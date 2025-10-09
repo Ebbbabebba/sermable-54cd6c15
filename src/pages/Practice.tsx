@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Mic, MicOff, Play, Pause } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AudioRecorder from "@/components/AudioRecorder";
+import WordHighlighter from "@/components/WordHighlighter";
+import PracticeResults from "@/components/PracticeResults";
 
 interface Speech {
   id: string;
@@ -15,14 +18,26 @@ interface Speech {
   goal_date: string;
 }
 
+interface SessionResults {
+  transcription: string;
+  accuracy: number;
+  missedWords: string[];
+  delayedWords: string[];
+  analysis: string;
+  cueText: string;
+}
+
 const Practice = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
   const [isPracticing, setIsPracticing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     loadSpeech();
@@ -52,27 +67,102 @@ const Practice = () => {
 
   const handleStartPractice = () => {
     setIsPracticing(true);
+    setShowResults(false);
+    setSessionResults(null);
     toast({
       title: "Practice mode activated",
-      description: "Read your speech aloud when ready.",
+      description: "Read your speech aloud when ready, then start recording.",
     });
   };
 
-  const handleToggleRecording = () => {
-    if (isRecording) {
-      setIsRecording(false);
+  const handleRecordingStart = () => {
+    setIsRecording(true);
+  };
+
+  const handleRecordingStop = async (audioBlob: Blob) => {
+    setIsRecording(false);
+    setIsProcessing(true);
+
+    try {
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+
+        toast({
+          title: "Processing...",
+          description: "AI is analyzing your practice session",
+        });
+
+        // Call the edge function
+        const { data, error } = await supabase.functions.invoke('analyze-speech', {
+          body: {
+            audio: base64Audio,
+            originalText: speech!.text_current,
+            speechId: speech!.id,
+          },
+        });
+
+        if (error) throw error;
+
+        setSessionResults(data);
+        setShowResults(true);
+
+        // Save practice session to database
+        const { error: sessionError } = await supabase
+          .from('practice_sessions')
+          .insert({
+            speech_id: speech!.id,
+            score: data.accuracy,
+            missed_words: data.missedWords,
+            delayed_words: data.delayedWords,
+            duration: 0,
+          });
+
+        if (sessionError) {
+          console.error('Error saving session:', sessionError);
+        }
+
+        // Update speech with new cue text
+        const { error: updateError } = await supabase
+          .from('speeches')
+          .update({ text_current: data.cueText })
+          .eq('id', speech!.id);
+
+        if (updateError) {
+          console.error('Error updating speech:', updateError);
+        } else {
+          loadSpeech();
+        }
+
+        toast({
+          title: "Analysis complete!",
+          description: `${data.accuracy}% accuracy. Check your results below.`,
+        });
+      };
+
+      reader.onerror = () => {
+        throw new Error('Failed to read audio file');
+      };
+
+    } catch (error: any) {
+      console.error('Error processing recording:', error);
       toast({
-        title: "Recording stopped",
-        description: "Processing your practice session...",
+        variant: "destructive",
+        title: "Processing failed",
+        description: error.message || "Failed to analyze your recording. Please try again.",
       });
-      // Here we would process the audio with AI
-    } else {
-      setIsRecording(true);
-      toast({
-        title: "Recording started",
-        description: "Speak clearly into your microphone.",
-      });
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  const handleNewSession = () => {
+    setShowResults(false);
+    setSessionResults(null);
+    setIsPracticing(false);
   };
 
   if (loading) {
@@ -87,7 +177,6 @@ const Practice = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <header className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -99,15 +188,13 @@ const Practice = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="space-y-6">
-          {/* Title Section */}
           <div className="animate-fade-in">
             <h1 className="text-4xl font-bold mb-2">{speech.title}</h1>
             <p className="text-muted-foreground">
-              Practice session • {speech.text_original.split(/\s+/).filter(Boolean).length} words
+              Practice session • {speech.text_current.split(/\s+/).filter(Boolean).length} words
             </p>
           </div>
 
-          {/* Progress Overview */}
           <Card>
             <CardHeader>
               <CardTitle>Session Progress</CardTitle>
@@ -117,37 +204,37 @@ const Practice = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Memorization</span>
-                  <span className="font-medium">0%</span>
+                  <span className="font-medium">
+                    {sessionResults ? `${sessionResults.accuracy}%` : '0%'}
+                  </span>
                 </div>
-                <Progress value={0} />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                <div className="text-center">
-                  <div className="text-2xl font-bold">0</div>
-                  <div className="text-sm text-muted-foreground">Sessions</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">0</div>
-                  <div className="text-sm text-muted-foreground">Accuracy</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">0</div>
-                  <div className="text-sm text-muted-foreground">Minutes</div>
-                </div>
+                <Progress value={sessionResults?.accuracy || 0} />
               </div>
             </CardContent>
           </Card>
 
-          {/* Practice Area */}
           <Card>
             <CardHeader>
-              <CardTitle>Practice Mode</CardTitle>
-              <CardDescription>
-                {isPracticing
-                  ? "Read the text aloud and we'll track your progress"
-                  : "Click start to begin your practice session"}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Practice Mode</CardTitle>
+                  <CardDescription>
+                    {!isPracticing
+                      ? "Click start to begin your practice session"
+                      : isRecording
+                      ? "Recording... speak clearly"
+                      : isProcessing
+                      ? "AI is analyzing your performance..."
+                      : "Read the text aloud and record yourself"}
+                  </CardDescription>
+                </div>
+                {showResults && (
+                  <Button variant="outline" size="sm" onClick={handleNewSession}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    New Session
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {!isPracticing ? (
@@ -159,65 +246,66 @@ const Practice = () => {
                 </div>
               ) : (
                 <>
-                  {/* Speech Text */}
                   <div className="p-6 bg-muted/30 rounded-lg">
-                    <div className="prose prose-lg max-w-none">
-                      <p className="whitespace-pre-wrap leading-relaxed">
-                        {speech.text_current}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Recording Controls */}
-                  <div className="flex justify-center">
-                    <Button
-                      size="lg"
-                      variant={isRecording ? "destructive" : "default"}
-                      onClick={handleToggleRecording}
-                      className="w-48"
-                    >
-                      {isRecording ? (
-                        <>
-                          <MicOff className="h-5 w-5 mr-2" />
-                          Stop Recording
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="h-5 w-5 mr-2" />
-                          Start Recording
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  {isRecording && (
-                    <div className="text-center">
-                      <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                        <div className="h-2 w-2 rounded-full bg-destructive animate-pulse"></div>
-                        Recording in progress...
+                    {showResults && sessionResults ? (
+                      <WordHighlighter
+                        text={speech.text_current}
+                        missedWords={sessionResults.missedWords}
+                        delayedWords={sessionResults.delayedWords}
+                      />
+                    ) : (
+                      <div className="prose prose-lg max-w-none">
+                        <p className="whitespace-pre-wrap leading-relaxed">
+                          {speech.text_current}
+                        </p>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
+                  <div className="flex justify-center">
+                    <AudioRecorder
+                      isRecording={isRecording}
+                      onStart={handleRecordingStart}
+                      onStop={handleRecordingStop}
+                      disabled={isProcessing}
+                    />
+                  </div>
                 </>
               )}
             </CardContent>
           </Card>
 
-          {/* AI Feedback Section (Placeholder) */}
-          {isPracticing && (
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Feedback</CardTitle>
-                <CardDescription>
-                  Real-time analysis of your practice session
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Complete a recording to receive AI-powered feedback on your performance.
-                </p>
-              </CardContent>
-            </Card>
+          {showResults && sessionResults && (
+            <div className="animate-slide-up">
+              <PracticeResults
+                accuracy={sessionResults.accuracy}
+                missedWords={sessionResults.missedWords}
+                delayedWords={sessionResults.delayedWords}
+                analysis={sessionResults.analysis}
+                transcription={sessionResults.transcription}
+              />
+
+              {sessionResults.cueText !== speech.text_current && (
+                <Card className="mt-4">
+                  <CardHeader>
+                    <CardTitle>Updated Cue Script</CardTitle>
+                    <CardDescription>
+                      Focus on these key words for your next practice
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="p-4 bg-primary/5 rounded-lg">
+                      <p className="text-lg leading-relaxed">
+                        {sessionResults.cueText}
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      This simplified version will be used in your next practice session.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </div>
       </main>
