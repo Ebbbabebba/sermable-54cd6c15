@@ -245,6 +245,12 @@ const Practice = () => {
                     Start Practice Session
                   </Button>
                 </div>
+              ) : isProcessing ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
+                  <h3 className="text-xl font-semibold mb-2">Analyzing Your Performance...</h3>
+                  <p className="text-muted-foreground">AI is comparing your speech and identifying areas for improvement</p>
+                </div>
               ) : (
                 <>
                   <div className="p-6 bg-muted/30 rounded-lg">
@@ -268,21 +274,23 @@ const Practice = () => {
                     )}
                   </div>
 
-                  <div className="flex justify-center">
-                    <AudioRecorder
-                      isRecording={isRecording}
-                      onStart={handleRecordingStart}
-                      onStop={handleRecordingStop}
-                      disabled={isProcessing}
-                    />
-                  </div>
+                  {!showResults && (
+                    <div className="flex justify-center">
+                      <AudioRecorder
+                        isRecording={isRecording}
+                        onStart={handleRecordingStart}
+                        onStop={handleRecordingStop}
+                        disabled={isProcessing}
+                      />
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>
           </Card>
 
           {showResults && sessionResults && (
-            <div className="animate-slide-up">
+            <div className="animate-slide-up space-y-4">
               <PracticeResults
                 accuracy={sessionResults.accuracy}
                 missedWords={sessionResults.missedWords}
@@ -291,23 +299,27 @@ const Practice = () => {
                 transcription={sessionResults.transcription}
               />
 
-              {sessionResults.cueText !== speech.text_current && (
-                <Card className="mt-4">
+              {(sessionResults.missedWords.length > 0 || sessionResults.delayedWords.length > 0) && (
+                <Card className="border-primary/20">
                   <CardHeader>
-                    <CardTitle>Updated Cue Script</CardTitle>
+                    <CardTitle>Practice Problem Words</CardTitle>
                     <CardDescription>
-                      Focus on these key words for your next practice
+                      Your script has been simplified to focus on {sessionResults.missedWords.length + sessionResults.delayedWords.length} words that need practice
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <div className="p-4 bg-primary/5 rounded-lg">
-                      <p className="text-lg leading-relaxed">
+                      <p className="text-lg leading-relaxed font-medium">
                         {sessionResults.cueText}
                       </p>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-3">
-                      This simplified version will be used in your next practice session.
-                    </p>
+                    <Button 
+                      size="lg" 
+                      className="w-full"
+                      onClick={handleNewSession}
+                    >
+                      Practice with Problem Words Only
+                    </Button>
                   </CardContent>
                 </Card>
               )}
