@@ -24,7 +24,7 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Starting speech analysis for speech:', speechId);
+    console.log('Starting speech analysis for speech ID:', speechId);
 
     // Step 1: Transcribe audio using Whisper (via OpenAI-compatible API)
     console.log('Transcribing audio...');
