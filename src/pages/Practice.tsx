@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import AudioRecorder from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
+import RealtimeWordTracker from "@/components/RealtimeWordTracker";
 
 interface Speech {
   id: string;
@@ -252,6 +253,11 @@ const Practice = () => {
                         text={speech.text_current}
                         missedWords={sessionResults.missedWords}
                         delayedWords={sessionResults.delayedWords}
+                      />
+                    ) : isRecording ? (
+                      <RealtimeWordTracker
+                        text={speech.text_current}
+                        isRecording={isRecording}
                       />
                     ) : (
                       <div className="prose prose-lg max-w-none">
