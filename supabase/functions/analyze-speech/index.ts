@@ -12,46 +12,17 @@ serve(async (req) => {
   }
 
   try {
-    const { audio, originalText, speechId } = await req.json();
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const { transcription, originalText, speechId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured');
-    }
     
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     console.log('Starting speech analysis for speech ID:', speechId);
+    console.log('Transcription received:', transcription.substring(0, 100));
 
-    // Step 1: Transcribe audio using Whisper (via OpenAI-compatible API)
-    console.log('Transcribing audio...');
-    const audioBuffer = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
-    const audioBlob = new Blob([audioBuffer], { type: 'audio/webm' });
-    
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.webm');
-    formData.append('model', 'whisper-1');
-
-    const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: formData,
-    });
-
-    if (!transcriptionResponse.ok) {
-      const error = await transcriptionResponse.text();
-      console.error('Transcription error:', error);
-      throw new Error(`Transcription failed: ${error}`);
-    }
-
-    const transcriptionData = await transcriptionResponse.json();
-    const spokenText = transcriptionData.text;
-    console.log('Transcription complete:', spokenText.substring(0, 100));
+    const spokenText = transcription;
 
     // Step 2: Use AI to analyze the speech and identify issues
     console.log('Analyzing speech patterns...');

@@ -6,14 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 interface AudioRecorderProps {
   isRecording: boolean;
   onStart: () => void;
-  onStop: (audioBlob: Blob) => void;
+  onStop: () => void;
   disabled?: boolean;
 }
 
 const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorderProps) => {
   const { toast } = useToast();
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const [recordingTime, setRecordingTime] = useState(0);
   const timerRef = useRef<number | null>(null);
 
@@ -37,57 +35,16 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
     };
   }, [isRecording]);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        }
-      });
-
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
-      });
-
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        onStop(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
-      onStart();
-
-      toast({
-        title: "Recording started",
-        description: "Speak clearly into your microphone",
-      });
-    } catch (error: any) {
-      console.error('Error starting recording:', error);
-      toast({
-        variant: "destructive",
-        title: "Microphone access denied",
-        description: "Please allow microphone access to record your practice.",
-      });
-    }
+  const startRecording = () => {
+    onStart();
+    toast({
+      title: "Recording started",
+      description: "Speak clearly - your browser is listening",
+    });
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
+    onStop();
   };
 
   const formatTime = (seconds: number) => {

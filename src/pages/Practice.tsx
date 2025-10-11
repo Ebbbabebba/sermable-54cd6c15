@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,8 @@ const Practice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [fullTranscript, setFullTranscript] = useState("");
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     loadSpeech();
@@ -78,75 +80,104 @@ const Practice = () => {
 
   const handleRecordingStart = () => {
     setIsRecording(true);
+    setFullTranscript("");
+    
+    // Initialize speech recognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      
+      let finalTranscript = '';
+      
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        setFullTranscript(finalTranscript + interimTranscript);
+      };
+      
+      recognition.start();
+      recognitionRef.current = recognition;
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Browser not supported",
+        description: "Your browser doesn't support speech recognition.",
+      });
+    }
   };
 
-  const handleRecordingStop = async (audioBlob: Blob) => {
+  const handleRecordingStop = async () => {
     setIsRecording(false);
     setIsProcessing(true);
+    
+    // Stop speech recognition
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
 
     try {
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
+      toast({
+        title: "Processing...",
+        description: "AI is analyzing your practice session",
+      });
 
-        toast({
-          title: "Processing...",
-          description: "AI is analyzing your practice session",
+      // Call the edge function with transcription
+      const { data, error } = await supabase.functions.invoke('analyze-speech', {
+        body: {
+          transcription: fullTranscript,
+          originalText: speech!.text_current,
+          speechId: speech!.id,
+        },
+      });
+
+      if (error) throw error;
+
+      setSessionResults(data);
+      setShowResults(true);
+
+      // Save practice session to database
+      const { error: sessionError } = await supabase
+        .from('practice_sessions')
+        .insert({
+          speech_id: speech!.id,
+          score: data.accuracy,
+          missed_words: data.missedWords,
+          delayed_words: data.delayedWords,
+          duration: 0,
         });
 
-        // Call the edge function
-        const { data, error } = await supabase.functions.invoke('analyze-speech', {
-          body: {
-            audio: base64Audio,
-            originalText: speech!.text_current,
-            speechId: speech!.id,
-          },
-        });
+      if (sessionError) {
+        console.error('Error saving session:', sessionError);
+      }
 
-        if (error) throw error;
+      // Update speech with new cue text
+      const { error: updateError } = await supabase
+        .from('speeches')
+        .update({ text_current: data.cueText })
+        .eq('id', speech!.id);
 
-        setSessionResults(data);
-        setShowResults(true);
+      if (updateError) {
+        console.error('Error updating speech:', updateError);
+      } else {
+        loadSpeech();
+      }
 
-        // Save practice session to database
-        const { error: sessionError } = await supabase
-          .from('practice_sessions')
-          .insert({
-            speech_id: speech!.id,
-            score: data.accuracy,
-            missed_words: data.missedWords,
-            delayed_words: data.delayedWords,
-            duration: 0,
-          });
-
-        if (sessionError) {
-          console.error('Error saving session:', sessionError);
-        }
-
-        // Update speech with new cue text
-        const { error: updateError } = await supabase
-          .from('speeches')
-          .update({ text_current: data.cueText })
-          .eq('id', speech!.id);
-
-        if (updateError) {
-          console.error('Error updating speech:', updateError);
-        } else {
-          loadSpeech();
-        }
-
-        toast({
-          title: "Analysis complete!",
-          description: `${data.accuracy}% accuracy. Check your results below.`,
-        });
-      };
-
-      reader.onerror = () => {
-        throw new Error('Failed to read audio file');
-      };
+      toast({
+        title: "Analysis complete!",
+        description: `${data.accuracy}% accuracy. Check your results below.`,
+      });
 
     } catch (error: any) {
       console.error('Error processing recording:', error);
