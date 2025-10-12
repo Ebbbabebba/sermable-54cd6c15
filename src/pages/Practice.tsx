@@ -119,12 +119,40 @@ const Practice = () => {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
+        
         if (event.error === 'no-speech') {
           toast({
             variant: "destructive",
             title: "No speech detected",
             description: "Please speak louder or check your microphone.",
           });
+        } else if (event.error === 'aborted') {
+          // Ignore aborted errors when user stops manually
+          console.log('Recognition aborted by user');
+        } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          toast({
+            variant: "destructive",
+            title: "Microphone access denied",
+            description: "Please allow microphone access in your browser settings.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Speech recognition error",
+            description: `Error: ${event.error}. Try speaking more clearly.`,
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        // Only restart if still supposed to be recording
+        if (isRecording && recognitionRef.current) {
+          console.log('Recognition ended unexpectedly, restarting...');
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            console.log('Could not restart recognition:', e);
+          }
         }
       };
 
