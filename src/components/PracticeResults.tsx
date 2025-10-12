@@ -7,6 +7,8 @@ interface PracticeResultsProps {
   accuracy: number;
   missedWords: string[];
   delayedWords: string[];
+  fillerWords: { [key: string]: number };
+  toneFeedback: string;
   analysis: string;
   transcription: string;
 }
@@ -14,10 +16,13 @@ interface PracticeResultsProps {
 const PracticeResults = ({ 
   accuracy, 
   missedWords, 
-  delayedWords, 
+  delayedWords,
+  fillerWords,
+  toneFeedback, 
   analysis, 
   transcription 
 }: PracticeResultsProps) => {
+  const totalFillers = Object.values(fillerWords).reduce((sum, count) => sum + count, 0);
   return (
     <Card>
       <CardHeader>
@@ -77,6 +82,33 @@ const PracticeResults = ({
           <h4 className="font-semibold">AI Feedback</h4>
           <p className="text-sm text-muted-foreground">{analysis}</p>
         </div>
+
+        {/* Tone Feedback */}
+        {toneFeedback && (
+          <div className="space-y-2 p-4 bg-primary/5 rounded-lg border border-primary/10">
+            <h4 className="font-semibold flex items-center gap-2">
+              🎭 Tone & Delivery Feedback
+            </h4>
+            <p className="text-sm text-muted-foreground">{toneFeedback}</p>
+          </div>
+        )}
+
+        {/* Filler Words */}
+        {totalFillers > 0 && (
+          <div className="space-y-2">
+            <h4 className="font-semibold">Filler Words Detected</h4>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(fillerWords).map(([word, count]) => (
+                <Badge key={word} variant="outline" className="bg-orange-50 dark:bg-orange-950/30">
+                  "{word}" × {count}
+                </Badge>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Try to eliminate filler words for more confident delivery
+            </p>
+          </div>
+        )}
 
         {/* Problem Words */}
         {(missedWords.length > 0 || delayedWords.length > 0) && (

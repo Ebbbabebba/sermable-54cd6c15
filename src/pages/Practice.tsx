@@ -24,6 +24,8 @@ interface SessionResults {
   accuracy: number;
   missedWords: string[];
   delayedWords: string[];
+  fillerWords: { [key: string]: number };
+  toneFeedback: string;
   analysis: string;
   cueText: string;
 }
@@ -422,6 +424,8 @@ const Practice = () => {
                 accuracy={sessionResults.accuracy}
                 missedWords={sessionResults.missedWords}
                 delayedWords={sessionResults.delayedWords}
+                fillerWords={sessionResults.fillerWords}
+                toneFeedback={sessionResults.toneFeedback}
                 analysis={sessionResults.analysis}
                 transcription={sessionResults.transcription}
               />
@@ -429,7 +433,7 @@ const Practice = () => {
               {(sessionResults.missedWords.length > 0 || sessionResults.delayedWords.length > 0) && (
                 <Card className="border-primary/20">
                   <CardHeader>
-                    <CardTitle>Practice Problem Words</CardTitle>
+                    <CardTitle>Review Key Points</CardTitle>
                     <CardDescription>
                       Your script has been simplified to focus on {sessionResults.missedWords.length + sessionResults.delayedWords.length} words that need practice
                     </CardDescription>

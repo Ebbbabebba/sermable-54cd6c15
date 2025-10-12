@@ -26,23 +26,28 @@ serve(async (req) => {
 
     // Step 2: Use AI to analyze the speech and identify issues
     console.log('Analyzing speech patterns...');
-    const analysisPrompt = `You are a speech coach analyzing a practice session.
+    const analysisPrompt = `You are an expert speech coach analyzing a practice session in detail.
 
 Original text: "${originalText}"
 What was spoken: "${spokenText}"
 
-Analyze the performance and identify:
-1. Words that were missed completely
-2. Words that were likely hesitated on (based on transcription patterns)
-3. Overall accuracy percentage
-4. Which words need more practice
+Provide a comprehensive analysis:
+
+1. **Missing Words**: Words from the original text that were completely omitted
+2. **Hesitation/Delayed Words**: Words where the speaker paused, repeated, or stumbled
+3. **Filler Words**: Count instances of "uh", "um", "ehh", "ah", "like", "you know", etc.
+4. **Tone Feedback**: Analyze the emotional tone. For parts of the text that should sound positive/happy, did the speaker convey that? For serious parts, was the tone appropriate?
+5. **Pacing Issues**: Were there awkward pauses where the flow should have been smooth?
+6. **Overall Accuracy**: Percentage of how well they matched the original text
 
 Respond in JSON format:
 {
   "accuracy": <number 0-100>,
   "missedWords": ["word1", "word2"],
   "delayedWords": ["word3", "word4"],
-  "analysis": "brief feedback"
+  "fillerWords": {"uh": 2, "um": 3, "like": 1},
+  "toneFeedback": "detailed feedback on tone - mention specific parts where tone should be happier/more serious",
+  "analysis": "comprehensive feedback covering all issues"
 }`;
 
     const analysisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -85,6 +90,8 @@ Respond in JSON format:
         accuracy: 70,
         missedWords: [],
         delayedWords: [],
+        fillerWords: {},
+        toneFeedback: 'Unable to analyze tone',
         analysis: 'Unable to parse detailed analysis'
       };
     }
@@ -140,6 +147,8 @@ Provide ONLY the cue text, no explanations.`;
         accuracy: analysis.accuracy,
         missedWords: analysis.missedWords || [],
         delayedWords: analysis.delayedWords || [],
+        fillerWords: analysis.fillerWords || {},
+        toneFeedback: analysis.toneFeedback || '',
         analysis: analysis.analysis || 'Good practice session',
         cueText: cueText,
       }),
