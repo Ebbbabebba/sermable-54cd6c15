@@ -45,6 +45,8 @@ const Practice = () => {
   const [transcription, setTranscription] = useState("");
   const recognitionRef = useRef<any>(null);
   const durationIntervalRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const shouldBeRecordingRef = useRef(false);
 
   useEffect(() => {
     loadSpeech();
@@ -91,10 +93,15 @@ const Practice = () => {
         throw new Error("Speech recognition not supported in this browser. Please use Chrome or Edge.");
       }
 
-      // Request microphone permission explicitly
+      console.log('Requesting microphone access...');
+      
+      // Request and keep microphone permission
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = stream;
+        console.log('Microphone access granted');
       } catch (err) {
+        console.error('Microphone access error:', err);
         throw new Error("Microphone access denied. Please allow microphone access and try again.");
       }
 
@@ -106,9 +113,10 @@ const Practice = () => {
 
       setTranscription("");
       setRecordingDuration(0);
+      shouldBeRecordingRef.current = true;
 
       recognition.onstart = () => {
-        console.log('Speech recognition started successfully');
+        console.log('✅ Speech recognition started successfully');
         setIsRecording(true);
         durationIntervalRef.current = window.setInterval(() => {
           setRecordingDuration(prev => prev + 1);
@@ -121,60 +129,60 @@ const Practice = () => {
       };
 
       recognition.onresult = (event: any) => {
-        console.log('Speech detected:', event.results.length, 'segments');
         let currentTranscript = "";
         for (let i = 0; i < event.results.length; i++) {
           currentTranscript += event.results[i][0].transcript + " ";
         }
         const finalTranscript = currentTranscript.trim();
         setTranscription(finalTranscript);
-        console.log('Current transcription length:', finalTranscript.length);
+        console.log('📝 Transcription updated:', finalTranscript.substring(0, 50) + '...');
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
+        console.error('❌ Speech recognition error:', event.error);
         
         if (event.error === 'no-speech') {
-          toast({
-            variant: "destructive",
-            title: "No speech detected",
-            description: "Please speak louder or check your microphone.",
-          });
+          console.log('⚠️ No speech detected - continuing to listen...');
+          // Don't show error toast, just keep listening
         } else if (event.error === 'aborted') {
-          // Ignore aborted errors when user stops manually
-          console.log('Recognition aborted by user');
+          console.log('⏹️ Recognition aborted');
+          shouldBeRecordingRef.current = false;
         } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          shouldBeRecordingRef.current = false;
           toast({
             variant: "destructive",
             title: "Microphone access denied",
             description: "Please allow microphone access in your browser settings.",
           });
         } else {
-          toast({
-            variant: "destructive",
-            title: "Speech recognition error",
-            description: `Error: ${event.error}. Try speaking more clearly.`,
-          });
+          console.log('⚠️ Recognition error:', event.error, '- will try to continue');
         }
       };
 
       recognition.onend = () => {
-        // Only restart if still supposed to be recording
-        if (isRecording && recognitionRef.current) {
-          console.log('Recognition ended unexpectedly, restarting...');
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            console.log('Could not restart recognition:', e);
-          }
+        console.log('🔄 Recognition ended');
+        // Only restart if we should still be recording
+        if (shouldBeRecordingRef.current && recognitionRef.current) {
+          console.log('↻ Auto-restarting recognition...');
+          setTimeout(() => {
+            try {
+              if (shouldBeRecordingRef.current && recognitionRef.current) {
+                recognitionRef.current.start();
+              }
+            } catch (e) {
+              console.error('Failed to restart recognition:', e);
+            }
+          }, 100);
         }
       };
 
       recognitionRef.current = recognition;
+      console.log('🎤 Starting speech recognition...');
       recognition.start();
 
     } catch (error: any) {
-      console.error('Error starting recording:', error);
+      console.error('💥 Error starting recording:', error);
+      shouldBeRecordingRef.current = false;
       toast({
         variant: "destructive",
         title: "Speech recognition unavailable",
@@ -184,6 +192,8 @@ const Practice = () => {
   };
 
   const handleRecordingStop = async () => {
+    console.log('🛑 Stopping recording...');
+    shouldBeRecordingRef.current = false;
     setIsRecording(false);
     
     // Clear duration timer
@@ -196,6 +206,12 @@ const Practice = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
+    }
+
+    // Stop and release microphone stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
     }
 
     if (!transcription || transcription.trim().length === 0) {
