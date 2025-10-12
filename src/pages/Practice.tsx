@@ -89,32 +89,44 @@ const Practice = () => {
         throw new Error("Speech recognition not supported in this browser. Please use Chrome or Edge.");
       }
 
+      // Request microphone permission explicitly
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        throw new Error("Microphone access denied. Please allow microphone access and try again.");
+      }
+
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
 
       setTranscription("");
       setRecordingDuration(0);
 
       recognition.onstart = () => {
+        console.log('Speech recognition started successfully');
         setIsRecording(true);
         durationIntervalRef.current = window.setInterval(() => {
           setRecordingDuration(prev => prev + 1);
         }, 1000);
         
         toast({
-          title: "🎙️ Beta: Browser Speech Recognition",
-          description: "Speak your speech clearly. Results may vary by browser.",
+          title: "🎙️ Recording Active",
+          description: "Microphone is listening. Start speaking now.",
         });
       };
 
       recognition.onresult = (event: any) => {
+        console.log('Speech detected:', event.results.length, 'segments');
         let currentTranscript = "";
         for (let i = 0; i < event.results.length; i++) {
           currentTranscript += event.results[i][0].transcript + " ";
         }
-        setTranscription(currentTranscript.trim());
+        const finalTranscript = currentTranscript.trim();
+        setTranscription(finalTranscript);
+        console.log('Current transcription length:', finalTranscript.length);
       };
 
       recognition.onerror = (event: any) => {
