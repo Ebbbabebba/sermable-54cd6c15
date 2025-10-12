@@ -40,8 +40,8 @@ const Practice = () => {
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const [transcription, setTranscription] = useState("");
+  const recognitionRef = useRef<any>(null);
   const durationIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -82,40 +82,61 @@ const Practice = () => {
 
   const handleRecordingStart = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Check if browser supports speech recognition
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
-      audioChunksRef.current = [];
+      if (!SpeechRecognition) {
+        throw new Error("Speech recognition not supported in this browser. Please use Chrome or Edge.");
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      setTranscription("");
       setRecordingDuration(0);
-      
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
-      });
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        durationIntervalRef.current = window.setInterval(() => {
+          setRecordingDuration(prev => prev + 1);
+        }, 1000);
+        
+        toast({
+          title: "🎙️ Beta: Browser Speech Recognition",
+          description: "Speak your speech clearly. Results may vary by browser.",
+        });
+      };
+
+      recognition.onresult = (event: any) => {
+        let currentTranscript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          currentTranscript += event.results[i][0].transcript + " ";
+        }
+        setTranscription(currentTranscript.trim());
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'no-speech') {
+          toast({
+            variant: "destructive",
+            title: "No speech detected",
+            description: "Please speak louder or check your microphone.",
+          });
         }
       };
-      
-      mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
-      setIsRecording(true);
 
-      // Start duration timer
-      durationIntervalRef.current = window.setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
-      }, 1000);
+      recognitionRef.current = recognition;
+      recognition.start();
 
-      toast({
-        title: "Recording started",
-        description: "Speak your speech clearly into the microphone",
-      });
     } catch (error: any) {
       console.error('Error starting recording:', error);
       toast({
         variant: "destructive",
-        title: "Microphone access denied",
-        description: "Please allow microphone access to record your speech.",
+        title: "Speech recognition unavailable",
+        description: error.message || "Please use Chrome or Edge browser for best results.",
       });
     }
   };
@@ -129,11 +150,17 @@ const Practice = () => {
       durationIntervalRef.current = null;
     }
 
-    if (!mediaRecorderRef.current) {
+    // Stop speech recognition
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+
+    if (!transcription || transcription.trim().length === 0) {
       toast({
         variant: "destructive",
-        title: "Recording error",
-        description: "No recording found. Please try again.",
+        title: "No speech detected",
+        description: "Please speak clearly during recording and try again.",
       });
       return;
     }
@@ -141,58 +168,6 @@ const Practice = () => {
     setIsProcessing(true);
 
     try {
-      // Stop the media recorder and wait for final data
-      await new Promise<void>((resolve) => {
-        mediaRecorderRef.current!.onstop = () => resolve();
-        mediaRecorderRef.current!.stop();
-        
-        // Stop all tracks
-        mediaRecorderRef.current!.stream.getTracks().forEach(track => track.stop());
-      });
-
-      if (audioChunksRef.current.length === 0) {
-        throw new Error('No audio data recorded');
-      }
-
-      toast({
-        title: "Transcribing...",
-        description: "Converting your speech to text using AI",
-      });
-
-      // Convert audio to base64
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      const reader = new FileReader();
-      
-      const base64Audio = await new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(audioBlob);
-      });
-
-      // Transcribe audio using Whisper
-      const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('transcribe-audio', {
-        body: { audio: base64Audio },
-      });
-
-      if (transcriptionError) throw transcriptionError;
-      if (!transcriptionData?.text) throw new Error('No transcription received');
-
-      const transcription = transcriptionData.text.trim();
-      console.log('Transcription:', transcription);
-
-      if (!transcription) {
-        toast({
-          variant: "destructive",
-          title: "No speech detected",
-          description: "Please speak clearly during recording.",
-        });
-        setIsProcessing(false);
-        return;
-      }
-
       toast({
         title: "Analyzing...",
         description: "AI is analyzing your performance",
@@ -201,7 +176,7 @@ const Practice = () => {
       // Analyze the transcription
       const { data, error } = await supabase.functions.invoke('analyze-speech', {
         body: {
-          transcription,
+          transcription: transcription.trim(),
           originalText: speech!.text_current,
           speechId: speech!.id,
         },
@@ -253,7 +228,6 @@ const Practice = () => {
       });
     } finally {
       setIsProcessing(false);
-      audioChunksRef.current = [];
     }
   };
 
@@ -364,13 +338,19 @@ const Practice = () => {
                             <div className="h-3 w-3 rounded-full bg-destructive animate-pulse"></div>
                             <span className="text-lg font-semibold">Recording: {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}</span>
                           </div>
-                          <p className="mt-4 text-muted-foreground">Speak your speech clearly into the microphone</p>
+                          <p className="mt-4 text-sm text-muted-foreground">🎙️ Beta: Browser Speech Recognition Active</p>
                         </div>
                         <div className="prose prose-lg max-w-none opacity-50">
                           <p className="whitespace-pre-wrap leading-relaxed">
                             {speech.text_current}
                           </p>
                         </div>
+                        {transcription && (
+                          <div className="mt-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                            <p className="text-sm font-medium mb-2">Live Transcription:</p>
+                            <p className="text-sm">{transcription}</p>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="prose prose-lg max-w-none">
