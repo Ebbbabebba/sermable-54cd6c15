@@ -79,7 +79,19 @@ const Practice = () => {
     });
   };
 
-  const handleRecordingStart = () => {
+  const handleRecordingStart = async () => {
+    // Request microphone permission first
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Microphone access denied",
+        description: "Please allow microphone access to record your speech.",
+      });
+      return;
+    }
+
     setIsRecording(true);
     setFullTranscript("");
     transcriptRef.current = "";
@@ -329,11 +341,19 @@ const Practice = () => {
                         missedWords={sessionResults.missedWords}
                         delayedWords={sessionResults.delayedWords}
                       />
-                    ) : isRecording ? (
-                      <RealtimeWordTracker
-                        text={speech.text_current}
-                        isRecording={isRecording}
-                      />
+                  ) : isRecording ? (
+                      <div className="space-y-4">
+                        <RealtimeWordTracker
+                          text={speech.text_current}
+                          isRecording={isRecording}
+                        />
+                        {fullTranscript && (
+                          <div className="p-4 bg-primary/10 rounded-lg">
+                            <p className="text-sm font-semibold mb-2">Live Transcription:</p>
+                            <p className="text-sm text-muted-foreground">{fullTranscript}</p>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div className="prose prose-lg max-w-none">
                         <p className="whitespace-pre-wrap leading-relaxed">
