@@ -41,6 +41,7 @@ const Practice = () => {
   const [showResults, setShowResults] = useState(false);
   const [fullTranscript, setFullTranscript] = useState("");
   const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef<string>("");
 
   useEffect(() => {
     loadSpeech();
@@ -81,6 +82,7 @@ const Practice = () => {
   const handleRecordingStart = () => {
     setIsRecording(true);
     setFullTranscript("");
+    transcriptRef.current = "";
     
     // Initialize speech recognition
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -90,12 +92,11 @@ const Practice = () => {
       recognition.interimResults = true;
       recognition.lang = 'en-US';
       
-      let finalTranscript = '';
-      
       recognition.onresult = (event: any) => {
         let interimTranscript = '';
+        let finalTranscript = '';
         
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        for (let i = 0; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
@@ -104,7 +105,19 @@ const Practice = () => {
           }
         }
         
+        // Store in ref for immediate access
+        transcriptRef.current = finalTranscript;
+        // Update state for display
         setFullTranscript(finalTranscript + interimTranscript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        toast({
+          variant: "destructive",
+          title: "Recognition error",
+          description: `Error: ${event.error}. Please try again.`,
+        });
       };
       
       recognition.start();
@@ -122,9 +135,26 @@ const Practice = () => {
     setIsRecording(false);
     setIsProcessing(true);
     
-    // Stop speech recognition
+    // Stop speech recognition and wait for final results
     if (recognitionRef.current) {
       recognitionRef.current.stop();
+    }
+
+    // Wait a bit for final transcription results
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const finalText = transcriptRef.current.trim();
+    
+    console.log('Final transcript:', finalText);
+
+    if (!finalText) {
+      toast({
+        variant: "destructive",
+        title: "No speech detected",
+        description: "Please check your microphone permissions and try again.",
+      });
+      setIsProcessing(false);
+      return;
     }
 
     try {
@@ -136,7 +166,7 @@ const Practice = () => {
       // Call the edge function with transcription
       const { data, error } = await supabase.functions.invoke('analyze-speech', {
         body: {
-          transcription: fullTranscript,
+          transcription: finalText,
           originalText: speech!.text_current,
           speechId: speech!.id,
         },
