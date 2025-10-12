@@ -106,18 +106,26 @@ const Practice = () => {
         }
         
         // Store in ref for immediate access
-        transcriptRef.current = finalTranscript;
+        if (finalTranscript) {
+          transcriptRef.current += finalTranscript;
+        }
         // Update state for display
-        setFullTranscript(finalTranscript + interimTranscript);
+        setFullTranscript(transcriptRef.current + interimTranscript);
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        toast({
-          variant: "destructive",
-          title: "Recognition error",
-          description: `Error: ${event.error}. Please try again.`,
-        });
+        if (event.error !== 'aborted') {
+          console.error('Speech recognition error:', event.error);
+          toast({
+            variant: "destructive",
+            title: "Recognition error",
+            description: `Error: ${event.error}. Please check your microphone.`,
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        console.log('Recognition ended, final transcript:', transcriptRef.current);
       };
       
       recognition.start();
@@ -133,29 +141,29 @@ const Practice = () => {
 
   const handleRecordingStop = async () => {
     setIsRecording(false);
-    setIsProcessing(true);
     
-    // Stop speech recognition and wait for final results
+    // Stop speech recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
 
-    // Wait a bit for final transcription results
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Wait for recognition to fully stop and process final results
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const finalText = transcriptRef.current.trim();
     
-    console.log('Final transcript:', finalText);
+    console.log('Final transcript for analysis:', finalText);
 
     if (!finalText) {
       toast({
         variant: "destructive",
         title: "No speech detected",
-        description: "Please check your microphone permissions and try again.",
+        description: "Please speak clearly and check your microphone permissions.",
       });
-      setIsProcessing(false);
       return;
     }
+
+    setIsProcessing(true);
 
     try {
       toast({
