@@ -91,9 +91,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="border-b bg-card flex-shrink-0">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Dryrun</h1>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
@@ -103,7 +103,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1 overflow-y-auto">
         <div className="space-y-8">
           {/* Welcome Section */}
           <div className="animate-fade-in">
