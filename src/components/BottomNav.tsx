@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Play, TrendingUp } from "lucide-react";
+import { Home, Play, TrendingUp, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BottomNav = () => {
@@ -8,8 +8,8 @@ const BottomNav = () => {
 
   const tabs = [
     { id: "dashboard", label: "My Speeches", icon: Home, path: "/dashboard" },
-    { id: "practice", label: "Practice", icon: Play, path: "/practice" },
     { id: "progress", label: "Progress", icon: TrendingUp, path: "/progress" },
+    { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
   ];
 
   return (
