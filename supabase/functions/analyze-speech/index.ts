@@ -193,69 +193,190 @@ Respond ONLY with valid JSON (no markdown, no code blocks, no extra text). Use \
       };
     }
 
-    // Generate updated cue words based on performance
-    // Only include words that need MORE practice (missed or delayed)
+    // Get current mastery level BEFORE generating cue words
+    const { data: speechData } = await supabase
+      .from('speeches')
+      .select('mastery_level')
+      .eq('id', speechId)
+      .single();
+
+    const currentMastery = speechData?.mastery_level || 0;
+
+    // PROGRESSIVE LEARNING FLOW: Generate updated cue words based on mastery level
     console.log('Generating updated cue words...');
+    console.log('Current mastery level:', currentMastery);
+    
+    let newCueText = originalText; // Default to full text
     
     const problematicWords = [...(analysis.missedWords || []), ...(analysis.delayedWords || [])];
     
-    const cuePrompt = `Based on the user's performance, create an UPDATED simplified "cue text" version for their next practice session.
+    // PHASE 1: Initial Reading Sessions (mastery < 30)
+    // Keep FULL original text - user needs to familiarize with complete speech
+    if (currentMastery < 30) {
+      console.log('PHASE 1: Initial reading - keeping full original text');
+      newCueText = originalText;
+    }
+    // PHASE 2: Early Cue-Word Introduction (mastery 30-60)
+    // Start removing only very small, non-essential words
+    else if (currentMastery < 60) {
+      console.log('PHASE 2: Early cue-words - removing small non-essential words');
+      
+      const cuePrompt = `Based on the user's performance, create an UPDATED "cue text" for their next practice session.
 
 IMPORTANT: The cue text MUST be in ${languageNames[speechLanguage] || 'English'} (same language as the original speech).
 
 FULL ORIGINAL SPEECH (in ${languageNames[speechLanguage]}): "${originalText}"
 
-Words/sections the user struggled with or missed: ${problematicWords.join(', ')}
+Words/sections the user struggled with: ${problematicWords.join(', ')}
 
 Current accuracy: ${analysis.accuracy}%
+Mastery level: ${currentMastery} (EARLY STAGE)
 
-Create an updated cue text that:
-1. FOCUSES on the words/sections that need MORE practice (the problematic ones)
-2. REMOVES words that were spoken confidently and correctly
-3. Keeps enough context to maintain the flow and meaning
-4. Uses "..." to indicate removed/mastered sections
-5. Should be SHORTER than the original if performance is improving (${analysis.accuracy}% accuracy)
-6. Should include MORE detail if performance is poor (<70% accuracy)
+INSTRUCTIONS FOR EARLY STAGE:
+1. Keep the speech MOSTLY COMPLETE - user is still familiarizing
+2. ONLY remove very small, non-essential words like: "the", "and", "of", "a", "an", "in", "on", "at"
+3. KEEP ALL core words, verbs, nouns, adjectives, and adverbs
+4. KEEP ALL problematic words and their surrounding context: ${problematicWords.join(', ')}
+5. Use "..." SPARINGLY - only for 1-2 word removals of very simple words
+6. The cue text should still be 70-90% of the original length
 7. MUST be in ${languageNames[speechLanguage] || 'English'}
 
-${analysis.accuracy >= 90 ? 'User is doing great - create a very minimal cue text with only the hardest words' : ''}
-${analysis.accuracy < 50 ? 'User needs more support - keep more context words to help recall' : ''}
-
-Example logic:
-- If user spoke a section perfectly, replace it with "..."
-- If user missed a word, KEEP that word and some context
-- If entire section was skipped, include the full section
+Example: "The cat sat on the mat" → "... cat sat ... mat" (only removed articles)
 
 Return ONLY the updated cue text in ${languageNames[speechLanguage] || 'English'}, no explanations.`;
 
-    const cueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: `You create adaptive cue texts that help users memorize speeches. Cue texts must be in ${languageNames[speechLanguage]}.` },
-          { role: 'user', content: cuePrompt }
-        ],
-      }),
-    });
+      const cueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: `You create adaptive cue texts for early-stage speech learning. Remove only very small words. Cue texts must be in ${languageNames[speechLanguage]}.` },
+            { role: 'user', content: cuePrompt }
+          ],
+        }),
+      });
 
-    if (!cueResponse.ok) {
-      const error = await cueResponse.text();
-      console.error('Cue generation error:', error);
-      // Don't throw - use existing cue text as fallback
+      if (cueResponse.ok) {
+        const cueData = await cueResponse.json();
+        newCueText = cueData.choices[0].message.content.trim();
+        console.log('Generated early-stage cue text:', newCueText.substring(0, 100));
+      } else {
+        newCueText = originalText;
+      }
     }
+    // PHASE 3: Advanced Cue-Words (mastery 60-85)
+    // More aggressive removal, focus on difficult sections
+    else if (currentMastery < 85) {
+      console.log('PHASE 3: Advanced cue-words - focusing on difficult sections');
+      
+      const cuePrompt = `Based on the user's performance, create an UPDATED "cue text" for their next practice session.
 
-    let newCueText = originalText; // Default to full text if generation fails
-    try {
-      const cueData = await cueResponse.json();
-      newCueText = cueData.choices[0].message.content.trim();
-      console.log('Generated updated cue text:', newCueText);
-    } catch (e) {
-      console.error('Error generating cue text, using original:', e);
+IMPORTANT: The cue text MUST be in ${languageNames[speechLanguage] || 'English'} (same language as the original speech).
+
+FULL ORIGINAL SPEECH (in ${languageNames[speechLanguage]}): "${originalText}"
+
+Words/sections the user struggled with: ${problematicWords.join(', ')}
+
+Current accuracy: ${analysis.accuracy}%
+Mastery level: ${currentMastery} (ADVANCED STAGE)
+
+INSTRUCTIONS FOR ADVANCED STAGE:
+1. User has good familiarity - remove more words to challenge memory
+2. KEEP ALL problematic words and their immediate context: ${problematicWords.join(', ')}
+3. REMOVE words that were consistently spoken correctly
+4. Remove small words (the, and, of, a) AND some easier content words
+5. Use "..." to indicate mastered sections
+6. The cue text should be 40-60% of the original length
+7. Focus on difficult transitions and problematic areas
+8. MUST be in ${languageNames[speechLanguage] || 'English'}
+
+Example: "The quick brown fox jumped over the lazy dog" → "... quick ... fox jumped ... lazy dog"
+
+Return ONLY the updated cue text in ${languageNames[speechLanguage] || 'English'}, no explanations.`;
+
+      const cueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: `You create adaptive cue texts for advanced speech learning. Focus on difficult sections. Cue texts must be in ${languageNames[speechLanguage]}.` },
+            { role: 'user', content: cuePrompt }
+          ],
+        }),
+      });
+
+      if (cueResponse.ok) {
+        const cueData = await cueResponse.json();
+        newCueText = cueData.choices[0].message.content.trim();
+        console.log('Generated advanced cue text:', newCueText.substring(0, 100));
+      } else {
+        newCueText = originalText;
+      }
+    }
+    // PHASE 4: Near Mastery (mastery >= 85)
+    // Minimal cues - only the hardest words
+    else {
+      console.log('PHASE 4: Near mastery - minimal cues only');
+      
+      const cuePrompt = `Based on the user's performance, create MINIMAL cue text for their next practice session.
+
+IMPORTANT: The cue text MUST be in ${languageNames[speechLanguage] || 'English'} (same language as the original speech).
+
+FULL ORIGINAL SPEECH (in ${languageNames[speechLanguage]}): "${originalText}"
+
+Words/sections the user struggled with: ${problematicWords.join(', ')}
+
+Current accuracy: ${analysis.accuracy}%
+Mastery level: ${currentMastery} (NEAR MASTERY)
+
+INSTRUCTIONS FOR NEAR MASTERY:
+1. User has excellent recall - provide MINIMAL cues
+2. ONLY include the hardest words: ${problematicWords.join(', ')}
+3. Use "..." extensively for mastered sections
+4. The cue text should be 10-30% of the original length
+5. Include only critical transition points and problem areas
+6. Challenge the user to recall from memory
+7. MUST be in ${languageNames[speechLanguage] || 'English'}
+
+Example: "The quick brown fox jumped over the lazy dog" → "... fox ... dog"
+
+Return ONLY the minimal cue text in ${languageNames[speechLanguage] || 'English'}, no explanations.`;
+
+      const cueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: `You create minimal cue texts for near-mastery speech learning. Provide only essential cues. Cue texts must be in ${languageNames[speechLanguage]}.` },
+            { role: 'user', content: cuePrompt }
+          ],
+        }),
+      });
+
+      if (cueResponse.ok) {
+        const cueData = await cueResponse.json();
+        newCueText = cueData.choices[0].message.content.trim();
+        console.log('Generated minimal cue text:', newCueText.substring(0, 100));
+      } else {
+        // Fallback: create minimal cues manually from problematic words
+        if (problematicWords.length > 0) {
+          newCueText = '... ' + problematicWords.join(' ... ') + ' ...';
+        } else {
+          newCueText = '...';
+        }
+      }
     }
 
     // Calculate next practice interval using spaced repetition
@@ -280,13 +401,6 @@ Return ONLY the updated cue text in ${languageNames[speechLanguage] || 'English'
     }
 
     // Update mastery level (weighted average favoring recent performance)
-    const { data: speechData } = await supabase
-      .from('speeches')
-      .select('mastery_level')
-      .eq('id', speechId)
-      .single();
-
-    const currentMastery = speechData?.mastery_level || 0;
     const newMastery = (currentMastery * 0.7) + (analysis.accuracy * 0.3);
 
     await supabase
