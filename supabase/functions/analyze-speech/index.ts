@@ -13,7 +13,15 @@ serve(async (req) => {
   }
 
   try {
-    const { transcription, originalText, speechId, speechLanguage = 'en', feedbackLanguage = 'sv' } = await req.json();
+    const { 
+      transcription, 
+      originalText, 
+      cueText,
+      speechId, 
+      speechLanguage = 'en', 
+      feedbackLanguage = 'sv' 
+    } = await req.json();
+    
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -28,6 +36,10 @@ serve(async (req) => {
     console.log('Transcription received:', transcription.substring(0, 100));
     console.log('Speech language:', speechLanguage);
     console.log('Feedback language:', feedbackLanguage);
+    console.log('Analyzing against FULL ORIGINAL speech');
+    if (cueText && cueText !== originalText) {
+      console.log('User is practicing with cue words as memory prompts');
+    }
 
     const languageNames: Record<string, string> = {
       'en': 'English',
@@ -39,35 +51,77 @@ serve(async (req) => {
 
     const spokenText = transcription;
 
-    // Step 2: Use AI to analyze the speech with multi-language support
-    console.log('Analyzing speech patterns...');
+    // CRITICAL: Analyze against the FULL ORIGINAL speech
+    // Even if user is shown cue words, we measure full speech recall
+    console.log('Analyzing speech patterns against full original text...');
+    
+    const practiceMode = cueText && cueText !== originalText ? 'cue_words' : 'full_text';
+    
     const analysisPrompt = `You are an expert speech coach analyzing a practice session in detail.
 
 The speech is in ${languageNames[speechLanguage] || 'English'}.
 IMPORTANT: Provide ALL feedback in ${languageNames[feedbackLanguage] || 'Swedish'}.
 
-Original text (in ${languageNames[speechLanguage]}): "${originalText}"
-What was spoken (transcribed): "${spokenText}"
+${practiceMode === 'cue_words' ? `
+CRITICAL CONTEXT: The user is practicing with CUE WORDS as memory prompts.
+- The user was shown simplified cue words (not the full text)
+- They attempted to recall and speak the ENTIRE SPEECH from memory
+- Your analysis MUST compare what they said to the FULL ORIGINAL SPEECH
+- This tests true memorization, not just reading cue words
+` : ''}
 
-Provide a comprehensive analysis:
+FULL ORIGINAL TEXT (what should be spoken): "${originalText}"
+${practiceMode === 'cue_words' ? `CUE WORDS shown to user: "${cueText}"` : ''}
+What was actually spoken (transcribed): "${spokenText}"
 
-1. **Missing Words**: Words from the original text that were completely omitted
-2. **Hesitation/Delayed Words**: Words where the speaker paused, repeated, or stumbled
-3. **Filler Words**: Count instances of "uh", "um", "ehh", "ah", "like", "you know", etc.
-4. **Tone Feedback**: Analyze the emotional tone. For parts of the text that should sound positive/happy, did the speaker convey that? For serious parts, was the tone appropriate?
-5. **Pacing Issues**: Were there awkward pauses where the flow should have been smooth?
-6. **Overall Accuracy**: Percentage of how well they matched the original text
+Provide a comprehensive analysis comparing spoken content to the FULL ORIGINAL SPEECH:
+
+1. **Overall Accuracy**: Percentage of the FULL ORIGINAL SPEECH that was correctly recalled (0-100)
+   - Calculate based on: (correctly spoken words / total words in original speech) × 100
+   
+2. **Missing Words/Sections**: 
+   - Words or entire sections from the FULL ORIGINAL that were completely omitted
+   - List specific words/phrases that should have been said but weren't
+   
+3. **Hesitation/Delayed Words**: 
+   - Words where the speaker paused, stumbled, or showed uncertainty
+   - Words spoken out of order
+   
+4. **Filler Words**: Count instances of "uh", "um", "ehh", "ah", "like", "you know", etc.
+
+5. **Sequence Errors**: 
+   - Did the speaker follow the correct order of the original speech?
+   - Were any sections jumbled or reversed?
+
+6. **Completion Status**:
+   - Did the user speak the ENTIRE speech or only parts of it?
+   - What percentage of the full speech was attempted?
+
+7. **Tone Feedback**: Was the emotional tone appropriate for the content?
+
+8. **Pacing Issues**: Were there awkward pauses where flow should be smooth?
+
+${practiceMode === 'cue_words' ? `
+IMPORTANT FOR CUE WORD MODE:
+- If the user only spoke the cue words themselves, accuracy should be LOW (they didn't recall the full speech)
+- High accuracy requires speaking the full original text, not just the prompts
+- Missing sections between cue words should be heavily penalized
+` : ''}
 
 IMPORTANT: All feedback text (toneFeedback, analysis) MUST be in ${languageNames[feedbackLanguage] || 'Swedish'}.
 
 Respond in JSON format:
 {
-  "accuracy": <number 0-100>,
-  "missedWords": ["word1", "word2"],
-  "delayedWords": ["word3", "word4"],
-  "fillerWords": {"uh": 2, "um": 3, "like": 1},
-  "toneFeedback": "detailed feedback on tone in ${languageNames[feedbackLanguage]}",
-  "analysis": "comprehensive feedback in ${languageNames[feedbackLanguage]}"
+  "accuracy": <number 0-100 based on FULL SPEECH recall>,
+  "missedWords": ["word1", "word2", ...],
+  "delayedWords": ["word3", "word4", ...],
+  "fillerWords": {"uh": 2, "um": 3},
+  "toneFeedback": "detailed feedback in ${languageNames[feedbackLanguage]}",
+  "analysis": "comprehensive feedback in ${languageNames[feedbackLanguage]} covering:
+    - How well they recalled the FULL speech
+    - Specific sections that were missed or incomplete
+    - Whether they went beyond just reading cue words (if applicable)
+    - Suggestions for improving full-speech recall"
 }`;
 
     const analysisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -79,7 +133,7 @@ Respond in JSON format:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: `You are a helpful speech analysis assistant. Always respond with valid JSON. Provide feedback in ${languageNames[feedbackLanguage]}.` },
+          { role: 'system', content: `You are a speech analysis assistant focused on measuring FULL SPEECH memorization. Always respond with valid JSON. Provide feedback in ${languageNames[feedbackLanguage]}.` },
           { role: 'user', content: analysisPrompt }
         ],
       }),
@@ -107,7 +161,7 @@ Respond in JSON format:
     } catch (e) {
       console.error('Failed to parse analysis JSON:', e);
       analysis = {
-        accuracy: 70,
+        accuracy: 50,
         missedWords: [],
         delayedWords: [],
         fillerWords: {},
@@ -116,28 +170,40 @@ Respond in JSON format:
       };
     }
 
-    // Step 3: Generate cue words in original speech language
-    console.log('Generating cue words...');
-    const cuePrompt = `Given this speech text and the words that need practice, create a simplified "cue word" version.
+    // Generate updated cue words based on performance
+    // Only include words that need MORE practice (missed or delayed)
+    console.log('Generating updated cue words...');
+    
+    const problematicWords = [...(analysis.missedWords || []), ...(analysis.delayedWords || [])];
+    
+    const cuePrompt = `Based on the user's performance, create an UPDATED simplified "cue text" version for their next practice session.
 
 IMPORTANT: The cue text MUST be in ${languageNames[speechLanguage] || 'English'} (same language as the original speech).
 
-Original text (in ${languageNames[speechLanguage]}): "${originalText}"
-Words that need practice: ${[...analysis.missedWords, ...analysis.delayedWords].join(', ')}
+FULL ORIGINAL SPEECH (in ${languageNames[speechLanguage]}): "${originalText}"
 
-Create a simplified version that:
-1. Keeps all the problematic words
-2. Removes words that were spoken well
-3. Keeps minimal context words to maintain flow
-4. Uses "..." to indicate removed sections
-5. MUST be in ${languageNames[speechLanguage] || 'English'}
+Words/sections the user struggled with or missed: ${problematicWords.join(', ')}
 
-Example:
-Original: "Today I want to talk about our future goals for the company"
-Problematic words: "future", "goals"
-Result: "Today... future goals... company"
+Current accuracy: ${analysis.accuracy}%
 
-Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no explanations.`;
+Create an updated cue text that:
+1. FOCUSES on the words/sections that need MORE practice (the problematic ones)
+2. REMOVES words that were spoken confidently and correctly
+3. Keeps enough context to maintain the flow and meaning
+4. Uses "..." to indicate removed/mastered sections
+5. Should be SHORTER than the original if performance is improving (${analysis.accuracy}% accuracy)
+6. Should include MORE detail if performance is poor (<70% accuracy)
+7. MUST be in ${languageNames[speechLanguage] || 'English'}
+
+${analysis.accuracy >= 90 ? 'User is doing great - create a very minimal cue text with only the hardest words' : ''}
+${analysis.accuracy < 50 ? 'User needs more support - keep more context words to help recall' : ''}
+
+Example logic:
+- If user spoke a section perfectly, replace it with "..."
+- If user missed a word, KEEP that word and some context
+- If entire section was skipped, include the full section
+
+Return ONLY the updated cue text in ${languageNames[speechLanguage] || 'English'}, no explanations.`;
 
     const cueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -148,7 +214,7 @@ Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no e
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: `You are a helpful assistant that creates concise cue texts in ${languageNames[speechLanguage]}.` },
+          { role: 'system', content: `You create adaptive cue texts that help users memorize speeches. Cue texts must be in ${languageNames[speechLanguage]}.` },
           { role: 'user', content: cuePrompt }
         ],
       }),
@@ -157,12 +223,17 @@ Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no e
     if (!cueResponse.ok) {
       const error = await cueResponse.text();
       console.error('Cue generation error:', error);
-      throw new Error(`Cue generation failed: ${error}`);
+      // Don't throw - use existing cue text as fallback
     }
 
-    const cueData = await cueResponse.json();
-    const cueText = cueData.choices[0].message.content.trim();
-    console.log('Generated cue text:', cueText);
+    let newCueText = originalText; // Default to full text if generation fails
+    try {
+      const cueData = await cueResponse.json();
+      newCueText = cueData.choices[0].message.content.trim();
+      console.log('Generated updated cue text:', newCueText);
+    } catch (e) {
+      console.error('Error generating cue text, using original:', e);
+    }
 
     // Calculate next practice interval using spaced repetition
     const { data: scheduleData } = await supabase
@@ -175,7 +246,7 @@ Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no e
 
     const currentInterval = scheduleData?.interval_days || 1;
     
-    // Calculate next interval based on accuracy
+    // Calculate next interval based on FULL SPEECH accuracy
     let nextInterval = 1;
     if (analysis.accuracy >= 90) {
       nextInterval = Math.min(currentInterval * 2, 30);
@@ -185,7 +256,7 @@ Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no e
       nextInterval = 1;
     }
 
-    // Update mastery level (weighted average)
+    // Update mastery level (weighted average favoring recent performance)
     const { data: speechData } = await supabase
       .from('speeches')
       .select('mastery_level')
@@ -197,7 +268,10 @@ Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no e
 
     await supabase
       .from('speeches')
-      .update({ mastery_level: newMastery })
+      .update({ 
+        mastery_level: newMastery,
+        text_current: newCueText // Update to new adaptive cue text
+      })
       .eq('id', speechId);
 
     // Create new schedule entry
@@ -213,6 +287,13 @@ Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no e
       completed: false
     });
 
+    console.log('Analysis complete:', {
+      accuracy: analysis.accuracy,
+      mastery: Math.round(newMastery),
+      nextInterval,
+      cueTextUpdated: newCueText !== originalText
+    });
+
     return new Response(
       JSON.stringify({
         transcription: spokenText,
@@ -222,10 +303,11 @@ Provide ONLY the cue text in ${languageNames[speechLanguage] || 'English'}, no e
         fillerWords: analysis.fillerWords || {},
         toneFeedback: analysis.toneFeedback || '',
         analysis: analysis.analysis || 'Good practice session',
-        cueText: cueText,
+        cueText: newCueText,
         nextPracticeInterval: nextInterval,
         nextPracticeDate: nextReviewDate.toISOString(),
-        masteryLevel: Math.round(newMastery)
+        masteryLevel: Math.round(newMastery),
+        practiceMode: practiceMode
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

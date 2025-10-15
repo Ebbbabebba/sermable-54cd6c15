@@ -83,9 +83,13 @@ const Practice = () => {
     setIsPracticing(true);
     setShowResults(false);
     setSessionResults(null);
+    
+    const isCueMode = speech?.text_current !== speech?.text_original;
     toast({
       title: "Practice mode activated",
-      description: "Read your speech aloud when ready, then start recording.",
+      description: isCueMode 
+        ? "Use the cue words to help you recall and speak the ENTIRE speech from memory."
+        : "Read your speech aloud when ready, then start recording.",
     });
   };
 
@@ -244,11 +248,13 @@ const Practice = () => {
         .eq('id', userData.user!.id)
         .maybeSingle();
 
-      // Analyze the transcription with language support
+      // CRITICAL: Analyze against the FULL ORIGINAL speech, not just cue words
+      // This ensures we're testing full memorization, using cue words as prompts
       const { data, error } = await supabase.functions.invoke('analyze-speech', {
         body: {
           transcription: transcription.trim(),
-          originalText: speech!.text_current,
+          originalText: speech!.text_original, // Full speech for comparison
+          cueText: speech!.text_current, // Cue words shown to user
           speechId: speech!.id,
           speechLanguage: speech!.speech_language || 'en',
           feedbackLanguage: profileData?.feedback_language || 'sv'
@@ -344,24 +350,33 @@ const Practice = () => {
           <div className="animate-fade-in">
             <h1 className="text-4xl font-bold mb-2">{speech.title}</h1>
             <p className="text-muted-foreground">
-              Practice session • {speech.text_current.split(/\s+/).filter(Boolean).length} words
+              Practice session • {speech.text_original.split(/\s+/).filter(Boolean).length} words (full speech)
             </p>
+            {speech.text_current !== speech.text_original && (
+              <p className="text-sm text-primary mt-1">
+                📝 Using cue words as memory prompts - speak the entire speech
+              </p>
+            )}
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Session Progress</CardTitle>
-              <CardDescription>Track your practice performance</CardDescription>
+              <CardTitle>Full Speech Progress</CardTitle>
+              <CardDescription>
+                {speech.text_current !== speech.text_original 
+                  ? "You're practicing with cue words - AI tracks your full speech recall"
+                  : "Track your practice performance"}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Memorization</span>
+                  <span className="text-muted-foreground">Full Speech Memorization</span>
                   <span className="font-medium">
-                    {sessionResults ? `${sessionResults.accuracy}%` : '0%'}
+                    {sessionResults ? `${sessionResults.accuracy}%` : `${Math.round(speech.mastery_level || 0)}%`}
                   </span>
                 </div>
-                <Progress value={sessionResults?.accuracy || 0} />
+                <Progress value={sessionResults?.accuracy || speech.mastery_level || 0} />
               </div>
             </CardContent>
           </Card>
@@ -375,9 +390,11 @@ const Practice = () => {
                     {!isPracticing
                       ? "Click start to begin your practice session"
                       : isRecording
-                      ? "Recording... speak clearly"
+                      ? "Recording... speak the FULL speech from memory"
                       : isProcessing
-                      ? "AI is analyzing your performance..."
+                      ? "AI is analyzing your full speech performance..."
+                      : speech.text_current !== speech.text_original
+                      ? "Use the cue words below to recall and speak the entire speech"
                       : "Read the text aloud and record yourself"}
                   </CardDescription>
                 </div>
@@ -494,24 +511,31 @@ const Practice = () => {
               {(sessionResults.missedWords.length > 0 || sessionResults.delayedWords.length > 0) && (
                 <Card className="border-primary/20">
                   <CardHeader>
-                    <CardTitle>Review Key Points</CardTitle>
+                    <CardTitle>Updated Practice Script</CardTitle>
                     <CardDescription>
-                      Your script has been simplified to focus on {sessionResults.missedWords.length + sessionResults.delayedWords.length} words that need practice
+                      Your cue words have been updated based on this session's performance. 
+                      Words you mastered are removed. Challenging sections remain for focused practice.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-4 bg-primary/5 rounded-lg">
-                      <p className="text-lg leading-relaxed font-medium">
+                      <p className="text-sm font-medium mb-2 text-primary">
+                        📝 Updated Cue Words for Next Practice:
+                      </p>
+                      <p className="whitespace-pre-wrap leading-relaxed text-base">
                         {sessionResults.cueText}
                       </p>
                     </div>
-                    <Button 
-                      size="lg" 
-                      className="w-full"
-                      onClick={handleNewSession}
-                    >
-                      Practice with Problem Words Only
-                    </Button>
+                    <div className="text-sm text-muted-foreground space-y-2">
+                      <p>
+                        <strong>How to use:</strong> These cue words will help trigger your memory of the full speech. 
+                        The "..." sections represent parts you've mastered.
+                      </p>
+                      <p>
+                        <strong>Next session:</strong> Use these updated cue words to practice. 
+                        Remember to speak the ENTIRE speech, not just the cue words!
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               )}
