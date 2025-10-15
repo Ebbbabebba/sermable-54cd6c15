@@ -118,8 +118,22 @@ const Practice = () => {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      // Use speech's language for accurate recognition
+      const speechLang = speech?.speech_language || 'en';
+      const langCode = speechLang === 'en' ? 'en-US' : 
+                       speechLang === 'sv' ? 'sv-SE' :
+                       speechLang === 'es' ? 'es-ES' :
+                       speechLang === 'fr' ? 'fr-FR' :
+                       speechLang === 'de' ? 'de-DE' :
+                       speechLang === 'it' ? 'it-IT' :
+                       speechLang === 'pt' ? 'pt-PT' :
+                       speechLang === 'ru' ? 'ru-RU' :
+                       speechLang === 'zh' ? 'zh-CN' :
+                       speechLang === 'ja' ? 'ja-JP' : 'en-US';
+      recognition.lang = langCode;
       recognition.maxAlternatives = 1;
+      
+      console.log(`🌐 Using language: ${speechLang} (${langCode})`);
 
       setTranscription("");
       setRecordingDuration(0);
