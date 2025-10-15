@@ -78,14 +78,14 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="card-apple hover-scale transition-all duration-300">
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <CardTitle className="truncate">{speech.title}</CardTitle>
               {speech.speech_language && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs rounded-full">
                   {languageNames[speech.speech_language] || speech.speech_language.toUpperCase()}
                 </Badge>
               )}
@@ -94,10 +94,13 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
               Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
             </CardDescription>
           </div>
-          <Badge variant={isOverdue ? "destructive" : "secondary"}>
+          <Badge 
+            variant={isOverdue ? "destructive" : "secondary"} 
+            className="rounded-full"
+          >
             {isOverdue
-              ? `${Math.abs(daysRemaining)} days overdue`
-              : `${daysRemaining} days left`}
+              ? `${Math.abs(daysRemaining)}d overdue`
+              : `${daysRemaining}d left`}
           </Badge>
         </div>
       </CardHeader>
@@ -111,11 +114,11 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Memory Mastery</span>
-            <span className="font-medium">{progress}%</span>
+            <span className="font-semibold text-primary">{progress}%</span>
           </div>
-          <Progress value={progress} />
+          <Progress value={progress} className="h-2 progress-animate" />
           {progress === 100 && (
-            <p className="text-xs text-green-600 dark:text-green-400">✓ Fully memorized!</p>
+            <p className="text-xs text-success animate-fade-in">✓ Fully memorized!</p>
           )}
         </div>
 
@@ -139,7 +142,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent className="rounded-3xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Speech?</AlertDialogTitle>
               <AlertDialogDescription>

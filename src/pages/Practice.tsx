@@ -10,6 +10,7 @@ import AudioRecorder from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import RealtimeWordTracker from "@/components/RealtimeWordTracker";
+import BottomNav from "@/components/BottomNav";
 
 interface Speech {
   id: string;
@@ -335,10 +336,10 @@ const Practice = () => {
   if (!speech) return null;
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b bg-card sticky top-0 z-10">
+    <div className="min-h-screen pb-24">
+      <header className="border-b border-border/50 bg-card backdrop-blur-lg bg-card/80 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="hover-scale">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -346,7 +347,7 @@ const Practice = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           <div className="animate-fade-in">
             <h1 className="text-4xl font-bold mb-2">{speech.title}</h1>
             <p className="text-muted-foreground">
@@ -543,6 +544,8 @@ const Practice = () => {
           )}
         </div>
       </main>
+      
+      <BottomNav />
     </div>
   );
 };
