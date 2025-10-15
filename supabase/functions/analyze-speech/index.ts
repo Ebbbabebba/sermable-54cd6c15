@@ -74,18 +74,22 @@ FULL ORIGINAL TEXT (what should be spoken): "${originalText}"
 ${practiceMode === 'cue_words' ? `CUE WORDS shown to user: "${cueText}"` : ''}
 What was actually spoken (transcribed): "${spokenText}"
 
-Provide a comprehensive analysis comparing spoken content to the FULL ORIGINAL SPEECH:
+Provide a comprehensive analysis comparing spoken content sentence-by-sentence to the FULL ORIGINAL SPEECH:
 
 1. **Overall Accuracy**: Percentage of the FULL ORIGINAL SPEECH that was correctly recalled (0-100)
-   - Calculate based on: (correctly spoken words / total words in original speech) × 100
+   - CRITICAL CALCULATION: (correctly spoken words / total words in original speech) × 100
+   - Count ONLY words that appear in the original speech and were spoken correctly
+   - If user only spoke cue words, this will be a LOW percentage
+   - Every missing word from the original reduces the accuracy
    
 2. **Missing Words/Sections**: 
    - Words or entire sections from the FULL ORIGINAL that were completely omitted
    - List specific words/phrases that should have been said but weren't
+   - Include sections between cue words that were skipped
    
 3. **Hesitation/Delayed Words**: 
    - Words where the speaker paused, stumbled, or showed uncertainty
-   - Words spoken out of order
+   - Words spoken out of order or with long pauses before them
    
 4. **Filler Words**: Count instances of "uh", "um", "ehh", "ah", "like", "you know", etc.
 
@@ -96,32 +100,31 @@ Provide a comprehensive analysis comparing spoken content to the FULL ORIGINAL S
 6. **Completion Status**:
    - Did the user speak the ENTIRE speech or only parts of it?
    - What percentage of the full speech was attempted?
+   - How many words from the original were actually spoken?
 
 7. **Tone Feedback**: Was the emotional tone appropriate for the content?
 
 8. **Pacing Issues**: Were there awkward pauses where flow should be smooth?
 
 ${practiceMode === 'cue_words' ? `
-IMPORTANT FOR CUE WORD MODE:
-- If the user only spoke the cue words themselves, accuracy should be LOW (they didn't recall the full speech)
-- High accuracy requires speaking the full original text, not just the prompts
-- Missing sections between cue words should be heavily penalized
+CRITICAL FOR CUE WORD MODE - ACCURACY CALCULATION:
+- If the user only spoke the cue words themselves (e.g., 10 words), but the full speech has 100 words, accuracy = 10%
+- High accuracy (80%+) requires speaking most/all of the full original text, not just the prompts
+- Missing entire sections between cue words heavily reduces accuracy
+- Example: Original has 50 words, user spoke 15 words correctly = 30% accuracy
+- DO NOT give high scores for partial recall
 ` : ''}
 
 IMPORTANT: All feedback text (toneFeedback, analysis) MUST be in ${languageNames[feedbackLanguage] || 'Swedish'}.
 
-Respond in JSON format:
+Respond ONLY with valid JSON (no markdown, no code blocks, no extra text). Use \\n for newlines in strings:
 {
   "accuracy": <number 0-100 based on FULL SPEECH recall>,
   "missedWords": ["word1", "word2", ...],
   "delayedWords": ["word3", "word4", ...],
   "fillerWords": {"uh": 2, "um": 3},
-  "toneFeedback": "detailed feedback in ${languageNames[feedbackLanguage]}",
-  "analysis": "comprehensive feedback in ${languageNames[feedbackLanguage]} covering:
-    - How well they recalled the FULL speech
-    - Specific sections that were missed or incomplete
-    - Whether they went beyond just reading cue words (if applicable)
-    - Suggestions for improving full-speech recall"
+  "toneFeedback": "detailed feedback in ${languageNames[feedbackLanguage]} (use \\n for line breaks)",
+  "analysis": "comprehensive feedback in ${languageNames[feedbackLanguage]} covering: how well they recalled the FULL speech, specific sections missed, whether they went beyond just cue words, suggestions for improvement (use \\n for line breaks)"
 }`;
 
     const analysisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -133,7 +136,7 @@ Respond in JSON format:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: `You are a speech analysis assistant focused on measuring FULL SPEECH memorization. Always respond with valid JSON. Provide feedback in ${languageNames[feedbackLanguage]}.` },
+          { role: 'system', content: `You are a speech analysis assistant focused on measuring FULL SPEECH memorization. Calculate accuracy as: (correctly spoken words / total words in original speech) × 100. Always respond with ONLY valid JSON, no markdown formatting. Provide feedback in ${languageNames[feedbackLanguage]}.` },
           { role: 'user', content: analysisPrompt }
         ],
       }),
@@ -152,21 +155,41 @@ Respond in JSON format:
     // Parse JSON from the response
     let analysis;
     try {
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
+      // Remove markdown code blocks if present
+      let cleanedText = analysisText.trim();
+      if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/```json\s*|\s*```/g, '');
+      }
+      
+      // Try to find JSON object
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         analysis = JSON.parse(jsonMatch[0]);
       } else {
         throw new Error('No JSON found in response');
       }
+      
+      // Validate accuracy is a number
+      if (typeof analysis.accuracy !== 'number') {
+        analysis.accuracy = parseFloat(analysis.accuracy) || 0;
+      }
+      
+      console.log('Parsed analysis:', { 
+        accuracy: analysis.accuracy, 
+        missedWordsCount: analysis.missedWords?.length || 0,
+        delayedWordsCount: analysis.delayedWords?.length || 0 
+      });
+      
     } catch (e) {
       console.error('Failed to parse analysis JSON:', e);
+      console.error('Raw text was:', analysisText);
       analysis = {
-        accuracy: 50,
+        accuracy: 0,
         missedWords: [],
         delayedWords: [],
         fillerWords: {},
         toneFeedback: 'Unable to analyze tone',
-        analysis: 'Unable to parse detailed analysis'
+        analysis: 'Unable to parse detailed analysis. Please try again.'
       };
     }
 
