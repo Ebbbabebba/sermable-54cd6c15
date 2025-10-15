@@ -26,6 +26,8 @@ interface Speech {
   text_current: string;
   goal_date: string;
   created_at: string;
+  mastery_level?: number;
+  speech_language?: string;
 }
 
 interface SpeechCardProps {
@@ -41,8 +43,16 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const daysRemaining = differenceInDays(goalDate, today);
   const isOverdue = daysRemaining < 0;
 
-  // Calculate progress (simplified - in production this would be based on practice sessions)
-  const progress = 0; // Will be calculated from practice sessions
+  // Calculate progress from mastery level
+  const progress = Math.round(speech.mastery_level || 0);
+  
+  const languageNames: Record<string, string> = {
+    'en': 'EN',
+    'sv': 'SV', 
+    'es': 'ES',
+    'de': 'DE',
+    'fi': 'FI'
+  };
 
   const handleDelete = async () => {
     try {
@@ -72,7 +82,14 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="truncate">{speech.title}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="truncate">{speech.title}</CardTitle>
+              {speech.speech_language && (
+                <Badge variant="outline" className="text-xs">
+                  {languageNames[speech.speech_language] || speech.speech_language.toUpperCase()}
+                </Badge>
+              )}
+            </div>
             <CardDescription className="mt-1">
               Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
             </CardDescription>
@@ -93,10 +110,13 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
+            <span className="text-muted-foreground">Memory Mastery</span>
             <span className="font-medium">{progress}%</span>
           </div>
           <Progress value={progress} />
+          {progress === 100 && (
+            <p className="text-xs text-green-600 dark:text-green-400">✓ Fully memorized!</p>
+          )}
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2">

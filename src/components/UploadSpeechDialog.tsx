@@ -19,6 +19,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
+  const [speechLanguage, setSpeechLanguage] = useState("en");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -36,6 +37,8 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         text_original: text,
         text_current: text,
         goal_date: goalDate,
+        speech_language: speechLanguage,
+        mastery_level: 0
       });
 
       if (error) throw error;
@@ -49,6 +52,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       setTitle("");
       setText("");
       setGoalDate("");
+      setSpeechLanguage("en");
       onSuccess();
     } catch (error: any) {
       toast({
@@ -102,6 +106,26 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             </div>
             <p className="text-sm text-muted-foreground">
               When do you need to deliver this speech?
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="speechLanguage">Speech Language</Label>
+            <select
+              id="speechLanguage"
+              value={speechLanguage}
+              onChange={(e) => setSpeechLanguage(e.target.value)}
+              className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+              required
+            >
+              <option value="en">English</option>
+              <option value="sv">Swedish</option>
+              <option value="es">Spanish</option>
+              <option value="de">German</option>
+              <option value="fi">Finnish</option>
+            </select>
+            <p className="text-sm text-muted-foreground">
+              What language is your speech in?
             </p>
           </div>
 

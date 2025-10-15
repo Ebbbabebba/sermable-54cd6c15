@@ -8,6 +8,7 @@ import { Plus, LogOut, BookOpen, Calendar, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
+import LanguagePreference from "@/components/LanguagePreference";
 
 interface Speech {
   id: string;
@@ -151,6 +152,9 @@ const Dashboard = () => {
               </Card>
             </div>
           )}
+
+          {/* Language Preference */}
+          <LanguagePreference />
 
           {/* Speeches Section */}
           <div className="space-y-4">

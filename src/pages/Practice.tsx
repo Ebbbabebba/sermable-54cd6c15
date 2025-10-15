@@ -17,6 +17,8 @@ interface Speech {
   text_original: string;
   text_current: string;
   goal_date: string;
+  speech_language?: string;
+  mastery_level?: number;
 }
 
 interface SessionResults {
@@ -28,6 +30,9 @@ interface SessionResults {
   toneFeedback: string;
   analysis: string;
   cueText: string;
+  nextPracticeInterval?: number;
+  nextPracticeDate?: string;
+  masteryLevel?: number;
 }
 
 const Practice = () => {
@@ -231,12 +236,22 @@ const Practice = () => {
         description: "AI is analyzing your performance",
       });
 
-      // Analyze the transcription
+      // Get user's feedback language preference
+      const { data: userData } = await supabase.auth.getUser();
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('feedback_language')
+        .eq('id', userData.user!.id)
+        .maybeSingle();
+
+      // Analyze the transcription with language support
       const { data, error } = await supabase.functions.invoke('analyze-speech', {
         body: {
           transcription: transcription.trim(),
           originalText: speech!.text_current,
           speechId: speech!.id,
+          speechLanguage: speech!.speech_language || 'en',
+          feedbackLanguage: profileData?.feedback_language || 'sv'
         },
       });
 
@@ -254,6 +269,11 @@ const Practice = () => {
           missed_words: data.missedWords,
           delayed_words: data.delayedWords,
           duration: recordingDuration,
+          filler_words: data.fillerWords,
+          tone_feedback: data.toneFeedback,
+          analysis: data.analysis,
+          cue_text: data.cueText,
+          transcription: data.transcription
         });
 
       if (sessionError) {
@@ -272,9 +292,12 @@ const Practice = () => {
         loadSpeech();
       }
 
+      const nextPracticeDays = data.nextPracticeInterval || 1;
+      const masteryPercent = data.masteryLevel || 0;
+      
       toast({
         title: "Analysis complete!",
-        description: `${data.accuracy}% accuracy. Check your results below.`,
+        description: `${data.accuracy}% accuracy. Mastery: ${masteryPercent}%. Next practice in ${nextPracticeDays} day${nextPracticeDays !== 1 ? 's' : ''}.`,
       });
 
     } catch (error: any) {
@@ -436,6 +459,28 @@ const Practice = () => {
 
           {showResults && sessionResults && (
             <div className="animate-slide-up space-y-4">
+              {sessionResults.nextPracticeInterval && (
+                <Card className="border-primary bg-primary/5">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-primary">Next Practice Schedule</p>
+                        <p className="text-2xl font-bold mt-1">
+                          {sessionResults.nextPracticeInterval} day{sessionResults.nextPracticeInterval !== 1 ? 's' : ''}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {sessionResults.nextPracticeDate && `Practice again on ${new Date(sessionResults.nextPracticeDate).toLocaleDateString()}`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-primary">Memory Mastery</p>
+                        <p className="text-3xl font-bold mt-1">{sessionResults.masteryLevel || 0}%</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <PracticeResults
                 accuracy={sessionResults.accuracy}
                 missedWords={sessionResults.missedWords}
