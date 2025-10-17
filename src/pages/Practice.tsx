@@ -129,9 +129,21 @@ const Practice = () => {
         throw new Error("Microphone access denied. Please allow microphone access and try again.");
       }
 
+      // Stop any existing recognition first
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.log('No active recognition to stop');
+        }
+      }
+
       const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition; // Store ref immediately
+      
       recognition.continuous = true;
       recognition.interimResults = true;
+      
       // Use speech's language for accurate recognition
       const speechLang = speech?.speech_language || 'en';
       const langCode = speechLang === 'en' ? 'en-US' : 
@@ -159,7 +171,6 @@ const Practice = () => {
         console.log('✅ Speech recognition started successfully');
         lastStartTimeRef.current = Date.now();
         restartAttemptsRef.current = 0;
-        quickAbortCountRef.current = 0; // Reset quick abort counter on successful start
         setIsRecording(true);
         
         // Clear any existing timer before starting new one
@@ -170,11 +181,6 @@ const Practice = () => {
         durationIntervalRef.current = window.setInterval(() => {
           setRecordingDuration(prev => prev + 1);
         }, 1000);
-        
-        toast({
-          title: "🎙️ Recording Active",
-          description: "Microphone is listening. Start speaking now.",
-        });
       };
 
       recognition.onresult = (event: any) => {
@@ -194,30 +200,8 @@ const Practice = () => {
           console.log('⚠️ No speech detected - continuing to listen...');
           // Don't show error toast, just keep listening
         } else if (event.error === 'aborted') {
-          console.log('⏹️ Recognition aborted');
-          const timeSinceStart = Date.now() - lastStartTimeRef.current;
-          
-          // Track quick aborts, but allow a few retries before giving up
-          if (timeSinceStart < 2000) {
-            quickAbortCountRef.current += 1;
-            console.log(`⚠️ Quick abort detected (${quickAbortCountRef.current}/3)`);
-            
-            // Only stop after 3 consecutive quick aborts
-            if (quickAbortCountRef.current >= 3) {
-              console.log('⚠️ Too many quick aborts - stopping to prevent loop');
-              shouldBeRecordingRef.current = false;
-              setIsRecording(false);
-              if (durationIntervalRef.current) {
-                clearInterval(durationIntervalRef.current);
-                durationIntervalRef.current = null;
-              }
-              toast({
-                variant: "destructive",
-                title: "Speech recognition failed",
-                description: "Unable to start speech recognition. Please try again or use a different browser.",
-              });
-            }
-          }
+          console.log('⏹️ Recognition aborted - will auto-restart if needed');
+          // Don't treat abort as fatal - let the onend handler restart if needed
         } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
           shouldBeRecordingRef.current = false;
           setIsRecording(false);
@@ -251,12 +235,12 @@ const Practice = () => {
       recognition.onend = () => {
         console.log('🔄 Recognition ended');
         
-        // Only restart if we should still be recording and haven't exceeded restart attempts
+        // Only restart if we should still be recording
         if (shouldBeRecordingRef.current && recognitionRef.current) {
           restartAttemptsRef.current += 1;
           
-          // Prevent infinite restart loops - max 5 restarts
-          if (restartAttemptsRef.current > 5) {
+          // Prevent infinite restart loops - max 10 restarts
+          if (restartAttemptsRef.current > 10) {
             console.log('⚠️ Too many restart attempts - stopping');
             shouldBeRecordingRef.current = false;
             setIsRecording(false);
@@ -272,11 +256,9 @@ const Practice = () => {
             return;
           }
           
-          console.log(`↻ Auto-restarting recognition (attempt ${restartAttemptsRef.current}/5)...`);
+          console.log(`↻ Auto-restarting recognition (attempt ${restartAttemptsRef.current}/10)...`);
           
-          // Use shorter delay for quick restart
-          const restartDelay = quickAbortCountRef.current > 0 ? 500 : 300;
-          
+          // Quick restart
           setTimeout(() => {
             try {
               if (shouldBeRecordingRef.current && recognitionRef.current) {
@@ -285,9 +267,7 @@ const Practice = () => {
               }
             } catch (e: any) {
               console.error('Failed to restart recognition:', e);
-              if (e.message?.includes('already started')) {
-                console.log('Recognition already running');
-              } else {
+              if (!e.message?.includes('already started')) {
                 shouldBeRecordingRef.current = false;
                 setIsRecording(false);
                 if (durationIntervalRef.current) {
@@ -301,11 +281,9 @@ const Practice = () => {
                 });
               }
             }
-          }, restartDelay);
+          }, 100);
         }
       };
-
-      recognitionRef.current = recognition;
       console.log('🎤 Starting speech recognition...');
       recognition.start();
 
