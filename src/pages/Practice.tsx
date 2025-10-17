@@ -158,7 +158,16 @@ const Practice = () => {
       recognition.onerror = (event: any) => {
         console.error('❌ Error:', event.error);
         
-        if (event.error === 'not-allowed') {
+        if (event.error === 'aborted') {
+          // Stop restarting on abort - it means there's a conflict
+          console.log('⚠️ Abort detected - stopping restart loop');
+          shouldBeRecordingRef.current = false;
+          setIsRecording(false);
+          toast({
+            title: "Speech recognition stopped",
+            description: "Please try clicking Start Recording again.",
+          });
+        } else if (event.error === 'not-allowed') {
           shouldBeRecordingRef.current = false;
           setIsRecording(false);
           toast({
@@ -173,16 +182,18 @@ const Practice = () => {
         console.log('🔄 Recognition ended');
         
         if (shouldBeRecordingRef.current) {
-          console.log('↻ Restarting...');
+          console.log('↻ Restarting in 500ms...');
           setTimeout(() => {
             if (shouldBeRecordingRef.current && recognitionRef.current) {
               try {
                 recognitionRef.current.start();
               } catch (e) {
                 console.log('Restart error:', e);
+                shouldBeRecordingRef.current = false;
+                setIsRecording(false);
               }
             }
-          }, 100);
+          }, 500);
         } else {
           setIsRecording(false);
         }
