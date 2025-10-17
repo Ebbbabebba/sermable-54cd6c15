@@ -205,11 +205,10 @@ const Practice = () => {
         console.error('❌ Speech recognition error:', event.error);
         
         if (event.error === 'no-speech') {
-          console.log('⚠️ No speech detected - will continue listening after restart');
+          console.log('⚠️ No speech detected - will continue on restart');
         } else if (event.error === 'aborted') {
-          console.log('⏹️ Recognition aborted');
-          // Aborted means we're stopping - don't restart
-          shouldBeRecordingRef.current = false;
+          console.log('⏹️ Recognition aborted - will restart if still recording');
+          // Don't change shouldBeRecording - let the onend handler decide
         } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
           shouldBeRecordingRef.current = false;
           setIsRecording(false);
@@ -296,19 +295,29 @@ const Practice = () => {
   const handleRecordingStop = async () => {
     console.log('🛑 Stopping recording...');
     shouldBeRecordingRef.current = false;
-    setIsRecording(false);
     
-    // Clear duration timer
+    // Clear duration timer first
     if (durationIntervalRef.current) {
       clearInterval(durationIntervalRef.current);
       durationIntervalRef.current = null;
     }
 
-    // Stop speech recognition
+    // Stop speech recognition and clear handlers
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      const recognition = recognitionRef.current;
       recognitionRef.current = null;
+      
+      try {
+        // Clear handlers to prevent restart
+        recognition.onend = null;
+        recognition.onerror = null;
+        recognition.stop();
+      } catch (e) {
+        console.log('Error stopping recognition:', e);
+      }
     }
+    
+    setIsRecording(false);
 
     // Stop and release microphone stream
     if (mediaStreamRef.current) {
