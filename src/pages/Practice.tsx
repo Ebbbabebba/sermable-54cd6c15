@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import PracticeResults from "@/components/PracticeResults";
 import RealtimeWordTracker from "@/components/RealtimeWordTracker";
 import BottomNav from "@/components/BottomNav";
 import FeedbackScreen from "@/components/FeedbackScreen";
+import { useRealtimeSpeech } from "@/hooks/useRealtimeSpeech";
 
 interface Speech {
   id: string;
@@ -44,17 +45,12 @@ const Practice = () => {
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPracticing, setIsPracticing] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [transcription, setTranscription] = useState("");
-  const recognitionRef = useRef<any>(null);
-  const shouldBeRecordingRef = useRef(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const transcriptionIntervalRef = useRef<number | null>(null);
+  
+  const { isRecording, transcription, startRecording, stopRecording } = useRealtimeSpeech();
 
   useEffect(() => {
     loadSpeech();
@@ -96,131 +92,12 @@ const Practice = () => {
     });
   };
 
-  const handleRecordingStart = async () => {
-    try {
-      console.log('🎤 Starting audio recording...');
-
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
-      });
-
-      // Create media recorder
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm'
-      });
-      
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      setTranscription("");
-      shouldBeRecordingRef.current = true;
-      setIsRecording(true);
-
-      // Collect audio data
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-          console.log('📦 Audio chunk collected:', event.data.size, 'bytes');
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        console.log('🛑 Recording stopped');
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      // Start recording
-      mediaRecorder.start();
-      console.log('✅ Recording started');
-
-      // Transcribe every 2 seconds for real-time feedback
-      transcriptionIntervalRef.current = window.setInterval(async () => {
-        if (audioChunksRef.current.length > 0 && shouldBeRecordingRef.current) {
-          await transcribeCurrentAudio();
-        }
-      }, 2000);
-
-      toast({
-        title: "Recording started",
-        description: "Speak clearly - transcription will appear as you speak",
-      });
-
-    } catch (error: any) {
-      console.error('💥 Error starting recording:', error);
-      shouldBeRecordingRef.current = false;
-      setIsRecording(false);
-      toast({
-        variant: "destructive",
-        title: "Microphone access failed",
-        description: error.message || "Please allow microphone access and try again.",
-      });
-    }
-  };
-
-  const transcribeCurrentAudio = async () => {
-    if (audioChunksRef.current.length === 0) return;
-
-    try {
-      // Create blob from current chunks
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      
-      // Convert to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      await new Promise((resolve) => {
-        reader.onloadend = async () => {
-          const base64Audio = (reader.result as string).split(',')[1];
-          
-          // Send to Whisper API
-          const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-            body: { 
-              audio: base64Audio,
-              language: speech?.speech_language || 'en'
-            }
-          });
-
-          if (error) {
-            console.error('Transcription error:', error);
-          } else if (data?.text) {
-            console.log('📝 Transcription:', data.text.substring(0, 50) + '...');
-            setTranscription(data.text);
-          }
-          
-          resolve(null);
-        };
-      });
-    } catch (error) {
-      console.error('Error transcribing:', error);
-    }
+  const handleRecordingStart = () => {
+    startRecording();
   };
 
   const handleRecordingStop = async () => {
-    console.log('🛑 Stopping recording...');
-    shouldBeRecordingRef.current = false;
-
-    // Clear transcription interval
-    if (transcriptionIntervalRef.current) {
-      clearInterval(transcriptionIntervalRef.current);
-      transcriptionIntervalRef.current = null;
-    }
-
-    // Stop media recorder
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
-    
-    setIsRecording(false);
-
-    // Do final transcription
-    if (audioChunksRef.current.length > 0) {
-      await transcribeCurrentAudio();
-    }
+    stopRecording();
 
     if (!transcription || transcription.trim().length === 0) {
       toast({
