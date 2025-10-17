@@ -57,6 +57,7 @@ const Practice = () => {
   const shouldBeRecordingRef = useRef(false);
   const restartAttemptsRef = useRef(0);
   const lastStartTimeRef = useRef(0);
+  const quickAbortCountRef = useRef(0);
 
   useEffect(() => {
     loadSpeech();
@@ -152,11 +153,13 @@ const Practice = () => {
       setRecordingDuration(0);
       shouldBeRecordingRef.current = true;
       restartAttemptsRef.current = 0;
+      quickAbortCountRef.current = 0;
 
       recognition.onstart = () => {
         console.log('✅ Speech recognition started successfully');
         lastStartTimeRef.current = Date.now();
         restartAttemptsRef.current = 0;
+        quickAbortCountRef.current = 0; // Reset quick abort counter on successful start
         setIsRecording(true);
         
         // Clear any existing timer before starting new one
@@ -194,20 +197,26 @@ const Practice = () => {
           console.log('⏹️ Recognition aborted');
           const timeSinceStart = Date.now() - lastStartTimeRef.current;
           
-          // If aborted within 2 seconds of starting, it's likely a real problem - stop trying
+          // Track quick aborts, but allow a few retries before giving up
           if (timeSinceStart < 2000) {
-            console.log('⚠️ Recognition aborted too quickly - stopping to prevent loop');
-            shouldBeRecordingRef.current = false;
-            setIsRecording(false);
-            if (durationIntervalRef.current) {
-              clearInterval(durationIntervalRef.current);
-              durationIntervalRef.current = null;
+            quickAbortCountRef.current += 1;
+            console.log(`⚠️ Quick abort detected (${quickAbortCountRef.current}/3)`);
+            
+            // Only stop after 3 consecutive quick aborts
+            if (quickAbortCountRef.current >= 3) {
+              console.log('⚠️ Too many quick aborts - stopping to prevent loop');
+              shouldBeRecordingRef.current = false;
+              setIsRecording(false);
+              if (durationIntervalRef.current) {
+                clearInterval(durationIntervalRef.current);
+                durationIntervalRef.current = null;
+              }
+              toast({
+                variant: "destructive",
+                title: "Speech recognition failed",
+                description: "Unable to start speech recognition. Please try again or use a different browser.",
+              });
             }
-            toast({
-              variant: "destructive",
-              title: "Speech recognition failed",
-              description: "Unable to start speech recognition. Please try again or use a different browser.",
-            });
           }
         } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
           shouldBeRecordingRef.current = false;
@@ -265,6 +274,9 @@ const Practice = () => {
           
           console.log(`↻ Auto-restarting recognition (attempt ${restartAttemptsRef.current}/5)...`);
           
+          // Use shorter delay for quick restart
+          const restartDelay = quickAbortCountRef.current > 0 ? 500 : 300;
+          
           setTimeout(() => {
             try {
               if (shouldBeRecordingRef.current && recognitionRef.current) {
@@ -285,17 +297,11 @@ const Practice = () => {
                 toast({
                   variant: "destructive",
                   title: "Recording stopped",
-                  description: "Speech recognition encountered an error. Please try again.",
+                  description: "Unable to continue recording. Please try again.",
                 });
               }
             }
-          }, 800); // Longer delay for stability
-        } else {
-          console.log('Recognition stopped - not restarting');
-          if (durationIntervalRef.current) {
-            clearInterval(durationIntervalRef.current);
-            durationIntervalRef.current = null;
-          }
+          }, restartDelay);
         }
       };
 
