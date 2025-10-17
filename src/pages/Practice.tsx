@@ -52,6 +52,9 @@ const Practice = () => {
   const [transcription, setTranscription] = useState("");
   const recognitionRef = useRef<any>(null);
   const shouldBeRecordingRef = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const transcriptionIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     loadSpeech();
@@ -95,121 +98,104 @@ const Practice = () => {
 
   const handleRecordingStart = async () => {
     try {
-      // Check if browser supports speech recognition
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      
-      if (!SpeechRecognition) {
-        throw new Error("Speech recognition not supported in this browser. Please use Chrome or Edge.");
-      }
+      console.log('🎤 Starting audio recording...');
 
-      console.log('🎤 Starting speech recognition...');
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
 
-      // Clean up any existing recognition
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-          recognitionRef.current = null;
-        } catch (e) {
-          console.log('Cleanup error:', e);
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      const recognition = new SpeechRecognition();
+      // Create media recorder
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm'
+      });
       
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      
-      // Use speech's language for accurate recognition
-      const speechLang = speech?.speech_language || 'en';
-      const langCode = speechLang === 'en' ? 'en-US' : 
-                       speechLang === 'sv' ? 'sv-SE' :
-                       speechLang === 'es' ? 'es-ES' :
-                       speechLang === 'fr' ? 'fr-FR' :
-                       speechLang === 'de' ? 'de-DE' :
-                       speechLang === 'it' ? 'it-IT' :
-                       speechLang === 'pt' ? 'pt-PT' :
-                       speechLang === 'ru' ? 'ru-RU' :
-                       speechLang === 'zh' ? 'zh-CN' :
-                       speechLang === 'ja' ? 'ja-JP' : 'en-US';
-      recognition.lang = langCode;
-      recognition.maxAlternatives = 1;
-      
-      console.log(`🌐 Language: ${langCode}`);
-
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
       setTranscription("");
       shouldBeRecordingRef.current = true;
+      setIsRecording(true);
 
-      recognition.onstart = () => {
-        console.log('✅ Recognition started');
-        setIsRecording(true);
-        recognitionRef.current = recognition;
-      };
-
-      recognition.onresult = (event: any) => {
-        let transcript = "";
-        for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript + " ";
-        }
-        setTranscription(transcript.trim());
-        console.log('📝 Speech detected:', transcript.trim().substring(0, 30) + '...');
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error('❌ Error:', event.error);
-        
-        if (event.error === 'aborted') {
-          // Stop restarting on abort - it means there's a conflict
-          console.log('⚠️ Abort detected - stopping restart loop');
-          shouldBeRecordingRef.current = false;
-          setIsRecording(false);
-          toast({
-            title: "Speech recognition stopped",
-            description: "Please try clicking Start Recording again.",
-          });
-        } else if (event.error === 'not-allowed') {
-          shouldBeRecordingRef.current = false;
-          setIsRecording(false);
-          toast({
-            variant: "destructive",
-            title: "Microphone access denied",
-            description: "Please allow microphone access and try again.",
-          });
+      // Collect audio data
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+          console.log('📦 Audio chunk collected:', event.data.size, 'bytes');
         }
       };
 
-      recognition.onend = () => {
-        console.log('🔄 Recognition ended');
-        
-        if (shouldBeRecordingRef.current) {
-          console.log('↻ Restarting in 500ms...');
-          setTimeout(() => {
-            if (shouldBeRecordingRef.current && recognitionRef.current) {
-              try {
-                recognitionRef.current.start();
-              } catch (e) {
-                console.log('Restart error:', e);
-                shouldBeRecordingRef.current = false;
-                setIsRecording(false);
-              }
-            }
-          }, 500);
-        } else {
-          setIsRecording(false);
-        }
+      mediaRecorder.onstop = () => {
+        console.log('🛑 Recording stopped');
+        stream.getTracks().forEach(track => track.stop());
       };
 
-      recognitionRef.current = recognition;
-      recognition.start();
-      
+      // Start recording
+      mediaRecorder.start();
+      console.log('✅ Recording started');
+
+      // Transcribe every 2 seconds for real-time feedback
+      transcriptionIntervalRef.current = window.setInterval(async () => {
+        if (audioChunksRef.current.length > 0 && shouldBeRecordingRef.current) {
+          await transcribeCurrentAudio();
+        }
+      }, 2000);
+
+      toast({
+        title: "Recording started",
+        description: "Speak clearly - transcription will appear as you speak",
+      });
+
     } catch (error: any) {
-      console.error('💥 Fatal error:', error);
+      console.error('💥 Error starting recording:', error);
       shouldBeRecordingRef.current = false;
+      setIsRecording(false);
       toast({
         variant: "destructive",
-        title: "Speech recognition unavailable",
-        description: error.message || "Please use Chrome or Edge browser.",
+        title: "Microphone access failed",
+        description: error.message || "Please allow microphone access and try again.",
       });
+    }
+  };
+
+  const transcribeCurrentAudio = async () => {
+    if (audioChunksRef.current.length === 0) return;
+
+    try {
+      // Create blob from current chunks
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      await new Promise((resolve) => {
+        reader.onloadend = async () => {
+          const base64Audio = (reader.result as string).split(',')[1];
+          
+          // Send to Whisper API
+          const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+            body: { 
+              audio: base64Audio,
+              language: speech?.speech_language || 'en'
+            }
+          });
+
+          if (error) {
+            console.error('Transcription error:', error);
+          } else if (data?.text) {
+            console.log('📝 Transcription:', data.text.substring(0, 50) + '...');
+            setTranscription(data.text);
+          }
+          
+          resolve(null);
+        };
+      });
+    } catch (error) {
+      console.error('Error transcribing:', error);
     }
   };
 
@@ -217,22 +203,24 @@ const Practice = () => {
     console.log('🛑 Stopping recording...');
     shouldBeRecordingRef.current = false;
 
-    // Stop speech recognition and clear handlers
-    if (recognitionRef.current) {
-      const recognition = recognitionRef.current;
-      recognitionRef.current = null;
-      
-      try {
-        // Clear handlers to prevent restart
-        recognition.onend = null;
-        recognition.onerror = null;
-        recognition.stop();
-      } catch (e) {
-        console.log('Error stopping recognition:', e);
-      }
+    // Clear transcription interval
+    if (transcriptionIntervalRef.current) {
+      clearInterval(transcriptionIntervalRef.current);
+      transcriptionIntervalRef.current = null;
+    }
+
+    // Stop media recorder
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
     }
     
     setIsRecording(false);
+
+    // Do final transcription
+    if (audioChunksRef.current.length > 0) {
+      await transcribeCurrentAudio();
+    }
 
     if (!transcription || transcription.trim().length === 0) {
       toast({
