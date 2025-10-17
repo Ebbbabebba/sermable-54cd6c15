@@ -193,32 +193,48 @@ Respond ONLY with valid JSON (no markdown, no code blocks, no extra text). Use \
       };
     }
 
-    // Get current mastery level BEFORE generating cue words
+    // Get current mastery level and familiarity BEFORE generating cue words
     const { data: speechData } = await supabase
       .from('speeches')
-      .select('mastery_level')
+      .select('mastery_level, familiarity_level')
       .eq('id', speechId)
       .single();
 
     const currentMastery = speechData?.mastery_level || 0;
+    const familiarityLevel = speechData?.familiarity_level || 'new';
 
     // PROGRESSIVE LEARNING FLOW: Generate updated cue words based on mastery level
+    // Adjusted by familiarity level for personalized learning
     console.log('Generating updated cue words...');
     console.log('Current mastery level:', currentMastery);
+    console.log('Familiarity level:', familiarityLevel);
     
     let newCueText = originalText; // Default to full text
     
     const problematicWords = [...(analysis.missedWords || []), ...(analysis.delayedWords || [])];
     
+    // Adjust mastery thresholds based on familiarity
+    // For 'new' texts: standard progression
+    // For 'familiar' texts: start at phase 2 (mastery +30)
+    // For 'well_known' texts: start at phase 3 (mastery +60)
+    let effectiveMastery = currentMastery;
+    if (familiarityLevel === 'familiar') {
+      effectiveMastery = Math.max(currentMastery, 30);
+      console.log('Adjusted for familiar text - effective mastery:', effectiveMastery);
+    } else if (familiarityLevel === 'well_known') {
+      effectiveMastery = Math.max(currentMastery, 60);
+      console.log('Adjusted for well-known text - effective mastery:', effectiveMastery);
+    }
+    
     // PHASE 1: Initial Reading Sessions (mastery < 30)
     // Keep FULL original text - user needs to familiarize with complete speech
-    if (currentMastery < 30) {
+    if (effectiveMastery < 30) {
       console.log('PHASE 1: Initial reading - keeping full original text');
       newCueText = originalText;
     }
     // PHASE 2: Early Cue-Word Introduction (mastery 30-60)
     // Start removing only very small, non-essential words
-    else if (currentMastery < 60) {
+    else if (effectiveMastery < 60) {
       console.log('PHASE 2: Early cue-words - removing small non-essential words');
       
       const cuePrompt = `Based on the user's performance, create an UPDATED "cue text" for their next practice session.
@@ -270,7 +286,7 @@ Return ONLY the updated cue text in ${languageNames[speechLanguage] || 'English'
     }
     // PHASE 3: Advanced Cue-Words (mastery 60-85)
     // More aggressive removal, focus on difficult sections
-    else if (currentMastery < 85) {
+    else if (effectiveMastery < 85) {
       console.log('PHASE 3: Advanced cue-words - focusing on difficult sections');
       
       const cuePrompt = `Based on the user's performance, create an UPDATED "cue text" for their next practice session.

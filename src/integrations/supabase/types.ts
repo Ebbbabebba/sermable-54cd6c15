@@ -138,6 +138,7 @@ export type Database = {
       speeches: {
         Row: {
           created_at: string
+          familiarity_level: string | null
           goal_date: string
           id: string
           mastery_level: number | null
@@ -150,6 +151,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          familiarity_level?: string | null
           goal_date: string
           id?: string
           mastery_level?: number | null
@@ -162,6 +164,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          familiarity_level?: string | null
           goal_date?: string
           id?: string
           mastery_level?: number | null

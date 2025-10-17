@@ -20,6 +20,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
   const [speechLanguage, setSpeechLanguage] = useState("en");
+  const [familiarityLevel, setFamiliarityLevel] = useState("new");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -31,6 +32,14 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Set initial mastery based on familiarity
+      let initialMastery = 0;
+      if (familiarityLevel === "familiar") {
+        initialMastery = 30;
+      } else if (familiarityLevel === "well_known") {
+        initialMastery = 60;
+      }
+
       const { error } = await supabase.from("speeches").insert({
         user_id: user.id,
         title,
@@ -38,7 +47,8 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         text_current: text,
         goal_date: goalDate,
         speech_language: speechLanguage,
-        mastery_level: 0
+        familiarity_level: familiarityLevel,
+        mastery_level: initialMastery
       });
 
       if (error) throw error;
@@ -53,6 +63,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       setText("");
       setGoalDate("");
       setSpeechLanguage("en");
+      setFamiliarityLevel("new");
       onSuccess();
     } catch (error: any) {
       toast({
@@ -126,6 +137,24 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             </select>
             <p className="text-sm text-muted-foreground">
               What language is your speech in?
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="familiarityLevel">How familiar are you with this text?</Label>
+            <select
+              id="familiarityLevel"
+              value={familiarityLevel}
+              onChange={(e) => setFamiliarityLevel(e.target.value)}
+              className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+              required
+            >
+              <option value="new">This text is completely new to me</option>
+              <option value="familiar">I know a bit about this text</option>
+              <option value="well_known">I already know this text quite well</option>
+            </select>
+            <p className="text-sm text-muted-foreground">
+              We'll adapt the learning process based on your familiarity.
             </p>
           </div>
 
