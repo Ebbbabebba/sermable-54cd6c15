@@ -46,38 +46,40 @@ const RealtimeWordTracker = ({
   const getWordStyle = (word: string) => {
     const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
     
-    if (!cleanWord) return "text-foreground/80";
+    if (!cleanWord) return "text-muted-foreground/40";
     
     if (currentWord === cleanWord) {
-      return "bg-success/20 text-success font-bold scale-110 animate-popIn";
+      return "bg-success text-success-foreground font-extrabold scale-110 shadow-lg animate-popIn";
     }
     
     if (spokenWords.has(cleanWord)) {
-      return "bg-success/30 text-success-dark font-semibold";
+      return "bg-success/80 text-success-foreground font-bold shadow-md";
     }
     
-    return "text-muted-foreground/60";
+    return "text-muted-foreground/50 font-medium";
   };
 
   return (
-    <div className={cn("prose prose-2xl max-w-none leading-loose text-2xl", className)}>
-      {words.map((word, index) => {
-        if (/^\s+$/.test(word)) {
-          return <span key={index}>{word}</span>;
-        }
-        
-        return (
-          <span
-            key={index}
-            className={cn(
-              "inline-block px-1.5 py-0.5 rounded-md transition-all duration-300",
-              getWordStyle(word)
-            )}
-          >
-            {word}
-          </span>
-        );
-      })}
+    <div className={cn("max-w-4xl mx-auto text-center leading-loose", className)}>
+      <div className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
+        {words.map((word, index) => {
+          if (/^\s+$/.test(word)) {
+            return <span key={index}> </span>;
+          }
+          
+          return (
+            <span
+              key={index}
+              className={cn(
+                "inline-block mx-1 my-2 px-3 py-2 rounded-2xl transition-all duration-300 ease-out",
+                getWordStyle(word)
+              )}
+            >
+              {word}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 };
