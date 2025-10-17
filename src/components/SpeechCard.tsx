@@ -78,67 +78,60 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   };
 
   return (
-    <Card className="card-apple hover-scale transition-all duration-300">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <CardTitle className="truncate">{speech.title}</CardTitle>
-              {speech.speech_language && (
-                <Badge variant="outline" className="text-xs rounded-full">
-                  {languageNames[speech.speech_language] || speech.speech_language.toUpperCase()}
-                </Badge>
-              )}
-            </div>
-            <CardDescription className="mt-1">
-              Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
-            </CardDescription>
-          </div>
-          <Badge 
-            variant={isOverdue ? "destructive" : "secondary"} 
-            className="rounded-full"
-          >
-            {isOverdue
-              ? `${Math.abs(daysRemaining)}d overdue`
-              : `${daysRemaining}d left`}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>Goal: {format(goalDate, "MMM dd, yyyy")}</span>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Memory Mastery</span>
-            <span className="font-semibold text-primary">{progress}%</span>
-          </div>
-          <Progress value={progress} className="h-2 progress-animate" />
-          {progress === 100 && (
-            <p className="text-xs text-success animate-fade-in">✓ Fully memorized!</p>
+    <Card className="card-pinterest group overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <CardTitle className="text-lg font-semibold leading-tight line-clamp-2 flex-1">
+            {speech.title}
+          </CardTitle>
+          {speech.speech_language && (
+            <Badge variant="secondary" className="text-xs rounded-full shrink-0">
+              {languageNames[speech.speech_language] || speech.speech_language.toUpperCase()}
+            </Badge>
           )}
         </div>
+        <CardDescription className="text-xs">
+          {format(new Date(speech.created_at), "MMM dd, yyyy")}
+        </CardDescription>
+      </CardHeader>
 
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {speech.text_original.substring(0, 150)}...
+      <CardContent className="space-y-3 pb-3">
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground font-medium">Progress</span>
+            <span className="font-bold text-foreground">{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-1.5 progress-animate" />
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5" />
+          <span className="truncate">{format(goalDate, "MMM dd, yyyy")}</span>
+          <Badge 
+            variant={isOverdue ? "destructive" : "secondary"} 
+            className="ml-auto text-xs rounded-full px-2 py-0"
+          >
+            {isOverdue ? `${Math.abs(daysRemaining)}d over` : `${daysRemaining}d`}
+          </Badge>
+        </div>
+
+        <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+          {speech.text_original.substring(0, 120)}...
         </p>
       </CardContent>
 
-      <CardFooter className="gap-2">
+      <CardFooter className="pt-0 pb-4 gap-2">
         <Button
-          className="flex-1"
+          className="flex-1 rounded-full"
           onClick={() => navigate(`/practice/${speech.id}`)}
         >
-          <Play className="h-4 w-4 mr-2" />
+          <Play className="h-3.5 w-3.5 mr-1.5" />
           Practice
         </Button>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="ghost" size="icon" className="rounded-full shrink-0">
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>

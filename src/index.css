@@ -2,70 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple-inspired Design System - Clean, Minimalist, Modern */
+/* Pinterest-inspired Design System - Clean, Minimal, Content-Focused */
 
 @layer base {
   :root {
-    /* Vibrant, modern color palette inspired by Microsoft Teams & App Store */
-    --background: 240 10% 98%;
-    --foreground: 224 15% 10%;
+    /* Clean neutral palette inspired by Pinterest */
+    --background: 0 0% 97%;
+    --foreground: 0 0% 15%;
 
-    /* Elevated cards with subtle tint */
+    /* Pure white cards with soft shadows */
     --card: 0 0% 100%;
-    --card-foreground: 224 15% 10%;
+    --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 15% 10%;
+    --popover-foreground: 0 0% 15%;
 
-    /* Vibrant primary - energetic blue */
-    --primary: 217 91% 60%;
+    /* Subtle red accent - Pinterest signature */
+    --primary: 0 78% 54%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 91% 70%;
+    --primary-glow: 0 78% 64%;
 
-    /* Warm secondary with personality */
-    --secondary: 280 60% 65%;
-    --secondary-foreground: 0 0% 100%;
+    /* Soft neutral secondary */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
 
-    /* Soft muted tones */
-    --muted: 220 15% 96%;
-    --muted-foreground: 220 10% 46%;
+    /* Light muted tones */
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Vibrant accent - warm gradient-ready */
-    --accent: 340 75% 60%;
-    --accent-foreground: 0 0% 100%;
-    --accent-glow: 340 75% 70%;
+    /* Clean accent */
+    --accent: 0 0% 95%;
+    --accent-foreground: 0 0% 15%;
+    --accent-glow: 0 0% 90%;
 
-    /* Success with pop */
+    /* Success */
     --success: 142 76% 45%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning - attention-grabbing */
+    /* Warning */
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     /* Destructive state */
-    --destructive: 0 84% 60%;
+    --destructive: 0 78% 54%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Refined borders */
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 217 91% 60%;
+    /* Minimal borders */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 78% 54%;
 
-    /* Smooth rounded corners */
-    --radius: 1rem;
+    /* More rounded corners */
+    --radius: 1.25rem;
 
-    /* Elevated shadows with color tint */
-    --shadow-sm: 0 1px 3px 0 rgba(59, 130, 246, 0.05);
-    --shadow-md: 0 4px 12px -2px rgba(59, 130, 246, 0.12), 0 2px 8px -2px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 12px 24px -4px rgba(59, 130, 246, 0.15), 0 6px 12px -4px rgba(0, 0, 0, 0.08);
-    --shadow-xl: 0 24px 48px -8px rgba(59, 130, 246, 0.18), 0 12px 24px -6px rgba(0, 0, 0, 0.1);
-    --shadow-glow: 0 0 32px rgba(59, 130, 246, 0.3);
+    /* Soft Pinterest-style shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 16px 0 rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 12px 24px 0 rgba(0, 0, 0, 0.15);
+    --shadow-pinterest: 0 1px 6px 0 rgba(0, 0, 0, 0.1);
+    --shadow-pinterest-hover: 0 8px 24px 0 rgba(0, 0, 0, 0.12);
 
-    /* Gradients for modern appeal */
-    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(280, 60%, 65%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(340, 75%, 60%) 0%, hsl(38, 92%, 50%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(240, 10%, 98%) 0%, hsl(220, 15%, 96%) 100%);
+    /* Subtle gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(0, 78%, 54%) 0%, hsl(0, 78%, 64%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(0, 0%, 97%) 100%);
 
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -74,28 +74,28 @@
   }
 
   .dark {
-    --background: 224 15% 6%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 224 15% 9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 224 15% 9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 217 91% 60%;
+    --primary: 0 78% 54%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 91% 70%;
+    --primary-glow: 0 78% 64%;
 
-    --secondary: 280 60% 65%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 65%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 340 75% 60%;
-    --accent-foreground: 0 0% 100%;
-    --accent-glow: 340 75% 70%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
+    --accent-glow: 0 0% 20%;
 
     --success: 142 76% 45%;
     --success-foreground: 0 0% 100%;
@@ -103,14 +103,15 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 78% 54%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 217 91% 60%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 78% 54%;
 
-    --shadow-glow: 0 0 32px rgba(59, 130, 246, 0.4);
+    --shadow-pinterest: 0 1px 6px 0 rgba(0, 0, 0, 0.3);
+    --shadow-pinterest-hover: 0 8px 24px 0 rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -183,15 +184,16 @@
     transform: scale(0.98);
   }
 
-  /* Modern elevated card */
-  .card-apple {
-    @apply bg-card rounded-2xl shadow-lg border border-border/30 backdrop-blur-sm;
-    transition: var(--transition-smooth);
+  /* Pinterest-style card */
+  .card-pinterest {
+    @apply bg-card rounded-2xl border-0;
+    box-shadow: var(--shadow-pinterest);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .card-apple:hover {
-    @apply shadow-xl;
-    transform: translateY(-2px);
+  .card-pinterest:hover {
+    box-shadow: var(--shadow-pinterest-hover);
+    transform: translateY(-4px);
   }
 
   /* Gradient backgrounds */

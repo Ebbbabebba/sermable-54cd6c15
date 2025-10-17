@@ -92,119 +92,95 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 bg-gradient-subtle">
+    <div className="min-h-screen flex flex-col pb-24 bg-background">
       {/* Header */}
-      <header className="bg-card/80 border-b border-border/30 backdrop-blur-xl sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">Dryrun</h1>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="hover-scale">
+      <header className="bg-card sticky top-0 z-40 border-b border-border">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-bold text-primary">Dryrun</h1>
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 flex-1 overflow-y-auto">
-        <div className="space-y-8">
+      <main className="container mx-auto px-6 py-8 flex-1 overflow-y-auto">
+        <div className="space-y-8 max-w-7xl mx-auto">
           {/* Welcome Section */}
-          <div className="animate-slide-up">
-            <h2 className="text-4xl font-bold mb-3 bg-gradient-primary bg-clip-text text-transparent">
-              Welcome back, {user?.user_metadata?.full_name || "there"}! 👋
+          <div className="animate-fade-in">
+            <h2 className="text-3xl font-bold mb-2">
+              Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Continue practicing or start a new speech.
+            <p className="text-muted-foreground">
+              Continue practicing or start a new speech
             </p>
           </div>
 
           {/* Stats Cards */}
           {speeches.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-scale-in">
-              <Card className="card-apple border-primary/20 overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Speeches</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="card-pinterest p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <BookOpen className="h-5 w-5 text-primary" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground">{speeches.length}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Learning materials</p>
-                </CardContent>
-              </Card>
+                  <div className="text-sm text-muted-foreground font-medium">Speeches</div>
+                </div>
+                <div className="text-2xl font-bold">{speeches.length}</div>
+              </div>
 
-              <Card className="card-apple border-secondary/20 overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 transition-opacity"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Active Goals</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-secondary/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-secondary" />
+              <div className="card-pinterest p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Calendar className="h-5 w-5 text-primary" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground">
-                    {speeches.filter((s) => new Date(s.goal_date) >= new Date()).length}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Upcoming deadlines</p>
-                </CardContent>
-              </Card>
+                  <div className="text-sm text-muted-foreground font-medium">Active Goals</div>
+                </div>
+                <div className="text-2xl font-bold">
+                  {speeches.filter((s) => new Date(s.goal_date) >= new Date()).length}
+                </div>
+              </div>
 
-              <Card className="card-apple border-accent/20 overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-accent opacity-0 group-hover:opacity-5 transition-opacity"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Practice Sessions</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-accent" />
+              <div className="card-pinterest p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <TrendingUp className="h-5 w-5 text-primary" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground">0</div>
-                  <p className="text-xs text-muted-foreground mt-1">Total completed</p>
-                </CardContent>
-              </Card>
+                  <div className="text-sm text-muted-foreground font-medium">Sessions</div>
+                </div>
+                <div className="text-2xl font-bold">0</div>
+              </div>
             </div>
           )}
 
           {/* Speeches Section */}
-          <div className="space-y-6 mb-8">
-            <div className="flex items-center justify-between animate-fade-in">
-              <div>
-                <h3 className="text-2xl font-bold">Your Speeches</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Manage and practice your speeches
-                </p>
-              </div>
-              <Button onClick={() => setUploadDialogOpen(true)} className="hover-scale bg-gradient-primary shadow-md hover:shadow-lg">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold">Your Speeches</h3>
+              <Button onClick={() => setUploadDialogOpen(true)} className="rounded-full" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 New Speech
               </Button>
             </div>
 
             {speeches.length === 0 ? (
-              <Card className="card-apple p-12 text-center overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-                <div className="relative">
-                  <div className="mx-auto w-28 h-28 rounded-full bg-gradient-primary/10 flex items-center justify-center mb-6 animate-float">
-                    <BookOpen className="h-14 w-14 text-primary" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-3">No speeches yet</h3>
-                  <p className="text-muted-foreground mb-8 max-w-md mx-auto text-base">
-                    Upload your first speech to start practicing. Set a goal date and let AI help you memorize it.
-                  </p>
-                  <Button onClick={() => setUploadDialogOpen(true)} className="hover-scale bg-gradient-primary shadow-lg hover:shadow-xl">
-                    <Plus className="h-5 w-5 mr-2" />
-                    Upload Your First Speech
-                  </Button>
+              <div className="card-pinterest p-16 text-center max-w-md mx-auto">
+                <div className="mx-auto w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <BookOpen className="h-10 w-10 text-muted-foreground" />
                 </div>
-              </Card>
+                <h3 className="text-xl font-bold mb-2">No speeches yet</h3>
+                <p className="text-muted-foreground text-sm mb-6">
+                  Upload your first speech to start practicing
+                </p>
+                <Button onClick={() => setUploadDialogOpen(true)} className="rounded-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Upload Speech
+                </Button>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {speeches.map((speech, i) => (
-                  <div 
-                    key={speech.id}
-                    className="animate-slide-up"
-                    style={{ animationDelay: `${i * 100}ms` }}
-                  >
+              <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+                {speeches.map((speech) => (
+                  <div key={speech.id} className="break-inside-avoid">
                     <SpeechCard speech={speech} onUpdate={loadSpeeches} />
                   </div>
                 ))}
