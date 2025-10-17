@@ -11,6 +11,7 @@ import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import RealtimeWordTracker from "@/components/RealtimeWordTracker";
 import BottomNav from "@/components/BottomNav";
+import FeedbackScreen from "@/components/FeedbackScreen";
 
 interface Speech {
   id: string;
@@ -47,6 +48,7 @@ const Practice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [transcription, setTranscription] = useState("");
   const recognitionRef = useRef<any>(null);
@@ -376,7 +378,13 @@ const Practice = () => {
       if (error) throw error;
 
       setSessionResults(data);
-      setShowResults(true);
+      setShowFeedback(true); // Show feedback screen first
+      
+      // After feedback, show detailed results
+      setTimeout(() => {
+        setShowFeedback(false);
+        setShowResults(true);
+      }, 3000);
 
       // Save practice session to database
       const { error: sessionError } = await supabase
@@ -432,6 +440,7 @@ const Practice = () => {
 
   const handleNewSession = () => {
     setShowResults(false);
+    setShowFeedback(false);
     setSessionResults(null);
     setIsPracticing(false);
   };
@@ -657,6 +666,17 @@ const Practice = () => {
       </main>
       
       <BottomNav />
+
+      {/* Feedback Screen Overlay */}
+      {showFeedback && sessionResults && (
+        <FeedbackScreen 
+          accuracy={sessionResults.accuracy}
+          onComplete={() => {
+            setShowFeedback(false);
+            setShowResults(true);
+          }}
+        />
+      )}
     </div>
   );
 };

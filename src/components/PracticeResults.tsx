@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PracticeResultsProps {
   accuracy: number;
@@ -23,32 +24,48 @@ const PracticeResults = ({
   transcription 
 }: PracticeResultsProps) => {
   const totalFillers = Object.values(fillerWords).reduce((sum, count) => sum + count, 0);
+  
+  const getEncouragingMessage = () => {
+    if (accuracy >= 95) return "🎉 Outstanding performance!";
+    if (accuracy >= 80) return "⭐ Great job! Keep it up!";
+    if (accuracy >= 60) return "👏 Good effort! You're improving!";
+    return "💪 Keep practicing! You're getting better!";
+  };
+
   return (
-    <Card>
+    <Card className="animate-slide-in-up">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          Session Results
-          <Badge variant={accuracy >= 80 ? "default" : accuracy >= 60 ? "secondary" : "destructive"}>
-            {accuracy}% Accuracy
-          </Badge>
-        </CardTitle>
-        <CardDescription>AI-powered analysis of your practice session</CardDescription>
+        <div className="space-y-3">
+          <div className="text-center py-2 animate-pop-in">
+            <p className="text-2xl mb-2">{getEncouragingMessage()}</p>
+          </div>
+          <CardTitle className="flex items-center gap-2 animate-fade-in">
+            Session Results
+            <Badge 
+              variant={accuracy >= 80 ? "default" : accuracy >= 60 ? "secondary" : "destructive"}
+              className="animate-pop-in"
+            >
+              {accuracy}% Accuracy
+            </Badge>
+          </CardTitle>
+          <CardDescription>AI-powered analysis of your practice session</CardDescription>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Progress Bar */}
-        <div className="space-y-2">
+        <div className="space-y-2 animate-slide-up">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Overall Performance</span>
             <span className="font-medium">{accuracy}%</span>
           </div>
-          <Progress value={accuracy} />
+          <Progress value={accuracy} className="transition-all duration-1000 ease-out" />
         </div>
 
         {/* Statistics Grid */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
+          <div className="text-center p-4 bg-muted/30 rounded-lg hover-scale animate-pop-in" style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
-              <CheckCircle2 className="h-4 w-4 text-success" />
+              <CheckCircle2 className={cn("h-4 w-4 text-success", accuracy >= 80 && "animate-bounce")} />
               <div className="text-2xl font-bold">
                 {Math.round(accuracy)}%
               </div>
@@ -56,19 +73,19 @@ const PracticeResults = ({
             <div className="text-sm text-muted-foreground">Correct</div>
           </div>
 
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
+          <div className="text-center p-4 bg-muted/30 rounded-lg hover-scale animate-pop-in" style={{ animationDelay: '0.2s' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-yellow-600" />
-              <div className="text-2xl font-bold text-yellow-600">
+              <Clock className={cn("h-4 w-4 text-warning", delayedWords.length > 0 && "animate-wiggle")} />
+              <div className="text-2xl font-bold text-warning">
                 {delayedWords.length}
               </div>
             </div>
             <div className="text-sm text-muted-foreground">Hesitated</div>
           </div>
 
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
+          <div className="text-center p-4 bg-muted/30 rounded-lg hover-scale animate-pop-in" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
-              <AlertCircle className="h-4 w-4 text-destructive" />
+              <AlertCircle className={cn("h-4 w-4 text-destructive", missedWords.length > 0 && "animate-wiggle")} />
               <div className="text-2xl font-bold text-destructive">
                 {missedWords.length}
               </div>
@@ -78,8 +95,8 @@ const PracticeResults = ({
         </div>
 
         {/* AI Analysis */}
-        <div className="space-y-2">
-          <h4 className="font-semibold">AI Feedback</h4>
+        <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <h4 className="font-semibold">💬 AI Feedback</h4>
           <p className="text-sm text-muted-foreground">{analysis}</p>
         </div>
 
