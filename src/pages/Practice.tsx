@@ -200,8 +200,13 @@ const Practice = () => {
           console.log('⚠️ No speech detected - continuing to listen...');
           // Don't show error toast, just keep listening
         } else if (event.error === 'aborted') {
-          console.log('⏹️ Recognition aborted - will auto-restart if needed');
-          // Don't treat abort as fatal - let the onend handler restart if needed
+          console.log('⏹️ Recognition aborted - stopping to prevent loop');
+          shouldBeRecordingRef.current = false;
+          setIsRecording(false);
+          if (durationIntervalRef.current) {
+            clearInterval(durationIntervalRef.current);
+            durationIntervalRef.current = null;
+          }
         } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
           shouldBeRecordingRef.current = false;
           setIsRecording(false);
@@ -235,8 +240,18 @@ const Practice = () => {
       recognition.onend = () => {
         console.log('🔄 Recognition ended');
         
+        // Don't restart if we got an abort error
+        if (!shouldBeRecordingRef.current) {
+          console.log('❌ Not restarting - shouldBeRecording is false');
+          if (durationIntervalRef.current) {
+            clearInterval(durationIntervalRef.current);
+            durationIntervalRef.current = null;
+          }
+          return;
+        }
+        
         // Only restart if we should still be recording
-        if (shouldBeRecordingRef.current && recognitionRef.current) {
+        if (recognitionRef.current) {
           restartAttemptsRef.current += 1;
           
           // Prevent infinite restart loops - max 10 restarts

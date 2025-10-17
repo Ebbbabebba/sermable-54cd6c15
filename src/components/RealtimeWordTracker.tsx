@@ -49,18 +49,18 @@ const RealtimeWordTracker = ({
     if (!cleanWord) return "text-foreground/80";
     
     if (currentWord === cleanWord) {
-      return "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 font-medium scale-105";
+      return "bg-success/20 text-success font-bold scale-110 animate-popIn";
     }
     
     if (spokenWords.has(cleanWord)) {
-      return "bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-300 font-medium";
+      return "bg-success/30 text-success-dark font-semibold";
     }
     
-    return "text-foreground/60";
+    return "text-muted-foreground/60";
   };
 
   return (
-    <div className={cn("prose prose-lg max-w-none leading-relaxed", className)}>
+    <div className={cn("prose prose-2xl max-w-none leading-loose text-2xl", className)}>
       {words.map((word, index) => {
         if (/^\s+$/.test(word)) {
           return <span key={index}>{word}</span>;
@@ -70,7 +70,7 @@ const RealtimeWordTracker = ({
           <span
             key={index}
             className={cn(
-              "inline-block px-1 rounded transition-all duration-200",
+              "inline-block px-1.5 py-0.5 rounded-md transition-all duration-300",
               getWordStyle(word)
             )}
           >

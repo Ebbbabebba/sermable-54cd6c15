@@ -38,6 +38,7 @@
     /* Success */
     --success: 142 76% 45%;
     --success-foreground: 0 0% 100%;
+    --success-dark: 142 76% 35%;
 
     /* Warning */
     --warning: 38 92% 50%;
@@ -105,6 +106,7 @@
 
     --success: 142 76% 45%;
     --success-foreground: 0 0% 100%;
+    --success-dark: 142 76% 30%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;

@@ -45,6 +45,7 @@ export default {
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
+          dark: "hsl(var(--success-dark))",
         },
         warning: {
           DEFAULT: "hsl(var(--warning))",
@@ -97,6 +98,11 @@ export default {
           from: { opacity: "0", transform: "translateX(20px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
+        "popIn": {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "50%": { transform: "scale(1.1)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.3s ease-out",
@@ -105,6 +111,7 @@ export default {
         "slide-up": "slide-up 0.5s ease-out",
         "scale-in": "scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
         "slide-in-right": "slide-in-right 0.4s ease-out",
+        "popIn": "popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },
