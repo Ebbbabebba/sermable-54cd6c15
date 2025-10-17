@@ -53,6 +53,8 @@ const Practice = () => {
   const durationIntervalRef = useRef<number | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const shouldBeRecordingRef = useRef(false);
+  const restartAttemptsRef = useRef(0);
+  const lastStartTimeRef = useRef(0);
 
   useEffect(() => {
     loadSpeech();
@@ -147,10 +149,19 @@ const Practice = () => {
       setTranscription("");
       setRecordingDuration(0);
       shouldBeRecordingRef.current = true;
+      restartAttemptsRef.current = 0;
 
       recognition.onstart = () => {
         console.log('✅ Speech recognition started successfully');
+        lastStartTimeRef.current = Date.now();
+        restartAttemptsRef.current = 0;
         setIsRecording(true);
+        
+        // Clear any existing timer before starting new one
+        if (durationIntervalRef.current) {
+          clearInterval(durationIntervalRef.current);
+        }
+        
         durationIntervalRef.current = window.setInterval(() => {
           setRecordingDuration(prev => prev + 1);
         }, 1000);
@@ -179,15 +190,30 @@ const Practice = () => {
           // Don't show error toast, just keep listening
         } else if (event.error === 'aborted') {
           console.log('⏹️ Recognition aborted');
-          // If aborted but should still be recording, try to restart
-          if (shouldBeRecordingRef.current) {
-            console.log('↻ Recognition aborted unexpectedly - will attempt restart');
-          } else {
+          const timeSinceStart = Date.now() - lastStartTimeRef.current;
+          
+          // If aborted within 2 seconds of starting, it's likely a real problem - stop trying
+          if (timeSinceStart < 2000) {
+            console.log('⚠️ Recognition aborted too quickly - stopping to prevent loop');
             shouldBeRecordingRef.current = false;
+            setIsRecording(false);
+            if (durationIntervalRef.current) {
+              clearInterval(durationIntervalRef.current);
+              durationIntervalRef.current = null;
+            }
+            toast({
+              variant: "destructive",
+              title: "Speech recognition failed",
+              description: "Unable to start speech recognition. Please try again or use a different browser.",
+            });
           }
         } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
           shouldBeRecordingRef.current = false;
           setIsRecording(false);
+          if (durationIntervalRef.current) {
+            clearInterval(durationIntervalRef.current);
+            durationIntervalRef.current = null;
+          }
           toast({
             variant: "destructive",
             title: "Microphone access denied",
@@ -195,13 +221,17 @@ const Practice = () => {
           });
         } else if (event.error === 'audio-capture') {
           console.log('⚠️ Audio capture error - microphone may be in use');
+          shouldBeRecordingRef.current = false;
+          setIsRecording(false);
+          if (durationIntervalRef.current) {
+            clearInterval(durationIntervalRef.current);
+            durationIntervalRef.current = null;
+          }
           toast({
             variant: "destructive",
             title: "Microphone unavailable",
             description: "Your microphone may be in use by another application. Please close other apps and try again.",
           });
-          shouldBeRecordingRef.current = false;
-          setIsRecording(false);
         } else {
           console.log('⚠️ Recognition error:', event.error, '- will try to continue');
         }
@@ -209,10 +239,30 @@ const Practice = () => {
 
       recognition.onend = () => {
         console.log('🔄 Recognition ended');
-        // Only restart if we should still be recording and haven't been manually stopped
+        
+        // Only restart if we should still be recording and haven't exceeded restart attempts
         if (shouldBeRecordingRef.current && recognitionRef.current) {
-          console.log('↻ Auto-restarting recognition...');
-          // Longer delay to prevent rapid restart loops on problematic devices
+          restartAttemptsRef.current += 1;
+          
+          // Prevent infinite restart loops - max 5 restarts
+          if (restartAttemptsRef.current > 5) {
+            console.log('⚠️ Too many restart attempts - stopping');
+            shouldBeRecordingRef.current = false;
+            setIsRecording(false);
+            if (durationIntervalRef.current) {
+              clearInterval(durationIntervalRef.current);
+              durationIntervalRef.current = null;
+            }
+            toast({
+              variant: "destructive",
+              title: "Recording stopped",
+              description: "Speech recognition became unstable. Please try again.",
+            });
+            return;
+          }
+          
+          console.log(`↻ Auto-restarting recognition (attempt ${restartAttemptsRef.current}/5)...`);
+          
           setTimeout(() => {
             try {
               if (shouldBeRecordingRef.current && recognitionRef.current) {
@@ -221,12 +271,15 @@ const Practice = () => {
               }
             } catch (e: any) {
               console.error('Failed to restart recognition:', e);
-              // If restart fails repeatedly, stop trying
               if (e.message?.includes('already started')) {
                 console.log('Recognition already running');
               } else {
                 shouldBeRecordingRef.current = false;
                 setIsRecording(false);
+                if (durationIntervalRef.current) {
+                  clearInterval(durationIntervalRef.current);
+                  durationIntervalRef.current = null;
+                }
                 toast({
                   variant: "destructive",
                   title: "Recording stopped",
@@ -234,9 +287,13 @@ const Practice = () => {
                 });
               }
             }
-          }, 500); // Increased delay for stability
+          }, 800); // Longer delay for stability
         } else {
           console.log('Recognition stopped - not restarting');
+          if (durationIntervalRef.current) {
+            clearInterval(durationIntervalRef.current);
+            durationIntervalRef.current = null;
+          }
         }
       };
 
