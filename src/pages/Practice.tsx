@@ -107,9 +107,18 @@ const Practice = () => {
       
       // Request and keep microphone permission
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
+        });
         mediaStreamRef.current = stream;
         console.log('Microphone access granted');
+        
+        // Small delay to ensure microphone is fully initialized
+        await new Promise(resolve => setTimeout(resolve, 300));
       } catch (err) {
         console.error('Microphone access error:', err);
         throw new Error("Microphone access denied. Please allow microphone access and try again.");
@@ -170,14 +179,29 @@ const Practice = () => {
           // Don't show error toast, just keep listening
         } else if (event.error === 'aborted') {
           console.log('⏹️ Recognition aborted');
-          shouldBeRecordingRef.current = false;
+          // If aborted but should still be recording, try to restart
+          if (shouldBeRecordingRef.current) {
+            console.log('↻ Recognition aborted unexpectedly - will attempt restart');
+          } else {
+            shouldBeRecordingRef.current = false;
+          }
         } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
           shouldBeRecordingRef.current = false;
+          setIsRecording(false);
           toast({
             variant: "destructive",
             title: "Microphone access denied",
             description: "Please allow microphone access in your browser settings.",
           });
+        } else if (event.error === 'audio-capture') {
+          console.log('⚠️ Audio capture error - microphone may be in use');
+          toast({
+            variant: "destructive",
+            title: "Microphone unavailable",
+            description: "Your microphone may be in use by another application. Please close other apps and try again.",
+          });
+          shouldBeRecordingRef.current = false;
+          setIsRecording(false);
         } else {
           console.log('⚠️ Recognition error:', event.error, '- will try to continue');
         }
@@ -185,18 +209,34 @@ const Practice = () => {
 
       recognition.onend = () => {
         console.log('🔄 Recognition ended');
-        // Only restart if we should still be recording
+        // Only restart if we should still be recording and haven't been manually stopped
         if (shouldBeRecordingRef.current && recognitionRef.current) {
           console.log('↻ Auto-restarting recognition...');
+          // Longer delay to prevent rapid restart loops on problematic devices
           setTimeout(() => {
             try {
               if (shouldBeRecordingRef.current && recognitionRef.current) {
+                console.log('🔄 Attempting restart...');
                 recognitionRef.current.start();
               }
-            } catch (e) {
+            } catch (e: any) {
               console.error('Failed to restart recognition:', e);
+              // If restart fails repeatedly, stop trying
+              if (e.message?.includes('already started')) {
+                console.log('Recognition already running');
+              } else {
+                shouldBeRecordingRef.current = false;
+                setIsRecording(false);
+                toast({
+                  variant: "destructive",
+                  title: "Recording stopped",
+                  description: "Speech recognition encountered an error. Please try again.",
+                });
+              }
             }
-          }, 100);
+          }, 500); // Increased delay for stability
+        } else {
+          console.log('Recognition stopped - not restarting');
         }
       };
 
