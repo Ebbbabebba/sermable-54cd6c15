@@ -108,26 +108,7 @@ const Practice = () => {
         throw new Error("Speech recognition not supported in this browser. Please use Chrome or Edge.");
       }
 
-      console.log('Requesting microphone access...');
-      
-      // Request and keep microphone permission
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          } 
-        });
-        mediaStreamRef.current = stream;
-        console.log('Microphone access granted');
-        
-        // Small delay to ensure microphone is fully initialized
-        await new Promise(resolve => setTimeout(resolve, 300));
-      } catch (err) {
-        console.error('Microphone access error:', err);
-        throw new Error("Microphone access denied. Please allow microphone access and try again.");
-      }
+      console.log('🎤 Initializing speech recognition...');
 
       // Clean up any existing recognition without triggering events
       if (recognitionRef.current) {
@@ -137,11 +118,13 @@ const Practice = () => {
         try {
           oldRecognition.onend = null;
           oldRecognition.onerror = null;
-          oldRecognition.abort();
+          oldRecognition.onstart = null;
+          oldRecognition.onresult = null;
+          oldRecognition.stop();
         } catch (e) {
           console.log('Error cleaning up old recognition:', e);
         }
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
       const recognition = new SpeechRecognition();
@@ -167,10 +150,8 @@ const Practice = () => {
       console.log(`🌐 Using language: ${speechLang} (${langCode})`);
 
       setTranscription("");
-      setRecordingDuration(0);
       shouldBeRecordingRef.current = true;
       restartAttemptsRef.current = 0;
-      quickAbortCountRef.current = 0;
 
       recognition.onstart = () => {
         console.log('✅ Speech recognition started successfully');
@@ -180,15 +161,6 @@ const Practice = () => {
         
         // Store ref only after successful start
         recognitionRef.current = recognition;
-        
-        // Clear any existing timer before starting new one
-        if (durationIntervalRef.current) {
-          clearInterval(durationIntervalRef.current);
-        }
-        
-        durationIntervalRef.current = window.setInterval(() => {
-          setRecordingDuration(prev => prev + 1);
-        }, 1000);
       };
 
       recognition.onresult = (event: any) => {
@@ -295,12 +267,6 @@ const Practice = () => {
   const handleRecordingStop = async () => {
     console.log('🛑 Stopping recording...');
     shouldBeRecordingRef.current = false;
-    
-    // Clear duration timer first
-    if (durationIntervalRef.current) {
-      clearInterval(durationIntervalRef.current);
-      durationIntervalRef.current = null;
-    }
 
     // Stop speech recognition and clear handlers
     if (recognitionRef.current) {
@@ -318,12 +284,6 @@ const Practice = () => {
     }
     
     setIsRecording(false);
-
-    // Stop and release microphone stream
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      mediaStreamRef.current = null;
-    }
 
     if (!transcription || transcription.trim().length === 0) {
       toast({

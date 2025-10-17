@@ -1,4 +1,3 @@
-import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -12,28 +11,6 @@ interface AudioRecorderProps {
 
 const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorderProps) => {
   const { toast } = useToast();
-  const [recordingTime, setRecordingTime] = useState(0);
-  const timerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (isRecording) {
-      timerRef.current = window.setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      setRecordingTime(0);
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isRecording]);
 
   const startRecording = () => {
     onStart();
@@ -45,12 +22,6 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
 
   const stopRecording = () => {
     onStop();
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -81,9 +52,9 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
       </Button>
 
       {isRecording && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="h-2 w-2 rounded-full bg-destructive animate-pulse"></div>
-          Recording: {formatTime(recordingTime)}
+        <div className="flex items-center gap-2">
+          <div className="h-3 w-3 rounded-full bg-destructive animate-pulse"></div>
+          <span className="text-sm font-medium text-muted-foreground">Listening...</span>
         </div>
       )}
     </div>
