@@ -17,10 +17,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 15%;
 
-    /* Subtle red accent - Pinterest signature */
-    --primary: 0 78% 54%;
+    /* Forest green accent */
+    --primary: 150 50% 35%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 0 78% 64%;
+    --primary-glow: 150 50% 45%;
 
     /* Soft neutral secondary */
     --secondary: 0 0% 96%;
@@ -44,13 +44,13 @@
     --warning-foreground: 0 0% 100%;
 
     /* Destructive state */
-    --destructive: 0 78% 54%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     /* Minimal borders */
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 0 78% 54%;
+    --ring: 150 50% 35%;
 
     /* More rounded corners */
     --radius: 1.25rem;
@@ -64,7 +64,7 @@
     --shadow-pinterest-hover: 0 8px 24px 0 rgba(0, 0, 0, 0.12);
 
     /* Subtle gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(0, 78%, 54%) 0%, hsl(0, 78%, 64%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(150, 50%, 35%) 0%, hsl(150, 50%, 45%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(0, 0%, 97%) 100%);
 
     /* Smooth transitions */
@@ -83,9 +83,9 @@
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 0 78% 54%;
+    --primary: 150 50% 40%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 0 78% 64%;
+    --primary-glow: 150 50% 50%;
 
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 95%;
@@ -103,12 +103,12 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 78% 54%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 0 78% 54%;
+    --ring: 150 50% 40%;
 
     --shadow-pinterest: 0 1px 6px 0 rgba(0, 0, 0, 0.3);
     --shadow-pinterest-hover: 0 8px 24px 0 rgba(0, 0, 0, 0.4);
