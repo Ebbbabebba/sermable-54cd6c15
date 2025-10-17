@@ -49,15 +49,9 @@ const Practice = () => {
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
   const [transcription, setTranscription] = useState("");
   const recognitionRef = useRef<any>(null);
-  const durationIntervalRef = useRef<number | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
   const shouldBeRecordingRef = useRef(false);
-  const restartAttemptsRef = useRef(0);
-  const lastStartTimeRef = useRef(0);
-  const quickAbortCountRef = useRef(0);
 
   useEffect(() => {
     loadSpeech();
@@ -108,23 +102,17 @@ const Practice = () => {
         throw new Error("Speech recognition not supported in this browser. Please use Chrome or Edge.");
       }
 
-      console.log('🎤 Initializing speech recognition...');
+      console.log('🎤 Starting speech recognition...');
 
-      // Clean up any existing recognition without triggering events
+      // Clean up any existing recognition
       if (recognitionRef.current) {
-        shouldBeRecordingRef.current = false;
-        const oldRecognition = recognitionRef.current;
-        recognitionRef.current = null;
         try {
-          oldRecognition.onend = null;
-          oldRecognition.onerror = null;
-          oldRecognition.onstart = null;
-          oldRecognition.onresult = null;
-          oldRecognition.stop();
+          recognitionRef.current.stop();
+          recognitionRef.current = null;
         } catch (e) {
-          console.log('Error cleaning up old recognition:', e);
+          console.log('Cleanup error:', e);
         }
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       const recognition = new SpeechRecognition();
@@ -147,119 +135,69 @@ const Practice = () => {
       recognition.lang = langCode;
       recognition.maxAlternatives = 1;
       
-      console.log(`🌐 Using language: ${speechLang} (${langCode})`);
+      console.log(`🌐 Language: ${langCode}`);
 
       setTranscription("");
       shouldBeRecordingRef.current = true;
-      restartAttemptsRef.current = 0;
 
       recognition.onstart = () => {
-        console.log('✅ Speech recognition started successfully');
-        lastStartTimeRef.current = Date.now();
-        restartAttemptsRef.current = 0;
+        console.log('✅ Recognition started');
         setIsRecording(true);
-        
-        // Store ref only after successful start
         recognitionRef.current = recognition;
       };
 
       recognition.onresult = (event: any) => {
-        let currentTranscript = "";
+        let transcript = "";
         for (let i = 0; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript + " ";
+          transcript += event.results[i][0].transcript + " ";
         }
-        const finalTranscript = currentTranscript.trim();
-        setTranscription(finalTranscript);
-        console.log('📝 Transcription updated:', finalTranscript.substring(0, 50) + '...');
+        setTranscription(transcript.trim());
+        console.log('📝 Speech detected:', transcript.trim().substring(0, 30) + '...');
       };
 
       recognition.onerror = (event: any) => {
-        console.error('❌ Speech recognition error:', event.error);
+        console.error('❌ Error:', event.error);
         
-        if (event.error === 'no-speech') {
-          console.log('⚠️ No speech detected - will continue on restart');
-        } else if (event.error === 'aborted') {
-          console.log('⏹️ Recognition aborted - will restart if still recording');
-          // Don't change shouldBeRecording - let the onend handler decide
-        } else if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        if (event.error === 'not-allowed') {
           shouldBeRecordingRef.current = false;
           setIsRecording(false);
-          if (durationIntervalRef.current) {
-            clearInterval(durationIntervalRef.current);
-            durationIntervalRef.current = null;
-          }
           toast({
             variant: "destructive",
             title: "Microphone access denied",
-            description: "Please allow microphone access in your browser settings.",
+            description: "Please allow microphone access and try again.",
           });
-        } else if (event.error === 'audio-capture') {
-          console.log('⚠️ Audio capture error - microphone may be in use');
-          shouldBeRecordingRef.current = false;
-          setIsRecording(false);
-          if (durationIntervalRef.current) {
-            clearInterval(durationIntervalRef.current);
-            durationIntervalRef.current = null;
-          }
-          toast({
-            variant: "destructive",
-            title: "Microphone unavailable",
-            description: "Your microphone may be in use by another application. Please close other apps and try again.",
-          });
-        } else {
-          console.log('⚠️ Recognition error:', event.error, '- will try to continue');
         }
       };
 
       recognition.onend = () => {
-        console.log('🔄 Recognition ended, shouldBeRecording:', shouldBeRecordingRef.current);
+        console.log('🔄 Recognition ended');
         
-        // Only restart if we should still be recording
-        if (!shouldBeRecordingRef.current) {
-          console.log('❌ Not restarting - user stopped recording');
-          if (durationIntervalRef.current) {
-            clearInterval(durationIntervalRef.current);
-            durationIntervalRef.current = null;
-          }
-          setIsRecording(false);
-          return;
-        }
-        
-        // Restart after a short delay
-        setTimeout(() => {
-          if (shouldBeRecordingRef.current && recognitionRef.current === recognition) {
-            console.log('🔄 Restarting recognition...');
-            try {
-              recognition.start();
-            } catch (e: any) {
-              console.error('Failed to restart:', e);
-              if (!e.message?.includes('already started')) {
-                shouldBeRecordingRef.current = false;
-                setIsRecording(false);
-                if (durationIntervalRef.current) {
-                  clearInterval(durationIntervalRef.current);
-                  durationIntervalRef.current = null;
-                }
-                toast({
-                  variant: "destructive",
-                  title: "Recording stopped",
-                  description: "Unable to continue. Please start recording again.",
-                });
+        if (shouldBeRecordingRef.current) {
+          console.log('↻ Restarting...');
+          setTimeout(() => {
+            if (shouldBeRecordingRef.current && recognitionRef.current) {
+              try {
+                recognitionRef.current.start();
+              } catch (e) {
+                console.log('Restart error:', e);
               }
             }
-          }
-        }, 200);
+          }, 100);
+        } else {
+          setIsRecording(false);
+        }
       };
-      console.log('🎤 Starting speech recognition...');
-      recognition.start();
 
+      recognitionRef.current = recognition;
+      recognition.start();
+      
     } catch (error: any) {
-      console.error('💥 Error starting recording:', error);
+      console.error('💥 Fatal error:', error);
       shouldBeRecordingRef.current = false;
       toast({
         variant: "destructive",
         title: "Speech recognition unavailable",
-        description: error.message || "Please use Chrome or Edge browser for best results.",
+        description: error.message || "Please use Chrome or Edge browser.",
       });
     }
   };
@@ -342,7 +280,7 @@ const Practice = () => {
           score: data.accuracy,
           missed_words: data.missedWords,
           delayed_words: data.delayedWords,
-          duration: recordingDuration,
+          duration: 0, // Duration tracking removed
           filler_words: data.fillerWords,
           tone_feedback: data.toneFeedback,
           analysis: data.analysis,
@@ -501,11 +439,11 @@ const Practice = () => {
                     ) : isRecording ? (
                       <div className="space-y-4">
                         <div className="text-center py-8">
-                          <div className="inline-flex items-center gap-3 px-6 py-3 bg-destructive/10 rounded-full">
-                            <div className="h-3 w-3 rounded-full bg-destructive animate-pulse"></div>
-                            <span className="text-lg font-semibold">Recording: {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}</span>
+                          <div className="inline-flex items-center gap-3 px-6 py-3 bg-success/20 rounded-full">
+                            <div className="h-3 w-3 rounded-full bg-success animate-pulse"></div>
+                            <span className="text-lg font-semibold text-success">🎤 Listening...</span>
                           </div>
-                          <p className="mt-4 text-sm text-muted-foreground">🎙️ Beta: Browser Speech Recognition Active</p>
+                          <p className="mt-4 text-sm text-muted-foreground">Speak clearly - words will highlight as you say them</p>
                         </div>
                         <div className="prose prose-lg max-w-none opacity-50">
                           <p className="whitespace-pre-wrap leading-relaxed">
