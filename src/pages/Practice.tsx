@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import PracticeResults from "@/components/PracticeResults";
 import RealtimeWordTracker from "@/components/RealtimeWordTracker";
 import BottomNav from "@/components/BottomNav";
 import FeedbackScreen from "@/components/FeedbackScreen";
-import { useRealtimeSpeech } from "@/hooks/useRealtimeSpeech";
 
 interface Speech {
   id: string;
@@ -49,8 +48,15 @@ const Practice = () => {
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcription, setTranscription] = useState('');
+  const [audioLevel, setAudioLevel] = useState(0);
   
-  const { isRecording, transcription, audioLevel, startRecording, stopRecording } = useRealtimeSpeech();
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     loadSpeech();
@@ -92,14 +98,118 @@ const Practice = () => {
     });
   };
 
-  const handleRecordingStart = () => {
-    startRecording();
+  const updateAudioLevel = () => {
+    if (!analyserRef.current) return;
+    
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+    analyserRef.current.getByteFrequencyData(dataArray);
+    
+    const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+    setAudioLevel(Math.min(100, (average / 255) * 200));
+    
+    animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+  };
+
+  const handleRecordingStart = async () => {
+    try {
+      audioChunksRef.current = [];
+      setTranscription('');
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      
+      // Set up audio level visualization
+      audioContextRef.current = new AudioContext();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      updateAudioLevel();
+      
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm'
+      });
+      
+      mediaRecorderRef.current = mediaRecorder;
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.start();
+      setIsRecording(true);
+      
+      toast({
+        title: "Recording started",
+        description: "Speak clearly into your microphone",
+      });
+    } catch (error: any) {
+      console.error('Error starting recording:', error);
+      toast({
+        variant: "destructive",
+        title: "Microphone access denied",
+        description: "Please allow microphone access and try again.",
+      });
+    }
   };
 
   const handleRecordingStop = async () => {
-    stopRecording();
+    if (!mediaRecorderRef.current) return;
+    
+    mediaRecorderRef.current.stop();
+    setIsRecording(false);
+    
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+    }
+    
+    mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+        
+        // Transcribe using Whisper
+        const { data: transcribeData, error: transcribeError } = await supabase.functions.invoke('transcribe-audio', {
+          body: { 
+            audio: base64Audio,
+            language: speech!.speech_language || 'en'
+          }
+        });
+        
+        if (transcribeError) {
+          console.error('Transcription error:', transcribeError);
+          toast({
+            variant: "destructive",
+            title: "Transcription failed",
+            description: "Could not process your audio. Please try again.",
+          });
+          return;
+        }
+        
+        setTranscription(transcribeData.text);
+        
+        // Continue with analysis
+        handleAnalysis(transcribeData.text);
+      };
+    };
+  };
 
-    if (!transcription || transcription.trim().length === 0) {
+  const handleAnalysis = async (transcribedText: string) => {
+
+    if (!transcribedText || transcribedText.trim().length === 0) {
       toast({
         variant: "destructive",
         title: "No speech detected",
@@ -128,7 +238,7 @@ const Practice = () => {
       // This ensures we're testing full memorization, using cue words as prompts
       const { data, error } = await supabase.functions.invoke('analyze-speech', {
         body: {
-          transcription: transcription.trim(),
+          transcription: transcribedText.trim(),
           originalText: speech!.text_original, // Full speech for comparison
           cueText: speech!.text_current, // Cue words shown to user
           speechId: speech!.id,
@@ -199,6 +309,17 @@ const Practice = () => {
       setIsProcessing(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
 
   const handleNewSession = () => {
     setShowResults(false);
