@@ -31,6 +31,7 @@ const encodeAudioForAPI = (float32Array: Float32Array): string => {
 export const useRealtimeSpeech = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState('');
+  const [audioLevel, setAudioLevel] = useState(0);
   const { toast } = useToast();
   
   const wsRef = useRef<WebSocket | null>(null);
@@ -80,6 +81,15 @@ export const useRealtimeSpeech = () => {
           processor.onaudioprocess = (e) => {
             if (ws.readyState === WebSocket.OPEN) {
               const inputData = e.inputBuffer.getChannelData(0);
+              
+              // Calculate audio level for visual feedback
+              let sum = 0;
+              for (let i = 0; i < inputData.length; i++) {
+                sum += inputData[i] * inputData[i];
+              }
+              const rms = Math.sqrt(sum / inputData.length);
+              setAudioLevel(Math.min(100, rms * 500));
+              
               const base64Audio = encodeAudioForAPI(new Float32Array(inputData));
               
               ws.send(JSON.stringify({
@@ -130,8 +140,9 @@ export const useRealtimeSpeech = () => {
         toast({
           variant: "destructive",
           title: "Connection error",
-          description: "Failed to connect to speech service.",
+          description: "Failed to connect to speech service. Please check your internet connection and try again.",
         });
+        stopRecording();
       };
 
       ws.onclose = () => {
@@ -192,6 +203,7 @@ export const useRealtimeSpeech = () => {
   return {
     isRecording,
     transcription,
+    audioLevel,
     startRecording,
     stopRecording,
   };

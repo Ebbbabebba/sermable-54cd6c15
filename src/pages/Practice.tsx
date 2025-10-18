@@ -50,7 +50,7 @@ const Practice = () => {
   const [showResults, setShowResults] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   
-  const { isRecording, transcription, startRecording, stopRecording } = useRealtimeSpeech();
+  const { isRecording, transcription, audioLevel, startRecording, stopRecording } = useRealtimeSpeech();
 
   useEffect(() => {
     loadSpeech();
@@ -320,6 +320,19 @@ const Practice = () => {
                             <span className="text-lg font-semibold text-success">🎤 Listening...</span>
                           </div>
                           <p className="mt-4 text-sm text-muted-foreground">Speak clearly - words will highlight as you say them</p>
+                          
+                          {/* Audio Level Indicator */}
+                          <div className="mt-6 max-w-md mx-auto">
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-success to-primary transition-all duration-100"
+                                style={{ width: `${audioLevel}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {audioLevel > 5 ? '🔊 Audio detected' : '🔇 Speak louder'}
+                            </p>
+                          </div>
                         </div>
                         <div className="prose prose-lg max-w-none opacity-50">
                           <p className="whitespace-pre-wrap leading-relaxed">

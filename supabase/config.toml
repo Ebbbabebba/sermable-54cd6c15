@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.transcribe-audio]
 verify_jwt = true
+
+[functions.realtime-speech]
+verify_jwt = false
