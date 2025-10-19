@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 interface RealtimeWordTrackerProps {
@@ -13,6 +13,7 @@ interface WordState {
   index: number;
   word: string;
   cleanWord: string;
+  normalizedWord: string;
   isSpoken: boolean;
   isRevealed: boolean;
   revealTimer?: NodeJS.Timeout;
@@ -23,7 +24,7 @@ const RealtimeWordTracker = ({
   isRecording, 
   onTranscriptUpdate,
   className,
-  language = 'sv-SE' // Default to Swedish for Nordic language optimization
+  language = 'sv-SE'
 }: RealtimeWordTrackerProps) => {
   const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
   const [currentWord, setCurrentWord] = useState<string>("");
@@ -31,24 +32,94 @@ const RealtimeWordTracker = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const recognitionRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const words = text.split(/(\s+)/);
   const timersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
+  const updateQueueRef = useRef<Set<string>>(new Set());
+  const rafRef = useRef<number>();
 
-  // Initialize word states with Nordic character support
+  // Memoize word parsing to avoid recalculation
+  const words = useMemo(() => text.split(/(\s+)/), [text]);
+
+  // Normalize text once for faster matching
+  const normalizeWord = useCallback((word: string): string => {
+    return word
+      .toLowerCase()
+      .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }, []);
+
+  // Initialize word states with pre-normalized words
   useEffect(() => {
     const states: WordState[] = words
       .filter(w => !/^\s+$/.test(w))
-      .map((word, index) => ({
-        index,
-        word,
-        cleanWord: word.toLowerCase().replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, ''),
-        isSpoken: false,
-        isRevealed: false,
-      }));
+      .map((word, index) => {
+        const cleanWord = word.toLowerCase().replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '');
+        return {
+          index,
+          word,
+          cleanWord,
+          normalizedWord: normalizeWord(word),
+          isSpoken: false,
+          isRevealed: false,
+        };
+      });
     setWordStates(states);
-  }, [text]);
+  }, [text, words, normalizeWord]);
 
-  // Setup speech recognition with iPad/iOS support
+  // Batch word updates using requestAnimationFrame
+  const batchUpdateWords = useCallback(() => {
+    if (updateQueueRef.current.size === 0) return;
+
+    const wordsToUpdate = Array.from(updateQueueRef.current);
+    updateQueueRef.current.clear();
+
+    setWordStates(prev => prev.map(ws => {
+      if (wordsToUpdate.includes(ws.cleanWord) || wordsToUpdate.includes(ws.normalizedWord)) {
+        return { ...ws, isSpoken: true, isRevealed: true };
+      }
+      return ws;
+    }));
+  }, []);
+
+  // Debounced speech recognition handler
+  const handleSpeechResult = useCallback((transcript: string, alternatives: string[]) => {
+    if (onTranscriptUpdate) {
+      onTranscriptUpdate(transcript);
+    }
+
+    const allTranscripts = [transcript, ...alternatives];
+    const newSpokenWords = new Set(spokenWords);
+    
+    allTranscripts.forEach(transcriptText => {
+      const transcriptWords = transcriptText.toLowerCase().split(/\s+/);
+      
+      transcriptWords.forEach(word => {
+        const cleanWord = word.replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '').toLowerCase();
+        if (cleanWord) {
+          newSpokenWords.add(cleanWord);
+          updateQueueRef.current.add(cleanWord);
+          updateQueueRef.current.add(normalizeWord(cleanWord));
+        }
+      });
+    });
+    
+    setSpokenWords(newSpokenWords);
+    
+    // Track current word
+    const transcriptWords = transcript.toLowerCase().split(/\s+/);
+    if (transcriptWords.length > 0) {
+      const lastWord = transcriptWords[transcriptWords.length - 1]
+        .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '')
+        .toLowerCase();
+      setCurrentWord(lastWord);
+    }
+
+    // Batch update on next frame
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(batchUpdateWords);
+  }, [spokenWords, onTranscriptUpdate, normalizeWord, batchUpdateWords]);
+
+  // Setup speech recognition
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       console.warn('Speech recognition not supported on this device');
@@ -60,13 +131,12 @@ const RealtimeWordTracker = ({
     
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = language; // Use selected language (default: Swedish)
-    recognition.maxAlternatives = 3; // More alternatives for better Nordic language recognition
+    recognition.lang = language;
+    recognition.maxAlternatives = 3;
     
-    // iPad/iOS specific settings
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
       console.log('iOS/iPad device detected - optimizing speech recognition');
-      recognition.continuous = false; // iOS works better with non-continuous mode
+      recognition.continuous = false;
     }
     
     console.log(`Speech recognition initialized with language: ${language}`);
@@ -75,75 +145,21 @@ const RealtimeWordTracker = ({
       let transcript = '';
       let allAlternatives: string[] = [];
       
-      // Collect transcript and alternatives for better Nordic language matching
       for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
-        
-        // Collect alternative interpretations
         for (let j = 0; j < Math.min(event.results[i].length, 3); j++) {
           allAlternatives.push(event.results[i][j].transcript);
         }
       }
       
       console.log('Speech recognition transcript:', transcript);
-      console.log('Alternatives:', allAlternatives);
-      
-      if (onTranscriptUpdate) {
-        onTranscriptUpdate(transcript);
-      }
-
-      // Extract words and mark as spoken - check both main transcript and alternatives
-      const allTranscripts = [transcript, ...allAlternatives];
-      const newSpokenWords = new Set(spokenWords);
-      
-      allTranscripts.forEach(transcriptText => {
-        const transcriptWords = transcriptText.toLowerCase().split(/\s+/);
-        
-        transcriptWords.forEach(word => {
-          // Nordic language character preservation
-          const cleanWord = word.replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '').toLowerCase();
-          if (cleanWord) {
-            newSpokenWords.add(cleanWord);
-            
-            // Update word states - use fuzzy matching for Nordic characters
-            setWordStates(prev => prev.map(ws => {
-              // Exact match
-              if (ws.cleanWord === cleanWord) {
-                return { ...ws, isSpoken: true, isRevealed: true };
-              }
-              
-              // Fuzzy match for Nordic variations (å/a, ä/a, ö/o, etc.)
-              const normalizedClean = cleanWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-              const normalizedWord = ws.cleanWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-              
-              if (normalizedClean === normalizedWord) {
-                return { ...ws, isSpoken: true, isRevealed: true };
-              }
-              
-              return ws;
-            }));
-          }
-        });
-      });
-      
-      setSpokenWords(newSpokenWords);
-      
-      // Track current word being spoken
-      const transcriptWords = transcript.toLowerCase().split(/\s+/);
-      if (transcriptWords.length > 0) {
-        const lastWord = transcriptWords[transcriptWords.length - 1]
-          .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '')
-          .toLowerCase();
-        setCurrentWord(lastWord);
-      }
+      handleSpeechResult(transcript, allAlternatives);
     };
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
       
-      // Auto-restart on iPad/iOS
       if (/iPad|iPhone|iPod/.test(navigator.userAgent) && isRecording) {
-        console.log('Attempting to restart recognition...');
         setTimeout(() => {
           if (isRecording && recognitionRef.current) {
             try {
@@ -157,8 +173,6 @@ const RealtimeWordTracker = ({
     };
 
     recognition.onend = () => {
-      console.log('Recognition ended');
-      // Auto-restart on iPad/iOS
       if (/iPad|iPhone|iPod/.test(navigator.userAgent) && isRecording) {
         try {
           recognition.start();
@@ -178,8 +192,11 @@ const RealtimeWordTracker = ({
           console.error('Error stopping recognition:', e);
         }
       }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
-  }, [isRecording, language]);
+  }, [isRecording, language, handleSpeechResult]);
 
   // Handle recording state
   useEffect(() => {
@@ -187,8 +204,8 @@ const RealtimeWordTracker = ({
       setSpokenWords(new Set());
       setCurrentWord("");
       setCurrentIndex(0);
+      updateQueueRef.current.clear();
       
-      // Clear all timers
       timersRef.current.forEach(timer => clearTimeout(timer));
       timersRef.current.clear();
       
@@ -205,87 +222,88 @@ const RealtimeWordTracker = ({
         console.error('Error stopping recognition:', error);
       }
       
-      // Clear all timers on stop
       timersRef.current.forEach(timer => clearTimeout(timer));
       timersRef.current.clear();
     }
   }, [isRecording]);
 
-  // Smart word reveal timing
+  // Smart word reveal timing - optimized
   useEffect(() => {
     if (!isRecording) return;
 
-    wordStates.forEach((ws, idx) => {
-      if (ws.isRevealed || ws.isSpoken) return;
-      
-      // Clear existing timer
-      if (timersRef.current.has(idx)) {
-        clearTimeout(timersRef.current.get(idx));
-      }
-      
-      // Determine if first word in paragraph
-      const isFirstInParagraph = idx === 0 || 
-        (idx > 0 && words[idx - 1]?.includes('\n'));
-      
-      const delay = isFirstInParagraph ? 10000 : 3000;
-      
-      const timer = setTimeout(() => {
-        setWordStates(prev => prev.map((w, i) => 
-          i === idx ? { ...w, isRevealed: true } : w
-        ));
-      }, delay);
-      
-      timersRef.current.set(idx, timer);
-    });
+    const updateTimers = () => {
+      wordStates.forEach((ws, idx) => {
+        if (ws.isRevealed || ws.isSpoken) return;
+        
+        if (timersRef.current.has(idx)) {
+          clearTimeout(timersRef.current.get(idx));
+        }
+        
+        const isFirstInParagraph = idx === 0 || 
+          (idx > 0 && words[idx - 1]?.includes('\n'));
+        
+        const delay = isFirstInParagraph ? 10000 : 3000;
+        
+        const timer = setTimeout(() => {
+          setWordStates(prev => prev.map((w, i) => 
+            i === idx ? { ...w, isRevealed: true } : w
+          ));
+        }, delay);
+        
+        timersRef.current.set(idx, timer);
+      });
+    };
+
+    updateTimers();
 
     return () => {
       timersRef.current.forEach(timer => clearTimeout(timer));
       timersRef.current.clear();
     };
-  }, [wordStates, isRecording]);
+  }, [wordStates, isRecording, words]);
 
-  // Auto-scroll to current word
+  // Auto-scroll - throttled
   useEffect(() => {
-    if (containerRef.current && currentWord) {
-      const currentWordIndex = wordStates.findIndex(ws => ws.cleanWord === currentWord);
-      if (currentWordIndex !== -1) {
-        setCurrentIndex(currentWordIndex);
-        const wordElement = containerRef.current.querySelector(`[data-index="${currentWordIndex}"]`);
+    if (!containerRef.current || !currentWord) return;
+
+    const currentWordIndex = wordStates.findIndex(ws => ws.cleanWord === currentWord);
+    if (currentWordIndex !== -1 && currentWordIndex !== currentIndex) {
+      setCurrentIndex(currentWordIndex);
+      
+      requestAnimationFrame(() => {
+        const wordElement = containerRef.current?.querySelector(`[data-index="${currentWordIndex}"]`);
         if (wordElement) {
           wordElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }
+      });
     }
-  }, [currentWord, wordStates]);
+  }, [currentWord, wordStates, currentIndex]);
 
   // Tap to reveal word
-  const handleWordTap = (index: number) => {
+  const handleWordTap = useCallback((index: number) => {
     setWordStates(prev => prev.map((w, i) => 
       i === index ? { ...w, isRevealed: true } : w
     ));
-  };
+  }, []);
 
-  const getWordStyle = (ws: WordState) => {
+  // Memoized word style calculation
+  const getWordStyle = useCallback((ws: WordState) => {
     if (!ws.cleanWord) return "text-foreground/80";
     
-    // Currently being spoken - neon cyan with glow
-    if (currentWord === ws.cleanWord) {
+    if (currentWord === ws.cleanWord || currentWord === ws.normalizedWord) {
       return "text-[hsl(var(--neon-cyan))] font-bold neon-glow scale-110";
     }
     
-    // Already spoken - neon green
     if (ws.isSpoken) {
       return "text-[hsl(var(--neon-green))] font-semibold";
     }
     
-    // Revealed but not spoken yet - dimmed
     if (ws.isRevealed) {
       return "text-foreground/70 font-medium";
     }
     
-    // Hidden - very dim
     return "text-foreground/20 blur-[2px]";
-  };
+  }, [currentWord]);
 
   return (
     <div 
