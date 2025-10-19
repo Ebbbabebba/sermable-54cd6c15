@@ -38,6 +38,10 @@ All colors MUST be HSL.
     /* Success state */
     --success: 140 55% 50%;
     --success-foreground: 0 0% 100%;
+    
+    /* Neon colors for speech feedback */
+    --neon-green: 142 76% 56%;
+    --neon-cyan: 187 85% 53%;
 
     --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -79,6 +83,10 @@ All colors MUST be HSL.
 
     --success: 140 50% 45%;
     --success-foreground: 0 0% 100%;
+    
+    /* Neon colors for speech feedback - dark mode */
+    --neon-green: 142 71% 45%;
+    --neon-cyan: 187 80% 48%;
 
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -132,5 +140,18 @@ All colors MUST be HSL.
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  
+  @keyframes neon-pulse {
+    0%, 100% {
+      filter: drop-shadow(0 0 2px currentColor) drop-shadow(0 0 8px currentColor);
+    }
+    50% {
+      filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 12px currentColor);
+    }
+  }
+  
+  .neon-glow {
+    animation: neon-pulse 2s ease-in-out infinite;
   }
 }
