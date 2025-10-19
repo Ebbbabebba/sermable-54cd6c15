@@ -6,6 +6,7 @@ interface RealtimeWordTrackerProps {
   isRecording: boolean;
   onTranscriptUpdate?: (transcript: string) => void;
   className?: string;
+  language?: 'en-US' | 'sv-SE' | 'no-NO' | 'da-DK' | 'fi-FI';
 }
 
 interface WordState {
@@ -21,7 +22,8 @@ const RealtimeWordTracker = ({
   text, 
   isRecording, 
   onTranscriptUpdate,
-  className 
+  className,
+  language = 'sv-SE' // Default to Swedish for Nordic language optimization
 }: RealtimeWordTrackerProps) => {
   const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
   const [currentWord, setCurrentWord] = useState<string>("");
@@ -32,14 +34,14 @@ const RealtimeWordTracker = ({
   const words = text.split(/(\s+)/);
   const timersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
 
-  // Initialize word states
+  // Initialize word states with Nordic character support
   useEffect(() => {
     const states: WordState[] = words
       .filter(w => !/^\s+$/.test(w))
       .map((word, index) => ({
         index,
         word,
-        cleanWord: word.toLowerCase().replace(/[^\w]/g, ''),
+        cleanWord: word.toLowerCase().replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, ''),
         isSpoken: false,
         isRevealed: false,
       }));
@@ -58,50 +60,80 @@ const RealtimeWordTracker = ({
     
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
+    recognition.lang = language; // Use selected language (default: Swedish)
+    recognition.maxAlternatives = 3; // More alternatives for better Nordic language recognition
     
     // iPad/iOS specific settings
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
       console.log('iOS/iPad device detected - optimizing speech recognition');
       recognition.continuous = false; // iOS works better with non-continuous mode
     }
+    
+    console.log(`Speech recognition initialized with language: ${language}`);
 
     recognition.onresult = (event: any) => {
       let transcript = '';
+      let allAlternatives: string[] = [];
+      
+      // Collect transcript and alternatives for better Nordic language matching
       for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
+        
+        // Collect alternative interpretations
+        for (let j = 0; j < Math.min(event.results[i].length, 3); j++) {
+          allAlternatives.push(event.results[i][j].transcript);
+        }
       }
       
       console.log('Speech recognition transcript:', transcript);
+      console.log('Alternatives:', allAlternatives);
       
       if (onTranscriptUpdate) {
         onTranscriptUpdate(transcript);
       }
 
-      // Extract words and mark as spoken
-      const transcriptWords = transcript.toLowerCase().split(/\s+/);
+      // Extract words and mark as spoken - check both main transcript and alternatives
+      const allTranscripts = [transcript, ...allAlternatives];
       const newSpokenWords = new Set(spokenWords);
       
-      transcriptWords.forEach(word => {
-        const cleanWord = word.replace(/[^\w]/g, '');
-        if (cleanWord) {
-          newSpokenWords.add(cleanWord);
-          
-          // Update word states
-          setWordStates(prev => prev.map(ws => 
-            ws.cleanWord === cleanWord 
-              ? { ...ws, isSpoken: true, isRevealed: true }
-              : ws
-          ));
-        }
+      allTranscripts.forEach(transcriptText => {
+        const transcriptWords = transcriptText.toLowerCase().split(/\s+/);
+        
+        transcriptWords.forEach(word => {
+          // Nordic language character preservation
+          const cleanWord = word.replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '').toLowerCase();
+          if (cleanWord) {
+            newSpokenWords.add(cleanWord);
+            
+            // Update word states - use fuzzy matching for Nordic characters
+            setWordStates(prev => prev.map(ws => {
+              // Exact match
+              if (ws.cleanWord === cleanWord) {
+                return { ...ws, isSpoken: true, isRevealed: true };
+              }
+              
+              // Fuzzy match for Nordic variations (å/a, ä/a, ö/o, etc.)
+              const normalizedClean = cleanWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+              const normalizedWord = ws.cleanWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+              
+              if (normalizedClean === normalizedWord) {
+                return { ...ws, isSpoken: true, isRevealed: true };
+              }
+              
+              return ws;
+            }));
+          }
+        });
       });
       
       setSpokenWords(newSpokenWords);
       
       // Track current word being spoken
+      const transcriptWords = transcript.toLowerCase().split(/\s+/);
       if (transcriptWords.length > 0) {
-        const lastWord = transcriptWords[transcriptWords.length - 1].replace(/[^\w]/g, '');
+        const lastWord = transcriptWords[transcriptWords.length - 1]
+          .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '')
+          .toLowerCase();
         setCurrentWord(lastWord);
       }
     };
@@ -147,7 +179,7 @@ const RealtimeWordTracker = ({
         }
       }
     };
-  }, [isRecording]);
+  }, [isRecording, language]);
 
   // Handle recording state
   useEffect(() => {
@@ -259,21 +291,24 @@ const RealtimeWordTracker = ({
     <div 
       ref={containerRef}
       className={cn(
-        "max-h-[60vh] overflow-y-auto px-8 py-6 leading-loose",
+        "max-h-[70vh] overflow-y-auto px-6 py-8 leading-loose",
         "scroll-smooth",
+        "bg-gradient-to-b from-background to-muted/20",
+        "rounded-xl shadow-lg",
         className
       )}
     >
-      <div className="text-4xl md:text-5xl lg:text-6xl font-medium space-y-6">
+      <div className="text-5xl md:text-6xl lg:text-7xl font-medium space-y-8 text-center">
         {wordStates.map((ws) => (
           <span
             key={ws.index}
             data-index={ws.index}
             onClick={() => handleWordTap(ws.index)}
             className={cn(
-              "inline-block mx-2 my-1 px-2 py-1 rounded-lg",
+              "inline-block mx-3 my-2 px-3 py-2 rounded-xl",
               "transition-all duration-300 cursor-pointer",
-              "hover:scale-105 active:scale-95",
+              "hover:scale-110 active:scale-95",
+              "select-none touch-manipulation",
               getWordStyle(ws)
             )}
           >
