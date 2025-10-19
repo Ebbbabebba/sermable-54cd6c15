@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -5,23 +6,94 @@ import { useToast } from "@/hooks/use-toast";
 interface AudioRecorderProps {
   isRecording: boolean;
   onStart: () => void;
-  onStop: () => void;
+  onStop: (audioBlob: Blob) => void;
   disabled?: boolean;
 }
 
 const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorderProps) => {
   const { toast } = useToast();
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const timerRef = useRef<number | null>(null);
 
-  const startRecording = () => {
-    onStart();
-    toast({
-      title: "Recording started",
-      description: "Speak clearly - your browser is listening",
-    });
+  useEffect(() => {
+    if (isRecording) {
+      timerRef.current = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setRecordingTime(0);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isRecording]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        }
+      });
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm',
+      });
+
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        onStop(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+      onStart();
+
+      toast({
+        title: "Recording started",
+        description: "Speak clearly into your microphone",
+      });
+    } catch (error: any) {
+      console.error('Error starting recording:', error);
+      toast({
+        variant: "destructive",
+        title: "Microphone access denied",
+        description: "Please allow microphone access to record your practice.",
+      });
+    }
   };
 
   const stopRecording = () => {
-    onStop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -52,9 +124,9 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
       </Button>
 
       {isRecording && (
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-destructive animate-pulse"></div>
-          <span className="text-sm font-medium text-muted-foreground">Listening...</span>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="h-2 w-2 rounded-full bg-destructive animate-pulse"></div>
+          Recording: {formatTime(recordingTime)}
         </div>
       )}
     </div>

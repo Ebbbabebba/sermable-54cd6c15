@@ -16,49 +16,34 @@ export type Database = {
     Tables: {
       practice_sessions: {
         Row: {
-          analysis: string | null
           created_at: string
-          cue_text: string | null
           delayed_words: string[] | null
           duration: number | null
-          filler_words: Json | null
           id: string
           missed_words: string[] | null
           score: number | null
           session_date: string
           speech_id: string
-          tone_feedback: string | null
-          transcription: string | null
         }
         Insert: {
-          analysis?: string | null
           created_at?: string
-          cue_text?: string | null
           delayed_words?: string[] | null
           duration?: number | null
-          filler_words?: Json | null
           id?: string
           missed_words?: string[] | null
           score?: number | null
           session_date?: string
           speech_id: string
-          tone_feedback?: string | null
-          transcription?: string | null
         }
         Update: {
-          analysis?: string | null
           created_at?: string
-          cue_text?: string | null
           delayed_words?: string[] | null
           duration?: number | null
-          filler_words?: Json | null
           id?: string
           missed_words?: string[] | null
           score?: number | null
           session_date?: string
           speech_id?: string
-          tone_feedback?: string | null
-          transcription?: string | null
         }
         Relationships: [
           {
@@ -74,21 +59,18 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
-          feedback_language: string | null
           full_name: string | null
           id: string
         }
         Insert: {
           created_at?: string
           email?: string | null
-          feedback_language?: string | null
           full_name?: string | null
           id: string
         }
         Update: {
           created_at?: string
           email?: string | null
-          feedback_language?: string | null
           full_name?: string | null
           id?: string
         }
@@ -99,9 +81,6 @@ export type Database = {
           completed: boolean
           created_at: string
           id: string
-          interval_days: number | null
-          mastery_score: number | null
-          next_review_date: string | null
           session_date: string
           speech_id: string
         }
@@ -109,9 +88,6 @@ export type Database = {
           completed?: boolean
           created_at?: string
           id?: string
-          interval_days?: number | null
-          mastery_score?: number | null
-          next_review_date?: string | null
           session_date: string
           speech_id: string
         }
@@ -119,9 +95,6 @@ export type Database = {
           completed?: boolean
           created_at?: string
           id?: string
-          interval_days?: number | null
-          mastery_score?: number | null
-          next_review_date?: string | null
           session_date?: string
           speech_id?: string
         }
@@ -138,11 +111,8 @@ export type Database = {
       speeches: {
         Row: {
           created_at: string
-          familiarity_level: string | null
           goal_date: string
           id: string
-          mastery_level: number | null
-          speech_language: string | null
           text_current: string
           text_original: string
           title: string
@@ -151,11 +121,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          familiarity_level?: string | null
           goal_date: string
           id?: string
-          mastery_level?: number | null
-          speech_language?: string | null
           text_current: string
           text_original: string
           title: string
@@ -164,11 +131,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          familiarity_level?: string | null
           goal_date?: string
           id?: string
-          mastery_level?: number | null
-          speech_language?: string | null
           text_current?: string
           text_original?: string
           title?: string
@@ -190,14 +154,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_next_interval: {
-        Args: { accuracy: number; current_interval: number }
-        Returns: number
-      }
-      update_mastery_level: {
-        Args: { p_accuracy: number; p_speech_id: string }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

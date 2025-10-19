@@ -19,8 +19,6 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
-  const [speechLanguage, setSpeechLanguage] = useState("en");
-  const [familiarityLevel, setFamiliarityLevel] = useState("new");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -32,23 +30,12 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Set initial mastery based on familiarity
-      let initialMastery = 0;
-      if (familiarityLevel === "familiar") {
-        initialMastery = 30;
-      } else if (familiarityLevel === "well_known") {
-        initialMastery = 60;
-      }
-
       const { error } = await supabase.from("speeches").insert({
         user_id: user.id,
         title,
         text_original: text,
         text_current: text,
         goal_date: goalDate,
-        speech_language: speechLanguage,
-        familiarity_level: familiarityLevel,
-        mastery_level: initialMastery
       });
 
       if (error) throw error;
@@ -62,8 +49,6 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       setTitle("");
       setText("");
       setGoalDate("");
-      setSpeechLanguage("en");
-      setFamiliarityLevel("new");
       onSuccess();
     } catch (error: any) {
       toast({
@@ -81,15 +66,15 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
           <DialogTitle>Upload Your Speech</DialogTitle>
           <DialogDescription>
             Add your speech text and set a goal date for when you need to have it memorized.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Speech Title</Label>
             <Input
@@ -117,44 +102,6 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             </div>
             <p className="text-sm text-muted-foreground">
               When do you need to deliver this speech?
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="speechLanguage">Speech Language</Label>
-            <select
-              id="speechLanguage"
-              value={speechLanguage}
-              onChange={(e) => setSpeechLanguage(e.target.value)}
-              className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
-              required
-            >
-              <option value="en">English</option>
-              <option value="sv">Swedish</option>
-              <option value="es">Spanish</option>
-              <option value="de">German</option>
-              <option value="fi">Finnish</option>
-            </select>
-            <p className="text-sm text-muted-foreground">
-              What language is your speech in?
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="familiarityLevel">How familiar are you with this text?</Label>
-            <select
-              id="familiarityLevel"
-              value={familiarityLevel}
-              onChange={(e) => setFamiliarityLevel(e.target.value)}
-              className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
-              required
-            >
-              <option value="new">This text is completely new to me</option>
-              <option value="familiar">I know a bit about this text</option>
-              <option value="well_known">I already know this text quite well</option>
-            </select>
-            <p className="text-sm text-muted-foreground">
-              We'll adapt the learning process based on your familiarity.
             </p>
           </div>
 

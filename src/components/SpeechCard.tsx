@@ -26,8 +26,6 @@ interface Speech {
   text_current: string;
   goal_date: string;
   created_at: string;
-  mastery_level?: number;
-  speech_language?: string;
 }
 
 interface SpeechCardProps {
@@ -43,16 +41,8 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const daysRemaining = differenceInDays(goalDate, today);
   const isOverdue = daysRemaining < 0;
 
-  // Calculate progress from mastery level
-  const progress = Math.round(speech.mastery_level || 0);
-  
-  const languageNames: Record<string, string> = {
-    'en': 'EN',
-    'sv': 'SV', 
-    'es': 'ES',
-    'de': 'DE',
-    'fi': 'FI'
-  };
+  // Calculate progress (simplified - in production this would be based on practice sessions)
+  const progress = 0; // Will be calculated from practice sessions
 
   const handleDelete = async () => {
     try {
@@ -78,64 +68,58 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   };
 
   return (
-    <Card className="card-pinterest group overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <CardTitle className="text-lg font-semibold leading-tight line-clamp-2 flex-1">
-            {speech.title}
-          </CardTitle>
-          {speech.speech_language && (
-            <Badge variant="secondary" className="text-xs rounded-full shrink-0">
-              {languageNames[speech.speech_language] || speech.speech_language.toUpperCase()}
-            </Badge>
-          )}
-        </div>
-        <CardDescription className="text-xs">
-          {format(new Date(speech.created_at), "MMM dd, yyyy")}
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-3 pb-3">
-        <div className="space-y-1.5">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-muted-foreground font-medium">Progress</span>
-            <span className="font-bold text-foreground">{progress}%</span>
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="truncate">{speech.title}</CardTitle>
+            <CardDescription className="mt-1">
+              Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
+            </CardDescription>
           </div>
-          <Progress value={progress} className="h-1.5 progress-animate" />
-        </div>
-
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Calendar className="h-3.5 w-3.5" />
-          <span className="truncate">{format(goalDate, "MMM dd, yyyy")}</span>
-          <Badge 
-            variant={isOverdue ? "destructive" : "secondary"} 
-            className="ml-auto text-xs rounded-full px-2 py-0"
-          >
-            {isOverdue ? `${Math.abs(daysRemaining)}d over` : `${daysRemaining}d`}
+          <Badge variant={isOverdue ? "destructive" : "secondary"}>
+            {isOverdue
+              ? `${Math.abs(daysRemaining)} days overdue`
+              : `${daysRemaining} days left`}
           </Badge>
         </div>
+      </CardHeader>
 
-        <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
-          {speech.text_original.substring(0, 120)}...
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <span>Goal: {format(goalDate, "MMM dd, yyyy")}</span>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-medium">{progress}%</span>
+          </div>
+          <Progress value={progress} />
+        </div>
+
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {speech.text_original.substring(0, 150)}...
         </p>
       </CardContent>
 
-      <CardFooter className="pt-0 pb-4 gap-2">
+      <CardFooter className="gap-2">
         <Button
-          className="flex-1 rounded-full"
+          className="flex-1"
           onClick={() => navigate(`/practice/${speech.id}`)}
         >
-          <Play className="h-3.5 w-3.5 mr-1.5" />
+          <Play className="h-4 w-4 mr-2" />
           Practice
         </Button>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full shrink-0">
+            <Button variant="outline" size="icon">
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="rounded-3xl">
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Speech?</AlertDialogTitle>
               <AlertDialogDescription>

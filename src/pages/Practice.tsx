@@ -10,9 +10,6 @@ import AudioRecorder from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import RealtimeWordTracker from "@/components/RealtimeWordTracker";
-import BottomNav from "@/components/BottomNav";
-import FeedbackScreen from "@/components/FeedbackScreen";
-import { useRealtimeSpeech } from "@/hooks/useRealtimeSpeech";
 
 interface Speech {
   id: string;
@@ -20,8 +17,6 @@ interface Speech {
   text_original: string;
   text_current: string;
   goal_date: string;
-  speech_language?: string;
-  mastery_level?: number;
 }
 
 interface SessionResults {
@@ -29,13 +24,8 @@ interface SessionResults {
   accuracy: number;
   missedWords: string[];
   delayedWords: string[];
-  fillerWords: { [key: string]: number };
-  toneFeedback: string;
   analysis: string;
   cueText: string;
-  nextPracticeInterval?: number;
-  nextPracticeDate?: string;
-  masteryLevel?: number;
 }
 
 const Practice = () => {
@@ -45,12 +35,10 @@ const Practice = () => {
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPracticing, setIsPracticing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [showFeedback, setShowFeedback] = useState(false);
-  
-  const { isRecording, transcription, audioLevel, startRecording, stopRecording } = useRealtimeSpeech();
 
   useEffect(() => {
     loadSpeech();
@@ -82,118 +70,90 @@ const Practice = () => {
     setIsPracticing(true);
     setShowResults(false);
     setSessionResults(null);
-    
-    const isCueMode = speech?.text_current !== speech?.text_original;
     toast({
       title: "Practice mode activated",
-      description: isCueMode 
-        ? "Use the cue words to help you recall and speak the ENTIRE speech from memory."
-        : "Read your speech aloud when ready, then start recording.",
+      description: "Read your speech aloud when ready, then start recording.",
     });
   };
 
   const handleRecordingStart = () => {
-    startRecording();
+    setIsRecording(true);
   };
 
-  const handleRecordingStop = async () => {
-    stopRecording();
-
-    if (!transcription || transcription.trim().length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No speech detected",
-        description: "Please speak clearly during recording and try again.",
-      });
-      return;
-    }
-
+  const handleRecordingStop = async (audioBlob: Blob) => {
+    setIsRecording(false);
     setIsProcessing(true);
 
     try {
-      toast({
-        title: "Analyzing...",
-        description: "AI is analyzing your performance",
-      });
-
-      // Get user's feedback language preference
-      const { data: userData } = await supabase.auth.getUser();
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('feedback_language')
-        .eq('id', userData.user!.id)
-        .maybeSingle();
-
-      // CRITICAL: Analyze against the FULL ORIGINAL speech, not just cue words
-      // This ensures we're testing full memorization, using cue words as prompts
-      const { data, error } = await supabase.functions.invoke('analyze-speech', {
-        body: {
-          transcription: transcription.trim(),
-          originalText: speech!.text_original, // Full speech for comparison
-          cueText: speech!.text_current, // Cue words shown to user
-          speechId: speech!.id,
-          speechLanguage: speech!.speech_language || 'en',
-          feedbackLanguage: profileData?.feedback_language || 'sv'
-        },
-      });
-
-      if (error) throw error;
-
-      setSessionResults(data);
-      setShowFeedback(true); // Show feedback screen first
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
       
-      // After feedback, show detailed results
-      setTimeout(() => {
-        setShowFeedback(false);
-        setShowResults(true);
-      }, 3000);
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
 
-      // Save practice session to database
-      const { error: sessionError } = await supabase
-        .from('practice_sessions')
-        .insert({
-          speech_id: speech!.id,
-          score: data.accuracy,
-          missed_words: data.missedWords,
-          delayed_words: data.delayedWords,
-          duration: 0, // Duration tracking removed
-          filler_words: data.fillerWords,
-          tone_feedback: data.toneFeedback,
-          analysis: data.analysis,
-          cue_text: data.cueText,
-          transcription: data.transcription
+        toast({
+          title: "Processing...",
+          description: "AI is analyzing your practice session",
         });
 
-      if (sessionError) {
-        console.error('Error saving session:', sessionError);
-      }
+        // Call the edge function
+        const { data, error } = await supabase.functions.invoke('analyze-speech', {
+          body: {
+            audio: base64Audio,
+            originalText: speech!.text_current,
+            speechId: speech!.id,
+          },
+        });
 
-      // Update speech with new cue text
-      const { error: updateError } = await supabase
-        .from('speeches')
-        .update({ text_current: data.cueText })
-        .eq('id', speech!.id);
+        if (error) throw error;
 
-      if (updateError) {
-        console.error('Error updating speech:', updateError);
-      } else {
-        loadSpeech();
-      }
+        setSessionResults(data);
+        setShowResults(true);
 
-      const nextPracticeDays = data.nextPracticeInterval || 1;
-      const masteryPercent = data.masteryLevel || 0;
-      
-      toast({
-        title: "Analysis complete!",
-        description: `${data.accuracy}% accuracy. Mastery: ${masteryPercent}%. Next practice in ${nextPracticeDays} day${nextPracticeDays !== 1 ? 's' : ''}.`,
-      });
+        // Save practice session to database
+        const { error: sessionError } = await supabase
+          .from('practice_sessions')
+          .insert({
+            speech_id: speech!.id,
+            score: data.accuracy,
+            missed_words: data.missedWords,
+            delayed_words: data.delayedWords,
+            duration: 0,
+          });
+
+        if (sessionError) {
+          console.error('Error saving session:', sessionError);
+        }
+
+        // Update speech with new cue text
+        const { error: updateError } = await supabase
+          .from('speeches')
+          .update({ text_current: data.cueText })
+          .eq('id', speech!.id);
+
+        if (updateError) {
+          console.error('Error updating speech:', updateError);
+        } else {
+          loadSpeech();
+        }
+
+        toast({
+          title: "Analysis complete!",
+          description: `${data.accuracy}% accuracy. Check your results below.`,
+        });
+      };
+
+      reader.onerror = () => {
+        throw new Error('Failed to read audio file');
+      };
 
     } catch (error: any) {
       console.error('Error processing recording:', error);
       toast({
         variant: "destructive",
         title: "Processing failed",
-        description: error.message || "Failed to process your recording. Please try again.",
+        description: error.message || "Failed to analyze your recording. Please try again.",
       });
     } finally {
       setIsProcessing(false);
@@ -202,7 +162,6 @@ const Practice = () => {
 
   const handleNewSession = () => {
     setShowResults(false);
-    setShowFeedback(false);
     setSessionResults(null);
     setIsPracticing(false);
   };
@@ -218,10 +177,10 @@ const Practice = () => {
   if (!speech) return null;
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="border-b border-border/50 bg-card backdrop-blur-lg bg-card/80 sticky top-0 z-40">
+    <div className="min-h-screen">
+      <header className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="hover-scale">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -229,37 +188,28 @@ const Practice = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6">
           <div className="animate-fade-in">
             <h1 className="text-4xl font-bold mb-2">{speech.title}</h1>
             <p className="text-muted-foreground">
-              Practice session • {speech.text_original.split(/\s+/).filter(Boolean).length} words (full speech)
+              Practice session • {speech.text_current.split(/\s+/).filter(Boolean).length} words
             </p>
-            {speech.text_current !== speech.text_original && (
-              <p className="text-sm text-primary mt-1">
-                📝 Using cue words as memory prompts - speak the entire speech
-              </p>
-            )}
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Full Speech Progress</CardTitle>
-              <CardDescription>
-                {speech.text_current !== speech.text_original 
-                  ? "You're practicing with cue words - AI tracks your full speech recall"
-                  : "Track your practice performance"}
-              </CardDescription>
+              <CardTitle>Session Progress</CardTitle>
+              <CardDescription>Track your practice performance</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Full Speech Memorization</span>
+                  <span className="text-muted-foreground">Memorization</span>
                   <span className="font-medium">
-                    {sessionResults ? `${sessionResults.accuracy}%` : `${Math.round(speech.mastery_level || 0)}%`}
+                    {sessionResults ? `${sessionResults.accuracy}%` : '0%'}
                   </span>
                 </div>
-                <Progress value={sessionResults?.accuracy || speech.mastery_level || 0} />
+                <Progress value={sessionResults?.accuracy || 0} />
               </div>
             </CardContent>
           </Card>
@@ -273,11 +223,9 @@ const Practice = () => {
                     {!isPracticing
                       ? "Click start to begin your practice session"
                       : isRecording
-                      ? "Recording... speak the FULL speech from memory"
+                      ? "Recording... speak clearly"
                       : isProcessing
-                      ? "AI is analyzing your full speech performance..."
-                      : speech.text_current !== speech.text_original
-                      ? "Use the cue words below to recall and speak the entire speech"
+                      ? "AI is analyzing your performance..."
                       : "Read the text aloud and record yourself"}
                   </CardDescription>
                 </div>
@@ -297,12 +245,6 @@ const Practice = () => {
                     Start Practice Session
                   </Button>
                 </div>
-              ) : isProcessing ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
-                  <h3 className="text-xl font-semibold mb-2">Analyzing Your Performance...</h3>
-                  <p className="text-muted-foreground">AI is comparing your speech and identifying areas for improvement</p>
-                </div>
               ) : (
                 <>
                   <div className="p-6 bg-muted/30 rounded-lg">
@@ -313,39 +255,10 @@ const Practice = () => {
                         delayedWords={sessionResults.delayedWords}
                       />
                     ) : isRecording ? (
-                      <div className="space-y-4">
-                        <div className="text-center py-4">
-                          <div className="inline-flex items-center gap-3 px-6 py-3 bg-success/20 rounded-full mb-2">
-                            <div className="h-3 w-3 rounded-full bg-success animate-pulse"></div>
-                            <span className="text-lg font-semibold text-success">🎤 Listening...</span>
-                          </div>
-                          
-                          {/* Audio Level Indicator - Secondary visual */}
-                          <div className="max-w-xs mx-auto opacity-50">
-                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-gradient-to-r from-success to-primary transition-all duration-100"
-                                style={{ width: `${audioLevel}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Real-time word highlighting - Main focus */}
-                        <div className="prose prose-lg max-w-none">
-                          <RealtimeWordTracker
-                            text={speech.text_current}
-                            transcript={transcription}
-                          />
-                        </div>
-                        
-                        {transcription && (
-                          <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                            <p className="text-xs font-medium mb-1 text-muted-foreground">What you're saying:</p>
-                            <p className="text-sm">{transcription}</p>
-                          </div>
-                        )}
-                      </div>
+                      <RealtimeWordTracker
+                        text={speech.text_current}
+                        isRecording={isRecording}
+                      />
                     ) : (
                       <div className="prose prose-lg max-w-none">
                         <p className="whitespace-pre-wrap leading-relaxed">
@@ -355,83 +268,46 @@ const Practice = () => {
                     )}
                   </div>
 
-                  {!showResults && (
-                    <div className="flex justify-center">
-                      <AudioRecorder
-                        isRecording={isRecording}
-                        onStart={handleRecordingStart}
-                        onStop={handleRecordingStop}
-                        disabled={isProcessing}
-                      />
-                    </div>
-                  )}
+                  <div className="flex justify-center">
+                    <AudioRecorder
+                      isRecording={isRecording}
+                      onStart={handleRecordingStart}
+                      onStop={handleRecordingStop}
+                      disabled={isProcessing}
+                    />
+                  </div>
                 </>
               )}
             </CardContent>
           </Card>
 
           {showResults && sessionResults && (
-            <div className="animate-slide-up space-y-4">
-              {sessionResults.nextPracticeInterval && (
-                <Card className="border-primary bg-primary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-primary">Next Practice Schedule</p>
-                        <p className="text-2xl font-bold mt-1">
-                          {sessionResults.nextPracticeInterval} day{sessionResults.nextPracticeInterval !== 1 ? 's' : ''}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {sessionResults.nextPracticeDate && `Practice again on ${new Date(sessionResults.nextPracticeDate).toLocaleDateString()}`}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-primary">Memory Mastery</p>
-                        <p className="text-3xl font-bold mt-1">{sessionResults.masteryLevel || 0}%</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
+            <div className="animate-slide-up">
               <PracticeResults
                 accuracy={sessionResults.accuracy}
                 missedWords={sessionResults.missedWords}
                 delayedWords={sessionResults.delayedWords}
-                fillerWords={sessionResults.fillerWords}
-                toneFeedback={sessionResults.toneFeedback}
                 analysis={sessionResults.analysis}
                 transcription={sessionResults.transcription}
               />
 
-              {(sessionResults.missedWords.length > 0 || sessionResults.delayedWords.length > 0) && (
-                <Card className="border-primary/20">
+              {sessionResults.cueText !== speech.text_current && (
+                <Card className="mt-4">
                   <CardHeader>
-                    <CardTitle>Updated Practice Script</CardTitle>
+                    <CardTitle>Updated Cue Script</CardTitle>
                     <CardDescription>
-                      Your cue words have been updated based on this session's performance. 
-                      Words you mastered are removed. Challenging sections remain for focused practice.
+                      Focus on these key words for your next practice
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
                     <div className="p-4 bg-primary/5 rounded-lg">
-                      <p className="text-sm font-medium mb-2 text-primary">
-                        📝 Updated Cue Words for Next Practice:
-                      </p>
-                      <p className="whitespace-pre-wrap leading-relaxed text-base">
+                      <p className="text-lg leading-relaxed">
                         {sessionResults.cueText}
                       </p>
                     </div>
-                    <div className="text-sm text-muted-foreground space-y-2">
-                      <p>
-                        <strong>How to use:</strong> These cue words will help trigger your memory of the full speech. 
-                        The "..." sections represent parts you've mastered.
-                      </p>
-                      <p>
-                        <strong>Next session:</strong> Use these updated cue words to practice. 
-                        Remember to speak the ENTIRE speech, not just the cue words!
-                      </p>
-                    </div>
+                    <p className="text-sm text-muted-foreground mt-3">
+                      This simplified version will be used in your next practice session.
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -439,19 +315,6 @@ const Practice = () => {
           )}
         </div>
       </main>
-      
-      <BottomNav />
-
-      {/* Feedback Screen Overlay */}
-      {showFeedback && sessionResults && (
-        <FeedbackScreen 
-          accuracy={sessionResults.accuracy}
-          onComplete={() => {
-            setShowFeedback(false);
-            setShowResults(true);
-          }}
-        />
-      )}
     </div>
   );
 };

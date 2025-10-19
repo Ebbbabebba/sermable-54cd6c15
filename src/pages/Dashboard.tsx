@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, LogOut, BookOpen, Calendar, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
-import BottomNav from "@/components/BottomNav";
 
 interface Speech {
   id: string;
@@ -92,11 +91,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 bg-background">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-card sticky top-0 z-40 border-b border-border">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-primary">Dryrun</h1>
+      <header className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Dryrun</h1>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
@@ -104,85 +103,88 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8 flex-1 overflow-y-auto">
-        <div className="space-y-8 max-w-7xl mx-auto">
+      <main className="container mx-auto px-4 py-8">
+        <div className="space-y-8">
           {/* Welcome Section */}
           <div className="animate-fade-in">
             <h2 className="text-3xl font-bold mb-2">
-              Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}
+              Welcome back, {user?.user_metadata?.full_name || "there"}!
             </h2>
             <p className="text-muted-foreground">
-              Continue practicing or start a new speech
+              Continue practicing or start a new speech.
             </p>
           </div>
 
           {/* Stats Cards */}
           {speeches.length > 0 && (
-            <div className="grid grid-cols-3 gap-4">
-              <div className="card-pinterest p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="text-sm text-muted-foreground font-medium">Speeches</div>
-                </div>
-                <div className="text-2xl font-bold">{speeches.length}</div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Speeches</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{speeches.length}</div>
+                </CardContent>
+              </Card>
 
-              <div className="card-pinterest p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Calendar className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Goals</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {speeches.filter((s) => new Date(s.goal_date) >= new Date()).length}
                   </div>
-                  <div className="text-sm text-muted-foreground font-medium">Active Goals</div>
-                </div>
-                <div className="text-2xl font-bold">
-                  {speeches.filter((s) => new Date(s.goal_date) >= new Date()).length}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="card-pinterest p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="text-sm text-muted-foreground font-medium">Sessions</div>
-                </div>
-                <div className="text-2xl font-bold">0</div>
-              </div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Practice Sessions</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">0</div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
           {/* Speeches Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold">Your Speeches</h3>
-              <Button onClick={() => setUploadDialogOpen(true)} className="rounded-full" size="sm">
+              <div>
+                <h3 className="text-xl font-semibold">Your Speeches</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage and practice your speeches
+                </p>
+              </div>
+              <Button onClick={() => setUploadDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Speech
               </Button>
             </div>
 
             {speeches.length === 0 ? (
-              <div className="card-pinterest p-16 text-center max-w-md mx-auto">
-                <div className="mx-auto w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                  <BookOpen className="h-10 w-10 text-muted-foreground" />
+              <Card className="p-12 text-center">
+                <div className="mx-auto w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <BookOpen className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">No speeches yet</h3>
-                <p className="text-muted-foreground text-sm mb-6">
-                  Upload your first speech to start practicing
+                <h3 className="text-xl font-semibold mb-2">No speeches yet</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Upload your first speech to start practicing. Set a goal date and let AI help you memorize it.
                 </p>
-                <Button onClick={() => setUploadDialogOpen(true)} className="rounded-full">
+                <Button onClick={() => setUploadDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Upload Speech
+                  Upload Your First Speech
                 </Button>
-              </div>
+              </Card>
             ) : (
-              <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {speeches.map((speech) => (
-                  <div key={speech.id} className="break-inside-avoid">
-                    <SpeechCard speech={speech} onUpdate={loadSpeeches} />
-                  </div>
+                  <SpeechCard key={speech.id} speech={speech} onUpdate={loadSpeeches} />
                 ))}
               </div>
             )}
@@ -195,8 +197,6 @@ const Dashboard = () => {
         onOpenChange={setUploadDialogOpen}
         onSuccess={handleSpeechAdded}
       />
-      
-      <BottomNav />
     </div>
   );
 };

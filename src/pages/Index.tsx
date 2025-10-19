@@ -37,7 +37,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/20">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5"></div>
@@ -47,17 +47,17 @@ const Index = () => {
             {/* Left Content */}
             <div className="space-y-8 animate-fade-in">
               <div className="inline-block">
-                <span className="px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                <span className="px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
                   AI-Powered Memorization
                 </span>
               </div>
               
-              <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 Master Your Speech
                 <span className="block text-primary mt-2">Before the Big Day</span>
               </h1>
               
-              <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
+              <p className="text-xl text-muted-foreground max-w-xl">
                 Dryrun uses AI and spaced repetition to help you fully memorize your speech, 
                 script, or presentation with confidence.
               </p>
@@ -66,7 +66,7 @@ const Index = () => {
                 <Button 
                   size="lg" 
                   onClick={() => navigate("/auth")}
-                  className="text-lg px-8 hover-scale"
+                  className="text-lg px-8"
                 >
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -75,7 +75,7 @@ const Index = () => {
                   size="lg" 
                   variant="outline"
                   onClick={() => navigate("/auth")}
-                  className="text-lg px-8 hover-scale"
+                  className="text-lg px-8"
                 >
                   Sign In
                 </Button>
@@ -83,7 +83,7 @@ const Index = () => {
 
               <div className="pt-8 space-y-3">
                 {benefits.map((benefit, i) => (
-                  <div key={i} className="flex items-center gap-3 text-foreground/80">
+                  <div key={i} className="flex items-center gap-3 text-muted-foreground">
                     <CheckCircle className="h-5 w-5 text-success flex-shrink-0" />
                     <span>{benefit}</span>
                   </div>
@@ -93,13 +93,13 @@ const Index = () => {
 
             {/* Right Image */}
             <div className="animate-slide-up">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl hover-scale">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <img 
                   src={heroImage} 
                   alt="Person practicing speech" 
                   className="w-full h-auto"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent"></div>
               </div>
             </div>
           </div>
@@ -107,10 +107,10 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-card/30 backdrop-blur-sm">
+      <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-4xl font-bold mb-4">
               Everything You Need to Succeed
             </h2>
             <p className="text-xl text-muted-foreground">
@@ -118,18 +118,18 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, i) => (
               <div 
                 key={i}
-                className="card-apple p-8 hover-scale transition-all duration-300 animate-slide-up"
+                className="p-6 rounded-xl bg-card border hover:shadow-lg transition-all duration-300 animate-slide-up"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
-                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 shadow-sm">
-                  <feature.icon className="h-7 w-7 text-primary" />
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                  <feature.icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -137,10 +137,10 @@ const Index = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16 animate-fade-in">
-            <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-4xl font-bold mb-4">
               Simple 3-Step Process
             </h2>
             <p className="text-xl text-muted-foreground">
@@ -148,7 +148,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-4xl mx-auto space-y-12">
             {[
               {
                 step: "1",
@@ -168,15 +168,15 @@ const Index = () => {
             ].map((item, i) => (
               <div 
                 key={i}
-                className="card-apple flex gap-6 items-start p-8 hover-scale transition-all duration-300 animate-slide-up"
+                className="flex gap-6 items-start p-6 rounded-xl bg-card border animate-slide-up"
                 style={{ animationDelay: `${i * 150}ms` }}
               >
-                <div className="flex-shrink-0 h-14 w-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold shadow-md">
+                <div className="flex-shrink-0 h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold">
                   {item.step}
                 </div>
-                <div className="pt-1">
-                  <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
-                  <p className="text-lg text-muted-foreground leading-relaxed">{item.description}</p>
+                <div>
+                  <h3 className="text-2xl font-semibold mb-2">{item.title}</h3>
+                  <p className="text-lg text-muted-foreground">{item.description}</p>
                 </div>
               </div>
             ))}
@@ -185,21 +185,20 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-primary/10 via-background to-accent/10 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(59,130,246,0.05),transparent_50%)]"></div>
-        <div className="relative container mx-auto px-4 text-center">
-          <div className="max-w-3xl mx-auto space-y-8 animate-scale-in">
-            <h2 className="text-4xl lg:text-6xl font-bold">
+      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-accent/10">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <h2 className="text-4xl lg:text-5xl font-bold">
               Ready to Speak with Confidence?
             </h2>
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-xl text-muted-foreground">
               Join Dryrun today and never worry about forgetting your lines again.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg" 
                 onClick={() => navigate("/auth")}
-                className="text-lg px-10 hover-scale shadow-lg hover:shadow-xl"
+                className="text-lg px-8"
               >
                 Start Practicing Now
                 <ArrowRight className="ml-2 h-5 w-5" />
