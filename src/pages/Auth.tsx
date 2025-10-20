@@ -62,7 +62,7 @@ const Auth = () => {
 
         toast({
           title: "Account created!",
-          description: "Welcome to Dryrun. Let's get you started.",
+          description: "Welcome to Sermable. Let's get you started.",
         });
         navigate("/dashboard");
       }

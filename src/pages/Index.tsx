@@ -58,7 +58,7 @@ const Index = () => {
               </h1>
               
               <p className="text-xl text-muted-foreground max-w-xl">
-                Dryrun uses AI and spaced repetition to help you fully memorize your speech, 
+                Sermable uses AI and spaced repetition to help you fully memorize your speech, 
                 script, or presentation with confidence.
               </p>
 
@@ -192,7 +192,7 @@ const Index = () => {
               Ready to Speak with Confidence?
             </h2>
             <p className="text-xl text-muted-foreground">
-              Join Dryrun today and never worry about forgetting your lines again.
+              Join Sermable today and never worry about forgetting your lines again.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -211,7 +211,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t py-12">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Dryrun. Master your speech with AI.</p>
+          <p>&copy; {new Date().getFullYear()} Sermable. Master your speech with AI.</p>
         </div>
       </footer>
     </div>
