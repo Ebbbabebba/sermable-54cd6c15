@@ -21,7 +21,6 @@ interface WordState {
   isParagraphStart: boolean;
 }
 
-// Nordic character normalization for fuzzy matching
 const normalizeNordic = (text: string): string => {
   return text
     .toLowerCase()
@@ -238,16 +237,15 @@ const EnhancedWordTracker = ({
   }, [currentWordIndex]);
 
   const getWordClassName = (word: WordState, index: number) => {
-    const base = "inline-block px-2 py-1 mx-1 my-0.5 rounded-lg transition-all duration-300";
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-200";
     
     if (word.isSpoken) {
       return cn(
         base,
-        "text-[hsl(var(--neon-green))]",
-        "bg-[hsl(var(--neon-green)_/_0.15)]",
-        "shadow-[0_0_12px_hsl(var(--neon-green)_/_0.4)]",
-        animationStyle === 'playful' && "animate-gentle-bounce",
-        animationStyle === 'energetic' && "animate-confetti-pop"
+        "bg-[hsl(var(--success-green))] text-white shadow-sm",
+        animationStyle === 'playful' && "animate-fill-in",
+        animationStyle === 'energetic' && "animate-fill-in",
+        animationStyle === 'minimal' && "animate-fade-in-up"
       );
     }
 
@@ -255,44 +253,43 @@ const EnhancedWordTracker = ({
       if (!word.isRevealed) {
         return cn(
           base,
-          "text-transparent",
-          "bg-muted/50",
-          "backdrop-blur-sm",
-          "cursor-pointer",
-          "hover:bg-muted/70"
+          "bg-[hsl(var(--word-bg))] text-[hsl(var(--word-text))]",
+          "border-2 border-dashed border-[hsl(var(--word-bg))]",
+          "cursor-pointer hover:border-primary/30"
         );
       }
       return cn(
         base,
-        "text-[hsl(var(--neon-cyan))]",
-        "bg-[hsl(var(--neon-cyan)_/_0.15)]",
-        "shadow-[0_0_16px_hsl(var(--neon-cyan)_/_0.5)]",
-        "animate-neon-pulse",
-        "animate-soft-reveal"
+        "bg-[hsl(var(--word-bg))] text-[hsl(var(--word-text))]",
+        "border-2 border-primary animate-pulse"
       );
     }
 
-    return cn(base, "text-muted-foreground/50 blur-[2px]");
+    return cn(
+      base, 
+      "bg-transparent text-[hsl(var(--word-text))] opacity-40"
+    );
   };
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        "relative max-h-[60vh] overflow-y-auto scroll-smooth",
-        "text-4xl md:text-5xl lg:text-6xl leading-relaxed",
-        "p-8 rounded-lg",
+        "relative max-h-[65vh] overflow-y-auto scroll-smooth",
+        "bg-white dark:bg-gray-50 rounded-2xl shadow-lg",
+        "p-8 md:p-12",
         className
       )}
       onClick={handleTapToReveal}
     >
-      <div className="flex flex-wrap items-center justify-center">
+      <div className="flex flex-wrap items-center justify-center gap-1 leading-loose">
         {wordStates.map((word, index) => (
           <span
             key={index}
             data-word-index={index}
             className={getWordClassName(word, index)}
             style={{
+              fontSize: 'clamp(1.5rem, 3vw, 2rem)',
               fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}
           >
@@ -302,8 +299,8 @@ const EnhancedWordTracker = ({
       </div>
       
       {isRecording && currentWordIndex >= 0 && !wordStates[currentWordIndex]?.isRevealed && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-muted-foreground animate-fade-in">
-          💡 Tap anywhere to reveal the word
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-gray-500 animate-fade-in bg-white/90 px-4 py-2 rounded-full shadow-sm">
+          💡 Tap anywhere to reveal
         </div>
       )}
     </div>
