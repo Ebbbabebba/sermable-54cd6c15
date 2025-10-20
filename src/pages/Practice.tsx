@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import AudioRecorder from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
-import RealtimeWordTracker from "@/components/RealtimeWordTracker";
+import EnhancedWordTracker from "@/components/EnhancedWordTracker";
+import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 
 interface Speech {
   id: string;
@@ -39,6 +40,12 @@ const Practice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [settings, setSettings] = useState<PracticeSettingsConfig>({
+    language: 'sv-SE',
+    revealSpeed: 5,
+    showWordOnPause: true,
+    animationStyle: 'playful',
+  });
 
   useEffect(() => {
     loadSpeech();
@@ -196,6 +203,8 @@ const Practice = () => {
             </p>
           </div>
 
+          <PracticeSettings settings={settings} onSettingsChange={setSettings} />
+
           <Card>
             <CardHeader>
               <CardTitle>Session Progress</CardTitle>
@@ -255,9 +264,13 @@ const Practice = () => {
                         delayedWords={sessionResults.delayedWords}
                       />
                     ) : isRecording ? (
-                      <RealtimeWordTracker
+                      <EnhancedWordTracker
                         text={speech.text_current}
                         isRecording={isRecording}
+                        language={settings.language}
+                        revealSpeed={settings.revealSpeed}
+                        showWordOnPause={settings.showWordOnPause}
+                        animationStyle={settings.animationStyle}
                       />
                     ) : (
                       <div className="prose prose-lg max-w-none">
