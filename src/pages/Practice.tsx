@@ -10,7 +10,6 @@ import AudioRecorder from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import RealtimeWordTracker from "@/components/RealtimeWordTracker";
-import LanguageSelector from "@/components/LanguageSelector";
 
 interface Speech {
   id: string;
@@ -40,7 +39,6 @@ const Practice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [language, setLanguage] = useState<'en-US' | 'sv-SE' | 'no-NO' | 'da-DK' | 'fi-FI'>('sv-SE');
 
   useEffect(() => {
     loadSpeech();
@@ -181,14 +179,11 @@ const Practice = () => {
   return (
     <div className="min-h-screen">
       <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
-          {isPracticing && !showResults && (
-            <LanguageSelector value={language} onChange={(val) => setLanguage(val as any)} />
-          )}
         </div>
       </header>
 
@@ -259,11 +254,10 @@ const Practice = () => {
                         missedWords={sessionResults.missedWords}
                         delayedWords={sessionResults.delayedWords}
                       />
-                     ) : isRecording ? (
+                    ) : isRecording ? (
                       <RealtimeWordTracker
                         text={speech.text_current}
                         isRecording={isRecording}
-                        language={language}
                       />
                     ) : (
                       <div className="prose prose-lg max-w-none">
