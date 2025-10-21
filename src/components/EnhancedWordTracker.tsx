@@ -94,8 +94,13 @@ const EnhancedWordTracker = ({
 
     recognition.onresult = (event: any) => {
       let transcript = '';
+      let isFinal = false;
+      
       for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          isFinal = true;
+        }
       }
 
       setLastSpeechTime(Date.now());
@@ -103,7 +108,9 @@ const EnhancedWordTracker = ({
         onTranscriptUpdate(transcript);
       }
 
-      console.info('Speech recognition transcript:', transcript);
+      console.log('🎤 Transcript:', transcript);
+      console.log('📝 Is final:', isFinal);
+      console.log('📍 Current word index:', currentWordIndex);
 
       // Process spoken words with Nordic character support
       const spokenWords = transcript.toLowerCase().split(/\s+/);
@@ -118,17 +125,28 @@ const EnhancedWordTracker = ({
           const currentWord = updated[nextIndex];
           const normalizedCurrentWord = normalizeNordic(currentWord.text);
           
+          console.log('🔍 Checking word:', currentWord.text);
+          console.log('🔤 Normalized current:', normalizedCurrentWord);
+          console.log('🗣️ Spoken words:', normalizedSpoken);
+          
           // Check if any of the recently spoken words match the current word
           const matchFound = normalizedSpoken.some(spoken => {
             const cleanSpoken = spoken.trim();
             if (!cleanSpoken) return false;
-            return cleanSpoken === normalizedCurrentWord || 
+            
+            const matches = cleanSpoken === normalizedCurrentWord || 
                    cleanSpoken.includes(normalizedCurrentWord) || 
                    normalizedCurrentWord.includes(cleanSpoken);
+            
+            if (matches) {
+              console.log('✅ Match found! Spoken:', cleanSpoken, 'Expected:', normalizedCurrentWord);
+            }
+            
+            return matches;
           });
 
           if (matchFound && !currentWord.isSpoken) {
-            console.log('Match found for word:', currentWord.text);
+            console.log('🎯 Marking word as spoken:', currentWord.text);
             
             // Mark current word as spoken
             updated[nextIndex] = {
@@ -147,6 +165,7 @@ const EnhancedWordTracker = ({
                 updated[i] = { ...w, isCurrent: i === nextIndex };
               });
               setCurrentWordIndex(nextIndex);
+              console.log('➡️ Moving to next word index:', nextIndex);
             }
           }
         }
