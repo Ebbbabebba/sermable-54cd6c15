@@ -111,32 +111,44 @@ const EnhancedWordTracker = ({
 
       setWordStates((prev) => {
         const updated = [...prev];
-        let lastMatchedIndex = currentWordIndex;
+        let nextIndex = currentWordIndex;
 
-        updated.forEach((word, index) => {
-          const normalizedWord = normalizeNordic(word.text);
+        // Only check if the CURRENT word (in sequence) matches the spoken words
+        if (nextIndex >= 0 && nextIndex < updated.length) {
+          const currentWord = updated[nextIndex];
+          const normalizedCurrentWord = normalizeNordic(currentWord.text);
           
-          // Check if word matches any spoken word
-          if (normalizedSpoken.some(spoken => 
-            spoken.includes(normalizedWord) || normalizedWord.includes(spoken)
-          )) {
-            updated[index] = {
-              ...word,
+          // Check if any of the recently spoken words match the current word
+          const matchFound = normalizedSpoken.some(spoken => {
+            const cleanSpoken = spoken.trim();
+            if (!cleanSpoken) return false;
+            return cleanSpoken === normalizedCurrentWord || 
+                   cleanSpoken.includes(normalizedCurrentWord) || 
+                   normalizedCurrentWord.includes(cleanSpoken);
+          });
+
+          if (matchFound && !currentWord.isSpoken) {
+            console.log('Match found for word:', currentWord.text);
+            
+            // Mark current word as spoken
+            updated[nextIndex] = {
+              ...currentWord,
               isSpoken: true,
               isRevealed: true,
               isCurrent: false,
             };
-            lastMatchedIndex = Math.max(lastMatchedIndex, index);
-          }
-        });
 
-        // Update current word to next unspoken word
-        const nextIndex = lastMatchedIndex + 1;
-        if (nextIndex < updated.length && !updated[nextIndex].isSpoken) {
-          updated.forEach((w, i) => {
-            updated[i] = { ...w, isCurrent: i === nextIndex };
-          });
-          setCurrentWordIndex(nextIndex);
+            // Move to next word
+            nextIndex = nextIndex + 1;
+            
+            // Set the new current word
+            if (nextIndex < updated.length) {
+              updated.forEach((w, i) => {
+                updated[i] = { ...w, isCurrent: i === nextIndex };
+              });
+              setCurrentWordIndex(nextIndex);
+            }
+          }
         }
 
         return updated;
@@ -163,12 +175,28 @@ const EnhancedWordTracker = ({
   // Handle recording state
   useEffect(() => {
     if (isRecording && recognitionRef.current) {
-      setWordStates((prev) => prev.map((w) => ({ ...w, isSpoken: false, isCurrent: false, isRevealed: false })));
+      setWordStates((prev) => prev.map((w, i) => ({ 
+        ...w, 
+        isSpoken: false, 
+        isCurrent: i === 0, 
+        isRevealed: false 
+      })));
       setCurrentWordIndex(0);
       setLastSpeechTime(Date.now());
-      recognitionRef.current.start();
+      
+      try {
+        recognitionRef.current.start();
+        console.log('Speech recognition started successfully');
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+      }
     } else if (!isRecording && recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+        console.log('Speech recognition stopped');
+      } catch (error) {
+        console.error('Failed to stop speech recognition:', error);
+      }
     }
   }, [isRecording]);
 
