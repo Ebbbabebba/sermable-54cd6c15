@@ -48,6 +48,12 @@ const EnhancedWordTracker = ({
   const recognitionRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pauseTimerRef = useRef<NodeJS.Timeout>();
+  const currentWordIndexRef = useRef<number>(-1);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentWordIndexRef.current = currentWordIndex;
+  }, [currentWordIndex]);
 
   // Initialize word states
   useEffect(() => {
@@ -118,7 +124,7 @@ const EnhancedWordTracker = ({
 
       setWordStates((prev) => {
         const updated = [...prev];
-        let nextIndex = currentWordIndex;
+        let nextIndex = currentWordIndexRef.current;
 
         // Only check if the CURRENT word (in sequence) matches the spoken words
         if (nextIndex >= 0 && nextIndex < updated.length) {
@@ -189,7 +195,7 @@ const EnhancedWordTracker = ({
         recognitionRef.current.stop();
       }
     };
-  }, [language, currentWordIndex, onTranscriptUpdate]);
+  }, [language, onTranscriptUpdate]);
 
   // Handle recording state
   useEffect(() => {
