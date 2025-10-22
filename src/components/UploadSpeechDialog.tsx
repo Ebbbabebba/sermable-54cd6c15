@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +20,72 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userTier, setUserTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [wordLimit, setWordLimit] = useState(500);
+  const [canCreateSpeech, setCanCreateSpeech] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadUserLimits = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Get user profile with subscription info
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("subscription_tier, monthly_speeches_count, monthly_speeches_reset_date")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          setUserTier(profile.subscription_tier);
+          
+          // Get word limit
+          const { data: limitData } = await supabase.rpc('get_word_limit', { 
+            p_user_id: user.id 
+          });
+          if (limitData) setWordLimit(limitData);
+
+          // Check if user can create speech
+          const { data: canCreate } = await supabase.rpc('can_create_speech', { 
+            p_user_id: user.id 
+          });
+          if (canCreate !== null) setCanCreateSpeech(canCreate);
+        }
+      } catch (error) {
+        console.error('Error loading user limits:', error);
+      }
+    };
+
+    if (open) {
+      loadUserLimits();
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check word count
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    if (wordCount > wordLimit) {
+      toast({
+        variant: "destructive",
+        title: "Word limit exceeded",
+        description: `Your speech has ${wordCount} words. ${userTier === 'free' ? 'Free plan' : 'Your plan'} allows up to ${wordLimit} words. ${userTier === 'free' ? 'Upgrade to premium for up to 5000 words.' : ''}`,
+      });
+      return;
+    }
+
+    if (!canCreateSpeech) {
+      toast({
+        variant: "destructive",
+        title: "Monthly limit reached",
+        description: "You've reached your monthly speech limit. Free users can create 2 speeches per month. Upgrade to premium for unlimited speeches.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -116,9 +178,16 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
               required
               className="resize-none"
             />
-            <p className="text-sm text-muted-foreground">
-              {text.split(/\s+/).filter(Boolean).length} words
-            </p>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {text.split(/\s+/).filter(Boolean).length} / {wordLimit} words
+              </span>
+              {userTier === 'free' && (
+                <span className="text-xs text-muted-foreground">
+                  Free plan limit
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end">

@@ -23,6 +23,8 @@ const Dashboard = () => {
   const [speeches, setSpeeches] = useState<Speech[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [monthlySpeeches, setMonthlySpeeches] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -51,6 +53,9 @@ const Dashboard = () => {
 
   const loadSpeeches = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from("speeches")
         .select("*")
@@ -58,6 +63,18 @@ const Dashboard = () => {
 
       if (error) throw error;
       setSpeeches(data || []);
+
+      // Load subscription info
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("subscription_tier, monthly_speeches_count")
+        .eq("id", user.id)
+        .single();
+
+      if (profile) {
+        setSubscriptionTier(profile.subscription_tier);
+        setMonthlySpeeches(profile.monthly_speeches_count);
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -96,10 +113,20 @@ const Dashboard = () => {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Sermable</h1>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="text-sm">
+              <span className="font-medium capitalize">{subscriptionTier}</span> Plan
+              {subscriptionTier === 'free' && (
+                <span className="text-muted-foreground ml-2">
+                  ({monthlySpeeches}/2 speeches this month)
+                </span>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -114,6 +141,15 @@ const Dashboard = () => {
               Continue practicing or start a new speech.
             </p>
           </div>
+
+          {/* Ad Placeholder - Free Users */}
+          {subscriptionTier === 'free' && (
+            <Card className="bg-muted/30 border-dashed">
+              <CardContent className="flex items-center justify-center py-8">
+                <p className="text-sm text-muted-foreground">Ad Space - Upgrade to remove ads</p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Stats Cards */}
           {speeches.length > 0 && (

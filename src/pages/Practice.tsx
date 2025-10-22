@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -40,12 +41,36 @@ const Practice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
     language: 'sv-SE',
     revealSpeed: 5,
     showWordOnPause: true,
     animationStyle: 'playful',
   });
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("subscription_tier")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          setSubscriptionTier(profile.subscription_tier);
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   useEffect(() => {
     loadSpeech();
@@ -202,6 +227,15 @@ const Practice = () => {
               Practice session • {speech.text_current.split(/\s+/).filter(Boolean).length} words
             </p>
           </div>
+
+          {/* Ad Placeholder - Free Users */}
+          {subscriptionTier === 'free' && (
+            <Card className="bg-muted/30 border-dashed">
+              <CardContent className="flex items-center justify-center py-6">
+                <p className="text-sm text-muted-foreground">Ad Space - Upgrade to remove ads</p>
+              </CardContent>
+            </Card>
+          )}
 
           <PracticeSettings settings={settings} onSettingsChange={setSettings} />
 
