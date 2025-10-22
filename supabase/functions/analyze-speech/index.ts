@@ -13,15 +13,15 @@ serve(async (req) => {
 
   try {
     const { audio, originalText, speechId } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not configured');
     }
 
     console.log('Starting speech analysis for speech:', speechId);
 
-    // Step 1: Transcribe audio using Lovable AI Whisper
+    // Step 1: Transcribe audio using OpenAI Whisper
     console.log('Transcribing audio...');
     const audioBuffer = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
     const audioBlob = new Blob([audioBuffer], { type: 'audio/webm' });
@@ -30,10 +30,10 @@ serve(async (req) => {
     formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
 
-    const transcriptionResponse = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
+    const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: formData,
     });
@@ -69,18 +69,19 @@ Respond in JSON format:
   "analysis": "brief feedback"
 }`;
 
-    const analysisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-5',
         messages: [
           { role: 'system', content: 'You are a helpful speech analysis assistant. Always respond with valid JSON.' },
           { role: 'user', content: analysisPrompt }
         ],
+        max_completion_tokens: 1000,
       }),
     });
 
@@ -133,18 +134,19 @@ Result: "Today... future goals... company"
 
 Provide ONLY the cue text, no explanations.`;
 
-    const cueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const cueResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-5',
         messages: [
           { role: 'system', content: 'You are a helpful assistant that creates concise cue texts.' },
           { role: 'user', content: cuePrompt }
         ],
+        max_completion_tokens: 500,
       }),
     });
 
