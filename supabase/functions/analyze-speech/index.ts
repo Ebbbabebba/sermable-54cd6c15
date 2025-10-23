@@ -12,14 +12,14 @@ serve(async (req) => {
   }
 
   try {
-    const { audio, originalText, speechId } = await req.json();
+    const { audio, originalText, speechId, userTier } = await req.json();
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    console.log('Starting speech analysis for speech:', speechId);
+    console.log('Starting speech analysis for speech:', speechId, 'User tier:', userTier);
 
     // Step 1: Transcribe audio using OpenAI Whisper
     console.log('Transcribing audio...');
@@ -69,6 +69,10 @@ Respond in JSON format:
   "analysis": "brief feedback"
 }`;
 
+    // Use GPT-5 for premium users, GPT-5-mini for free users
+    const analysisModel = userTier === 'free' ? 'gpt-5-mini-2025-08-07' : 'gpt-5-2025-08-07';
+    console.log('Using analysis model:', analysisModel);
+
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -76,7 +80,7 @@ Respond in JSON format:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5',
+        model: analysisModel,
         messages: [
           { role: 'system', content: 'You are a helpful speech analysis assistant. Always respond with valid JSON.' },
           { role: 'user', content: analysisPrompt }
@@ -141,7 +145,7 @@ Provide ONLY the cue text, no explanations.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5',
+        model: analysisModel,
         messages: [
           { role: 'system', content: 'You are a helpful assistant that creates concise cue texts.' },
           { role: 'user', content: cuePrompt }

@@ -135,6 +135,7 @@ const Practice = () => {
             audio: base64Audio,
             originalText: speech!.text_current,
             speechId: speech!.id,
+            userTier: subscriptionTier,
           },
         });
 
