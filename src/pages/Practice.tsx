@@ -117,68 +117,99 @@ const Practice = () => {
     setIsProcessing(true);
 
     try {
+      // Validate audio blob
+      if (!audioBlob || audioBlob.size === 0) {
+        throw new Error('No audio data recorded. Please try again.');
+      }
+
       // Convert blob to base64
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       
       reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
+        try {
+          const base64Audio = (reader.result as string).split(',')[1];
 
-        toast({
-          title: "Processing...",
-          description: "AI is analyzing your practice session",
-        });
+          if (!base64Audio) {
+            throw new Error('Failed to process audio. Please try again.');
+          }
 
-        // Call the edge function
-        const { data, error } = await supabase.functions.invoke('analyze-speech', {
-          body: {
-            audio: base64Audio,
-            originalText: speech!.text_current,
-            speechId: speech!.id,
-            userTier: subscriptionTier,
-          },
-        });
-
-        if (error) throw error;
-
-        setSessionResults(data);
-        setShowResults(true);
-
-        // Save practice session to database
-        const { error: sessionError } = await supabase
-          .from('practice_sessions')
-          .insert({
-            speech_id: speech!.id,
-            score: data.accuracy,
-            missed_words: data.missedWords,
-            delayed_words: data.delayedWords,
-            duration: 0,
+          toast({
+            title: "Processing...",
+            description: "AI is analyzing your practice session",
           });
 
-        if (sessionError) {
-          console.error('Error saving session:', sessionError);
+          // Call the edge function
+          const { data, error } = await supabase.functions.invoke('analyze-speech', {
+            body: {
+              audio: base64Audio,
+              originalText: speech!.text_current,
+              speechId: speech!.id,
+              userTier: subscriptionTier,
+            },
+          });
+
+          if (error) {
+            console.error('Edge function error:', error);
+            throw new Error(error.message || 'Failed to analyze speech');
+          }
+
+          if (!data) {
+            throw new Error('No response from analysis service');
+          }
+
+          setSessionResults(data);
+          setShowResults(true);
+
+          // Save practice session to database
+          const { error: sessionError } = await supabase
+            .from('practice_sessions')
+            .insert({
+              speech_id: speech!.id,
+              score: data.accuracy,
+              missed_words: data.missedWords,
+              delayed_words: data.delayedWords,
+              duration: 0,
+            });
+
+          if (sessionError) {
+            console.error('Error saving session:', sessionError);
+          }
+
+          // Update speech with new cue text
+          const { error: updateError } = await supabase
+            .from('speeches')
+            .update({ text_current: data.cueText })
+            .eq('id', speech!.id);
+
+          if (updateError) {
+            console.error('Error updating speech:', updateError);
+          } else {
+            loadSpeech();
+          }
+
+          toast({
+            title: "Analysis complete!",
+            description: `${data.accuracy}% accuracy. Check your results below.`,
+          });
+        } catch (innerError: any) {
+          console.error('Error in analysis:', innerError);
+          toast({
+            variant: "destructive",
+            title: "Analysis failed",
+            description: innerError.message || "Failed to analyze your recording. Please try again.",
+          });
+          setIsProcessing(false);
         }
-
-        // Update speech with new cue text
-        const { error: updateError } = await supabase
-          .from('speeches')
-          .update({ text_current: data.cueText })
-          .eq('id', speech!.id);
-
-        if (updateError) {
-          console.error('Error updating speech:', updateError);
-        } else {
-          loadSpeech();
-        }
-
-        toast({
-          title: "Analysis complete!",
-          description: `${data.accuracy}% accuracy. Check your results below.`,
-        });
       };
 
       reader.onerror = () => {
-        throw new Error('Failed to read audio file');
+        toast({
+          variant: "destructive",
+          title: "Processing failed",
+          description: "Failed to read audio file. Please try again.",
+        });
+        setIsProcessing(false);
       };
 
     } catch (error: any) {
@@ -186,9 +217,8 @@ const Practice = () => {
       toast({
         variant: "destructive",
         title: "Processing failed",
-        description: error.message || "Failed to analyze your recording. Please try again.",
+        description: error.message || "Failed to process your recording. Please try again.",
       });
-    } finally {
       setIsProcessing(false);
     }
   };
