@@ -69,8 +69,8 @@ Respond in JSON format:
   "analysis": "brief feedback"
 }`;
 
-    // Use GPT-4o for premium users, GPT-4o-mini for free users (more widely available)
-    const analysisModel = userTier === 'free' ? 'gpt-4o-mini' : 'gpt-4o';
+    // Use GPT-5 for premium users, GPT-5-mini for free users
+    const analysisModel = userTier === 'free' ? 'gpt-5-mini-2025-08-07' : 'gpt-5-2025-08-07';
     console.log('Using analysis model:', analysisModel);
 
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
