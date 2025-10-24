@@ -27,7 +27,7 @@ const Index = () => {
               enableZoom={false} 
               enablePan={false}
               autoRotate
-              autoRotateSpeed={0.3}
+              autoRotateSpeed={1.2}
             />
           </Suspense>
         </Canvas>
