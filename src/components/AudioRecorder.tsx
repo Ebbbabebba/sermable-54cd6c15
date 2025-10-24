@@ -16,6 +16,7 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
   const chunksRef = useRef<Blob[]>([]);
   const [recordingTime, setRecordingTime] = useState(0);
   const timerRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     if (isRecording) {
@@ -55,11 +56,15 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
 
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
+          sampleRate: 24000,
+          channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
         }
       });
+
+      streamRef.current = stream;
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm',
@@ -67,22 +72,32 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
 
       chunksRef.current = [];
 
+      // Stream audio in 250ms chunks for real-time processing
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           chunksRef.current.push(event.data);
+          console.log(`Audio chunk received: ${event.data.size} bytes`);
         }
       };
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        console.log(`Recording stopped. Total audio size: ${audioBlob.size} bytes from ${chunksRef.current.length} chunks`);
         onStop(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+        
+        // Stop all tracks
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
       };
 
-      mediaRecorder.start();
+      // Start recording with 250ms chunks for streaming
+      mediaRecorder.start(250);
       mediaRecorderRef.current = mediaRecorder;
       onStart();
 
+      console.log('Recording started with streaming chunks (250ms intervals)');
       toast({
         title: "Recording started",
         description: "Speak clearly into your microphone",
@@ -110,6 +125,7 @@ const AudioRecorder = ({ isRecording, onStart, onStop, disabled }: AudioRecorder
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      console.log('Stopping recording...');
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
     }
