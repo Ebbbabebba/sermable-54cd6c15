@@ -4,7 +4,7 @@ interface FloatingAstronaut2DProps {
 
 const FloatingAstronaut2D = ({ triggerFlyAway = false }: FloatingAstronaut2DProps) => {
   return (
-    <div className={`absolute top-20 left-1/2 -translate-x-1/2 ${triggerFlyAway ? 'animate-fly-away' : 'animate-float'}`}>
+    <div className={`mx-auto mb-4 ${triggerFlyAway ? 'animate-fly-away' : 'animate-float'}`}>
       <svg
         width="200"
         height="280"

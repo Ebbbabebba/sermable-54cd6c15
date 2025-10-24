@@ -16,15 +16,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
-      {/* 2D Floating Astronaut */}
-      <FloatingAstronaut2D triggerFlyAway={flyAway} />
-
       {/* Content Overlay */}
       <div className="relative z-10 text-center w-full h-full flex flex-col">
         {/* Main content centered */}
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          {/* Spacing for astronaut */}
-          <div className="h-48 md:h-64"></div>
+          {/* 2D Floating Astronaut */}
+          <FloatingAstronaut2D triggerFlyAway={flyAway} />
           
           {/* Logo text - Navy blue */}
           <div className="animate-fade-in mb-4">
