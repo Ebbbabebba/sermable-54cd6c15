@@ -50,27 +50,28 @@ serve(async (req) => {
 
     // Step 2: Use AI to analyze the speech and identify issues
     console.log('Analyzing speech patterns...');
-    const analysisPrompt = `You are a speech coach analyzing a practice session.
+    
+    const analysisPrompt = `Analyze this speech practice session and return ONLY valid JSON.
 
 Original text: "${originalText}"
-What was spoken: "${spokenText}"
+Spoken text: "${spokenText}"
 
-Analyze the performance and identify:
-1. Words that were missed completely
-2. Words that were likely hesitated on (based on transcription patterns)
-3. Overall accuracy percentage
-4. Which words need more practice
+Compare them and identify:
+1. accuracy: percentage match (0-100)
+2. missedWords: array of words completely missed from original
+3. delayedWords: array of words spoken with noticeable hesitation
+4. analysis: brief feedback text
 
-Respond in JSON format:
+Return ONLY this JSON structure with no extra text:
 {
-  "accuracy": <number 0-100>,
-  "missedWords": ["word1", "word2"],
-  "delayedWords": ["word3", "word4"],
-  "analysis": "brief feedback"
+  "accuracy": 85,
+  "missedWords": ["example1", "example2"],
+  "delayedWords": ["example3"],
+  "analysis": "Good practice session"
 }`;
 
-    // Use GPT-5 for premium users, GPT-5-mini for free users
-    const analysisModel = userTier === 'free' ? 'gpt-5-mini-2025-08-07' : 'gpt-5-2025-08-07';
+    // Use GPT-4o-mini for reliable JSON responses
+    const analysisModel = 'gpt-4o-mini';
     console.log('Using analysis model:', analysisModel);
 
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -83,87 +84,108 @@ Respond in JSON format:
         model: analysisModel,
         response_format: { type: "json_object" },
         messages: [
-          { role: 'system', content: 'You are a helpful speech analysis assistant. Always respond with valid JSON only, no markdown or explanations.' },
+          { role: 'system', content: 'You are a speech analysis assistant. Return ONLY valid JSON with no markdown formatting or explanations.' },
           { role: 'user', content: analysisPrompt }
         ],
-        max_completion_tokens: 1000,
+        temperature: 0.3,
+        max_tokens: 500,
       }),
     });
 
     if (!analysisResponse.ok) {
-      const error = await analysisResponse.text();
-      console.error('Analysis error:', error);
-      throw new Error(`Analysis failed: ${error}`);
+      const errorText = await analysisResponse.text();
+      console.error('Analysis API error:', analysisResponse.status, errorText);
+      throw new Error(`Analysis failed: ${errorText}`);
     }
 
     const analysisData = await analysisResponse.json();
-    const analysisText = analysisData.choices[0].message.content;
+    console.log('Full API response:', JSON.stringify(analysisData, null, 2));
+    
+    const analysisText = analysisData.choices[0]?.message?.content;
     console.log('Raw analysis response:', analysisText);
-    console.log('Full analysis data:', JSON.stringify(analysisData, null, 2));
+
+    if (!analysisText) {
+      throw new Error('Empty response from AI');
+    }
 
     // Parse JSON from the response
     let analysis;
     try {
-      // GPT-5 with json_object mode should return pure JSON
       analysis = JSON.parse(analysisText);
-      console.log('Parsed analysis successfully:', analysis);
+      console.log('✅ Parsed analysis successfully:', JSON.stringify(analysis, null, 2));
+      
+      // Validate required fields
+      if (typeof analysis.accuracy !== 'number') {
+        analysis.accuracy = 70;
+      }
+      if (!Array.isArray(analysis.missedWords)) {
+        analysis.missedWords = [];
+      }
+      if (!Array.isArray(analysis.delayedWords)) {
+        analysis.delayedWords = [];
+      }
+      if (!analysis.analysis) {
+        analysis.analysis = 'Practice session completed';
+      }
     } catch (e) {
-      console.error('Failed to parse analysis JSON:', e);
-      console.error('Analysis text was:', analysisText);
-      // Fallback analysis
-      analysis = {
-        accuracy: 70,
-        missedWords: [],
-        delayedWords: [],
-        analysis: 'Unable to parse detailed analysis. Please try again.'
-      };
+      console.error('❌ Failed to parse analysis JSON:', e);
+      console.error('Response text was:', analysisText);
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      throw new Error(`JSON parse error: ${errorMessage}`);
     }
 
     // Step 3: Generate cue words (simplified version of text)
     console.log('Generating cue words...');
-    const cuePrompt = `Given this speech text and the words that need practice, create a simplified "cue word" version.
+    
+    const problematicWords = [...analysis.missedWords, ...analysis.delayedWords];
+    let cueText = originalText; // Default to full text if cue generation fails
+    
+    if (problematicWords.length > 0) {
+      const cuePrompt = `Create a simplified cue text from this speech focusing on problem words.
 
-Original text: "${originalText}"
-Words that need practice: ${[...analysis.missedWords, ...analysis.delayedWords].join(', ')}
+Original: "${originalText}"
+Problem words: ${problematicWords.join(', ')}
 
-Create a simplified version that:
-1. Keeps all the problematic words
-2. Removes words that were spoken well
-3. Keeps minimal context words to maintain flow
-4. Uses "..." to indicate removed sections
+Rules:
+1. Keep ALL problem words
+2. Keep 1-2 context words around each problem word
+3. Use "..." between sections
+4. Maximum 50% of original length
 
-Example:
-Original: "Today I want to talk about our future goals for the company"
-Problematic words: "future", "goals"
-Result: "Today... future goals... company"
+Return ONLY the cue text, nothing else.`;
 
-Provide ONLY the cue text, no explanations.`;
+      const cueResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You create concise cue texts. Return only the cue text with no explanations.' },
+            { role: 'user', content: cuePrompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 300,
+        }),
+      });
 
-    const cueResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: analysisModel,
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that creates concise cue texts.' },
-          { role: 'user', content: cuePrompt }
-        ],
-        max_completion_tokens: 500,
-      }),
-    });
-
-    if (!cueResponse.ok) {
-      const error = await cueResponse.text();
-      console.error('Cue generation error:', error);
-      throw new Error(`Cue generation failed: ${error}`);
+      if (cueResponse.ok) {
+        const cueData = await cueResponse.json();
+        const generatedCue = cueData.choices[0]?.message?.content?.trim();
+        if (generatedCue && generatedCue.length > 10) {
+          cueText = generatedCue;
+          console.log('✅ Generated cue text:', cueText);
+        } else {
+          console.log('⚠️ Cue generation returned short text, using original');
+        }
+      } else {
+        console.error('Cue generation failed, using original text');
+      }
+    } else {
+      console.log('No problematic words, keeping original text');
     }
-
-    const cueData = await cueResponse.json();
-    const cueText = cueData.choices[0].message.content.trim();
-    console.log('Generated cue text:', cueText);
 
     return new Response(
       JSON.stringify({
