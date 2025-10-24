@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "Sermable",
+    "tagline": "Domina tu Discurso con Práctica Potenciada por IA"
+  },
+  "nav": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "practice": "Practicar",
+    "signOut": "Cerrar Sesión",
+    "signIn": "Iniciar Sesión"
+  },
+  "home": {
+    "hero": {
+      "title": "Domina tu Discurso con Práctica Potenciada por IA",
+      "subtitle": "Transforma tus habilidades de oratoria con retroalimentación personalizada y aprendizaje por repetición espaciada",
+      "cta": "Comenzar a Practicar"
+    },
+    "features": {
+      "title": "Características",
+      "aiAnalysis": {
+        "title": "Análisis de Discurso con IA",
+        "description": "Obtén retroalimentación instantánea sobre tu presentación"
+      },
+      "spacedRepetition": {
+        "title": "Repetición Espaciada",
+        "description": "Optimiza el aprendizaje con programación basada en ciencia"
+      },
+      "realTimeTracking": {
+        "title": "Seguimiento en Tiempo Real",
+        "description": "Sigue el texto con resaltado visual de palabras"
+      }
+    }
+  },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "loading": "Cargando...",
+    "signInError": "Error al iniciar sesión",
+    "signUpError": "Error al registrarse",
+    "passwordMismatch": "Las contraseñas no coinciden"
+  },
+  "dashboard": {
+    "title": "Mis Discursos",
+    "uploadSpeech": "Subir Discurso",
+    "noSpeeches": "Aún no hay discursos. ¡Sube tu primer discurso para comenzar!",
+    "words": "palabras",
+    "dueToday": "Para hoy",
+    "overdue": "Atrasado",
+    "loading": "Cargando discursos..."
+  },
+  "upload": {
+    "title": "Subir Nuevo Discurso",
+    "speechTitle": "Título del Discurso",
+    "speechText": "Texto del Discurso",
+    "goalDate": "Fecha Objetivo",
+    "optional": "opcional",
+    "cancel": "Cancelar",
+    "upload": "Subir",
+    "uploading": "Subiendo...",
+    "success": "¡Discurso subido exitosamente!",
+    "error": "Error al subir discurso",
+    "wordLimit": "Límite de palabras",
+    "monthlyLimit": "Límite mensual de discursos",
+    "limitReached": "Límite alcanzado",
+    "pasteText": "Pega el texto de tu discurso aquí..."
+  },
+  "practice": {
+    "title": "Sesión de Práctica",
+    "startRecording": "Iniciar Grabación",
+    "stopRecording": "Detener Grabación",
+    "analyzing": "Analizando...",
+    "ready": "Listo para grabar",
+    "recording": "Grabando...",
+    "paused": "Pausado",
+    "results": {
+      "title": "Resultados de Práctica",
+      "accuracy": "Precisión",
+      "missedWords": "Palabras Omitidas",
+      "delayedWords": "Palabras Retrasadas",
+      "feedback": "Retroalimentación",
+      "cueText": "Texto de Práctica",
+      "retry": "Intentar de Nuevo",
+      "dashboard": "Volver al Panel"
+    },
+    "settings": {
+      "title": "Configuración de Práctica",
+      "language": "Idioma",
+      "revealSpeed": "Velocidad de Revelado",
+      "showOnPause": "Mostrar palabras al pausar",
+      "animationStyle": "Estilo de Animación",
+      "styles": {
+        "fade": "Desvanecer",
+        "slide": "Deslizar",
+        "highlight": "Resaltar"
+      }
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "close": "Cerrar"
+  }
+}

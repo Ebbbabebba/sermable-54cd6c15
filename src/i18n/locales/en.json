@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "Sermable",
+    "tagline": "Master Your Speech with AI-Powered Practice"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "practice": "Practice",
+    "signOut": "Sign Out",
+    "signIn": "Sign In"
+  },
+  "home": {
+    "hero": {
+      "title": "Master Your Speech with AI-Powered Practice",
+      "subtitle": "Transform your speaking skills with personalized feedback and spaced repetition learning",
+      "cta": "Start Practicing"
+    },
+    "features": {
+      "title": "Features",
+      "aiAnalysis": {
+        "title": "AI Speech Analysis",
+        "description": "Get instant feedback on your speech delivery"
+      },
+      "spacedRepetition": {
+        "title": "Spaced Repetition",
+        "description": "Optimize learning with science-backed scheduling"
+      },
+      "realTimeTracking": {
+        "title": "Real-Time Tracking",
+        "description": "Follow along with visual word highlighting"
+      }
+    }
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "loading": "Loading...",
+    "signInError": "Error signing in",
+    "signUpError": "Error signing up",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "dashboard": {
+    "title": "My Speeches",
+    "uploadSpeech": "Upload Speech",
+    "noSpeeches": "No speeches yet. Upload your first speech to get started!",
+    "words": "words",
+    "dueToday": "Due today",
+    "overdue": "Overdue",
+    "loading": "Loading speeches..."
+  },
+  "upload": {
+    "title": "Upload New Speech",
+    "speechTitle": "Speech Title",
+    "speechText": "Speech Text",
+    "goalDate": "Goal Date",
+    "optional": "optional",
+    "cancel": "Cancel",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "success": "Speech uploaded successfully!",
+    "error": "Failed to upload speech",
+    "wordLimit": "Word limit",
+    "monthlyLimit": "Monthly speech limit",
+    "limitReached": "Limit reached",
+    "pasteText": "Paste your speech text here..."
+  },
+  "practice": {
+    "title": "Practice Session",
+    "startRecording": "Start Recording",
+    "stopRecording": "Stop Recording",
+    "analyzing": "Analyzing...",
+    "ready": "Ready to record",
+    "recording": "Recording...",
+    "paused": "Paused",
+    "results": {
+      "title": "Practice Results",
+      "accuracy": "Accuracy",
+      "missedWords": "Missed Words",
+      "delayedWords": "Delayed Words",
+      "feedback": "Feedback",
+      "cueText": "Practice Cue",
+      "retry": "Try Again",
+      "dashboard": "Back to Dashboard"
+    },
+    "settings": {
+      "title": "Practice Settings",
+      "language": "Language",
+      "revealSpeed": "Reveal Speed",
+      "showOnPause": "Show words on pause",
+      "animationStyle": "Animation Style",
+      "styles": {
+        "fade": "Fade",
+        "slide": "Slide",
+        "highlight": "Highlight"
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "Sermable",
+    "tagline": "Meistern Sie Ihre Rede mit KI-gestützter Übung"
+  },
+  "nav": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "practice": "Üben",
+    "signOut": "Abmelden",
+    "signIn": "Anmelden"
+  },
+  "home": {
+    "hero": {
+      "title": "Meistern Sie Ihre Rede mit KI-gestützter Übung",
+      "subtitle": "Verwandeln Sie Ihre Sprechfähigkeiten mit personalisiertem Feedback und wissenschaftlich fundiertem Lernen",
+      "cta": "Jetzt Üben"
+    },
+    "features": {
+      "title": "Funktionen",
+      "aiAnalysis": {
+        "title": "KI-Sprachanalyse",
+        "description": "Erhalten Sie sofortiges Feedback zu Ihrer Präsentation"
+      },
+      "spacedRepetition": {
+        "title": "Verteilte Wiederholung",
+        "description": "Optimieren Sie das Lernen mit wissenschaftlicher Planung"
+      },
+      "realTimeTracking": {
+        "title": "Echtzeit-Verfolgung",
+        "description": "Folgen Sie mit visueller Worthervorhebung"
+      }
+    }
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "forgotPassword": "Passwort vergessen?",
+    "noAccount": "Noch kein Konto?",
+    "haveAccount": "Bereits ein Konto?",
+    "loading": "Wird geladen...",
+    "signInError": "Fehler bei der Anmeldung",
+    "signUpError": "Fehler bei der Registrierung",
+    "passwordMismatch": "Passwörter stimmen nicht überein"
+  },
+  "dashboard": {
+    "title": "Meine Reden",
+    "uploadSpeech": "Rede Hochladen",
+    "noSpeeches": "Noch keine Reden. Laden Sie Ihre erste Rede hoch, um zu beginnen!",
+    "words": "Wörter",
+    "dueToday": "Heute fällig",
+    "overdue": "Überfällig",
+    "loading": "Reden werden geladen..."
+  },
+  "upload": {
+    "title": "Neue Rede Hochladen",
+    "speechTitle": "Redetitel",
+    "speechText": "Redetext",
+    "goalDate": "Zieldatum",
+    "optional": "optional",
+    "cancel": "Abbrechen",
+    "upload": "Hochladen",
+    "uploading": "Wird hochgeladen...",
+    "success": "Rede erfolgreich hochgeladen!",
+    "error": "Fehler beim Hochladen der Rede",
+    "wordLimit": "Wortlimit",
+    "monthlyLimit": "Monatliches Redenlimit",
+    "limitReached": "Limit erreicht",
+    "pasteText": "Fügen Sie hier Ihren Redetext ein..."
+  },
+  "practice": {
+    "title": "Übungssitzung",
+    "startRecording": "Aufnahme Starten",
+    "stopRecording": "Aufnahme Stoppen",
+    "analyzing": "Wird analysiert...",
+    "ready": "Bereit zur Aufnahme",
+    "recording": "Aufnahme läuft...",
+    "paused": "Pausiert",
+    "results": {
+      "title": "Übungsergebnisse",
+      "accuracy": "Genauigkeit",
+      "missedWords": "Verpasste Wörter",
+      "delayedWords": "Verzögerte Wörter",
+      "feedback": "Feedback",
+      "cueText": "Übungstext",
+      "retry": "Erneut Versuchen",
+      "dashboard": "Zurück zum Dashboard"
+    },
+    "settings": {
+      "title": "Übungseinstellungen",
+      "language": "Sprache",
+      "revealSpeed": "Anzeigegeschwindigkeit",
+      "showOnPause": "Wörter bei Pause anzeigen",
+      "animationStyle": "Animationsstil",
+      "styles": {
+        "fade": "Überblenden",
+        "slide": "Gleiten",
+        "highlight": "Hervorheben"
+      }
+    }
+  },
+  "common": {
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "close": "Schließen"
+  }
+}

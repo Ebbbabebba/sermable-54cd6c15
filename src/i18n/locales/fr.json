@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "Sermable",
+    "tagline": "Maîtrisez votre Discours avec la Pratique Assistée par IA"
+  },
+  "nav": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "practice": "Pratiquer",
+    "signOut": "Se déconnecter",
+    "signIn": "Se connecter"
+  },
+  "home": {
+    "hero": {
+      "title": "Maîtrisez votre Discours avec la Pratique Assistée par IA",
+      "subtitle": "Transformez vos compétences oratoires avec des retours personnalisés et un apprentissage par répétition espacée",
+      "cta": "Commencer à Pratiquer"
+    },
+    "features": {
+      "title": "Fonctionnalités",
+      "aiAnalysis": {
+        "title": "Analyse de Discours par IA",
+        "description": "Obtenez des retours instantanés sur votre présentation"
+      },
+      "spacedRepetition": {
+        "title": "Répétition Espacée",
+        "description": "Optimisez l'apprentissage avec une planification scientifique"
+      },
+      "realTimeTracking": {
+        "title": "Suivi en Temps Réel",
+        "description": "Suivez avec la mise en évidence visuelle des mots"
+      }
+    }
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "forgotPassword": "Mot de passe oublié?",
+    "noAccount": "Pas de compte?",
+    "haveAccount": "Vous avez déjà un compte?",
+    "loading": "Chargement...",
+    "signInError": "Erreur de connexion",
+    "signUpError": "Erreur d'inscription",
+    "passwordMismatch": "Les mots de passe ne correspondent pas"
+  },
+  "dashboard": {
+    "title": "Mes Discours",
+    "uploadSpeech": "Télécharger un Discours",
+    "noSpeeches": "Aucun discours pour le moment. Téléchargez votre premier discours pour commencer!",
+    "words": "mots",
+    "dueToday": "À faire aujourd'hui",
+    "overdue": "En retard",
+    "loading": "Chargement des discours..."
+  },
+  "upload": {
+    "title": "Télécharger un Nouveau Discours",
+    "speechTitle": "Titre du Discours",
+    "speechText": "Texte du Discours",
+    "goalDate": "Date Objectif",
+    "optional": "facultatif",
+    "cancel": "Annuler",
+    "upload": "Télécharger",
+    "uploading": "Téléchargement...",
+    "success": "Discours téléchargé avec succès!",
+    "error": "Échec du téléchargement du discours",
+    "wordLimit": "Limite de mots",
+    "monthlyLimit": "Limite mensuelle de discours",
+    "limitReached": "Limite atteinte",
+    "pasteText": "Collez le texte de votre discours ici..."
+  },
+  "practice": {
+    "title": "Session de Pratique",
+    "startRecording": "Démarrer l'enregistrement",
+    "stopRecording": "Arrêter l'enregistrement",
+    "analyzing": "Analyse en cours...",
+    "ready": "Prêt à enregistrer",
+    "recording": "Enregistrement...",
+    "paused": "En pause",
+    "results": {
+      "title": "Résultats de Pratique",
+      "accuracy": "Précision",
+      "missedWords": "Mots Manqués",
+      "delayedWords": "Mots Retardés",
+      "feedback": "Retour",
+      "cueText": "Texte d'Aide",
+      "retry": "Réessayer",
+      "dashboard": "Retour au Tableau de bord"
+    },
+    "settings": {
+      "title": "Paramètres de Pratique",
+      "language": "Langue",
+      "revealSpeed": "Vitesse de Révélation",
+      "showOnPause": "Afficher les mots en pause",
+      "animationStyle": "Style d'Animation",
+      "styles": {
+        "fade": "Fondu",
+        "slide": "Glissement",
+        "highlight": "Surbrillance"
+      }
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "close": "Fermer"
+  }
+}
