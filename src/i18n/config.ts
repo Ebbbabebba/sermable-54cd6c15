@@ -8,34 +8,30 @@ import de from './locales/de.json';
 import it from './locales/it.json';
 import pt from './locales/pt.json';
 
-const initI18n = async () => {
-  await i18n
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-      resources: {
-        en: { translation: en },
-        es: { translation: es },
-        fr: { translation: fr },
-        de: { translation: de },
-        it: { translation: it },
-        pt: { translation: pt },
-      },
-      fallbackLng: 'en',
-      interpolation: {
-        escapeValue: false,
-      },
-      detection: {
-        order: ['navigator', 'htmlTag', 'path', 'subdomain'],
-        caches: ['localStorage'],
-      },
-      react: {
-        useSuspense: true,
-      },
-    });
-};
-
-// Initialize immediately but don't block
-initI18n();
+// Initialize synchronously to ensure it's ready before React renders
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources: {
+      en: { translation: en },
+      es: { translation: es },
+      fr: { translation: fr },
+      de: { translation: de },
+      it: { translation: it },
+      pt: { translation: pt },
+    },
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    detection: {
+      order: ['navigator', 'htmlTag', 'path', 'subdomain'],
+      caches: ['localStorage'],
+    },
+    react: {
+      useSuspense: false, // Disable suspense to prevent loading issues
+    },
+  });
 
 export default i18n;
