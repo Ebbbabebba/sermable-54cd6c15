@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sphere, Box, Cylinder, Torus } from '@react-three/drei';
-import { Text } from '@react-three/drei';
+import { Sphere, Box, Cylinder, Torus, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 export const AnimatedAstronaut = () => {
@@ -155,7 +154,6 @@ export const AnimatedAstronaut = () => {
         color="#000000"
         anchorX="center"
         anchorY="middle"
-        font="/fonts/inter-bold.woff"
       >
         sermable
       </Text>

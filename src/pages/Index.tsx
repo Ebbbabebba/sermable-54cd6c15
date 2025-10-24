@@ -12,14 +12,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
       {/* 3D Canvas Background */}
-      <div className="absolute inset-0 z-0">
-        <Canvas>
+      <div className="absolute top-0 left-0 right-0 h-96 z-0">
+        <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
           <Suspense fallback={null}>
-            <PerspectiveCamera makeDefault position={[0, 0, 8]} />
-            <ambientLight intensity={0.6} />
-            <pointLight position={[10, 10, 10]} intensity={1.2} />
-            <pointLight position={[-10, -10, -10]} intensity={0.6} />
-            <directionalLight position={[5, 5, 5]} intensity={1} />
+            <ambientLight intensity={0.7} />
+            <pointLight position={[10, 10, 10]} intensity={1.5} />
+            <pointLight position={[-10, -10, -10]} intensity={0.8} />
+            <directionalLight position={[5, 5, 5]} intensity={1.2} />
             
             <StarField />
             <AnimatedAstronaut />
@@ -29,8 +28,6 @@ const Index = () => {
               enablePan={false}
               autoRotate
               autoRotateSpeed={0.3}
-              maxPolarAngle={Math.PI / 2}
-              minPolarAngle={Math.PI / 2}
             />
           </Suspense>
         </Canvas>
