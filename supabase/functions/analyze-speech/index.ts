@@ -81,8 +81,9 @@ Respond in JSON format:
       },
       body: JSON.stringify({
         model: analysisModel,
+        response_format: { type: "json_object" },
         messages: [
-          { role: 'system', content: 'You are a helpful speech analysis assistant. Always respond with valid JSON.' },
+          { role: 'system', content: 'You are a helpful speech analysis assistant. Always respond with valid JSON only, no markdown or explanations.' },
           { role: 'user', content: analysisPrompt }
         ],
         max_completion_tokens: 1000,
@@ -97,24 +98,24 @@ Respond in JSON format:
 
     const analysisData = await analysisResponse.json();
     const analysisText = analysisData.choices[0].message.content;
-    console.log('Raw analysis:', analysisText);
+    console.log('Raw analysis response:', analysisText);
+    console.log('Full analysis data:', JSON.stringify(analysisData, null, 2));
 
     // Parse JSON from the response
     let analysis;
     try {
-      const jsonMatch = analysisText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('No JSON found in response');
-      }
+      // GPT-5 with json_object mode should return pure JSON
+      analysis = JSON.parse(analysisText);
+      console.log('Parsed analysis successfully:', analysis);
     } catch (e) {
       console.error('Failed to parse analysis JSON:', e);
+      console.error('Analysis text was:', analysisText);
+      // Fallback analysis
       analysis = {
         accuracy: 70,
         missedWords: [],
         delayedWords: [],
-        analysis: 'Unable to parse detailed analysis'
+        analysis: 'Unable to parse detailed analysis. Please try again.'
       };
     }
 

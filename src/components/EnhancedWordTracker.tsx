@@ -84,7 +84,7 @@ const EnhancedWordTracker = ({
   // Setup speech recognition
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.warn('Speech recognition not supported');
+      console.error('❌ Speech recognition not supported in this browser');
       return;
     }
 
@@ -96,7 +96,8 @@ const EnhancedWordTracker = ({
     recognition.lang = language;
     recognition.maxAlternatives = 3;
 
-    console.info('Speech recognition initialized with language:', language);
+    console.info('✅ Speech recognition initialized with language:', language);
+    console.info('📝 Total words in text:', wordStates.length);
 
     recognition.onresult = (event: any) => {
       let transcript = '';
@@ -187,7 +188,9 @@ const EnhancedWordTracker = ({
     };
 
     recognition.onstart = () => {
-      console.info('🎙️ Speech recognition listening...');
+      console.info('🎙️ Speech recognition started and listening...');
+      console.info('📊 Current word index:', currentWordIndexRef.current);
+      console.info('📝 Expected next word:', wordStates[currentWordIndexRef.current + 1]?.text || 'N/A');
     };
 
     recognition.onend = () => {
@@ -342,13 +345,24 @@ const EnhancedWordTracker = ({
       ref={containerRef}
       className={cn(
         "relative max-h-[65vh] overflow-y-auto scroll-smooth",
-        "bg-white dark:bg-gray-50 rounded-2xl shadow-lg",
+        "bg-white dark:bg-gray-900 rounded-2xl shadow-lg",
         "p-8 md:p-12",
         className
       )}
       onClick={handleTapToReveal}
     >
-      <div className="flex flex-wrap items-center justify-center gap-1 leading-loose">
+      {/* Recording Status Banner */}
+      {isRecording && (
+        <div className="absolute top-4 left-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg animate-pulse flex items-center gap-2 z-10">
+          <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+          <span className="font-medium">RECORDING - Speak now</span>
+          <span className="text-xs opacity-90 ml-auto">
+            Word {currentWordIndex + 1} of {wordStates.length}
+          </span>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center justify-center gap-1 leading-loose mt-16">
         {wordStates.map((word, index) => (
           <span
             key={index}
@@ -365,8 +379,8 @@ const EnhancedWordTracker = ({
       </div>
       
       {isRecording && currentWordIndex >= 0 && !wordStates[currentWordIndex]?.isRevealed && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-gray-500 animate-fade-in bg-white/90 px-4 py-2 rounded-full shadow-sm">
-          💡 Tap anywhere to reveal
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-gray-600 dark:text-gray-300 animate-fade-in bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-sm">
+          💡 Tap anywhere to reveal the next word
         </div>
       )}
     </div>
