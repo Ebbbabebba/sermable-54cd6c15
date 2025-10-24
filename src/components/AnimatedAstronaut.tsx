@@ -38,75 +38,102 @@ export const AnimatedAstronaut = () => {
   });
 
   return (
-    <group ref={groupRef}>
-      {/* Body */}
-      <Sphere args={[0.8, 32, 32]} position={[0, 0, 0]}>
-        <meshStandardMaterial color="#f0f0f0" />
+    <group ref={groupRef} scale={0.5}>
+      {/* Body - Cute round shape */}
+      <Sphere args={[0.9, 32, 32]} position={[0, 0, 0]}>
+        <meshStandardMaterial color="#58cc02" roughness={0.3} />
       </Sphere>
 
-      {/* Helmet/Head */}
-      <Sphere args={[0.5, 32, 32]} position={[0, 1.2, 0]}>
-        <meshStandardMaterial color="#ffffff" transparent opacity={0.9} />
+      {/* Head - Large and round like Duolingo owl */}
+      <Sphere args={[0.65, 32, 32]} position={[0, 1.3, 0]}>
+        <meshStandardMaterial color="#58cc02" roughness={0.3} />
       </Sphere>
 
-      {/* Visor */}
-      <Sphere args={[0.48, 32, 32]} position={[0, 1.2, 0.15]}>
-        <meshStandardMaterial color="#1a1a2e" transparent opacity={0.8} />
-      </Sphere>
+      {/* Helmet visor - Big cute eyes effect */}
+      <group position={[0, 1.35, 0.5]}>
+        {/* Left eye */}
+        <Sphere args={[0.15, 16, 16]} position={[-0.2, 0.05, 0]}>
+          <meshStandardMaterial color="#ffffff" />
+        </Sphere>
+        <Sphere args={[0.08, 16, 16]} position={[-0.2, 0.05, 0.12]}>
+          <meshStandardMaterial color="#1a1a1a" />
+        </Sphere>
+        
+        {/* Right eye */}
+        <Sphere args={[0.15, 16, 16]} position={[0.2, 0.05, 0]}>
+          <meshStandardMaterial color="#ffffff" />
+        </Sphere>
+        <Sphere args={[0.08, 16, 16]} position={[0.2, 0.05, 0.12]}>
+          <meshStandardMaterial color="#1a1a1a" />
+        </Sphere>
 
-      {/* Backpack */}
-      <Box args={[0.6, 0.7, 0.3]} position={[0, 0.2, -0.6]}>
-        <meshStandardMaterial color="#e0e0e0" />
+        {/* Smile */}
+        <Torus args={[0.15, 0.03, 8, 16, Math.PI]} position={[0, -0.15, 0.05]} rotation={[0, 0, 0]}>
+          <meshStandardMaterial color="#1a1a1a" />
+        </Torus>
+      </group>
+
+      {/* Backpack - Fun colors */}
+      <Box args={[0.7, 0.8, 0.35]} position={[0, 0.2, -0.65]}>
+        <meshStandardMaterial color="#ff6b35" roughness={0.4} />
       </Box>
 
-      {/* Left Arm */}
-      <group ref={leftArmRef} position={[-0.7, 0.3, 0]}>
-        <Cylinder args={[0.15, 0.15, 0.9, 16]} rotation={[0, 0, Math.PI / 2]}>
-          <meshStandardMaterial color="#f0f0f0" />
+      {/* Antenna */}
+      <Cylinder args={[0.03, 0.03, 0.4, 8]} position={[0, 2.0, 0]}>
+        <meshStandardMaterial color="#ffd700" />
+      </Cylinder>
+      <Sphere args={[0.1, 16, 16]} position={[0, 2.25, 0]}>
+        <meshStandardMaterial color="#ff1744" emissive="#ff1744" emissiveIntensity={0.5} />
+      </Sphere>
+
+      {/* Left Arm - Shorter and rounder */}
+      <group ref={leftArmRef} position={[-0.75, 0.25, 0]}>
+        <Cylinder args={[0.12, 0.12, 0.6, 16]} rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial color="#4a90e2" />
         </Cylinder>
-        <Sphere args={[0.18, 16, 16]} position={[-0.5, 0, 0]}>
-          <meshStandardMaterial color="#d0d0d0" />
+        <Sphere args={[0.16, 16, 16]} position={[-0.35, 0, 0]}>
+          <meshStandardMaterial color="#ffd700" />
         </Sphere>
       </group>
 
-      {/* Right Arm */}
-      <group ref={rightArmRef} position={[0.7, 0.3, 0]}>
-        <Cylinder args={[0.15, 0.15, 0.9, 16]} rotation={[0, 0, Math.PI / 2]}>
-          <meshStandardMaterial color="#f0f0f0" />
+      {/* Right Arm - Shorter and rounder */}
+      <group ref={rightArmRef} position={[0.75, 0.25, 0]}>
+        <Cylinder args={[0.12, 0.12, 0.6, 16]} rotation={[0, 0, Math.PI / 2]}>
+          <meshStandardMaterial color="#4a90e2" />
         </Cylinder>
-        <Sphere args={[0.18, 16, 16]} position={[0.5, 0, 0]}>
-          <meshStandardMaterial color="#d0d0d0" />
+        <Sphere args={[0.16, 16, 16]} position={[0.35, 0, 0]}>
+          <meshStandardMaterial color="#ffd700" />
         </Sphere>
       </group>
 
-      {/* Left Leg */}
-      <group ref={leftLegRef} position={[-0.3, -0.8, 0]}>
-        <Cylinder args={[0.18, 0.18, 0.8, 16]}>
-          <meshStandardMaterial color="#f0f0f0" />
+      {/* Left Leg - Stubby and cute */}
+      <group ref={leftLegRef} position={[-0.3, -0.85, 0]}>
+        <Cylinder args={[0.16, 0.16, 0.6, 16]}>
+          <meshStandardMaterial color="#4a90e2" />
         </Cylinder>
-        <Sphere args={[0.22, 16, 16]} position={[0, -0.5, 0.1]}>
-          <meshStandardMaterial color="#d0d0d0" />
+        <Sphere args={[0.2, 16, 16]} position={[0, -0.4, 0.1]}>
+          <meshStandardMaterial color="#7b2cbf" />
         </Sphere>
       </group>
 
-      {/* Right Leg */}
-      <group ref={rightLegRef} position={[0.3, -0.8, 0]}>
-        <Cylinder args={[0.18, 0.18, 0.8, 16]}>
-          <meshStandardMaterial color="#f0f0f0" />
+      {/* Right Leg - Stubby and cute */}
+      <group ref={rightLegRef} position={[0.3, -0.85, 0]}>
+        <Cylinder args={[0.16, 0.16, 0.6, 16]}>
+          <meshStandardMaterial color="#4a90e2" />
         </Cylinder>
-        <Sphere args={[0.22, 16, 16]} position={[0, -0.5, 0.1]}>
-          <meshStandardMaterial color="#d0d0d0" />
+        <Sphere args={[0.2, 16, 16]} position={[0, -0.4, 0.1]}>
+          <meshStandardMaterial color="#7b2cbf" />
         </Sphere>
       </group>
 
-      {/* Belt detail */}
-      <Torus args={[0.82, 0.08, 16, 32]} position={[0, -0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <meshStandardMaterial color="#4a90e2" />
+      {/* Belt accent */}
+      <Torus args={[0.92, 0.06, 16, 32]} position={[0, -0.25, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <meshStandardMaterial color="#ffd700" />
       </Torus>
 
-      {/* Chest emblem */}
-      <Sphere args={[0.15, 16, 16]} position={[0, 0.3, 0.75]}>
-        <meshStandardMaterial color="#4a90e2" />
+      {/* Chest emblem - Star shape */}
+      <Sphere args={[0.12, 16, 16]} position={[0, 0.35, 0.88]}>
+        <meshStandardMaterial color="#ff1744" emissive="#ff1744" emissiveIntensity={0.3} />
       </Sphere>
     </group>
   );
