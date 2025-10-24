@@ -114,9 +114,9 @@ const EnhancedWordTracker = ({
         onTranscriptUpdate(transcript);
       }
 
-      console.log('🎤 Transcript:', transcript);
+      console.log('🎤 Transcript received:', transcript);
       console.log('📝 Is final:', isFinal);
-      console.log('📍 Current word index:', currentWordIndex);
+      console.log('📍 Current word index:', currentWordIndexRef.current);
 
       // Process spoken words with Nordic character support
       const spokenWords = transcript.toLowerCase().split(/\s+/);
@@ -181,11 +181,17 @@ const EnhancedWordTracker = ({
     };
 
     recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
+      if (event.error !== 'aborted') {
+        console.error('❌ Speech recognition error:', event.error);
+      }
     };
 
     recognition.onstart = () => {
-      console.info('Speech recognition started');
+      console.info('🎙️ Speech recognition listening...');
+    };
+
+    recognition.onend = () => {
+      console.info('🛑 Speech recognition ended');
     };
 
     recognitionRef.current = recognition;
@@ -211,17 +217,22 @@ const EnhancedWordTracker = ({
       
       try {
         recognitionRef.current.start();
-        console.log('Speech recognition started successfully');
+        console.log('✅ Speech recognition started successfully');
       } catch (error) {
-        console.error('Failed to start speech recognition:', error);
+        console.error('❌ Failed to start speech recognition:', error);
       }
     } else if (!isRecording && recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-        console.log('Speech recognition stopped');
-      } catch (error) {
-        console.error('Failed to stop speech recognition:', error);
-      }
+      // Delay stopping to allow final results to be processed
+      setTimeout(() => {
+        try {
+          if (recognitionRef.current) {
+            recognitionRef.current.stop();
+            console.log('⏹️ Speech recognition stopped');
+          }
+        } catch (error) {
+          console.error('❌ Failed to stop speech recognition:', error);
+        }
+      }, 500);
     }
   }, [isRecording]);
 
