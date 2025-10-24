@@ -19,6 +19,8 @@ interface WordState {
   isCurrent: boolean;
   isRevealed: boolean;
   isParagraphStart: boolean;
+  status?: 'correct' | 'hesitated' | 'missed'; // Track performance
+  timeToSpeak?: number; // Time taken to speak this word
 }
 
 const normalizeNordic = (text: string): string => {
@@ -45,10 +47,12 @@ const EnhancedWordTracker = ({
   const [wordStates, setWordStates] = useState<WordState[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [lastSpeechTime, setLastSpeechTime] = useState<number>(Date.now());
+  const [wordStartTime, setWordStartTime] = useState<number>(Date.now());
   const recognitionRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const pauseTimerRef = useRef<NodeJS.Timeout>();
   const currentWordIndexRef = useRef<number>(-1);
+  const missedWordTimerRef = useRef<NodeJS.Timeout>();
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -153,26 +157,55 @@ const EnhancedWordTracker = ({
           });
 
           if (matchFound && !currentWord.isSpoken) {
-            console.log('🎯 Marking word as spoken:', currentWord.text);
+            const timeToSpeak = Date.now() - wordStartTime;
+            console.log('🎯 Marking word as spoken:', currentWord.text, 'Time taken:', timeToSpeak, 'ms');
             
-            // Mark current word as spoken
+            // Determine status based on timing
+            let status: 'correct' | 'hesitated' | 'missed' = 'correct';
+            if (timeToSpeak > 2000) {
+              status = 'hesitated'; // Yellow if took more than 2 seconds
+            }
+            
+            // Mark current word as spoken with status
             updated[nextIndex] = {
               ...currentWord,
               isSpoken: true,
               isRevealed: true,
               isCurrent: false,
+              status,
+              timeToSpeak,
             };
 
             // Move to next word
             nextIndex = nextIndex + 1;
             
-            // Set the new current word
+            // Set the new current word and start timer
             if (nextIndex < updated.length) {
               updated.forEach((w, i) => {
                 updated[i] = { ...w, isCurrent: i === nextIndex };
               });
               setCurrentWordIndex(nextIndex);
+              setWordStartTime(Date.now());
               console.log('➡️ Moving to next word index:', nextIndex);
+              
+              // Start timer to mark as missed if not spoken within 4 seconds
+              if (missedWordTimerRef.current) {
+                clearTimeout(missedWordTimerRef.current);
+              }
+              missedWordTimerRef.current = setTimeout(() => {
+                setWordStates((prev) => {
+                  const newUpdated = [...prev];
+                  if (newUpdated[nextIndex] && !newUpdated[nextIndex].isSpoken) {
+                    console.log('❌ Word missed (timeout):', newUpdated[nextIndex].text);
+                    newUpdated[nextIndex] = {
+                      ...newUpdated[nextIndex],
+                      status: 'missed',
+                      isRevealed: true,
+                    };
+                  }
+                  return newUpdated;
+                });
+              }, 4000);
             }
           }
         }
@@ -213,10 +246,13 @@ const EnhancedWordTracker = ({
         ...w, 
         isSpoken: false, 
         isCurrent: i === 0, 
-        isRevealed: false 
+        isRevealed: false,
+        status: undefined,
+        timeToSpeak: undefined,
       })));
       setCurrentWordIndex(0);
       setLastSpeechTime(Date.now());
+      setWordStartTime(Date.now());
       
       try {
         recognitionRef.current.start();
@@ -225,6 +261,11 @@ const EnhancedWordTracker = ({
         console.error('❌ Failed to start speech recognition:', error);
       }
     } else if (!isRecording && recognitionRef.current) {
+      // Clear timers
+      if (missedWordTimerRef.current) {
+        clearTimeout(missedWordTimerRef.current);
+      }
+      
       // Delay stopping to allow final results to be processed
       setTimeout(() => {
         try {
@@ -306,10 +347,31 @@ const EnhancedWordTracker = ({
   const getWordClassName = (word: WordState, index: number) => {
     const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-200";
     
-    if (word.isSpoken) {
+    // Color based on performance status
+    if (word.status === 'correct') {
       return cn(
         base,
-        "bg-green-500 text-white shadow-sm",
+        "bg-blue-500 text-white shadow-sm", // Blue for correct
+        animationStyle === 'playful' && "animate-fill-in",
+        animationStyle === 'energetic' && "animate-fill-in",
+        animationStyle === 'minimal' && "animate-fade-in-up"
+      );
+    }
+    
+    if (word.status === 'hesitated') {
+      return cn(
+        base,
+        "bg-yellow-500 text-white shadow-sm", // Yellow for hesitated
+        animationStyle === 'playful' && "animate-fill-in",
+        animationStyle === 'energetic' && "animate-fill-in",
+        animationStyle === 'minimal' && "animate-fade-in-up"
+      );
+    }
+    
+    if (word.status === 'missed') {
+      return cn(
+        base,
+        "bg-red-500 text-white shadow-sm", // Red for missed
         animationStyle === 'playful' && "animate-fill-in",
         animationStyle === 'energetic' && "animate-fill-in",
         animationStyle === 'minimal' && "animate-fade-in-up"
@@ -321,15 +383,15 @@ const EnhancedWordTracker = ({
         // Show word more clearly when it's current but not revealed yet
         return cn(
           base,
-          "bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100",
-          "border-2 border-dashed border-blue-400",
-          "cursor-pointer hover:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-800"
+          "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200",
+          "border-2 border-dashed border-gray-400",
+          "cursor-pointer hover:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
         );
       }
       return cn(
         base,
-        "bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100",
-        "border-2 border-blue-500 animate-pulse"
+        "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100",
+        "border-2 border-gray-500 animate-pulse"
       );
     }
 
