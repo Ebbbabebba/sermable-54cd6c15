@@ -1,39 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { AnimatedAstronaut } from "@/components/AnimatedAstronaut";
-import { StarField } from "@/components/StarField";
-import { Suspense } from "react";
+import FloatingAstronaut2D from "@/components/FloatingAstronaut2D";
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
-      {/* 3D Canvas Background */}
-      <div className="absolute top-0 left-0 right-0 h-96 z-0">
-        <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
-          <Suspense fallback={null}>
-            <ambientLight intensity={0.7} />
-            <pointLight position={[10, 10, 10]} intensity={1.5} />
-            <pointLight position={[-10, -10, -10]} intensity={0.8} />
-            <directionalLight position={[5, 5, 5]} intensity={1.2} />
-            
-            <StarField />
-            <AnimatedAstronaut />
-            
-            <OrbitControls 
-              enableZoom={false} 
-              enablePan={false}
-              autoRotate
-              autoRotateSpeed={1.2}
-            />
-          </Suspense>
-        </Canvas>
-      </div>
+      {/* 2D Floating Astronaut */}
+      <FloatingAstronaut2D />
 
-      {/* Content Overlay - Duolingo Style */}
+      {/* Content Overlay */}
       <div className="relative z-10 text-center w-full h-full flex flex-col">
         {/* Main content centered */}
         <div className="flex-1 flex flex-col items-center justify-center px-6">
