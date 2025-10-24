@@ -9,9 +9,10 @@ const Index = () => {
 
   const handleNavigation = (path: string) => {
     setFlyAway(true);
+    // Navigate when astronaut's feet leave screen (~1 second into 2.5s animation)
     setTimeout(() => {
       navigate(path);
-    }, 2500);
+    }, 1000);
   };
 
   return (
