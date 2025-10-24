@@ -224,6 +224,6 @@ All colors MUST be HSL.
 }
 
 .animate-fly-away {
-  animation: flyAway 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: flyAway 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 }

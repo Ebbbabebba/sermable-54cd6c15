@@ -11,7 +11,7 @@ const Index = () => {
     setFlyAway(true);
     setTimeout(() => {
       navigate(path);
-    }, 500);
+    }, 2500);
   };
 
   return (
