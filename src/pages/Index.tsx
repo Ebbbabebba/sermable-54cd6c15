@@ -1,14 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import FloatingAstronaut2D from "@/components/FloatingAstronaut2D";
+import { useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [flyAway, setFlyAway] = useState(false);
+
+  const handleNavigation = (path: string) => {
+    setFlyAway(true);
+    setTimeout(() => {
+      navigate(path);
+    }, 500);
+  };
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
       {/* 2D Floating Astronaut */}
-      <FloatingAstronaut2D />
+      <FloatingAstronaut2D triggerFlyAway={flyAway} />
 
       {/* Content Overlay */}
       <div className="relative z-10 text-center w-full h-full flex flex-col">
@@ -34,7 +43,7 @@ const Index = () => {
         <div className="px-6 pb-8 space-y-3 max-w-md w-full mx-auto animate-slide-up">
           <Button 
             size="lg" 
-            onClick={() => navigate("/auth")}
+            onClick={() => handleNavigation("/auth")}
             className="w-full text-base font-bold py-6 uppercase tracking-wider shadow-lg hover:shadow-xl transition-all"
             style={{ backgroundColor: 'hsl(220, 80%, 25%)', color: 'white' }}
           >
@@ -43,7 +52,7 @@ const Index = () => {
           <Button 
             size="lg" 
             variant="outline"
-            onClick={() => navigate("/auth")}
+            onClick={() => handleNavigation("/auth")}
             className="w-full text-base font-bold py-6 uppercase tracking-wider border-2"
             style={{ 
               borderColor: 'hsl(220, 80%, 25%)', 

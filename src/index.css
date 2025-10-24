@@ -185,6 +185,28 @@ All colors MUST be HSL.
     }
   }
 
+  @keyframes flyAway {
+    0% {
+      transform: translate(-50%, 0) rotate(0deg) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -100vh) rotate(360deg) scale(0.5);
+      opacity: 0;
+    }
+  }
+
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 0;
+      transform: translateY(0) scale(0);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-20px) scale(1);
+    }
+  }
+
   .animate-fill-in {
     animation: fillIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
@@ -199,5 +221,9 @@ All colors MUST be HSL.
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-fly-away {
+  animation: flyAway 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 }

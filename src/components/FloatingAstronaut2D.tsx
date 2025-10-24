@@ -1,6 +1,10 @@
-const FloatingAstronaut2D = () => {
+interface FloatingAstronaut2DProps {
+  triggerFlyAway?: boolean;
+}
+
+const FloatingAstronaut2D = ({ triggerFlyAway = false }: FloatingAstronaut2DProps) => {
   return (
-    <div className="absolute top-20 left-1/2 -translate-x-1/2 animate-float">
+    <div className={`absolute top-20 left-1/2 -translate-x-1/2 ${triggerFlyAway ? 'animate-fly-away' : 'animate-float'}`}>
       <svg
         width="200"
         height="280"
