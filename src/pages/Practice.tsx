@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -12,6 +12,7 @@ import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import EnhancedWordTracker from "@/components/EnhancedWordTracker";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 interface Speech {
   id: string;
@@ -34,6 +35,7 @@ const Practice = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const resultsRef = useRef<HTMLDivElement>(null);
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPracticing, setIsPracticing] = useState(false);
@@ -116,6 +118,11 @@ const Practice = () => {
     setIsRecording(false);
     setIsProcessing(true);
 
+    // Scroll to results area
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+
     try {
       // Validate audio blob
       if (!audioBlob || audioBlob.size === 0) {
@@ -159,7 +166,12 @@ const Practice = () => {
           }
 
           setSessionResults(data);
-          setShowResults(true);
+          
+          // Delay showing results for smooth transition
+          setTimeout(() => {
+            setIsProcessing(false);
+            setShowResults(true);
+          }, 500);
 
           // Save practice session to database
           const { error: sessionError } = await supabase
@@ -241,6 +253,8 @@ const Practice = () => {
 
   return (
     <div className="min-h-screen">
+      <LoadingOverlay isVisible={isProcessing} />
+      
       <header className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -360,7 +374,7 @@ const Practice = () => {
           </Card>
 
           {showResults && sessionResults && (
-            <div className="animate-slide-up">
+            <div ref={resultsRef} className="animate-fade-in">
               <PracticeResults
                 accuracy={sessionResults.accuracy}
                 missedWords={sessionResults.missedWords}
