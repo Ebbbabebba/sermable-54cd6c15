@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Settings, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,11 +7,9 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
-export type Language = 'sv-SE' | 'no-NO' | 'da-DK' | 'fi-FI' | 'is-IS';
 export type AnimationStyle = 'playful' | 'minimal' | 'energetic';
 
 export interface PracticeSettingsConfig {
-  language: Language;
   revealSpeed: number; // 1-10 scale
   showWordOnPause: boolean;
   animationStyle: AnimationStyle;
@@ -22,14 +19,6 @@ interface PracticeSettingsProps {
   settings: PracticeSettingsConfig;
   onSettingsChange: (settings: PracticeSettingsConfig) => void;
 }
-
-const languages = [
-  { value: 'sv-SE' as Language, label: 'Swedish 🇸🇪', flag: '🇸🇪' },
-  { value: 'no-NO' as Language, label: 'Norwegian 🇳🇴', flag: '🇳🇴' },
-  { value: 'da-DK' as Language, label: 'Danish 🇩🇰', flag: '🇩🇰' },
-  { value: 'fi-FI' as Language, label: 'Finnish 🇫🇮', flag: '🇫🇮' },
-  { value: 'is-IS' as Language, label: 'Icelandic 🇮🇸', flag: '🇮🇸' },
-];
 
 const animationStyles = [
   { value: 'playful' as AnimationStyle, label: 'Playful', description: 'Bouncy and fun' },
@@ -70,26 +59,6 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-6 pt-0">
-            {/* Language Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="language">Language Focus</Label>
-              <Select
-                value={settings.language}
-                onValueChange={(value) => updateSetting('language', value as Language)}
-              >
-                <SelectTrigger id="language">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map((lang) => (
-                    <SelectItem key={lang.value} value={lang.value}>
-                      {lang.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Reveal Speed */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">

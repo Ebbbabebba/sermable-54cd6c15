@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import type { Language, AnimationStyle } from "./PracticeSettings";
+import type { AnimationStyle } from "./PracticeSettings";
 
 interface EnhancedWordTrackerProps {
   text: string;
   isRecording: boolean;
-  language: Language;
+  language: string;
   revealSpeed: number;
   showWordOnPause: boolean;
   animationStyle: AnimationStyle;
@@ -306,7 +306,7 @@ const EnhancedWordTracker = ({
     if (word.isSpoken) {
       return cn(
         base,
-        "bg-[hsl(var(--success-green))] text-white shadow-sm",
+        "bg-green-500 text-white shadow-sm",
         animationStyle === 'playful' && "animate-fill-in",
         animationStyle === 'energetic' && "animate-fill-in",
         animationStyle === 'minimal' && "animate-fade-in-up"
@@ -315,23 +315,25 @@ const EnhancedWordTracker = ({
 
     if (word.isCurrent) {
       if (!word.isRevealed) {
+        // Show word more clearly when it's current but not revealed yet
         return cn(
           base,
-          "bg-[hsl(var(--word-bg))] text-[hsl(var(--word-text))]",
-          "border-2 border-dashed border-[hsl(var(--word-bg))]",
-          "cursor-pointer hover:border-primary/30"
+          "bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100",
+          "border-2 border-dashed border-blue-400",
+          "cursor-pointer hover:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-800"
         );
       }
       return cn(
         base,
-        "bg-[hsl(var(--word-bg))] text-[hsl(var(--word-text))]",
-        "border-2 border-primary animate-pulse"
+        "bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100",
+        "border-2 border-blue-500 animate-pulse"
       );
     }
 
+    // Show upcoming words more clearly - light gray instead of very faded
     return cn(
       base, 
-      "bg-transparent text-[hsl(var(--word-text))] opacity-40"
+      "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
     );
   };
 

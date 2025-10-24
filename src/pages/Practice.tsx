@@ -45,7 +45,6 @@ const Practice = () => {
   const [showResults, setShowResults] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
-    language: 'sv-SE',
     revealSpeed: 5,
     showWordOnPause: true,
     animationStyle: 'playful',
@@ -343,14 +342,21 @@ const Practice = () => {
                         delayedWords={sessionResults.delayedWords}
                       />
                     ) : isRecording ? (
-                      <EnhancedWordTracker
-                        text={speech.text_current}
-                        isRecording={isRecording}
-                        language={settings.language}
-                        revealSpeed={settings.revealSpeed}
-                        showWordOnPause={settings.showWordOnPause}
-                        animationStyle={settings.animationStyle}
-                      />
+                      <div className="space-y-4">
+                        <div className="text-center mb-4">
+                          <p className="text-sm text-muted-foreground">
+                            🎤 Speak clearly. Words appear as you say them. Tap to reveal if stuck.
+                          </p>
+                        </div>
+                        <EnhancedWordTracker
+                          text={speech.text_current}
+                          isRecording={isRecording}
+                          language="en-US"
+                          revealSpeed={settings.revealSpeed}
+                          showWordOnPause={settings.showWordOnPause}
+                          animationStyle={settings.animationStyle}
+                        />
+                      </div>
                     ) : (
                       <div className="prose prose-lg max-w-none">
                         <p className="whitespace-pre-wrap leading-relaxed">

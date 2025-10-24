@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, LogOut, BookOpen, Calendar, TrendingUp } from "lucide-react";
+import { Plus, LogOut, BookOpen, Calendar, TrendingUp, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
@@ -153,6 +153,10 @@ const Dashboard = () => {
                 Upgrade to Premium
               </Button>
             )}
+            <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
