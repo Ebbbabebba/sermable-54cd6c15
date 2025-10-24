@@ -10,7 +10,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-white flex items-center justify-center relative overflow-hidden">
       {/* 3D Canvas Background */}
       <div className="absolute inset-0 z-0">
         <Canvas>
@@ -36,24 +36,33 @@ const Index = () => {
         </Canvas>
       </div>
 
-      {/* Content Overlay */}
-      <div className="relative z-10 text-center space-y-8 px-4 max-w-md mx-auto">
-        {/* Spacing for astronaut */}
-        <div className="h-64 md:h-80"></div>
-        
-        {/* Tagline */}
-        <div className="animate-fade-in">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">
+      {/* Content Overlay - Duolingo Style */}
+      <div className="relative z-10 text-center w-full h-full flex flex-col">
+        {/* Main content centered */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          {/* Spacing for astronaut */}
+          <div className="h-48 md:h-64"></div>
+          
+          {/* Logo text - Duolingo style */}
+          <div className="animate-fade-in mb-4">
+            <h1 className="text-6xl md:text-7xl font-bold tracking-tight" style={{ color: 'hsl(140, 81%, 47%)' }}>
+              sermable
+            </h1>
+          </div>
+          
+          {/* Tagline */}
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in">
             Master your speech.
-          </h1>
+          </p>
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col gap-3 animate-slide-up">
+        {/* Buttons at bottom - Duolingo style */}
+        <div className="px-6 pb-8 space-y-3 max-w-md w-full mx-auto animate-slide-up">
           <Button 
             size="lg" 
             onClick={() => navigate("/auth")}
-            className="w-full text-lg py-6 shadow-lg hover:shadow-xl transition-shadow"
+            className="w-full text-base font-bold py-6 uppercase tracking-wider shadow-lg hover:shadow-xl transition-all"
+            style={{ backgroundColor: 'hsl(140, 81%, 47%)', color: 'white' }}
           >
             Get Started
           </Button>
@@ -61,17 +70,18 @@ const Index = () => {
             size="lg" 
             variant="outline"
             onClick={() => navigate("/auth")}
-            className="w-full text-lg py-6 bg-background/80 backdrop-blur-sm"
+            className="w-full text-base font-bold py-6 uppercase tracking-wider border-2"
+            style={{ 
+              borderColor: 'hsl(140, 81%, 47%)', 
+              color: 'hsl(140, 81%, 47%)',
+              backgroundColor: 'white'
+            }}
           >
-            Log In
+            I already have an account
           </Button>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="absolute bottom-4 left-0 right-0 text-center text-sm text-muted-foreground z-10">
-        <p>&copy; {new Date().getFullYear()} Sermable</p>
-      </footer>
     </div>
   );
 };
