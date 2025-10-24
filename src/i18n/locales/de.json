@@ -69,7 +69,8 @@
     "wordLimit": "Wortlimit",
     "monthlyLimit": "Monatliches Redenlimit",
     "limitReached": "Limit erreicht",
-    "pasteText": "Fügen Sie hier Ihren Redetext ein..."
+    "pasteText": "Fügen Sie hier Ihren Redetext ein...",
+    "languageDetected": "Sprache erkannt und Oberfläche aktualisiert"
   },
   "practice": {
     "title": "Übungssitzung",

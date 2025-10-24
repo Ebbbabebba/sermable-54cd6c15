@@ -69,7 +69,8 @@
     "wordLimit": "Limite de mots",
     "monthlyLimit": "Limite mensuelle de discours",
     "limitReached": "Limite atteinte",
-    "pasteText": "Collez le texte de votre discours ici..."
+    "pasteText": "Collez le texte de votre discours ici...",
+    "languageDetected": "Langue détectée et interface mise à jour"
   },
   "practice": {
     "title": "Session de Pratique",

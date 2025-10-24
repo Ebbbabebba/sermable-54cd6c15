@@ -69,7 +69,8 @@
     "wordLimit": "Limite di parole",
     "monthlyLimit": "Limite mensile di discorsi",
     "limitReached": "Limite raggiunto",
-    "pasteText": "Incolla qui il testo del tuo discorso..."
+    "pasteText": "Incolla qui il testo del tuo discorso...",
+    "languageDetected": "Lingua rilevata e interfaccia aggiornata"
   },
   "practice": {
     "title": "Sessione di Esercitazione",

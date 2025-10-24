@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calendar } from "lucide-react";
+import { Loader2, Calendar, Languages } from "lucide-react";
 import { format } from "date-fns";
+import { switchLanguageBasedOnText } from "@/utils/languageDetection";
 
 interface UploadSpeechDialogProps {
   open: boolean;
@@ -16,6 +18,7 @@ interface UploadSpeechDialogProps {
 }
 
 const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialogProps) => {
+  const { t, i18n } = useTranslation();
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
@@ -63,6 +66,27 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
     }
   }, [open]);
 
+  const handleTextChange = (newText: string) => {
+    setText(newText);
+    
+    // Auto-detect language and switch if different
+    if (newText.length > 50) {
+      const languageSwitched = switchLanguageBasedOnText(
+        newText,
+        i18n.language,
+        i18n.changeLanguage
+      );
+      
+      if (languageSwitched) {
+        toast({
+          title: t('common.success'),
+          description: `${t('upload.languageDetected')} (${i18n.language.toUpperCase()})`,
+          duration: 3000,
+        });
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -71,7 +95,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
     if (wordCount > wordLimit) {
       toast({
         variant: "destructive",
-        title: "Word limit exceeded",
+        title: t('upload.error'),
         description: `Your speech has ${wordCount} words. ${userTier === 'free' ? 'Free plan' : 'Your plan'} allows up to ${wordLimit} words. ${userTier === 'free' ? 'Upgrade to premium for up to 5000 words.' : ''}`,
       });
       return;
@@ -80,7 +104,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
     if (!canCreateSpeech) {
       toast({
         variant: "destructive",
-        title: "Monthly limit reached",
+        title: t('upload.limitReached'),
         description: "You've reached your monthly speech limit. Free users can create 2 speeches per month. Upgrade to premium for unlimited speeches.",
       });
       return;
@@ -103,7 +127,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       if (error) throw error;
 
       toast({
-        title: "Speech uploaded!",
+        title: t('upload.success'),
         description: "Your speech has been saved. Time to start practicing!",
       });
 
@@ -115,7 +139,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('upload.error'),
         description: error.message,
       });
     } finally {
@@ -130,7 +154,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Upload Your Speech</DialogTitle>
+          <DialogTitle>{t('upload.title')}</DialogTitle>
           <DialogDescription>
             Add your speech text and set a goal date for when you need to have it memorized.
           </DialogDescription>
@@ -138,7 +162,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Speech Title</Label>
+            <Label htmlFor="title">{t('upload.speechTitle')}</Label>
             <Input
               id="title"
               placeholder="e.g., Quarterly Business Review"
@@ -149,7 +173,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="goalDate">Goal Date</Label>
+            <Label htmlFor="goalDate">{t('upload.goalDate')}</Label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -168,23 +192,29 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="text">Speech Text</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="text">{t('upload.speechText')}</Label>
+              <Languages className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">
+                Auto-detects language
+              </span>
+            </div>
             <Textarea
               id="text"
-              placeholder="Paste your speech text here..."
+              placeholder={t('upload.pasteText')}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => handleTextChange(e.target.value)}
               rows={12}
               required
               className="resize-none"
             />
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                {text.split(/\s+/).filter(Boolean).length} / {wordLimit} words
+                {text.split(/\s+/).filter(Boolean).length} / {wordLimit} {t('dashboard.words')}
               </span>
               {userTier === 'free' && (
                 <span className="text-xs text-muted-foreground">
-                  Free plan limit
+                  {t('upload.wordLimit')}
                 </span>
               )}
             </div>
@@ -197,16 +227,16 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancel
+              {t('upload.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
+                  {t('upload.uploading')}
                 </>
               ) : (
-                "Upload Speech"
+                t('upload.upload')
               )}
             </Button>
           </div>

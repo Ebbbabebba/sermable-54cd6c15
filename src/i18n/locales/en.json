@@ -69,7 +69,8 @@
     "wordLimit": "Word limit",
     "monthlyLimit": "Monthly speech limit",
     "limitReached": "Limit reached",
-    "pasteText": "Paste your speech text here..."
+    "pasteText": "Paste your speech text here...",
+    "languageDetected": "Language detected and UI updated"
   },
   "practice": {
     "title": "Practice Session",
