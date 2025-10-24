@@ -96,6 +96,32 @@ const Dashboard = () => {
     loadSpeeches();
   };
 
+  const handleUpgradeToPremium = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_tier: 'regular' })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setSubscriptionTier('regular');
+      toast({
+        title: "Upgraded to Premium!",
+        description: "You now have access to all premium features.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Upgrade failed",
+        description: error.message,
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -122,6 +148,11 @@ const Dashboard = () => {
                 </span>
               )}
             </div>
+            {subscriptionTier === 'free' && (
+              <Button variant="default" size="sm" onClick={handleUpgradeToPremium}>
+                Upgrade to Premium
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
