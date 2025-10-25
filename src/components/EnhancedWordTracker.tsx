@@ -89,31 +89,47 @@ const EnhancedWordTracker = ({
     const normalizeText = (text: string) => 
       normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
 
-    const transcribedWords = normalizeText(transcription).split(/\s+/);
+    const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
     const targetWords = wordStates.map(ws => normalizeText(ws.text));
 
-    let matchCount = 0;
-    for (let i = 0; i < Math.min(transcribedWords.length, targetWords.length); i++) {
-      if (transcribedWords[i] === targetWords[i]) {
-        matchCount = i + 1;
-      } else {
-        break;
-      }
-    }
+    console.log('Transcription:', transcription);
+    console.log('Transcribed words:', transcribedWords);
+    console.log('Target words:', targetWords);
 
-    if (matchCount > lastSpokenIndexRef.current) {
-      setWordStates(prevStates => 
-        prevStates.map((state, idx) => ({
-          ...state,
-          spoken: idx < matchCount,
-          isCurrent: idx === matchCount,
-          revealed: state.revealed || idx < matchCount,
-          performanceStatus: idx < matchCount ? 'correct' : state.performanceStatus
-        }))
-      );
-      setCurrentWordIndex(matchCount);
-      currentWordIndexRef.current = matchCount;
-      lastSpokenIndexRef.current = matchCount - 1;
+    // More lenient matching - find all spoken words in target
+    const updatedStates = wordStates.map((state, idx) => {
+      const targetWord = targetWords[idx];
+      const isSpoken = transcribedWords.some(tw => {
+        // Exact match
+        if (tw === targetWord) return true;
+        // Partial match (at least 70% similar)
+        const similarity = Math.max(
+          tw.includes(targetWord) ? 1 : 0,
+          targetWord.includes(tw) ? 1 : 0,
+          1 - (Math.abs(tw.length - targetWord.length) / Math.max(tw.length, targetWord.length))
+        );
+        return similarity >= 0.7;
+      });
+
+      return {
+        ...state,
+        spoken: isSpoken || state.spoken,
+        revealed: state.revealed || isSpoken,
+        performanceStatus: isSpoken ? 'correct' as const : state.performanceStatus
+      };
+    });
+
+    // Find current word (first unspoken word)
+    const currentIdx = updatedStates.findIndex(s => !s.spoken);
+    const finalStates = updatedStates.map((state, idx) => ({
+      ...state,
+      isCurrent: idx === currentIdx && currentIdx !== -1
+    }));
+
+    setWordStates(finalStates);
+    if (currentIdx !== -1 && currentIdx > currentWordIndexRef.current) {
+      setCurrentWordIndex(currentIdx);
+      currentWordIndexRef.current = currentIdx;
     }
   }, [transcription, wordStates.length]);
 
