@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,14 +13,55 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.error('Missing authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('Invalid authentication:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { audio, originalText, speechId, userTier } = await req.json();
+    
+    // Verify user owns the speech they're analyzing
+    const { data: speech, error: speechError } = await supabase
+      .from('speeches')
+      .select('user_id')
+      .eq('id', speechId)
+      .single();
+
+    if (speechError || !speech || speech.user_id !== user.id) {
+      console.error('Unauthorized access attempt to speech:', speechId, 'by user:', user.id);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized access to speech' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    console.log('Starting speech analysis for speech:', speechId, 'User tier:', userTier);
+    console.log('Starting speech analysis for speech:', speechId, 'User tier:', userTier, 'User ID:', user.id);
 
     // Step 1: Transcribe audio using OpenAI Whisper
     console.log('Transcribing audio...');
