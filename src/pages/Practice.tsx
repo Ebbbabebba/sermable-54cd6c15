@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Play, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import AudioRecorder from "@/components/AudioRecorder";
+import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import EnhancedWordTracker from "@/components/EnhancedWordTracker";
@@ -50,6 +50,9 @@ const Practice = () => {
     animationStyle: 'playful',
     keywordMode: false,
   });
+  const [liveTranscription, setLiveTranscription] = useState("");
+  const audioRecorderRef = useRef<AudioRecorderHandle>(null);
+  const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -112,11 +115,48 @@ const Practice = () => {
 
   const handleRecordingStart = () => {
     setIsRecording(true);
+    setLiveTranscription("");
+    
+    // Start periodic transcription every 2 seconds
+    transcriptionIntervalRef.current = setInterval(async () => {
+      const audioBlob = audioRecorderRef.current?.getCurrentAudioBlob();
+      if (!audioBlob) return;
+
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64Audio = reader.result?.toString().split(',')[1];
+          if (!base64Audio) return;
+
+          const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+            body: { audio: base64Audio }
+          });
+
+          if (error) {
+            console.error('Transcription error:', error);
+            return;
+          }
+
+          if (data?.text) {
+            setLiveTranscription(data.text);
+          }
+        };
+      } catch (error) {
+        console.error('Error during live transcription:', error);
+      }
+    }, 2000);
   };
 
   const handleRecordingStop = async (audioBlob: Blob) => {
     setIsRecording(false);
     setIsProcessing(true);
+    
+    // Clear the transcription interval
+    if (transcriptionIntervalRef.current) {
+      clearInterval(transcriptionIntervalRef.current);
+      transcriptionIntervalRef.current = null;
+    }
 
     // Scroll to results area
     setTimeout(() => {
@@ -352,7 +392,7 @@ const Practice = () => {
                         <EnhancedWordTracker
                           text={speech.text_current}
                           isRecording={isRecording}
-                          language="en-US"
+                          transcription={liveTranscription}
                           revealSpeed={settings.revealSpeed}
                           showWordOnPause={settings.showWordOnPause}
                           animationStyle={settings.animationStyle}
@@ -369,12 +409,13 @@ const Practice = () => {
                   </div>
 
                   <div className="flex justify-center">
-                    <AudioRecorder
-                      isRecording={isRecording}
-                      onStart={handleRecordingStart}
-                      onStop={handleRecordingStop}
-                      disabled={isProcessing}
-                    />
+                  <AudioRecorder
+                    ref={audioRecorderRef}
+                    isRecording={isRecording}
+                    onStart={handleRecordingStart}
+                    onStop={handleRecordingStop}
+                    disabled={isProcessing}
+                  />
                   </div>
                 </>
               )}
