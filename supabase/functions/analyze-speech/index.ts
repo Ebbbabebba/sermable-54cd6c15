@@ -94,7 +94,7 @@ Return ONLY this JSON structure with no extra text:
           { role: 'system', content: 'You are a supportive speech analysis assistant. Be encouraging and lenient with word matching. Return ONLY valid JSON with no markdown formatting or explanations.' },
           { role: 'user', content: analysisPrompt }
         ],
-        max_completion_tokens: 500,
+        max_completion_tokens: 2000,
       }),
     });
 
@@ -172,7 +172,7 @@ Return ONLY the cue text, nothing else.`;
             { role: 'system', content: 'You create concise cue texts. Return only the cue text with no explanations.' },
             { role: 'user', content: cuePrompt }
           ],
-          max_completion_tokens: 300,
+          max_completion_tokens: 1000,
         }),
       });
 
