@@ -170,44 +170,43 @@ const EnhancedWordTracker = ({
     if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken && !isRecording) {
       return cn(
         base,
-        "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600",
+        "bg-muted text-muted-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground",
         "text-center min-w-[60px]"
       );
     }
     
-    // Color based on performance status
+    // Color based on performance status using semantic tokens
     if (word.performanceStatus === 'correct') {
       return cn(
         base,
-        "bg-blue-500 text-white shadow-sm"
+        "bg-primary text-primary-foreground shadow-sm"
       );
     }
     
     if (word.performanceStatus === 'hesitated') {
       return cn(
         base,
-        "bg-yellow-500 text-white shadow-sm"
+        "bg-warning text-warning-foreground shadow-sm"
       );
     }
     
     if (word.performanceStatus === 'missed') {
       return cn(
         base,
-        "bg-red-500 text-white shadow-sm"
+        "bg-destructive text-destructive-foreground shadow-sm"
       );
     }
 
     if (word.isCurrent) {
       return cn(
         base,
-        "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100",
-        "border-2 border-gray-500 animate-pulse"
+        "bg-accent text-accent-foreground border-2 border-primary animate-pulse"
       );
     }
 
     return cn(
       base, 
-      "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+      "bg-muted text-muted-foreground"
     );
   };
 
@@ -227,8 +226,8 @@ const EnhancedWordTracker = ({
       )}
     >
       {isRecording && (
-        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <p className="text-sm text-blue-800 dark:text-blue-200 font-medium text-center">
+        <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
+          <p className="text-sm text-primary font-medium text-center">
             🎤 Recording via Whisper API - Words will highlight as you speak
           </p>
         </div>

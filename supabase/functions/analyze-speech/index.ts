@@ -38,7 +38,7 @@ serve(async (req) => {
       );
     }
 
-    const { audio, originalText, speechId, userTier } = await req.json();
+    const { audio, originalText, speechId, userTier, language } = await req.json();
     
     // Verify user owns the speech they're analyzing
     const { data: speech, error: speechError } = await supabase
@@ -61,16 +61,18 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    console.log('Starting speech analysis for speech:', speechId, 'User tier:', userTier, 'User ID:', user.id);
+    const audioLanguage = language || 'en';
+    console.log('Starting speech analysis for speech:', speechId, 'Language:', audioLanguage, 'User tier:', userTier, 'User ID:', user.id);
 
     // Step 1: Transcribe audio using OpenAI Whisper
-    console.log('Transcribing audio...');
+    console.log('Transcribing audio with language:', audioLanguage);
     const audioBuffer = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
     const audioBlob = new Blob([audioBuffer], { type: 'audio/webm' });
     
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
+    formData.append('language', audioLanguage);
 
     const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -97,19 +99,23 @@ serve(async (req) => {
 
 Original text: "${originalText}"
 Spoken text: "${spokenText}"
+Language: ${audioLanguage}
 
-Instructions:
-- Be LENIENT with word matching - similar pronunciations should count as correct
+CRITICAL INSTRUCTIONS:
+- The user must speak the ENTIRE speech text, not just keywords
+- Analyze WORD BY WORD comparison of the entire speech
+- Be LENIENT with pronunciation variations and similar-sounding words
 - Consider words correct if they sound similar (e.g., "Eva" vs "Ebba", "shares" vs "chairs")
-- Only mark words as MISSED if they are completely absent
-- Only mark as DELAYED if there's a long pause before the word
-- Focus on the overall message delivery, not perfect word-for-word matching
+- Only mark words as MISSED if they are completely absent from spoken text
+- Only mark as DELAYED if there's an obvious long pause before the word
+- Focus on the overall message delivery and flow
+- The goal is to help the user memorize and deliver the FULL speech smoothly
 
 Compare them and identify:
-1. accuracy: percentage match (0-100) - be generous with partial matches
+1. accuracy: percentage match (0-100) based on how much of the FULL speech was spoken correctly
 2. missedWords: array of words COMPLETELY missing from spoken text (be strict - only clear omissions)
 3. delayedWords: array of words with obvious long pauses (be strict - only clear hesitations)
-4. analysis: brief encouraging feedback
+4. analysis: brief encouraging feedback about their delivery of the FULL speech
 
 Return ONLY this JSON structure with no extra text:
 {

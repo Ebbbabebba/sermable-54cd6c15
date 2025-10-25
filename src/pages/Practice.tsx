@@ -113,9 +113,14 @@ const Practice = () => {
     });
   };
 
-  const handleRecordingStart = () => {
+  const handleRecordingStart = async () => {
     setIsRecording(true);
     setLiveTranscription("");
+    
+    // Detect language from speech text
+    const { detectTextLanguage } = await import('@/utils/languageDetection');
+    const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
+    console.log('Detected language:', detectedLang);
     
     // Start periodic transcription every 0.5 seconds
     transcriptionIntervalRef.current = setInterval(async () => {
@@ -129,8 +134,20 @@ const Practice = () => {
           const base64Audio = reader.result?.toString().split(',')[1];
           if (!base64Audio) return;
 
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            console.error('No active session');
+            return;
+          }
+
           const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-            body: { audio: base64Audio }
+            body: { 
+              audio: base64Audio,
+              language: detectedLang 
+            },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
           });
 
           if (error) {
@@ -186,14 +203,29 @@ const Practice = () => {
             description: "AI is analyzing your practice session",
           });
 
-          // Call the edge function
+          // Detect language from speech text
+          const { detectTextLanguage } = await import('@/utils/languageDetection');
+          const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
+          console.log('Using language for analysis:', detectedLang);
+
+          // Get current session for auth
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            throw new Error('No active session. Please log in again.');
+          }
+
+          // Call the edge function with auth token
           const { data, error } = await supabase.functions.invoke('analyze-speech', {
             body: {
               audio: base64Audio,
               originalText: speech!.text_current,
               speechId: speech!.id,
               userTier: subscriptionTier,
+              language: detectedLang,
             },
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
           });
 
           if (error) {

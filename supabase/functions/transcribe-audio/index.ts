@@ -21,13 +21,15 @@ serve(async (req) => {
       );
     }
 
-    const { audio } = await req.json();
+    const { audio, language } = await req.json();
 
     if (!audio) {
       throw new Error('No audio data provided');
     }
 
-    console.log('Transcribing audio chunk...');
+    // Use provided language or default to auto-detect
+    const audioLanguage = language || 'en';
+    console.log('Transcribing audio chunk with language:', audioLanguage);
 
     // Convert base64 to binary
     const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
@@ -36,7 +38,7 @@ serve(async (req) => {
     const formData = new FormData();
     formData.append('file', new Blob([binaryAudio], { type: 'audio/webm' }), 'audio.webm');
     formData.append('model', 'whisper-1');
-    formData.append('language', 'en');
+    formData.append('language', audioLanguage);
 
     const openaiResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',

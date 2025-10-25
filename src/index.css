@@ -39,6 +39,10 @@ All colors MUST be HSL.
     --success: 140 55% 50%;
     --success-foreground: 0 0% 100%;
 
+    /* Warning state for hesitations */
+    --warning: 45 90% 55%;
+    --warning-foreground: 0 0% 100%;
+
     --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 100%;
 
@@ -85,6 +89,9 @@ All colors MUST be HSL.
 
     --success: 140 50% 45%;
     --success-foreground: 0 0% 100%;
+
+    --warning: 45 85% 50%;
+    --warning-foreground: 0 0% 100%;
 
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
