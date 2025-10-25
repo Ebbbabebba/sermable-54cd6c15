@@ -218,7 +218,7 @@ const Practice = () => {
           const { data, error } = await supabase.functions.invoke('analyze-speech', {
             body: {
               audio: base64Audio,
-              originalText: speech!.text_current,
+              originalText: speech!.text_original, // Always analyze against FULL original speech
               speechId: speech!.id,
               userTier: subscriptionTier,
               language: detectedLang,

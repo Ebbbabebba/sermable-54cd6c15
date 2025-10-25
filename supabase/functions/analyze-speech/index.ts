@@ -110,23 +110,24 @@ serve(async (req) => {
     
     const analysisPrompt = `Analyze this speech practice session and return ONLY valid JSON.
 
-Original text: "${originalText}"
+Original FULL speech text: "${originalText}"
 Spoken text: "${spokenText}"
 Language: ${audioLanguage}
 
 CRITICAL INSTRUCTIONS:
-- The user must speak the ENTIRE speech text, not just keywords
-- Analyze WORD BY WORD comparison of the entire speech
+- The user is practicing the FULL speech above
+- They may only be shown simplified keywords as cues, but they must speak the ENTIRE speech
+- Compare the spoken text against the FULL original speech text word by word
+- Calculate accuracy based on how much of the FULL speech was spoken correctly
 - Be LENIENT with pronunciation variations and similar-sounding words
 - Consider words correct if they sound similar (e.g., "Eva" vs "Ebba", "shares" vs "chairs")
 - Only mark words as MISSED if they are completely absent from spoken text
 - Only mark as DELAYED if there's an obvious long pause before the word
-- Focus on the overall message delivery and flow
-- The goal is to help the user memorize and deliver the FULL speech smoothly
+- Focus on the overall message delivery and flow of the COMPLETE speech
 
 Compare them and identify:
-1. accuracy: percentage match (0-100) based on how much of the FULL speech was spoken correctly
-2. missedWords: array of words COMPLETELY missing from spoken text (be strict - only clear omissions)
+1. accuracy: percentage match (0-100) based on how much of the FULL original speech was spoken correctly
+2. missedWords: array of words COMPLETELY missing from spoken text (be strict - only clear omissions from the FULL speech)
 3. delayedWords: array of words with obvious long pauses (be strict - only clear hesitations)
 4. analysis: brief encouraging feedback about their delivery of the FULL speech
 
