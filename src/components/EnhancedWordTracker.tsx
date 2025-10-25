@@ -101,7 +101,8 @@ const EnhancedWordTracker = ({
   // Setup speech recognition
   useEffect(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.error('❌ Speech recognition not supported in this browser');
+      console.error('❌ Speech recognition not supported in this browser/device (iPad Safari has limited support)');
+      console.info('ℹ️ Word tracking will be available after recording completes via AI analysis');
       return;
     }
 
@@ -464,10 +465,17 @@ const EnhancedWordTracker = ({
       {isRecording && (
         <div className="absolute top-4 left-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg animate-pulse flex items-center gap-2 z-10">
           <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-          <span className="font-medium">RECORDING - Speak now</span>
-          <span className="text-xs opacity-90 ml-auto">
-            Word {currentWordIndex + 1} of {wordStates.length}
-          </span>
+          <span className="font-medium">RECORDING - Speak clearly</span>
+          {recognitionRef.current && (
+            <span className="text-xs opacity-90 ml-auto">
+              Word {currentWordIndex + 1} of {wordStates.length}
+            </span>
+          )}
+          {!recognitionRef.current && (
+            <span className="text-xs opacity-90 ml-auto">
+              Live tracking unavailable on this device
+            </span>
+          )}
         </div>
       )}
 
@@ -491,9 +499,14 @@ const EnhancedWordTracker = ({
         ))}
       </div>
       
-      {isRecording && currentWordIndex >= 0 && !wordStates[currentWordIndex]?.isRevealed && (
+      {isRecording && recognitionRef.current && currentWordIndex >= 0 && !wordStates[currentWordIndex]?.isRevealed && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-gray-600 dark:text-gray-300 animate-fade-in bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-sm">
           💡 Tap anywhere to reveal the next word
+        </div>
+      )}
+      {isRecording && !recognitionRef.current && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-gray-600 dark:text-gray-300 animate-fade-in bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-sm">
+          📱 Word tracking after recording on iPad • AI will analyze your speech
         </div>
       )}
     </div>

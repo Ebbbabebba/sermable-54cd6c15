@@ -56,22 +56,29 @@ serve(async (req) => {
 Original text: "${originalText}"
 Spoken text: "${spokenText}"
 
+Instructions:
+- Be LENIENT with word matching - similar pronunciations should count as correct
+- Consider words correct if they sound similar (e.g., "Eva" vs "Ebba", "shares" vs "chairs")
+- Only mark words as MISSED if they are completely absent
+- Only mark as DELAYED if there's a long pause before the word
+- Focus on the overall message delivery, not perfect word-for-word matching
+
 Compare them and identify:
-1. accuracy: percentage match (0-100)
-2. missedWords: array of words completely missed from original
-3. delayedWords: array of words spoken with noticeable hesitation
-4. analysis: brief feedback text
+1. accuracy: percentage match (0-100) - be generous with partial matches
+2. missedWords: array of words COMPLETELY missing from spoken text (be strict - only clear omissions)
+3. delayedWords: array of words with obvious long pauses (be strict - only clear hesitations)
+4. analysis: brief encouraging feedback
 
 Return ONLY this JSON structure with no extra text:
 {
   "accuracy": 85,
-  "missedWords": ["example1", "example2"],
-  "delayedWords": ["example3"],
+  "missedWords": ["example1"],
+  "delayedWords": ["example2"],
   "analysis": "Good practice session"
 }`;
 
-    // Use GPT-4o-mini for reliable JSON responses
-    const analysisModel = 'gpt-4o-mini';
+    // Use GPT-5 Mini for faster, more accurate analysis
+    const analysisModel = 'gpt-5-mini-2025-08-07';
     console.log('Using analysis model:', analysisModel);
 
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -84,11 +91,10 @@ Return ONLY this JSON structure with no extra text:
         model: analysisModel,
         response_format: { type: "json_object" },
         messages: [
-          { role: 'system', content: 'You are a speech analysis assistant. Return ONLY valid JSON with no markdown formatting or explanations.' },
+          { role: 'system', content: 'You are a supportive speech analysis assistant. Be encouraging and lenient with word matching. Return ONLY valid JSON with no markdown formatting or explanations.' },
           { role: 'user', content: analysisPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 500,
+        max_completion_tokens: 500,
       }),
     });
 
@@ -161,13 +167,12 @@ Return ONLY the cue text, nothing else.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5-mini-2025-08-07',
           messages: [
             { role: 'system', content: 'You create concise cue texts. Return only the cue text with no explanations.' },
             { role: 'user', content: cuePrompt }
           ],
-          temperature: 0.3,
-          max_tokens: 300,
+          max_completion_tokens: 300,
         }),
       });
 
