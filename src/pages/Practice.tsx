@@ -117,7 +117,7 @@ const Practice = () => {
     setIsRecording(true);
     setLiveTranscription("");
     
-    // Start periodic transcription every 2 seconds
+    // Start periodic transcription every 0.5 seconds
     transcriptionIntervalRef.current = setInterval(async () => {
       const audioBlob = audioRecorderRef.current?.getCurrentAudioBlob();
       if (!audioBlob) return;
@@ -145,7 +145,7 @@ const Practice = () => {
       } catch (error) {
         console.error('Error during live transcription:', error);
       }
-    }, 2000);
+    }, 500);
   };
 
   const handleRecordingStop = async (audioBlob: Blob) => {
