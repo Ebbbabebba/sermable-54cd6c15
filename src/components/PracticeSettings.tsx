@@ -13,6 +13,7 @@ export interface PracticeSettingsConfig {
   revealSpeed: number; // 1-10 scale
   showWordOnPause: boolean;
   animationStyle: AnimationStyle;
+  keywordMode: boolean; // Show only keywords, hide other words
 }
 
 interface PracticeSettingsProps {
@@ -91,6 +92,21 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
                 id="show-pause"
                 checked={settings.showWordOnPause}
                 onCheckedChange={(checked) => updateSetting('showWordOnPause', checked)}
+              />
+            </div>
+
+            {/* Keyword Mode */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="keyword-mode">Keyword Mode</Label>
+                <p className="text-xs text-muted-foreground">
+                  Hide non-keywords with dots • Tap dots to reveal words
+                </p>
+              </div>
+              <Switch
+                id="keyword-mode"
+                checked={settings.keywordMode}
+                onCheckedChange={(checked) => updateSetting('keywordMode', checked)}
               />
             </div>
 

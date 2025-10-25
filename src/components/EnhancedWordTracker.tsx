@@ -9,6 +9,7 @@ interface EnhancedWordTrackerProps {
   revealSpeed: number;
   showWordOnPause: boolean;
   animationStyle: AnimationStyle;
+  keywordMode: boolean;
   onTranscriptUpdate?: (transcript: string) => void;
   className?: string;
 }
@@ -19,6 +20,8 @@ interface WordState {
   isCurrent: boolean;
   isRevealed: boolean;
   isParagraphStart: boolean;
+  isKeyword: boolean; // Whether this word is a keyword (always visible)
+  manuallyRevealed: boolean; // Whether user tapped to reveal this word
   status?: 'correct' | 'hesitated' | 'missed'; // Track performance
   timeToSpeak?: number; // Time taken to speak this word
 }
@@ -34,6 +37,13 @@ const normalizeNordic = (text: string): string => {
     .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '');
 };
 
+// Helper to determine if a word should be a keyword
+const isKeywordWord = (word: string): boolean => {
+  const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+  // Keywords: longer words (>5 chars), or words with capitals, or important punctuation
+  return cleanWord.length > 5 || /[A-Z]/.test(word) || /[.!?]/.test(word);
+};
+
 const EnhancedWordTracker = ({
   text,
   isRecording,
@@ -41,6 +51,7 @@ const EnhancedWordTracker = ({
   revealSpeed,
   showWordOnPause,
   animationStyle,
+  keywordMode,
   onTranscriptUpdate,
   className,
 }: EnhancedWordTrackerProps) => {
@@ -81,6 +92,8 @@ const EnhancedWordTracker = ({
         isCurrent: false,
         isRevealed: false,
         isParagraphStart: paragraphStarts.has(index),
+        isKeyword: isKeywordWord(word),
+        manuallyRevealed: false,
       }))
     );
   }, [text]);
@@ -247,6 +260,7 @@ const EnhancedWordTracker = ({
         isSpoken: false, 
         isCurrent: i === 0, 
         isRevealed: false,
+        manuallyRevealed: false,
         status: undefined,
         timeToSpeak: undefined,
       })));
@@ -314,7 +328,23 @@ const EnhancedWordTracker = ({
     };
   }, [currentWordIndex, lastSpeechTime, showWordOnPause, isRecording, revealSpeed, wordStates]);
 
-  // Tap to reveal
+  // Tap to reveal individual word
+  const handleWordTap = useCallback((index: number) => {
+    if (!keywordMode || isRecording) return;
+    
+    setWordStates((prev) => {
+      const updated = [...prev];
+      if (index >= 0 && index < updated.length && !updated[index].isKeyword) {
+        updated[index] = {
+          ...updated[index],
+          manuallyRevealed: true,
+        };
+      }
+      return updated;
+    });
+  }, [keywordMode, isRecording]);
+
+  // Tap to reveal current word during recording
   const handleTapToReveal = useCallback(() => {
     if (isRecording && currentWordIndex >= 0) {
       revealCurrentWord();
@@ -346,6 +376,15 @@ const EnhancedWordTracker = ({
 
   const getWordClassName = (word: WordState, index: number) => {
     const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-200";
+    
+    // In keyword mode, hidden words show as dots
+    if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.isSpoken && !isRecording) {
+      return cn(
+        base,
+        "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600",
+        "text-center min-w-[60px]"
+      );
+    }
     
     // Color based on performance status
     if (word.status === 'correct') {
@@ -402,6 +441,14 @@ const EnhancedWordTracker = ({
     );
   };
 
+  // Render word content - show dots for hidden words in keyword mode
+  const renderWordContent = (word: WordState) => {
+    if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.isSpoken && !isRecording) {
+      return "•••";
+    }
+    return word.text;
+  };
+
   return (
     <div
       ref={containerRef}
@@ -430,12 +477,16 @@ const EnhancedWordTracker = ({
             key={index}
             data-word-index={index}
             className={getWordClassName(word, index)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleWordTap(index);
+            }}
             style={{
               fontSize: 'clamp(1.5rem, 3vw, 2rem)',
               fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             }}
           >
-            {word.text}
+            {renderWordContent(word)}
           </span>
         ))}
       </div>

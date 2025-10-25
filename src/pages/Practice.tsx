@@ -48,6 +48,7 @@ const Practice = () => {
     revealSpeed: 5,
     showWordOnPause: true,
     animationStyle: 'playful',
+    keywordMode: false,
   });
 
   useEffect(() => {
@@ -355,6 +356,7 @@ const Practice = () => {
                           revealSpeed={settings.revealSpeed}
                           showWordOnPause={settings.showWordOnPause}
                           animationStyle={settings.animationStyle}
+                          keywordMode={settings.keywordMode}
                         />
                       </div>
                     ) : (
