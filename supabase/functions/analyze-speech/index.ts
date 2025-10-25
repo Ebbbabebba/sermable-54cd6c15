@@ -23,20 +23,33 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    console.log('Auth header present:', authHeader ? 'Yes' : 'No');
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Create Supabase client with the user's JWT
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { 
+        headers: { 
+          Authorization: authHeader 
+        } 
+      },
+      auth: {
+        persistSession: false
+      }
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (userError || !user) {
-      console.error('Invalid authentication:', userError);
+      console.error('Invalid authentication:', userError?.message || 'No user found');
       return new Response(
-        JSON.stringify({ error: 'Invalid authentication' }),
+        JSON.stringify({ error: 'Invalid authentication: ' + (userError?.message || 'No user') }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('User authenticated:', user.id);
 
     const { audio, originalText, speechId, userTier, language } = await req.json();
     
