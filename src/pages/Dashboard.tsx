@@ -136,10 +136,14 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Sermable</h1>
           <div className="flex items-center gap-4">
+            <Button onClick={() => setUploadDialogOpen(true)} variant="default">
+              <Plus className="h-4 w-4 mr-2" />
+              New Speech
+            </Button>
             <div className="text-sm">
               <span className="font-medium capitalize">{subscriptionTier}</span> Plan
               {subscriptionTier === 'free' && (
@@ -232,10 +236,6 @@ const Dashboard = () => {
                   Manage and practice your speeches
                 </p>
               </div>
-              <Button onClick={() => setUploadDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Speech
-              </Button>
             </div>
 
             {speeches.length === 0 ? (

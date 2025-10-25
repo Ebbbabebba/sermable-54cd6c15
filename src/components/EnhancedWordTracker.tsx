@@ -82,7 +82,7 @@ const EnhancedWordTracker = ({
     lastSpokenIndexRef.current = -1;
   }, [text, keywordMode]);
 
-  // Process transcription from Whisper - Sequential word matching
+  // Process transcription from Whisper - Sequential word matching with immediate updates
   useEffect(() => {
     if (!transcription || wordStates.length === 0) return;
 
@@ -96,49 +96,52 @@ const EnhancedWordTracker = ({
     console.log('Transcribed words:', transcribedWords);
     console.log('Target words:', targetWords);
 
-    // Sequential matching - only mark words in order
-    const updatedStates = [...wordStates];
-    let lastSpokenIndex = lastSpokenIndexRef.current;
+    // Sequential matching - mark words immediately as they're spoken
+    setWordStates(prevStates => {
+      const updatedStates = [...prevStates];
+      let currentLastSpoken = lastSpokenIndexRef.current;
 
-    // Check each transcribed word against the next expected target word
-    for (const transcribedWord of transcribedWords) {
-      const nextTargetIndex = lastSpokenIndex + 1;
-      
-      if (nextTargetIndex >= targetWords.length) break;
+      // Check each transcribed word against the next expected target word
+      for (const transcribedWord of transcribedWords) {
+        const nextTargetIndex = currentLastSpoken + 1;
+        
+        if (nextTargetIndex >= targetWords.length) break;
 
-      const targetWord = targetWords[nextTargetIndex];
-      
-      // Check if transcribed word matches next expected word
-      const isMatch = transcribedWord === targetWord || 
-        transcribedWord.includes(targetWord) || 
-        targetWord.includes(transcribedWord) ||
-        (Math.abs(transcribedWord.length - targetWord.length) / Math.max(transcribedWord.length, targetWord.length)) < 0.3;
+        const targetWord = targetWords[nextTargetIndex];
+        
+        // Check if transcribed word matches next expected word
+        const isMatch = transcribedWord === targetWord || 
+          transcribedWord.includes(targetWord) || 
+          targetWord.includes(transcribedWord) ||
+          (Math.abs(transcribedWord.length - targetWord.length) / Math.max(transcribedWord.length, targetWord.length)) < 0.3;
 
-      if (isMatch) {
-        updatedStates[nextTargetIndex] = {
-          ...updatedStates[nextTargetIndex],
-          spoken: true,
-          revealed: true,
-          performanceStatus: 'correct'
-        };
-        lastSpokenIndex = nextTargetIndex;
-        lastSpokenIndexRef.current = lastSpokenIndex;
+        if (isMatch && !updatedStates[nextTargetIndex].spoken) {
+          updatedStates[nextTargetIndex] = {
+            ...updatedStates[nextTargetIndex],
+            spoken: true,
+            revealed: true,
+            performanceStatus: 'correct'
+          };
+          currentLastSpoken = nextTargetIndex;
+          lastSpokenIndexRef.current = currentLastSpoken;
+        }
       }
-    }
 
-    // Find current word (first unspoken word)
-    const currentIdx = updatedStates.findIndex(s => !s.spoken);
-    const finalStates = updatedStates.map((state, idx) => ({
-      ...state,
-      isCurrent: idx === currentIdx && currentIdx !== -1
-    }));
+      // Find current word (first unspoken word)
+      const currentIdx = updatedStates.findIndex(s => !s.spoken);
+      return updatedStates.map((state, idx) => ({
+        ...state,
+        isCurrent: idx === currentIdx && currentIdx !== -1
+      }));
+    });
 
-    setWordStates(finalStates);
-    if (currentIdx !== -1 && currentIdx > currentWordIndexRef.current) {
-      setCurrentWordIndex(currentIdx);
-      currentWordIndexRef.current = currentIdx;
+    // Update current word index
+    const newCurrentIdx = wordStates.findIndex(s => !s.spoken);
+    if (newCurrentIdx !== -1 && newCurrentIdx > currentWordIndexRef.current) {
+      setCurrentWordIndex(newCurrentIdx);
+      currentWordIndexRef.current = newCurrentIdx;
     }
-  }, [transcription, wordStates.length]);
+  }, [transcription]);
 
   // Handle recording state changes
   useEffect(() => {
