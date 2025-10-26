@@ -121,12 +121,13 @@ CRITICAL INSTRUCTIONS:
 - Calculate accuracy based on how much of the FULL speech was spoken correctly
 - Be LENIENT with pronunciation variations and similar-sounding words
 - Consider words correct if they sound similar (e.g., "Eva" vs "Ebba", "shares" vs "chairs")
+- PENALIZE WORD REPETITIONS: If the user repeats words unnecessarily (not in original text), reduce accuracy
 - Only mark words as MISSED if they are completely absent from spoken text
 - Only mark as DELAYED if there's an obvious long pause before the word
 - Focus on the overall message delivery and flow of the COMPLETE speech
 
 Compare them and identify:
-1. accuracy: percentage match (0-100) based on how much of the FULL original speech was spoken correctly
+1. accuracy: percentage match (0-100) based on how much of the FULL original speech was spoken correctly, MINUS penalties for word repetitions
 2. missedWords: array of words COMPLETELY missing from spoken text (be strict - only clear omissions from the FULL speech)
 3. delayedWords: array of words with obvious long pauses (be strict - only clear hesitations)
 4. analysis: brief encouraging feedback about their delivery of the FULL speech
