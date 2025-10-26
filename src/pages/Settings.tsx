@@ -5,12 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Languages, Globe } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Languages, Globe, Bell } from "lucide-react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { Capacitor } from "@capacitor/core";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
+  const isNativePlatform = Capacitor.isNativePlatform();
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -121,18 +126,54 @@ const Settings = () => {
             </CardContent>
           </Card>
 
-          {/* Notification Settings Placeholder */}
+          {/* Notification Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>Notifications</CardTitle>
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                <CardTitle>Notifications</CardTitle>
+              </div>
               <CardDescription>
-                Configure how you receive practice reminders
+                Get reminders when speeches are due for review
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Notification settings coming soon...
-              </p>
+            <CardContent className="space-y-4">
+              {!isNativePlatform ? (
+                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                  <p className="text-sm font-medium">Native App Required</p>
+                  <p className="text-xs text-muted-foreground">
+                    Lock screen push notifications are only available in the native mobile app. 
+                    To get notifications on your iPhone or Android device, you'll need to install the app.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Push Notifications</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Receive reminders on your lock screen
+                      </p>
+                    </div>
+                    <Switch
+                      checked={notificationsEnabled}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          registerPushNotifications();
+                        }
+                      }}
+                    />
+                  </div>
+                  
+                  {notificationsEnabled && (
+                    <div className="rounded-lg bg-primary/10 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        ✓ You'll receive notifications when speeches are due for review based on your progress.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

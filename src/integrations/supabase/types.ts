@@ -79,6 +79,9 @@ export type Database = {
           id: string
           monthly_speeches_count: number
           monthly_speeches_reset_date: string
+          notifications_enabled: boolean | null
+          push_platform: string | null
+          push_token: string | null
           subscription_status: string
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
         }
@@ -90,6 +93,9 @@ export type Database = {
           id: string
           monthly_speeches_count?: number
           monthly_speeches_reset_date?: string
+          notifications_enabled?: boolean | null
+          push_platform?: string | null
+          push_token?: string | null
           subscription_status?: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
         }
@@ -101,6 +107,9 @@ export type Database = {
           id?: string
           monthly_speeches_count?: number
           monthly_speeches_reset_date?: string
+          notifications_enabled?: boolean | null
+          push_platform?: string | null
+          push_token?: string | null
           subscription_status?: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
         }
@@ -238,6 +247,16 @@ export type Database = {
           speech_id: string
           speech_title: string
           success_rate: number
+        }[]
+      }
+      get_users_with_due_reviews: {
+        Args: never
+        Returns: {
+          due_count: number
+          push_platform: string
+          push_token: string
+          speech_titles: string[]
+          user_id: string
         }[]
       }
       get_word_limit: { Args: { p_user_id: string }; Returns: number }
