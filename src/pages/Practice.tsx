@@ -54,6 +54,7 @@ const Practice = () => {
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedChunkIndex = useRef(0);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -124,58 +125,99 @@ const Practice = () => {
     const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
     console.log('Detected language:', detectedLang);
     
-    // Start rapid transcription every 200ms
-    transcriptionIntervalRef.current = setInterval(async () => {
-      const newChunks = audioRecorderRef.current?.getNewChunks(lastProcessedChunkIndex.current);
-      if (!newChunks || newChunks.chunks.length === 0) return;
-
-      lastProcessedChunkIndex.current = newChunks.currentIndex;
-
-      try {
-        const audioBlob = new Blob(newChunks.chunks, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-          const base64Audio = reader.result?.toString().split(',')[1];
-          if (!base64Audio) return;
-
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            console.error('No active session');
-            return;
+    // Start Web Speech API for instant transcription
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = detectedLang === 'sv' ? 'sv-SE' : detectedLang === 'en' ? 'en-US' : 'en-US';
+      
+      let finalTranscript = '';
+      
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
           }
+        }
+        
+        setLiveTranscription((finalTranscript + interimTranscript).trim());
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+      };
+      
+      recognition.start();
+      recognitionRef.current = recognition;
+      console.log('Web Speech API started for instant transcription');
+    } else {
+      console.warn('Web Speech API not supported, falling back to server transcription');
+      // Fallback to server-side transcription
+      transcriptionIntervalRef.current = setInterval(async () => {
+        const newChunks = audioRecorderRef.current?.getNewChunks(lastProcessedChunkIndex.current);
+        if (!newChunks || newChunks.chunks.length === 0) return;
 
-          const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-            body: { 
-              audio: base64Audio,
-              language: detectedLang 
-            },
-            headers: {
-              Authorization: `Bearer ${session.access_token}`
+        lastProcessedChunkIndex.current = newChunks.currentIndex;
+
+        try {
+          const audioBlob = new Blob(newChunks.chunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async () => {
+            const base64Audio = reader.result?.toString().split(',')[1];
+            if (!base64Audio) return;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              console.error('No active session');
+              return;
             }
-          });
 
-          if (error) {
-            console.error('Transcription error:', error);
-            return;
-          }
-
-          if (data?.text && data.text.trim()) {
-            setLiveTranscription(prev => {
-              const newText = prev + ' ' + data.text;
-              return newText.trim();
+            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+              body: { 
+                audio: base64Audio,
+                language: detectedLang 
+              },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`
+              }
             });
-          }
-        };
-      } catch (error) {
-        console.error('Error during live transcription:', error);
-      }
-    }, 200);
+
+            if (error) {
+              console.error('Transcription error:', error);
+              return;
+            }
+
+            if (data?.text && data.text.trim()) {
+              setLiveTranscription(prev => {
+                const newText = prev + ' ' + data.text;
+                return newText.trim();
+              });
+            }
+          };
+        } catch (error) {
+          console.error('Error during live transcription:', error);
+        }
+      }, 200);
+    }
   };
 
   const handleRecordingStop = async (audioBlob: Blob) => {
     setIsRecording(false);
     setIsProcessing(true);
+    
+    // Stop Web Speech API
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
     
     // Clear the transcription interval
     if (transcriptionIntervalRef.current) {
