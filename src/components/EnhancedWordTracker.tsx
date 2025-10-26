@@ -36,40 +36,35 @@ const normalizeNordic = (text: string): string => {
     .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '');
 };
 
-// Phonetic similarity for names - very lenient matching
-const isPhoneticallySimilar = (word1: string, word2: string): boolean => {
+// Lenient word similarity checking
+const isSimilarWord = (word1: string, word2: string): boolean => {
   const w1 = normalizeNordic(word1);
   const w2 = normalizeNordic(word2);
   
-  // If either word starts with capital, treat as name and be more lenient
-  const isName = /^[A-Z]/.test(word1) || /^[A-Z]/.test(word2);
+  // Exact match
+  if (w1 === w2) return true;
   
-  if (isName) {
-    // For names, check if first 2 letters match or if they sound similar
-    const start1 = w1.substring(0, 2);
-    const start2 = w2.substring(0, 2);
-    
-    // Common phonetic substitutions for names
-    const phoneticMap: { [key: string]: string[] } = {
-      'eb': ['ab', 'ib', 'av', 'ev'],
-      'ab': ['eb', 'av', 'ib', 'ob'],
-      'av': ['ab', 'eb', 'ev', 'ov'],
-      'ev': ['av', 'eb', 'iv'],
-      'ma': ['mo', 'me', 'mi'],
-      'so': ['sa', 'su', 'se'],
-      'ka': ['ca', 'ke'],
-      'ch': ['sh', 'k'],
-    };
-    
-    if (start1 === start2) return true;
-    if (phoneticMap[start1]?.includes(start2)) return true;
-    if (phoneticMap[start2]?.includes(start1)) return true;
-    
-    // Check if similar length and first letter matches
-    if (w1[0] === w2[0] && Math.abs(w1.length - w2.length) <= 2) return true;
+  // Contains match (for partial words)
+  if (w1.includes(w2) || w2.includes(w1)) return true;
+  
+  // Check if one starts with the other (for truncated pronunciations)
+  if (w1.startsWith(w2.substring(0, 3)) || w2.startsWith(w1.substring(0, 3))) return true;
+  
+  // Length-based similarity (50% threshold for more lenient matching)
+  const maxLen = Math.max(w1.length, w2.length);
+  const minLen = Math.min(w1.length, w2.length);
+  if (minLen / maxLen >= 0.5 && w1[0] === w2[0]) return true;
+  
+  // Levenshtein-like distance for similar sounding words
+  let differences = 0;
+  const length = Math.min(w1.length, w2.length);
+  for (let i = 0; i < length; i++) {
+    if (w1[i] !== w2[i]) differences++;
   }
+  differences += Math.abs(w1.length - w2.length);
   
-  return false;
+  // Allow up to 40% character differences
+  return differences / maxLen <= 0.4;
 };
 
 const isKeywordWord = (word: string): boolean => {
@@ -118,7 +113,7 @@ const EnhancedWordTracker = ({
     lastSpokenIndexRef.current = -1;
   }, [text, keywordMode]);
 
-  // Process transcription from Whisper - Sequential word matching with immediate updates
+  // Process transcription from Whisper - Sequential word matching with skip detection
   useEffect(() => {
     if (!transcription || wordStates.length === 0) return;
 
@@ -132,12 +127,12 @@ const EnhancedWordTracker = ({
     console.log('Transcribed words:', transcribedWords);
     console.log('Target words:', targetWords);
 
-    // Sequential matching - mark words immediately as they're spoken
+    // Sequential matching with skip detection
     setWordStates(prevStates => {
       const updatedStates = [...prevStates];
       let currentLastSpoken = lastSpokenIndexRef.current;
 
-      // Check each transcribed word against the next expected target word
+      // Check each transcribed word
       for (const transcribedWord of transcribedWords) {
         const nextTargetIndex = currentLastSpoken + 1;
         
@@ -146,15 +141,11 @@ const EnhancedWordTracker = ({
         const targetWord = targetWords[nextTargetIndex];
         const originalTargetWord = prevStates[nextTargetIndex].text;
         
-        // Check if transcribed word matches next expected word
-        const phoneticMatch = isPhoneticallySimilar(transcribedWord, originalTargetWord);
-        const isMatch = transcribedWord === targetWord || 
-          transcribedWord.includes(targetWord) || 
-          targetWord.includes(transcribedWord) ||
-          phoneticMatch ||
-          (Math.abs(transcribedWord.length - targetWord.length) / Math.max(transcribedWord.length, targetWord.length)) < 0.3;
+        // Check if transcribed word matches next expected word (very lenient)
+        const isMatch = isSimilarWord(transcribedWord, targetWord);
 
         if (isMatch && !updatedStates[nextTargetIndex].spoken) {
+          // Mark the word as spoken
           updatedStates[nextTargetIndex] = {
             ...updatedStates[nextTargetIndex],
             spoken: true,
@@ -163,11 +154,41 @@ const EnhancedWordTracker = ({
           };
           currentLastSpoken = nextTargetIndex;
           lastSpokenIndexRef.current = currentLastSpoken;
+        } else if (!isMatch) {
+          // Check if this word matches a word further ahead (skip detection)
+          let foundMatch = false;
+          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 4, targetWords.length); i++) {
+            if (isSimilarWord(transcribedWord, targetWords[i])) {
+              // Mark all skipped words as missed
+              for (let j = nextTargetIndex; j < i; j++) {
+                if (!updatedStates[j].spoken) {
+                  updatedStates[j] = {
+                    ...updatedStates[j],
+                    spoken: false,
+                    revealed: true,
+                    performanceStatus: 'missed'
+                  };
+                }
+              }
+              
+              // Mark the matched word as spoken
+              updatedStates[i] = {
+                ...updatedStates[i],
+                spoken: true,
+                revealed: true,
+                performanceStatus: 'correct'
+              };
+              currentLastSpoken = i;
+              lastSpokenIndexRef.current = currentLastSpoken;
+              foundMatch = true;
+              break;
+            }
+          }
         }
       }
 
-      // Find current word (first unspoken word)
-      const currentIdx = updatedStates.findIndex(s => !s.spoken);
+      // Find current word (first unspoken word that isn't marked as missed)
+      const currentIdx = updatedStates.findIndex(s => !s.spoken && s.performanceStatus !== 'missed');
       return updatedStates.map((state, idx) => ({
         ...state,
         isCurrent: idx === currentIdx && currentIdx !== -1
@@ -175,8 +196,8 @@ const EnhancedWordTracker = ({
     });
 
     // Update current word index
-    const newCurrentIdx = wordStates.findIndex(s => !s.spoken);
-    if (newCurrentIdx !== -1 && newCurrentIdx > currentWordIndexRef.current) {
+    const newCurrentIdx = wordStates.findIndex(s => !s.spoken && s.performanceStatus !== 'missed');
+    if (newCurrentIdx !== -1 && newCurrentIdx !== currentWordIndexRef.current) {
       setCurrentWordIndex(newCurrentIdx);
       currentWordIndexRef.current = newCurrentIdx;
     }
