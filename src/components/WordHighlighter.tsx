@@ -4,10 +4,11 @@ interface WordHighlighterProps {
   text: string;
   missedWords: string[];
   delayedWords: string[];
+  connectorWords?: string[];
   className?: string;
 }
 
-const WordHighlighter = ({ text, missedWords, delayedWords, className }: WordHighlighterProps) => {
+const WordHighlighter = ({ text, missedWords, delayedWords, connectorWords = [], className }: WordHighlighterProps) => {
   // Split text into words while preserving punctuation and whitespace
   const words = text.split(/(\s+)/);
 
@@ -19,6 +20,9 @@ const WordHighlighter = ({ text, missedWords, delayedWords, className }: WordHig
     }
     if (delayedWords.some(w => w.toLowerCase() === cleanWord)) {
       return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium";
+    }
+    if (connectorWords.some(w => w.toLowerCase() === cleanWord)) {
+      return "text-muted-foreground/60 text-sm";
     }
     return "text-foreground/80";
   };

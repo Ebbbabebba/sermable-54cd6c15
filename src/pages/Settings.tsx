@@ -6,14 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Languages, Globe, Bell } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { toast } = useToast();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -35,7 +40,55 @@ const Settings = () => {
   useEffect(() => {
     // Sync with current language on mount
     setCurrentLanguage(i18n.language);
+    
+    // Load user skill level
+    const loadSkillLevel = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("skill_level")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          setSkillLevel((profile.skill_level || 'beginner') as 'beginner' | 'intermediate' | 'advanced');
+        }
+      } catch (error) {
+        console.error('Error loading skill level:', error);
+      }
+    };
+
+    loadSkillLevel();
   }, [i18n.language]);
+
+  const handleSkillLevelChange = async (level: 'beginner' | 'intermediate' | 'advanced') => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ skill_level: level })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setSkillLevel(level);
+      toast({
+        title: "Skill level updated",
+        description: "Your practice schedule will be adjusted accordingly",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update skill level",
+        description: error.message,
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,7 +164,7 @@ const Settings = () => {
             </CardContent>
           </Card>
 
-          {/* Account Settings Placeholder */}
+          {/* Account Settings */}
           <Card>
             <CardHeader>
               <CardTitle>Account</CardTitle>
@@ -119,10 +172,56 @@ const Settings = () => {
                 Manage your account settings and preferences
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Account settings coming soon...
-              </p>
+            <CardContent className="space-y-6">
+              {/* Skill Level */}
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="skill-level">Speaking Skill Level</Label>
+                  <p className="text-sm text-muted-foreground">
+                    This adjusts your practice schedule and notification frequency
+                  </p>
+                </div>
+                <Select value={skillLevel} onValueChange={(value) => handleSkillLevelChange(value as 'beginner' | 'intermediate' | 'advanced')}>
+                  <SelectTrigger id="skill-level">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">
+                      <div className="flex flex-col">
+                        <span>Beginner</span>
+                        <span className="text-xs text-muted-foreground">
+                          Slower pace, more frequent reviews
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="intermediate">
+                      <div className="flex flex-col">
+                        <span>Intermediate</span>
+                        <span className="text-xs text-muted-foreground">
+                          Balanced progression
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="advanced">
+                      <div className="flex flex-col">
+                        <span>Advanced</span>
+                        <span className="text-xs text-muted-foreground">
+                          Faster pace, longer intervals
+                        </span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                <p className="text-sm font-medium">Personalized Learning</p>
+                <p className="text-xs text-muted-foreground">
+                  Your skill level combined with speech deadlines determines review frequency. Advanced speakers progress faster with longer intervals between reviews, while beginners get more frequent practice sessions.
+                </p>
+              </div>
             </CardContent>
           </Card>
 

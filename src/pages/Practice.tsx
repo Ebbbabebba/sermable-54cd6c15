@@ -27,6 +27,8 @@ interface SessionResults {
   accuracy: number;
   missedWords: string[];
   delayedWords: string[];
+  connectorWords: string[];
+  difficultyScore: number;
   analysis: string;
   cueText: string;
 }
@@ -44,6 +46,7 @@ const Practice = () => {
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
     revealSpeed: 5,
     showWordOnPause: true,
@@ -64,12 +67,12 @@ const Practice = () => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("subscription_tier")
+          .select("subscription_tier, skill_level")
           .eq("id", user.id)
           .single();
 
         if (profile) {
-          setSubscriptionTier(profile.subscription_tier);
+          setSkillLevel((profile.skill_level || 'beginner') as 'beginner' | 'intermediate' | 'advanced');
         }
       } catch (error) {
         console.error('Error loading user profile:', error);
@@ -276,6 +279,7 @@ const Practice = () => {
               speechId: speech!.id,
               userTier: subscriptionTier,
               language: detectedLang,
+              skillLevel: skillLevel,
             },
             headers: {
               Authorization: `Bearer ${session.access_token}`
@@ -307,6 +311,8 @@ const Practice = () => {
               score: data.accuracy,
               missed_words: data.missedWords,
               delayed_words: data.delayedWords,
+              difficulty_score: data.difficultyScore,
+              connector_words: data.connectorWords,
               duration: 0,
             });
 
@@ -467,6 +473,7 @@ const Practice = () => {
                         text={speech.text_current}
                         missedWords={sessionResults.missedWords}
                         delayedWords={sessionResults.delayedWords}
+                        connectorWords={sessionResults.connectorWords}
                       />
                     ) : isRecording ? (
                       <div className="space-y-4">

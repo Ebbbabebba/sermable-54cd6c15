@@ -51,7 +51,7 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
-    const { audio, originalText, speechId, userTier, language } = await req.json();
+    const { audio, originalText, speechId, userTier, language, skillLevel } = await req.json();
     
     // Verify user owns the speech they're analyzing and get familiarity level
     const { data: speech, error: speechError } = await supabase
@@ -113,6 +113,7 @@ serve(async (req) => {
 Original FULL speech text: "${originalText}"
 Spoken text: "${spokenText}"
 Language: ${audioLanguage}
+Speaker skill level: ${skillLevel || 'beginner'}
 
 CRITICAL INSTRUCTIONS:
 - The user is practicing the FULL speech above
@@ -126,17 +127,32 @@ CRITICAL INSTRUCTIONS:
 - Only mark as DELAYED if there's an obvious long pause before the word
 - Focus on the overall message delivery and flow of the COMPLETE speech
 
+CONNECTOR WORD DETECTION:
+Identify small connector words (articles, prepositions, conjunctions) from the original text:
+- Common connectors: the, a, an, and, but, or, in, on, at, to, for, of, with, from, by, as, is, was, are, were, be, been, that, this, these, those, it, its
+
+DIFFICULTY SCORING (0-100):
+Calculate based on:
+- Text complexity (word length, sentence structure)
+- Total word count
+- Presence of technical or uncommon words
+- Speaking pace required
+
 Compare them and identify:
 1. accuracy: percentage match (0-100) based on how much of the FULL original speech was spoken correctly, MINUS penalties for word repetitions
 2. missedWords: array of words COMPLETELY missing from spoken text (be strict - only clear omissions from the FULL speech)
 3. delayedWords: array of words with obvious long pauses (be strict - only clear hesitations)
-4. analysis: brief encouraging feedback about their delivery of the FULL speech
+4. connectorWords: array of connector words found in the original text (small words that could be hidden in practice)
+5. difficultyScore: 0-100 score indicating speech complexity
+6. analysis: brief encouraging feedback about their delivery of the FULL speech
 
 Return ONLY this JSON structure with no extra text:
 {
   "accuracy": 85,
   "missedWords": ["example1"],
   "delayedWords": ["example2"],
+  "connectorWords": ["the", "and", "of"],
+  "difficultyScore": 65,
   "analysis": "Good practice session"
 }`;
 
@@ -192,6 +208,12 @@ Return ONLY this JSON structure with no extra text:
       }
       if (!Array.isArray(analysis.delayedWords)) {
         analysis.delayedWords = [];
+      }
+      if (!Array.isArray(analysis.connectorWords)) {
+        analysis.connectorWords = [];
+      }
+      if (typeof analysis.difficultyScore !== 'number') {
+        analysis.difficultyScore = 50;
       }
       if (!analysis.analysis) {
         analysis.analysis = 'Practice session completed';
@@ -369,6 +391,8 @@ Return ONLY the simplified text.`;
         accuracy: analysis.accuracy,
         missedWords: analysis.missedWords || [],
         delayedWords: analysis.delayedWords || [],
+        connectorWords: analysis.connectorWords || [],
+        difficultyScore: analysis.difficultyScore || 50,
         analysis: analysis.analysis || 'Good practice session',
         cueText: cueText,
       }),

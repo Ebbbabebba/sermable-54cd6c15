@@ -17,9 +17,11 @@ export type Database = {
       practice_sessions: {
         Row: {
           analysis: string | null
+          connector_words: Json | null
           created_at: string
           cue_text: string | null
           delayed_words: string[] | null
+          difficulty_score: number | null
           duration: number | null
           filler_words: Json | null
           id: string
@@ -32,9 +34,11 @@ export type Database = {
         }
         Insert: {
           analysis?: string | null
+          connector_words?: Json | null
           created_at?: string
           cue_text?: string | null
           delayed_words?: string[] | null
+          difficulty_score?: number | null
           duration?: number | null
           filler_words?: Json | null
           id?: string
@@ -47,9 +51,11 @@ export type Database = {
         }
         Update: {
           analysis?: string | null
+          connector_words?: Json | null
           created_at?: string
           cue_text?: string | null
           delayed_words?: string[] | null
+          difficulty_score?: number | null
           duration?: number | null
           filler_words?: Json | null
           id?: string
@@ -82,6 +88,7 @@ export type Database = {
           notifications_enabled: boolean | null
           push_platform: string | null
           push_token: string | null
+          skill_level: string | null
           subscription_status: string
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
         }
@@ -96,6 +103,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           push_platform?: string | null
           push_token?: string | null
+          skill_level?: string | null
           subscription_status?: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
         }
@@ -110,6 +118,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           push_platform?: string | null
           push_token?: string | null
+          skill_level?: string | null
           subscription_status?: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
         }
@@ -236,6 +245,16 @@ export type Database = {
             Args: { accuracy: number; current_interval: number }
             Returns: number
           }
+      calculate_personalized_interval: {
+        Args: {
+          p_accuracy: number
+          p_current_interval: number
+          p_days_until_deadline: number
+          p_difficulty_level: string
+          p_skill_level: string
+        }
+        Returns: number
+      }
       can_create_speech: { Args: { p_user_id: string }; Returns: boolean }
       get_speeches_due_for_review: {
         Args: { p_user_id: string }
@@ -262,6 +281,14 @@ export type Database = {
       get_word_limit: { Args: { p_user_id: string }; Returns: number }
       update_mastery_level: {
         Args: { p_accuracy: number; p_speech_id: string }
+        Returns: undefined
+      }
+      update_personalized_schedule: {
+        Args: {
+          p_accuracy: number
+          p_session_date?: string
+          p_speech_id: string
+        }
         Returns: undefined
       }
       update_schedule_after_practice: {
