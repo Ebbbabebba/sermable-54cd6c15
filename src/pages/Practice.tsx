@@ -53,6 +53,7 @@ const Practice = () => {
   const [liveTranscription, setLiveTranscription] = useState("");
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastProcessedChunkIndex = useRef(0);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -116,18 +117,22 @@ const Practice = () => {
   const handleRecordingStart = async () => {
     setIsRecording(true);
     setLiveTranscription("");
+    lastProcessedChunkIndex.current = 0;
     
     // Detect language from speech text
     const { detectTextLanguage } = await import('@/utils/languageDetection');
     const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
     console.log('Detected language:', detectedLang);
     
-    // Start periodic transcription every 0.5 seconds
+    // Start rapid transcription every 200ms
     transcriptionIntervalRef.current = setInterval(async () => {
-      const audioBlob = audioRecorderRef.current?.getCurrentAudioBlob();
-      if (!audioBlob) return;
+      const newChunks = audioRecorderRef.current?.getNewChunks(lastProcessedChunkIndex.current);
+      if (!newChunks || newChunks.chunks.length === 0) return;
+
+      lastProcessedChunkIndex.current = newChunks.currentIndex;
 
       try {
+        const audioBlob = new Blob(newChunks.chunks, { type: 'audio/webm' });
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = async () => {
@@ -155,14 +160,17 @@ const Practice = () => {
             return;
           }
 
-          if (data?.text) {
-            setLiveTranscription(data.text);
+          if (data?.text && data.text.trim()) {
+            setLiveTranscription(prev => {
+              const newText = prev + ' ' + data.text;
+              return newText.trim();
+            });
           }
         };
       } catch (error) {
         console.error('Error during live transcription:', error);
       }
-    }, 500);
+    }, 200);
   };
 
   const handleRecordingStop = async (audioBlob: Blob) => {
@@ -174,6 +182,7 @@ const Practice = () => {
       clearInterval(transcriptionIntervalRef.current);
       transcriptionIntervalRef.current = null;
     }
+    lastProcessedChunkIndex.current = 0;
 
     // Scroll to results area
     setTimeout(() => {

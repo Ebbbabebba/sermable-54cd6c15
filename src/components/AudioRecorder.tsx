@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface AudioRecorderHandle {
   getCurrentAudioBlob: () => Blob | null;
+  getNewChunks: (lastIndex: number) => { chunks: Blob[], currentIndex: number } | null;
 }
 
 interface AudioRecorderProps {
@@ -50,8 +51,20 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
       return null;
     };
 
+    const getNewChunks = (lastIndex: number) => {
+      if (chunksRef.current.length > lastIndex) {
+        const newChunks = chunksRef.current.slice(lastIndex);
+        return {
+          chunks: newChunks,
+          currentIndex: chunksRef.current.length
+        };
+      }
+      return null;
+    };
+
     useImperativeHandle(ref, () => ({
-      getCurrentAudioBlob
+      getCurrentAudioBlob,
+      getNewChunks
     }));
 
     const startRecording = async () => {
@@ -88,11 +101,11 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
 
         chunksRef.current = [];
 
-        // Stream audio in 250ms chunks for real-time processing
+        // Stream audio in 200ms chunks for faster real-time processing
         mediaRecorder.ondataavailable = (event) => {
           if (event.data && event.data.size > 0) {
             chunksRef.current.push(event.data);
-            console.log(`Audio chunk received: ${event.data.size} bytes`);
+            console.log(`Audio chunk received: ${event.data.size} bytes, total chunks: ${chunksRef.current.length}`);
           }
         };
 
@@ -108,12 +121,12 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
           }
         };
 
-        // Start recording with 250ms chunks for streaming
-        mediaRecorder.start(250);
+        // Start recording with 200ms chunks for faster streaming
+        mediaRecorder.start(200);
         mediaRecorderRef.current = mediaRecorder;
         onStart();
 
-        console.log('Recording started with streaming chunks (250ms intervals)');
+        console.log('Recording started with streaming chunks (200ms intervals)');
         toast({
           title: "Recording started",
           description: "Speak clearly into your microphone",
