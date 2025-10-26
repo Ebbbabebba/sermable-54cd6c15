@@ -36,6 +36,42 @@ const normalizeNordic = (text: string): string => {
     .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '');
 };
 
+// Phonetic similarity for names - very lenient matching
+const isPhoneticallySimilar = (word1: string, word2: string): boolean => {
+  const w1 = normalizeNordic(word1);
+  const w2 = normalizeNordic(word2);
+  
+  // If either word starts with capital, treat as name and be more lenient
+  const isName = /^[A-Z]/.test(word1) || /^[A-Z]/.test(word2);
+  
+  if (isName) {
+    // For names, check if first 2 letters match or if they sound similar
+    const start1 = w1.substring(0, 2);
+    const start2 = w2.substring(0, 2);
+    
+    // Common phonetic substitutions for names
+    const phoneticMap: { [key: string]: string[] } = {
+      'eb': ['ab', 'ib', 'av', 'ev'],
+      'ab': ['eb', 'av', 'ib', 'ob'],
+      'av': ['ab', 'eb', 'ev', 'ov'],
+      'ev': ['av', 'eb', 'iv'],
+      'ma': ['mo', 'me', 'mi'],
+      'so': ['sa', 'su', 'se'],
+      'ka': ['ca', 'ke'],
+      'ch': ['sh', 'k'],
+    };
+    
+    if (start1 === start2) return true;
+    if (phoneticMap[start1]?.includes(start2)) return true;
+    if (phoneticMap[start2]?.includes(start1)) return true;
+    
+    // Check if similar length and first letter matches
+    if (w1[0] === w2[0] && Math.abs(w1.length - w2.length) <= 2) return true;
+  }
+  
+  return false;
+};
+
 const isKeywordWord = (word: string): boolean => {
   const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
   return cleanWord.length > 5 || /[A-Z]/.test(word) || /[.!?]/.test(word);
@@ -108,11 +144,14 @@ const EnhancedWordTracker = ({
         if (nextTargetIndex >= targetWords.length) break;
 
         const targetWord = targetWords[nextTargetIndex];
+        const originalTargetWord = prevStates[nextTargetIndex].text;
         
         // Check if transcribed word matches next expected word
+        const phoneticMatch = isPhoneticallySimilar(transcribedWord, originalTargetWord);
         const isMatch = transcribedWord === targetWord || 
           transcribedWord.includes(targetWord) || 
           targetWord.includes(transcribedWord) ||
+          phoneticMatch ||
           (Math.abs(transcribedWord.length - targetWord.length) / Math.max(transcribedWord.length, targetWord.length)) < 0.3;
 
         if (isMatch && !updatedStates[nextTargetIndex].spoken) {

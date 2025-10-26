@@ -131,6 +131,7 @@ const Practice = () => {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
+      recognition.maxAlternatives = 3; // Get multiple alternatives for better name detection
       recognition.lang = detectedLang === 'sv' ? 'sv-SE' : detectedLang === 'en' ? 'en-US' : 'en-US';
       
       let finalTranscript = '';
@@ -142,12 +143,14 @@ const Practice = () => {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
+            // Update immediately on final results
+            setLiveTranscription(finalTranscript.trim());
           } else {
             interimTranscript += transcript;
+            // Update instantly even with interim results for maximum responsiveness
+            setLiveTranscription((finalTranscript + interimTranscript).trim());
           }
         }
-        
-        setLiveTranscription((finalTranscript + interimTranscript).trim());
       };
       
       recognition.onerror = (event: any) => {
