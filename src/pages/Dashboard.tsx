@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
+import ReviewNotifications from "@/components/ReviewNotifications";
 
 interface Speech {
   id: string;
@@ -236,6 +237,9 @@ const Dashboard = () => {
               Continue practicing or start a new speech.
             </p>
           </div>
+
+          {/* Review Notifications */}
+          <ReviewNotifications />
 
           {/* Ad Placeholder - Free Users */}
           {subscriptionTier === 'free' && (
