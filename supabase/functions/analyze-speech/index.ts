@@ -156,8 +156,8 @@ Return ONLY this JSON structure with no extra text:
   "analysis": "Good practice session"
 }`;
 
-    // Use GPT-4o-mini for reliable analysis without reasoning tokens
-    const analysisModel = 'gpt-4o-mini';
+    // Use GPT-5 Mini for faster, more accurate analysis
+    const analysisModel = 'gpt-5-mini-2025-08-07';
     console.log('Using analysis model:', analysisModel);
 
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -173,8 +173,7 @@ Return ONLY this JSON structure with no extra text:
           { role: 'system', content: 'You are a supportive speech analysis assistant. Be encouraging and lenient with word matching. Return ONLY valid JSON with no markdown formatting or explanations.' },
           { role: 'user', content: analysisPrompt }
         ],
-        max_tokens: 3000,
-        temperature: 0.7,
+        max_completion_tokens: 5000,
       }),
     });
 
@@ -324,13 +323,12 @@ Return ONLY the simplified cue text, nothing else.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5-mini-2025-08-07',
           messages: [
             { role: 'system', content: 'You create concise cue texts. Return only the cue text with no explanations.' },
             { role: 'user', content: cuePrompt }
           ],
-          max_tokens: 1000,
-          temperature: 0.7,
+          max_completion_tokens: 1000,
         }),
       });
 
@@ -366,13 +364,12 @@ Return ONLY the simplified text.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-5-mini-2025-08-07',
           messages: [
             { role: 'system', content: 'You simplify texts by removing small words. Return only the simplified text.' },
             { role: 'user', content: simpleCuePrompt }
           ],
-          max_tokens: 1000,
-          temperature: 0.7,
+          max_completion_tokens: 1000,
         }),
       });
 
