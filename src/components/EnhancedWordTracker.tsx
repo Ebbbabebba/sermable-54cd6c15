@@ -125,9 +125,6 @@ const EnhancedWordTracker = ({
     const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
     const targetWords = wordStates.map(ws => normalizeText(ws.text));
 
-    console.log('Transcription:', transcription);
-    console.log('Transcribed words:', transcribedWords);
-
     const now = Date.now();
 
     // Sequential matching with skip detection and hesitation timing
@@ -143,7 +140,7 @@ const EnhancedWordTracker = ({
 
         const targetWord = targetWords[nextTargetIndex];
         
-        // Check if transcribed word matches next expected word (stricter now)
+        // Check if transcribed word matches next expected word
         const isMatch = isSimilarWord(transcribedWord, targetWord);
 
         if (isMatch && !updatedStates[nextTargetIndex].spoken) {
@@ -151,7 +148,7 @@ const EnhancedWordTracker = ({
           const timeAtWord = wordTimestamps.current.get(nextTargetIndex);
           const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
           
-          // Mark the word as spoken
+          // Mark the word as spoken and IMMEDIATELY advance
           updatedStates[nextTargetIndex] = {
             ...updatedStates[nextTargetIndex],
             spoken: true,
@@ -159,10 +156,13 @@ const EnhancedWordTracker = ({
             performanceStatus: hesitated ? 'hesitated' : 'correct'
           };
           currentLastSpoken = nextTargetIndex;
-          lastSpokenIndexRef.current = currentLastSpoken;
-          wordTimestamps.current.delete(nextTargetIndex); // Clear timestamp
+          lastSpokenIndexRef.current = nextTargetIndex;
+          wordTimestamps.current.delete(nextTargetIndex);
+          
+          // Continue processing more words in this transcription batch
+          continue;
         } else if (!isMatch) {
-          // Check if this word matches a word further ahead (skip detection) - look ahead only 2 words
+          // Check if this word matches a word further ahead (skip detection)
           let foundMatch = false;
           for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 3, targetWords.length); i++) {
             if (isSimilarWord(transcribedWord, targetWords[i])) {
@@ -175,7 +175,7 @@ const EnhancedWordTracker = ({
                     revealed: true,
                     performanceStatus: 'missed'
                   };
-                  wordTimestamps.current.delete(j); // Clear timestamps for skipped words
+                  wordTimestamps.current.delete(j);
                 }
               }
               
@@ -183,7 +183,7 @@ const EnhancedWordTracker = ({
               const timeAtWord = wordTimestamps.current.get(i);
               const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
               
-              // Mark the matched word as spoken
+              // Mark the matched word as spoken and advance
               updatedStates[i] = {
                 ...updatedStates[i],
                 spoken: true,
@@ -191,32 +191,41 @@ const EnhancedWordTracker = ({
                 performanceStatus: hesitated ? 'hesitated' : 'correct'
               };
               currentLastSpoken = i;
-              lastSpokenIndexRef.current = currentLastSpoken;
+              lastSpokenIndexRef.current = i;
               wordTimestamps.current.delete(i);
               foundMatch = true;
               break;
             }
           }
+          
+          if (foundMatch) continue;
         }
       }
 
-      // Find current word (first unspoken word that isn't marked as missed)
-      const currentIdx = updatedStates.findIndex(s => !s.spoken && s.performanceStatus !== 'missed');
+      // Find next unspoken word (skip over missed words)
+      let currentIdx = -1;
+      for (let i = 0; i < updatedStates.length; i++) {
+        if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
+          currentIdx = i;
+          break;
+        }
+      }
       
       // Track timestamp when we reach a new word position
       if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
         wordTimestamps.current.set(currentIdx, now);
       }
       
+      // Update isCurrent for all words
       return updatedStates.map((state, idx) => ({
         ...state,
         isCurrent: idx === currentIdx && currentIdx !== -1
       }));
     });
 
-    // Update current word index
+    // Update current word index for scrolling
     const newCurrentIdx = wordStates.findIndex(s => !s.spoken && s.performanceStatus !== 'missed');
-    if (newCurrentIdx !== -1 && newCurrentIdx !== currentWordIndexRef.current) {
+    if (newCurrentIdx !== -1) {
       setCurrentWordIndex(newCurrentIdx);
       currentWordIndexRef.current = newCurrentIdx;
     }
