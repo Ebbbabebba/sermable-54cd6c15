@@ -110,32 +110,44 @@ export type Database = {
         Row: {
           completed: boolean
           created_at: string
+          difficulty_level: string | null
           id: string
           interval_days: number | null
+          last_reviewed_at: string | null
           mastery_score: number | null
           next_review_date: string | null
+          review_count: number | null
           session_date: string
           speech_id: string
+          success_rate: number | null
         }
         Insert: {
           completed?: boolean
           created_at?: string
+          difficulty_level?: string | null
           id?: string
           interval_days?: number | null
+          last_reviewed_at?: string | null
           mastery_score?: number | null
           next_review_date?: string | null
+          review_count?: number | null
           session_date: string
           speech_id: string
+          success_rate?: number | null
         }
         Update: {
           completed?: boolean
           created_at?: string
+          difficulty_level?: string | null
           id?: string
           interval_days?: number | null
+          last_reviewed_at?: string | null
           mastery_score?: number | null
           next_review_date?: string | null
+          review_count?: number | null
           session_date?: string
           speech_id?: string
+          success_rate?: number | null
         }
         Relationships: [
           {
@@ -202,14 +214,43 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_next_interval: {
-        Args: { accuracy: number; current_interval: number }
-        Returns: number
-      }
+      calculate_next_interval:
+        | {
+            Args: {
+              accuracy: number
+              current_interval: number
+              difficulty_level?: string
+            }
+            Returns: number
+          }
+        | {
+            Args: { accuracy: number; current_interval: number }
+            Returns: number
+          }
       can_create_speech: { Args: { p_user_id: string }; Returns: boolean }
+      get_speeches_due_for_review: {
+        Args: { p_user_id: string }
+        Returns: {
+          difficulty_level: string
+          interval_days: number
+          next_review_date: string
+          review_count: number
+          speech_id: string
+          speech_title: string
+          success_rate: number
+        }[]
+      }
       get_word_limit: { Args: { p_user_id: string }; Returns: number }
       update_mastery_level: {
         Args: { p_accuracy: number; p_speech_id: string }
+        Returns: undefined
+      }
+      update_schedule_after_practice: {
+        Args: {
+          p_accuracy: number
+          p_session_date?: string
+          p_speech_id: string
+        }
         Returns: undefined
       }
     }
