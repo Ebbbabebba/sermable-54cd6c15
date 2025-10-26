@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, LogOut, BookOpen, Calendar, TrendingUp, Settings } from "lucide-react";
+import { Plus, LogOut, BookOpen, Calendar, TrendingUp, Settings, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 
@@ -23,10 +25,12 @@ const Dashboard = () => {
   const [speeches, setSpeeches] = useState<Speech[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [monthlySpeeches, setMonthlySpeeches] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -134,38 +138,90 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 md:pb-8">
       {/* Header */}
       <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Sermable</h1>
-          <div className="flex items-center gap-4">
-            <Button onClick={() => setUploadDialogOpen(true)} variant="default">
-              <Plus className="h-4 w-4 mr-2" />
-              New Speech
-            </Button>
-            <div className="text-sm">
-              <span className="font-medium capitalize">{subscriptionTier}</span> Plan
-              {subscriptionTier === 'free' && (
-                <span className="text-muted-foreground ml-2">
-                  ({monthlySpeeches}/2 speeches this month)
-                </span>
-              )}
-            </div>
-            {subscriptionTier === 'free' && (
-              <Button variant="default" size="sm" onClick={handleUpgradeToPremium}>
-                Upgrade to Premium
+          
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <div className="flex items-center gap-4">
+              <Button onClick={() => setUploadDialogOpen(true)} variant="default">
+                <Plus className="h-4 w-4 mr-2" />
+                New Speech
               </Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
+              <div className="text-sm">
+                <span className="font-medium capitalize">{subscriptionTier}</span> Plan
+                {subscriptionTier === 'free' && (
+                  <span className="text-muted-foreground ml-2">
+                    ({monthlySpeeches}/2 speeches this month)
+                  </span>
+                )}
+              </div>
+              {subscriptionTier === 'free' && (
+                <Button variant="default" size="sm" onClick={handleUpgradeToPremium}>
+                  Upgrade to Premium
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          )}
+
+          {/* Mobile Menu */}
+          {isMobile && (
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-6">
+                  <div className="text-sm pb-4 border-b">
+                    <span className="font-medium capitalize">{subscriptionTier}</span> Plan
+                    {subscriptionTier === 'free' && (
+                      <div className="text-muted-foreground mt-1">
+                        {monthlySpeeches}/2 speeches this month
+                      </div>
+                    )}
+                  </div>
+                  {subscriptionTier === 'free' && (
+                    <Button variant="default" onClick={() => {
+                      handleUpgradeToPremium();
+                      setMobileMenuOpen(false);
+                    }}>
+                      Upgrade to Premium
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => {
+                    navigate("/settings");
+                    setMobileMenuOpen(false);
+                  }}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Settings
+                  </Button>
+                  <Button variant="outline" onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </header>
 
@@ -262,6 +318,17 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Floating Action Button - Mobile Only */}
+      {isMobile && (
+        <Button
+          onClick={() => setUploadDialogOpen(true)}
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+          size="icon"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
 
       <UploadSpeechDialog
         open={uploadDialogOpen}
