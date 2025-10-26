@@ -138,9 +138,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-8">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
+      <header className="border-b bg-card sticky top-0 z-50 shadow-sm flex-shrink-0">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Sermable</h1>
           
@@ -225,7 +225,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pb-24 overflow-y-auto flex-1">
         <div className="space-y-8">
           {/* Welcome Section */}
           <div className="animate-fade-in">
@@ -323,7 +323,7 @@ const Dashboard = () => {
       {isMobile && (
         <Button
           onClick={() => setUploadDialogOpen(true)}
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+          className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-lg z-50"
           size="icon"
         >
           <Plus className="h-6 w-6" />
