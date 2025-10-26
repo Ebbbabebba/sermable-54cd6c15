@@ -53,10 +53,10 @@ serve(async (req) => {
 
     const { audio, originalText, speechId, userTier, language } = await req.json();
     
-    // Verify user owns the speech they're analyzing
+    // Verify user owns the speech they're analyzing and get familiarity level
     const { data: speech, error: speechError } = await supabase
       .from('speeches')
-      .select('user_id')
+      .select('user_id, familiarity_level')
       .eq('id', speechId)
       .single();
 
@@ -203,25 +203,96 @@ Return ONLY this JSON structure with no extra text:
       throw new Error(`JSON parse error: ${errorMessage}`);
     }
 
-    // Step 3: Generate cue words (simplified version of text)
-    console.log('Generating cue words...');
+    // Get schedule info to determine practice history
+    const { data: schedule } = await supabase
+      .from('schedules')
+      .select('review_count, success_rate')
+      .eq('speech_id', speechId)
+      .single();
+
+    const reviewCount = schedule?.review_count || 0;
+    const successRate = schedule?.success_rate || 0;
+    const familiarityLevel = speech.familiarity_level || 'beginner';
+    
+    console.log('Adaptive difficulty context:', { 
+      familiarityLevel, 
+      reviewCount, 
+      successRate, 
+      accuracy: analysis.accuracy 
+    });
+
+    // Step 3: Generate adaptive cue text based on familiarity and performance
+    console.log('Generating adaptive cue text...');
     
     const problematicWords = [...analysis.missedWords, ...analysis.delayedWords];
-    let cueText = originalText; // Default to full text if cue generation fails
+    let cueText = originalText; // Default to full text
     
-    if (problematicWords.length > 0) {
-      const cuePrompt = `Create a simplified cue text from this speech focusing on problem words.
+    // Determine if we should start removing words based on adaptive logic
+    let shouldSimplify = false;
+    let simplificationLevel = 0; // 0 = full text, 1 = minimal, 2 = moderate, 3 = aggressive
+    
+    if (familiarityLevel === 'beginner') {
+      // Keep full text for first 5 practice sessions or until 80% success rate
+      if (reviewCount >= 5 && successRate >= 80) {
+        shouldSimplify = true;
+        simplificationLevel = 1; // Start with minimal removal (only small connectors)
+      }
+      // Restore words if performance drops below 70%
+      if (successRate < 70 || analysis.accuracy < 70) {
+        shouldSimplify = false;
+        console.log('Restoring full text due to low performance');
+      }
+    } else if (familiarityLevel === 'intermediate') {
+      // Can start removing words after 2-3 sessions with 75%+ success
+      if (reviewCount >= 2 && successRate >= 75) {
+        shouldSimplify = true;
+        simplificationLevel = 2; // Moderate removal
+      }
+      if (successRate < 65 || analysis.accuracy < 65) {
+        shouldSimplify = false;
+        console.log('Restoring full text due to low performance');
+      }
+    } else if (familiarityLevel === 'confident') {
+      // Can start removing words immediately with good performance
+      if (successRate >= 70 || reviewCount === 0) {
+        shouldSimplify = true;
+        simplificationLevel = reviewCount > 3 ? 3 : 2; // Progressive difficulty
+      }
+      if (successRate < 60 || analysis.accuracy < 60) {
+        shouldSimplify = false;
+        console.log('Restoring full text due to low performance');
+      }
+    }
+    
+    if (shouldSimplify && problematicWords.length > 0) {
+      const cuePrompt = `Create a simplified cue text from this speech with adaptive difficulty.
 
 Original: "${originalText}"
 Problem words: ${problematicWords.join(', ')}
+Simplification level: ${simplificationLevel}
+Current performance: ${analysis.accuracy}%
 
-Rules:
-1. Keep ALL problem words
-2. Keep 1-2 context words around each problem word
-3. Use "..." between sections
-4. Maximum 50% of original length
+ADAPTIVE RULES:
+${simplificationLevel === 1 ? `
+Level 1 (Minimal): Remove only small connector words (and, but, the, a, an, of, in, on, at, to, for)
+- Keep 90% of content
+- Focus on removing the smallest words that don't carry meaning
+- Keep problem words and their full context
+` : simplificationLevel === 2 ? `
+Level 2 (Moderate): Remove small connectors + some common words
+- Keep 70-80% of content
+- Remove: and, but, the, a, an, of, in, on, at, to, for, that, this, with, from
+- Keep problem words with 2-3 context words around them
+- Use "..." between key sections
+` : `
+Level 3 (Aggressive): Show only key words and problem areas
+- Keep 50-60% of content
+- Remove all non-essential words except nouns, verbs, and problem words
+- Keep problem words with 1-2 context words
+- Use "..." liberally between sections
+`}
 
-Return ONLY the cue text, nothing else.`;
+Return ONLY the simplified cue text, nothing else.`;
 
       const cueResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -244,15 +315,52 @@ Return ONLY the cue text, nothing else.`;
         const generatedCue = cueData.choices[0]?.message?.content?.trim();
         if (generatedCue && generatedCue.length > 10) {
           cueText = generatedCue;
-          console.log('✅ Generated cue text:', cueText);
+          console.log('✅ Generated adaptive cue text (level', simplificationLevel, '):', cueText.substring(0, 100));
         } else {
           console.log('⚠️ Cue generation returned short text, using original');
         }
       } else {
         console.error('Cue generation failed, using original text');
       }
+    } else if (shouldSimplify) {
+      // Even without problem words, can simplify if performance is good
+      console.log('Good performance, generating simplified text without problem words');
+      const simpleCuePrompt = `Simplify this speech by removing only small connector words.
+
+Original: "${originalText}"
+Simplification level: ${simplificationLevel}
+
+Remove small words like: and, but, the, a, an, of, in, on, at, to, for
+Keep all important content words and structure.
+
+Return ONLY the simplified text.`;
+
+      const simpleCueResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-5-mini-2025-08-07',
+          messages: [
+            { role: 'system', content: 'You simplify texts by removing small words. Return only the simplified text.' },
+            { role: 'user', content: simpleCuePrompt }
+          ],
+          max_completion_tokens: 1000,
+        }),
+      });
+
+      if (simpleCueResponse.ok) {
+        const simpleCueData = await simpleCueResponse.json();
+        const generatedCue = simpleCueData.choices[0]?.message?.content?.trim();
+        if (generatedCue && generatedCue.length > 10) {
+          cueText = generatedCue;
+          console.log('✅ Generated simplified cue text');
+        }
+      }
     } else {
-      console.log('No problematic words, keeping original text');
+      console.log('Keeping full text - building familiarity or performance needs improvement');
     }
 
     return new Response(

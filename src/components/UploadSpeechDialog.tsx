@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calendar, Languages } from "lucide-react";
+import { Loader2, Calendar, Languages, Brain } from "lucide-react";
 import { format } from "date-fns";
 import { switchLanguageBasedOnText } from "@/utils/languageDetection";
 
@@ -22,6 +23,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
+  const [familiarityLevel, setFamiliarityLevel] = useState<string>("beginner");
   const [loading, setLoading] = useState(false);
   const [userTier, setUserTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [wordLimit, setWordLimit] = useState(500);
@@ -122,6 +124,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         text_original: text,
         text_current: text,
         goal_date: goalDate,
+        familiarity_level: familiarityLevel,
       });
 
       if (error) throw error;
@@ -135,6 +138,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       setTitle("");
       setText("");
       setGoalDate("");
+      setFamiliarityLevel("beginner");
       onSuccess();
     } catch (error: any) {
       toast({
@@ -188,6 +192,26 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             </div>
             <p className="text-sm text-muted-foreground">
               When do you need to deliver this speech?
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="familiarity">How well do you know this text?</Label>
+              <Brain className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <Select value={familiarityLevel} onValueChange={setFamiliarityLevel}>
+              <SelectTrigger id="familiarity">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="beginner">I don't know it at all</SelectItem>
+                <SelectItem value="intermediate">I know some parts</SelectItem>
+                <SelectItem value="confident">I know it very well</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">
+              This helps us adjust the difficulty level for your practice sessions
             </p>
           </div>
 
