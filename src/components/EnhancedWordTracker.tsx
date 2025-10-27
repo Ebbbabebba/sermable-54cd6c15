@@ -33,7 +33,7 @@ const normalizeNordic = (text: string): string => {
     .replace(/æ/g, 'ae')
     .replace(/ð/g, 'd')
     .replace(/þ/g, 'th')
-    .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, '');
+    .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž\s]/gi, ''); // Keep spaces!
 };
 
 // Stricter word similarity checking - only match if words are actually similar
@@ -131,11 +131,6 @@ const EnhancedWordTracker = ({
       const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
       const targetWords = prevStates.map(ws => normalizeText(ws.text));
       
-      console.log('🎤 Transcription received:', transcription);
-      console.log('📝 Transcribed words:', transcribedWords);
-      console.log('🎯 Target words:', targetWords);
-      console.log('📍 Current position (lastSpokenIndex):', lastSpokenIndexRef.current);
-      
       const updatedStates = [...prevStates];
       let currentLastSpoken = lastSpokenIndexRef.current;
 
@@ -149,8 +144,6 @@ const EnhancedWordTracker = ({
         
         // Check if transcribed word matches next expected word
         const isMatch = isSimilarWord(transcribedWord, targetWord);
-        
-        console.log(`🔍 Checking "${transcribedWord}" vs "${targetWord}" at index ${nextTargetIndex}: ${isMatch ? '✅ MATCH' : '❌ NO MATCH'}`);
 
         if (isMatch && !updatedStates[nextTargetIndex].spoken) {
           // Check for hesitation (2+ seconds at this word position)
