@@ -150,25 +150,28 @@ const EnhancedWordTracker = ({
           const timeAtWord = wordTimestamps.current.get(nextTargetIndex);
           const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
           
-          // Mark the word as spoken and IMMEDIATELY advance
+          // Check if this is a repeat (word appeared before but didn't match - now it does)
+          const isRepeat = updatedStates[nextTargetIndex].performanceStatus === 'hesitated';
+          
+          // Mark the word as spoken - blue (correct) only if no hesitation and not a repeat
           updatedStates[nextTargetIndex] = {
             ...updatedStates[nextTargetIndex],
             spoken: true,
             revealed: true,
-            performanceStatus: hesitated ? 'hesitated' : 'correct'
+            performanceStatus: (hesitated || isRepeat) ? 'hesitated' : 'correct'
           };
           currentLastSpoken = nextTargetIndex;
           lastSpokenIndexRef.current = nextTargetIndex;
           wordTimestamps.current.delete(nextTargetIndex);
           
-          // Continue processing more words in this transcription batch
           continue;
         } else if (!isMatch) {
+          // Word doesn't match - could be wrong word before correction
           // Check if this word matches a word further ahead (skip detection)
           let foundMatch = false;
           for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 3, targetWords.length); i++) {
             if (isSimilarWord(transcribedWord, targetWords[i])) {
-              // Mark all skipped words as missed (RED)
+              // User jumped ahead - mark skipped words as missed (RED)
               for (let j = nextTargetIndex; j < i; j++) {
                 if (!updatedStates[j].spoken) {
                   updatedStates[j] = {
@@ -185,7 +188,7 @@ const EnhancedWordTracker = ({
               const timeAtWord = wordTimestamps.current.get(i);
               const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
               
-              // Mark the matched word as spoken and advance
+              // Mark the matched word as spoken
               updatedStates[i] = {
                 ...updatedStates[i],
                 spoken: true,
@@ -197,6 +200,17 @@ const EnhancedWordTracker = ({
               wordTimestamps.current.delete(i);
               foundMatch = true;
               break;
+            }
+          }
+          
+          if (!foundMatch) {
+            // No match found ahead - mark current word as needing attention (potential repeat situation)
+            // Mark as hesitated (orange) since they're struggling with this word
+            if (!updatedStates[nextTargetIndex].spoken) {
+              updatedStates[nextTargetIndex] = {
+                ...updatedStates[nextTargetIndex],
+                performanceStatus: 'hesitated'
+              };
             }
           }
           
