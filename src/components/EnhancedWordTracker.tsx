@@ -117,18 +117,20 @@ const EnhancedWordTracker = ({
 
   // Process transcription from Whisper - Sequential word matching with skip detection and timing
   useEffect(() => {
-    if (!transcription || wordStates.length === 0) return;
+    if (!transcription) return;
 
     const normalizeText = (text: string) => 
       normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
-
-    const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
-    const targetWords = wordStates.map(ws => normalizeText(ws.text));
 
     const now = Date.now();
 
     // Sequential matching with skip detection and hesitation timing
     setWordStates(prevStates => {
+      if (prevStates.length === 0) return prevStates;
+      
+      const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
+      const targetWords = prevStates.map(ws => normalizeText(ws.text));
+      
       const updatedStates = [...prevStates];
       let currentLastSpoken = lastSpokenIndexRef.current;
 
@@ -216,20 +218,19 @@ const EnhancedWordTracker = ({
         wordTimestamps.current.set(currentIdx, now);
       }
       
+      // Update current word index for scrolling
+      if (currentIdx !== -1) {
+        setCurrentWordIndex(currentIdx);
+        currentWordIndexRef.current = currentIdx;
+      }
+      
       // Update isCurrent for all words
       return updatedStates.map((state, idx) => ({
         ...state,
         isCurrent: idx === currentIdx && currentIdx !== -1
       }));
     });
-
-    // Update current word index for scrolling
-    const newCurrentIdx = wordStates.findIndex(s => !s.spoken && s.performanceStatus !== 'missed');
-    if (newCurrentIdx !== -1) {
-      setCurrentWordIndex(newCurrentIdx);
-      currentWordIndexRef.current = newCurrentIdx;
-    }
-  }, [transcription, wordStates]);
+  }, [transcription]);
 
   // Handle recording state changes
   useEffect(() => {
