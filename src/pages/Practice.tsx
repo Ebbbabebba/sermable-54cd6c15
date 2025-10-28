@@ -58,6 +58,7 @@ const Practice = () => {
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedChunkIndex = useRef(0);
   const recognitionRef = useRef<any>(null);
+  const audioFormatRef = useRef<string>('audio/webm');
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -123,14 +124,28 @@ const Practice = () => {
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
     
+    // Detect iOS/iPad to determine audio format
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    // Determine audio format
+    let audioFormat = 'audio/webm';
+    if (isIOS) {
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        audioFormat = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+        audioFormat = 'audio/aac';
+      } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+        audioFormat = 'audio/mpeg';
+      }
+    }
+    audioFormatRef.current = audioFormat;
+    console.log('Recording with format:', audioFormat);
+    
     // Detect language from speech text
     const { detectTextLanguage } = await import('@/utils/languageDetection');
     const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
     console.log('Detected language:', detectedLang);
-    
-    // Detect iOS/iPadOS - Web Speech API doesn't work reliably on these devices
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     
     // Start Web Speech API for instant transcription (skip on iOS)
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -197,7 +212,8 @@ const Practice = () => {
             const { data, error } = await supabase.functions.invoke('transcribe-audio', {
               body: { 
                 audio: base64Audio,
-                language: detectedLang 
+                language: detectedLang,
+                format: audioFormatRef.current
               },
               headers: {
                 Authorization: `Bearer ${session.access_token}`

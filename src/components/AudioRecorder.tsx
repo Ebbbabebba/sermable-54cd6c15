@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 export interface AudioRecorderHandle {
   getCurrentAudioBlob: () => Blob | null;
   getNewChunks: (lastIndex: number) => { chunks: Blob[], currentIndex: number } | null;
+  getCurrentFormat: () => string;
 }
 
 interface AudioRecorderProps {
@@ -66,7 +67,8 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
 
     useImperativeHandle(ref, () => ({
       getCurrentAudioBlob,
-      getNewChunks
+      getNewChunks,
+      getCurrentFormat: () => mimeTypeRef.current
     }));
 
     const startRecording = async () => {

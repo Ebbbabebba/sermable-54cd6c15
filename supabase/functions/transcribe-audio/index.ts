@@ -21,22 +21,38 @@ serve(async (req) => {
       );
     }
 
-    const { audio, language } = await req.json();
+    const { audio, language, format } = await req.json();
 
     if (!audio) {
       throw new Error('No audio data provided');
     }
 
-    // Use provided language or default to auto-detect
+    // Use provided format, language, or defaults
+    const audioFormat = format || 'audio/webm';
     const audioLanguage = language || 'en';
-    console.log('Transcribing audio chunk with language:', audioLanguage);
+    
+    // Determine file extension from MIME type
+    const getExtension = (mimeType: string) => {
+      const map: Record<string, string> = {
+        'audio/webm': 'webm',
+        'audio/mp4': 'mp4',
+        'audio/m4a': 'm4a',
+        'audio/aac': 'aac',
+        'audio/mpeg': 'mp3',
+        'audio/wav': 'wav'
+      };
+      return map[mimeType] || 'webm';
+    };
+    
+    const extension = getExtension(audioFormat);
+    console.log(`Transcribing ${extension} audio chunk with language: ${audioLanguage}`);
 
     // Convert base64 to binary
     const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
 
-    // Prepare form data for Whisper API
+    // Prepare form data for Whisper API with correct format
     const formData = new FormData();
-    formData.append('file', new Blob([binaryAudio], { type: 'audio/webm' }), 'audio.webm');
+    formData.append('file', new Blob([binaryAudio], { type: audioFormat }), `audio.${extension}`);
     formData.append('model', 'whisper-1');
     formData.append('language', audioLanguage);
 
