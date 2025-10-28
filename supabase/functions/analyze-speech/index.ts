@@ -156,8 +156,8 @@ Return ONLY this JSON structure with no extra text:
   "analysis": "Good practice session"
 }`;
 
-    // Use GPT-5 Mini for faster, more accurate analysis
-    const analysisModel = 'gpt-5-mini-2025-08-07';
+    // Use GPT-5 for comprehensive, accurate analysis
+    const analysisModel = 'gpt-5-2025-08-07';
     console.log('Using analysis model:', analysisModel);
 
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -323,7 +323,7 @@ Return ONLY the simplified cue text, nothing else.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-5-mini-2025-08-07',
+          model: 'gpt-5-2025-08-07',
           messages: [
             { role: 'system', content: 'You create concise cue texts. Return only the cue text with no explanations.' },
             { role: 'user', content: cuePrompt }
@@ -364,7 +364,7 @@ Return ONLY the simplified text.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-5-mini-2025-08-07',
+          model: 'gpt-5-2025-08-07',
           messages: [
             { role: 'system', content: 'You simplify texts by removing small words. Return only the simplified text.' },
             { role: 'user', content: simpleCuePrompt }
