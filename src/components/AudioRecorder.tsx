@@ -44,9 +44,11 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
       };
     }, [isRecording]);
 
+    const mimeTypeRef = useRef<string>('audio/webm');
+
     const getCurrentAudioBlob = () => {
       if (chunksRef.current.length > 0) {
-        return new Blob(chunksRef.current, { type: 'audio/webm' });
+        return new Blob(chunksRef.current, { type: mimeTypeRef.current });
       }
       return null;
     };
@@ -95,8 +97,28 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
 
         streamRef.current = stream;
 
+        // Detect iOS/iPad and use compatible format
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        
+        // Choose MIME type based on browser support
+        let mimeType = 'audio/webm';
+        if (isIOS) {
+          // iOS Safari supports mp4 better
+          if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            mimeType = 'audio/mp4';
+          } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+            mimeType = 'audio/aac';
+          } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+            mimeType = 'audio/mpeg';
+          }
+        }
+        
+        mimeTypeRef.current = mimeType;
+        console.log('Using audio format:', mimeType);
+
         const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'audio/webm',
+          mimeType: mimeType,
         });
 
         chunksRef.current = [];
@@ -110,8 +132,8 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
         };
 
         mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-          console.log(`Recording stopped. Total audio size: ${audioBlob.size} bytes from ${chunksRef.current.length} chunks`);
+          const audioBlob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+          console.log(`Recording stopped. Total audio size: ${audioBlob.size} bytes (${mimeTypeRef.current}) from ${chunksRef.current.length} chunks`);
           onStop(audioBlob);
           
           // Stop all tracks
