@@ -128,9 +128,13 @@ const Practice = () => {
     const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
     console.log('Detected language:', detectedLang);
     
-    // Start Web Speech API for instant transcription
+    // Detect iOS/iPadOS - Web Speech API doesn't work reliably on these devices
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    // Start Web Speech API for instant transcription (skip on iOS)
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
+    if (SpeechRecognition && !isIOS) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -164,7 +168,11 @@ const Practice = () => {
       recognitionRef.current = recognition;
       console.log('Web Speech API started for instant transcription');
     } else {
-      console.warn('Web Speech API not supported, falling back to server transcription');
+      if (isIOS) {
+        console.log('iOS/iPadOS detected - using Whisper transcription for better compatibility');
+      } else {
+        console.warn('Web Speech API not supported, falling back to server transcription');
+      }
       // Fallback to server-side transcription
       transcriptionIntervalRef.current = setInterval(async () => {
         const newChunks = audioRecorderRef.current?.getNewChunks(lastProcessedChunkIndex.current);
