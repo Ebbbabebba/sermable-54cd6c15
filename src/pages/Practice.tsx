@@ -184,16 +184,58 @@ const Practice = () => {
       console.log('Web Speech API started for instant transcription');
     } else {
       if (isIOS) {
-        console.log('iOS/iPadOS detected - live transcription not available, will transcribe at end');
-        toast({
-          title: "Recording on iOS",
-          description: "Live word tracking isn't available on iOS. Your full speech will be analyzed when you stop recording.",
-        });
+        console.log('iOS/iPadOS detected - using Whisper transcription for better compatibility');
       } else {
         console.warn('Web Speech API not supported, falling back to server transcription');
       }
-      // On iOS, skip live transcription - it doesn't work reliably with chunked audio
-      // Full transcription will happen when recording stops
+      // Fallback to server-side transcription
+      transcriptionIntervalRef.current = setInterval(async () => {
+        const newChunks = audioRecorderRef.current?.getNewChunks(lastProcessedChunkIndex.current);
+        if (!newChunks || newChunks.chunks.length === 0) return;
+
+        lastProcessedChunkIndex.current = newChunks.currentIndex;
+
+        try {
+          const audioBlob = new Blob(newChunks.chunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async () => {
+            const base64Audio = reader.result?.toString().split(',')[1];
+            if (!base64Audio) return;
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              console.error('No active session');
+              return;
+            }
+
+            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+              body: { 
+                audio: base64Audio,
+                language: detectedLang,
+                format: audioFormatRef.current
+              },
+              headers: {
+                Authorization: `Bearer ${session.access_token}`
+              }
+            });
+
+            if (error) {
+              console.error('Transcription error:', error);
+              return;
+            }
+
+            if (data?.text && data.text.trim()) {
+              setLiveTranscription(prev => {
+                const newText = prev + ' ' + data.text;
+                return newText.trim();
+              });
+            }
+          };
+        } catch (error) {
+          console.error('Error during live transcription:', error);
+        }
+      }, 200);
     }
   };
 
@@ -461,17 +503,18 @@ const Practice = () => {
                       <div className="space-y-4">
                         <div className="text-center mb-4">
                           <p className="text-sm text-muted-foreground">
-                            🎤 Recording your speech...
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Live word tracking not available on this device
+                            🎤 Speak clearly. Words appear as you say them. Tap to reveal if stuck.
                           </p>
                         </div>
-                        <div className="prose prose-lg max-w-none">
-                          <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
-                            {speech.text_current}
-                          </p>
-                        </div>
+                        <EnhancedWordTracker
+                          text={speech.text_current}
+                          isRecording={isRecording}
+                          transcription={liveTranscription}
+                          revealSpeed={settings.revealSpeed}
+                          showWordOnPause={settings.showWordOnPause}
+                          animationStyle={settings.animationStyle}
+                          keywordMode={settings.keywordMode}
+                        />
                       </div>
                     ) : (
                       <div className="prose prose-lg max-w-none">
