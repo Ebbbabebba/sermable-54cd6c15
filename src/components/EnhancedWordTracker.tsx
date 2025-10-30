@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { AnimationStyle } from "./PracticeSettings";
+import { RealtimeTranscriber } from "@/utils/RealtimeTranscription";
 
 interface EnhancedWordTrackerProps {
   text: string;
@@ -92,6 +93,8 @@ const EnhancedWordTracker = ({
   const revealTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSpokenIndexRef = useRef(-1);
   const wordTimestamps = useRef<Map<number, number>>(new Map()); // Track when each word position was reached
+  const transcriberRef = useRef<RealtimeTranscriber | null>(null);
+  const accumulatedTranscript = useRef<string>("");
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -236,24 +239,172 @@ const EnhancedWordTracker = ({
     });
   }, [transcription]);
 
+  // Initialize OpenAI Realtime transcription
+  useEffect(() => {
+    const transcriber = new RealtimeTranscriber(
+      (transcriptText) => {
+        console.log('📝 Received transcript:', transcriptText);
+        accumulatedTranscript.current = transcriptText;
+        
+        // Update parent component with full transcript
+        if (onTranscriptUpdate) {
+          onTranscriptUpdate(transcriptText);
+        }
+      },
+      (error) => {
+        console.error('❌ Transcription error:', error);
+      }
+    );
+
+    transcriberRef.current = transcriber;
+
+    return () => {
+      if (transcriberRef.current) {
+        transcriberRef.current.disconnect();
+      }
+    };
+  }, [onTranscriptUpdate]);
+
+  // Process accumulated transcript for word highlighting
+  useEffect(() => {
+    const transcript = accumulatedTranscript.current;
+    if (!transcript || transcript.trim() === '') return;
+
+    const normalizeText = (text: string) => 
+      normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
+
+    const now = Date.now();
+
+    setWordStates(prevStates => {
+      if (prevStates.length === 0) return prevStates;
+      
+      const transcribedWords = normalizeText(transcript).split(/\s+/).filter(w => w.length > 0);
+      const targetWords = prevStates.map(ws => normalizeText(ws.text));
+      
+      const updatedStates = [...prevStates];
+      let currentLastSpoken = lastSpokenIndexRef.current;
+
+      for (const transcribedWord of transcribedWords) {
+        const nextTargetIndex = currentLastSpoken + 1;
+        
+        if (nextTargetIndex >= targetWords.length) break;
+
+        const targetWord = targetWords[nextTargetIndex];
+        const isMatch = isSimilarWord(transcribedWord, targetWord);
+
+        if (isMatch && !updatedStates[nextTargetIndex].spoken) {
+          const timeAtWord = wordTimestamps.current.get(nextTargetIndex);
+          const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+          
+          updatedStates[nextTargetIndex] = {
+            ...updatedStates[nextTargetIndex],
+            spoken: true,
+            revealed: true,
+            isCurrent: false,
+            performanceStatus: hesitated ? 'hesitated' : 'correct'
+          };
+          currentLastSpoken = nextTargetIndex;
+          lastSpokenIndexRef.current = nextTargetIndex;
+          wordTimestamps.current.delete(nextTargetIndex);
+          
+          continue;
+        } else if (!isMatch) {
+          let foundMatch = false;
+          let matchIndex = -1;
+          
+          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 2, targetWords.length); i++) {
+            if (isSimilarWord(transcribedWord, targetWords[i])) {
+              matchIndex = i;
+              foundMatch = true;
+              break;
+            }
+          }
+          
+          if (foundMatch && matchIndex !== -1) {
+            updatedStates[nextTargetIndex] = {
+              ...updatedStates[nextTargetIndex],
+              spoken: false,
+              revealed: true,
+              performanceStatus: 'missed'
+            };
+            wordTimestamps.current.delete(nextTargetIndex);
+            
+            const timeAtWord = wordTimestamps.current.get(matchIndex);
+            const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+            
+            updatedStates[matchIndex] = {
+              ...updatedStates[matchIndex],
+              spoken: true,
+              revealed: true,
+              isCurrent: false,
+              performanceStatus: hesitated ? 'hesitated' : 'correct'
+            };
+            currentLastSpoken = matchIndex;
+            lastSpokenIndexRef.current = matchIndex;
+            wordTimestamps.current.delete(matchIndex);
+            continue;
+          }
+        }
+      }
+
+      let currentIdx = -1;
+      for (let i = 0; i < updatedStates.length; i++) {
+        if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
+          currentIdx = i;
+          break;
+        }
+      }
+      
+      if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
+        wordTimestamps.current.set(currentIdx, now);
+      }
+      
+      if (currentIdx !== -1) {
+        setCurrentWordIndex(currentIdx);
+        currentWordIndexRef.current = currentIdx;
+      }
+      
+      return updatedStates.map((state, idx) => ({
+        ...state,
+        isCurrent: idx === currentIdx && currentIdx !== -1
+      }));
+    });
+  }, [transcription]);
+
   // Handle recording state changes
   useEffect(() => {
-    if (isRecording) {
-      wordTimestamps.current.clear(); // Clear all timing data
-      setWordStates(prevStates =>
-        prevStates.map(state => ({
-          ...state,
-          spoken: false,
-          isCurrent: false,
-          revealed: !keywordMode || state.isKeyword || state.manuallyRevealed,
-          performanceStatus: undefined,
-          timeToSpeak: 0
-        }))
-      );
-      setCurrentWordIndex(0);
-      currentWordIndexRef.current = 0;
-      lastSpokenIndexRef.current = -1;
-    }
+    const setupRecording = async () => {
+      if (isRecording && transcriberRef.current) {
+        console.log('🎤 Starting OpenAI realtime transcription');
+        wordTimestamps.current.clear();
+        accumulatedTranscript.current = "";
+        setWordStates(prevStates =>
+          prevStates.map(state => ({
+            ...state,
+            spoken: false,
+            isCurrent: false,
+            revealed: !keywordMode || state.isKeyword || state.manuallyRevealed,
+            performanceStatus: undefined,
+            timeToSpeak: 0
+          }))
+        );
+        setCurrentWordIndex(0);
+        currentWordIndexRef.current = 0;
+        lastSpokenIndexRef.current = -1;
+        
+        try {
+          await transcriberRef.current.connect();
+          await transcriberRef.current.startRecording();
+        } catch (error) {
+          console.error('Error starting transcription:', error);
+        }
+      } else if (!isRecording && transcriberRef.current) {
+        console.log('⏹️ Stopping transcription');
+        transcriberRef.current.disconnect();
+      }
+    };
+
+    setupRecording();
   }, [isRecording, keywordMode]);
 
   // Tap to reveal individual word
