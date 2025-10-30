@@ -128,7 +128,7 @@ const Practice = () => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     
-    // Determine audio format
+    // Determine audio format for recording
     let audioFormat = 'audio/webm';
     if (isIOS) {
       if (MediaRecorder.isTypeSupported('audio/mp4')) {
@@ -147,9 +147,9 @@ const Practice = () => {
     const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
     console.log('Detected language:', detectedLang);
     
-    // Start Web Speech API for instant transcription (skip on iOS)
+    // Start Web Speech API for instant transcription on ALL devices
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition && !isIOS) {
+    if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -175,24 +175,21 @@ const Practice = () => {
       
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
+        if (event.error === 'no-speech') {
+          console.log('No speech detected, continuing...');
+        }
       };
       
       recognition.start();
       recognitionRef.current = recognition;
-      console.log('Web Speech API started for instant transcription');
+      console.log('Web Speech API started for instant word tracking');
     } else {
-      if (isIOS) {
-        console.log('iOS/iPadOS detected - live word tracking disabled. Full transcription will occur after recording stops.');
-        toast({
-          title: "iOS Device Detected",
-          description: "Live word tracking is not available on iOS/iPad. Your speech will be transcribed and analyzed after you stop recording.",
-          duration: 5000,
-        });
-      } else {
-        console.warn('Web Speech API not supported, falling back to post-recording transcription');
-      }
-      // No live transcription for iOS or unsupported browsers
-      // Full audio will be transcribed at the end via analyze-speech function
+      console.warn('Web Speech API not supported on this device');
+      toast({
+        title: "Limited Support",
+        description: "Real-time word tracking is not available on this device. Your speech will be analyzed after recording.",
+        duration: 5000,
+      });
     }
   };
 
