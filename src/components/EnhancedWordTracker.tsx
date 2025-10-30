@@ -115,61 +115,118 @@ const EnhancedWordTracker = ({
     lastSpokenIndexRef.current = -1;
   }, [text, keywordMode]);
 
-  // Process transcription instantly - fast word-by-word highlighting
+  // Process transcription with instant highlighting, hesitation detection, and skip tracking
   useEffect(() => {
     if (!transcription || transcription.trim() === '') return;
 
-    const transcribedWords = transcription.toLowerCase().split(/\s+/).filter(Boolean);
-    if (transcribedWords.length === 0) return;
+    const normalizeText = (text: string) => 
+      normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
+
+    const now = Date.now();
 
     setWordStates(prevStates => {
-      const newStates = [...prevStates];
-      let lastMatchedIndex = currentWordIndexRef.current;
+      if (prevStates.length === 0) return prevStates;
+      
+      const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
+      const targetWords = prevStates.map(ws => normalizeText(ws.text));
+      
+      const updatedStates = [...prevStates];
+      let currentLastSpoken = lastSpokenIndexRef.current;
 
-      // Process each transcribed word instantly
-      for (let i = 0; i < transcribedWords.length; i++) {
-        const transcribedWord = normalizeNordic(transcribedWords[i].replace(/[^\w]/g, ''));
-        if (!transcribedWord) continue;
+      // Process each transcribed word
+      for (const transcribedWord of transcribedWords) {
+        const nextTargetIndex = currentLastSpoken + 1;
+        
+        if (nextTargetIndex >= targetWords.length) break;
 
-        // Find the next matching word in the text
-        let foundMatch = false;
-        for (let j = lastMatchedIndex; j < newStates.length; j++) {
-          const targetWord = normalizeNordic(newStates[j].text.toLowerCase().replace(/[^\w]/g, ''));
+        const targetWord = targetWords[nextTargetIndex];
+        const isMatch = isSimilarWord(transcribedWord, targetWord);
+
+        if (isMatch && !updatedStates[nextTargetIndex].spoken) {
+          // Check for hesitation (2+ seconds at this word)
+          const timeAtWord = wordTimestamps.current.get(nextTargetIndex);
+          const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
           
-          if (isSimilarWord(transcribedWord, targetWord)) {
-            // Instantly mark as spoken with correct status
-            newStates[j] = {
-              ...newStates[j],
-              spoken: true,
-              isCurrent: false,
-              performanceStatus: 'correct',
-              revealed: true
-            };
-
-            foundMatch = true;
-            lastMatchedIndex = j + 1;
-            lastSpokenIndexRef.current = j;
-            break;
+          // Mark as spoken - green if no hesitation, yellow if hesitated
+          updatedStates[nextTargetIndex] = {
+            ...updatedStates[nextTargetIndex],
+            spoken: true,
+            revealed: true,
+            isCurrent: false,
+            performanceStatus: hesitated ? 'hesitated' : 'correct'
+          };
+          currentLastSpoken = nextTargetIndex;
+          lastSpokenIndexRef.current = nextTargetIndex;
+          wordTimestamps.current.delete(nextTargetIndex);
+          
+          continue;
+        } else if (!isMatch) {
+          // Check if word matches further ahead (skip detection)
+          let foundMatch = false;
+          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 5, targetWords.length); i++) {
+            if (isSimilarWord(transcribedWord, targetWords[i])) {
+              // User jumped ahead - mark skipped words as MISSED (RED)
+              for (let j = nextTargetIndex; j < i; j++) {
+                if (!updatedStates[j].spoken) {
+                  updatedStates[j] = {
+                    ...updatedStates[j],
+                    spoken: false,
+                    revealed: true,
+                    performanceStatus: 'missed'
+                  };
+                  wordTimestamps.current.delete(j);
+                }
+              }
+              
+              // Check for hesitation on matched word
+              const timeAtWord = wordTimestamps.current.get(i);
+              const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
+              
+              // Mark the matched word
+              updatedStates[i] = {
+                ...updatedStates[i],
+                spoken: true,
+                revealed: true,
+                isCurrent: false,
+                performanceStatus: hesitated ? 'hesitated' : 'correct'
+              };
+              currentLastSpoken = i;
+              lastSpokenIndexRef.current = i;
+              wordTimestamps.current.delete(i);
+              foundMatch = true;
+              break;
+            }
           }
+          
+          if (foundMatch) continue;
         }
       }
 
-      // Find the current (next unspoken) word
+      // Find next unspoken word and track timestamp
       let currentIdx = -1;
-      for (let i = 0; i < newStates.length; i++) {
-        if (!newStates[i].spoken) {
+      for (let i = 0; i < updatedStates.length; i++) {
+        if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
           currentIdx = i;
-          newStates[i] = { ...newStates[i], isCurrent: true };
           break;
         }
       }
-
+      
+      // Track timestamp when we reach a new word position
+      if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
+        wordTimestamps.current.set(currentIdx, now);
+      }
+      
+      // Update current word index
       if (currentIdx !== -1) {
         setCurrentWordIndex(currentIdx);
         currentWordIndexRef.current = currentIdx;
       }
-
-      return newStates;
+      
+      // Update isCurrent for all words
+      return updatedStates.map((state, idx) => ({
+        ...state,
+        isCurrent: idx === currentIdx && currentIdx !== -1
+      }));
     });
   }, [transcription]);
 
@@ -223,7 +280,7 @@ const EnhancedWordTracker = ({
   const getWordClassName = (word: WordState, index: number) => {
     const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-150 ease-out";
     
-    // Current word being spoken - bright blue highlight
+    // Current word being spoken - bright blue highlight with pulse
     if (word.isCurrent && isRecording) {
       return cn(
         base,
@@ -231,7 +288,7 @@ const EnhancedWordTracker = ({
       );
     }
     
-    // Spoken words - instant green success state
+    // Correct - GREEN (spoken without hesitation)
     if (word.spoken && word.performanceStatus === 'correct') {
       return cn(
         base,
@@ -239,17 +296,19 @@ const EnhancedWordTracker = ({
       );
     }
     
+    // Hesitated - YELLOW (took 2+ seconds)
     if (word.performanceStatus === 'hesitated') {
       return cn(
         base,
-        "bg-warning text-warning-foreground shadow-sm"
+        "bg-yellow-500 text-white shadow-sm"
       );
     }
     
+    // Missed/Skipped - RED (jumped over it)
     if (word.performanceStatus === 'missed') {
       return cn(
         base,
-        "bg-destructive text-destructive-foreground shadow-sm"
+        "bg-red-500 text-white shadow-sm line-through"
       );
     }
 
@@ -264,7 +323,7 @@ const EnhancedWordTracker = ({
 
     return cn(
       base, 
-      "bg-muted text-muted-foreground"
+      "bg-muted/50 text-muted-foreground"
     );
   };
 
