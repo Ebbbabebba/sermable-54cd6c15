@@ -198,19 +198,6 @@ const EnhancedWordTracker = ({
             }
           }
           
-          // If no match found anywhere, mark current word as missed (wrong word spoken)
-          if (!foundMatch && !updatedStates[nextTargetIndex].spoken) {
-            updatedStates[nextTargetIndex] = {
-              ...updatedStates[nextTargetIndex],
-              spoken: false,
-              revealed: true,
-              performanceStatus: 'missed'
-            };
-            currentLastSpoken = nextTargetIndex;
-            lastSpokenIndexRef.current = nextTargetIndex;
-            wordTimestamps.current.delete(nextTargetIndex);
-          }
-          
           if (foundMatch) continue;
         }
       }
