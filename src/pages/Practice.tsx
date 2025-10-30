@@ -196,7 +196,7 @@ const Practice = () => {
         lastProcessedChunkIndex.current = newChunks.currentIndex;
 
         try {
-          const audioBlob = new Blob(newChunks.chunks, { type: 'audio/webm' });
+          const audioBlob = new Blob(newChunks.chunks, { type: audioFormatRef.current });
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
           reader.onloadend = async () => {
