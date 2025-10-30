@@ -41,22 +41,22 @@ const isSimilarWord = (word1: string, word2: string): boolean => {
   const w1 = normalizeNordic(word1);
   const w2 = normalizeNordic(word2);
   
-  // Must be at least 3 characters to match
-  if (w1.length < 3 || w2.length < 3) {
-    return w1 === w2; // Short words must match exactly
+  // Must be at least 2 characters to match
+  if (w1.length < 2 || w2.length < 2) {
+    return w1 === w2; // Very short words must match exactly
   }
   
   // Exact match
   if (w1 === w2) return true;
   
-  // One starts with the other (for truncated pronunciations) - but must be at least 70% of length
+  // One starts with the other (for truncated pronunciations) - must be at least 80% of length
   const maxLen = Math.max(w1.length, w2.length);
   const minLen = Math.min(w1.length, w2.length);
-  if (minLen / maxLen >= 0.7) {
+  if (minLen / maxLen >= 0.8) {
     if (w1.startsWith(w2) || w2.startsWith(w1)) return true;
   }
   
-  // Levenshtein-like distance for similar sounding words - stricter threshold
+  // Levenshtein-like distance for similar sounding words - very strict threshold
   let differences = 0;
   const length = Math.min(w1.length, w2.length);
   for (let i = 0; i < length; i++) {
@@ -64,8 +64,9 @@ const isSimilarWord = (word1: string, word2: string): boolean => {
   }
   differences += Math.abs(w1.length - w2.length);
   
-  // Allow up to 20% character differences only (much stricter)
-  return differences / maxLen <= 0.2;
+  // Allow only 1 character difference for words under 6 chars, 2 for longer words
+  const maxDifferences = w1.length < 6 ? 1 : 2;
+  return differences <= maxDifferences;
 };
 
 const isKeywordWord = (word: string): boolean => {
@@ -143,9 +144,9 @@ const EnhancedWordTracker = ({
         const isMatch = isSimilarWord(transcribedWord, targetWord);
 
         if (isMatch && !updatedStates[nextTargetIndex].spoken) {
-          // Check for hesitation (2+ seconds at this word)
+          // Check for hesitation (3+ seconds at this word for more lenient detection)
           const timeAtWord = wordTimestamps.current.get(nextTargetIndex);
-          const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
+          const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
           
           // Mark as spoken - green if no hesitation, yellow if hesitated
           updatedStates[nextTargetIndex] = {
@@ -161,44 +162,59 @@ const EnhancedWordTracker = ({
           
           continue;
         } else if (!isMatch) {
-          // Check if word matches further ahead (skip detection)
+          // Check if word matches further ahead (skip detection) - only look 3 words ahead
           let foundMatch = false;
-          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 5, targetWords.length); i++) {
+          let matchIndex = -1;
+          
+          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 3, targetWords.length); i++) {
             if (isSimilarWord(transcribedWord, targetWords[i])) {
-              // User jumped ahead - mark skipped words as MISSED (RED)
-              for (let j = nextTargetIndex; j < i; j++) {
-                if (!updatedStates[j].spoken) {
-                  updatedStates[j] = {
-                    ...updatedStates[j],
-                    spoken: false,
-                    revealed: true,
-                    performanceStatus: 'missed'
-                  };
-                  wordTimestamps.current.delete(j);
-                }
-              }
-              
-              // Check for hesitation on matched word
-              const timeAtWord = wordTimestamps.current.get(i);
-              const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
-              
-              // Mark the matched word
-              updatedStates[i] = {
-                ...updatedStates[i],
-                spoken: true,
-                revealed: true,
-                isCurrent: false,
-                performanceStatus: hesitated ? 'hesitated' : 'correct'
-              };
-              currentLastSpoken = i;
-              lastSpokenIndexRef.current = i;
-              wordTimestamps.current.delete(i);
+              matchIndex = i;
               foundMatch = true;
               break;
             }
           }
           
-          if (foundMatch) continue;
+          // Only mark as skipped if we're very confident (found match within 3 words)
+          if (foundMatch && matchIndex !== -1) {
+            // Mark skipped words as MISSED (RED) - but only immediate predecessor
+            if (nextTargetIndex < matchIndex) {
+              updatedStates[nextTargetIndex] = {
+                ...updatedStates[nextTargetIndex],
+                spoken: false,
+                revealed: true,
+                performanceStatus: 'missed'
+              };
+              wordTimestamps.current.delete(nextTargetIndex);
+            }
+            
+            // Check for hesitation on matched word
+            const timeAtWord = wordTimestamps.current.get(matchIndex);
+            const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+            
+            // Mark the matched word
+            updatedStates[matchIndex] = {
+              ...updatedStates[matchIndex],
+              spoken: true,
+              revealed: true,
+              isCurrent: false,
+              performanceStatus: hesitated ? 'hesitated' : 'correct'
+            };
+            currentLastSpoken = matchIndex;
+            lastSpokenIndexRef.current = matchIndex;
+            wordTimestamps.current.delete(matchIndex);
+            continue;
+          }
+          
+          // If no match found ahead, mark current word as missed and move on
+          if (!foundMatch) {
+            updatedStates[nextTargetIndex] = {
+              ...updatedStates[nextTargetIndex],
+              spoken: false,
+              revealed: true,
+              performanceStatus: 'missed'
+            };
+            wordTimestamps.current.delete(nextTargetIndex);
+          }
         }
       }
 
