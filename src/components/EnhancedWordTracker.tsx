@@ -146,8 +146,7 @@ const EnhancedWordTracker = ({
     };
   }, [onTranscriptUpdate]);
 
-  // Process accumulated transcript - ONLY mark words as CORRECT/HESITATED (never MISSED)
-  // Analysis results will provide the final RED coloring for missed words
+  // Process accumulated transcript - mark words CORRECT/HESITATED immediately, MISSED only with evidence
   useEffect(() => {
     const transcript = accumulatedTranscript.current;
     if (!transcript || transcript.trim() === '' || !isRecording) return;
@@ -166,21 +165,18 @@ const EnhancedWordTracker = ({
       const updatedStates = [...prevStates];
       let currentSearchIndex = lastSpokenIndexRef.current + 1;
 
-      // Process each transcribed word sequentially
+      // Process each transcribed word
       for (const transcribedWord of transcribedWords) {
         if (currentSearchIndex >= targetWords.length) break;
 
-        // ONLY look for exact matches at the current position
-        // NO skip detection - let the analysis handle missed words
         const targetWord = targetWords[currentSearchIndex];
-        const isMatch = isSimilarWord(transcribedWord, targetWord);
+        const isExactMatch = isSimilarWord(transcribedWord, targetWord);
 
-        if (isMatch && !updatedStates[currentSearchIndex].spoken) {
-          // Check for hesitation (3+ seconds at this word)
+        // EXACT MATCH - color green/yellow immediately
+        if (isExactMatch && !updatedStates[currentSearchIndex].spoken) {
           const timeAtWord = wordTimestamps.current.get(currentSearchIndex);
           const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
           
-          // Mark as spoken - green if no hesitation, yellow if hesitated
           updatedStates[currentSearchIndex] = {
             ...updatedStates[currentSearchIndex],
             spoken: true,
@@ -192,12 +188,58 @@ const EnhancedWordTracker = ({
           lastSpokenIndexRef.current = currentSearchIndex;
           wordTimestamps.current.delete(currentSearchIndex);
           currentSearchIndex++;
+          continue;
         }
-        // If no match, just continue - don't mark anything as missed
-        // The analysis will provide the final verdict
+
+        // SKIP DETECTION - only mark RED if we have clear evidence (said a word ahead)
+        if (!isExactMatch) {
+          let foundMatchAhead = false;
+          let matchIndex = -1;
+          
+          // Look ahead max 3 words to detect skips
+          for (let lookAhead = 1; lookAhead <= 3 && (currentSearchIndex + lookAhead) < targetWords.length; lookAhead++) {
+            const futureIndex = currentSearchIndex + lookAhead;
+            if (isSimilarWord(transcribedWord, targetWords[futureIndex]) && !updatedStates[futureIndex].spoken) {
+              matchIndex = futureIndex;
+              foundMatchAhead = true;
+              break;
+            }
+          }
+          
+          // ONLY mark as MISSED if we found positive evidence of skipping
+          if (foundMatchAhead && matchIndex !== -1) {
+            // Mark current word as MISSED (RED)
+            updatedStates[currentSearchIndex] = {
+              ...updatedStates[currentSearchIndex],
+              spoken: false,
+              revealed: true,
+              performanceStatus: 'missed'
+            };
+            wordTimestamps.current.delete(currentSearchIndex);
+            
+            // Mark the matched word ahead as CORRECT/HESITATED
+            const timeAtWord = wordTimestamps.current.get(matchIndex);
+            const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+            
+            updatedStates[matchIndex] = {
+              ...updatedStates[matchIndex],
+              spoken: true,
+              revealed: true,
+              isCurrent: false,
+              performanceStatus: hesitated ? 'hesitated' : 'correct'
+            };
+            
+            lastSpokenIndexRef.current = matchIndex;
+            wordTimestamps.current.delete(matchIndex);
+            currentSearchIndex = matchIndex + 1;
+            continue;
+          }
+          
+          // No match found - don't mark anything, just wait for next transcript
+        }
       }
 
-      // Update current word indicator (blue pulse)
+      // Update current word indicator
       let currentIdx = -1;
       for (let i = 0; i < updatedStates.length; i++) {
         if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
@@ -206,7 +248,6 @@ const EnhancedWordTracker = ({
         }
       }
       
-      // Track timestamp for hesitation detection
       if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
         wordTimestamps.current.set(currentIdx, now);
       }
@@ -216,7 +257,6 @@ const EnhancedWordTracker = ({
         currentWordIndexRef.current = currentIdx;
       }
       
-      // Apply current word indicator
       return updatedStates.map((state, idx) => ({
         ...state,
         isCurrent: idx === currentIdx && currentIdx !== -1 && isRecording
