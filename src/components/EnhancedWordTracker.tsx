@@ -115,134 +115,61 @@ const EnhancedWordTracker = ({
     lastSpokenIndexRef.current = -1;
   }, [text, keywordMode]);
 
-  // Process transcription from Whisper - Sequential word matching with skip detection and timing
+  // Process transcription instantly - fast word-by-word highlighting
   useEffect(() => {
-    if (!transcription) return;
+    if (!transcription || transcription.trim() === '') return;
 
-    const normalizeText = (text: string) => 
-      normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
+    const transcribedWords = transcription.toLowerCase().split(/\s+/).filter(Boolean);
+    if (transcribedWords.length === 0) return;
 
-    const now = Date.now();
-
-    // Sequential matching with skip detection and hesitation timing
     setWordStates(prevStates => {
-      if (prevStates.length === 0) return prevStates;
-      
-      const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
-      const targetWords = prevStates.map(ws => normalizeText(ws.text));
-      
-      const updatedStates = [...prevStates];
-      let currentLastSpoken = lastSpokenIndexRef.current;
+      const newStates = [...prevStates];
+      let lastMatchedIndex = currentWordIndexRef.current;
 
-      // Check each transcribed word
-      for (const transcribedWord of transcribedWords) {
-        const nextTargetIndex = currentLastSpoken + 1;
-        
-        if (nextTargetIndex >= targetWords.length) break;
+      // Process each transcribed word instantly
+      for (let i = 0; i < transcribedWords.length; i++) {
+        const transcribedWord = normalizeNordic(transcribedWords[i].replace(/[^\w]/g, ''));
+        if (!transcribedWord) continue;
 
-        const targetWord = targetWords[nextTargetIndex];
-        
-        // Check if transcribed word matches next expected word
-        const isMatch = isSimilarWord(transcribedWord, targetWord);
+        // Find the next matching word in the text
+        let foundMatch = false;
+        for (let j = lastMatchedIndex; j < newStates.length; j++) {
+          const targetWord = normalizeNordic(newStates[j].text.toLowerCase().replace(/[^\w]/g, ''));
+          
+          if (isSimilarWord(transcribedWord, targetWord)) {
+            // Instantly mark as spoken with correct status
+            newStates[j] = {
+              ...newStates[j],
+              spoken: true,
+              isCurrent: false,
+              performanceStatus: 'correct',
+              revealed: true
+            };
 
-        if (isMatch && !updatedStates[nextTargetIndex].spoken) {
-          // Check for hesitation (2+ seconds at this word position)
-          const timeAtWord = wordTimestamps.current.get(nextTargetIndex);
-          const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
-          
-          // Check if this is a repeat (word appeared before but didn't match - now it does)
-          const isRepeat = updatedStates[nextTargetIndex].performanceStatus === 'hesitated';
-          
-          // Mark the word as spoken - blue (correct) only if no hesitation and not a repeat
-          updatedStates[nextTargetIndex] = {
-            ...updatedStates[nextTargetIndex],
-            spoken: true,
-            revealed: true,
-            performanceStatus: (hesitated || isRepeat) ? 'hesitated' : 'correct'
-          };
-          currentLastSpoken = nextTargetIndex;
-          lastSpokenIndexRef.current = nextTargetIndex;
-          wordTimestamps.current.delete(nextTargetIndex);
-          
-          continue;
-        } else if (!isMatch) {
-          // Word doesn't match - could be wrong word before correction
-          // Check if this word matches a word further ahead (skip detection)
-          let foundMatch = false;
-          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 3, targetWords.length); i++) {
-            if (isSimilarWord(transcribedWord, targetWords[i])) {
-              // User jumped ahead - mark skipped words as missed (RED)
-              for (let j = nextTargetIndex; j < i; j++) {
-                if (!updatedStates[j].spoken) {
-                  updatedStates[j] = {
-                    ...updatedStates[j],
-                    spoken: false,
-                    revealed: true,
-                    performanceStatus: 'missed'
-                  };
-                  wordTimestamps.current.delete(j);
-                }
-              }
-              
-              // Check for hesitation on the matched word
-              const timeAtWord = wordTimestamps.current.get(i);
-              const hesitated = timeAtWord ? (now - timeAtWord) >= 2000 : false;
-              
-              // Mark the matched word as spoken
-              updatedStates[i] = {
-                ...updatedStates[i],
-                spoken: true,
-                revealed: true,
-                performanceStatus: hesitated ? 'hesitated' : 'correct'
-              };
-              currentLastSpoken = i;
-              lastSpokenIndexRef.current = i;
-              wordTimestamps.current.delete(i);
-              foundMatch = true;
-              break;
-            }
+            foundMatch = true;
+            lastMatchedIndex = j + 1;
+            lastSpokenIndexRef.current = j;
+            break;
           }
-          
-          if (!foundMatch) {
-            // No match found ahead - mark current word as needing attention (potential repeat situation)
-            // Mark as hesitated (orange) since they're struggling with this word
-            if (!updatedStates[nextTargetIndex].spoken) {
-              updatedStates[nextTargetIndex] = {
-                ...updatedStates[nextTargetIndex],
-                performanceStatus: 'hesitated'
-              };
-            }
-          }
-          
-          if (foundMatch) continue;
         }
       }
 
-      // Find next unspoken word (skip over missed words)
+      // Find the current (next unspoken) word
       let currentIdx = -1;
-      for (let i = 0; i < updatedStates.length; i++) {
-        if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
+      for (let i = 0; i < newStates.length; i++) {
+        if (!newStates[i].spoken) {
           currentIdx = i;
+          newStates[i] = { ...newStates[i], isCurrent: true };
           break;
         }
       }
-      
-      // Track timestamp when we reach a new word position
-      if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
-        wordTimestamps.current.set(currentIdx, now);
-      }
-      
-      // Update current word index for scrolling
+
       if (currentIdx !== -1) {
         setCurrentWordIndex(currentIdx);
         currentWordIndexRef.current = currentIdx;
       }
-      
-      // Update isCurrent for all words
-      return updatedStates.map((state, idx) => ({
-        ...state,
-        isCurrent: idx === currentIdx && currentIdx !== -1
-      }));
+
+      return newStates;
     });
   }, [transcription]);
 
@@ -294,22 +221,21 @@ const EnhancedWordTracker = ({
   }, [currentWordIndex]);
 
   const getWordClassName = (word: WordState, index: number) => {
-    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-200";
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-150 ease-out";
     
-    // In keyword mode, hidden words show as dots
-    if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken && !isRecording) {
+    // Current word being spoken - bright blue highlight
+    if (word.isCurrent && isRecording) {
       return cn(
         base,
-        "bg-muted text-muted-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground",
-        "text-center min-w-[60px]"
+        "bg-blue-500 text-white scale-110 shadow-lg ring-2 ring-blue-400/50 animate-pulse"
       );
     }
     
-    // Color based on performance status using semantic tokens
-    if (word.performanceStatus === 'correct') {
+    // Spoken words - instant green success state
+    if (word.spoken && word.performanceStatus === 'correct') {
       return cn(
         base,
-        "bg-primary text-primary-foreground shadow-sm"
+        "bg-green-500 text-white shadow-md"
       );
     }
     
@@ -327,10 +253,12 @@ const EnhancedWordTracker = ({
       );
     }
 
-    if (word.isCurrent) {
+    // In keyword mode, hidden words show as dots
+    if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken && !isRecording) {
       return cn(
         base,
-        "bg-accent text-accent-foreground border-2 border-primary animate-pulse"
+        "bg-muted text-muted-foreground cursor-pointer hover:bg-accent hover:text-accent-foreground",
+        "text-center min-w-[60px]"
       );
     }
 
@@ -356,9 +284,9 @@ const EnhancedWordTracker = ({
       )}
     >
       {isRecording && (
-        <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
-          <p className="text-sm text-primary font-medium text-center">
-            🎤 Recording via Whisper API - Words will highlight as you speak
+        <div className="mb-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium text-center">
+            🎤 Listening - Speak clearly and words will light up as you go
           </p>
         </div>
       )}
