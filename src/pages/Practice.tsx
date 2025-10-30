@@ -153,7 +153,7 @@ const Practice = () => {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.maxAlternatives = 3; // Get multiple alternatives for better name detection
+      recognition.maxAlternatives = 3;
       recognition.lang = detectedLang === 'sv' ? 'sv-SE' : detectedLang === 'en' ? 'en-US' : 'en-US';
       
       let finalTranscript = '';
@@ -165,11 +165,9 @@ const Practice = () => {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
             finalTranscript += transcript + ' ';
-            // Update immediately on final results
             setLiveTranscription(finalTranscript.trim());
           } else {
             interimTranscript += transcript;
-            // Update instantly even with interim results for maximum responsiveness
             setLiveTranscription((finalTranscript + interimTranscript).trim());
           }
         }
@@ -184,58 +182,17 @@ const Practice = () => {
       console.log('Web Speech API started for instant transcription');
     } else {
       if (isIOS) {
-        console.log('iOS/iPadOS detected - using Whisper transcription for better compatibility');
+        console.log('iOS/iPadOS detected - live word tracking disabled. Full transcription will occur after recording stops.');
+        toast({
+          title: "iOS Device Detected",
+          description: "Live word tracking is not available on iOS/iPad. Your speech will be transcribed and analyzed after you stop recording.",
+          duration: 5000,
+        });
       } else {
-        console.warn('Web Speech API not supported, falling back to server transcription');
+        console.warn('Web Speech API not supported, falling back to post-recording transcription');
       }
-      // Fallback to server-side transcription
-      transcriptionIntervalRef.current = setInterval(async () => {
-        const newChunks = audioRecorderRef.current?.getNewChunks(lastProcessedChunkIndex.current);
-        if (!newChunks || newChunks.chunks.length === 0) return;
-
-        lastProcessedChunkIndex.current = newChunks.currentIndex;
-
-        try {
-          const audioBlob = new Blob(newChunks.chunks, { type: audioFormatRef.current });
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          reader.onloadend = async () => {
-            const base64Audio = reader.result?.toString().split(',')[1];
-            if (!base64Audio) return;
-
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-              console.error('No active session');
-              return;
-            }
-
-            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-              body: { 
-                audio: base64Audio,
-                language: detectedLang,
-                format: audioFormatRef.current
-              },
-              headers: {
-                Authorization: `Bearer ${session.access_token}`
-              }
-            });
-
-            if (error) {
-              console.error('Transcription error:', error);
-              return;
-            }
-
-            if (data?.text && data.text.trim()) {
-              setLiveTranscription(prev => {
-                const newText = prev + ' ' + data.text;
-                return newText.trim();
-              });
-            }
-          };
-        } catch (error) {
-          console.error('Error during live transcription:', error);
-        }
-      }, 200);
+      // No live transcription for iOS or unsupported browsers
+      // Full audio will be transcribed at the end via analyze-speech function
     }
   };
 
