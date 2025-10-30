@@ -162,11 +162,11 @@ const EnhancedWordTracker = ({
           
           continue;
         } else if (!isMatch) {
-          // Check if word matches further ahead (skip detection) - only look 3 words ahead
+          // Check if word matches further ahead (skip detection) - only look 2 words ahead
           let foundMatch = false;
           let matchIndex = -1;
           
-          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 3, targetWords.length); i++) {
+          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 2, targetWords.length); i++) {
             if (isSimilarWord(transcribedWord, targetWords[i])) {
               matchIndex = i;
               foundMatch = true;
@@ -174,18 +174,16 @@ const EnhancedWordTracker = ({
             }
           }
           
-          // Only mark as skipped if we're very confident (found match within 3 words)
+          // ONLY mark as missed if we found a clear match ahead (positive evidence of skipping)
           if (foundMatch && matchIndex !== -1) {
-            // Mark skipped words as MISSED (RED) - but only immediate predecessor
-            if (nextTargetIndex < matchIndex) {
-              updatedStates[nextTargetIndex] = {
-                ...updatedStates[nextTargetIndex],
-                spoken: false,
-                revealed: true,
-                performanceStatus: 'missed'
-              };
-              wordTimestamps.current.delete(nextTargetIndex);
-            }
+            // Mark the skipped word as MISSED (RED)
+            updatedStates[nextTargetIndex] = {
+              ...updatedStates[nextTargetIndex],
+              spoken: false,
+              revealed: true,
+              performanceStatus: 'missed'
+            };
+            wordTimestamps.current.delete(nextTargetIndex);
             
             // Check for hesitation on matched word
             const timeAtWord = wordTimestamps.current.get(matchIndex);
@@ -205,16 +203,8 @@ const EnhancedWordTracker = ({
             continue;
           }
           
-          // If no match found ahead, mark current word as missed and move on
-          if (!foundMatch) {
-            updatedStates[nextTargetIndex] = {
-              ...updatedStates[nextTargetIndex],
-              spoken: false,
-              revealed: true,
-              performanceStatus: 'missed'
-            };
-            wordTimestamps.current.delete(nextTargetIndex);
-          }
+          // DON'T mark as missed if no match found - just wait for next transcription batch
+          // This prevents false positives from transcription delays
         }
       }
 
