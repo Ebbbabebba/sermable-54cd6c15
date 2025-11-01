@@ -156,8 +156,8 @@ Return ONLY this JSON structure with no extra text:
   "analysis": "Good practice session"
 }`;
 
-    // Use GPT-5-mini for efficient, accurate analysis
-    const analysisModel = 'gpt-5-mini-2025-08-07';
+    // Use GPT-4o-mini for efficient structured analysis (not a reasoning model)
+    const analysisModel = 'gpt-4o-mini';
     console.log('Using analysis model:', analysisModel);
 
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -173,7 +173,8 @@ Return ONLY this JSON structure with no extra text:
           { role: 'system', content: 'You are a supportive speech analysis assistant. Be encouraging and lenient with word matching. Return ONLY valid JSON with no markdown formatting or explanations.' },
           { role: 'user', content: analysisPrompt }
         ],
-        max_completion_tokens: 2000, // Sufficient for structured JSON output
+        max_tokens: 1500, // gpt-4o uses max_tokens, not max_completion_tokens
+        temperature: 0.7,
       }),
     });
 
