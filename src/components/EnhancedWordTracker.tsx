@@ -57,16 +57,16 @@ const isSimilarWord = (word1: string, word2: string): boolean => {
     if (w1.startsWith(w2) || w2.startsWith(w1)) return true;
   }
   
-  // Character-by-character similarity with strict threshold
+  // Character-by-character similarity with lenient threshold
   let matches = 0;
   const compareLength = Math.min(w1.length, w2.length);
   for (let i = 0; i < compareLength; i++) {
     if (w1[i] === w2[i]) matches++;
   }
   
-  // Must have 85% character match
+  // Must have 75% character match (more lenient to reduce false negatives)
   const similarity = matches / Math.max(w1.length, w2.length);
-  return similarity >= 0.85;
+  return similarity >= 0.75;
 };
 
 const isKeywordWord = (word: string): boolean => {
@@ -119,125 +119,7 @@ const EnhancedWordTracker = ({
     lastSpokenIndexRef.current = -1;
   }, [text, keywordMode]);
 
-  // Process transcription with instant highlighting, hesitation detection, and skip tracking
-  useEffect(() => {
-    if (!transcription || transcription.trim() === '') return;
-
-    const normalizeText = (text: string) => 
-      normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
-
-    const now = Date.now();
-
-    setWordStates(prevStates => {
-      if (prevStates.length === 0) return prevStates;
-      
-      const transcribedWords = normalizeText(transcription).split(/\s+/).filter(w => w.length > 0);
-      const targetWords = prevStates.map(ws => normalizeText(ws.text));
-      
-      const updatedStates = [...prevStates];
-      let currentLastSpoken = lastSpokenIndexRef.current;
-
-      // Process each transcribed word
-      for (const transcribedWord of transcribedWords) {
-        const nextTargetIndex = currentLastSpoken + 1;
-        
-        if (nextTargetIndex >= targetWords.length) break;
-
-        const targetWord = targetWords[nextTargetIndex];
-        const isMatch = isSimilarWord(transcribedWord, targetWord);
-
-        if (isMatch && !updatedStates[nextTargetIndex].spoken) {
-          // Check for hesitation (3+ seconds at this word for more lenient detection)
-          const timeAtWord = wordTimestamps.current.get(nextTargetIndex);
-          const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
-          
-          // Mark as spoken - green if no hesitation, yellow if hesitated
-          updatedStates[nextTargetIndex] = {
-            ...updatedStates[nextTargetIndex],
-            spoken: true,
-            revealed: true,
-            isCurrent: false,
-            performanceStatus: hesitated ? 'hesitated' : 'correct'
-          };
-          currentLastSpoken = nextTargetIndex;
-          lastSpokenIndexRef.current = nextTargetIndex;
-          wordTimestamps.current.delete(nextTargetIndex);
-          
-          continue;
-        } else if (!isMatch) {
-          // Check if word matches further ahead (skip detection) - only look 2 words ahead
-          let foundMatch = false;
-          let matchIndex = -1;
-          
-          for (let i = nextTargetIndex + 1; i < Math.min(nextTargetIndex + 2, targetWords.length); i++) {
-            if (isSimilarWord(transcribedWord, targetWords[i])) {
-              matchIndex = i;
-              foundMatch = true;
-              break;
-            }
-          }
-          
-          // ONLY mark as missed if we found a clear match ahead (positive evidence of skipping)
-          if (foundMatch && matchIndex !== -1) {
-            // Mark the skipped word as MISSED (RED)
-            updatedStates[nextTargetIndex] = {
-              ...updatedStates[nextTargetIndex],
-              spoken: false,
-              revealed: true,
-              performanceStatus: 'missed'
-            };
-            wordTimestamps.current.delete(nextTargetIndex);
-            
-            // Check for hesitation on matched word
-            const timeAtWord = wordTimestamps.current.get(matchIndex);
-            const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
-            
-            // Mark the matched word
-            updatedStates[matchIndex] = {
-              ...updatedStates[matchIndex],
-              spoken: true,
-              revealed: true,
-              isCurrent: false,
-              performanceStatus: hesitated ? 'hesitated' : 'correct'
-            };
-            currentLastSpoken = matchIndex;
-            lastSpokenIndexRef.current = matchIndex;
-            wordTimestamps.current.delete(matchIndex);
-            continue;
-          }
-          
-          // DON'T mark as missed if no match found - just wait for next transcription batch
-          // This prevents false positives from transcription delays
-        }
-      }
-
-      // Find next unspoken word and track timestamp
-      let currentIdx = -1;
-      for (let i = 0; i < updatedStates.length; i++) {
-        if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
-          currentIdx = i;
-          break;
-        }
-      }
-      
-      // Track timestamp when we reach a new word position
-      if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
-        wordTimestamps.current.set(currentIdx, now);
-      }
-      
-      // Update current word index
-      if (currentIdx !== -1) {
-        setCurrentWordIndex(currentIdx);
-        currentWordIndexRef.current = currentIdx;
-      }
-      
-      // Update isCurrent for all words
-      return updatedStates.map((state, idx) => ({
-        ...state,
-        isCurrent: idx === currentIdx && currentIdx !== -1
-      }));
-    });
-  }, [transcription]);
+  // REMOVED: Old transcription processing - now using OpenAI realtime only (see useEffect below)
 
   // Initialize OpenAI Realtime transcription
   useEffect(() => {
@@ -335,23 +217,30 @@ const EnhancedWordTracker = ({
             continue;
           }
 
-          // SKIP DETECTION - ONLY if we have clear evidence of skipping (look ahead 1 word only)
+          // SKIP DETECTION - VERY conservative, only mark as missed if we have STRONG evidence
           if (!isExactMatch) {
             let foundMatchAhead = false;
             let matchIndex = -1;
             
-            // Look ahead ONLY 1 word to be conservative
+            // Look ahead ONLY 1 word and require EXACT similarity
             if ((nextUnspokenIndex + 1) < targetWords.length) {
               const futureIndex = nextUnspokenIndex + 1;
-              if (isSimilarWord(transcribedWord, targetWords[futureIndex])) {
+              const futureWord = targetWords[futureIndex];
+              
+              // Require very strong match (exact or very close) to consider it a skip
+              const normalizedTranscribed = normalizeNordic(transcribedWord);
+              const normalizedFuture = normalizeNordic(futureWord);
+              
+              if (normalizedTranscribed === normalizedFuture || 
+                  (normalizedTranscribed.length > 4 && normalizedFuture.startsWith(normalizedTranscribed))) {
                 matchIndex = futureIndex;
                 foundMatchAhead = true;
               }
             }
             
-            // If found match ahead, mark skipped word as MISSED (RED)
+            // ONLY mark as MISSED if we have VERY clear evidence of skipping
             if (foundMatchAhead && matchIndex !== -1) {
-              console.log(`❌ Word "${updatedStates[nextUnspokenIndex].text}" skipped (found "${updatedStates[matchIndex].text}" ahead)`);
+              console.log(`❌ Word "${updatedStates[nextUnspokenIndex].text}" skipped (confirmed "${updatedStates[matchIndex].text}" ahead)`);
               
               // Mark current word as MISSED
               updatedStates[nextUnspokenIndex] = {
@@ -381,6 +270,9 @@ const EnhancedWordTracker = ({
               nextUnspokenIndex = matchIndex + 1;
               continue;
             }
+            
+            // NO CLEAR MATCH - don't mark as missed, just continue waiting
+            // This prevents false positives from transcription variations
           }
         }
 
