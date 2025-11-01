@@ -270,7 +270,7 @@ const EnhancedWordTracker = ({
     };
   }, [onTranscriptUpdate]);
 
-  // Process accumulated transcript ONLY on final results - process every 200ms
+  // Process accumulated transcript ONLY on final results - process every 300ms
   useEffect(() => {
     if (!isRecording) return;
 
@@ -301,6 +301,7 @@ const EnhancedWordTracker = ({
         }
 
         // CRITICAL: Only process transcribed words that match our current position or ahead
+        // ONLY color words when we have FINAL transcript evidence
         for (let transcribedIdx = 0; transcribedIdx < transcribedWords.length; transcribedIdx++) {
           const transcribedWord = transcribedWords[transcribedIdx];
           
@@ -310,12 +311,14 @@ const EnhancedWordTracker = ({
           const targetWord = targetWords[nextUnspokenIndex];
           const isExactMatch = isSimilarWord(transcribedWord, targetWord);
 
-          // EXACT MATCH - color it ONLY after we have transcript evidence
+          // EXACT MATCH - color it ONLY after we have FINAL transcript evidence
           if (isExactMatch && !updatedStates[nextUnspokenIndex].spoken) {
             const timeAtWord = wordTimestamps.current.get(nextUnspokenIndex);
             const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
             
-            // Color word instantly after speaking
+            console.log(`✅ Word "${updatedStates[nextUnspokenIndex].text}" confirmed by final transcript`);
+            
+            // Color word after final confirmation
             updatedStates[nextUnspokenIndex] = {
               ...updatedStates[nextUnspokenIndex],
               spoken: true,
@@ -332,23 +335,24 @@ const EnhancedWordTracker = ({
             continue;
           }
 
-          // SKIP DETECTION - check if they said a word ahead (look max 2 words ahead)
+          // SKIP DETECTION - ONLY if we have clear evidence of skipping (look ahead 1 word only)
           if (!isExactMatch) {
             let foundMatchAhead = false;
             let matchIndex = -1;
             
-            // Look ahead max 2 words
-            for (let lookAhead = 1; lookAhead <= 2 && (nextUnspokenIndex + lookAhead) < targetWords.length; lookAhead++) {
-              const futureIndex = nextUnspokenIndex + lookAhead;
+            // Look ahead ONLY 1 word to be conservative
+            if ((nextUnspokenIndex + 1) < targetWords.length) {
+              const futureIndex = nextUnspokenIndex + 1;
               if (isSimilarWord(transcribedWord, targetWords[futureIndex])) {
                 matchIndex = futureIndex;
                 foundMatchAhead = true;
-                break;
               }
             }
             
             // If found match ahead, mark skipped word as MISSED (RED)
             if (foundMatchAhead && matchIndex !== -1) {
+              console.log(`❌ Word "${updatedStates[nextUnspokenIndex].text}" skipped (found "${updatedStates[matchIndex].text}" ahead)`);
+              
               // Mark current word as MISSED
               updatedStates[nextUnspokenIndex] = {
                 ...updatedStates[nextUnspokenIndex],
@@ -380,7 +384,7 @@ const EnhancedWordTracker = ({
           }
         }
 
-        // Update current word indicator (blue pulse) - only on NEXT unspoken word
+        // Update current word indicator (blue pulse) - ALWAYS show on NEXT unspoken word
         let currentIdx = -1;
         for (let i = 0; i < updatedStates.length; i++) {
           if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
@@ -392,6 +396,7 @@ const EnhancedWordTracker = ({
         // Track timestamp for hesitation detection ONLY when we reach a new word
         if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
           wordTimestamps.current.set(currentIdx, now);
+          console.log(`🔵 Tracking word "${updatedStates[currentIdx].text}" for timing`);
         }
         
         if (currentIdx !== -1) {
@@ -399,13 +404,13 @@ const EnhancedWordTracker = ({
           currentWordIndexRef.current = currentIdx;
         }
         
-        // Apply current word indicator - blue pulse on NEXT word to speak
+        // Apply current word indicator - blue pulse ALWAYS shows on next unspoken word
         return updatedStates.map((state, idx) => ({
           ...state,
           isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken
         }));
       });
-    }, 200); // Process every 200ms - only FINAL transcripts
+    }, 300); // Process every 300ms - only FINAL transcripts
 
     return () => clearInterval(intervalId);
   }, [isRecording]);
@@ -474,11 +479,22 @@ const EnhancedWordTracker = ({
   }, [currentWordIndex]);
 
   const getWordClassName = (word: WordState, index: number) => {
-    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-75 ease-out";
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-100 ease-out";
     
-    // Priority order: Missed > Hesitated > Correct > Current > Default
+    // Priority order: Current (reading now) > Missed > Hesitated > Correct > Default
     
-    // Missed/Skipped - RED (highest priority - word was skipped)
+    // Current word being READ - bright blue highlight (shows while reading)
+    // This appears BEFORE any correctness evaluation
+    if (word.isCurrent && isRecording && !word.spoken) {
+      return cn(
+        base,
+        "bg-blue-500 text-white scale-110 shadow-lg ring-4 ring-blue-400/60 animate-pulse font-bold"
+      );
+    }
+    
+    // AFTER word is fully spoken and confirmed by OpenAI:
+    
+    // Missed/Skipped - RED (word was skipped based on final transcript)
     if (word.performanceStatus === 'missed') {
       return cn(
         base,
@@ -486,7 +502,7 @@ const EnhancedWordTracker = ({
       );
     }
     
-    // Hesitated - YELLOW (took 3+ seconds)
+    // Hesitated - YELLOW (took 3+ seconds, confirmed by final transcript)
     if (word.performanceStatus === 'hesitated') {
       return cn(
         base,
@@ -494,19 +510,11 @@ const EnhancedWordTracker = ({
       );
     }
     
-    // Correct - GREEN (spoken correctly without hesitation)
+    // Correct - GREEN (spoken correctly, confirmed by final transcript)
     if (word.spoken && word.performanceStatus === 'correct') {
       return cn(
         base,
         "bg-green-500 text-white shadow-md"
-      );
-    }
-    
-    // Current word being spoken - bright blue highlight ONLY if not yet spoken
-    if (word.isCurrent && isRecording && !word.spoken) {
-      return cn(
-        base,
-        "bg-blue-500 text-white scale-110 shadow-lg ring-2 ring-blue-400/50 animate-pulse"
       );
     }
 
@@ -519,7 +527,7 @@ const EnhancedWordTracker = ({
       );
     }
 
-    // Default - unspoken word
+    // Default - unspoken word (no evaluation yet)
     return cn(
       base, 
       "bg-muted/50 text-muted-foreground"
