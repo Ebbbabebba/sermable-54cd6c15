@@ -88,9 +88,8 @@ export class RealtimeTranscriber {
 
   async connect() {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'ktlbseweighlrhoxbjii';
-    const wsUrl = `wss://${projectId}.functions.supabase.co/realtime-transcribe`;
+    const wsUrl = `wss://${projectId}.supabase.co/functions/v1/realtime-transcribe`;
     
-    console.log('Connecting to WebSocket:', wsUrl);
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
