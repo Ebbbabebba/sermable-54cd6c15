@@ -119,7 +119,146 @@ const EnhancedWordTracker = ({
     lastSpokenIndexRef.current = -1;
   }, [text, keywordMode]);
 
-  // REMOVED: Old transcription processing - now using OpenAI realtime only (see useEffect below)
+  // Process accumulated transcript ONLY from FINAL OpenAI results - runs every 200ms
+  useEffect(() => {
+    if (!isRecording) return;
+
+    const intervalId = setInterval(() => {
+      const transcript = accumulatedTranscript.current;
+      if (!transcript || transcript.trim() === '') return;
+
+      const normalizeText = (text: string) => 
+        normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
+
+      const now = Date.now();
+
+      setWordStates(prevStates => {
+        if (prevStates.length === 0) return prevStates;
+        
+        const transcribedWords = normalizeText(transcript).split(/\s+/).filter(w => w.length > 0);
+        const targetWords = prevStates.map(ws => normalizeText(ws.text));
+        
+        const updatedStates = [...prevStates];
+        let nextUnspokenIndex = -1;
+
+        // Find the next unspoken word (this is where we are in the script)
+        for (let i = 0; i < updatedStates.length; i++) {
+          if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
+            nextUnspokenIndex = i;
+            break;
+          }
+        }
+
+        // Process transcribed words and match against script
+        for (let transcribedIdx = 0; transcribedIdx < transcribedWords.length; transcribedIdx++) {
+          const transcribedWord = transcribedWords[transcribedIdx];
+          
+          if (nextUnspokenIndex === -1 || nextUnspokenIndex >= targetWords.length) break;
+
+          const targetWord = targetWords[nextUnspokenIndex];
+          const isExactMatch = isSimilarWord(transcribedWord, targetWord);
+
+          // EXACT MATCH - mark as spoken with appropriate color
+          if (isExactMatch && !updatedStates[nextUnspokenIndex].spoken) {
+            const timeAtWord = wordTimestamps.current.get(nextUnspokenIndex);
+            const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+            
+            console.log(`✅ Word "${updatedStates[nextUnspokenIndex].text}" confirmed by OpenAI`);
+            
+            updatedStates[nextUnspokenIndex] = {
+              ...updatedStates[nextUnspokenIndex],
+              spoken: true,
+              revealed: true,
+              isCurrent: false,
+              performanceStatus: hesitated ? 'hesitated' : 'correct'
+            };
+            
+            lastSpokenIndexRef.current = nextUnspokenIndex;
+            wordTimestamps.current.delete(nextUnspokenIndex);
+            
+            nextUnspokenIndex++;
+            continue;
+          }
+
+          // SKIP DETECTION - very conservative
+          if (!isExactMatch) {
+            let foundMatchAhead = false;
+            let matchIndex = -1;
+            
+            // Look ahead ONLY 1 word
+            if ((nextUnspokenIndex + 1) < targetWords.length) {
+              const futureIndex = nextUnspokenIndex + 1;
+              const futureWord = targetWords[futureIndex];
+              
+              const normalizedTranscribed = normalizeNordic(transcribedWord);
+              const normalizedFuture = normalizeNordic(futureWord);
+              
+              if (normalizedTranscribed === normalizedFuture || 
+                  (normalizedTranscribed.length > 4 && normalizedFuture.startsWith(normalizedTranscribed))) {
+                matchIndex = futureIndex;
+                foundMatchAhead = true;
+              }
+            }
+            
+            if (foundMatchAhead && matchIndex !== -1) {
+              console.log(`❌ Word "${updatedStates[nextUnspokenIndex].text}" skipped`);
+              
+              updatedStates[nextUnspokenIndex] = {
+                ...updatedStates[nextUnspokenIndex],
+                spoken: false,
+                revealed: true,
+                performanceStatus: 'missed'
+              };
+              wordTimestamps.current.delete(nextUnspokenIndex);
+              
+              const timeAtWord = wordTimestamps.current.get(matchIndex);
+              const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+              
+              updatedStates[matchIndex] = {
+                ...updatedStates[matchIndex],
+                spoken: true,
+                revealed: true,
+                isCurrent: false,
+                performanceStatus: hesitated ? 'hesitated' : 'correct'
+              };
+              
+              lastSpokenIndexRef.current = matchIndex;
+              wordTimestamps.current.delete(matchIndex);
+              
+              nextUnspokenIndex = matchIndex + 1;
+              continue;
+            }
+          }
+        }
+
+        // Update current word indicator (blue pulse)
+        let currentIdx = -1;
+        for (let i = 0; i < updatedStates.length; i++) {
+          if (!updatedStates[i].spoken && updatedStates[i].performanceStatus !== 'missed') {
+            currentIdx = i;
+            break;
+          }
+        }
+        
+        if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
+          wordTimestamps.current.set(currentIdx, now);
+          console.log(`🔵 Now at word "${updatedStates[currentIdx].text}"`);
+        }
+        
+        if (currentIdx !== -1) {
+          setCurrentWordIndex(currentIdx);
+          currentWordIndexRef.current = currentIdx;
+        }
+        
+        return updatedStates.map((state, idx) => ({
+          ...state,
+          isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken
+        }));
+      });
+    }, 200); // Process every 200ms
+
+    return () => clearInterval(intervalId);
+  }, [isRecording]);
 
   // Initialize OpenAI Realtime transcription
   useEffect(() => {
