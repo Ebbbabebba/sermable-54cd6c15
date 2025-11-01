@@ -80,11 +80,9 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
 export class RealtimeTranscriber {
   private ws: WebSocket | null = null;
   private recorder: AudioRecorder | null = null;
-  private audioQueue: string[] = [];
-  private isCommitting = false;
 
   constructor(
-    private onTranscript: (text: string) => void,
+    private onTranscript: (text: string, isFinal: boolean) => void,
     private onError: (error: string) => void
   ) {}
 
@@ -100,11 +98,16 @@ export class RealtimeTranscriber {
 
     this.ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log('Received:', data);
+      console.log('📨 WebSocket message:', data);
 
-      if (data.type === 'transcription') {
-        this.onTranscript(data.text);
+      if (data.type === 'transcription' && data.text && data.isFinal) {
+        console.log('✅ FINAL transcript:', data.text);
+        this.onTranscript(data.text, true);
+      } else if (data.type === 'transcription_interim' && data.text) {
+        console.log('⏳ Interim transcript:', data.text);
+        this.onTranscript(data.text, false);
       } else if (data.type === 'error') {
+        console.error('❌ Transcription error:', data.message);
         this.onError(data.message);
       }
     };
@@ -138,25 +141,12 @@ export class RealtimeTranscriber {
     this.recorder = new AudioRecorder((audioData) => {
       if (this.ws?.readyState === WebSocket.OPEN) {
         const encoded = encodeAudioForAPI(audioData);
-        this.audioQueue.push(encoded);
         
-        // Send audio chunk
+        // Send audio chunk - server VAD handles turn detection
         this.ws.send(JSON.stringify({
           type: 'audio_chunk',
           audio: encoded
         }));
-
-        // Commit audio every 1 second for continuous transcription
-        if (this.audioQueue.length >= 24 && !this.isCommitting) {
-          this.isCommitting = true;
-          this.ws.send(JSON.stringify({
-            type: 'commit_audio'
-          }));
-          this.audioQueue = [];
-          setTimeout(() => {
-            this.isCommitting = false;
-          }, 1000);
-        }
       }
     });
 
@@ -167,14 +157,6 @@ export class RealtimeTranscriber {
     if (this.recorder) {
       this.recorder.stop();
       this.recorder = null;
-    }
-
-    // Final commit
-    if (this.ws?.readyState === WebSocket.OPEN && this.audioQueue.length > 0) {
-      this.ws.send(JSON.stringify({
-        type: 'commit_audio'
-      }));
-      this.audioQueue = [];
     }
   }
 

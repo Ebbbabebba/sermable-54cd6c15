@@ -94,6 +94,7 @@ const EnhancedWordTracker = ({
   const wordTimestamps = useRef<Map<number, number>>(new Map()); // Track when each word position was reached
   const transcriberRef = useRef<RealtimeTranscriber | null>(null);
   const accumulatedTranscript = useRef<string>("");
+  const interimTranscript = useRef<string>("");
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -241,13 +242,18 @@ const EnhancedWordTracker = ({
   // Initialize OpenAI Realtime transcription
   useEffect(() => {
     const transcriber = new RealtimeTranscriber(
-      (transcriptText) => {
-        console.log('📝 Received transcript:', transcriptText);
-        accumulatedTranscript.current = transcriptText;
-        
-        // Update parent component with full transcript
-        if (onTranscriptUpdate) {
-          onTranscriptUpdate(transcriptText);
+      (transcriptText, isFinal) => {
+        if (isFinal) {
+          console.log('📝 FINAL transcript:', transcriptText);
+          accumulatedTranscript.current = transcriptText;
+          
+          // Update parent component with full transcript
+          if (onTranscriptUpdate) {
+            onTranscriptUpdate(transcriptText);
+          }
+        } else {
+          console.log('⏳ Interim transcript:', transcriptText);
+          interimTranscript.current = transcriptText;
         }
       },
       (error) => {
@@ -264,7 +270,7 @@ const EnhancedWordTracker = ({
     };
   }, [onTranscriptUpdate]);
 
-  // Process accumulated transcript in real-time - process every 100ms for instant feedback
+  // Process accumulated transcript ONLY on final results - process every 200ms
   useEffect(() => {
     if (!isRecording) return;
 
@@ -399,7 +405,7 @@ const EnhancedWordTracker = ({
           isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken
         }));
       });
-    }, 100); // Process every 100ms for near-instant feedback
+    }, 200); // Process every 200ms - only FINAL transcripts
 
     return () => clearInterval(intervalId);
   }, [isRecording]);

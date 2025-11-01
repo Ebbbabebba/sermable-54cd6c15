@@ -52,17 +52,31 @@ serve(async (req) => {
             input_audio_transcription: {
               model: "whisper-1"
             },
-            turn_detection: null // Manual turn detection
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.6,
+              prefix_padding_ms: 500,
+              silence_duration_ms: 1500 // Longer silence before finalizing
+            }
           }
         }));
       }
 
-      // Forward transcription events to client
+      // Forward FINAL transcription events only
       if (data.type === 'conversation.item.input_audio_transcription.completed') {
         socket.send(JSON.stringify({
           type: 'transcription',
           text: data.transcript,
           isFinal: true
+        }));
+      }
+
+      // Forward interim transcription for visual feedback only
+      if (data.type === 'conversation.item.input_audio_transcription.delta') {
+        socket.send(JSON.stringify({
+          type: 'transcription_interim',
+          text: data.delta,
+          isFinal: false
         }));
       }
 
@@ -106,23 +120,10 @@ serve(async (req) => {
       const data = JSON.parse(event.data);
       
       if (data.type === 'audio_chunk') {
-        // Forward audio to OpenAI
+        // Forward audio to OpenAI - server VAD handles turn detection
         openAISocket.send(JSON.stringify({
           type: 'input_audio_buffer.append',
           audio: data.audio
-        }));
-      }
-
-      if (data.type === 'commit_audio') {
-        // Commit the audio buffer for transcription
-        openAISocket.send(JSON.stringify({
-          type: 'input_audio_buffer.commit'
-        }));
-        openAISocket.send(JSON.stringify({
-          type: 'response.create',
-          response: {
-            modalities: ["text"]
-          }
         }));
       }
     };
