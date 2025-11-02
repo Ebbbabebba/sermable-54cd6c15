@@ -574,29 +574,16 @@ const EnhancedWordTracker = ({
 
       <div className="flex flex-wrap items-center justify-center gap-1 leading-loose">
         {wordStates.map((word, index) => {
-          // Check if this is a hidden word that should be grouped
-          const isHidden = keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.performanceStatus;
+          // Check if this word should be part of a hidden group (before performance status)
+          const isPartOfHiddenGroup = keywordMode && !word.isKeyword && !word.manuallyRevealed;
           
           // Skip rendering if this is a hidden word that's part of a group (not the first in the group)
-          if (isHidden && index > 0) {
+          // BUT only if it doesn't have a performance status (which needs individual rendering)
+          if (isPartOfHiddenGroup && !word.performanceStatus && index > 0) {
             const prevWord = wordStates[index - 1];
-            const prevIsHidden = keywordMode && !prevWord.isKeyword && !prevWord.manuallyRevealed && !prevWord.performanceStatus;
-            if (prevIsHidden) {
-              return null; // Skip this word, it's part of the previous group
-            }
-          }
-          
-          // If this is the first hidden word in a group, count how many consecutive hidden words there are
-          let groupSize = 1;
-          if (isHidden) {
-            for (let i = index + 1; i < wordStates.length; i++) {
-              const nextWord = wordStates[i];
-              const nextIsHidden = keywordMode && !nextWord.isKeyword && !nextWord.manuallyRevealed && !nextWord.performanceStatus;
-              if (nextIsHidden) {
-                groupSize++;
-              } else {
-                break;
-              }
+            const prevIsPartOfHiddenGroup = keywordMode && !prevWord.isKeyword && !prevWord.manuallyRevealed;
+            if (prevIsPartOfHiddenGroup && !prevWord.performanceStatus) {
+              return null; // Skip this word, it's part of the previous "..." group
             }
           }
           
@@ -607,14 +594,7 @@ const EnhancedWordTracker = ({
               className={getWordClassName(word, index)}
               onClick={(e) => {
                 e.stopPropagation();
-                // If this is a grouped "...", reveal all words in the group
-                if (isHidden && groupSize > 1 && !isRecording) {
-                  for (let i = index; i < index + groupSize; i++) {
-                    handleWordTap(i);
-                  }
-                } else {
-                  handleWordTap(index);
-                }
+                handleWordTap(index);
               }}
               style={{
                 fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
