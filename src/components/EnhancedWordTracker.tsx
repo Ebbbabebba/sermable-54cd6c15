@@ -544,17 +544,13 @@ const EnhancedWordTracker = ({
   };
 
   const renderWordContent = (word: WordState) => {
-    // Show "..." for hidden words (unless they have a performance status during recording)
-    if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken) {
-      // If recording and word has performance status, show the actual word
-      if (isRecording && word.performanceStatus) {
+    // In keyword mode, non-keyword words should show as "..."
+    if (keywordMode && !word.isKeyword && !word.manuallyRevealed) {
+      // If word has performance status (missed/hesitated/correct), show actual word
+      if (word.performanceStatus) {
         return word.text;
       }
-      // Otherwise show "..."
-      if (!isRecording) {
-        return "...";
-      }
-      // During recording, before any status, show "..."
+      // Otherwise always show "..."
       return "...";
     }
     return word.text;
