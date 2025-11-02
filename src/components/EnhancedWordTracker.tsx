@@ -94,7 +94,7 @@ const EnhancedWordTracker = ({
   const wordTimestamps = useRef<Map<number, number>>(new Map()); // Track when each word position was reached
   const transcriberRef = useRef<RealtimeTranscriber | null>(null);
   const accumulatedTranscript = useRef<string>("");
-  const interimTranscript = useRef<string>("");
+  const previousTranscriptLength = useRef<number>(0); // Track how many words we've processed
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -127,12 +127,10 @@ const EnhancedWordTracker = ({
       (transcriptText, isFinal) => {
         if (isFinal) {
           console.log('📝 FINAL transcript received:', transcriptText);
-          // ACCUMULATE final transcripts (don't replace)
-          accumulatedTranscript.current = accumulatedTranscript.current 
-            ? accumulatedTranscript.current + ' ' + transcriptText 
-            : transcriptText;
+          // DON'T accumulate - OpenAI sends COMPLETE transcript each time
+          accumulatedTranscript.current = transcriptText;
           
-          console.log('📝 Full accumulated transcript:', accumulatedTranscript.current);
+          console.log('📝 Current transcript:', accumulatedTranscript.current);
           
           // Update parent component with full transcript
           if (onTranscriptUpdate) {
@@ -155,7 +153,7 @@ const EnhancedWordTracker = ({
     };
   }, [onTranscriptUpdate]);
 
-  // Process ONLY final transcripts - accumulate and match strictly in order
+  // Process ONLY NEW words from final transcripts
   useEffect(() => {
     if (!isRecording) return;
 
@@ -164,19 +162,26 @@ const EnhancedWordTracker = ({
       const transcript = transcription || accumulatedTranscript.current;
       if (!transcript || transcript.trim() === '') return;
 
-      console.log('📝 Processing FINAL transcript:', transcript);
-
       const normalizeText = (text: string) => 
         normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
+
+      const transcribedWords = normalizeText(transcript).split(/\s+/).filter(w => w.length > 0);
+      
+      // ONLY process NEW words that weren't in previous transcript
+      if (transcribedWords.length <= previousTranscriptLength.current) {
+        return; // No new words to process
+      }
+      
+      const newWords = transcribedWords.slice(previousTranscriptLength.current);
+      console.log('📝 NEW words to process:', newWords.join(' '));
+      previousTranscriptLength.current = transcribedWords.length;
 
       const now = Date.now();
 
       setWordStates(prevStates => {
         if (prevStates.length === 0) return prevStates;
         
-        const transcribedWords = normalizeText(transcript).split(/\s+/).filter(w => w.length > 0);
         const targetWords = prevStates.map(ws => normalizeText(ws.text));
-        
         const updatedStates = [...prevStates];
         
         // Find where we are in the script (first unspoken word)
@@ -188,11 +193,11 @@ const EnhancedWordTracker = ({
           }
         }
 
-        // Match transcribed words to script words STRICTLY in order
-        let transcriptPosition = 0;
+        // Match NEW transcribed words to script words STRICTLY in order
+        let newWordIdx = 0;
         
-        while (transcriptPosition < transcribedWords.length && scriptPosition < targetWords.length) {
-          const transcribedWord = transcribedWords[transcriptPosition];
+        while (newWordIdx < newWords.length && scriptPosition < targetWords.length) {
+          const transcribedWord = newWords[newWordIdx];
           const targetWord = targetWords[scriptPosition];
           
           // Check if current words match
@@ -215,7 +220,7 @@ const EnhancedWordTracker = ({
             lastSpokenIndexRef.current = scriptPosition;
             
             // Move both positions forward
-            transcriptPosition++;
+            newWordIdx++;
             scriptPosition++;
           } else {
             // NO MATCH - check if transcribed word matches ahead in script (skip detection)
@@ -256,7 +261,7 @@ const EnhancedWordTracker = ({
                 lastSpokenIndexRef.current = scriptPosition + lookAhead;
                 
                 scriptPosition = scriptPosition + lookAhead + 1;
-                transcriptPosition++;
+                newWordIdx++;
                 matchFound = true;
                 break;
               }
@@ -265,7 +270,7 @@ const EnhancedWordTracker = ({
             // If no match found ahead, it might be transcription error - just move to next transcribed word
             if (!matchFound) {
               console.log(`⚠️ No match for "${transcribedWord}" - possible transcription error`);
-              transcriptPosition++;
+              newWordIdx++;
             }
           }
         }
@@ -295,7 +300,7 @@ const EnhancedWordTracker = ({
           isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken
         }));
       });
-    }, 500); // Process every 500ms - wait for final transcripts to accumulate
+    }, 300); // Process every 300ms
 
     return () => clearInterval(intervalId);
   }, [isRecording, transcription]);
@@ -307,6 +312,7 @@ const EnhancedWordTracker = ({
         console.log('🎤 Starting OpenAI realtime transcription');
         wordTimestamps.current.clear();
         accumulatedTranscript.current = "";
+        previousTranscriptLength.current = 0; // Reset processed word count
         setWordStates(prevStates =>
           prevStates.map(state => ({
             ...state,
