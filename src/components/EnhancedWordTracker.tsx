@@ -335,37 +335,44 @@ const EnhancedWordTracker = ({
             continue;
           }
 
-          // SKIP DETECTION - ONLY if we have clear evidence of skipping (look ahead 1 word only)
+          // SKIP DETECTION - Only if we have clear evidence (word matches ahead)
           if (!isExactMatch) {
             let foundMatchAhead = false;
             let matchIndex = -1;
             
-            // Look ahead ONLY 1 word to be conservative
-            if ((nextUnspokenIndex + 1) < targetWords.length) {
-              const futureIndex = nextUnspokenIndex + 1;
-              if (isSimilarWord(transcribedWord, targetWords[futureIndex])) {
+            // Look ahead up to 2 words to detect skips
+            for (let lookAhead = 1; lookAhead <= 2; lookAhead++) {
+              const futureIndex = nextUnspokenIndex + lookAhead;
+              if (futureIndex < targetWords.length && isSimilarWord(transcribedWord, targetWords[futureIndex])) {
                 matchIndex = futureIndex;
                 foundMatchAhead = true;
+                break;
               }
             }
             
-            // If found match ahead, mark skipped word as MISSED (RED)
+            // If found match ahead, mark ALL skipped words as MISSED (RED)
             if (foundMatchAhead && matchIndex !== -1) {
-              console.log(`❌ Word "${updatedStates[nextUnspokenIndex].text}" skipped (found "${updatedStates[matchIndex].text}" ahead)`);
+              console.log(`❌ Skip detected: jumping from "${updatedStates[nextUnspokenIndex].text}" to "${updatedStates[matchIndex].text}"`);
               
-              // Mark current word as MISSED
-              updatedStates[nextUnspokenIndex] = {
-                ...updatedStates[nextUnspokenIndex],
-                spoken: false,
-                revealed: true,
-                performanceStatus: 'missed'
-              };
-              wordTimestamps.current.delete(nextUnspokenIndex);
+              // Mark ALL words between current position and match as MISSED (including hidden gap words)
+              for (let skipIdx = nextUnspokenIndex; skipIdx < matchIndex; skipIdx++) {
+                if (!updatedStates[skipIdx].spoken) {
+                  console.log(`  ❌ Marking "${updatedStates[skipIdx].text}" as MISSED (skipped)`);
+                  updatedStates[skipIdx] = {
+                    ...updatedStates[skipIdx],
+                    spoken: false,
+                    revealed: true,
+                    performanceStatus: 'missed'
+                  };
+                  wordTimestamps.current.delete(skipIdx);
+                }
+              }
               
-              // Mark the matched word ahead as CORRECT/HESITATED
+              // Mark the matched word as CORRECT (independent of skipped words)
               const timeAtWord = wordTimestamps.current.get(matchIndex);
               const hesitated = timeAtWord ? (now - timeAtWord) >= 4000 : false;
               
+              console.log(`  ✅ Marking "${updatedStates[matchIndex].text}" as ${hesitated ? 'HESITATED' : 'CORRECT'}`);
               updatedStates[matchIndex] = {
                 ...updatedStates[matchIndex],
                 spoken: true,
