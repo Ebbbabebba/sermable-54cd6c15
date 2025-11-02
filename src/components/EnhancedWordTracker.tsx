@@ -314,7 +314,7 @@ const EnhancedWordTracker = ({
           // EXACT MATCH - color it ONLY after we have FINAL transcript evidence
           if (isExactMatch && !updatedStates[nextUnspokenIndex].spoken) {
             const timeAtWord = wordTimestamps.current.get(nextUnspokenIndex);
-            const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+            const hesitated = timeAtWord ? (now - timeAtWord) >= 4000 : false;
             
             console.log(`✅ Word "${updatedStates[nextUnspokenIndex].text}" confirmed by final transcript`);
             
@@ -364,7 +364,7 @@ const EnhancedWordTracker = ({
               
               // Mark the matched word ahead as CORRECT/HESITATED
               const timeAtWord = wordTimestamps.current.get(matchIndex);
-              const hesitated = timeAtWord ? (now - timeAtWord) >= 3000 : false;
+              const hesitated = timeAtWord ? (now - timeAtWord) >= 4000 : false;
               
               updatedStates[matchIndex] = {
                 ...updatedStates[matchIndex],
@@ -495,6 +495,7 @@ const EnhancedWordTracker = ({
     // AFTER word is fully spoken and confirmed by OpenAI:
     
     // Missed/Skipped - RED (word was skipped based on final transcript)
+    // This applies to hidden words too!
     if (word.performanceStatus === 'missed') {
       return cn(
         base,
@@ -502,11 +503,12 @@ const EnhancedWordTracker = ({
       );
     }
     
-    // Hesitated - YELLOW (took 3+ seconds, confirmed by final transcript)
+    // Hesitated - ORANGE (took 4+ seconds, confirmed by final transcript)
+    // This applies to hidden words too!
     if (word.performanceStatus === 'hesitated') {
       return cn(
         base,
-        "bg-yellow-500 text-white shadow-sm"
+        "bg-orange-500 text-white shadow-sm"
       );
     }
     
@@ -518,7 +520,7 @@ const EnhancedWordTracker = ({
       );
     }
 
-    // In keyword mode, hidden words show as dots
+    // In keyword mode, hidden words show as "..." - can be clicked when not recording
     if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken && !isRecording) {
       return cn(
         base,
@@ -535,8 +537,18 @@ const EnhancedWordTracker = ({
   };
 
   const renderWordContent = (word: WordState) => {
-    if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken && !isRecording) {
-      return "•••";
+    // Show "..." for hidden words (unless they have a performance status during recording)
+    if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken) {
+      // If recording and word has performance status, show the actual word
+      if (isRecording && word.performanceStatus) {
+        return word.text;
+      }
+      // Otherwise show "..."
+      if (!isRecording) {
+        return "...";
+      }
+      // During recording, before any status, show "..."
+      return "...";
     }
     return word.text;
   };
