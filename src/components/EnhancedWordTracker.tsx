@@ -275,8 +275,11 @@ const EnhancedWordTracker = ({
     if (!isRecording) return;
 
     const intervalId = setInterval(() => {
-      const transcript = accumulatedTranscript.current;
+      // Use the transcription prop if available (from Web Speech API), otherwise use OpenAI realtime
+      const transcript = transcription || accumulatedTranscript.current;
       if (!transcript || transcript.trim() === '') return;
+
+      console.log('📝 Processing transcript:', transcript);
 
       const normalizeText = (text: string) => 
         normalizeNordic(text.toLowerCase().replace(/[^\w\s]/g, ''));
@@ -420,7 +423,7 @@ const EnhancedWordTracker = ({
     }, 300); // Process every 300ms - only FINAL transcripts
 
     return () => clearInterval(intervalId);
-  }, [isRecording]);
+  }, [isRecording, transcription]); // Add transcription to dependencies
 
   // Handle recording state changes
   useEffect(() => {
@@ -543,14 +546,17 @@ const EnhancedWordTracker = ({
     );
   };
 
-  const renderWordContent = (word: WordState) => {
-    // In keyword mode, non-keyword words should show as "..."
+  const renderWordContent = (word: WordState, index: number) => {
+    // In keyword mode, check if this is the start of a hidden word group
     if (keywordMode && !word.isKeyword && !word.manuallyRevealed) {
       // If word has performance status (missed/hesitated/correct), show actual word
       if (word.performanceStatus) {
         return word.text;
       }
-      // Otherwise always show "..."
+      
+      // This is a hidden word without status - check if it's the first in a group
+      // If previous word is also hidden, we should have been skipped in render
+      // So if we're here, we're the first in the group - show "..."
       return "...";
     }
     return word.text;
@@ -601,7 +607,7 @@ const EnhancedWordTracker = ({
                 fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
               }}
             >
-              {renderWordContent(word)}
+              {renderWordContent(word, index)}
             </span>
           );
         })}
