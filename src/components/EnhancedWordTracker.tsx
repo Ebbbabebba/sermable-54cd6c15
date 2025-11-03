@@ -64,9 +64,9 @@ const isSimilarWord = (word1: string, word2: string): boolean => {
     if (w1[i] === w2[i]) matches++;
   }
   
-  // Must have 85% character match
+  // Must have 75% character match (more forgiving for speech transcription)
   const similarity = matches / Math.max(w1.length, w2.length);
-  return similarity >= 0.85;
+  return similarity >= 0.75;
 };
 
 const isKeywordWord = (word: string): boolean => {
@@ -226,23 +226,29 @@ const EnhancedWordTracker = ({
             // NO MATCH - check if transcribed word matches ahead in script (skip detection)
             let matchFound = false;
             
-            // Look ahead up to 3 words in script
-            for (let lookAhead = 1; lookAhead <= 3 && scriptPosition + lookAhead < targetWords.length; lookAhead++) {
+            // Look ahead up to 5 words in script for more context
+            for (let lookAhead = 1; lookAhead <= 5 && scriptPosition + lookAhead < targetWords.length; lookAhead++) {
               if (isSimilarWord(transcribedWord, targetWords[scriptPosition + lookAhead])) {
-                // Found match ahead - mark skipped words as MISSED
-                console.log(`❌ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}"`);
-                
-                for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
-                  if (!updatedStates[skipIdx].spoken) {
-                    console.log(`  ❌ "${updatedStates[skipIdx].text}" marked as MISSED`);
-                    updatedStates[skipIdx] = {
-                      ...updatedStates[skipIdx],
-                      spoken: false,
-                      revealed: true,
-                      performanceStatus: 'missed'
-                    };
-                    wordTimestamps.current.delete(skipIdx);
+                // Only mark as skipped if look-ahead is 2+ words (more conservative)
+                // If it's just 1 word ahead, it might be a transcription delay, not a skip
+                if (lookAhead >= 2) {
+                  console.log(`❌ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}"`);
+                  
+                  for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
+                    if (!updatedStates[skipIdx].spoken) {
+                      console.log(`  ❌ "${updatedStates[skipIdx].text}" marked as MISSED`);
+                      updatedStates[skipIdx] = {
+                        ...updatedStates[skipIdx],
+                        spoken: false,
+                        revealed: true,
+                        performanceStatus: 'missed'
+                      };
+                      wordTimestamps.current.delete(skipIdx);
+                    }
                   }
+                } else {
+                  // Just 1 word ahead - might be transcription delay, don't mark as missed
+                  console.log(`⚠️ Possible transcription delay for "${updatedStates[scriptPosition].text}", not marking as missed`);
                 }
                 
                 // Color the matched word
