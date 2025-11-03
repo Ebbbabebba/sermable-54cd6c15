@@ -300,7 +300,7 @@ const EnhancedWordTracker = ({
           isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken
         }));
       });
-    }, 300); // Process every 300ms
+    }, 100); // Process every 100ms for faster real-time response
 
     return () => clearInterval(intervalId);
   }, [isRecording, transcription]);
