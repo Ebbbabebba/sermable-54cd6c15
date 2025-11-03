@@ -300,7 +300,7 @@ const EnhancedWordTracker = ({
           isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken
         }));
       });
-    }, 25); // Process every 25ms for ultra-fast real-time responsiveness
+    }, 10); // Process every 10ms for minimal latency
 
     return () => clearInterval(intervalId);
   }, [isRecording, transcription]);
@@ -370,7 +370,7 @@ const EnhancedWordTracker = ({
   }, [currentWordIndex]);
 
   const getWordClassName = (word: WordState, index: number) => {
-    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-100 ease-out";
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-50 ease-linear";
     
     // Priority order: Current (reading now) > Missed > Hesitated > Correct > Default
     
