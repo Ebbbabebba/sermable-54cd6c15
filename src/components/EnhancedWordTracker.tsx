@@ -37,36 +37,39 @@ const normalizeNordic = (text: string): string => {
     .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž\s]/gi, ''); // Keep spaces!
 };
 
-// EXACT same matching logic as analyze-speech edge function - must be identical
-const isSimilarWord = (word1: string, word2: string): boolean => {
+// Calculate word similarity score (0-1) for pronunciation matching
+const getWordSimilarity = (word1: string, word2: string): number => {
   const w1 = normalizeNordic(word1);
   const w2 = normalizeNordic(word2);
   
   // Exact match
-  if (w1 === w2) return true;
+  if (w1 === w2) return 1.0;
   
   // Very short words must match exactly (2 chars or less)
   if (w1.length <= 2 || w2.length <= 2) {
-    return w1 === w2;
+    return w1 === w2 ? 1.0 : 0.0;
   }
   
   // Prefix matching for truncated words - minimum 80% length match
   const maxLen = Math.max(w1.length, w2.length);
   const minLen = Math.min(w1.length, w2.length);
   if (minLen / maxLen >= 0.8) {
-    if (w1.startsWith(w2) || w2.startsWith(w1)) return true;
+    if (w1.startsWith(w2) || w2.startsWith(w1)) return 0.9;
   }
   
-  // Character-by-character similarity with strict threshold
+  // Character-by-character similarity
   let matches = 0;
   const compareLength = Math.min(w1.length, w2.length);
   for (let i = 0; i < compareLength; i++) {
     if (w1[i] === w2[i]) matches++;
   }
   
-  // Must have 65% character match (very forgiving for pronunciation variations)
-  const similarity = matches / Math.max(w1.length, w2.length);
-  return similarity >= 0.65;
+  return matches / Math.max(w1.length, w2.length);
+};
+
+// Check if words are similar enough to be considered a match
+const isSimilarWord = (word1: string, word2: string): boolean => {
+  return getWordSimilarity(word1, word2) >= 0.50; // 50% threshold for any match
 };
 
 const isKeywordWord = (word: string): boolean => {
@@ -201,19 +204,31 @@ const EnhancedWordTracker = ({
           const targetWord = targetWords[scriptPosition];
           
           // Check if current words match
-          if (isSimilarWord(transcribedWord, targetWord)) {
-            // MATCH - color it green/orange based on timing
+          const similarity = getWordSimilarity(transcribedWord, targetWord);
+          
+          if (similarity >= 0.50) {
+            // MATCH - determine performance status based on similarity and timing
             const timeAtWord = wordTimestamps.current.get(scriptPosition);
-            const hesitated = timeAtWord ? (now - timeAtWord) >= 4000 : false;
+            const tookTooLong = timeAtWord ? (now - timeAtWord) >= 4000 : false;
             
-            console.log(`✅ "${updatedStates[scriptPosition].text}" spoken ${hesitated ? 'with hesitation' : 'correctly'}`);
+            let performanceStatus: 'correct' | 'hesitated' | 'missed';
+            
+            // Pronunciation quality check (65% threshold for "correct")
+            if (similarity >= 0.65) {
+              performanceStatus = tookTooLong ? 'hesitated' : 'correct';
+              console.log(`✅ "${updatedStates[scriptPosition].text}" spoken ${tookTooLong ? 'with timing hesitation' : 'correctly'}`);
+            } else {
+              // Minor pronunciation issue (50-65% similarity) - soft feedback
+              performanceStatus = 'hesitated';
+              console.log(`⚠️ "${updatedStates[scriptPosition].text}" spoken with minor pronunciation variation (${Math.round(similarity * 100)}% match)`);
+            }
             
             updatedStates[scriptPosition] = {
               ...updatedStates[scriptPosition],
               spoken: true,
               revealed: true,
               isCurrent: false,
-              performanceStatus: hesitated ? 'hesitated' : 'correct'
+              performanceStatus
             };
             
             wordTimestamps.current.delete(scriptPosition);
@@ -226,35 +241,49 @@ const EnhancedWordTracker = ({
             // NO MATCH - check if transcribed word matches ahead in script (skip detection)
             let matchFound = false;
             
-            // Look ahead up to 5 words in script - STRICT skip detection
+            // Look ahead up to 5 words in script - only mark as MISSED if 2+ words skipped
             for (let lookAhead = 1; lookAhead <= 5 && scriptPosition + lookAhead < targetWords.length; lookAhead++) {
-              if (isSimilarWord(transcribedWord, targetWords[scriptPosition + lookAhead])) {
-                // STRICT: Mark ALL skipped words as MISSED (even 1 word ahead)
-                console.log(`❌ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}"`);
-                
-                for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
-                  if (!updatedStates[skipIdx].spoken) {
-                    console.log(`  ❌ "${updatedStates[skipIdx].text}" marked as MISSED`);
-                    updatedStates[skipIdx] = {
-                      ...updatedStates[skipIdx],
-                      spoken: false,
-                      revealed: true,
-                      performanceStatus: 'missed'
-                    };
-                    wordTimestamps.current.delete(skipIdx);
+              const similarity = getWordSimilarity(transcribedWord, targetWords[scriptPosition + lookAhead]);
+              
+              if (similarity >= 0.50) {
+                // Mark skipped words as MISSED only if 2+ words were skipped
+                if (lookAhead >= 2) {
+                  console.log(`❌ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}" (${lookAhead} words skipped)`);
+                  
+                  for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
+                    if (!updatedStates[skipIdx].spoken) {
+                      console.log(`  ❌ "${updatedStates[skipIdx].text}" marked as MISSED`);
+                      updatedStates[skipIdx] = {
+                        ...updatedStates[skipIdx],
+                        spoken: false,
+                        revealed: true,
+                        performanceStatus: 'missed'
+                      };
+                      wordTimestamps.current.delete(skipIdx);
+                    }
                   }
+                } else {
+                  // Just 1 word ahead - might be transcription timing, don't mark as missed
+                  console.log(`⚠️ Jumped 1 word ahead (possible transcription timing), not marking as missed`);
                 }
                 
-                // Color the matched word
+                // Color the matched word based on pronunciation quality
                 const timeAtWord = wordTimestamps.current.get(scriptPosition + lookAhead);
-                const hesitated = timeAtWord ? (now - timeAtWord) >= 4000 : false;
+                const tookTooLong = timeAtWord ? (now - timeAtWord) >= 4000 : false;
+                
+                let performanceStatus: 'correct' | 'hesitated' | 'missed';
+                if (similarity >= 0.65) {
+                  performanceStatus = tookTooLong ? 'hesitated' : 'correct';
+                } else {
+                  performanceStatus = 'hesitated'; // Minor pronunciation issue
+                }
                 
                 updatedStates[scriptPosition + lookAhead] = {
                   ...updatedStates[scriptPosition + lookAhead],
                   spoken: true,
                   revealed: true,
                   isCurrent: false,
-                  performanceStatus: hesitated ? 'hesitated' : 'correct'
+                  performanceStatus
                 };
                 
                 wordTimestamps.current.delete(scriptPosition + lookAhead);
