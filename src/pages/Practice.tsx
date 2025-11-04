@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
@@ -366,10 +366,14 @@ const Practice = () => {
       <LoadingOverlay isVisible={isProcessing} />
       
       <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/presentation/${id}`)}>
+            <Presentation className="h-4 w-4 mr-2" />
+            Enter Presentation Mode
           </Button>
         </div>
       </header>
