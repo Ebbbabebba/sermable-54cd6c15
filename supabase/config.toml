@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.realtime-transcribe]
 verify_jwt = true
+
+[functions.analyze-presentation]
+verify_jwt = true
+
+[functions.whisper-stream]
+verify_jwt = true

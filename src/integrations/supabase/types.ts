@@ -76,6 +76,56 @@ export type Database = {
           },
         ]
       }
+      presentation_sessions: {
+        Row: {
+          accuracy: number | null
+          created_at: string | null
+          duration_seconds: number | null
+          feedback_advice: string | null
+          feedback_next_step: string | null
+          feedback_summary: string | null
+          hesitations: number | null
+          id: string
+          missed_words: string[] | null
+          speech_id: string
+          transcript: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          feedback_advice?: string | null
+          feedback_next_step?: string | null
+          feedback_summary?: string | null
+          hesitations?: number | null
+          id?: string
+          missed_words?: string[] | null
+          speech_id: string
+          transcript?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          feedback_advice?: string | null
+          feedback_next_step?: string | null
+          feedback_summary?: string | null
+          hesitations?: number | null
+          id?: string
+          missed_words?: string[] | null
+          speech_id?: string
+          transcript?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presentation_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
