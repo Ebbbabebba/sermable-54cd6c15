@@ -3,8 +3,9 @@ import './SpeechTrainingLine.css';
 
 interface WordStatus {
   text: string;
-  status: 'gray' | 'yellow' | 'red' | 'pending';
+  status: 'gray' | 'red';
   pulse?: boolean;
+  delay?: number;
 }
 
 interface SpeechTrainingLineProps {
@@ -16,7 +17,7 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
   const [words, setWords] = useState<WordStatus[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const expectedWords = expectedText.trim().split(/\s+/);
-  const lastInterimWordRef = useRef<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     setWords(expectedWords.map((w) => ({ text: w, status: 'gray' })));
@@ -26,10 +27,8 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      if (data.type === 'transcription_interim') {
-        lastInterimWordRef.current = data.words[data.words.length - 1];
-        handleInterimUpdate();
-      }
+      
+      // Only process final transcriptions
       if (data.type === 'transcription_final') {
         handleFinalTranscription(data.words);
       }
@@ -46,45 +45,61 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
     };
   }, [expectedText, websocketUrl]);
 
-  const handleInterimUpdate = () => {
-    setWords((prev) => {
-      return prev.map((word) => {
-        if (word.status === 'pending') {
-          return { ...word, status: 'gray' };
-        }
-        return word;
-      });
-    });
-  };
-
   const handleFinalTranscription = (spokenWords: string[]) => {
+    setIsProcessing(true);
     const updated = diffWords(spokenWords, expectedWords);
-    setWords(updated);
+    
+    // Apply words with delays for red highlighting
+    setWords(updated.map(w => ({ ...w, status: 'gray' }))); // Start all as gray
+    
+    // Then apply red highlights with delays
+    updated.forEach((word, index) => {
+      if (word.status === 'red') {
+        const delay = word.delay || 0;
+        setTimeout(() => {
+          setWords(prev => prev.map((w, i) => 
+            i === index ? { ...w, status: 'red', pulse: true } : w
+          ));
+        }, delay);
+      }
+    });
+    
+    setTimeout(() => setIsProcessing(false), 1000);
   };
 
   const diffWords = (spoken: string[], expected: string[]): WordStatus[] => {
     const newWords: WordStatus[] = [];
     let spokenIndex = 0;
+    let redWordCount = 0;
 
-    expected.forEach((exp, i) => {
+    expected.forEach((exp) => {
       const spokenWord = spoken[spokenIndex];
 
+      // Word not spoken - mark as red with delay
       if (!spokenWord) {
-        newWords.push({ text: exp, status: 'red', pulse: true });
+        newWords.push({ 
+          text: exp, 
+          status: 'red', 
+          pulse: true,
+          delay: 600 + (redWordCount * 150) // Staggered delay
+        });
+        redWordCount++;
         return;
       }
 
-      if (isCorrectWord(spokenWord, exp)) {
-        newWords.push({ text: exp, status: 'gray', pulse: false });
+      // Exact match or almost correct - stay gray
+      if (isCorrectWord(spokenWord, exp) || isAlmostWord(spokenWord, exp)) {
+        newWords.push({ text: exp, status: 'gray' });
         spokenIndex++;
-      } else if (isAlmostWord(spokenWord, exp)) {
-        newWords.push({ text: exp, status: 'yellow', pulse: false });
-        spokenIndex++;
-        setTimeout(() => {
-          setWords((prev) => prev.map((w, idx) => (idx === i ? { ...w, status: 'gray' } : w)));
-        }, 900);
       } else {
-        newWords.push({ text: exp, status: 'red', pulse: true });
+        // Incorrect word - mark as red with delay
+        newWords.push({ 
+          text: exp, 
+          status: 'red', 
+          pulse: true,
+          delay: 600 + (redWordCount * 150) // Staggered delay
+        });
+        redWordCount++;
         spokenIndex++;
       }
     });
