@@ -24,16 +24,16 @@ serve(async (req) => {
     const spokenSet = new Set(spokenWords);
     
     // Find missed words
-    const missedWords = originalWords.filter(word => !spokenSet.has(word));
+    const missedWords = originalWords.filter((word: string) => !spokenSet.has(word));
     
     // Calculate accuracy
-    const matchedWords = originalWords.filter(word => spokenSet.has(word)).length;
+    const matchedWords = originalWords.filter((word: string) => spokenSet.has(word)).length;
     const accuracy = (matchedWords / originalWords.length) * 100;
     
     // Detect hesitations (filler words and repeated words)
     const fillerWords = ['um', 'uh', 'like', 'you know', 'actually', 'basically', 'so'];
     let hesitations = 0;
-    spokenWords.forEach(word => {
+    spokenWords.forEach((word: string) => {
       if (fillerWords.includes(word)) hesitations++;
     });
     
@@ -130,8 +130,9 @@ Format your response as JSON:
 
   } catch (error) {
     console.error('Error in analyze-presentation:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

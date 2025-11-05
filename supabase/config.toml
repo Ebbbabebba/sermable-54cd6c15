@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.whisper-stream]
 verify_jwt = true
+
+[functions.realtime-speech-training]
+verify_jwt = false
