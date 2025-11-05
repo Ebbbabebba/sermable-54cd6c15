@@ -18,6 +18,7 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
   const wsRef = useRef<WebSocket | null>(null);
   const expectedWords = expectedText.trim().split(/\s+/);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
 
   useEffect(() => {
     setWords(expectedWords.map((w) => ({ text: w, status: 'gray' })));
@@ -28,7 +29,12 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       
-      // Only process final transcriptions
+      // Handle interim transcriptions for word progression
+      if (data.type === 'transcription_interim') {
+        handleInterimTranscription(data.words);
+      }
+      
+      // Process final transcriptions for error highlighting
       if (data.type === 'transcription_final') {
         handleFinalTranscription(data.words);
       }
@@ -45,26 +51,31 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
     };
   }, [expectedText, websocketUrl]);
 
+  const handleInterimTranscription = (spokenWords: string[]) => {
+    // Update word progression in real-time - all stay gray
+    const spokenCount = spokenWords.length;
+    setCurrentWordIndex(Math.min(spokenCount, expectedWords.length));
+  };
+
   const handleFinalTranscription = (spokenWords: string[]) => {
     setIsProcessing(true);
     const updated = diffWords(spokenWords, expectedWords);
     
-    // Apply words with delays for red highlighting
-    setWords(updated.map(w => ({ ...w, status: 'gray' }))); // Start all as gray
+    // Reset all words to gray first
+    setWords(expectedWords.map(w => ({ text: w, status: 'gray' })));
     
-    // Then apply red highlights with delays
+    // Apply red highlights with staggered delays
     updated.forEach((word, index) => {
-      if (word.status === 'red') {
-        const delay = word.delay || 0;
+      if (word.status === 'red' && word.delay !== undefined) {
         setTimeout(() => {
           setWords(prev => prev.map((w, i) => 
-            i === index ? { ...w, status: 'red', pulse: true } : w
+            i === index ? { text: word.text, status: 'red', pulse: true } : w
           ));
-        }, delay);
+        }, word.delay);
       }
     });
     
-    setTimeout(() => setIsProcessing(false), 1000);
+    setTimeout(() => setIsProcessing(false), 1200);
   };
 
   const diffWords = (spoken: string[], expected: string[]): WordStatus[] => {
@@ -133,11 +144,21 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
 
   return (
     <div className="speech-line">
-      {words.map((w, i) => (
-        <span key={i} className={`word-block word-${w.status} ${w.pulse ? 'pulse' : ''}`}>
-          {w.text}
-        </span>
-      ))}
+      {words.map((w, i) => {
+        const isCurrentWord = i === currentWordIndex && !isProcessing;
+        const isPastWord = i < currentWordIndex;
+        
+        return (
+          <span
+            key={i}
+            className={`word-block word-${w.status} ${w.pulse ? 'pulse' : ''} ${
+              isCurrentWord ? 'current-word' : ''
+            } ${isPastWord ? 'past-word' : ''}`}
+          >
+            {w.text}
+          </span>
+        );
+      })}
     </div>
   );
 }
