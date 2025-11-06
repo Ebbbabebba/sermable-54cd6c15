@@ -33,29 +33,30 @@
 .current-word {
   opacity: 1;
   position: relative;
+  background-color: hsl(var(--primary) / 0.15);
+  color: hsl(var(--primary));
+  font-weight: 600;
+  transform: scale(1.05);
+  animation: vibrate 0.3s ease-in-out infinite;
 }
 
-/* Blinking cursor under the current word */
-.current-word::after {
-  content: "";
-  position: absolute;
-  bottom: 0.1em; /* aligns with text baseline */
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: hsl(var(--primary));
-  animation: cursor-blink 1s ease-in-out infinite;
+/* Vibration animation for current word */
+@keyframes vibrate {
+  0%, 100% {
+    transform: scale(1.05) translateX(0);
+  }
+  25% {
+    transform: scale(1.05) translateX(-1px);
+  }
+  75% {
+    transform: scale(1.05) translateX(1px);
+  }
 }
 
-/* Cursor blink animation */
-@keyframes cursor-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
+/* Almost correct words */
+.word-yellow {
+  background-color: hsl(45 93% 47% / 0.9);
+  color: hsl(0 0% 100%);
 }
 
 /* Incorrect or skipped words */

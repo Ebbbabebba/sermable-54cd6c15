@@ -3,7 +3,7 @@ import './SpeechTrainingLine.css';
 
 interface WordStatus {
   text: string;
-  status: 'gray' | 'red';
+  status: 'gray' | 'red' | 'yellow';
   pulse?: boolean;
   delay?: number;
 }
@@ -64,12 +64,12 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
     // Reset all words to gray first
     setWords(expectedWords.map(w => ({ text: w, status: 'gray' })));
     
-    // Apply red highlights with staggered delays
+    // Apply red and yellow highlights with staggered delays
     updated.forEach((word, index) => {
-      if (word.status === 'red' && word.delay !== undefined) {
+      if ((word.status === 'red' || word.status === 'yellow') && word.delay !== undefined) {
         setTimeout(() => {
           setWords(prev => prev.map((w, i) => 
-            i === index ? { text: word.text, status: 'red', pulse: true } : w
+            i === index ? { text: word.text, status: word.status, pulse: true } : w
           ));
         }, word.delay);
       }
@@ -98,9 +98,19 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
         return;
       }
 
-      // Exact match or almost correct - stay gray
-      if (isCorrectWord(spokenWord, exp) || isAlmostWord(spokenWord, exp)) {
+      // Exact match - stay gray
+      if (isCorrectWord(spokenWord, exp)) {
         newWords.push({ text: exp, status: 'gray' });
+        spokenIndex++;
+      } else if (isAlmostWord(spokenWord, exp)) {
+        // Almost correct - mark as yellow with delay
+        newWords.push({ 
+          text: exp, 
+          status: 'yellow', 
+          pulse: true,
+          delay: 600 + (redWordCount * 150)
+        });
+        redWordCount++;
         spokenIndex++;
       } else {
         // Incorrect word - mark as red with delay
