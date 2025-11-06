@@ -24,10 +24,9 @@ export default function SpeechTrainingLine({
   const [words, setWords] = useState<WordStatus[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const expectedWords = expectedText.trim().split(/\s+/);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const lastWordTimeRef = useRef<number>(Date.now());
-  const wordTimingsRef = useRef<number[]>([]);
+  const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setWords(expectedWords.map((w) => ({ text: w, status: 'gray' })));
@@ -53,119 +52,84 @@ export default function SpeechTrainingLine({
       console.error('WebSocket error:', error);
     };
 
+    // Start hesitation timer for first word
+    const threshold = firstWordHesitationThreshold;
+    hesitationTimerRef.current = setTimeout(() => {
+      setWords(prev => prev.map((w, i) => 
+        i === 0 ? { ...w, status: 'yellow', pulse: true } : w
+      ));
+    }, threshold * 1000);
+
     return () => {
+      if (hesitationTimerRef.current) {
+        clearTimeout(hesitationTimerRef.current);
+      }
       if (ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
     };
-  }, [expectedText, websocketUrl]);
+  }, [expectedText, websocketUrl, firstWordHesitationThreshold]);
 
   const handleInterimTranscription = (spokenWords: string[]) => {
-    // Update word progression in real-time - all stay gray
     const spokenCount = spokenWords.length;
     const newIndex = Math.min(spokenCount, expectedWords.length);
     
-    // Track timing when moving to a new word
+    // Moving to a new word
     if (newIndex > currentWordIndex) {
-      const now = Date.now();
-      const timeSinceLastWord = (now - lastWordTimeRef.current) / 1000;
-      wordTimingsRef.current.push(timeSinceLastWord);
-      lastWordTimeRef.current = now;
+      // Clear hesitation timer
+      if (hesitationTimerRef.current) {
+        clearTimeout(hesitationTimerRef.current);
+        hesitationTimerRef.current = null;
+      }
+      
+      // Check if previous word was correct
+      if (currentWordIndex < expectedWords.length && spokenWords[currentWordIndex]) {
+        const spokenWord = spokenWords[currentWordIndex];
+        const expectedWord = expectedWords[currentWordIndex];
+        
+        if (!isCorrectWord(spokenWord, expectedWord)) {
+          // Mark as red immediately
+          setWords(prev => prev.map((w, i) => 
+            i === currentWordIndex ? { ...w, status: 'red', pulse: true } : w
+          ));
+        }
+      }
+      
+      setCurrentWordIndex(newIndex);
+      lastWordTimeRef.current = Date.now();
+      
+      // Start hesitation timer for new word
+      if (newIndex < expectedWords.length) {
+        const threshold = newIndex === 0 ? firstWordHesitationThreshold : hesitationThreshold;
+        hesitationTimerRef.current = setTimeout(() => {
+          setWords(prev => prev.map((w, i) => 
+            i === newIndex ? { ...w, status: 'yellow', pulse: true } : w
+          ));
+        }, threshold * 1000);
+      }
     }
-    
-    setCurrentWordIndex(newIndex);
   };
 
   const handleFinalTranscription = (spokenWords: string[]) => {
-    setIsProcessing(true);
-    const updated = diffWords(spokenWords, expectedWords);
+    // Clear any pending hesitation timer
+    if (hesitationTimerRef.current) {
+      clearTimeout(hesitationTimerRef.current);
+      hesitationTimerRef.current = null;
+    }
     
-    // Reset all words to gray first
-    setWords(expectedWords.map(w => ({ text: w, status: 'gray' })));
-    
-    // Apply red and yellow highlights with staggered delays
-    updated.forEach((word, index) => {
-      if ((word.status === 'red' || word.status === 'yellow') && word.delay !== undefined) {
-        setTimeout(() => {
-          setWords(prev => prev.map((w, i) => 
-            i === index ? { text: word.text, status: word.status, pulse: true } : w
-          ));
-        }, word.delay);
+    // Mark any remaining unspoken words as red
+    setWords(prev => prev.map((w, i) => {
+      if (i >= spokenWords.length) {
+        return { ...w, status: 'red', pulse: true };
       }
-    });
+      return w;
+    }));
     
-    // Reset timing trackers
+    // Reset for next session
+    setCurrentWordIndex(0);
     lastWordTimeRef.current = Date.now();
-    wordTimingsRef.current = [];
-    
-    setTimeout(() => setIsProcessing(false), 1200);
   };
 
-  const diffWords = (spoken: string[], expected: string[]): WordStatus[] => {
-    const newWords: WordStatus[] = [];
-    let spokenIndex = 0;
-    let redWordCount = 0;
-
-    expected.forEach((exp, expectedIndex) => {
-      const spokenWord = spoken[spokenIndex];
-      const wordTiming = wordTimingsRef.current[expectedIndex];
-
-      // Check if user hesitated too long
-      const threshold = expectedIndex === 0 ? firstWordHesitationThreshold : hesitationThreshold;
-      const hesitated = wordTiming !== undefined && wordTiming > threshold;
-
-      // Word not spoken - mark as red with delay
-      if (!spokenWord) {
-        newWords.push({ 
-          text: exp, 
-          status: 'red', 
-          pulse: true,
-          delay: 600 + (redWordCount * 150)
-        });
-        redWordCount++;
-        return;
-      }
-
-      // Exact match
-      if (isCorrectWord(spokenWord, exp)) {
-        // Check if hesitated
-        if (hesitated) {
-          newWords.push({ 
-            text: exp, 
-            status: 'yellow', 
-            pulse: true,
-            delay: 600 + (redWordCount * 150)
-          });
-          redWordCount++;
-        } else {
-          newWords.push({ text: exp, status: 'gray' });
-        }
-        spokenIndex++;
-      } else if (isAlmostWord(spokenWord, exp)) {
-        // Almost correct - mark as yellow with delay
-        newWords.push({ 
-          text: exp, 
-          status: 'yellow', 
-          pulse: true,
-          delay: 600 + (redWordCount * 150)
-        });
-        redWordCount++;
-        spokenIndex++;
-      } else {
-        // Incorrect word - mark as red with delay
-        newWords.push({ 
-          text: exp, 
-          status: 'red', 
-          pulse: true,
-          delay: 600 + (redWordCount * 150)
-        });
-        redWordCount++;
-        spokenIndex++;
-      }
-    });
-
-    return newWords;
-  };
 
   const isCorrectWord = (spoken: string, expected: string): boolean => 
     spoken.toLowerCase() === expected.toLowerCase();
@@ -194,13 +158,13 @@ export default function SpeechTrainingLine({
   return (
     <div className="speech-line">
       {words.map((w, i) => {
-        const isCurrentWord = i === currentWordIndex && !isProcessing;
+        const isCurrentWord = i === currentWordIndex;
         const isPastWord = i < currentWordIndex;
         
         return (
           <span
             key={i}
-            className={`word-block word-${w.status} ${w.pulse ? 'pulse' : ''} ${
+            className={`word-block word-${w.status} ${
               isCurrentWord ? 'current-word' : ''
             } ${isPastWord ? 'past-word' : ''}`}
           >
