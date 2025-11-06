@@ -29,40 +29,40 @@
   opacity: 1;
 }
 
-/* Current word being spoken */
+/* Current word being spoken - position indicator like Duolingo */
 .current-word {
   opacity: 1;
   position: relative;
-  background-color: hsl(var(--primary) / 0.15);
-  color: hsl(var(--primary));
+  color: hsl(var(--foreground));
   font-weight: 600;
-  transform: scale(1.05);
+  border-bottom: 3px solid hsl(var(--primary));
   animation: vibrate 0.3s ease-in-out infinite;
 }
 
-/* Vibration animation for current word */
+/* Gentle pulse animation for current word - just to indicate position */
 @keyframes vibrate {
   0%, 100% {
-    transform: scale(1.05) translateX(0);
+    transform: translateY(0);
   }
-  25% {
-    transform: scale(1.05) translateX(-1px);
-  }
-  75% {
-    transform: scale(1.05) translateX(1px);
+  50% {
+    transform: translateY(-2px);
   }
 }
 
-/* Almost correct words */
+/* Hesitated words - like Duolingo's warning color */
 .word-yellow {
-  background-color: hsl(45 93% 47% / 0.9);
-  color: hsl(0 0% 100%);
+  background-color: hsl(45 100% 51% / 0.3);
+  color: hsl(var(--foreground));
+  border-bottom: 2px solid hsl(45 100% 51%);
+  font-weight: 600;
 }
 
-/* Incorrect or skipped words */
+/* Incorrect or skipped words - like Duolingo's error color */
 .word-red {
-  background-color: hsl(0 84% 60%);
-  color: hsl(0 0% 100%);
+  background-color: hsl(0 84% 60% / 0.3);
+  color: hsl(var(--foreground));
+  border-bottom: 2px solid hsl(0 84% 60%);
+  font-weight: 600;
 }
 
 /* Pulse animation for red errors */
