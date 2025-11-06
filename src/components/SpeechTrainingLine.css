@@ -3,86 +3,12 @@
 </div>
 
 <style>
-/* Container for the line of words */
-.speech-line {
-  line-height: 2;
-  font-size: 1.125rem;
-  font-family: sans-serif;
-}
-
-/* Individual word blocks */
-.word-block {
-  display: inline-block;
-  margin: 0 4px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition:
-    background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s ease;
-}
-
-/* Default gray word */
-.word-gray {
-  color: hsl(var(--muted-foreground));
-  background-color: transparent;
-}
-
-/* Words that have been spoken - faded like Duolingo */
-.past-word {
-  opacity: 0.4;
-  transition: opacity 0.5s ease;
-}
-
-/* Current word being spoken - pulse like Duolingo */
-.current-word {
-  opacity: 1;
-  position: relative;
-  color: hsl(var(--foreground));
-  font-weight: 600;
-  animation: pulse 1s ease-in-out infinite;
-}
-
-/* Pulse animation for current word - scale up and down */
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-}
-
-/* Hesitated words - yellow underline */
-.word-yellow {
-  background-color: hsl(45 100% 51% / 0.3);
-  color: hsl(var(--foreground));
-  border-bottom: 2px solid hsl(45 100% 51%);
-  font-weight: 600;
-}
-
-/* Incorrect words - red underline */
-.word-red {
-  background-color: hsl(0 84% 60% / 0.3);
-  color: hsl(var(--foreground));
-  border-bottom: 2px solid hsl(0 84% 60%);
-  font-weight: 600;
-}
-
-/* Pulse animation for red errors */
-@keyframes pulse-animation {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-.pulse {
-  animation: pulse-animation 0.5s ease-in-out;
-  animation-fill-mode: forwards;
-}
-
-/* CSS variables for colors */
-:root {
-  --primary: 220 90% 56%;
-  --muted-foreground: 210 10% 50%;
-  --foreground: 210 20% 20%;
-}
+.word-block { display: inline-block; margin: 0 4px; padding: 4px 8px; border-radius: 6px; transition: color 0.5s, opacity 0.5s; color: gray; }
+.current-word { animation: pulse 1s ease-in-out infinite; font-weight: 600; }
+.past-word { opacity: 0.4; }
+.word-yellow { border-bottom: 2px solid orange; font-weight: 600; }
+.word-red { border-bottom: 2px solid red; font-weight: 600; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 </style>
 
 <script>
@@ -91,65 +17,58 @@ class WordFeedback {
     this.container = document.getElementById(containerId);
     this.words = [];
     this.currentIndex = 0;
-
     this.initWords();
     this.startCurrentWord();
   }
 
-  // Split sentence into individual word spans
   initWords() {
     const text = this.container.textContent.trim();
     const split = text.split(/\s+/);
     this.container.textContent = '';
-
-    split.forEach((word, index) => {
+    split.forEach((word, i) => {
       const span = document.createElement('span');
       span.textContent = word;
-      span.classList.add('word-block', 'word-gray');
+      span.classList.add('word-block');
       this.container.appendChild(span);
       this.words.push({ element: span, word: word });
-
-      if (index < split.length - 1) this.container.appendChild(document.createTextNode(' '));
+      if (i < split.length - 1) this.container.appendChild(document.createTextNode(' '));
     });
   }
 
-  // Start pulsing current word and set hesitation timer
   startCurrentWord() {
     if (this.currentIndex >= this.words.length) return;
     const current = this.words[this.currentIndex];
     current.element.classList.add('current-word');
 
-    const delay = this.currentIndex === 0 ? 4000 : 2000; // pause delay
+    // Delay for hesitation detection
     current.waitTimer = setTimeout(() => {
-      current.element.classList.add('word-yellow'); // mark hesitation
-    }, delay);
+      current.element.classList.add('word-yellow'); // only add yellow if paused
+    }, 2000);
   }
 
-  // Call when user says a word; correct=true/false
   userSaidWord(correct) {
     if (this.currentIndex >= this.words.length) return;
-
     const current = this.words[this.currentIndex];
     clearTimeout(current.waitTimer);
     current.element.classList.remove('current-word');
-    current.element.classList.add('past-word'); // fade gray
 
-    if (!correct) {
-      current.element.classList.add('word-red'); // mark wrong
-    }
+    // Fade correct words
+    current.element.classList.add('past-word');
+
+    // Only add red if really incorrect
+    if (!correct) current.element.classList.add('word-red');
 
     this.currentIndex++;
     this.startCurrentWord();
   }
 }
 
-// Initialize tracker for the line
+// Initialize
 const tracker = new WordFeedback('speech-line');
 
-// Example simulation (replace with your live transcription)
+// Example simulation
 setTimeout(() => tracker.userSaidWord(true), 1500);
 setTimeout(() => tracker.userSaidWord(true), 3000);
 setTimeout(() => tracker.userSaidWord(false), 4500);
 setTimeout(() => tracker.userSaidWord(true), 6000);
-setTimeout(() => tracker.userSaidWord(true), 7500);
 </script>
