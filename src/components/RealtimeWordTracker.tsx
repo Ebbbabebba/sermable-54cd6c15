@@ -14,6 +14,7 @@ const RealtimeWordTracker = ({
   onTranscriptUpdate,
   className 
 }: RealtimeWordTrackerProps) => {
+
   const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
   const [currentWord, setCurrentWord] = useState<string>("");
   const recognitionRef = useRef<any>(null);
@@ -38,24 +39,18 @@ const RealtimeWordTracker = ({
         transcript += event.results[i][0].transcript;
       }
       
-      if (onTranscriptUpdate) {
-        onTranscriptUpdate(transcript);
-      }
+      if (onTranscriptUpdate) onTranscriptUpdate(transcript);
 
-      // Extract words and mark as spoken
       const transcriptWords = transcript.toLowerCase().split(/\s+/);
       const newSpokenWords = new Set(spokenWords);
       
       transcriptWords.forEach(word => {
         const cleanWord = word.replace(/[^\w]/g, '');
-        if (cleanWord) {
-          newSpokenWords.add(cleanWord);
-        }
+        if (cleanWord) newSpokenWords.add(cleanWord);
       });
-      
+
       setSpokenWords(newSpokenWords);
-      
-      // Track current word being spoken
+
       if (transcriptWords.length > 0) {
         setCurrentWord(transcriptWords[transcriptWords.length - 1].replace(/[^\w]/g, ''));
       }
@@ -68,9 +63,7 @@ const RealtimeWordTracker = ({
     recognitionRef.current = recognition;
 
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
+      if (recognitionRef.current) recognitionRef.current.stop();
     };
   }, []);
 
@@ -86,18 +79,21 @@ const RealtimeWordTracker = ({
 
   const getWordStyle = (word: string) => {
     const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
-    
+
     if (!cleanWord) return "text-foreground/80";
-    
+
+    // CURRENT word (pulse)
     if (currentWord === cleanWord) {
-      return "bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 font-medium scale-105";
+      return "animate-pulse text-gray-900 dark:text-gray-200 font-semibold";
     }
-    
+
+    // SPOKEN = PAST = fade gray
     if (spokenWords.has(cleanWord)) {
-      return "bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-300 font-medium";
+      return "opacity-40 text-gray-500 dark:text-gray-400";
     }
-    
-    return "text-foreground/60";
+
+    // NOT YET
+    return "text-gray-700 dark:text-gray-300";
   };
 
   return (
