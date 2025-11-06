@@ -52,6 +52,8 @@ const Practice = () => {
     showWordOnPause: true,
     animationStyle: 'playful',
     keywordMode: false,
+    hesitationThreshold: 2,
+    firstWordHesitationThreshold: 4,
   });
   const [liveTranscription, setLiveTranscription] = useState("");
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);

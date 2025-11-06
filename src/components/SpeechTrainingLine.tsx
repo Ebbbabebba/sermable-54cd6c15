@@ -11,14 +11,23 @@ interface WordStatus {
 interface SpeechTrainingLineProps {
   expectedText: string;
   websocketUrl: string;
+  hesitationThreshold?: number; // seconds
+  firstWordHesitationThreshold?: number; // seconds
 }
 
-export default function SpeechTrainingLine({ expectedText, websocketUrl }: SpeechTrainingLineProps) {
+export default function SpeechTrainingLine({ 
+  expectedText, 
+  websocketUrl,
+  hesitationThreshold = 2,
+  firstWordHesitationThreshold = 4
+}: SpeechTrainingLineProps) {
   const [words, setWords] = useState<WordStatus[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const expectedWords = expectedText.trim().split(/\s+/);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const lastWordTimeRef = useRef<number>(Date.now());
+  const wordTimingsRef = useRef<number[]>([]);
 
   useEffect(() => {
     setWords(expectedWords.map((w) => ({ text: w, status: 'gray' })));
@@ -54,7 +63,17 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
   const handleInterimTranscription = (spokenWords: string[]) => {
     // Update word progression in real-time - all stay gray
     const spokenCount = spokenWords.length;
-    setCurrentWordIndex(Math.min(spokenCount, expectedWords.length));
+    const newIndex = Math.min(spokenCount, expectedWords.length);
+    
+    // Track timing when moving to a new word
+    if (newIndex > currentWordIndex) {
+      const now = Date.now();
+      const timeSinceLastWord = (now - lastWordTimeRef.current) / 1000;
+      wordTimingsRef.current.push(timeSinceLastWord);
+      lastWordTimeRef.current = now;
+    }
+    
+    setCurrentWordIndex(newIndex);
   };
 
   const handleFinalTranscription = (spokenWords: string[]) => {
@@ -75,6 +94,10 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
       }
     });
     
+    // Reset timing trackers
+    lastWordTimeRef.current = Date.now();
+    wordTimingsRef.current = [];
+    
     setTimeout(() => setIsProcessing(false), 1200);
   };
 
@@ -83,8 +106,13 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
     let spokenIndex = 0;
     let redWordCount = 0;
 
-    expected.forEach((exp) => {
+    expected.forEach((exp, expectedIndex) => {
       const spokenWord = spoken[spokenIndex];
+      const wordTiming = wordTimingsRef.current[expectedIndex];
+
+      // Check if user hesitated too long
+      const threshold = expectedIndex === 0 ? firstWordHesitationThreshold : hesitationThreshold;
+      const hesitated = wordTiming !== undefined && wordTiming > threshold;
 
       // Word not spoken - mark as red with delay
       if (!spokenWord) {
@@ -92,15 +120,26 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
           text: exp, 
           status: 'red', 
           pulse: true,
-          delay: 600 + (redWordCount * 150) // Staggered delay
+          delay: 600 + (redWordCount * 150)
         });
         redWordCount++;
         return;
       }
 
-      // Exact match - stay gray
+      // Exact match
       if (isCorrectWord(spokenWord, exp)) {
-        newWords.push({ text: exp, status: 'gray' });
+        // Check if hesitated
+        if (hesitated) {
+          newWords.push({ 
+            text: exp, 
+            status: 'yellow', 
+            pulse: true,
+            delay: 600 + (redWordCount * 150)
+          });
+          redWordCount++;
+        } else {
+          newWords.push({ text: exp, status: 'gray' });
+        }
         spokenIndex++;
       } else if (isAlmostWord(spokenWord, exp)) {
         // Almost correct - mark as yellow with delay
@@ -118,7 +157,7 @@ export default function SpeechTrainingLine({ expectedText, websocketUrl }: Speec
           text: exp, 
           status: 'red', 
           pulse: true,
-          delay: 600 + (redWordCount * 150) // Staggered delay
+          delay: 600 + (redWordCount * 150)
         });
         redWordCount++;
         spokenIndex++;

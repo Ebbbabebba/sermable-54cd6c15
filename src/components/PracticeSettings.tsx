@@ -14,6 +14,8 @@ export interface PracticeSettingsConfig {
   showWordOnPause: boolean;
   animationStyle: AnimationStyle;
   keywordMode: boolean; // Show only keywords, hide other words
+  hesitationThreshold: number; // seconds before marking word yellow
+  firstWordHesitationThreshold: number; // seconds for first word
 }
 
 interface PracticeSettingsProps {
@@ -131,6 +133,46 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Hesitation Threshold */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="hesitation">Hesitation Time (mid-sentence)</Label>
+                <span className="text-sm text-muted-foreground">{settings.hesitationThreshold}s</span>
+              </div>
+              <Slider
+                id="hesitation"
+                min={1}
+                max={5}
+                step={0.5}
+                value={[settings.hesitationThreshold]}
+                onValueChange={([value]) => updateSetting('hesitationThreshold', value)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Mark word yellow if you pause this long between words
+              </p>
+            </div>
+
+            {/* First Word Hesitation */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="first-hesitation">Hesitation Time (first word)</Label>
+                <span className="text-sm text-muted-foreground">{settings.firstWordHesitationThreshold}s</span>
+              </div>
+              <Slider
+                id="first-hesitation"
+                min={2}
+                max={8}
+                step={0.5}
+                value={[settings.firstWordHesitationThreshold]}
+                onValueChange={([value]) => updateSetting('firstWordHesitationThreshold', value)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Mark first word yellow if you pause this long before starting
+              </p>
             </div>
           </CardContent>
         </CollapsibleContent>
