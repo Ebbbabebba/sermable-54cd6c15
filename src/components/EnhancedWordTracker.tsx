@@ -209,7 +209,7 @@ const EnhancedWordTracker = ({
           if (similarity >= 0.5) {
             // MATCH - determine performance status based on similarity and timing
             const timeAtWord = wordTimestamps.current.get(scriptPosition);
-            const tookTooLong = timeAtWord ? now - timeAtWord >= 4000 : false;
+            const tookTooLong = timeAtWord ? now - timeAtWord >= 2000 : false;
 
             let performanceStatus: "correct" | "hesitated" | "missed";
 
@@ -275,7 +275,7 @@ const EnhancedWordTracker = ({
 
                 // Color the matched word based on pronunciation quality
                 const timeAtWord = wordTimestamps.current.get(scriptPosition + lookAhead);
-                const tookTooLong = timeAtWord ? now - timeAtWord >= 4000 : false;
+                const tookTooLong = timeAtWord ? now - timeAtWord >= 2000 : false;
 
                 let performanceStatus: "correct" | "hesitated" | "missed";
                 if (similarity >= 0.65) {
@@ -408,33 +408,28 @@ const EnhancedWordTracker = ({
   }, [currentWordIndex]);
 
   const getWordClassName = (word: WordState, index: number) => {
-    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-50 ease-linear";
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-in-out";
 
-    // Priority order: Current (reading now) > Missed > Hesitated > Correct > Default
-
-    // Current word being READ - bright blue highlight (shows while reading)
-    // This appears BEFORE any correctness evaluation
+    // Current word being spoken - pulse animation (gray, no color)
     if (word.isCurrent && isRecording && !word.spoken) {
-      return cn(base, "bg-blue-500 text-white scale-110 shadow-lg ring-4 ring-blue-400/60 animate-pulse font-bold");
+      return cn(base, "bg-muted/80 text-foreground scale-110 animate-pulse font-semibold");
     }
 
-    // AFTER word is fully spoken and confirmed by OpenAI:
+    // AFTER word is spoken:
 
-    // Missed/Skipped - RED (word was skipped based on final transcript)
-    // This applies to hidden words too!
+    // Missed/Skipped - RED background, then fades out
     if (word.performanceStatus === "missed") {
-      return cn(base, "bg-red-500 text-white shadow-sm line-through");
+      return cn(base, "bg-red-500/30 text-foreground border-b-2 border-red-500 opacity-40");
     }
 
-    // Hesitated - ORANGE (took 4+ seconds, confirmed by final transcript)
-    // This applies to hidden words too!
+    // Hesitated - YELLOW background (took too long), then fades out
     if (word.performanceStatus === "hesitated") {
-      return cn(base, "bg-orange-500 text-white shadow-sm");
+      return cn(base, "bg-yellow-500/30 text-foreground border-b-2 border-yellow-500 opacity-40");
     }
 
-    // Correct - GREEN (spoken correctly, confirmed by final transcript)
+    // Correct - NO COLOR, just fade out smoothly (gray with reduced opacity)
     if (word.spoken && word.performanceStatus === "correct") {
-      return cn(base, "bg-green-500 text-white shadow-md");
+      return cn(base, "bg-muted/50 text-muted-foreground opacity-40");
     }
 
     // In keyword mode, hidden words show as "..." - can be clicked when not recording
@@ -446,7 +441,7 @@ const EnhancedWordTracker = ({
       );
     }
 
-    // Default - unspoken word (no evaluation yet)
+    // Default - unspoken word (gray background)
     return cn(base, "bg-muted/50 text-muted-foreground");
   };
 
