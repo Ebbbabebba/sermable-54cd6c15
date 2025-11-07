@@ -452,152 +452,19 @@ const EnhancedWordTracker = ({
       } else if (!isRecording && transcriberRef.current) {
         console.log("⏹️ Stopping transcription");
         transcriberRef.current.disconnect();
-import { useEffect, useState, useRef, useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { RealtimeTranscriber } from "@/utils/RealtimeTranscription";
-
-interface EnhancedWordTrackerProps {
-  text: string;
-  isRecording: boolean;
-  transcription?: string;
-  revealSpeed: number;
-  showWordOnPause: boolean;
-  animationStyle?: string;
-  keywordMode: boolean;
-  onTranscriptUpdate?: (transcript: string) => void;
-  className?: string;
-}
-
-interface WordState {
-  text: string;
-  spoken: boolean;
-  isCurrent: boolean;
-  revealed: boolean;
-  isKeyword: boolean;
-  manuallyRevealed: boolean;
-  performanceStatus?: "correct" | "hesitated" | "missed";
-  timeToSpeak?: number;
-  hidden: boolean;
-  partialProgress: number;
-  showAsHint: boolean;
-}
-
-const normalizeNordic = (text: string): string => {
-  return text
-    .toLowerCase()
-    .replace(/[åä]/g, "a")
-    .replace(/[öø]/g, "o")
-    .replace(/æ/g, "ae")
-    .replace(/ð/g, "d")
-    .replace(/þ/g, "th")
-    .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž\s]/gi, "");
-};
-
-const getWordSimilarity = (word1: string, word2: string): number => {
-  const w1 = normalizeNordic(word1);
-  const w2 = normalizeNordic(word2);
-
-  if (w1 === w2) return 1.0;
-
-  if (w1.length <= 2 || w2.length <= 2) {
-    return w1 === w2 ? 1.0 : 0.0;
-  }
-
-  const maxLen = Math.max(w1.length, w2.length);
-  const minLen = Math.min(w1.length, w2.length);
-  if (minLen / maxLen >= 0.8) {
-    if (w1.startsWith(w2) || w2.startsWith(w1)) return 0.9;
-  }
-
-  let matches = 0;
-  const compareLength = Math.min(w1.length, w2.length);
-  for (let i = 0; i < compareLength; i++) {
-    if (w1[i] === w2[i]) matches++;
-  }
-
-  return matches / Math.max(w1.length, w2.length);
-};
-
-const isKeywordWord = (word: string): boolean => {
-  const cleanWord = word.toLowerCase().replace(/[^\w]/g, "");
-  return cleanWord.length > 5 || /[A-Z]/.test(word) || /[.!?]/.test(word);
-};
-
-const EnhancedWordTracker = ({
-  text,
-  isRecording,
-  transcription = "",
-  revealSpeed,
-  showWordOnPause,
-  animationStyle,
-  keywordMode,
-  onTranscriptUpdate,
-  className,
-}: EnhancedWordTrackerProps) => {
-  const [wordStates, setWordStates] = useState<WordState[]>([]);
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const currentWordIndexRef = useRef(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const revealTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSpokenIndexRef = useRef(-1);
-  const wordTimestamps = useRef<Map<number, number>>(new Map());
-  const transcriberRef = useRef<RealtimeTranscriber | null>(null);
-  const accumulatedTranscript = useRef<string>("");
-  const previousTranscriptLength = useRef<number>(0);
-  const hiddenWordTimers = useRef<Map<number, number>>(new Map());
-  const hesitationTimers = useRef<Map<number, number>>(new Map());
-
-  useEffect(() => {
-    currentWordIndexRef.current = currentWordIndex;
-  }, [currentWordIndex]);
-
-  useEffect(() => {
-    const words = text.split(/\s+/).filter((word) => word.length > 0);
-    const initialStates: WordState[] = words.map((word) => ({
-      text: word,
-      spoken: false,
-      isCurrent: false,
-      revealed: !keywordMode || isKeywordWord(word),
-      isKeyword: isKeywordWord(word),
-      manuallyRevealed: false,
-      performanceStatus: undefined,
-      timeToSpeak: 0,
-      hidden: false,
-      partialProgress: 0,
-      showAsHint: false,
-    }));
-    setWordStates(initialStates);
-    setCurrentWordIndex(0);
-    currentWordIndexRef.current = 0;
-    lastSpokenIndexRef.current = -1;
-  }, [text, keywordMode]);
-
-  useEffect(() => {
-    const transcriber = new RealtimeTranscriber(
-      (transcriptText, isFinal) => {
-        if (isFinal) {
-          accumulatedTranscript.current = transcriptText;
-          if (onTranscriptUpdate) {
-            onTranscriptUpdate(accumulatedTranscript.current);
-          }
-        }
-      },
-      (error) => {
-        console.error("❌ Transcription error:", error);
-      },
-    );
-
-    transcriberRef.current = transcriber;
-
-    return () => {
-      if (transcriberRef.current) {
-        transcriberRef.current.disconnect();
+        
+        // Clear all timers
+        hiddenWordTimers.current.forEach((timer) => clearTimeout(timer));
+        hiddenWordTimers.current.clear();
+        hesitationTimers.current.forEach((timer) => clearTimeout(timer));
+        hesitationTimers.current.clear();
       }
     };
-  }, [onTranscriptUpdate]);
 
-  // --- RECORDING LOGIC OMITTED FOR BREVITY (unchanged from original) ---
+    setupRecording();
+  }, [isRecording, keywordMode]);
 
+  // Tap to reveal individual word
   const handleWordTap = useCallback(
     (index: number) => {
       if (!keywordMode || isRecording) return;
@@ -617,37 +484,35 @@ const EnhancedWordTracker = ({
     [keywordMode, isRecording],
   );
 
+  // Auto-scroll to current word
   useEffect(() => {
     if (currentWordIndex >= 0 && scrollContainerRef.current) {
-      const currentElement = scrollContainerRef.current.querySelector(
-        `[data-word-index="${currentWordIndex}"]`,
-      );
+      const currentElement = scrollContainerRef.current.querySelector(`[data-word-index="${currentWordIndex}"]`);
       if (currentElement) {
         currentElement.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
   }, [currentWordIndex]);
 
-  // --- FIXED getWordClassName ---
   const getWordClassName = (word: WordState, index: number) => {
-    const base =
-      "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-in-out";
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-in-out";
 
     // Hidden word shown as hint (after 3s delay or 2s hesitation)
     if (word.showAsHint && word.hidden && !word.spoken) {
-      return cn(
-        base,
-        "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 animate-pulse",
-      );
+      return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 animate-pulse");
     }
 
-    // Current word being spoken - only one word pulses in blue
-    if (word.isCurrent && !word.spoken) {
-      return cn(
-        base,
-        "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse font-semibold",
-      );
+    // Hidden word with pulsing blue dots
+    if (word.hidden && !word.spoken && !word.showAsHint) {
+      return cn(base, "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center");
     }
+
+    // Current word being spoken - pulse animation (gray, no color)
+    if (word.isCurrent && isRecording && !word.spoken) {
+      return cn(base, "bg-muted/80 text-foreground scale-110 animate-pulse font-semibold");
+    }
+
+    // AFTER word is spoken and faded:
 
     // Missed/Skipped - RED, fades to dots
     if (word.performanceStatus === "missed" && word.hidden) {
@@ -661,10 +526,7 @@ const EnhancedWordTracker = ({
 
     // Correct - fades to dots (blue pulsing dots)
     if (word.spoken && word.performanceStatus === "correct" && word.hidden) {
-      return cn(
-        base,
-        "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center",
-      );
+      return cn(base, "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center");
     }
 
     // In keyword mode, hidden words show as "..." - can be clicked when not recording
@@ -681,27 +543,40 @@ const EnhancedWordTracker = ({
   };
 
   const renderWordContent = (word: WordState, index: number) => {
-    if (word.showAsHint && word.hidden && !word.spoken) return word.text;
+    // Show hint after delay or hesitation
+    if (word.showAsHint && word.hidden && !word.spoken) {
+      return word.text;
+    }
 
+    // Hidden word - show progressive dots based on partial progress
     if (word.hidden && !word.spoken && !word.showAsHint) {
       const wordLength = word.text.length;
       const dotsToShow = Math.ceil(wordLength * word.partialProgress);
       const dotsRemaining = Math.max(3, wordLength - dotsToShow);
-
+      
+      // Show filled portion + remaining dots
       if (dotsToShow > 0 && word.partialProgress > 0.1) {
         const filledPortion = word.text.substring(0, dotsToShow);
         const dots = ".".repeat(dotsRemaining);
         return `${filledPortion}${dots}`;
       }
-
+      
+      // Default: show dots representing word length (min 3, max word length)
       return ".".repeat(Math.min(Math.max(3, wordLength), 12));
     }
 
+    // In keyword mode, check if this is the start of a hidden word group
     if (keywordMode && !word.isKeyword && !word.manuallyRevealed) {
-      if (word.performanceStatus) return word.text;
+      // If word has performance status (missed/hesitated/correct), show actual word
+      if (word.performanceStatus) {
+        return word.text;
+      }
+
+      // This is a hidden word without status - check if it's the first in a group
+      // If previous word is also hidden, we should have been skipped in render
+      // So if we're here, we're the first in the group - show "..."
       return "...";
     }
-
     return word.text;
   };
 
@@ -723,11 +598,17 @@ const EnhancedWordTracker = ({
 
       <div className="flex flex-wrap items-center justify-center gap-1 leading-loose">
         {wordStates.map((word, index) => {
+          // Check if this word should be part of a hidden group (before performance status)
           const isPartOfHiddenGroup = keywordMode && !word.isKeyword && !word.manuallyRevealed;
+
+          // Skip rendering if this is a hidden word that's part of a group (not the first in the group)
+          // BUT only if it doesn't have a performance status (which needs individual rendering)
           if (isPartOfHiddenGroup && !word.performanceStatus && index > 0) {
             const prevWord = wordStates[index - 1];
             const prevIsPartOfHiddenGroup = keywordMode && !prevWord.isKeyword && !prevWord.manuallyRevealed;
-            if (prevIsPartOfHiddenGroup && !prevWord.performanceStatus) return null;
+            if (prevIsPartOfHiddenGroup && !prevWord.performanceStatus) {
+              return null; // Skip this word, it's part of the previous "..." group
+            }
           }
 
           return (
@@ -754,4 +635,3 @@ const EnhancedWordTracker = ({
 };
 
 export default EnhancedWordTracker;
-
