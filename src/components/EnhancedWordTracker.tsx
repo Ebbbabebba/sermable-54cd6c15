@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { RealtimeTranscriber } from "@/utils/RealtimeTranscription";
 
 interface EnhancedWordTrackerProps {
   text: string;
