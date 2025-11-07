@@ -23,6 +23,9 @@ interface WordState {
   manuallyRevealed: boolean;
   performanceStatus?: "correct" | "hesitated" | "missed";
   timeToSpeak?: number;
+  hidden: boolean; // Word has faded out and replaced with dots
+  partialProgress: number; // 0-1, how much of the word has been spoken
+  showAsHint: boolean; // Show word as hint after delay
 }
 
 const normalizeNordic = (text: string): string => {
@@ -97,6 +100,8 @@ const EnhancedWordTracker = ({
   const transcriberRef = useRef<RealtimeTranscriber | null>(null);
   const accumulatedTranscript = useRef<string>("");
   const previousTranscriptLength = useRef<number>(0); // Track how many words we've processed
+  const hiddenWordTimers = useRef<Map<number, number>>(new Map()); // Track 3s hint timers for hidden words
+  const hesitationTimers = useRef<Map<number, number>>(new Map()); // Track 2s hesitation timers
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -114,6 +119,9 @@ const EnhancedWordTracker = ({
       manuallyRevealed: false,
       performanceStatus: undefined,
       timeToSpeak: 0,
+      hidden: false,
+      partialProgress: 0,
+      showAsHint: false,
     }));
     setWordStates(initialStates);
     setCurrentWordIndex(0);
@@ -177,8 +185,7 @@ const EnhancedWordTracker = ({
 
       const newWords = transcribedWords.slice(previousTranscriptLength.current);
       console.log("📝 NEW words to process:", newWords.join(" "));
-      previousTranscriptLength.current = transcribedWords.length;
-
+      
       const now = Date.now();
 
       setWordStates((prevStates) => {
@@ -186,6 +193,46 @@ const EnhancedWordTracker = ({
 
         const targetWords = prevStates.map((ws) => normalizeText(ws.text));
         const updatedStates = [...prevStates];
+        
+        // Update partial progress for hidden words
+        for (let i = 0; i < updatedStates.length; i++) {
+          if (updatedStates[i].hidden && !updatedStates[i].spoken) {
+            const targetWord = targetWords[i];
+            const lastNewWord = newWords[newWords.length - 1] || "";
+            
+            // Calculate how much of the word has been spoken
+            if (lastNewWord.length > 0) {
+              const similarity = getWordSimilarity(lastNewWord, targetWord);
+              if (similarity > 0.3) {
+                // User is speaking this word - update progress
+                const progress = Math.min(lastNewWord.length / targetWord.length, 0.99);
+                updatedStates[i] = { ...updatedStates[i], partialProgress: progress };
+                
+                // Clear hesitation timer since user is actively speaking
+                const timer = hesitationTimers.current.get(i);
+                if (timer) {
+                  clearTimeout(timer);
+                  hesitationTimers.current.delete(i);
+                }
+                
+                // Start new hesitation timer (2s)
+                const hesitationTimer = setTimeout(() => {
+                  setWordStates((states) => {
+                    const updated = [...states];
+                    if (i < updated.length && updated[i].hidden && !updated[i].spoken) {
+                      // Show remaining part of word after 2s hesitation
+                      updated[i] = { ...updated[i], showAsHint: true };
+                    }
+                    return updated;
+                  });
+                }, 2000) as unknown as number;
+                hesitationTimers.current.set(i, hesitationTimer);
+              }
+            }
+          }
+        }
+        
+        previousTranscriptLength.current = transcribedWords.length;
 
         // Find where we are in the script (first unspoken word)
         let scriptPosition = 0;
@@ -233,7 +280,22 @@ const EnhancedWordTracker = ({
               revealed: true,
               isCurrent: false,
               performanceStatus,
+              hidden: true, // Mark as hidden after speaking (will fade out)
+              partialProgress: 1,
+              showAsHint: false,
             };
+
+            // Clear any timers for this word
+            const hintTimer = hiddenWordTimers.current.get(scriptPosition);
+            if (hintTimer) {
+              clearTimeout(hintTimer);
+              hiddenWordTimers.current.delete(scriptPosition);
+            }
+            const hesTimer = hesitationTimers.current.get(scriptPosition);
+            if (hesTimer) {
+              clearTimeout(hesTimer);
+              hesitationTimers.current.delete(hesTimer);
+            }
 
             wordTimestamps.current.delete(scriptPosition);
             lastSpokenIndexRef.current = scriptPosition;
@@ -319,9 +381,23 @@ const EnhancedWordTracker = ({
           }
         }
 
-        // Track timing for current word
+        // Track timing for current word and start hint timer if hidden
         if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
           wordTimestamps.current.set(currentIdx, now);
+          
+          // If this word is hidden and not yet spoken, start 3s hint timer
+          if (updatedStates[currentIdx].hidden && !hiddenWordTimers.current.has(currentIdx)) {
+            const timer = setTimeout(() => {
+              setWordStates((states) => {
+                const updated = [...states];
+                if (currentIdx < updated.length && !updated[currentIdx].spoken) {
+                  updated[currentIdx] = { ...updated[currentIdx], showAsHint: true };
+                }
+                return updated;
+              });
+            }, 3000) as unknown as number;
+            hiddenWordTimers.current.set(currentIdx, timer);
+          }
         }
 
         if (currentIdx !== -1) {
@@ -346,6 +422,8 @@ const EnhancedWordTracker = ({
       if (isRecording && transcriberRef.current) {
         console.log("🎤 Starting OpenAI realtime transcription");
         wordTimestamps.current.clear();
+        hiddenWordTimers.current.clear();
+        hesitationTimers.current.clear();
         accumulatedTranscript.current = "";
         previousTranscriptLength.current = 0; // Reset processed word count
         setWordStates((prevStates) =>
@@ -356,6 +434,9 @@ const EnhancedWordTracker = ({
             revealed: !keywordMode || state.isKeyword || state.manuallyRevealed,
             performanceStatus: undefined,
             timeToSpeak: 0,
+            hidden: false,
+            partialProgress: 0,
+            showAsHint: false,
           })),
         );
         setCurrentWordIndex(0);
@@ -371,6 +452,12 @@ const EnhancedWordTracker = ({
       } else if (!isRecording && transcriberRef.current) {
         console.log("⏹️ Stopping transcription");
         transcriberRef.current.disconnect();
+        
+        // Clear all timers
+        hiddenWordTimers.current.forEach((timer) => clearTimeout(timer));
+        hiddenWordTimers.current.clear();
+        hesitationTimers.current.forEach((timer) => clearTimeout(timer));
+        hesitationTimers.current.clear();
       }
     };
 
@@ -410,26 +497,36 @@ const EnhancedWordTracker = ({
   const getWordClassName = (word: WordState, index: number) => {
     const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-in-out";
 
+    // Hidden word shown as hint (after 3s delay or 2s hesitation)
+    if (word.showAsHint && word.hidden && !word.spoken) {
+      return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 animate-pulse");
+    }
+
+    // Hidden word with pulsing blue dots
+    if (word.hidden && !word.spoken && !word.showAsHint) {
+      return cn(base, "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center");
+    }
+
     // Current word being spoken - pulse animation (gray, no color)
     if (word.isCurrent && isRecording && !word.spoken) {
       return cn(base, "bg-muted/80 text-foreground scale-110 animate-pulse font-semibold");
     }
 
-    // AFTER word is spoken:
+    // AFTER word is spoken and faded:
 
-    // Missed/Skipped - RED background, then fades out
-    if (word.performanceStatus === "missed") {
-      return cn(base, "bg-red-500/30 text-foreground border-b-2 border-red-500 opacity-40");
+    // Missed/Skipped - RED, fades to dots
+    if (word.performanceStatus === "missed" && word.hidden) {
+      return cn(base, "bg-red-500/20 text-red-600 dark:text-red-400 border-b-2 border-red-500/40 opacity-60");
     }
 
-    // Hesitated - YELLOW background (took too long), then fades out
-    if (word.performanceStatus === "hesitated") {
-      return cn(base, "bg-yellow-500/30 text-foreground border-b-2 border-yellow-500 opacity-40");
+    // Hesitated - YELLOW, fades to dots
+    if (word.performanceStatus === "hesitated" && word.hidden) {
+      return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40 opacity-60");
     }
 
-    // Correct - NO COLOR, just fade out smoothly (gray with reduced opacity)
-    if (word.spoken && word.performanceStatus === "correct") {
-      return cn(base, "bg-muted/50 text-muted-foreground opacity-40");
+    // Correct - fades to dots (blue pulsing dots)
+    if (word.spoken && word.performanceStatus === "correct" && word.hidden) {
+      return cn(base, "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center");
     }
 
     // In keyword mode, hidden words show as "..." - can be clicked when not recording
@@ -446,6 +543,28 @@ const EnhancedWordTracker = ({
   };
 
   const renderWordContent = (word: WordState, index: number) => {
+    // Show hint after delay or hesitation
+    if (word.showAsHint && word.hidden && !word.spoken) {
+      return word.text;
+    }
+
+    // Hidden word - show progressive dots based on partial progress
+    if (word.hidden && !word.spoken && !word.showAsHint) {
+      const wordLength = word.text.length;
+      const dotsToShow = Math.ceil(wordLength * word.partialProgress);
+      const dotsRemaining = Math.max(3, wordLength - dotsToShow);
+      
+      // Show filled portion + remaining dots
+      if (dotsToShow > 0 && word.partialProgress > 0.1) {
+        const filledPortion = word.text.substring(0, dotsToShow);
+        const dots = ".".repeat(dotsRemaining);
+        return `${filledPortion}${dots}`;
+      }
+      
+      // Default: show dots representing word length (min 3, max word length)
+      return ".".repeat(Math.min(Math.max(3, wordLength), 12));
+    }
+
     // In keyword mode, check if this is the start of a hidden word group
     if (keywordMode && !word.isKeyword && !word.manuallyRevealed) {
       // If word has performance status (missed/hesitated/correct), show actual word
