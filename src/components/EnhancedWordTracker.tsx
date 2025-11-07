@@ -23,6 +23,7 @@ interface WordState {
   manuallyRevealed: boolean;
   performanceStatus?: "correct" | "hesitated" | "missed";
   timeToSpeak?: number;
+  showErrorBriefly?: boolean; // For briefly showing error in hidden section
 }
 
 const normalizeNordic = (text: string): string => {
@@ -235,6 +236,16 @@ const EnhancedWordTracker = ({
               performanceStatus,
             };
 
+            // If error occurred, briefly show it then hide
+            if (performanceStatus !== "correct") {
+              updatedStates[scriptPosition].showErrorBriefly = true;
+              setTimeout(() => {
+                setWordStates(prev => prev.map((w, i) => 
+                  i === scriptPosition ? { ...w, showErrorBriefly: false } : w
+                ));
+              }, 2000); // Show error for 2 seconds
+            }
+
             wordTimestamps.current.delete(scriptPosition);
             lastSpokenIndexRef.current = scriptPosition;
 
@@ -264,7 +275,17 @@ const EnhancedWordTracker = ({
                         spoken: false,
                         revealed: true,
                         performanceStatus: "missed",
+                        showErrorBriefly: true,
                       };
+                      
+                      // Briefly show error then hide
+                      const errorIndex = skipIdx;
+                      setTimeout(() => {
+                        setWordStates(prev => prev.map((w, i) => 
+                          i === errorIndex ? { ...w, showErrorBriefly: false } : w
+                        ));
+                      }, 2000);
+                      
                       wordTimestamps.current.delete(skipIdx);
                     }
                   }
@@ -291,6 +312,17 @@ const EnhancedWordTracker = ({
                   isCurrent: false,
                   performanceStatus,
                 };
+
+                // If error occurred, briefly show it then hide
+                if (performanceStatus !== "correct") {
+                  updatedStates[scriptPosition + lookAhead].showErrorBriefly = true;
+                  const errorIndex = scriptPosition + lookAhead;
+                  setTimeout(() => {
+                    setWordStates(prev => prev.map((w, i) => 
+                      i === errorIndex ? { ...w, showErrorBriefly: false } : w
+                    ));
+                  }, 2000);
+                }
 
                 wordTimestamps.current.delete(scriptPosition + lookAhead);
                 lastSpokenIndexRef.current = scriptPosition + lookAhead;
@@ -415,21 +447,23 @@ const EnhancedWordTracker = ({
       return cn(base, "bg-muted/80 text-foreground scale-110 animate-pulse font-semibold");
     }
 
-    // AFTER word is spoken:
-
-    // Missed/Skipped - RED background, then fades out
-    if (word.performanceStatus === "missed") {
-      return cn(base, "bg-red-500/30 text-foreground border-b-2 border-red-500 opacity-40");
+    // Briefly showing error in hidden section
+    if (word.showErrorBriefly && word.performanceStatus === "missed") {
+      return cn(base, "bg-red-500/30 text-foreground border-b-2 border-red-500 animate-pulse");
+    }
+    
+    if (word.showErrorBriefly && word.performanceStatus === "hesitated") {
+      return cn(base, "bg-yellow-500/30 text-foreground border-b-2 border-yellow-500 animate-pulse");
     }
 
-    // Hesitated - YELLOW background (took too long), then fades out
-    if (word.performanceStatus === "hesitated") {
-      return cn(base, "bg-yellow-500/30 text-foreground border-b-2 border-yellow-500 opacity-40");
-    }
-
-    // Correct - NO COLOR, just fade out smoothly (gray with reduced opacity)
+    // AFTER word is spoken - if it's faded (correct), show as "..." placeholder
     if (word.spoken && word.performanceStatus === "correct") {
-      return cn(base, "bg-muted/50 text-muted-foreground opacity-40");
+      return cn(base, "bg-transparent text-muted-foreground/60 animate-pulse text-center min-w-[40px]");
+    }
+
+    // Errors that have already been shown briefly - now hide as "..."
+    if (word.performanceStatus && !word.showErrorBriefly && word.spoken) {
+      return cn(base, "bg-transparent text-muted-foreground/60 animate-pulse text-center min-w-[40px]");
     }
 
     // In keyword mode, hidden words show as "..." - can be clicked when not recording
@@ -446,6 +480,16 @@ const EnhancedWordTracker = ({
   };
 
   const renderWordContent = (word: WordState, index: number) => {
+    // Briefly showing error - show actual word
+    if (word.showErrorBriefly) {
+      return word.text;
+    }
+
+    // After spoken and faded - show "..."
+    if (word.spoken) {
+      return "...";
+    }
+
     // In keyword mode, check if this is the start of a hidden word group
     if (keywordMode && !word.isKeyword && !word.manuallyRevealed) {
       // If word has performance status (missed/hesitated/correct), show actual word
