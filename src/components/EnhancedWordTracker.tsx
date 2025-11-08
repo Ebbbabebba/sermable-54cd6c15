@@ -102,6 +102,13 @@ const EnhancedWordTracker = ({
   const previousTranscriptLength = useRef<number>(0); // Track how many words we've processed
   const hiddenWordTimers = useRef<Map<number, number>>(new Map()); // Track 3s hint timers for hidden words
   const hesitationTimers = useRef<Map<number, number>>(new Map()); // Track 2s hesitation timers
+  const [forgottenWordPopup, setForgottenWordPopup] = useState<{
+    wordIndex: number;
+    isAnimating: boolean;
+  } | null>(null);
+  const pauseDetectionTimer = useRef<NodeJS.Timeout | null>(null);
+  const lastProgressTime = useRef<number>(Date.now());
+  const lastWordIndex = useRef<number>(-1);
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -274,6 +281,15 @@ const EnhancedWordTracker = ({
               );
             }
 
+            // Check if this word was shown in forgotten popup
+            const wasForgotten = forgottenWordPopup?.wordIndex === scriptPosition;
+            
+            // If word was forgotten, mark as hesitated regardless of timing
+            if (wasForgotten) {
+              performanceStatus = "hesitated";
+              console.log(`⚠️ "${updatedStates[scriptPosition].text}" was forgotten and shown in popup`);
+            }
+
             updatedStates[scriptPosition] = {
               ...updatedStates[scriptPosition],
               spoken: true,
@@ -299,6 +315,14 @@ const EnhancedWordTracker = ({
 
             wordTimestamps.current.delete(scriptPosition);
             lastSpokenIndexRef.current = scriptPosition;
+            
+            // Trigger popup reintegration animation if this word was in popup
+            if (wasForgotten) {
+              setForgottenWordPopup({ wordIndex: scriptPosition, isAnimating: true });
+              setTimeout(() => {
+                setForgottenWordPopup(null);
+              }, 800); // Animation duration
+            }
 
             // Move both positions forward
             newWordIdx++;
@@ -403,6 +427,12 @@ const EnhancedWordTracker = ({
         if (currentIdx !== -1) {
           setCurrentWordIndex(currentIdx);
           currentWordIndexRef.current = currentIdx;
+          
+          // Update last progress time when position changes
+          if (currentIdx !== lastWordIndex.current) {
+            lastProgressTime.current = now;
+            lastWordIndex.current = currentIdx;
+          }
         }
 
         // Update current indicator
@@ -416,6 +446,65 @@ const EnhancedWordTracker = ({
     return () => clearInterval(intervalId);
   }, [isRecording, transcription]);
 
+  // Pause detection for forgotten words
+  useEffect(() => {
+    if (!isRecording) {
+      if (pauseDetectionTimer.current) {
+        clearTimeout(pauseDetectionTimer.current);
+        pauseDetectionTimer.current = null;
+      }
+      return;
+    }
+
+    const checkForPause = () => {
+      const now = Date.now();
+      const timeSinceProgress = now - lastProgressTime.current;
+      const currentIdx = currentWordIndexRef.current;
+
+      // Check if current word is hidden and user has paused
+      if (currentIdx >= 0 && currentIdx < wordStates.length) {
+        const currentWord = wordStates[currentIdx];
+        
+        // Only trigger for hidden words that haven't been spoken
+        if (currentWord.hidden && !currentWord.spoken && !forgottenWordPopup) {
+          // Determine pause threshold based on position
+          const isStartOfSentence = currentIdx === 0 || wordStates[currentIdx - 1]?.text.match(/[.!?]$/);
+          const pauseThreshold = isStartOfSentence ? 4000 : 2000;
+
+          if (timeSinceProgress >= pauseThreshold) {
+            console.log(`⚠️ Forgotten word detected: "${currentWord.text}" (paused ${timeSinceProgress}ms)`);
+            setForgottenWordPopup({ wordIndex: currentIdx, isAnimating: false });
+            
+            // Mark the word as hesitated (forgotten) immediately
+            setWordStates((prevStates) => {
+              const updated = [...prevStates];
+              updated[currentIdx] = {
+                ...updated[currentIdx],
+                performanceStatus: "hesitated",
+                revealed: true,
+                showAsHint: true
+              };
+              return updated;
+            });
+            
+            lastProgressTime.current = now; // Reset to avoid repeated triggers
+          }
+        }
+      }
+
+      pauseDetectionTimer.current = setTimeout(checkForPause, 500) as unknown as NodeJS.Timeout;
+    };
+
+    pauseDetectionTimer.current = setTimeout(checkForPause, 500) as unknown as NodeJS.Timeout;
+
+    return () => {
+      if (pauseDetectionTimer.current) {
+        clearTimeout(pauseDetectionTimer.current);
+        pauseDetectionTimer.current = null;
+      }
+    };
+  }, [isRecording, wordStates, forgottenWordPopup]);
+
   // Handle recording state changes
   useEffect(() => {
     const setupRecording = async () => {
@@ -426,6 +515,9 @@ const EnhancedWordTracker = ({
         hesitationTimers.current.clear();
         accumulatedTranscript.current = "";
         previousTranscriptLength.current = 0; // Reset processed word count
+        lastProgressTime.current = Date.now();
+        lastWordIndex.current = -1;
+        setForgottenWordPopup(null);
         setWordStates((prevStates) =>
           prevStates.map((state) => ({
             ...state,
@@ -588,6 +680,39 @@ const EnhancedWordTracker = ({
         className,
       )}
     >
+      {/* Forgotten Word Popup */}
+      {forgottenWordPopup && forgottenWordPopup.wordIndex < wordStates.length && (
+        <div
+          className={cn(
+            "fixed inset-0 z-50 flex items-center justify-center pointer-events-none",
+            forgottenWordPopup.isAnimating && "animate-fade-out"
+          )}
+          style={{
+            animation: forgottenWordPopup.isAnimating 
+              ? "shrinkToPosition 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards"
+              : "none"
+          }}
+        >
+          <div
+            className={cn(
+              "bg-yellow-500 text-black font-bold rounded-2xl shadow-2xl flex items-center justify-center transition-all duration-800",
+              forgottenWordPopup.isAnimating 
+                ? "opacity-0 scale-50" 
+                : "opacity-100 scale-100"
+            )}
+            style={{
+              fontSize: "clamp(2rem, 5vw, 4rem)",
+              padding: "3rem 4rem",
+              minHeight: "33vh",
+              minWidth: "300px",
+              maxWidth: "80vw"
+            }}
+          >
+            {wordStates[forgottenWordPopup.wordIndex].text}
+          </div>
+        </div>
+      )}
+
       {isRecording && (
         <div className="mb-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
           <p className="text-sm text-blue-600 dark:text-blue-400 font-medium text-center">
@@ -598,6 +723,23 @@ const EnhancedWordTracker = ({
 
       <div className="flex flex-wrap items-center justify-center gap-1 leading-loose">
         {wordStates.map((word, index) => {
+          // Hide word in text flow if it's currently in the popup (not animating back yet)
+          if (forgottenWordPopup && forgottenWordPopup.wordIndex === index && !forgottenWordPopup.isAnimating) {
+            return (
+              <span
+                key={index}
+                data-word-index={index}
+                className="inline-block px-3 py-1.5 mx-1 my-1 opacity-0"
+                style={{
+                  fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)",
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                }}
+              >
+                {word.text}
+              </span>
+            );
+          }
+
           // Check if this word should be part of a hidden group (before performance status)
           const isPartOfHiddenGroup = keywordMode && !word.isKeyword && !word.manuallyRevealed;
 
