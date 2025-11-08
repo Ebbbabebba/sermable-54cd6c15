@@ -501,13 +501,15 @@ const Practice = () => {
 
           {showResults && sessionResults && (
             <div ref={resultsRef} className="animate-fade-in">
-              <PracticeResults
-                accuracy={sessionResults.accuracy}
-                missedWords={sessionResults.missedWords}
-                delayedWords={sessionResults.delayedWords}
-                analysis={sessionResults.analysis}
-                transcription={sessionResults.transcription}
-              />
+                    <PracticeResults
+                      accuracy={sessionResults.accuracy}
+                      missedWords={sessionResults.missedWords}
+                      delayedWords={sessionResults.delayedWords}
+                      analysis={sessionResults.analysis}
+                      transcription={sessionResults.transcription}
+                      originalText={speech.text_original}
+                      currentText={speech.text_current}
+                    />
 
               {sessionResults.cueText !== speech.text_current && (
                 <Card className="mt-4">

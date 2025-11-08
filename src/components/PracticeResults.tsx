@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PracticeResultsProps {
   accuracy: number;
@@ -9,6 +10,8 @@ interface PracticeResultsProps {
   delayedWords: string[];
   analysis: string;
   transcription: string;
+  originalText: string;
+  currentText: string;
 }
 
 const PracticeResults = ({ 
@@ -16,8 +19,35 @@ const PracticeResults = ({
   missedWords, 
   delayedWords, 
   analysis, 
-  transcription 
+  transcription,
+  originalText,
+  currentText
 }: PracticeResultsProps) => {
+  // Parse words and determine their status
+  const originalWords = originalText.split(/\s+/).filter(word => word.length > 0);
+  const currentWords = currentText.split(/\s+/).filter(word => word.length > 0);
+  
+  // Create a set of words that were hidden in cue text (in original but faded during practice)
+  const hiddenCueWords = new Set<string>();
+  originalWords.forEach((word, index) => {
+    const normalizedWord = word.toLowerCase().replace(/[^\w]/g, '');
+    // If word was in original but practice system hid it (mastered), track it
+    if (currentWords.some(cw => cw.toLowerCase().replace(/[^\w]/g, '') === normalizedWord)) {
+      // Word is in both, might have been temporarily hidden during practice
+      // We'll mark these specially in the display
+    }
+  });
+  
+  // Normalize missed/delayed words for comparison
+  const normalizedMissed = new Set(missedWords.map(w => w.toLowerCase().replace(/[^\w]/g, '')));
+  const normalizedDelayed = new Set(delayedWords.map(w => w.toLowerCase().replace(/[^\w]/g, '')));
+  
+  const getWordStatus = (word: string): 'correct' | 'hesitated' | 'missed' => {
+    const normalized = word.toLowerCase().replace(/[^\w]/g, '');
+    if (normalizedMissed.has(normalized)) return 'missed';
+    if (normalizedDelayed.has(normalized)) return 'hesitated';
+    return 'correct';
+  };
   return (
     <Card>
       <CardHeader>
@@ -108,6 +138,60 @@ const PracticeResults = ({
             )}
           </div>
         )}
+
+        {/* Word-by-Word Comparison Analysis */}
+        <div className="space-y-3 pt-4 border-t">
+          <h4 className="font-semibold">Word-by-Word Analysis</h4>
+          <p className="text-xs text-muted-foreground mb-3">
+            Comparing your performance with the original script
+          </p>
+          <div className="bg-muted/20 rounded-lg p-6 leading-relaxed">
+            <div className="flex flex-wrap gap-2 items-center justify-center">
+              {originalWords.map((word, index) => {
+                const status = getWordStatus(word);
+                const wasHiddenDuringPractice = !currentWords.some(
+                  cw => cw.toLowerCase().replace(/[^\w]/g, '') === word.toLowerCase().replace(/[^\w]/g, '')
+                );
+                
+                return (
+                  <span
+                    key={index}
+                    className={cn(
+                      "inline-block px-2.5 py-1 rounded-md font-medium transition-all",
+                      status === 'missed' && "bg-destructive/20 text-destructive border border-destructive/40",
+                      status === 'hesitated' && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500/40",
+                      status === 'correct' && !wasHiddenDuringPractice && "bg-success/10 text-success-foreground/80",
+                      status === 'correct' && wasHiddenDuringPractice && "bg-muted/40 text-muted-foreground/50 text-sm opacity-60",
+                    )}
+                    style={{
+                      fontSize: wasHiddenDuringPractice && status === 'correct' ? '0.875rem' : '1rem',
+                    }}
+                  >
+                    {word}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-3">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-success/10 border border-success/40"></div>
+              <span>Spoken correctly</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-yellow-500/20 border border-yellow-500/40"></div>
+              <span>Hesitated</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-destructive/20 border border-destructive/40"></div>
+              <span>Missed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-muted/40 opacity-60"></div>
+              <span>Hidden cue (mastered)</span>
+            </div>
+          </div>
+        </div>
 
         {/* Transcription */}
         <div className="space-y-2 pt-4 border-t">
