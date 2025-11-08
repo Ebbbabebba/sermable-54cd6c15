@@ -507,9 +507,9 @@ const EnhancedWordTracker = ({
       return cn(base, "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center");
     }
 
-    // Current word being spoken - pulse animation (gray, no color)
+    // Current word being spoken - blue pulse animation
     if (word.isCurrent && isRecording && !word.spoken) {
-      return cn(base, "bg-muted/80 text-foreground scale-110 animate-pulse font-semibold");
+      return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 scale-110 animate-pulse font-semibold border border-blue-500/40");
     }
 
     // AFTER word is spoken and faded:
@@ -524,9 +524,9 @@ const EnhancedWordTracker = ({
       return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40 opacity-60");
     }
 
-    // Correct - fades to dots (blue pulsing dots)
+    // Correct - gray fade out (no blue, no pulse)
     if (word.spoken && word.performanceStatus === "correct" && word.hidden) {
-      return cn(base, "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center");
+      return cn(base, "bg-muted/30 text-muted-foreground/40 opacity-40");
     }
 
     // In keyword mode, hidden words show as "..." - can be clicked when not recording
