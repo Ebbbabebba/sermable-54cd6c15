@@ -256,6 +256,7 @@ const EnhancedWordTracker = ({
         while (newWordIdx < newWords.length && scriptPosition < targetWords.length) {
           const transcribedWord = newWords[newWordIdx];
           const targetWord = targetWords[scriptPosition];
+          const currentWord = updatedStates[scriptPosition];
 
           // Check if current words match
           const similarity = getWordSimilarity(transcribedWord, targetWord);
@@ -328,28 +329,39 @@ const EnhancedWordTracker = ({
             newWordIdx++;
             scriptPosition++;
           } else {
+            // NO MATCH - check if this is a hidden word that should block progression
+            if (currentWord.hidden && !currentWord.spoken) {
+              console.log(`🛑 BLOCKED: Current word "${currentWord.text}" is hidden - waiting for user to say it`);
+              // Don't advance - wait for popup to trigger or user to say the word
+              // Skip this transcribed word as it doesn't match the required hidden word
+              newWordIdx++;
+              continue;
+            }
+            
             // NO MATCH - check if transcribed word matches ahead in script (skip detection)
             let matchFound = false;
 
-            // Look ahead up to 5 words in script - only mark as MISSED if 2+ words skipped
+            // Look ahead up to 5 words in script - only mark visible words as MISSED if 2+ words skipped
             for (let lookAhead = 1; lookAhead <= 5 && scriptPosition + lookAhead < targetWords.length; lookAhead++) {
               const similarity = getWordSimilarity(transcribedWord, targetWords[scriptPosition + lookAhead]);
 
               if (similarity >= 0.5) {
-                // Mark skipped words as MISSED only if 2+ words were skipped
+                // Mark skipped words - but NEVER mark hidden words as "missed", only as "hesitated"
                 if (lookAhead >= 2) {
                   console.log(
-                    `❌ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}" (${lookAhead} words skipped)`,
+                    `⚠️ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}" (${lookAhead} words skipped)`,
                   );
 
                   for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
                     if (!updatedStates[skipIdx].spoken) {
-                      console.log(`  ❌ "${updatedStates[skipIdx].text}" marked as MISSED`);
+                      // Hidden words are ALWAYS marked as "hesitated" (yellow), never "missed" (red)
+                      const skipStatus = updatedStates[skipIdx].hidden ? "hesitated" : "missed";
+                      console.log(`  ${skipStatus === "missed" ? "❌" : "⚠️"} "${updatedStates[skipIdx].text}" marked as ${skipStatus.toUpperCase()}`);
                       updatedStates[skipIdx] = {
                         ...updatedStates[skipIdx],
                         spoken: false,
                         revealed: true,
-                        performanceStatus: "missed",
+                        performanceStatus: skipStatus,
                       };
                       wordTimestamps.current.delete(skipIdx);
                     }
