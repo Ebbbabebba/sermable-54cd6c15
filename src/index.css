@@ -244,4 +244,53 @@ All colors MUST be HSL.
 .animate-fly-away {
   animation: flyAway 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* Liquid Column Styles */
+.liquid-column-container {
+  background: hsl(var(--primary) / 0.1);
+  border: 2px solid hsl(var(--primary) / 0.3);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.liquid-fill {
+  background: linear-gradient(90deg,
+    hsl(var(--primary) / 0.4) 0%,
+    hsl(var(--primary) / 0.6) 50%,
+    hsl(var(--primary)) 100%
+  );
+  position: relative;
+}
+
+.liquid-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.2) 50%,
+    transparent 100%
+  );
+  animation: liquidWave 2s ease-in-out infinite;
+}
+
+.liquid-error {
+  background: linear-gradient(90deg,
+    hsl(var(--warning) / 0.4) 0%,
+    hsl(var(--warning) / 0.6) 50%,
+    hsl(var(--warning)) 100%
+  ) !important;
+}
+
+@keyframes liquidWave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
 }

@@ -26,6 +26,8 @@ interface WordState {
   hidden: boolean; // Word has faded out and replaced with dots
   partialProgress: number; // 0-1, how much of the word has been spoken
   showAsHint: boolean; // Show word as hint after delay
+  inLiquidColumn?: boolean; // Part of liquid column animation
+  liquidError?: boolean; // Word was spoken incorrectly in liquid column
 }
 
 const normalizeNordic = (text: string): string => {
@@ -109,6 +111,13 @@ const EnhancedWordTracker = ({
   const pauseDetectionTimer = useRef<NodeJS.Timeout | null>(null);
   const lastProgressTime = useRef<number>(Date.now());
   const lastWordIndex = useRef<number>(-1);
+  const [liquidColumn, setLiquidColumn] = useState<{
+    start: number;
+    end: number;
+    progress: number; // 0-100
+  } | null>(null);
+  const liquidAnimationRef = useRef<number | null>(null);
+  const liquidPausedRef = useRef<boolean>(false);
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -324,6 +333,23 @@ const EnhancedWordTracker = ({
                 setForgottenWordPopup(null);
               }, 800); // Animation duration
             }
+            
+            // Check if we're in a liquid column and just completed it
+            if (liquidColumn && scriptPosition === liquidColumn.end) {
+              console.log('🌊 Liquid column complete - fading out');
+              // Fade out liquid column
+              setTimeout(() => {
+                setLiquidColumn(null);
+                if (liquidAnimationRef.current) {
+                  cancelAnimationFrame(liquidAnimationRef.current);
+                  liquidAnimationRef.current = null;
+                }
+              }, 300);
+            } else if (liquidColumn && scriptPosition >= liquidColumn.start && scriptPosition <= liquidColumn.end) {
+              // Continue filling liquid column
+              console.log('🌊 Continuing liquid fill');
+              liquidPausedRef.current = false;
+            }
 
             // Move both positions forward
             newWordIdx++;
@@ -332,6 +358,16 @@ const EnhancedWordTracker = ({
             // NO MATCH - check if this is a hidden word that should block progression
             if (currentWord.hidden && !currentWord.spoken) {
               console.log(`🛑 BLOCKED: Current word "${currentWord.text}" is hidden - waiting for user to say it`);
+              
+              // If in liquid column and wrong word spoken, freeze that part yellow
+              if (liquidColumn && scriptPosition >= liquidColumn.start && scriptPosition <= liquidColumn.end) {
+                updatedStates[scriptPosition] = {
+                  ...updatedStates[scriptPosition],
+                  liquidError: true,
+                  performanceStatus: "hesitated"
+                };
+              }
+              
               // Don't advance - wait for popup to trigger or user to say the word
               // Skip this transcribed word as it doesn't match the required hidden word
               newWordIdx++;
@@ -417,6 +453,29 @@ const EnhancedWordTracker = ({
           }
         }
 
+        // Check if we need to start a liquid column
+        if (currentIdx !== -1 && currentIdx < updatedStates.length && !liquidColumn) {
+          // Check if next word after current is hidden
+          const nextIdx = currentIdx + 1;
+          if (nextIdx < updatedStates.length && updatedStates[nextIdx].hidden && !updatedStates[nextIdx].spoken) {
+            // Find end of hidden word sequence
+            let endIdx = nextIdx;
+            while (endIdx < updatedStates.length && updatedStates[endIdx].hidden && !updatedStates[endIdx].spoken) {
+              endIdx++;
+            }
+            endIdx--; // Back to last hidden word
+            
+            console.log(`🌊 Starting liquid column from ${nextIdx} to ${endIdx}`);
+            setLiquidColumn({ start: nextIdx, end: endIdx, progress: 0 });
+            liquidPausedRef.current = false;
+            
+            // Mark words as in liquid column
+            for (let i = nextIdx; i <= endIdx; i++) {
+              updatedStates[i] = { ...updatedStates[i], inLiquidColumn: true };
+            }
+          }
+        }
+
         // Track timing for current word and start hint timer if hidden
         if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
           wordTimestamps.current.set(currentIdx, now);
@@ -456,7 +515,36 @@ const EnhancedWordTracker = ({
     }, 10); // Process every 10ms for minimal latency
 
     return () => clearInterval(intervalId);
-  }, [isRecording, transcription]);
+  }, [isRecording, transcription, liquidColumn]);
+  
+  // Liquid column animation
+  useEffect(() => {
+    if (!liquidColumn || !isRecording) return;
+    
+    const animate = () => {
+      if (liquidPausedRef.current) return;
+      
+      setLiquidColumn(prev => {
+        if (!prev) return null;
+        const newProgress = prev.progress + 1.5; // Adjust speed
+        if (newProgress >= 100) {
+          liquidPausedRef.current = true;
+          return { ...prev, progress: 100 };
+        }
+        return { ...prev, progress: newProgress };
+      });
+      
+      liquidAnimationRef.current = requestAnimationFrame(animate);
+    };
+    
+    liquidAnimationRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (liquidAnimationRef.current) {
+        cancelAnimationFrame(liquidAnimationRef.current);
+      }
+    };
+  }, [liquidColumn, isRecording]);
 
   // Pause detection for forgotten words
   useEffect(() => {
@@ -485,6 +573,10 @@ const EnhancedWordTracker = ({
 
           if (timeSinceProgress >= pauseThreshold) {
             console.log(`⚠️ Forgotten word detected: "${currentWord.text}" (paused ${timeSinceProgress}ms)`);
+            
+            // Pause liquid animation
+            liquidPausedRef.current = true;
+            
             setForgottenWordPopup({ wordIndex: currentIdx, isAnimating: false });
             
             // Mark the word as hesitated (forgotten) immediately
@@ -500,6 +592,12 @@ const EnhancedWordTracker = ({
             });
             
             lastProgressTime.current = now; // Reset to avoid repeated triggers
+          } else if (timeSinceProgress > 500) {
+            // User is pausing but not yet at threshold - pause liquid
+            liquidPausedRef.current = true;
+          } else {
+            // User is speaking - resume liquid
+            liquidPausedRef.current = false;
           }
         }
       }
@@ -530,6 +628,12 @@ const EnhancedWordTracker = ({
         lastProgressTime.current = Date.now();
         lastWordIndex.current = -1;
         setForgottenWordPopup(null);
+        setLiquidColumn(null);
+        if (liquidAnimationRef.current) {
+          cancelAnimationFrame(liquidAnimationRef.current);
+          liquidAnimationRef.current = null;
+        }
+        liquidPausedRef.current = false;
         setWordStates((prevStates) =>
           prevStates.map((state) => ({
             ...state,
@@ -733,8 +837,12 @@ const EnhancedWordTracker = ({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-center gap-1 leading-loose">
+      <div className="flex flex-wrap items-center justify-center gap-1 leading-loose relative">
         {wordStates.map((word, index) => {
+          // Render liquid column if this is the first word in the column
+          const isLiquidStart = liquidColumn && index === liquidColumn.start;
+          const isInLiquidColumn = liquidColumn && index >= liquidColumn.start && index <= liquidColumn.end;
+          
           // Hide word in text flow if it's currently in the popup (not animating back yet)
           if (forgottenWordPopup && forgottenWordPopup.wordIndex === index && !forgottenWordPopup.isAnimating) {
             return (
@@ -766,20 +874,45 @@ const EnhancedWordTracker = ({
           }
 
           return (
-            <span
-              key={index}
-              data-word-index={index}
-              className={getWordClassName(word, index)}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleWordTap(index);
-              }}
-              style={{
-                fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)",
-                fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-              }}
-            >
-              {renderWordContent(word, index)}
+            <span key={index} className="relative inline-block">
+              {/* Liquid column overlay */}
+              {isLiquidStart && (
+                <div className="absolute inset-0 z-10 pointer-events-none" style={{
+                  width: `calc(100% * ${liquidColumn.end - liquidColumn.start + 1} + ${(liquidColumn.end - liquidColumn.start) * 0.5}rem)`,
+                }}>
+                  <div className="liquid-column-container h-full">
+                    <div 
+                      className={cn(
+                        "liquid-fill h-full transition-all",
+                        word.liquidError && "liquid-error"
+                      )}
+                      style={{ 
+                        width: `${liquidColumn.progress}%`,
+                        transition: liquidPausedRef.current ? 'none' : 'width 0.1s linear'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <span
+                data-word-index={index}
+                className={cn(
+                  getWordClassName(word, index),
+                  isInLiquidColumn && !word.spoken && "invisible",
+                  !isInLiquidColumn && word.isCurrent && !word.spoken && "animate-pulse text-primary scale-110"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleWordTap(index);
+                }}
+                style={{
+                  fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)",
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                }}
+              >
+                {renderWordContent(word, index)}
+              </span>
             </span>
           );
         })}
