@@ -38,7 +38,7 @@ const normalizeNordic = (text: string): string => {
     .replace(/æ/g, "ae")
     .replace(/ð/g, "d")
     .replace(/þ/g, "th")
-    .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž\s]/gi, ""); // Keep spaces!
+    .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž]/gi, ""); // Remove ALL punctuation including hyphens, spaces
 };
 
 // Calculate word similarity score (0-1) for pronunciation matching
@@ -268,7 +268,19 @@ const EnhancedWordTracker = ({
           const currentWord = updatedStates[scriptPosition];
 
           // Check if current words match
-          const similarity = getWordSimilarity(transcribedWord, targetWord);
+          let similarity = getWordSimilarity(transcribedWord, targetWord);
+          let wordsConsumed = 1; // How many transcribed words were used
+
+          // If no match, check if this is a compound word (e.g., "all-consuming" vs "all consuming")
+          if (similarity < 0.5 && newWordIdx + 1 < newWords.length) {
+            const combinedTranscribed = transcribedWord + newWords[newWordIdx + 1];
+            const combinedSimilarity = getWordSimilarity(combinedTranscribed, targetWord);
+            if (combinedSimilarity >= 0.5) {
+              similarity = combinedSimilarity;
+              wordsConsumed = 2;
+              console.log(`🔗 Matched compound word: "${updatedStates[scriptPosition].text}" with "${transcribedWord} ${newWords[newWordIdx + 1]}"`);
+            }
+          }
 
           if (similarity >= 0.5) {
             // MATCH - determine performance status based on similarity and timing
@@ -352,7 +364,7 @@ const EnhancedWordTracker = ({
             }
 
             // Move both positions forward
-            newWordIdx++;
+            newWordIdx += wordsConsumed; // Consume 1 or 2 transcribed words depending on match
             scriptPosition++;
           } else {
             // NO MATCH - check if this is a hidden word that should block progression
@@ -379,9 +391,20 @@ const EnhancedWordTracker = ({
 
             // Look ahead up to 5 words in script - only mark visible words as MISSED if 2+ words skipped
             for (let lookAhead = 1; lookAhead <= 5 && scriptPosition + lookAhead < targetWords.length; lookAhead++) {
-              const similarity = getWordSimilarity(transcribedWord, targetWords[scriptPosition + lookAhead]);
+              let aheadSimilarity = getWordSimilarity(transcribedWord, targetWords[scriptPosition + lookAhead]);
+              let aheadWordsConsumed = 1;
 
-              if (similarity >= 0.5) {
+              // Check for compound word match when looking ahead
+              if (aheadSimilarity < 0.5 && newWordIdx + 1 < newWords.length) {
+                const combinedTranscribed = transcribedWord + newWords[newWordIdx + 1];
+                const combinedSimilarity = getWordSimilarity(combinedTranscribed, targetWords[scriptPosition + lookAhead]);
+                if (combinedSimilarity >= 0.5) {
+                  aheadSimilarity = combinedSimilarity;
+                  aheadWordsConsumed = 2;
+                }
+              }
+
+              if (aheadSimilarity >= 0.5) {
                 // Mark skipped words - but NEVER mark hidden words as "missed", only as "hesitated"
                 if (lookAhead >= 2) {
                   console.log(
@@ -412,7 +435,7 @@ const EnhancedWordTracker = ({
                 const tookTooLong = timeAtWord ? now - timeAtWord >= 2000 : false;
 
                 let performanceStatus: "correct" | "hesitated" | "missed";
-                if (similarity >= 0.65) {
+                if (aheadSimilarity >= 0.65) {
                   performanceStatus = tookTooLong ? "hesitated" : "correct";
                 } else {
                   performanceStatus = "hesitated"; // Minor pronunciation issue
@@ -424,13 +447,14 @@ const EnhancedWordTracker = ({
                   revealed: true,
                   isCurrent: false,
                   performanceStatus,
+                  hidden: true, // Ensure word fades out after being spoken
                 };
 
                 wordTimestamps.current.delete(scriptPosition + lookAhead);
                 lastSpokenIndexRef.current = scriptPosition + lookAhead;
 
                 scriptPosition = scriptPosition + lookAhead + 1;
-                newWordIdx++;
+                newWordIdx += aheadWordsConsumed; // Consume 1 or 2 words
                 matchFound = true;
                 break;
               }
