@@ -877,13 +877,17 @@ const EnhancedWordTracker = ({
             <span key={index} className="relative inline-block">
               {/* Liquid column overlay */}
               {isLiquidStart && (
-                <div className="absolute inset-0 z-10 pointer-events-none" style={{
-                  width: `calc(100% * ${liquidColumn.end - liquidColumn.start + 1} + ${(liquidColumn.end - liquidColumn.start) * 0.5}rem)`,
-                }}>
-                  <div className="liquid-column-container h-full">
+                <div 
+                  className="absolute top-0 left-0 z-20 pointer-events-none"
+                  style={{
+                    width: `calc(${(liquidColumn.end - liquidColumn.start + 1)} * 5rem)`,
+                    height: '3rem',
+                  }}
+                >
+                  <div className="liquid-column-container h-full relative">
                     <div 
                       className={cn(
-                        "liquid-fill h-full transition-all",
+                        "liquid-fill h-full absolute top-0 left-0",
                         word.liquidError && "liquid-error"
                       )}
                       style={{ 
@@ -899,7 +903,7 @@ const EnhancedWordTracker = ({
                 data-word-index={index}
                 className={cn(
                   getWordClassName(word, index),
-                  isInLiquidColumn && !word.spoken && "invisible",
+                  isInLiquidColumn && !word.spoken && "relative z-10",
                   !isInLiquidColumn && word.isCurrent && !word.spoken && "animate-pulse text-primary scale-110"
                 )}
                 onClick={(e) => {
