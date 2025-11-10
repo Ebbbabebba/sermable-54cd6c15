@@ -230,13 +230,10 @@ export type Database = {
       speeches: {
         Row: {
           created_at: string
-          ease_factor: number | null
           familiarity_level: string | null
           goal_date: string
           id: string
           mastery_level: number | null
-          next_review_date: string | null
-          review_interval: number | null
           speech_language: string | null
           text_current: string
           text_original: string
@@ -246,13 +243,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          ease_factor?: number | null
           familiarity_level?: string | null
           goal_date: string
           id?: string
           mastery_level?: number | null
-          next_review_date?: string | null
-          review_interval?: number | null
           speech_language?: string | null
           text_current: string
           text_original: string
@@ -262,13 +256,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          ease_factor?: number | null
           familiarity_level?: string | null
           goal_date?: string
           id?: string
           mastery_level?: number | null
-          next_review_date?: string | null
-          review_interval?: number | null
           speech_language?: string | null
           text_current?: string
           text_original?: string
@@ -304,17 +295,6 @@ export type Database = {
             Args: { accuracy: number; current_interval: number }
             Returns: number
           }
-      calculate_next_review: {
-        Args: {
-          current_ease: number
-          current_interval: number
-          performance_quality: number
-        }
-        Returns: {
-          new_ease: number
-          new_interval: number
-        }[]
-      }
       calculate_personalized_interval: {
         Args: {
           p_accuracy: number
