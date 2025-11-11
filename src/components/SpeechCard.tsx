@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Play, Trash2, Presentation, Lock } from "lucide-react";
+import { Calendar, Play, Trash2, Presentation, Lock, CheckCircle2 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import LockCountdown from "./LockCountdown";
 
 interface Speech {
   id: string;
@@ -40,6 +49,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const [isLocked, setIsLocked] = useState(false);
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [showLockDialog, setShowLockDialog] = useState(false);
   
   const goalDate = new Date(speech.goal_date);
   const today = new Date();
@@ -92,6 +102,19 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
     checkLockStatus();
   }, [speech.id]);
 
+  const handleCardClick = () => {
+    if (isLocked && subscriptionTier === 'free') {
+      setShowLockDialog(true);
+    } else {
+      navigate(`/practice/${speech.id}`);
+    }
+  };
+
+  const handlePracticeAnyway = () => {
+    setShowLockDialog(false);
+    navigate(`/practice/${speech.id}`);
+  };
+
   const handleDelete = async () => {
     try {
       const { error } = await supabase
@@ -116,85 +139,136 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="truncate">{speech.title}</CardTitle>
-            <CardDescription className="mt-1">
-              Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
-            </CardDescription>
+    <>
+      <Card 
+        className="hover:shadow-lg transition-shadow cursor-pointer"
+        onClick={handleCardClick}
+      >
+        <CardHeader>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="truncate">{speech.title}</CardTitle>
+              <CardDescription className="mt-1">
+                Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
+              </CardDescription>
+            </div>
+            <Badge variant={isOverdue ? "destructive" : "secondary"}>
+              {isOverdue
+                ? `${Math.abs(daysRemaining)} days overdue`
+                : `${daysRemaining} days left`}
+            </Badge>
           </div>
-          <Badge variant={isOverdue ? "destructive" : "secondary"}>
-            {isOverdue
-              ? `${Math.abs(daysRemaining)} days overdue`
-              : `${daysRemaining} days left`}
-          </Badge>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>Goal: {format(goalDate, "MMM dd, yyyy")}</span>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium">{progress}%</span>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>Goal: {format(goalDate, "MMM dd, yyyy")}</span>
           </div>
-          <Progress value={progress} />
-        </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {speech.text_original.substring(0, 150)}...
-        </p>
-      </CardContent>
+          {isLocked && nextReviewDate && (
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+              <Lock className="h-4 w-4 text-muted-foreground" />
+              <div className="flex-1 text-sm">
+                <div className="font-medium">Done for today</div>
+                <div className="text-muted-foreground">
+                  Exercise <LockCountdown nextReviewDate={nextReviewDate} />
+                </div>
+              </div>
+            </div>
+          )}
 
-      <CardFooter className="gap-2">
-        <Button
-          className="flex-1"
-          onClick={() => navigate(`/practice/${speech.id}`)}
-          disabled={isLocked && subscriptionTier === 'free'}
-        >
-          {isLocked && subscriptionTier === 'free' && <Lock className="h-4 w-4 mr-2" />}
-          {!isLocked && <Play className="h-4 w-4 mr-2" />}
-          {isLocked && subscriptionTier === 'free' 
-            ? `Locked until ${nextReviewDate ? format(nextReviewDate, 'MMM dd') : ''}` 
-            : 'Practice'}
-        </Button>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Progress</span>
+              <span className="font-medium">{progress}%</span>
+            </div>
+            <Progress value={progress} />
+          </div>
 
-        <Button
-          variant="outline"
-          onClick={() => navigate(`/presentation/${speech.id}`)}
-        >
-          <Presentation className="h-4 w-4 mr-2" />
-          Present
-        </Button>
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {speech.text_original.substring(0, 150)}...
+          </p>
+        </CardContent>
 
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Trash2 className="h-4 w-4" />
+        <CardFooter className="gap-2" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/presentation/${speech.id}`)}
+          >
+            <Presentation className="h-4 w-4 mr-2" />
+            Present
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Speech?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete "{speech.title}" and all associated practice sessions.
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardFooter>
+      </Card>
+
+      {/* Lock Dialog for Free Users */}
+      <Dialog open={showLockDialog} onOpenChange={setShowLockDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                <Lock className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-xl">Done for today</DialogTitle>
+            <DialogDescription className="text-center pt-2">
+              You've completed your review for this speech. Come back{" "}
+              {nextReviewDate && <LockCountdown nextReviewDate={nextReviewDate} className="font-medium text-foreground" />}
+              {" "}to practice again.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <span className="font-medium">Spaced repetition active</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Our algorithm schedules your next review based on your performance and deadline to optimize memorization.
+              </p>
+            </div>
+            
+            {subscriptionTier !== 'free' && (
+              <p className="text-xs text-center text-muted-foreground">
+                Premium members can practice anytime by clicking "Practice Anyway"
+              </p>
+            )}
+          </div>
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setShowLockDialog(false)} className="flex-1">
+              Got it
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Speech?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete "{speech.title}" and all associated practice sessions.
-                This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </CardFooter>
-    </Card>
+            {subscriptionTier !== 'free' && (
+              <Button onClick={handlePracticeAnyway} className="flex-1">
+                Practice Anyway
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
