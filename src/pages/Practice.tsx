@@ -5,8 +5,9 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, Lock, Unlock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
@@ -47,6 +48,9 @@ const Practice = () => {
   const [showResults, setShowResults] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  const [isLocked, setIsLocked] = useState(false);
+  const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
+  const [overrideLock, setOverrideLock] = useState(false);
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
     revealSpeed: 5,
     showWordOnPause: true,
@@ -75,6 +79,7 @@ const Practice = () => {
           .single();
 
         if (profile) {
+          setSubscriptionTier(profile.subscription_tier);
           setSkillLevel((profile.skill_level || 'beginner') as 'beginner' | 'intermediate' | 'advanced');
         }
       } catch (error) {
@@ -99,6 +104,25 @@ const Practice = () => {
 
       if (error) throw error;
       setSpeech(data);
+      
+      // Check lock status
+      const { data: schedule } = await supabase
+        .from("schedules")
+        .select("next_review_date")
+        .eq("speech_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (schedule?.next_review_date) {
+        const reviewDate = new Date(schedule.next_review_date);
+        setNextReviewDate(reviewDate);
+        
+        // Lock only for free users when review date is in future
+        if (subscriptionTier === 'free' && reviewDate > new Date()) {
+          setIsLocked(true);
+        }
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -112,12 +136,30 @@ const Practice = () => {
   };
 
   const handleStartPractice = () => {
+    // Check if locked and not overridden
+    if (isLocked && !overrideLock && subscriptionTier === 'free') {
+      toast({
+        variant: "destructive",
+        title: "Speech Locked",
+        description: `This speech is scheduled for review on ${nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy') : 'a future date'}. Upgrade to premium to practice anytime.`,
+      });
+      return;
+    }
+    
     setIsPracticing(true);
     setShowResults(false);
     setSessionResults(null);
     toast({
       title: "Practice mode activated",
       description: "Read your speech aloud when ready, then start recording.",
+    });
+  };
+  
+  const handleOverrideLock = () => {
+    setOverrideLock(true);
+    toast({
+      title: "Lock Overridden",
+      description: "You can now practice this speech anytime.",
     });
   };
 
@@ -443,11 +485,44 @@ const Practice = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {!isPracticing ? (
-                <div className="text-center py-12">
-                  <Button size="lg" onClick={handleStartPractice}>
+                <div className="text-center py-12 space-y-4">
+                  {isLocked && !overrideLock && (
+                    <div className="mb-4 p-4 bg-muted rounded-lg">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Lock className="h-5 w-5 text-muted-foreground" />
+                        <p className="font-medium">
+                          Spaced Repetition Lock
+                        </p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Next review: {nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy') : 'Not scheduled'}
+                      </p>
+                      {subscriptionTier !== 'free' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-3"
+                          onClick={handleOverrideLock}
+                        >
+                          <Unlock className="h-4 w-4 mr-2" />
+                          Practice Anyway
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  <Button 
+                    size="lg" 
+                    onClick={handleStartPractice}
+                    disabled={isLocked && !overrideLock && subscriptionTier === 'free'}
+                  >
                     <Play className="h-5 w-5 mr-2" />
                     Start Practice Session
                   </Button>
+                  {isLocked && subscriptionTier === 'free' && (
+                    <p className="text-xs text-muted-foreground">
+                      Upgrade to premium to practice anytime
+                    </p>
+                  )}
                 </div>
               ) : (
                 <>

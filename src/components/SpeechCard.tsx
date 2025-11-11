@@ -2,11 +2,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Play, Trash2, Presentation } from "lucide-react";
+import { Calendar, Play, Trash2, Presentation, Lock } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,10 @@ interface SpeechCardProps {
 const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isLocked, setIsLocked] = useState(false);
+  const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  
   const goalDate = new Date(speech.goal_date);
   const today = new Date();
   const daysRemaining = differenceInDays(goalDate, today);
@@ -43,6 +48,49 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
 
   // Calculate progress (simplified - in production this would be based on practice sessions)
   const progress = 0; // Will be calculated from practice sessions
+  
+  useEffect(() => {
+    const checkLockStatus = async () => {
+      try {
+        // Get user subscription tier
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("subscription_tier")
+          .eq("id", user.id)
+          .single();
+          
+        if (profile) {
+          setSubscriptionTier(profile.subscription_tier);
+        }
+        
+        // Get schedule data to check if locked
+        const { data: schedule } = await supabase
+          .from("schedules")
+          .select("next_review_date")
+          .eq("speech_id", speech.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (schedule?.next_review_date) {
+          const reviewDate = new Date(schedule.next_review_date);
+          setNextReviewDate(reviewDate);
+          
+          // Lock only for free users when review date is in future
+          if (profile?.subscription_tier === 'free' && reviewDate > new Date()) {
+            setIsLocked(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking lock status:', error);
+      }
+    };
+    
+    checkLockStatus();
+  }, [speech.id]);
 
   const handleDelete = async () => {
     try {
@@ -108,9 +156,13 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
         <Button
           className="flex-1"
           onClick={() => navigate(`/practice/${speech.id}`)}
+          disabled={isLocked && subscriptionTier === 'free'}
         >
-          <Play className="h-4 w-4 mr-2" />
-          Practice
+          {isLocked && subscriptionTier === 'free' && <Lock className="h-4 w-4 mr-2" />}
+          {!isLocked && <Play className="h-4 w-4 mr-2" />}
+          {isLocked && subscriptionTier === 'free' 
+            ? `Locked until ${nextReviewDate ? format(nextReviewDate, 'MMM dd') : ''}` 
+            : 'Practice'}
         </Button>
 
         <Button
