@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, HelpCircle, ExternalLink, Mail } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -580,6 +580,96 @@ const Settings = () => {
                   )}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Terms and Conditions */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                <CardTitle>Terms and Conditions</CardTitle>
+              </div>
+              <CardDescription>
+                Review our policies and legal information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => window.open('/terms', '_blank')}
+              >
+                <span>Terms of Service</span>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => window.open('/privacy', '_blank')}
+              >
+                <span>Privacy Policy</span>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => window.open('/cookies', '_blank')}
+              >
+                <span>Cookie Policy</span>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Contact Support/Help Center */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                <CardTitle>Contact Support</CardTitle>
+              </div>
+              <CardDescription>
+                Get help and access our support resources
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full justify-between"
+                  onClick={() => window.open('/help', '_blank')}
+                >
+                  <span>Help Center</span>
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between"
+                  onClick={() => window.open('https://discord.gg/sermable', '_blank')}
+                >
+                  <span>Join Community</span>
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between"
+                  onClick={() => window.location.href = 'mailto:support@sermable.com'}
+                >
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span>Email Support</span>
+                  </div>
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                <p className="text-sm font-medium">Need Help?</p>
+                <p className="text-xs text-muted-foreground">
+                  Our support team typically responds within 24 hours. For urgent issues, please email us directly at support@sermable.com
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
