@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
+import StreakCelebration from "@/components/StreakCelebration";
 
 interface Speech {
   id: string;
@@ -29,6 +30,8 @@ const Dashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [monthlySpeeches, setMonthlySpeeches] = useState(0);
+  const [showStreakCelebration, setShowStreakCelebration] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -42,6 +45,7 @@ const Dashboard = () => {
       }
       setUser(session.user);
       loadSpeeches();
+      checkStreak();
     };
 
     checkAuth();
@@ -55,6 +59,71 @@ const Dashboard = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const checkStreak = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check if we've already shown the streak today
+      const hasShownToday = sessionStorage.getItem('streak-shown-today');
+      if (hasShownToday === new Date().toDateString()) {
+        return;
+      }
+
+      // Get all practice sessions
+      const { data: sessions, error: sessionsError } = await supabase
+        .from("practice_sessions")
+        .select("session_date, speech_id")
+        .order("session_date", { ascending: false });
+
+      if (sessionsError) throw sessionsError;
+
+      // Get user's speeches to verify ownership
+      const { data: userSpeeches } = await supabase
+        .from("speeches")
+        .select("id")
+        .eq("user_id", user.id);
+
+      if (!userSpeeches || !sessions) return;
+
+      const userSpeechIds = new Set(userSpeeches.map(s => s.id));
+      const userSessions = sessions.filter(s => userSpeechIds.has(s.speech_id));
+
+      // Calculate streak
+      let streak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const uniqueDays = new Set(
+        userSessions.map(s => {
+          const date = new Date(s.session_date);
+          date.setHours(0, 0, 0, 0);
+          return date.getTime();
+        })
+      );
+
+      const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
+
+      for (let i = 0; i < sortedDays.length; i++) {
+        const daysDiff = Math.floor((today.getTime() - sortedDays[i]) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff === i) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+
+      if (streak > 0) {
+        setCurrentStreak(streak);
+        setShowStreakCelebration(true);
+        sessionStorage.setItem('streak-shown-today', new Date().toDateString());
+      }
+    } catch (error) {
+      console.error('Error checking streak:', error);
+    }
+  };
 
   const loadSpeeches = async () => {
     try {
@@ -140,6 +209,14 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Streak Celebration */}
+      {showStreakCelebration && (
+        <StreakCelebration 
+          streak={currentStreak} 
+          onClose={() => setShowStreakCelebration(false)} 
+        />
+      )}
+
       {/* Header */}
       <header className="border-b bg-card sticky top-0 z-50 shadow-sm flex-shrink-0">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
