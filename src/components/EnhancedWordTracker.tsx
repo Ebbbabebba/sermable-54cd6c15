@@ -747,17 +747,17 @@ const EnhancedWordTracker = ({
 
     // Missed/Skipped - RED, fades to dots
     if (word.performanceStatus === "missed" && word.hidden) {
-      return cn(base, "bg-red-500/20 text-red-600 dark:text-red-400 border-b-2 border-red-500/40 opacity-60");
+      return cn(base, "bg-red-500/20 text-red-600 dark:text-red-400 border-b-2 border-red-500/40 animate-fade-out");
     }
 
     // Hesitated - YELLOW, fades to dots
     if (word.performanceStatus === "hesitated" && word.hidden) {
-      return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40 opacity-60");
+      return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40 animate-fade-out");
     }
 
     // Correct - gray fade out (no blue, no pulse)
     if (word.spoken && word.performanceStatus === "correct" && word.hidden) {
-      return cn(base, "bg-muted/30 text-muted-foreground/40 opacity-40");
+      return cn(base, "bg-muted/30 text-muted-foreground/40 animate-fade-out");
     }
 
     // In keyword mode, hidden words show as "..." - can be clicked when not recording
