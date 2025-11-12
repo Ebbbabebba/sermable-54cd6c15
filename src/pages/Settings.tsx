@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,8 @@ const Settings = () => {
   const { toast } = useToast();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
   const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -41,8 +43,8 @@ const Settings = () => {
     // Sync with current language on mount
     setCurrentLanguage(i18n.language);
     
-    // Load user skill level
-    const loadSkillLevel = async () => {
+    // Load user data
+    const loadUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -56,12 +58,78 @@ const Settings = () => {
         if (profile) {
           setSkillLevel((profile.skill_level || 'beginner') as 'beginner' | 'intermediate' | 'advanced');
         }
+
+        // Calculate streak
+        const { data: sessions } = await supabase
+          .from("practice_sessions")
+          .select("session_date, speech_id")
+          .order("session_date", { ascending: false });
+
+        const { data: userSpeeches } = await supabase
+          .from("speeches")
+          .select("id")
+          .eq("user_id", user.id);
+
+        if (!userSpeeches || !sessions) return;
+
+        const userSpeechIds = new Set(userSpeeches.map(s => s.id));
+        const userSessions = sessions.filter(s => userSpeechIds.has(s.speech_id));
+
+        // Calculate current streak
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const uniqueDays = new Set(
+          userSessions.map(s => {
+            const date = new Date(s.session_date);
+            date.setHours(0, 0, 0, 0);
+            return date.getTime();
+          })
+        );
+
+        const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
+
+        let streak = 0;
+        for (let i = 0; i < sortedDays.length; i++) {
+          const daysDiff = Math.floor((today.getTime() - sortedDays[i]) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff === i) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+
+        setCurrentStreak(streak);
+
+        // Calculate best streak
+        let maxStreak = 0;
+        let tempStreak = 0;
+        let prevDay = null;
+
+        for (const day of sortedDays) {
+          if (prevDay === null) {
+            tempStreak = 1;
+          } else {
+            const diff = Math.floor((prevDay - day) / (1000 * 60 * 60 * 24));
+            if (diff === 1) {
+              tempStreak++;
+            } else {
+              maxStreak = Math.max(maxStreak, tempStreak);
+              tempStreak = 1;
+            }
+          }
+          prevDay = day;
+        }
+        maxStreak = Math.max(maxStreak, tempStreak);
+        setBestStreak(maxStreak);
+
       } catch (error) {
-        console.error('Error loading skill level:', error);
+        console.error('Error loading user data:', error);
       }
     };
 
-    loadSkillLevel();
+    loadUserData();
   }, [i18n.language]);
 
   const handleSkillLevelChange = async (level: 'beginner' | 'intermediate' | 'advanced') => {
@@ -160,6 +228,47 @@ const Settings = () => {
                     </p>
                   </div>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Profile & Streak */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                <CardTitle>Profile & Streak</CardTitle>
+              </div>
+              <CardDescription>
+                Track your practice consistency
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Flame className="h-4 w-4" />
+                    <span className="text-sm">Current Streak</span>
+                  </div>
+                  <div className="text-3xl font-bold">{currentStreak}</div>
+                  <div className="text-xs text-muted-foreground">days</div>
+                </div>
+
+                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Trophy className="h-4 w-4" />
+                    <span className="text-sm">Best Streak</span>
+                  </div>
+                  <div className="text-3xl font-bold">{bestStreak}</div>
+                  <div className="text-xs text-muted-foreground">days</div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-primary/10 p-4 space-y-2">
+                <p className="text-sm font-medium">Keep your streak alive!</p>
+                <p className="text-xs text-muted-foreground">
+                  Practice at least once every day to maintain your streak. Your streak resets if you miss a day.
+                </p>
               </div>
             </CardContent>
           </Card>
