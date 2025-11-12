@@ -262,8 +262,8 @@ const Settings = () => {
                           <p className="text-sm text-muted-foreground">Billed monthly</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold">$4.99</p>
-                          <p className="text-xs text-muted-foreground line-through">$9.99</p>
+                          <p className="text-2xl font-bold">€3.90</p>
+                          <p className="text-xs text-muted-foreground line-through">€7.90</p>
                           <p className="text-xs text-primary">50% off</p>
                         </div>
                       </div>
@@ -283,8 +283,8 @@ const Settings = () => {
                           <p className="text-sm text-muted-foreground">Billed yearly • Save 33%</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold">$39.99</p>
-                          <p className="text-xs text-muted-foreground line-through">$79.99</p>
+                          <p className="text-2xl font-bold">€39.90</p>
+                          <p className="text-xs text-muted-foreground line-through">€79.90</p>
                           <p className="text-xs text-primary">50% off</p>
                         </div>
                       </div>
@@ -315,7 +315,7 @@ const Settings = () => {
                           <p className="text-sm text-muted-foreground">Billed monthly</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold">$9.99</p>
+                          <p className="text-2xl font-bold">€7.90</p>
                           <p className="text-xs text-muted-foreground">per month</p>
                         </div>
                       </div>
@@ -338,8 +338,8 @@ const Settings = () => {
                           <p className="text-sm text-muted-foreground">Billed yearly</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold">$79.99</p>
-                          <p className="text-xs text-muted-foreground">$6.67/month</p>
+                          <p className="text-2xl font-bold">€79.90</p>
+                          <p className="text-xs text-muted-foreground">€6.66/month</p>
                         </div>
                       </div>
                     </button>
