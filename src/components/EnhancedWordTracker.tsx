@@ -119,6 +119,9 @@ const EnhancedWordTracker = ({
   } | null>(null);
   const liquidAnimationRef = useRef<number | null>(null);
   const liquidPausedRef = useRef<boolean>(false);
+  const fadeQueue = useRef<number[]>([]); // Queue of word indices waiting to fade
+  const lastFadedIndex = useRef<number>(-1); // Track last word that started fading
+  const fadeInProgress = useRef<boolean>(false); // Track if a fade animation is in progress
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -145,6 +148,62 @@ const EnhancedWordTracker = ({
     currentWordIndexRef.current = 0;
     lastSpokenIndexRef.current = -1;
   }, [text, keywordMode]);
+
+  // Process fade queue sequentially - only fade next word after previous finishes
+  useEffect(() => {
+    if (fadeQueue.current.length === 0 || fadeInProgress.current) return;
+    
+    const processFadeQueue = () => {
+      const nextWordIndex = fadeQueue.current[0];
+      
+      // Check if this word should fade (previous word must have finished)
+      if (nextWordIndex === undefined) return;
+      
+      // Check if we need to wait for previous word
+      if (lastFadedIndex.current !== -1 && nextWordIndex !== lastFadedIndex.current + 1) {
+        // There's a gap - wait for sequential order
+        if (nextWordIndex > lastFadedIndex.current + 1) {
+          // Skip this for now, wait for the word before it
+          return;
+        }
+      }
+      
+      fadeInProgress.current = true;
+      lastFadedIndex.current = nextWordIndex;
+      
+      // Mark word as hidden (triggers fade animation)
+      setWordStates((prev) => {
+        const updated = [...prev];
+        if (nextWordIndex >= 0 && nextWordIndex < updated.length) {
+          updated[nextWordIndex] = {
+            ...updated[nextWordIndex],
+            hidden: true,
+          };
+        }
+        return updated;
+      });
+      
+      // Remove from queue
+      fadeQueue.current.shift();
+      
+      // Wait for fade animation to complete (300ms) before processing next
+      setTimeout(() => {
+        fadeInProgress.current = false;
+      }, 300);
+    };
+    
+    // Process immediately
+    processFadeQueue();
+    
+    // Set up interval to keep processing queue
+    const interval = setInterval(() => {
+      if (fadeQueue.current.length > 0 && !fadeInProgress.current) {
+        processFadeQueue();
+      }
+    }, 350); // Check slightly after fade duration
+    
+    return () => clearInterval(interval);
+  }, [wordStates]); // Re-run when wordStates changes
 
   // Removed duplicate transcript processing - only use interval-based processing below
 
@@ -313,10 +372,15 @@ const EnhancedWordTracker = ({
               revealed: true,
               isCurrent: false,
               performanceStatus,
-              hidden: true, // Mark as hidden after speaking (will fade out)
+              hidden: false, // Don't hide immediately - will be queued for sequential fade
               partialProgress: 1,
               showAsHint: false,
             };
+            
+            // Add to fade queue for sequential processing
+            if (!fadeQueue.current.includes(scriptPosition)) {
+              fadeQueue.current.push(scriptPosition);
+            }
 
             // Clear any timers for this word
             const hintTimer = hiddenWordTimers.current.get(scriptPosition);
@@ -415,11 +479,17 @@ const EnhancedWordTracker = ({
                       console.log(`  ${skipStatus === "missed" ? "❌" : "⚠️"} "${updatedStates[skipIdx].text}" marked as ${skipStatus.toUpperCase()}`);
                       updatedStates[skipIdx] = {
                         ...updatedStates[skipIdx],
-                        spoken: false,
+                        spoken: true, // Mark as spoken (skipped)
                         revealed: true,
                         performanceStatus: skipStatus,
+                        hidden: false, // Don't hide immediately - will be queued
                       };
                       wordTimestamps.current.delete(skipIdx);
+                      
+                      // Add to fade queue
+                      if (!fadeQueue.current.includes(skipIdx)) {
+                        fadeQueue.current.push(skipIdx);
+                      }
                     }
                   }
                 } else {
@@ -444,10 +514,15 @@ const EnhancedWordTracker = ({
                   revealed: true,
                   isCurrent: false,
                   performanceStatus,
-                  hidden: true, // Ensure word fades out after speaking
+                  hidden: false, // Don't hide immediately - will be queued
                   partialProgress: 1,
                   showAsHint: false,
                 };
+                
+                // Add to fade queue
+                if (!fadeQueue.current.includes(scriptPosition + lookAhead)) {
+                  fadeQueue.current.push(scriptPosition + lookAhead);
+                }
 
                 wordTimestamps.current.delete(scriptPosition + lookAhead);
                 lastSpokenIndexRef.current = scriptPosition + lookAhead;
@@ -743,7 +818,22 @@ const EnhancedWordTracker = ({
       return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 scale-110 animate-pulse font-semibold border border-blue-500/40");
     }
 
-    // AFTER word is spoken and faded:
+    // AFTER word is spoken - show colors before fade starts:
+    
+    // Spoken but not yet hidden (waiting in queue) - show static colored state
+    if (word.spoken && !word.hidden && word.performanceStatus === "missed") {
+      return cn(base, "bg-red-500/20 text-red-600 dark:text-red-400 border-b-2 border-red-500/40");
+    }
+    
+    if (word.spoken && !word.hidden && word.performanceStatus === "hesitated") {
+      return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40");
+    }
+    
+    if (word.spoken && !word.hidden && word.performanceStatus === "correct") {
+      return cn(base, "bg-muted/30 text-muted-foreground/60");
+    }
+
+    // AFTER fade animation starts (word is hidden):
 
     // Missed/Skipped - RED, fades to dots
     if (word.performanceStatus === "missed" && word.hidden) {
