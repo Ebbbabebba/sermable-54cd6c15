@@ -5,6 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { X, Mic, Square, Play } from "lucide-react";
 import PresentationSummary from "@/components/PresentationSummary";
+import { PresentationModeSelector } from "@/components/PresentationModeSelector";
+import { FreestylePresentation } from "@/components/FreestylePresentation";
+import { FreestyleSummary } from "@/components/FreestyleSummary";
 import { cn } from "@/lib/utils";
 
 interface Speech {
@@ -13,6 +16,15 @@ interface Speech {
   text_original: string;
   text_current: string;
   speech_language: string;
+  presentation_mode?: 'strict' | 'freestyle';
+}
+
+interface FreestyleSegment {
+  id: string;
+  segment_order: number;
+  content: string;
+  importance_level: 'high' | 'medium' | 'low';
+  cue_words: string[];
 }
 
 const Presentation = () => {
@@ -23,8 +35,13 @@ const Presentation = () => {
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
   
+  // Mode selection
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'freestyle' | null>(null);
+  const [isAnalyzingFreestyle, setIsAnalyzingFreestyle] = useState(false);
+  const [freestyleSegments, setFreestyleSegments] = useState<FreestyleSegment[]>([]);
+  
   // Session states
-  const [stage, setStage] = useState<'prep' | 'live' | 'summary'>('prep');
+  const [stage, setStage] = useState<'mode-select' | 'prep' | 'live' | 'summary'>('mode-select');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
@@ -34,8 +51,14 @@ const Presentation = () => {
   const [autoStopSilence, setAutoStopSilence] = useState(4);
   const [fontSize, setFontSize] = useState(40);
   
+  // Freestyle tracking
+  const [coveredSegments, setCoveredSegments] = useState<number[]>([]);
+  const [mentionedCueWords, setMentionedCueWords] = useState<string[]>([]);
+  const [pauseCount, setPauseCount] = useState(0);
+  
   // Results
   const [sessionResults, setSessionResults] = useState<any>(null);
+  const [freestyleResults, setFreestyleResults] = useState<any>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -68,7 +91,10 @@ const Presentation = () => {
         .single();
 
       if (error) throw error;
-      setSpeech(data);
+      setSpeech({
+        ...data,
+        presentation_mode: (data.presentation_mode === 'freestyle' ? 'freestyle' : 'strict') as 'strict' | 'freestyle'
+      });
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -258,11 +284,106 @@ const Presentation = () => {
 
   const handleRetry = () => {
     setSessionResults(null);
-    setStage('prep');
+    setFreestyleResults(null);
+    setStage('mode-select');
+    setCoveredSegments([]);
+    setMentionedCueWords([]);
+    setPauseCount(0);
   };
 
   const handleExit = () => {
     navigate('/dashboard');
+  };
+
+  const handleModeSelect = async (mode: 'strict' | 'freestyle') => {
+    setSelectedMode(mode);
+    
+    if (mode === 'freestyle') {
+      // Check if segments already exist
+      const { data: existingSegments } = await supabase
+        .from('freestyle_segments')
+        .select('*')
+        .eq('speech_id', id)
+        .order('segment_order');
+
+      if (existingSegments && existingSegments.length > 0) {
+        setFreestyleSegments(existingSegments as FreestyleSegment[]);
+        setStage('prep');
+      } else {
+        // Analyze speech for freestyle mode
+        setIsAnalyzingFreestyle(true);
+        try {
+          const { data, error } = await supabase.functions.invoke('analyze-freestyle-speech', {
+            body: {
+              speechId: id,
+              text: speech!.text_original
+            }
+          });
+
+          if (error) throw error;
+
+          // Fetch the created segments
+          const { data: segments, error: segmentsError } = await supabase
+            .from('freestyle_segments')
+            .select('*')
+            .eq('speech_id', id)
+            .order('segment_order');
+
+          if (segmentsError) throw segmentsError;
+
+          setFreestyleSegments(segments as FreestyleSegment[]);
+          setStage('prep');
+          
+          toast({
+            title: "Speech analyzed!",
+            description: `Created ${segments.length} segments with key cue words`,
+          });
+        } catch (error: any) {
+          toast({
+            variant: "destructive",
+            title: "Analysis failed",
+            description: error.message,
+          });
+          setStage('mode-select');
+          setSelectedMode(null);
+        } finally {
+          setIsAnalyzingFreestyle(false);
+        }
+      }
+    } else {
+      setStage('prep');
+    }
+  };
+
+  const handleFreestyleComplete = async () => {
+    setIsProcessing(true);
+    const duration = Math.floor((Date.now() - startTime) / 1000);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-freestyle-session', {
+        body: {
+          speechId: speech!.id,
+          transcript: '', // Would need to capture this from speech recognition
+          durationSeconds: duration,
+          pauseCount,
+          coveredSegments,
+          mentionedCueWords
+        }
+      });
+
+      if (error) throw error;
+
+      setFreestyleResults(data);
+      setStage('summary');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Analysis failed",
+        description: error.message,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (loading) {
@@ -277,7 +398,35 @@ const Presentation = () => {
 
   if (!speech) return null;
 
-  // Show summary
+  // Show mode selector
+  if (stage === 'mode-select') {
+    return (
+      <PresentationModeSelector 
+        onSelectMode={handleModeSelect}
+        isAnalyzing={isAnalyzingFreestyle}
+      />
+    );
+  }
+
+  // Show freestyle summary
+  if (stage === 'summary' && freestyleResults && selectedMode === 'freestyle') {
+    return (
+      <FreestyleSummary
+        totalSegments={freestyleResults.coverage.totalSegments}
+        coveredSegments={freestyleResults.coverage.coveredSegments}
+        coveragePercent={freestyleResults.coverage.coveragePercent}
+        totalCueWords={freestyleResults.cueWords.total}
+        mentionedCueWords={freestyleResults.cueWords.mentioned}
+        missedCueWords={freestyleResults.cueWords.missed}
+        duration={Math.floor((Date.now() - startTime) / 1000)}
+        feedback={freestyleResults.feedback}
+        onRetry={handleRetry}
+        onExit={handleExit}
+      />
+    );
+  }
+
+  // Show strict mode summary
   if (stage === 'summary' && sessionResults) {
     return (
       <PresentationSummary
@@ -294,24 +443,38 @@ const Presentation = () => {
     );
   }
 
+  // Show freestyle live mode
+  if (stage === 'live' && selectedMode === 'freestyle') {
+    return (
+      <FreestylePresentation
+        segments={freestyleSegments}
+        isRecording={isRecording}
+        onStartRecording={handleRecordingStart}
+        onStopRecording={handleStopRecording}
+        onComplete={handleFreestyleComplete}
+      />
+    );
+  }
+
   // Show prep screen
   if (stage === 'prep') {
+    const modeLabel = selectedMode === 'freestyle' ? 'Freestyle' : 'Strict';
     return (
       <div className="min-h-screen bg-background p-8">
         <div className="max-w-2xl mx-auto space-y-6">
           <Button
             variant="ghost"
-            onClick={handleExit}
+            onClick={() => setStage('mode-select')}
             className="mb-4"
           >
             <X className="h-4 w-4 mr-2" />
-            Cancel
+            Back to Mode Selection
           </Button>
 
           <div className="space-y-2">
             <h1 className="text-4xl font-bold">{speech.title}</h1>
             <p className="text-muted-foreground">
-              Presentation Mode • {speech.text_original.split(/\s+/).length} words
+              {modeLabel} Mode • {speech.text_original.split(/\s+/).length} words
             </p>
           </div>
 

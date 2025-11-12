@@ -14,6 +14,94 @@ export type Database = {
   }
   public: {
     Tables: {
+      freestyle_segments: {
+        Row: {
+          content: string
+          created_at: string | null
+          cue_words: string[]
+          id: string
+          importance_level: string
+          segment_order: number
+          speech_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          cue_words?: string[]
+          id?: string
+          importance_level: string
+          segment_order: number
+          speech_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          cue_words?: string[]
+          id?: string
+          importance_level?: string
+          segment_order?: number
+          speech_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freestyle_segments_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freestyle_sessions: {
+        Row: {
+          completed_at: string | null
+          covered_segments: number[] | null
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          improvisation_count: number | null
+          mentioned_cue_words: string[] | null
+          missed_cue_words: string[] | null
+          pause_count: number | null
+          speech_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          covered_segments?: number[] | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          improvisation_count?: number | null
+          mentioned_cue_words?: string[] | null
+          missed_cue_words?: string[] | null
+          pause_count?: number | null
+          speech_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          covered_segments?: number[] | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          improvisation_count?: number | null
+          mentioned_cue_words?: string[] | null
+          missed_cue_words?: string[] | null
+          pause_count?: number | null
+          speech_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freestyle_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practice_sessions: {
         Row: {
           analysis: string | null
@@ -236,6 +324,7 @@ export type Database = {
           id: string
           mastery_level: number | null
           next_review_date: string | null
+          presentation_mode: string | null
           review_interval: number | null
           speech_language: string | null
           text_current: string
@@ -252,6 +341,7 @@ export type Database = {
           id?: string
           mastery_level?: number | null
           next_review_date?: string | null
+          presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
           text_current: string
@@ -268,6 +358,7 @@ export type Database = {
           id?: string
           mastery_level?: number | null
           next_review_date?: string | null
+          presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
           text_current?: string
