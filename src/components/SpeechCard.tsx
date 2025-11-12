@@ -193,6 +193,15 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
 
         <CardFooter className="gap-2" onClick={(e) => e.stopPropagation()}>
           <Button
+            variant="default"
+            onClick={handleCardClick}
+            className="flex-1"
+          >
+            <Play className="h-4 w-4 mr-2" />
+            Practice
+          </Button>
+
+          <Button
             variant="outline"
             onClick={() => navigate(`/presentation/${speech.id}`)}
           >
