@@ -56,8 +56,12 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const daysRemaining = differenceInDays(goalDate, today);
   const isOverdue = daysRemaining < 0;
 
-  // Calculate progress (simplified - in production this would be based on practice sessions)
-  const progress = 0; // Will be calculated from practice sessions
+  // Calculate memorization progress based on how many words have been mastered
+  // Progress = percentage of words removed from text_current (mastered)
+  const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
+  const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
+  const wordsMemorized = Math.max(0, originalWords - currentWords);
+  const progress = originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
   
   useEffect(() => {
     const checkLockStatus = async () => {
