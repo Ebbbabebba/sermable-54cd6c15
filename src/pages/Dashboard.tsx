@@ -11,8 +11,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
-import PracticeStreak from "@/components/PracticeStreak";
 import PracticeHeatmap from "@/components/PracticeHeatmap";
+import StreakCelebration from "@/components/StreakCelebration";
+import { startOfDay, differenceInDays } from "date-fns";
 
 interface Speech {
   id: string;
@@ -31,6 +32,8 @@ const Dashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [monthlySpeeches, setMonthlySpeeches] = useState(0);
+  const [showStreakCelebration, setShowStreakCelebration] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -82,6 +85,9 @@ const Dashboard = () => {
         setSubscriptionTier(profile.subscription_tier);
         setMonthlySpeeches(profile.monthly_speeches_count);
       }
+
+      // Load streak data and show celebration
+      await loadStreakData();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -96,6 +102,82 @@ const Dashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const loadStreakData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get all practice sessions
+      const { data: practiceSessions } = await supabase
+        .from("practice_sessions")
+        .select("session_date")
+        .order("session_date", { ascending: false });
+
+      const { data: presentationSessions } = await supabase
+        .from("presentation_sessions")
+        .select("created_at")
+        .order("created_at", { ascending: false });
+
+      // Combine and get unique practice days
+      const allDates = new Set<string>();
+      
+      practiceSessions?.forEach(session => {
+        const date = startOfDay(new Date(session.session_date)).toISOString();
+        allDates.add(date);
+      });
+
+      presentationSessions?.forEach(session => {
+        const date = startOfDay(new Date(session.created_at)).toISOString();
+        allDates.add(date);
+      });
+
+      const uniqueDates = Array.from(allDates)
+        .map(d => new Date(d))
+        .sort((a, b) => b.getTime() - a.getTime());
+
+      if (uniqueDates.length === 0) {
+        setCurrentStreak(0);
+        return;
+      }
+
+      // Calculate current streak
+      let streak = 0;
+      const today = startOfDay(new Date());
+      
+      const mostRecentPractice = uniqueDates[0];
+      const daysSinceLastPractice = differenceInDays(today, mostRecentPractice);
+      
+      if (daysSinceLastPractice <= 1) {
+        streak = 1;
+        
+        for (let i = 1; i < uniqueDates.length; i++) {
+          const currentDate = uniqueDates[i];
+          const previousDate = uniqueDates[i - 1];
+          const daysDiff = differenceInDays(previousDate, currentDate);
+          
+          if (daysDiff === 1) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+      }
+
+      setCurrentStreak(streak);
+      
+      // Show celebration if streak > 0
+      if (streak > 0) {
+        const hasSeenStreakToday = sessionStorage.getItem(`streak-seen-${today.toISOString()}`);
+        if (!hasSeenStreakToday) {
+          setShowStreakCelebration(true);
+          sessionStorage.setItem(`streak-seen-${today.toISOString()}`, 'true');
+        }
+      }
+    } catch (error) {
+      console.error("Error loading streak data:", error);
+    }
   };
 
   const handleSpeechAdded = () => {
@@ -243,11 +325,8 @@ const Dashboard = () => {
           {/* Review Notifications */}
           <ReviewNotifications />
 
-          {/* Practice Streak and Heatmap */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <PracticeStreak />
-            <PracticeHeatmap />
-          </div>
+          {/* Practice Heatmap */}
+          <PracticeHeatmap />
 
           {/* Ad Placeholder - Free Users */}
           {subscriptionTier === 'free' && (
@@ -346,6 +425,12 @@ const Dashboard = () => {
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         onSuccess={handleSpeechAdded}
+      />
+
+      <StreakCelebration
+        currentStreak={currentStreak}
+        show={showStreakCelebration}
+        onHide={() => setShowStreakCelebration(false)}
       />
     </div>
   );
