@@ -157,9 +157,12 @@ const Practice = () => {
   
   const handleOverrideLock = () => {
     setOverrideLock(true);
+    setIsPracticing(true);
+    setShowResults(false);
+    setSessionResults(null);
     toast({
-      title: "Lock Overridden",
-      description: "You can now practice this speech anytime.",
+      title: "Practice session activated",
+      description: "Read your speech aloud when ready, then start recording.",
     });
   };
 
