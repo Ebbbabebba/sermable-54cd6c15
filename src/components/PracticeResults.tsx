@@ -38,14 +38,37 @@ const PracticeResults = ({
     }
   });
   
-  // Normalize missed/delayed words for comparison
-  const normalizedMissed = new Set(missedWords.map(w => w.toLowerCase().replace(/[^\w]/g, '')));
-  const normalizedDelayed = new Set(delayedWords.map(w => w.toLowerCase().replace(/[^\w]/g, '')));
+  // Count how many times each word appears in missed/delayed arrays
+  const missedWordCount = new Map<string, number>();
+  const delayedWordCount = new Map<string, number>();
+  
+  missedWords.forEach(w => {
+    const normalized = w.toLowerCase().replace(/[^\w]/g, '');
+    missedWordCount.set(normalized, (missedWordCount.get(normalized) || 0) + 1);
+  });
+  
+  delayedWords.forEach(w => {
+    const normalized = w.toLowerCase().replace(/[^\w]/g, '');
+    delayedWordCount.set(normalized, (delayedWordCount.get(normalized) || 0) + 1);
+  });
   
   const getWordStatus = (word: string): 'correct' | 'hesitated' | 'missed' => {
     const normalized = word.toLowerCase().replace(/[^\w]/g, '');
-    if (normalizedMissed.has(normalized)) return 'missed';
-    if (normalizedDelayed.has(normalized)) return 'hesitated';
+    
+    // Check if this instance should be marked as missed
+    const missedCount = missedWordCount.get(normalized);
+    if (missedCount && missedCount > 0) {
+      missedWordCount.set(normalized, missedCount - 1);
+      return 'missed';
+    }
+    
+    // Check if this instance should be marked as delayed
+    const delayedCount = delayedWordCount.get(normalized);
+    if (delayedCount && delayedCount > 0) {
+      delayedWordCount.set(normalized, delayedCount - 1);
+      return 'hesitated';
+    }
+    
     return 'correct';
   };
   return (
