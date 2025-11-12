@@ -403,9 +403,9 @@ const EnhancedWordTracker = ({
 
               if (lookAheadSimilarity >= 0.5) {
                 // Mark skipped words - but NEVER mark hidden words as "missed", only as "hesitated"
-                if (lookAhead >= 2) {
+                if (lookAhead >= 1) {
                   console.log(
-                    `⚠️ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}" (${lookAhead} words skipped)`,
+                    `⚠️ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}" (${lookAhead} word${lookAhead > 1 ? 's' : ''} skipped)`,
                   );
 
                   for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
@@ -422,9 +422,6 @@ const EnhancedWordTracker = ({
                       wordTimestamps.current.delete(skipIdx);
                     }
                   }
-                } else {
-                  // Just 1 word ahead - might be transcription timing, don't mark as missed
-                  console.log(`⚠️ Jumped 1 word ahead (possible transcription timing), not marking as missed`);
                 }
 
                 // Color the matched word based on pronunciation quality
