@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ const Settings = () => {
   const [bestStreak, setBestStreak] = useState(0);
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | null>(null);
+  const [showStudentPricing, setShowStudentPricing] = useState(false);
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -177,6 +180,201 @@ const Settings = () => {
               Customize your Sermable experience
             </p>
           </div>
+
+          {/* Subscription Section */}
+          <Card className="border-primary/50">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-primary" />
+                <CardTitle>Subscription</CardTitle>
+              </div>
+              <CardDescription>
+                Unlock premium features and enhance your learning
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Premium Features */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Why Premium?</h3>
+                <div className="grid gap-3">
+                  <div className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Override Spaced Repetition Lock</p>
+                      <p className="text-sm text-muted-foreground">Practice anytime with "Practice Anyway" button</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Unlimited Speeches</p>
+                      <p className="text-sm text-muted-foreground">Upload and practice unlimited speech texts</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Advanced Analytics</p>
+                      <p className="text-sm text-muted-foreground">Detailed performance insights and progress tracking</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Streak Freeze</p>
+                      <p className="text-sm text-muted-foreground">Protect your streak when life gets busy</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Priority Support</p>
+                      <p className="text-sm text-muted-foreground">Get help faster with dedicated support</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Pricing Options */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Choose Your Plan</h3>
+                
+                {showStudentPricing ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 mb-4">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                      <p className="text-sm font-medium">Student Pricing</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => setSelectedPlan('monthly')}
+                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        selectedPlan === 'monthly'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">Monthly Student Plan</p>
+                          <p className="text-sm text-muted-foreground">Billed monthly</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold">$4.99</p>
+                          <p className="text-xs text-muted-foreground line-through">$9.99</p>
+                          <p className="text-xs text-primary">50% off</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedPlan('annual')}
+                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        selectedPlan === 'annual'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">Annual Student Plan</p>
+                          <p className="text-sm text-muted-foreground">Billed yearly • Save 33%</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold">$39.99</p>
+                          <p className="text-xs text-muted-foreground line-through">$79.99</p>
+                          <p className="text-xs text-primary">50% off</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowStudentPricing(false)}
+                      className="w-full"
+                    >
+                      Back to regular pricing
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setSelectedPlan('monthly')}
+                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        selectedPlan === 'monthly'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">Monthly Plan</p>
+                          <p className="text-sm text-muted-foreground">Billed monthly</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold">$9.99</p>
+                          <p className="text-xs text-muted-foreground">per month</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedPlan('annual')}
+                      className={`w-full p-4 rounded-lg border-2 transition-all text-left relative overflow-hidden ${
+                        selectedPlan === 'annual'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md font-medium">
+                        Save 33%
+                      </div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">Annual Plan</p>
+                          <p className="text-sm text-muted-foreground">Billed yearly</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold">$79.99</p>
+                          <p className="text-xs text-muted-foreground">$6.67/month</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Student Button */}
+              {!showStudentPricing && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowStudentPricing(true)}
+                >
+                  <GraduationCap className="h-4 w-4 mr-2" />
+                  Student? Click here!
+                </Button>
+              )}
+
+              {/* Continue Button */}
+              <Button
+                className="w-full"
+                size="lg"
+                disabled={!selectedPlan}
+                onClick={() => {
+                  toast({
+                    title: "Coming soon!",
+                    description: "Premium subscription will be available soon.",
+                  });
+                }}
+              >
+                Continue with {selectedPlan === 'monthly' ? 'Monthly' : selectedPlan === 'annual' ? 'Annual' : ''} Plan
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* Language Settings */}
           <Card>
