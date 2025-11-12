@@ -508,20 +508,21 @@ const Practice = () => {
                           Practice Anyway
                         </Button>
                       )}
+                      {subscriptionTier === 'free' && (
+                        <p className="text-xs text-muted-foreground mt-3">
+                          Upgrade to premium to practice anytime
+                        </p>
+                      )}
                     </div>
                   )}
-                  <Button 
-                    size="lg" 
-                    onClick={handleStartPractice}
-                    disabled={isLocked && !overrideLock && subscriptionTier === 'free'}
-                  >
-                    <Play className="h-5 w-5 mr-2" />
-                    Start Practice Session
-                  </Button>
-                  {isLocked && subscriptionTier === 'free' && (
-                    <p className="text-xs text-muted-foreground">
-                      Upgrade to premium to practice anytime
-                    </p>
+                  {(!isLocked || overrideLock) && (
+                    <Button 
+                      size="lg" 
+                      onClick={handleStartPractice}
+                    >
+                      <Play className="h-5 w-5 mr-2" />
+                      Start Practice Session
+                    </Button>
                   )}
                 </div>
               ) : (
