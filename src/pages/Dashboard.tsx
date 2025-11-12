@@ -11,6 +11,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
+import PracticeStreak from "@/components/PracticeStreak";
+import PracticeHeatmap from "@/components/PracticeHeatmap";
 
 interface Speech {
   id: string;
@@ -240,6 +242,12 @@ const Dashboard = () => {
 
           {/* Review Notifications */}
           <ReviewNotifications />
+
+          {/* Practice Streak and Heatmap */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PracticeStreak />
+            <PracticeHeatmap />
+          </div>
 
           {/* Ad Placeholder - Free Users */}
           {subscriptionTier === 'free' && (
