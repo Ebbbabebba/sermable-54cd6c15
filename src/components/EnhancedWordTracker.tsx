@@ -289,38 +289,23 @@ const EnhancedWordTracker = ({
               }
             }
             
-            // MATCH - determine performance status based on similarity and timing
+            // MATCH - determine performance status based on TIMING ONLY
             const timeAtWord = wordTimestamps.current.get(scriptPosition);
             const tookTooLong = timeAtWord ? now - timeAtWord >= 2000 : false;
 
-            let performanceStatus: "correct" | "hesitated" | "missed";
+            // Check if this word was shown in forgotten popup
+            const wasForgotten = forgottenWordPopup?.wordIndex === scriptPosition;
 
-            // Pronunciation quality check (65% threshold for "correct")
+            // Only mark as hesitated if user took 2+ seconds
+            const performanceStatus: "correct" | "hesitated" | "missed" = tookTooLong ? "hesitated" : "correct";
+            
             const finalSimilarity = wordsConsumed === 2 ? 
               getWordSimilarity(transcribedWord + newWords[newWordIdx + 1], targetWord) : 
               similarity;
-              
-            if (finalSimilarity >= 0.65) {
-              performanceStatus = tookTooLong ? "hesitated" : "correct";
-              console.log(
-                `✅ "${updatedStates[scriptPosition].text}" spoken ${tookTooLong ? "with timing hesitation" : "correctly"}`,
-              );
-            } else {
-              // Minor pronunciation issue (50-65% similarity) - soft feedback
-              performanceStatus = "hesitated";
-              console.log(
-                `⚠️ "${updatedStates[scriptPosition].text}" spoken with minor pronunciation variation (${Math.round(finalSimilarity * 100)}% match)`,
-              );
-            }
-
-            // Check if this word was shown in forgotten popup
-            const wasForgotten = forgottenWordPopup?.wordIndex === scriptPosition;
             
-            // If word was forgotten, mark as hesitated regardless of timing
-            if (wasForgotten) {
-              performanceStatus = "hesitated";
-              console.log(`⚠️ "${updatedStates[scriptPosition].text}" was forgotten and shown in popup`);
-            }
+            console.log(
+              `✅ "${updatedStates[scriptPosition].text}" spoken ${tookTooLong ? "with hesitation (2+ seconds)" : "correctly"}${finalSimilarity < 0.65 ? ` (${Math.round(finalSimilarity * 100)}% pronunciation match)` : ''}`
+            );
 
             updatedStates[scriptPosition] = {
               ...updatedStates[scriptPosition],
