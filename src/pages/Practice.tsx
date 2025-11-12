@@ -452,11 +452,30 @@ const Practice = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Memorization</span>
                   <span className="font-medium">
-                    {sessionResults ? `${sessionResults.accuracy}%` : '0%'}
+                    {(() => {
+                      const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
+                      const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
+                      const wordsMemorized = Math.max(0, originalWords - currentWords);
+                      const memorizationProgress = originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
+                      return `${memorizationProgress}%`;
+                    })()}
                   </span>
                 </div>
-                <Progress value={sessionResults?.accuracy || 0} />
+                <Progress value={(() => {
+                  const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
+                  const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
+                  const wordsMemorized = Math.max(0, originalWords - currentWords);
+                  return originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
+                })()} />
               </div>
+              {sessionResults && (
+                <div className="space-y-2 pt-2 border-t">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Last Session Accuracy</span>
+                    <span className="font-medium">{sessionResults.accuracy}%</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
