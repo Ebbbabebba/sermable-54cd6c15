@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.0';
 
 const corsHeaders = {
@@ -22,7 +23,7 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
       )
     );
 
-    // Use AI to analyze improvisation and flow
+    // Use OpenAI GPT-5 to analyze improvisation and flow
     let feedback = {
       summary: 'Good freestyle presentation!',
       coverage: `You covered ${coveredSegments.length} out of ${segments.length} segments.`,
@@ -74,16 +75,16 @@ Deno.serve(async (req) => {
       nextStep: 'Try to cover all segments in your next practice.'
     };
 
-    if (lovableApiKey) {
+    if (openAIApiKey) {
       try {
-        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${lovableApiKey}`,
+            'Authorization': `Bearer ${openAIApiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
+            model: 'gpt-5-2025-08-07',
             messages: [
               {
                 role: 'system',
