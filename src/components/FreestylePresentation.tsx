@@ -225,7 +225,7 @@ export const FreestylePresentation = ({
       return 'bg-primary/20 border-primary';
     }
     if (index === currentSegmentIndex) {
-      return 'bg-purple-500/10 border-purple-500';
+      return 'bg-white/10 border-white';
     }
     return 'bg-muted/30 border-border';
   };
@@ -240,7 +240,7 @@ export const FreestylePresentation = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-500/5 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-white/5 p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Progress Bar */}
         <Card className="p-4">
@@ -251,7 +251,7 @@ export const FreestylePresentation = ({
             </div>
             <div className="h-3 bg-muted rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
                 style={{ width: `${coveragePercent}%` }}
               />
             </div>
@@ -337,7 +337,7 @@ export const FreestylePresentation = ({
             {coveredSegments.includes(currentSegmentIndex) && (
               <Button 
                 onClick={handleNextSegment}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500"
+                className="w-full bg-gradient-to-r from-primary to-accent"
               >
                 {currentSegmentIndex < segments.length - 1 ? (
                   <>Next Segment <ArrowRight className="ml-2 w-4 h-4" /></>
@@ -381,7 +381,7 @@ export const FreestylePresentation = ({
               "rounded-full w-20 h-20 shadow-2xl transition-all duration-300",
               isRecording 
                 ? "bg-red-500 hover:bg-red-600 animate-pulse" 
-                : "bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-110"
+                : "bg-gradient-to-r from-primary to-accent hover:scale-110"
             )}
           >
             {isRecording ? (

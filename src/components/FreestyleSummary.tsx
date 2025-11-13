@@ -53,14 +53,14 @@ export const FreestyleSummary = ({
   const badge = getCoverageBadge();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-purple-500/5 to-pink-500/5">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-white/5 to-white/5">
       <Card className="w-full max-w-3xl p-8 space-y-8 shadow-2xl">
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mx-auto flex items-center justify-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-full mx-auto flex items-center justify-center">
             <Sparkles className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Freestyle Presentation Complete!
           </h2>
           <p className="text-muted-foreground">
@@ -70,8 +70,8 @@ export const FreestyleSummary = ({
 
         {/* Key Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 text-center bg-gradient-to-br from-purple-500/10 to-transparent">
-            <div className="text-3xl font-bold text-purple-600">{coveragePercent}%</div>
+          <Card className="p-4 text-center bg-gradient-to-br from-primary/10 to-transparent">
+            <div className="text-3xl font-bold text-primary">{coveragePercent}%</div>
             <div className="text-xs text-muted-foreground mt-1">Coverage</div>
           </Card>
           
@@ -109,7 +109,7 @@ export const FreestyleSummary = ({
               </div>
               <div className="h-3 bg-background rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-1000"
+                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000"
                   style={{ width: `${coveragePercent}%` }}
                 />
               </div>
@@ -150,9 +150,9 @@ export const FreestyleSummary = ({
         )}
 
         {/* AI Feedback */}
-        <Card className="p-6 bg-gradient-to-br from-purple-500/5 to-pink-500/5 border-purple-500/20">
+        <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
           <h3 className="font-semibold flex items-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-primary" />
             AI Coach Feedback
           </h3>
           

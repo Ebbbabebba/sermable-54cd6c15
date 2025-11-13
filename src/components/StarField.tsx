@@ -35,8 +35,8 @@ export const StarField = () => {
         colors[i * 3 + 1] = 0.8;
         colors[i * 3 + 2] = 1;
       } else if (colorChoice > 0.4) {
-        // Purple stars
-        colors[i * 3] = 0.7;
+        // White stars
+        colors[i * 3] = 1.0;
         colors[i * 3 + 1] = 0.4;
         colors[i * 3 + 2] = 1;
       } else if (colorChoice > 0.25) {
