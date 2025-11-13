@@ -130,10 +130,10 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       if (error) throw error;
 
       // Check memorization feasibility
-      const { data: feasibilityData, error: feasibilityError } = await supabase
+      const { data: feasibilityData, error: feasibilityError } = await (supabase as any)
         .rpc('assess_memorization_feasibility', { p_speech_id: newSpeech.id });
 
-      if (!feasibilityError && feasibilityData && feasibilityData.length > 0) {
+      if (!feasibilityError && feasibilityData && Array.isArray(feasibilityData) && feasibilityData.length > 0) {
         const assessment = feasibilityData[0];
         
         // Show appropriate warning based on warning level
