@@ -106,7 +106,7 @@ const Practice = () => {
       if (error) throw error;
       setSpeech(data);
       
-      // Check lock status
+      // Check lock status - TEMPORARILY DISABLED FOR TESTING
       const { data: schedule } = await supabase
         .from("schedules")
         .select("next_review_date")
@@ -119,10 +119,12 @@ const Practice = () => {
         const reviewDate = new Date(schedule.next_review_date);
         setNextReviewDate(reviewDate);
         
+        // LOCK DISABLED FOR TESTING - remove this to re-enable
         // Lock only for free users when review date is in future
-        if (subscriptionTier === 'free' && reviewDate > new Date()) {
-          setIsLocked(true);
-        }
+        // if (subscriptionTier === 'free' && reviewDate > new Date()) {
+        //   setIsLocked(true);
+        // }
+        setIsLocked(false); // Always unlocked for testing
       }
     } catch (error: any) {
       toast({
@@ -137,15 +139,16 @@ const Practice = () => {
   };
 
   const handleStartPractice = () => {
+    // LOCK CHECK DISABLED FOR TESTING
     // Check if locked and not overridden
-    if (isLocked && !overrideLock && subscriptionTier === 'free') {
-      toast({
-        variant: "destructive",
-        title: "Speech Locked",
-        description: `This speech is scheduled for review on ${nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy') : 'a future date'}. Upgrade to premium to practice anytime.`,
-      });
-      return;
-    }
+    // if (isLocked && !overrideLock && subscriptionTier === 'free') {
+    //   toast({
+    //     variant: "destructive",
+    //     title: "Speech Locked",
+    //     description: `This speech is scheduled for review on ${nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy') : 'a future date'}. Upgrade to premium to practice anytime.`,
+    //   });
+    //   return;
+    // }
     
     setIsPracticing(true);
     setShowResults(false);
