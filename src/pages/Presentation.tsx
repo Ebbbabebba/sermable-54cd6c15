@@ -452,6 +452,7 @@ const Presentation = () => {
         onStartRecording={handleRecordingStart}
         onStopRecording={handleStopRecording}
         onComplete={handleFreestyleComplete}
+        speechLanguage={speech.speech_language}
       />
     );
   }
