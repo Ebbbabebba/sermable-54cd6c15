@@ -420,7 +420,6 @@ const Presentation = () => {
         missedCueWords={freestyleResults.cueWords.missed}
         duration={Math.floor((Date.now() - startTime) / 1000)}
         feedback={freestyleResults.feedback}
-        onRetry={handleRetry}
         onExit={handleExit}
       />
     );

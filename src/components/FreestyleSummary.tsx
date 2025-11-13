@@ -18,7 +18,6 @@ interface FreestyleSummaryProps {
     advice: string;
     nextStep: string;
   };
-  onRetry: () => void;
   onExit: () => void;
 }
 
@@ -31,7 +30,6 @@ export const FreestyleSummary = ({
   missedCueWords,
   duration,
   feedback,
-  onRetry,
   onExit
 }: FreestyleSummaryProps) => {
   const formatDuration = (seconds: number) => {
@@ -180,21 +178,13 @@ export const FreestyleSummary = ({
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-4">
-          <Button
-            onClick={onExit}
-            variant="outline"
-            className="flex-1"
-          >
-            Back to Dashboard
-          </Button>
-          <Button
-            onClick={onRetry}
-            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-          >
-            Try Again
-          </Button>
-        </div>
+        <Button
+          onClick={onExit}
+          variant="outline"
+          className="w-full"
+        >
+          Back to Dashboard
+        </Button>
       </Card>
     </div>
   );
