@@ -14,6 +14,7 @@ import PracticeResults from "@/components/PracticeResults";
 import EnhancedWordTracker from "@/components/EnhancedWordTracker";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import LockCountdown from "@/components/LockCountdown";
 
 interface Speech {
   id: string;
@@ -513,11 +514,18 @@ const Practice = () => {
                       <div className="flex items-center justify-center gap-2 mb-2">
                         <Lock className="h-5 w-5 text-muted-foreground" />
                         <p className="font-medium">
-                          Spaced Repetition Lock
+                          Done for today
                         </p>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Next review: {nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy') : 'Not scheduled'}
+                        Come back{" "}
+                        {nextReviewDate && (
+                          <LockCountdown 
+                            nextReviewDate={nextReviewDate} 
+                            className="font-medium text-foreground" 
+                          />
+                        )}
+                        {" "}to practice again
                       </p>
                       {subscriptionTier !== 'free' && (
                         <Button 
