@@ -171,76 +171,101 @@ const Practice = () => {
   };
 
   const handleRecordingStart = async () => {
+    console.log('=== handleRecordingStart CALLED ===');
     setIsRecording(true);
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
     
-    // Detect iOS/iPad to determine audio format
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    
-    // Determine audio format for recording
-    let audioFormat = 'audio/webm';
-    if (isIOS) {
-      if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        audioFormat = 'audio/mp4';
-      } else if (MediaRecorder.isTypeSupported('audio/aac')) {
-        audioFormat = 'audio/aac';
-      } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
-        audioFormat = 'audio/mpeg';
+    try {
+      // Detect iOS/iPad to determine audio format
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
+      // Determine audio format for recording
+      let audioFormat = 'audio/webm';
+      if (isIOS) {
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          audioFormat = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+          audioFormat = 'audio/aac';
+        } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+          audioFormat = 'audio/mpeg';
+        }
       }
-    }
-    audioFormatRef.current = audioFormat;
-    console.log('Recording with format:', audioFormat);
-    
-    // Detect language from speech text
-    const { detectTextLanguage } = await import('@/utils/languageDetection');
-    const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
-    console.log('Detected language:', detectedLang);
-    
-    // Start Web Speech API for instant transcription on ALL devices
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 3;
-      recognition.lang = detectedLang === 'sv' ? 'sv-SE' : detectedLang === 'en' ? 'en-US' : 'en-US';
+      audioFormatRef.current = audioFormat;
+      console.log('🎙️ Recording with format:', audioFormat);
       
-      let finalTranscript = '';
+      // Detect language from speech text
+      const { detectTextLanguage } = await import('@/utils/languageDetection');
+      const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
+      console.log('🌍 Detected language:', detectedLang);
       
-      recognition.onresult = (event: any) => {
-        let interimTranscript = '';
+      // Start Web Speech API for instant transcription on ALL devices
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      console.log('🔍 SpeechRecognition available?', !!SpeechRecognition);
+      
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 3;
+        recognition.lang = detectedLang === 'sv' ? 'sv-SE' : detectedLang === 'en' ? 'en-US' : 'en-US';
         
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-            setLiveTranscription(finalTranscript.trim());
-          } else {
-            interimTranscript += transcript;
-            setLiveTranscription((finalTranscript + interimTranscript).trim());
+        console.log('📝 Recognition configured with lang:', recognition.lang);
+        
+        let finalTranscript = '';
+        
+        recognition.onresult = (event: any) => {
+          console.log('✅ Speech recognition result received!', event.results.length);
+          let interimTranscript = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            console.log('📢 Transcript:', transcript, 'isFinal:', event.results[i].isFinal);
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' ';
+              setLiveTranscription(finalTranscript.trim());
+              console.log('✔️ Final transcript updated:', finalTranscript.trim());
+            } else {
+              interimTranscript += transcript;
+              setLiveTranscription((finalTranscript + interimTranscript).trim());
+              console.log('⏳ Interim transcript:', (finalTranscript + interimTranscript).trim());
+            }
           }
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('❌ Speech recognition error:', event.error, event);
+          if (event.error === 'no-speech') {
+            console.log('⚠️ No speech detected, continuing...');
+          }
+        };
+        
+        recognition.onstart = () => {
+          console.log('🎤 Speech recognition STARTED successfully');
+        };
+        
+        recognition.onend = () => {
+          console.log('🛑 Speech recognition ENDED');
+        };
+        
+        try {
+          recognition.start();
+          recognitionRef.current = recognition;
+          console.log('✨ Web Speech API started for instant word tracking');
+        } catch (startError) {
+          console.error('❌ Error starting recognition:', startError);
         }
-      };
-      
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error === 'no-speech') {
-          console.log('No speech detected, continuing...');
-        }
-      };
-      
-      recognition.start();
-      recognitionRef.current = recognition;
-      console.log('Web Speech API started for instant word tracking');
-    } else {
-      console.warn('Web Speech API not supported on this device');
-      toast({
-        title: "Limited Support",
-        description: "Real-time word tracking is not available on this device. Your speech will be analyzed after recording.",
-        duration: 5000,
-      });
+      } else {
+        console.warn('⚠️ Web Speech API not supported on this device');
+        toast({
+          title: "Limited Support",
+          description: "Real-time word tracking is not available on this device. Your speech will be analyzed after recording.",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error in handleRecordingStart:', error);
     }
   };
 
