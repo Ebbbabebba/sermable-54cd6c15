@@ -19,6 +19,7 @@ interface FreestylePresentationProps {
   onStartRecording: () => void;
   onStopRecording: () => void;
   onComplete: () => void;
+  speechLanguage?: string;
 }
 
 export const FreestylePresentation = ({
@@ -26,11 +27,13 @@ export const FreestylePresentation = ({
   isRecording,
   onStartRecording,
   onStopRecording,
-  onComplete
+  onComplete,
+  speechLanguage = 'en'
 }: FreestylePresentationProps) => {
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [coveredSegments, setCoveredSegments] = useState<number[]>([]);
   const [mentionedCueWords, setMentionedCueWords] = useState<Set<string>>(new Set());
+  const [segmentCoverage, setSegmentCoverage] = useState<Record<number, number>>({});
   const [transcript, setTranscript] = useState("");
   const [showSupportPrompt, setShowSupportPrompt] = useState(false);
   const [pauseTimer, setPauseTimer] = useState<NodeJS.Timeout | null>(null);
@@ -38,6 +41,69 @@ export const FreestylePresentation = ({
 
   const currentSegment = segments[currentSegmentIndex];
   const coveragePercent = (coveredSegments.length / segments.length) * 100;
+
+  // Helper function for fuzzy word matching (handles plurals, tenses, etc.)
+  const normalizeWord = (word: string): string => {
+    return word.toLowerCase()
+      .replace(/[.,!?;:"'()]/g, '') // Remove punctuation
+      .replace(/s$/, '') // Remove trailing 's' for simple plural matching
+      .replace(/ing$/, '') // Remove -ing
+      .replace(/ed$/, ''); // Remove -ed
+  };
+
+  const isSimilarWord = (spoken: string, target: string): boolean => {
+    const normalizedSpoken = normalizeWord(spoken);
+    const normalizedTarget = normalizeWord(target);
+    
+    // Exact match after normalization
+    if (normalizedSpoken === normalizedTarget) return true;
+    
+    // Check if one contains the other (for compound words)
+    if (normalizedSpoken.includes(normalizedTarget) || normalizedTarget.includes(normalizedSpoken)) {
+      return true;
+    }
+    
+    // Simple Levenshtein distance check for typos/variations
+    const distance = levenshteinDistance(normalizedSpoken, normalizedTarget);
+    return distance <= 2 && Math.min(normalizedSpoken.length, normalizedTarget.length) > 3;
+  };
+
+  const levenshteinDistance = (a: string, b: string): number => {
+    const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+    
+    for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= b.length; j++) {
+      for (let i = 1; i <= a.length; i++) {
+        const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator
+        );
+      }
+    }
+    
+    return matrix[b.length][a.length];
+  };
+
+  // Map language code to speech recognition locale
+  const getRecognitionLocale = (lang: string): string => {
+    const localeMap: Record<string, string> = {
+      'en': 'en-US',
+      'es': 'es-ES',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'it': 'it-IT',
+      'pt': 'pt-PT',
+      'sv': 'sv-SE',
+      'da': 'da-DK',
+      'no': 'nb-NO',
+      'fi': 'fi-FI',
+    };
+    return localeMap[lang] || 'en-US';
+  };
 
   useEffect(() => {
     // Initialize speech recognition
@@ -47,7 +113,7 @@ export const FreestylePresentation = ({
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = getRecognitionLocale(speechLanguage);
 
       recognition.onresult = (event: any) => {
         let interimTranscript = '';
@@ -95,24 +161,37 @@ export const FreestylePresentation = ({
   }, [isRecording]);
 
   const checkCueWords = (text: string) => {
-    const lowerText = text.toLowerCase();
+    const spokenWords = text.toLowerCase().split(/\s+/);
     const newMentioned = new Set(mentionedCueWords);
 
-    currentSegment.cue_words.forEach(word => {
-      if (lowerText.includes(word.toLowerCase())) {
-        newMentioned.add(word);
+    currentSegment.cue_words.forEach(cueWord => {
+      // Check if any spoken word matches this cue word (fuzzy matching)
+      const isMatched = spokenWords.some(spokenWord => 
+        isSimilarWord(spokenWord, cueWord)
+      );
+      
+      if (isMatched) {
+        newMentioned.add(cueWord);
       }
     });
 
     setMentionedCueWords(newMentioned);
 
-    // Check if all important cue words in current segment are covered
+    // Calculate coverage percentage for current segment
     const currentSegmentWords = currentSegment.cue_words;
     const coveredWords = currentSegmentWords.filter(word => 
-      Array.from(newMentioned).some(m => m.toLowerCase() === word.toLowerCase())
+      Array.from(newMentioned).some(m => 
+        normalizeWord(m) === normalizeWord(word)
+      )
     );
 
-    if (coveredWords.length >= currentSegmentWords.length * 0.7) {
+    const coveragePercentage = (coveredWords.length / currentSegmentWords.length) * 100;
+    setSegmentCoverage(prev => ({
+      ...prev,
+      [currentSegmentIndex]: coveragePercentage
+    }));
+
+    if (coveragePercentage >= 70) {
       // Mark segment as covered
       if (!coveredSegments.includes(currentSegmentIndex)) {
         setCoveredSegments(prev => [...prev, currentSegmentIndex]);
@@ -203,15 +282,29 @@ export const FreestylePresentation = ({
         )}
 
         {/* Current Segment Display */}
-        <Card className="p-8">
-          <div className="space-y-6">
+        <Card className="p-8 relative overflow-hidden">
+          {/* Progressive Fill Animation */}
+          <div 
+            className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 transition-all duration-700 ease-out pointer-events-none"
+            style={{ 
+              width: `${segmentCoverage[currentSegmentIndex] || 0}%`,
+              opacity: 0.6 
+            }}
+          />
+          
+          <div className="space-y-6 relative z-10">
             <div className="flex items-center justify-between">
               <Badge variant="outline" className={getImportanceColor(currentSegment.importance_level)}>
                 {currentSegment.importance_level.toUpperCase()} Priority
               </Badge>
-              <span className="text-sm text-muted-foreground">
-                Segment {currentSegmentIndex + 1} of {segments.length}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted-foreground">
+                  {Math.round(segmentCoverage[currentSegmentIndex] || 0)}% covered
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Segment {currentSegmentIndex + 1} of {segments.length}
+                </span>
+              </div>
             </div>
 
             {/* Cue Words */}
@@ -220,7 +313,7 @@ export const FreestylePresentation = ({
               <div className="flex flex-wrap gap-2">
                 {currentSegment.cue_words.map((word, idx) => {
                   const isMentioned = Array.from(mentionedCueWords).some(m => 
-                    m.toLowerCase() === word.toLowerCase()
+                    normalizeWord(m) === normalizeWord(word)
                   );
                   return (
                     <Badge 
