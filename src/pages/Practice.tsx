@@ -483,127 +483,116 @@ const Practice = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Practice Mode</CardTitle>
-                  <CardDescription>
-                    {!isPracticing
-                      ? "Click start to begin your practice session"
-                      : isRecording
-                      ? "Recording... speak clearly"
-                      : isProcessing
-                      ? "AI is analyzing your performance..."
-                      : "Read the text aloud and record yourself"}
-                  </CardDescription>
+          {!showResults && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Practice Mode</CardTitle>
+                    <CardDescription>
+                      {!isPracticing
+                        ? "Click start to begin your practice session"
+                        : isRecording
+                        ? "Recording... speak clearly"
+                        : isProcessing
+                        ? "AI is analyzing your performance..."
+                        : "Read the text aloud and record yourself"}
+                    </CardDescription>
+                  </div>
                 </div>
-                {showResults && (
-                  <Button variant="outline" size="sm" onClick={handleNewSession}>
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    New Session
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {!isPracticing ? (
-                <div className="text-center py-12 space-y-4">
-                  {isLocked && !overrideLock && (
-                    <div className="mb-4 p-4 bg-muted rounded-lg">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Lock className="h-5 w-5 text-muted-foreground" />
-                        <p className="font-medium">
-                          Done for today
-                        </p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Come back{" "}
-                        {nextReviewDate && (
-                          <LockCountdown 
-                            nextReviewDate={nextReviewDate} 
-                            className="font-medium text-foreground" 
-                          />
-                        )}
-                        {" "}to practice again
-                      </p>
-                      {subscriptionTier !== 'free' && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-3"
-                          onClick={handleOverrideLock}
-                        >
-                          <Unlock className="h-4 w-4 mr-2" />
-                          Practice Anyway
-                        </Button>
-                      )}
-                      {subscriptionTier === 'free' && (
-                        <p className="text-xs text-muted-foreground mt-3">
-                          Upgrade to premium to practice anytime
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {(!isLocked || overrideLock) && (
-                    <Button 
-                      size="lg" 
-                      onClick={handleStartPractice}
-                    >
-                      <Play className="h-5 w-5 mr-2" />
-                      Start Practice Session
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <div className="p-6 bg-muted/30 rounded-lg">
-                    {showResults && sessionResults ? (
-                      <WordHighlighter
-                        text={speech.text_current}
-                        missedWords={sessionResults.missedWords}
-                        delayedWords={sessionResults.delayedWords}
-                        connectorWords={sessionResults.connectorWords}
-                      />
-                    ) : isRecording ? (
-                      <div className="space-y-4">
-                        <div className="text-center mb-4">
-                          <p className="text-sm text-muted-foreground">
-                            🎤 Speak clearly. Words appear as you say them. Tap to reveal if stuck.
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!isPracticing ? (
+                  <div className="text-center py-12 space-y-4">
+                    {isLocked && !overrideLock && (
+                      <div className="mb-4 p-4 bg-muted rounded-lg">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <Lock className="h-5 w-5 text-muted-foreground" />
+                          <p className="font-medium">
+                            Done for today
                           </p>
                         </div>
-                        <EnhancedWordTracker
-                          text={speech.text_current}
-                          isRecording={isRecording}
-                          transcription={liveTranscription}
-                          revealSpeed={settings.revealSpeed}
-                          showWordOnPause={settings.showWordOnPause}
-                          animationStyle={settings.animationStyle}
-                          keywordMode={settings.keywordMode}
-                        />
-                      </div>
-                    ) : (
-                      <div className="prose prose-lg max-w-none">
-                        <p className="whitespace-pre-wrap leading-relaxed">
-                          {speech.text_current}
+                        <p className="text-sm text-muted-foreground">
+                          Come back{" "}
+                          {nextReviewDate && (
+                            <LockCountdown 
+                              nextReviewDate={nextReviewDate} 
+                              className="font-medium text-foreground" 
+                            />
+                          )}
+                          {" "}to practice again
                         </p>
+                        {subscriptionTier !== 'free' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-3"
+                            onClick={handleOverrideLock}
+                          >
+                            <Unlock className="h-4 w-4 mr-2" />
+                            Practice Anyway
+                          </Button>
+                        )}
+                        {subscriptionTier === 'free' && (
+                          <p className="text-xs text-muted-foreground mt-3">
+                            Upgrade to premium to practice anytime
+                          </p>
+                        )}
                       </div>
                     )}
+                    {(!isLocked || overrideLock) && (
+                      <Button 
+                        size="lg" 
+                        onClick={handleStartPractice}
+                      >
+                        <Play className="h-5 w-5 mr-2" />
+                        Start Practice Session
+                      </Button>
+                    )}
                   </div>
+                ) : (
+                  <>
+                    <div className="p-6 bg-muted/30 rounded-lg">
+                      {isRecording ? (
+                        <div className="space-y-4">
+                          <div className="text-center mb-4">
+                            <p className="text-sm text-muted-foreground">
+                              🎤 Speak clearly. Words appear as you say them. Tap to reveal if stuck.
+                            </p>
+                          </div>
+                          <EnhancedWordTracker
+                            text={speech.text_current}
+                            isRecording={isRecording}
+                            transcription={liveTranscription}
+                            revealSpeed={settings.revealSpeed}
+                            showWordOnPause={settings.showWordOnPause}
+                            animationStyle={settings.animationStyle}
+                            keywordMode={settings.keywordMode}
+                          />
+                        </div>
+                      ) : (
+                        <div className="prose prose-lg max-w-none">
+                          <p className="whitespace-pre-wrap leading-relaxed">
+                            {speech.text_current}
+                          </p>
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="flex justify-center">
-                  <AudioRecorder
-                    ref={audioRecorderRef}
-                    isRecording={isRecording}
-                    onStart={handleRecordingStart}
-                    onStop={handleRecordingStop}
-                    disabled={isProcessing}
-                  />
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                    <div className="flex justify-center">
+                    <AudioRecorder
+                      ref={audioRecorderRef}
+                      isRecording={isRecording}
+                      onStart={handleRecordingStart}
+                      onStop={handleRecordingStop}
+                      disabled={isProcessing}
+                    />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {showResults && sessionResults && (
             <div ref={resultsRef} className="animate-fade-in">

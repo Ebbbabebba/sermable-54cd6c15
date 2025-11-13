@@ -12,7 +12,6 @@ interface PresentationSummaryProps {
   feedbackSummary: string;
   feedbackAdvice: string;
   feedbackNextStep: string;
-  onRetry: () => void;
   onExit: () => void;
 }
 
@@ -24,7 +23,6 @@ const PresentationSummary = ({
   feedbackSummary,
   feedbackAdvice,
   feedbackNextStep,
-  onRetry,
   onExit,
 }: PresentationSummaryProps) => {
   const getAccuracyColor = () => {
@@ -148,23 +146,14 @@ const PresentationSummary = ({
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onExit}
-            className="flex-1"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <Button
-            onClick={onRetry}
-            className="flex-1"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={onExit}
+          className="w-full"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
       </div>
     </div>
   );

@@ -436,7 +436,6 @@ const Presentation = () => {
         feedbackSummary={sessionResults.feedbackSummary}
         feedbackAdvice={sessionResults.feedbackAdvice}
         feedbackNextStep={sessionResults.feedbackNextStep}
-        onRetry={handleRetry}
         onExit={handleExit}
       />
     );
