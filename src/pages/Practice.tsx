@@ -346,6 +346,33 @@ const Practice = () => {
             console.error('Error saving session:', sessionError);
           }
 
+          // Update adaptive learning metrics
+          try {
+            const { data: adaptiveData, error: adaptiveError } = await supabase.functions.invoke('update-adaptive-learning', {
+              body: {
+                speechId: speech!.id,
+                sessionAccuracy: data.accuracy
+              }
+            });
+
+            if (adaptiveError) {
+              console.error('Error updating adaptive learning:', adaptiveError);
+            } else if (adaptiveData) {
+              console.log('Adaptive learning updated:', adaptiveData);
+              
+              // Show recommendation to user if provided
+              if (adaptiveData.recommendation) {
+                toast({
+                  title: "Training Update",
+                  description: adaptiveData.recommendation,
+                  duration: 5000,
+                });
+              }
+            }
+          } catch (adaptiveErr) {
+            console.error('Failed to update adaptive learning:', adaptiveErr);
+          }
+
           // Update speech with new cue text
           const { error: updateError } = await supabase
             .from('speeches')
