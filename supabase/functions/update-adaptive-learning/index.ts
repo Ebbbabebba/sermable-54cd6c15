@@ -122,7 +122,8 @@ serve(async (req) => {
         p_performance_trend: newTrend,
         p_last_accuracy: sessionAccuracy,
         p_consecutive_struggles: consecutiveStruggles,
-        p_word_count: wordCount
+        p_word_count: wordCount,
+        p_word_visibility: newVisibility
       });
 
     if (frequencyError) {
