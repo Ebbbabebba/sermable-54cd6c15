@@ -106,13 +106,23 @@ serve(async (req) => {
     const newVisibility = visibilityData || 100;
     console.log('Calculated word visibility:', newVisibility + '%');
 
+    // Get speech length for adaptive calculation
+    const { data: speechData } = await supabase
+      .from('speeches')
+      .select('text_current')
+      .eq('id', speechId)
+      .single();
+    
+    const wordCount = speechData?.text_current?.split(/\s+/).length || 0;
+
     // Calculate adaptive practice frequency multiplier
     const { data: frequencyData, error: frequencyError } = await supabase
       .rpc('calculate_practice_frequency', {
         p_days_until_deadline: daysUntilDeadline,
         p_performance_trend: newTrend,
         p_last_accuracy: sessionAccuracy,
-        p_consecutive_struggles: consecutiveStruggles
+        p_consecutive_struggles: consecutiveStruggles,
+        p_word_count: wordCount
       });
 
     if (frequencyError) {
@@ -139,9 +149,11 @@ serve(async (req) => {
     }
 
     // Update or create schedule with adaptive frequency
-    const baseIntervalDays = 1; // Default base interval
-    const adaptiveInterval = Math.max(0.25, baseIntervalDays / frequencyMultiplier); // Convert multiplier to days (min 6 hours)
-    const nextReviewDate = new Date(Date.now() + adaptiveInterval * 24 * 60 * 60 * 1000);
+    // Calculate interval in minutes (ranges from 1 minute to 14 days)
+    const baseIntervalMinutes = 24 * 60; // 1 day in minutes
+    const adaptiveIntervalMinutes = Math.max(1, Math.min(14 * 24 * 60, baseIntervalMinutes / frequencyMultiplier));
+    const nextReviewDate = new Date(Date.now() + adaptiveIntervalMinutes * 60 * 1000);
+    const adaptiveIntervalDays = adaptiveIntervalMinutes / (24 * 60);
 
     const { error: scheduleError } = await supabase
       .from('schedules')
@@ -150,7 +162,7 @@ serve(async (req) => {
         session_date: new Date().toISOString().split('T')[0],
         completed: true,
         next_review_date: nextReviewDate.toISOString(),
-        interval_days: Math.ceil(adaptiveInterval),
+        interval_days: Math.ceil(adaptiveIntervalDays),
         adaptive_frequency_multiplier: frequencyMultiplier,
         days_until_deadline: daysUntilDeadline,
         last_reviewed_at: new Date().toISOString()
@@ -164,6 +176,12 @@ serve(async (req) => {
 
     // Generate recommendation message
     let recommendation = '';
+    const timeUntilNext = adaptiveIntervalMinutes < 60 
+      ? `${Math.round(adaptiveIntervalMinutes)} minute${Math.round(adaptiveIntervalMinutes) !== 1 ? 's' : ''}`
+      : adaptiveIntervalMinutes < 24 * 60
+      ? `${Math.round(adaptiveIntervalMinutes / 60)} hour${Math.round(adaptiveIntervalMinutes / 60) !== 1 ? 's' : ''}`
+      : `${Math.round(adaptiveIntervalDays)} day${Math.round(adaptiveIntervalDays) !== 1 ? 's' : ''}`;
+    
     if (consecutiveStruggles >= 2) {
       recommendation = `⚠️ Performance needs attention. Practice ${Math.ceil(frequencyMultiplier)}x more frequently to improve before your deadline.`;
     } else if (daysUntilDeadline <= 7 && sessionAccuracy < 80) {
@@ -173,7 +191,7 @@ serve(async (req) => {
     } else if (newTrend > 0.5) {
       recommendation = `📈 Great progress! Keep practicing to reach complete memorization.`;
     } else {
-      recommendation = `✅ On track. Next practice session in ${Math.ceil(adaptiveInterval * 24)} hours.`;
+      recommendation = `✅ On track. Next practice session in ${timeUntilNext}.`;
     }
 
     console.log('Adaptive learning update complete');
