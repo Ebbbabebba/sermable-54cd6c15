@@ -106,10 +106,10 @@ const Practice = () => {
       if (error) throw error;
       setSpeech(data);
       
-      // Check lock status - TEMPORARILY DISABLED FOR TESTING
+      // Check lock status with adaptive learning integration
       const { data: schedule } = await supabase
         .from("schedules")
-        .select("next_review_date")
+        .select("next_review_date, interval_days")
         .eq("speech_id", id)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -119,12 +119,26 @@ const Practice = () => {
         const reviewDate = new Date(schedule.next_review_date);
         setNextReviewDate(reviewDate);
         
-        // LOCK DISABLED FOR TESTING - remove this to re-enable
-        // Lock only for free users when review date is in future
-        // if (subscriptionTier === 'free' && reviewDate > new Date()) {
-        //   setIsLocked(true);
-        // }
-        setIsLocked(false); // Always unlocked for testing
+        console.log('🔒 Lock status check:', {
+          nextReviewDate: reviewDate,
+          now: new Date(),
+          isInFuture: reviewDate > new Date(),
+          subscriptionTier,
+          intervalDays: schedule.interval_days
+        });
+        
+        // Lock for free users when review date is in future (adaptive interval)
+        if (subscriptionTier === 'free' && reviewDate > new Date()) {
+          setIsLocked(true);
+          console.log('🔒 Speech locked until:', reviewDate);
+        } else {
+          setIsLocked(false);
+          console.log('🔓 Speech unlocked');
+        }
+      } else {
+        // No schedule yet, allow practice
+        setIsLocked(false);
+        console.log('📝 No schedule found, allowing practice');
       }
     } catch (error: any) {
       toast({
@@ -139,17 +153,19 @@ const Practice = () => {
   };
 
   const handleStartPractice = () => {
-    // LOCK CHECK DISABLED FOR TESTING
     // Check if locked and not overridden
-    // if (isLocked && !overrideLock && subscriptionTier === 'free') {
-    //   toast({
-    //     variant: "destructive",
-    //     title: "Speech Locked",
-    //     description: `This speech is scheduled for review on ${nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy') : 'a future date'}. Upgrade to premium to practice anytime.`,
-    //   });
-    //   return;
-    // }
+    if (isLocked && !overrideLock && subscriptionTier === 'free') {
+      console.log('🚫 Practice blocked - speech is locked');
+      toast({
+        variant: "destructive",
+        title: "Speech Locked",
+        description: `This speech is scheduled for review ${nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy \'at\' HH:mm') : 'soon'}. The adaptive learning system has determined the optimal practice timing based on your performance.`,
+        duration: 6000,
+      });
+      return;
+    }
     
+    console.log('✅ Starting practice session');
     setIsPracticing(true);
     setShowResults(false);
     setSessionResults(null);
