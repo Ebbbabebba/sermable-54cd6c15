@@ -118,21 +118,56 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("speeches").insert({
+      const { data: newSpeech, error } = await supabase.from("speeches").insert({
         user_id: user.id,
         title,
         text_original: text,
         text_current: text,
         goal_date: goalDate,
         familiarity_level: familiarityLevel,
-      });
+      }).select().single();
 
       if (error) throw error;
 
-      toast({
-        title: t('upload.success'),
-        description: "Your speech has been saved. Time to start practicing!",
-      });
+      // Check memorization feasibility
+      const { data: feasibilityData, error: feasibilityError } = await supabase
+        .rpc('assess_memorization_feasibility', { p_speech_id: newSpeech.id });
+
+      if (!feasibilityError && feasibilityData && feasibilityData.length > 0) {
+        const assessment = feasibilityData[0];
+        
+        // Show appropriate warning based on warning level
+        if (assessment.warning_level === 'critical' || assessment.warning_level === 'emergency') {
+          toast({
+            variant: "destructive",
+            title: "⚠️ Tight Deadline Warning",
+            description: assessment.message,
+            duration: 8000,
+          });
+        } else if (assessment.warning_level === 'challenging') {
+          toast({
+            title: "🔥 Intensive Practice Required",
+            description: assessment.message,
+            duration: 6000,
+          });
+        } else if (assessment.warning_level === 'tight') {
+          toast({
+            title: "⏰ Stay Consistent",
+            description: assessment.message,
+            duration: 5000,
+          });
+        } else {
+          toast({
+            title: t('upload.success'),
+            description: "Your speech has been saved. Time to start practicing!",
+          });
+        }
+      } else {
+        toast({
+          title: t('upload.success'),
+          description: "Your speech has been saved. Time to start practicing!",
+        });
+      }
 
       // Reset form
       setTitle("");
