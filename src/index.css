@@ -23,16 +23,16 @@ All colors MUST be HSL.
     --primary: 220 85% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Nebula purple secondary */
-    --secondary: 270 60% 70%;
+    /* Nebula cyan secondary */
+    --secondary: 190 75% 65%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted space gray */
     --muted: 220 15% 92%;
     --muted-foreground: 220 10% 45%;
 
-    /* Galaxy purple accent */
-    --accent: 260 80% 65%;
+    /* Stellar orange accent */
+    --accent: 25 90% 60%;
     --accent-foreground: 0 0% 100%;
 
     /* Success cosmic green */
@@ -59,9 +59,9 @@ All colors MUST be HSL.
     --word-text: 0 0% 13%;
 
     /* Space theme gradients */
-    --gradient-cosmic: linear-gradient(135deg, hsl(220 85% 60%), hsl(260 80% 65%));
-    --gradient-nebula: linear-gradient(135deg, hsl(270 60% 70%), hsl(220 85% 60%));
-    --gradient-stellar: linear-gradient(135deg, hsl(260 80% 65%), hsl(280 70% 60%));
+    --gradient-cosmic: linear-gradient(135deg, hsl(220 85% 60%), hsl(190 75% 65%));
+    --gradient-nebula: linear-gradient(135deg, hsl(190 75% 65%), hsl(220 85% 60%));
+    --gradient-stellar: linear-gradient(135deg, hsl(25 90% 60%), hsl(45 95% 60%));
 
     /* Smooth animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -87,16 +87,16 @@ All colors MUST be HSL.
     --primary: 220 90% 65%;
     --primary-foreground: 0 0% 100%;
 
-    /* Vibrant nebula purple */
-    --secondary: 270 70% 75%;
+    /* Vibrant nebula cyan */
+    --secondary: 190 80% 70%;
     --secondary-foreground: 225 30% 8%;
 
     /* Muted dark space */
     --muted: 225 20% 18%;
     --muted-foreground: 220 15% 65%;
 
-    /* Bright galaxy purple */
-    --accent: 260 85% 70%;
+    /* Bright stellar orange */
+    --accent: 25 95% 65%;
     --accent-foreground: 0 0% 100%;
 
     /* Bright cosmic green */
