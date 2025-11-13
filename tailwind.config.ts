@@ -61,10 +61,6 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        cosmic: "hsl(220 85% 60%)",
-        nebula: "hsl(190 75% 65%)",
-        stellar: "hsl(45 95% 60%)",
-        mars: "hsl(25 90% 60%)",
       },
       borderRadius: {
         lg: "var(--radius)",

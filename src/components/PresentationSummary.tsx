@@ -1,8 +1,8 @@
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, AlertCircle, Sparkles, Home } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import { Award, Clock, AlertCircle, TrendingUp, RotateCcw, ArrowLeft } from "lucide-react";
 
 interface PresentationSummaryProps {
   accuracy: number;
@@ -12,6 +12,7 @@ interface PresentationSummaryProps {
   feedbackSummary: string;
   feedbackAdvice: string;
   feedbackNextStep: string;
+  onRetry: () => void;
   onExit: () => void;
 }
 
@@ -23,157 +24,147 @@ const PresentationSummary = ({
   feedbackSummary,
   feedbackAdvice,
   feedbackNextStep,
+  onRetry,
   onExit,
 }: PresentationSummaryProps) => {
+  const getAccuracyColor = () => {
+    if (accuracy >= 90) return "text-success";
+    if (accuracy >= 75) return "text-warning";
+    return "text-destructive";
+  };
+
+  const getAccuracyBadge = () => {
+    if (accuracy >= 90) return { label: "Excellent", variant: "default" as const };
+    if (accuracy >= 75) return { label: "Good", variant: "secondary" as const };
+    return { label: "Needs Work", variant: "destructive" as const };
+  };
+
+  const badge = getAccuracyBadge();
   const minutes = Math.floor(duration / 60);
   const seconds = duration % 60;
 
-  const getPerformanceData = () => {
-    if (accuracy >= 90) return {
-      emoji: "🎉",
-      title: "Amazing!",
-      subtitle: "You nailed it!",
-      color: "from-green-500 to-emerald-500",
-      bgColor: "bg-green-500/10",
-      textColor: "text-green-600"
-    };
-    if (accuracy >= 75) return {
-      emoji: "👏",
-      title: "Great job!",
-      subtitle: "Keep it up!",
-      color: "from-blue-500 to-cyan-500",
-      bgColor: "bg-blue-500/10",
-      textColor: "text-blue-600"
-    };
-    return {
-      emoji: "💪",
-      title: "Good effort!",
-      subtitle: "Practice makes perfect!",
-      color: "from-orange-500 to-yellow-500",
-      bgColor: "bg-orange-500/10",
-      textColor: "text-orange-600"
-    };
-  };
-
-  const performance = getPerformanceData();
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5 animate-fade-in">
-      <div className="w-full max-w-2xl space-y-6">
-        {/* Header with Emoji and Score */}
+    <div className="min-h-screen bg-background p-8 animate-fade-in">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header */}
         <div className="text-center space-y-4">
-          <div className="text-8xl animate-bounce">{performance.emoji}</div>
-          <h1 className={cn("text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent", performance.color)}>
-            {performance.title}
-          </h1>
-          <p className="text-lg text-muted-foreground">{performance.subtitle}</p>
+          <div className="text-6xl animate-bounce">🎉</div>
+          <h1 className="text-4xl font-bold">Great Work!</h1>
+          <p className="text-xl text-muted-foreground">Here's how you did</p>
         </div>
 
-        {/* Score Circle */}
-        <div className="flex justify-center">
-          <div className={cn("relative w-40 h-40 rounded-full flex items-center justify-center", performance.bgColor)}>
-            <svg className="absolute inset-0 w-40 h-40 -rotate-90">
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="none"
-                className="text-muted/20"
-              />
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="none"
-                strokeDasharray={`${2 * Math.PI * 70}`}
-                strokeDashoffset={`${2 * Math.PI * 70 * (1 - accuracy / 100)}`}
-                className={performance.textColor}
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="text-center z-10">
-              <div className={cn("text-4xl font-bold", performance.textColor)}>{Math.round(accuracy)}%</div>
-              <div className="text-xs text-muted-foreground">Accuracy</div>
+        {/* Main Stats */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Performance Summary</CardTitle>
+              <Badge variant={badge.variant}>{badge.label}</Badge>
             </div>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <Card className={cn("p-4 text-center", performance.bgColor)}>
-            <Clock className={cn("w-6 h-6 mx-auto mb-2", performance.textColor)} />
-            <div className="text-2xl font-bold">{minutes > 0 && `${minutes}:`}{seconds.toString().padStart(2, '0')}</div>
-            <div className="text-xs text-muted-foreground">Duration</div>
-          </Card>
-          
-          <Card className={cn("p-4 text-center", performance.bgColor)}>
-            <AlertCircle className={cn("w-6 h-6 mx-auto mb-2", performance.textColor)} />
-            <div className="text-2xl font-bold">{hesitations}</div>
-            <div className="text-xs text-muted-foreground">Hesitations</div>
-          </Card>
-        </div>
-
-        {/* Missed Words */}
-        {missedWords.length > 0 && (
-          <Card className="p-4">
-            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-muted-foreground">
-              Words to Practice
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {missedWords.slice(0, 10).map((word, idx) => (
-                <Badge key={idx} variant="secondary" className="bg-orange-500/10 text-orange-700 dark:text-orange-300">
-                  {word}
-                </Badge>
-              ))}
-              {missedWords.length > 10 && (
-                <Badge variant="secondary" className="bg-muted">
-                  +{missedWords.length - 10} more
-                </Badge>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {/* AI Feedback */}
-        <Card className={cn("p-6", performance.bgColor)}>
-          <div className="flex items-start gap-3 mb-4">
-            <Sparkles className={cn("w-5 h-5 mt-0.5", performance.textColor)} />
-            <div className="flex-1 space-y-3">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-1">Summary</h4>
-                <p className="text-sm">{feedbackSummary}</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Accuracy */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Accuracy</span>
+                </div>
+                <span className={`text-2xl font-bold ${getAccuracyColor()}`}>
+                  {accuracy.toFixed(1)}%
+                </span>
               </div>
-              
-              {feedbackAdvice && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Tip</h4>
-                  <p className="text-sm">{feedbackAdvice}</p>
-                </div>
-              )}
-              
-              {feedbackNextStep && (
-                <div className={cn("p-3 rounded-lg border", performance.bgColor)}>
-                  <h4 className={cn("text-sm font-semibold mb-1", performance.textColor)}>Next Step</h4>
-                  <p className="text-sm">{feedbackNextStep}</p>
-                </div>
-              )}
+              <Progress value={accuracy} className="h-3" />
             </div>
-          </div>
+
+            {/* Duration */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                <span className="font-semibold">Duration</span>
+              </div>
+              <span className="text-lg">
+                {minutes > 0 && `${minutes}m `}{seconds}s
+              </span>
+            </div>
+
+            {/* Hesitations */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-warning" />
+                <span className="font-semibold">Hesitations</span>
+              </div>
+              <span className="text-lg">{hesitations}</span>
+            </div>
+
+            {/* Missed Words */}
+            {missedWords.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-destructive" />
+                  <span className="font-semibold">Missed Words ({missedWords.length})</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {missedWords.slice(0, 10).map((word, i) => (
+                    <Badge key={i} variant="outline" className="text-xs">
+                      {word}
+                    </Badge>
+                  ))}
+                  {missedWords.length > 10 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{missedWords.length - 10} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
         </Card>
 
-        {/* Action */}
-        <Button
-          onClick={onExit}
-          size="lg"
-          className={cn("w-full bg-gradient-to-r text-white shadow-lg hover:shadow-xl transition-all", performance.color)}
-        >
-          <Home className="h-5 w-5 mr-2" />
-          Back to Dashboard
-        </Button>
+        {/* Feedback */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Coach's Feedback</CardTitle>
+            <CardDescription>Personalized suggestions for improvement</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-2">Summary</h4>
+              <p className="text-muted-foreground">{feedbackSummary}</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Advice</h4>
+              <p className="text-muted-foreground whitespace-pre-line">{feedbackAdvice}</p>
+            </div>
+
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                Next Step
+              </h4>
+              <p className="text-sm">{feedbackNextStep}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={onExit}
+            className="flex-1"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <Button
+            onClick={onRetry}
+            className="flex-1"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
       </div>
     </div>
   );

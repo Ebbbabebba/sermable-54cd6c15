@@ -8,112 +8,97 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Space-inspired minimal background */
-    --background: 220 25% 94%;
-    --foreground: 225 15% 15%;
+    /* Soft, calming cream/beige base */
+    --background: 38 45% 96%;
+    --foreground: 220 15% 20%;
 
-    /* Soft cosmic cards */
-    --card: 220 30% 98%;
-    --card-foreground: 225 15% 15%;
+    /* Clean white cards */
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
 
-    --popover: 220 30% 98%;
-    --popover-foreground: 225 15% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
 
-    /* Cosmic blue primary */
-    --primary: 220 85% 60%;
+    /* Gentle blue accent for focus */
+    --primary: 210 70% 55%;
     --primary-foreground: 0 0% 100%;
 
-    /* Nebula cyan secondary */
-    --secondary: 190 75% 65%;
-    --secondary-foreground: 0 0% 100%;
+    /* Soft secondary */
+    --secondary: 38 35% 92%;
+    --secondary-foreground: 220 15% 20%;
 
-    /* Muted space gray */
-    --muted: 220 15% 92%;
+    /* Muted for subtle elements */
+    --muted: 38 30% 90%;
     --muted-foreground: 220 10% 45%;
 
-    /* Stellar orange accent */
-    --accent: 25 90% 60%;
+    /* Accent with warmth */
+    --accent: 25 85% 65%;
     --accent-foreground: 0 0% 100%;
 
-    /* Success cosmic green */
-    --success: 140 60% 55%;
+    /* Success state */
+    --success: 140 55% 50%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning stellar yellow */
-    --warning: 45 95% 60%;
+    /* Warning state for hesitations */
+    --warning: 45 90% 55%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 80% 65%;
+    --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Minimal borders */
-    --border: 220 20% 88%;
-    --input: 220 20% 88%;
-    --ring: 220 85% 60%;
+    /* Subtle borders */
+    --border: 38 25% 88%;
+    --input: 38 25% 88%;
+    --ring: 210 70% 55%;
 
     --radius: 0.75rem;
 
-    /* Word highlighting colors */
+    /* Clean Duolingo-inspired colors */
     --success-green: 140 81% 47%;
     --word-bg: 0 0% 95%;
     --word-text: 0 0% 13%;
 
-    /* Space theme gradients */
-    --gradient-cosmic: linear-gradient(135deg, hsl(220 85% 60%), hsl(190 75% 65%));
-    --gradient-nebula: linear-gradient(135deg, hsl(190 75% 65%), hsl(220 85% 60%));
-    --gradient-stellar: linear-gradient(135deg, hsl(25 90% 60%), hsl(45 95% 60%));
-
-    /* Smooth animations */
+    /* Custom properties for smooth animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
     --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.08);
-    --shadow-cosmic: 0 8px 32px rgba(220, 85%, 60%, 0.15);
   }
 
   .dark {
-    /* Deep space background */
-    --background: 225 30% 8%;
-    --foreground: 220 20% 95%;
+    --background: 220 20% 12%;
+    --foreground: 38 30% 95%;
 
-    /* Dark space cards */
-    --card: 225 25% 12%;
-    --card-foreground: 220 20% 95%;
+    --card: 220 18% 15%;
+    --card-foreground: 38 30% 95%;
 
-    --popover: 225 25% 12%;
-    --popover-foreground: 220 20% 95%;
+    --popover: 220 18% 15%;
+    --popover-foreground: 38 30% 95%;
 
-    /* Bright cosmic blue */
-    --primary: 220 90% 65%;
+    --primary: 210 70% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Vibrant nebula cyan */
-    --secondary: 190 80% 70%;
-    --secondary-foreground: 225 30% 8%;
+    --secondary: 220 15% 20%;
+    --secondary-foreground: 38 30% 95%;
 
-    /* Muted dark space */
-    --muted: 225 20% 18%;
-    --muted-foreground: 220 15% 65%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 38 20% 65%;
 
-    /* Bright stellar orange */
-    --accent: 25 95% 65%;
+    --accent: 25 75% 60%;
     --accent-foreground: 0 0% 100%;
 
-    /* Bright cosmic green */
-    --success: 140 65% 60%;
+    --success: 140 50% 45%;
     --success-foreground: 0 0% 100%;
 
-    /* Bright stellar yellow */
-    --warning: 45 100% 65%;
-    --warning-foreground: 225 30% 8%;
+    --warning: 45 85% 50%;
+    --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 85% 70%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Subtle space borders */
-    --border: 225 20% 22%;
-    --input: 225 20% 22%;
-    --ring: 220 90% 65%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 210 70% 60%;
   }
 }
 

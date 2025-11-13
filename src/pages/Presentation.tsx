@@ -420,6 +420,7 @@ const Presentation = () => {
         missedCueWords={freestyleResults.cueWords.missed}
         duration={Math.floor((Date.now() - startTime) / 1000)}
         feedback={freestyleResults.feedback}
+        onRetry={handleRetry}
         onExit={handleExit}
       />
     );
@@ -436,6 +437,7 @@ const Presentation = () => {
         feedbackSummary={sessionResults.feedbackSummary}
         feedbackAdvice={sessionResults.feedbackAdvice}
         feedbackNextStep={sessionResults.feedbackNextStep}
+        onRetry={handleRetry}
         onExit={handleExit}
       />
     );
