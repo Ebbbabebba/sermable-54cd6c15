@@ -9,14 +9,14 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Space-inspired minimal background */
-    --background: 220 25% 97%;
+    --background: 220 25% 94%;
     --foreground: 225 15% 15%;
 
-    /* Clean white cards with subtle cosmic glow */
-    --card: 0 0% 100%;
+    /* Soft cosmic cards */
+    --card: 220 30% 98%;
     --card-foreground: 225 15% 15%;
 
-    --popover: 0 0% 100%;
+    --popover: 220 30% 98%;
     --popover-foreground: 225 15% 15%;
 
     /* Cosmic blue primary */
