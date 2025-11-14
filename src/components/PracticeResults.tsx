@@ -1,10 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Clock, X, Frown, Meh, Smile, Zap } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 interface PracticeResultsProps {
   accuracy: number;
@@ -14,8 +12,6 @@ interface PracticeResultsProps {
   transcription: string;
   originalText: string;
   currentText: string;
-  onRatingSubmit?: (rating: 'again' | 'hard' | 'good' | 'easy') => void;
-  showRatingButtons?: boolean;
 }
 
 const PracticeResults = ({ 
@@ -25,16 +21,8 @@ const PracticeResults = ({
   analysis, 
   transcription,
   originalText,
-  currentText,
-  onRatingSubmit,
-  showRatingButtons = false
+  currentText
 }: PracticeResultsProps) => {
-  const [selectedRating, setSelectedRating] = useState<'again' | 'hard' | 'good' | 'easy' | null>(null);
-  
-  const handleRating = (rating: 'again' | 'hard' | 'good' | 'easy') => {
-    setSelectedRating(rating);
-    onRatingSubmit?.(rating);
-  };
   // Parse words and determine their status
   const originalWords = originalText.split(/\s+/).filter(word => word.length > 0);
   const currentWords = currentText.split(/\s+/).filter(word => word.length > 0);
@@ -92,81 +80,9 @@ const PracticeResults = ({
             {accuracy}% Accuracy
           </Badge>
         </CardTitle>
-        <CardDescription>
-          {showRatingButtons && !selectedRating 
-            ? "How well did you recall this speech from memory?" 
-            : "AI-powered analysis of your practice session"}
-        </CardDescription>
+        <CardDescription>AI-powered analysis of your practice session</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* SM-2 Rating Buttons */}
-        {showRatingButtons && !selectedRating && (
-          <div className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border-2 border-primary/20">
-            <h3 className="font-semibold mb-4 text-center text-lg">Rate Your Recall</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => handleRating('again')}
-                className="flex flex-col items-center gap-2 h-auto py-4 border-2 hover:border-destructive hover:bg-destructive/10 transition-all"
-              >
-                <X className="h-6 w-6 text-destructive" />
-                <div className="text-center">
-                  <div className="font-bold text-destructive">Again</div>
-                  <div className="text-xs text-muted-foreground mt-1">Couldn't recall</div>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => handleRating('hard')}
-                className="flex flex-col items-center gap-2 h-auto py-4 border-2 hover:border-orange-500 hover:bg-orange-500/10 transition-all"
-              >
-                <Frown className="h-6 w-6 text-orange-500" />
-                <div className="text-center">
-                  <div className="font-bold text-orange-500">Hard</div>
-                  <div className="text-xs text-muted-foreground mt-1">Struggled</div>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => handleRating('good')}
-                className="flex flex-col items-center gap-2 h-auto py-4 border-2 hover:border-success hover:bg-success/10 transition-all"
-              >
-                <Smile className="h-6 w-6 text-success" />
-                <div className="text-center">
-                  <div className="font-bold text-success">Good</div>
-                  <div className="text-xs text-muted-foreground mt-1">Recalled well</div>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => handleRating('easy')}
-                className="flex flex-col items-center gap-2 h-auto py-4 border-2 hover:border-blue-500 hover:bg-blue-500/10 transition-all"
-              >
-                <Zap className="h-6 w-6 text-blue-500" />
-                <div className="text-center">
-                  <div className="font-bold text-blue-500">Easy</div>
-                  <div className="text-xs text-muted-foreground mt-1">Instant recall</div>
-                </div>
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground text-center mt-4">
-              Your rating determines when you'll practice this speech next
-            </p>
-          </div>
-        )}
-        
-        {selectedRating && (
-          <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 text-center">
-            <p className="font-medium">✅ Rating submitted! Schedule updated based on your performance.</p>
-          </div>
-        )}
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
