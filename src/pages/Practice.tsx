@@ -22,6 +22,7 @@ interface Speech {
   text_original: string;
   text_current: string;
   goal_date: string;
+  base_word_visibility_percent: number | null;
 }
 
 interface SessionResults {
@@ -395,7 +396,8 @@ const Practice = () => {
             const { data: adaptiveData, error: adaptiveError } = await supabase.functions.invoke('update-adaptive-learning', {
               body: {
                 speechId: speech!.id,
-                sessionAccuracy: data.accuracy
+                sessionAccuracy: data.accuracy,
+                wordVisibilityPercent: speech!.base_word_visibility_percent || 100
               }
             });
 
