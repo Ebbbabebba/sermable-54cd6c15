@@ -120,13 +120,14 @@ serve(async (req) => {
       daysUntilDeadline
     });
 
-    // Calculate new word visibility using database function
+    // Calculate new word visibility using database function with weighted accuracy
     const { data: visibilityData, error: visibilityError } = await supabase
       .rpc('calculate_word_visibility', {
         p_speech_id: speechId,
         p_goal_date: speech.goal_date,
         p_performance_trend: newTrend,
-        p_consecutive_struggles: consecutiveStruggles
+        p_consecutive_struggles: consecutiveStruggles,
+        p_weighted_accuracy: weightedAccuracy
       });
 
     if (visibilityError) {
@@ -179,10 +180,55 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // Update or create schedule with adaptive frequency
-    // Calculate interval in minutes (ranges from 1 minute to 14 days)
+    // ============================================================
+    // ADAPTIVE INTERVAL RULES (Based on Weighted Performance)
+    // ============================================================
+    // 1. High score + minimal notes (≥70% weighted, ≤30% visibility)
+    //    → INCREASE interval (2-4 days) - True memorization achieved
+    //
+    // 2. High score + full script (≥80% raw, ≥70% visibility) 
+    //    → KEEP SHORT interval (4-8 hours) - Just reading, not memorizing
+    //
+    // 3. Low weighted score (<50% weighted)
+    //    → SHORTEN interval (2-6 hours) - Needs more practice
+    //
+    // 4. Deadline pressure overrides:
+    //    - ≤2 days: Max 4 hours between sessions
+    //    - ≤7 days: Max 12 hours between sessions
+    // ============================================================
+    
+    // Calculate interval based on STRICT ADAPTATION RULES
+    let adaptiveIntervalMinutes: number;
     const baseIntervalMinutes = 24 * 60; // 1 day in minutes
-    const adaptiveIntervalMinutes = Math.max(1, Math.min(14 * 24 * 60, baseIntervalMinutes / frequencyMultiplier));
+    
+    // Rule 1: High score with little/no notes → INCREASE interval
+    if (weightedAccuracy >= 70 && wordVisibilityPercent <= 30) {
+      // Excellent true memorization: 2-4 days
+      adaptiveIntervalMinutes = baseIntervalMinutes * Math.min(4, 2 + (weightedAccuracy - 70) / 15);
+    }
+    // Rule 2: High score with full script → KEEP interval SHORT
+    else if (sessionAccuracy >= 80 && wordVisibilityPercent >= 70) {
+      // Just reading well, not memorizing: 4-8 hours
+      adaptiveIntervalMinutes = 4 * 60 + (sessionAccuracy - 80) * 12;
+    }
+    // Rule 3: Low score → SHORTEN interval
+    else if (weightedAccuracy < 50) {
+      // Struggling: 2-6 hours based on severity
+      adaptiveIntervalMinutes = Math.max(2 * 60, 6 * 60 * (weightedAccuracy / 50));
+    }
+    // Default: moderate performance
+    else {
+      adaptiveIntervalMinutes = baseIntervalMinutes / frequencyMultiplier;
+    }
+    
+    // Cap intervals based on deadline urgency
+    if (daysUntilDeadline <= 2) {
+      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 4 * 60); // Max 4 hours
+    } else if (daysUntilDeadline <= 7) {
+      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 12 * 60); // Max 12 hours
+    }
+    
+    adaptiveIntervalMinutes = Math.max(1, Math.min(14 * 24 * 60, adaptiveIntervalMinutes));
     const nextReviewDate = new Date(Date.now() + adaptiveIntervalMinutes * 60 * 1000);
     const adaptiveIntervalDays = adaptiveIntervalMinutes / (24 * 60);
 
@@ -240,11 +286,16 @@ serve(async (req) => {
         weightedAccuracy: Math.round(weightedAccuracy * 10) / 10,
         performanceWeight: Math.round(performanceWeight * 100),
         wordVisibility: newVisibility,
+        currentVisibility: wordVisibilityPercent,
         frequencyMultiplier,
+        intervalMinutes: Math.round(adaptiveIntervalMinutes),
         nextReviewDate: nextReviewDate.toISOString(),
         daysUntilDeadline,
         performanceTrend: newTrend,
         consecutiveStruggles,
+        adaptationRule: weightedAccuracy >= 70 && wordVisibilityPercent <= 30 ? 'increasing_interval' :
+                        sessionAccuracy >= 80 && wordVisibilityPercent >= 70 ? 'keeping_short' :
+                        weightedAccuracy < 50 ? 'shortening_interval' : 'moderate',
         recommendation
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

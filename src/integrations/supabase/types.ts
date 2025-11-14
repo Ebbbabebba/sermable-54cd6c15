@@ -511,6 +511,7 @@ export type Database = {
           p_goal_date: string
           p_performance_trend: number
           p_speech_id: string
+          p_weighted_accuracy?: number
         }
         Returns: number
       }
