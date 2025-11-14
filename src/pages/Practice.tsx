@@ -406,14 +406,35 @@ const Practice = () => {
             } else if (adaptiveData) {
               console.log('Adaptive learning updated:', adaptiveData);
               
-              // Show recommendation to user if provided
-              if (adaptiveData.recommendation) {
-                toast({
-                  title: "Training Update",
-                  description: adaptiveData.recommendation,
-                  duration: 5000,
-                });
-              }
+              // Show detailed adaptation info to user
+              const ruleExplanation = {
+                increasing_interval: '✅ Excellent memorization! Increasing practice interval.',
+                keeping_short: '📖 High accuracy but still using script. Keeping interval short.',
+                shortening_interval: '💪 Struggling detected. Shortening interval for more practice.',
+                moderate: '🔄 Moderate progress. Standard adjustment applied.'
+              }[adaptiveData.adaptationRule || 'moderate'];
+              
+              const weightInfo = `Raw: ${adaptiveData.rawAccuracy}% → Weighted: ${adaptiveData.weightedAccuracy}% (${adaptiveData.performanceWeight}% weight due to ${adaptiveData.currentVisibility}% script visibility)`;
+              
+              const intervalInfo = adaptiveData.intervalMinutes < 60 
+                ? `${adaptiveData.intervalMinutes} minutes`
+                : adaptiveData.intervalMinutes < 24 * 60
+                ? `${Math.round(adaptiveData.intervalMinutes / 60)} hours`
+                : `${Math.round(adaptiveData.intervalMinutes / (24 * 60))} days`;
+              
+              toast({
+                title: "🎯 Adaptive Training Update",
+                description: (
+                  <div className="space-y-2 text-sm">
+                    <p className="font-semibold">{ruleExplanation}</p>
+                    <p>{weightInfo}</p>
+                    <p>📅 Next practice: {intervalInfo}</p>
+                    <p>👁️ New word visibility: {adaptiveData.wordVisibility}%</p>
+                    <p className="text-muted-foreground mt-2">{adaptiveData.recommendation}</p>
+                  </div>
+                ),
+                duration: 8000,
+              });
             }
           } catch (adaptiveErr) {
             console.error('Failed to update adaptive learning:', adaptiveErr);
