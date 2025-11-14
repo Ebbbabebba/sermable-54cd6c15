@@ -428,12 +428,17 @@ const Practice = () => {
                   <div className="space-y-2 text-sm">
                     <p className="font-semibold">{ruleExplanation}</p>
                     <p>{weightInfo}</p>
-                    <p>📅 Next practice: {intervalInfo}</p>
-                    <p>👁️ New word visibility: {adaptiveData.wordVisibility}%</p>
-                    <p className="text-muted-foreground mt-2">{adaptiveData.recommendation}</p>
+                    <div className="border-t border-border pt-2 mt-2">
+                      <p className="font-semibold text-xs text-muted-foreground mb-1">AUTOMATIC ADJUSTMENTS:</p>
+                      <p>⏱️ Next: {adaptiveData.automationSummary?.nextSessionTiming}</p>
+                      <p>📏 Segment: {adaptiveData.automationSummary?.nextSegmentSize}</p>
+                      <p>👁️ Visibility: {adaptiveData.automationSummary?.nextScriptSupport}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{adaptiveData.automationSummary?.deadlineStatus}</p>
+                    </div>
+                    <p className="text-muted-foreground mt-2 border-t border-border pt-2">{adaptiveData.recommendation}</p>
                   </div>
                 ),
-                duration: 8000,
+                duration: 10000,
               });
             }
           } catch (adaptiveErr) {
