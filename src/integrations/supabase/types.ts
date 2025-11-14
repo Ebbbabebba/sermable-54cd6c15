@@ -119,6 +119,7 @@ export type Database = {
           speech_id: string
           tone_feedback: string | null
           transcription: string | null
+          user_rating: string | null
         }
         Insert: {
           analysis?: string | null
@@ -136,6 +137,7 @@ export type Database = {
           speech_id: string
           tone_feedback?: string | null
           transcription?: string | null
+          user_rating?: string | null
         }
         Update: {
           analysis?: string | null
@@ -153,6 +155,7 @@ export type Database = {
           speech_id?: string
           tone_feedback?: string | null
           transcription?: string | null
+          user_rating?: string | null
         }
         Relationships: [
           {
@@ -264,12 +267,17 @@ export type Database = {
       }
       schedules: {
         Row: {
+          adaptive_frequency_multiplier: number | null
+          card_state: string | null
           completed: boolean
           created_at: string
+          days_until_deadline: number | null
           difficulty_level: string | null
+          ease_factor: number | null
           id: string
           interval_days: number | null
           last_reviewed_at: string | null
+          learning_step: number | null
           mastery_score: number | null
           next_review_date: string | null
           review_count: number | null
@@ -278,12 +286,17 @@ export type Database = {
           success_rate: number | null
         }
         Insert: {
+          adaptive_frequency_multiplier?: number | null
+          card_state?: string | null
           completed?: boolean
           created_at?: string
+          days_until_deadline?: number | null
           difficulty_level?: string | null
+          ease_factor?: number | null
           id?: string
           interval_days?: number | null
           last_reviewed_at?: string | null
+          learning_step?: number | null
           mastery_score?: number | null
           next_review_date?: string | null
           review_count?: number | null
@@ -292,12 +305,17 @@ export type Database = {
           success_rate?: number | null
         }
         Update: {
+          adaptive_frequency_multiplier?: number | null
+          card_state?: string | null
           completed?: boolean
           created_at?: string
+          days_until_deadline?: number | null
           difficulty_level?: string | null
+          ease_factor?: number | null
           id?: string
           interval_days?: number | null
           last_reviewed_at?: string | null
+          learning_step?: number | null
           mastery_score?: number | null
           next_review_date?: string | null
           review_count?: number | null
@@ -317,13 +335,18 @@ export type Database = {
       }
       speeches: {
         Row: {
+          base_word_visibility_percent: number | null
+          consecutive_struggles: number | null
           created_at: string
           ease_factor: number | null
           familiarity_level: string | null
-          goal_date: string
+          goal_date: string | null
           id: string
+          last_accuracy: number | null
+          learning_mode: string | null
           mastery_level: number | null
           next_review_date: string | null
+          performance_trend: number | null
           presentation_mode: string | null
           review_interval: number | null
           speech_language: string | null
@@ -334,13 +357,18 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          base_word_visibility_percent?: number | null
+          consecutive_struggles?: number | null
           created_at?: string
           ease_factor?: number | null
           familiarity_level?: string | null
-          goal_date: string
+          goal_date?: string | null
           id?: string
+          last_accuracy?: number | null
+          learning_mode?: string | null
           mastery_level?: number | null
           next_review_date?: string | null
+          performance_trend?: number | null
           presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
@@ -351,13 +379,18 @@ export type Database = {
           user_id: string
         }
         Update: {
+          base_word_visibility_percent?: number | null
+          consecutive_struggles?: number | null
           created_at?: string
           ease_factor?: number | null
           familiarity_level?: string | null
-          goal_date?: string
+          goal_date?: string | null
           id?: string
+          last_accuracy?: number | null
+          learning_mode?: string | null
           mastery_level?: number | null
           next_review_date?: string | null
+          performance_trend?: number | null
           presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
@@ -382,6 +415,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assess_memorization_feasibility: {
+        Args: { p_speech_id: string }
+        Returns: {
+          estimated_days_needed: number
+          feasible: boolean
+          message: string
+          recommended_daily_sessions: number
+          warning_level: string
+        }[]
+      }
       calculate_next_interval:
         | {
             Args: {
@@ -413,6 +456,61 @@ export type Database = {
           p_days_until_deadline: number
           p_difficulty_level: string
           p_skill_level: string
+        }
+        Returns: number
+      }
+      calculate_practice_frequency:
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_days_until_deadline: number
+              p_last_accuracy: number
+              p_performance_trend: number
+              p_word_count?: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_days_until_deadline: number
+              p_last_accuracy: number
+              p_performance_trend: number
+              p_word_count?: number
+              p_word_visibility?: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_days_until_deadline: number
+              p_last_accuracy: number
+              p_performance_trend: number
+            }
+            Returns: number
+          }
+      calculate_sm2_interval: {
+        Args: {
+          p_card_state: string
+          p_current_interval: number
+          p_ease_factor: number
+          p_learning_step: number
+          p_user_rating: string
+        }
+        Returns: {
+          new_card_state: string
+          new_ease_factor: number
+          new_interval: number
+          new_learning_step: number
+        }[]
+      }
+      calculate_word_visibility: {
+        Args: {
+          p_consecutive_struggles: number
+          p_goal_date: string
+          p_performance_trend: number
+          p_speech_id: string
         }
         Returns: number
       }
@@ -457,6 +555,14 @@ export type Database = {
           p_accuracy: number
           p_session_date?: string
           p_speech_id: string
+        }
+        Returns: undefined
+      }
+      update_sm2_schedule: {
+        Args: {
+          p_session_date?: string
+          p_speech_id: string
+          p_user_rating: string
         }
         Returns: undefined
       }
