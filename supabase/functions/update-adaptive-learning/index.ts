@@ -42,9 +42,38 @@ serve(async (req) => {
       );
     }
 
-    const { speechId, sessionAccuracy } = await req.json();
+    const { speechId, sessionAccuracy, wordVisibilityPercent = 100 } = await req.json();
     
-    console.log('Updating adaptive learning for speech:', speechId, 'Session accuracy:', sessionAccuracy);
+    console.log('Updating adaptive learning for speech:', speechId, 'Session accuracy:', sessionAccuracy, 'Word visibility:', wordVisibilityPercent + '%');
+    
+    // Calculate weighted accuracy based on script visibility
+    // Full script (100%) → 20% weight, No notes (0-10%) → 100% weight
+    let performanceWeight = 1.0;
+    if (wordVisibilityPercent >= 80) {
+      // Full script: 20% weight
+      performanceWeight = 0.20;
+    } else if (wordVisibilityPercent >= 60) {
+      // Heavy notes: 50% weight
+      performanceWeight = 0.50;
+    } else if (wordVisibilityPercent >= 40) {
+      // Moderate notes: 70% weight
+      performanceWeight = 0.70;
+    } else if (wordVisibilityPercent >= 20) {
+      // Light notes: 85% weight
+      performanceWeight = 0.85;
+    } else {
+      // Minimal/no notes: 100% weight
+      performanceWeight = 1.00;
+    }
+    
+    const weightedAccuracy = sessionAccuracy * performanceWeight;
+    
+    console.log('Performance weighting:', {
+      rawAccuracy: sessionAccuracy,
+      visibility: wordVisibilityPercent + '%',
+      weight: (performanceWeight * 100) + '%',
+      weightedAccuracy: weightedAccuracy.toFixed(1)
+    });
 
     // Verify user owns the speech
     const { data: speech, error: speechError } = await supabase
@@ -60,19 +89,19 @@ serve(async (req) => {
       );
     }
 
-    // Calculate performance trend (compare current to last session)
+    // Calculate performance trend (compare weighted current to last weighted session)
     const lastAccuracy = speech.last_accuracy || 70;
-    const accuracyDelta = sessionAccuracy - lastAccuracy;
+    const accuracyDelta = weightedAccuracy - lastAccuracy;
     
     // Performance trend: -1 (declining) to +1 (improving)
     // Normalize the delta to be between -1 and 1
     const newTrend = Math.max(-1, Math.min(1, accuracyDelta / 30));
     
-    // Track consecutive struggles (accuracy < 70%)
+    // Track consecutive struggles (weighted accuracy < 50%)
     let consecutiveStruggles = speech.consecutive_struggles || 0;
-    if (sessionAccuracy < 70) {
+    if (weightedAccuracy < 50) {
       consecutiveStruggles += 1;
-    } else if (sessionAccuracy >= 80) {
+    } else if (weightedAccuracy >= 60) {
       consecutiveStruggles = Math.max(0, consecutiveStruggles - 1);
     }
     
@@ -83,9 +112,10 @@ serve(async (req) => {
     
     console.log('Performance analysis:', {
       lastAccuracy,
-      sessionAccuracy,
-      accuracyDelta,
-      newTrend,
+      rawAccuracy: sessionAccuracy,
+      weightedAccuracy: weightedAccuracy.toFixed(1),
+      accuracyDelta: accuracyDelta.toFixed(1),
+      newTrend: newTrend.toFixed(2),
       consecutiveStruggles,
       daysUntilDeadline
     });
@@ -120,7 +150,7 @@ serve(async (req) => {
       .rpc('calculate_practice_frequency', {
         p_days_until_deadline: daysUntilDeadline,
         p_performance_trend: newTrend,
-        p_last_accuracy: sessionAccuracy,
+        p_last_accuracy: weightedAccuracy,
         p_consecutive_struggles: consecutiveStruggles,
         p_word_count: wordCount,
         p_word_visibility: newVisibility
@@ -133,11 +163,11 @@ serve(async (req) => {
     const frequencyMultiplier = frequencyData || 1.0;
     console.log('Adaptive frequency multiplier:', frequencyMultiplier + 'x');
 
-    // Update speech performance tracking
+    // Update speech performance tracking (store weighted accuracy)
     const { error: updateError } = await supabase
       .from('speeches')
       .update({
-        last_accuracy: sessionAccuracy,
+        last_accuracy: weightedAccuracy,
         performance_trend: newTrend,
         consecutive_struggles: consecutiveStruggles,
         base_word_visibility_percent: newVisibility
@@ -175,7 +205,7 @@ serve(async (req) => {
       console.error('Error updating schedule:', scheduleError);
     }
 
-    // Generate recommendation message
+    // Generate recommendation message based on weighted performance
     let recommendation = '';
     const timeUntilNext = adaptiveIntervalMinutes < 60 
       ? `${Math.round(adaptiveIntervalMinutes)} minute${Math.round(adaptiveIntervalMinutes) !== 1 ? 's' : ''}`
@@ -183,16 +213,22 @@ serve(async (req) => {
       ? `${Math.round(adaptiveIntervalMinutes / 60)} hour${Math.round(adaptiveIntervalMinutes / 60) !== 1 ? 's' : ''}`
       : `${Math.round(adaptiveIntervalDays)} day${Math.round(adaptiveIntervalDays) !== 1 ? 's' : ''}`;
     
-    if (consecutiveStruggles >= 2) {
-      recommendation = `⚠️ Performance needs attention. Practice ${Math.ceil(frequencyMultiplier)}x more frequently to improve before your deadline.`;
-    } else if (daysUntilDeadline <= 7 && sessionAccuracy < 80) {
-      recommendation = `⏰ Your presentation is in ${daysUntilDeadline} days. Practice daily to ensure you're ready!`;
-    } else if (newVisibility < 30) {
-      recommendation = `🎯 You're almost there! Only ${Math.round(newVisibility)}% of cue words remain visible.`;
-    } else if (newTrend > 0.5) {
-      recommendation = `📈 Great progress! Keep practicing to reach complete memorization.`;
+    if (daysUntilDeadline <= 1) {
+      recommendation = '🚨 Presentation is tomorrow/today! Focus on key points and practice delivery flow.';
+    } else if (daysUntilDeadline <= 3) {
+      recommendation = '⚠️ Final countdown! Practice complete runs without notes.';
+    } else if (consecutiveStruggles >= 2) {
+      recommendation = '💪 You\'re struggling with true memorization - take it slow and practice with moderate visibility first.';
+    } else if (weightedAccuracy >= 70 && newVisibility < 40) {
+      recommendation = `🎯 Excellent! You\'re truly memorizing without heavy script reliance. Next practice in ${timeUntilNext}.`;
+    } else if (sessionAccuracy >= 90 && wordVisibilityPercent >= 80) {
+      recommendation = '📖 High accuracy but still reading from script. Time to reduce visibility and test real memorization.';
+    } else if (weightedAccuracy >= 50) {
+      recommendation = `✅ Solid progress on actual memorization! Next practice in ${timeUntilNext}.`;
+    } else if (wordVisibilityPercent > 70) {
+      recommendation = '📝 Start by memorizing key phrases, then gradually reduce script visibility.';
     } else {
-      recommendation = `✅ On track. Next practice session in ${timeUntilNext}.`;
+      recommendation = `🔄 Keep practicing! Next session in ${timeUntilNext}.`;
     }
 
     console.log('Adaptive learning update complete');
@@ -200,6 +236,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        rawAccuracy: sessionAccuracy,
+        weightedAccuracy: Math.round(weightedAccuracy * 10) / 10,
+        performanceWeight: Math.round(performanceWeight * 100),
         wordVisibility: newVisibility,
         frequencyMultiplier,
         nextReviewDate: nextReviewDate.toISOString(),
