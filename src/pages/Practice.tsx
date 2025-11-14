@@ -48,6 +48,8 @@ const Practice = () => {
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [showRatingButtons, setShowRatingButtons] = useState(false);
   const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   const [isLocked, setIsLocked] = useState(false);
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
@@ -374,7 +376,7 @@ const Practice = () => {
           }, 500);
 
           // Save practice session to database
-          const { error: sessionError } = await supabase
+          const { data: sessionData, error: sessionError } = await supabase
             .from('practice_sessions')
             .insert({
               speech_id: speech!.id,
@@ -384,10 +386,15 @@ const Practice = () => {
               difficulty_score: data.difficultyScore,
               connector_words: data.connectorWords,
               duration: 0,
-            });
+            })
+            .select('id')
+            .single();
 
           if (sessionError) {
             console.error('Error saving session:', sessionError);
+          } else if (sessionData) {
+            setCurrentSessionId(sessionData.id);
+            setShowRatingButtons(true);
           }
 
           // Update adaptive learning metrics
@@ -468,6 +475,62 @@ const Practice = () => {
     setShowResults(false);
     setSessionResults(null);
     setIsPracticing(false);
+    setCurrentSessionId(null);
+    setShowRatingButtons(false);
+  };
+  
+  const handleRatingSubmit = async (rating: 'again' | 'hard' | 'good' | 'easy') => {
+    if (!currentSessionId || !speech) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "Please sign in again",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-sm2-rating', {
+        body: {
+          speechId: speech.id,
+          userRating: rating,
+          practiceSessionId: currentSessionId
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Error updating SM-2 rating:', error);
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: "Failed to update learning schedule",
+        });
+        return;
+      }
+
+      if (data) {
+        console.log('SM-2 schedule updated:', data);
+        toast({
+          title: "Schedule Updated",
+          description: data.message,
+          duration: 6000,
+        });
+        setShowRatingButtons(false);
+      }
+    } catch (err) {
+      console.error('Failed to submit rating:', err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to submit rating",
+      });
+    }
   };
 
   if (loading) {
@@ -675,6 +738,8 @@ const Practice = () => {
                       transcription={sessionResults.transcription}
                       originalText={speech.text_original}
                       currentText={speech.text_current}
+                      onRatingSubmit={handleRatingSubmit}
+                      showRatingButtons={showRatingButtons}
                     />
 
               {sessionResults.cueText !== speech.text_current && (
