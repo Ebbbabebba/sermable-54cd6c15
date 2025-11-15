@@ -13,6 +13,16 @@ interface BracketedTextDisplayProps {
   className?: string;
 }
 
+// Common simple words to hide first
+const SIMPLE_WORDS = new Set([
+  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+  'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
+  'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+  'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might',
+  'that', 'this', 'these', 'those', 'it', 'its', 'as', 'if', 'then', 'than',
+  'so', 'very', 'just', 'can', 'your', 'my', 'our', 'their', 'his', 'her'
+]);
+
 const BracketedTextDisplay = ({ 
   text, 
   visibilityPercent, 
@@ -27,20 +37,36 @@ const BracketedTextDisplay = ({
 }: BracketedTextDisplayProps) => {
   const words = text.split(/\s+/).filter(w => w.trim());
   const totalWords = words.length;
-  const visibleCount = Math.ceil((visibilityPercent / 100) * totalWords);
   
-  // Calculate which words should be visible (evenly distributed)
+  // Calculate which words should be visible based on importance
   const visibleIndices = new Set<number>();
+  
   if (visibilityPercent >= 100) {
     // All words visible
     for (let i = 0; i < totalWords; i++) {
       visibleIndices.add(i);
     }
   } else if (visibilityPercent > 0) {
-    // Distribute visible words evenly throughout the text
-    const step = totalWords / visibleCount;
-    for (let i = 0; i < visibleCount; i++) {
-      visibleIndices.add(Math.floor(i * step));
+    // Prioritize hiding simple words first
+    const wordScores = words.map((word, index) => {
+      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+      const isSimple = SIMPLE_WORDS.has(cleanWord);
+      
+      // Simple words get lower scores (hidden first)
+      // Important words get higher scores (kept visible longer)
+      return {
+        index,
+        score: isSimple ? 1 : 3,
+        word
+      };
+    });
+    
+    // Sort by score (highest first) and take top percentage
+    const visibleCount = Math.ceil((visibilityPercent / 100) * totalWords);
+    const sortedWords = wordScores.sort((a, b) => b.score - a.score);
+    
+    for (let i = 0; i < visibleCount && i < sortedWords.length; i++) {
+      visibleIndices.add(sortedWords[i].index);
     }
   }
 
