@@ -67,6 +67,7 @@ const Practice = () => {
   const [incorrectWords, setIncorrectWords] = useState<Set<string>>(new Set());
   const [hesitatedWords, setHesitatedWords] = useState<Set<string>>(new Set());
   const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
+  const [revealedSegments, setRevealedSegments] = useState<Set<number>>(new Set());
   const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
   const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
   const [currentWord, setCurrentWord] = useState<string>("");
@@ -329,8 +330,14 @@ const Practice = () => {
                       setHesitatedWords(prev => new Set([...prev, nextWord]));
                       console.log('⚠️ Hesitation detected on word:', nextWord);
                       
-                      // Track hesitation for segment-level performance
+                      // Calculate which segment this word belongs to
                       const segmentIndex = Math.floor((nextExpectedIndex / allExpectedWords.length) * 10);
+                      
+                      // Reveal the segment containing the hesitated word
+                      setRevealedSegments(prev => new Set([...prev, segmentIndex]));
+                      console.log('👁️ Revealing segment:', segmentIndex);
+                      
+                      // Track hesitation for segment-level performance
                       setSegmentHesitations(prev => {
                         const updated = new Map(prev);
                         updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
@@ -453,6 +460,7 @@ const Practice = () => {
     setIncorrectWords(new Set());
     setHesitatedWords(new Set());
     setCompletedSegments(new Set());
+    setRevealedSegments(new Set());
     setSegmentErrors(new Map());
     setSegmentHesitations(new Map());
     setCurrentWord("");
@@ -822,6 +830,7 @@ const Practice = () => {
                           incorrectWords={incorrectWords}
                           hesitatedWords={hesitatedWords}
                           completedSegments={completedSegments}
+                          revealedSegments={revealedSegments}
                           currentWord={currentWord}
                           isRecording={isRecording}
                           onSegmentComplete={handleSegmentComplete}
