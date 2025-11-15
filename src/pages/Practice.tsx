@@ -12,6 +12,7 @@ import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import EnhancedWordTracker from "@/components/EnhancedWordTracker";
+import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
@@ -62,6 +63,8 @@ const Practice = () => {
     firstWordHesitationThreshold: 4,
   });
   const [liveTranscription, setLiveTranscription] = useState("");
+  const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
+  const [currentWord, setCurrentWord] = useState<string>("");
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedChunkIndex = useRef(0);
@@ -249,6 +252,26 @@ const Practice = () => {
               console.log('⏳ Interim transcript:', (finalTranscript + interimTranscript).trim());
             }
           }
+          
+          // Track spoken words for bracket visualization
+          const fullTranscript = (finalTranscript + interimTranscript).trim();
+          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/);
+          const newSpokenWords = new Set<string>();
+          
+          transcriptWords.forEach(word => {
+            const cleanWord = word.replace(/[^\w]/g, '');
+            if (cleanWord) {
+              newSpokenWords.add(cleanWord);
+            }
+          });
+          
+          setSpokenWords(newSpokenWords);
+          
+          // Track current word being spoken
+          if (transcriptWords.length > 0) {
+            const lastWord = transcriptWords[transcriptWords.length - 1].replace(/[^\w]/g, '');
+            setCurrentWord(lastWord);
+          }
         };
         
         recognition.onerror = (event: any) => {
@@ -302,6 +325,10 @@ const Practice = () => {
       transcriptionIntervalRef.current = null;
     }
     lastProcessedChunkIndex.current = 0;
+    
+    // Reset spoken words tracking
+    setSpokenWords(new Set());
+    setCurrentWord("");
 
     // Scroll to results area
     setTimeout(() => {
@@ -652,30 +679,22 @@ const Practice = () => {
                 ) : (
                   <>
                     <div className="p-6 bg-muted/30 rounded-lg">
-                      {isRecording ? (
-                        <div className="space-y-4">
+                      <div className="space-y-4">
+                        {isRecording && (
                           <div className="text-center mb-4">
                             <p className="text-sm text-muted-foreground">
-                              🎤 Speak clearly. Words appear as you say them. Tap to reveal if stuck.
+                              🎤 Recall the words in the brackets from memory
                             </p>
                           </div>
-                          <EnhancedWordTracker
-                            text={speech.text_current}
-                            isRecording={isRecording}
-                            transcription={liveTranscription}
-                            revealSpeed={settings.revealSpeed}
-                            showWordOnPause={settings.showWordOnPause}
-                            animationStyle={settings.animationStyle}
-                            keywordMode={settings.keywordMode}
-                          />
-                        </div>
-                      ) : (
-                        <div className="prose prose-lg max-w-none">
-                          <p className="whitespace-pre-wrap leading-relaxed">
-                            {speech.text_current}
-                          </p>
-                        </div>
-                      )}
+                        )}
+                        <BracketedTextDisplay
+                          text={speech.text_original}
+                          visibilityPercent={speech.base_word_visibility_percent || 100}
+                          spokenWords={spokenWords}
+                          currentWord={currentWord}
+                          isRecording={isRecording}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-center">
