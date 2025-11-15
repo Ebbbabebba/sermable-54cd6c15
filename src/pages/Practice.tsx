@@ -66,6 +66,7 @@ const Practice = () => {
   const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
   const [incorrectWords, setIncorrectWords] = useState<Set<string>>(new Set());
   const [hesitatedWords, setHesitatedWords] = useState<Set<string>>(new Set());
+  const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
   const [currentWord, setCurrentWord] = useState<string>("");
   const [expectedWordIndex, setExpectedWordIndex] = useState(0);
   const lastWordTimeRef = useRef<number>(Date.now());
@@ -193,6 +194,11 @@ const Practice = () => {
       title: "Practice session activated",
       description: "Read your speech aloud when ready, then start recording.",
     });
+  };
+
+  const handleSegmentComplete = (segmentIndex: number) => {
+    console.log('✅ Segment completed:', segmentIndex);
+    setCompletedSegments(prev => new Set([...prev, segmentIndex]));
   };
 
   const handleRecordingStart = async () => {
@@ -409,6 +415,7 @@ const Practice = () => {
     setSpokenWords(new Set());
     setIncorrectWords(new Set());
     setHesitatedWords(new Set());
+    setCompletedSegments(new Set());
     setCurrentWord("");
     setExpectedWordIndex(0);
 
@@ -775,8 +782,10 @@ const Practice = () => {
                           spokenWords={spokenWords}
                           incorrectWords={incorrectWords}
                           hesitatedWords={hesitatedWords}
+                          completedSegments={completedSegments}
                           currentWord={currentWord}
                           isRecording={isRecording}
+                          onSegmentComplete={handleSegmentComplete}
                         />
                       </div>
                     </div>
