@@ -131,14 +131,22 @@ const BracketedTextDisplay = ({
             return null;
           }
           
-          // Show as bracket with actual words
-          const allSpoken = segment.words.every(word => 
+          // Count how many words in this segment have been spoken
+          const spokenCount = segment.words.filter(word => 
             spokenWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
-          );
+          ).length;
+          const allSpoken = spokenCount === segment.words.length;
+          
+          // Check if this is the current bracket (next to be spoken)
+          // A bracket is current if any of its words are the current word being awaited
+          const isCurrentBracket = isRecording && segment.words.some(word => {
+            const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+            return currentWord === cleanWord;
+          });
           
           // Trigger completion sequence when all words are spoken
           if (allSpoken && !isCompleted && !isCollapsing && isRecording) {
-            // Play success sound
+            // Play click sound
             const audio = new Audio('data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
             audio.play().catch(e => console.log('Audio play failed:', e));
             
@@ -164,20 +172,28 @@ const BracketedTextDisplay = ({
               key={segmentIndex}
               className={cn(
                 "inline-block px-3 py-1.5 mx-1 rounded-lg border-2 transition-all duration-300",
-                isCollapsing && !allSpoken && "border-muted-foreground/40 bg-muted/20",
                 isCollapsing && allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20 scale-95",
                 !isCollapsing && allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20",
-                !isCollapsing && !allSpoken && "border-muted-foreground/40 bg-muted/20"
+                !isCollapsing && !allSpoken && isCurrentBracket && "border-primary bg-primary/10 animate-pulse",
+                !isCollapsing && !allSpoken && !isCurrentBracket && "border-muted-foreground/40 bg-muted/20"
               )}
             >
               <span className="font-mono text-sm">
                 {isCollapsing && allSpoken ? (
-                  // Empty bracket state
+                  // Empty bracket state - green and collapsing
                   <span className="text-green-600 dark:text-green-400 font-semibold animate-fade-out">
                     [ ]
                   </span>
-                ) : (
-                  // Full bracket with words
+                ) : spokenCount === 0 ? (
+                  // No words spoken yet - show empty bracket
+                  <span className={cn(
+                    "text-muted-foreground/50",
+                    isCurrentBracket && "text-primary font-semibold"
+                  )}>
+                    [ ]
+                  </span>
+                ) : spokenCount < segment.words.length ? (
+                  // Partial progress - show spoken words with ellipsis
                   <>
                     <span className="text-muted-foreground/50">[ </span>
                     {segment.words.map((word, wordIndex) => {
@@ -188,16 +204,45 @@ const BracketedTextDisplay = ({
                       const isHesitated = hesitatedWords.has(cleanWord);
                       const isCurrent = isRecording && currentWord === cleanWord;
                       
+                      if (!isSpoken && !isCurrent) return null;
+                      
                       return (
                         <span key={globalIndex}>
                           <span
                             className={cn(
                               "transition-all duration-300",
-                              isIncorrect && "text-destructive font-medium animate-fade-out",
-                              isHesitated && !isIncorrect && "text-yellow-600 dark:text-yellow-400 font-medium animate-fade-out",
-                              !isIncorrect && !isHesitated && isCurrent && "animate-pulse font-semibold text-primary",
-                              !isIncorrect && !isHesitated && isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
-                              !isIncorrect && !isHesitated && !isSpoken && !isCurrent && "text-muted-foreground/70"
+                              isIncorrect && "text-destructive font-medium",
+                              isHesitated && !isIncorrect && "text-yellow-600 dark:text-yellow-400 font-medium",
+                              isCurrent && "text-primary font-semibold",
+                              isSpoken && !isIncorrect && !isHesitated && !isCurrent && "text-foreground/70"
+                            )}
+                          >
+                            {word}
+                          </span>
+                          {wordIndex < segment.words.length - 1 && isSpoken && ' '}
+                        </span>
+                      );
+                    })}
+                    <span className="text-muted-foreground/50">…</span>
+                    <span className="text-muted-foreground/50"> ]</span>
+                  </>
+                ) : (
+                  // All words spoken - show full bracket
+                  <>
+                    <span className="text-muted-foreground/50">[ </span>
+                    {segment.words.map((word, wordIndex) => {
+                      const globalIndex = segment.startIndex + wordIndex;
+                      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+                      const isIncorrect = incorrectWords.has(cleanWord);
+                      const isHesitated = hesitatedWords.has(cleanWord);
+                      
+                      return (
+                        <span key={globalIndex}>
+                          <span
+                            className={cn(
+                              "transition-all duration-300 text-green-600 dark:text-green-400 font-medium",
+                              isIncorrect && "text-destructive",
+                              isHesitated && !isIncorrect && "text-yellow-600 dark:text-yellow-400"
                             )}
                           >
                             {word}
