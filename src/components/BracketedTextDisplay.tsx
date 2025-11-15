@@ -98,7 +98,7 @@ const BracketedTextDisplay = ({
   };
 
   return (
-    <div className={cn("flex flex-col gap-3 text-2xl leading-relaxed", className)}>
+    <div className={cn("text-2xl leading-relaxed", className)}>
       {segments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
           // Show individual words in column
