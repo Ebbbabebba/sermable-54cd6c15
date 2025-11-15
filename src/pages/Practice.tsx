@@ -269,70 +269,76 @@ const Practice = () => {
           // Track spoken words for bracket visualization
           const fullTranscript = (finalTranscript + interimTranscript).trim();
           const transcriptWords = fullTranscript.toLowerCase().split(/\s+/);
-          const newSpokenWords = new Set<string>();
-          const newIncorrectWords = new Set<string>();
           
           // Get expected words from the original speech
           const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
-          transcriptWords.forEach((word, index) => {
-            const cleanWord = word.replace(/[^\w]/g, '');
-            if (cleanWord) {
-              // Check if this word exists in the expected text
-              if (allExpectedWords.includes(cleanWord)) {
-                newSpokenWords.add(cleanWord);
-                
-                // Clear hesitation timer when word is spoken
-                if (hesitationTimerRef.current) {
-                  clearTimeout(hesitationTimerRef.current);
-                  hesitationTimerRef.current = null;
-                }
-                
-                // Update expected word index and reset timer
-                const newIndex = allExpectedWords.findIndex((w, i) => i >= expectedWordIndex && w === cleanWord);
-                if (newIndex !== -1) {
-                  setExpectedWordIndex(newIndex + 1);
-                  lastWordTimeRef.current = Date.now();
+          // Process all transcript words and merge with existing spoken words
+          setSpokenWords(prevSpoken => {
+            const newSpokenWords = new Set(prevSpoken);
+            const newIncorrectWords = new Set<string>();
+            
+            transcriptWords.forEach((word) => {
+              const cleanWord = word.replace(/[^\w]/g, '');
+              if (cleanWord) {
+                // Check if this word exists in the expected text
+                if (allExpectedWords.includes(cleanWord)) {
+                  newSpokenWords.add(cleanWord);
                   
-                  // Start new hesitation timer for next expected word
-                  const nextExpectedIndex = newIndex + 1;
-                  if (nextExpectedIndex < allExpectedWords.length) {
-                    const threshold = (nextExpectedIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
-                    hesitationTimerRef.current = setTimeout(() => {
-                      const nextWord = allExpectedWords[nextExpectedIndex];
-                      setHesitatedWords(prev => new Set([...prev, nextWord]));
-                      console.log('⚠️ Hesitation detected on word:', nextWord);
-                      
-                      // Remove from hesitated after 2 seconds (fade-out duration)
-                      setTimeout(() => {
-                        setHesitatedWords(prev => {
-                          const updated = new Set(prev);
-                          updated.delete(nextWord);
-                          return updated;
-                        });
-                      }, 2000);
-                    }, threshold);
+                  // Clear hesitation timer when word is spoken
+                  if (hesitationTimerRef.current) {
+                    clearTimeout(hesitationTimerRef.current);
+                    hesitationTimerRef.current = null;
                   }
+                  
+                  // Update expected word index and reset timer
+                  const newIndex = allExpectedWords.findIndex((w, i) => i >= expectedWordIndex && w === cleanWord);
+                  if (newIndex !== -1) {
+                    setExpectedWordIndex(newIndex + 1);
+                    lastWordTimeRef.current = Date.now();
+                    
+                    // Start new hesitation timer for next expected word
+                    const nextExpectedIndex = newIndex + 1;
+                    if (nextExpectedIndex < allExpectedWords.length) {
+                      const threshold = (nextExpectedIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                      hesitationTimerRef.current = setTimeout(() => {
+                        const nextWord = allExpectedWords[nextExpectedIndex];
+                        setHesitatedWords(prev => new Set([...prev, nextWord]));
+                        console.log('⚠️ Hesitation detected on word:', nextWord);
+                        
+                        // Remove from hesitated after 2 seconds (fade-out duration)
+                        setTimeout(() => {
+                          setHesitatedWords(prev => {
+                            const updated = new Set(prev);
+                            updated.delete(nextWord);
+                            return updated;
+                          });
+                        }, 2000);
+                      }, threshold);
+                    }
+                  }
+                } else {
+                  // Word spoken but doesn't match expected - mark as incorrect
+                  newIncorrectWords.add(cleanWord);
+                  console.log('❌ Incorrect word detected:', cleanWord);
+                  
+                  // Remove from incorrect after 2 seconds (fade-out duration)
+                  setTimeout(() => {
+                    setIncorrectWords(prev => {
+                      const updated = new Set(prev);
+                      updated.delete(cleanWord);
+                      return updated;
+                    });
+                  }, 2000);
                 }
-              } else {
-                // Word spoken but doesn't match expected - mark as incorrect
-                newIncorrectWords.add(cleanWord);
-                console.log('❌ Incorrect word detected:', cleanWord);
-                
-                // Remove from incorrect after 2 seconds (fade-out duration)
-                setTimeout(() => {
-                  setIncorrectWords(prev => {
-                    const updated = new Set(prev);
-                    updated.delete(cleanWord);
-                    return updated;
-                  });
-                }, 2000);
               }
-            }
+            });
+            
+            // Update incorrect words
+            setIncorrectWords(prev => new Set([...prev, ...newIncorrectWords]));
+            
+            return newSpokenWords;
           });
-          
-          setSpokenWords(newSpokenWords);
-          setIncorrectWords(prev => new Set([...prev, ...newIncorrectWords]));
           
           // Track current word being spoken
           if (transcriptWords.length > 0) {
