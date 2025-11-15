@@ -112,12 +112,8 @@ const BracketedTextDisplay = ({
             </span>
           );
         } else {
-          // Show as bracket
-          const bracketContent = segment.words.join(' ');
+          // Show as bracket with actual words
           const allSpoken = segment.words.every(word => 
-            spokenWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
-          );
-          const someSpoken = segment.words.some(word => 
             spokenWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
           );
           
@@ -125,16 +121,36 @@ const BracketedTextDisplay = ({
             <span
               key={segmentIndex}
               className={cn(
-                "inline-block px-3 py-1 mx-1 rounded-lg border-2 transition-all duration-300",
-                isRecording && allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20",
-                isRecording && someSpoken && !allSpoken && "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 animate-pulse",
-                !isRecording && "border-muted-foreground/30 bg-muted/30",
-                isRecording && !someSpoken && "border-muted-foreground/40 bg-muted/40"
+                "inline-block px-3 py-1.5 mx-1 rounded-lg border-2 transition-all duration-300",
+                allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20",
+                !allSpoken && "border-muted-foreground/40 bg-muted/20"
               )}
-              title={bracketContent}
             >
-              <span className="text-muted-foreground/60 font-mono text-sm">
-                [ {segment.words.length} {segment.words.length === 1 ? 'word' : 'words'} ]
+              <span className="font-mono text-sm">
+                <span className="text-muted-foreground/50">[ </span>
+                {segment.words.map((word, wordIndex) => {
+                  const globalIndex = segment.startIndex + wordIndex;
+                  const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+                  const isSpoken = spokenWords.has(cleanWord);
+                  const isCurrent = isRecording && currentWord === cleanWord;
+                  
+                  return (
+                    <span key={globalIndex}>
+                      <span
+                        className={cn(
+                          "transition-all duration-300",
+                          isCurrent && "animate-pulse font-semibold text-primary",
+                          isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
+                          !isSpoken && !isCurrent && "text-muted-foreground/70"
+                        )}
+                      >
+                        {word}
+                      </span>
+                      {wordIndex < segment.words.length - 1 && ' '}
+                    </span>
+                  );
+                })}
+                <span className="text-muted-foreground/50"> ]</span>
               </span>
             </span>
           );
