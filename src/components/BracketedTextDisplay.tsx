@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface BracketedTextDisplayProps {
@@ -6,8 +7,10 @@ interface BracketedTextDisplayProps {
   spokenWords?: Set<string>;
   incorrectWords?: Set<string>;
   hesitatedWords?: Set<string>;
+  completedSegments?: Set<number>;
   currentWord?: string;
   isRecording: boolean;
+  onSegmentComplete?: (segmentIndex: number) => void;
   className?: string;
 }
 
@@ -17,10 +20,13 @@ const BracketedTextDisplay = ({
   spokenWords = new Set(),
   incorrectWords = new Set(),
   hesitatedWords = new Set(),
+  completedSegments = new Set(),
   currentWord = "",
   isRecording,
+  onSegmentComplete,
   className 
 }: BracketedTextDisplayProps) => {
+  const [collapsingSegments, setCollapsingSegments] = useState<Set<number>>(new Set());
   const words = text.split(/\s+/).filter(w => w.trim());
   const totalWords = words.length;
   const visibleCount = Math.ceil((visibilityPercent / 100) * totalWords);
@@ -116,49 +122,93 @@ const BracketedTextDisplay = ({
             </span>
           );
         } else {
+          // Check if this segment is completed
+          const isCompleted = completedSegments.has(segmentIndex);
+          const isCollapsing = collapsingSegments.has(segmentIndex);
+          
+          // Don't render if completed (fully disappeared)
+          if (isCompleted && !isCollapsing) {
+            return null;
+          }
+          
           // Show as bracket with actual words
           const allSpoken = segment.words.every(word => 
             spokenWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
           );
+          
+          // Trigger completion sequence when all words are spoken
+          if (allSpoken && !isCompleted && !isCollapsing && isRecording) {
+            // Play success sound
+            const audio = new Audio('data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+            
+            // Start collapsing animation
+            setCollapsingSegments(prev => new Set([...prev, segmentIndex]));
+            
+            // Collapse to empty bracket after 300ms
+            setTimeout(() => {
+              // Mark as completed and notify parent after another 800ms
+              setTimeout(() => {
+                setCollapsingSegments(prev => {
+                  const updated = new Set(prev);
+                  updated.delete(segmentIndex);
+                  return updated;
+                });
+                onSegmentComplete?.(segmentIndex);
+              }, 800);
+            }, 300);
+          }
           
           return (
             <span
               key={segmentIndex}
               className={cn(
                 "inline-block px-3 py-1.5 mx-1 rounded-lg border-2 transition-all duration-300",
-                allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20",
-                !allSpoken && "border-muted-foreground/40 bg-muted/20"
+                isCollapsing && !allSpoken && "border-muted-foreground/40 bg-muted/20",
+                isCollapsing && allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20 scale-95",
+                !isCollapsing && allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20",
+                !isCollapsing && !allSpoken && "border-muted-foreground/40 bg-muted/20"
               )}
             >
               <span className="font-mono text-sm">
-                <span className="text-muted-foreground/50">[ </span>
-                {segment.words.map((word, wordIndex) => {
-                  const globalIndex = segment.startIndex + wordIndex;
-                  const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
-                  const isSpoken = spokenWords.has(cleanWord);
-                  const isIncorrect = incorrectWords.has(cleanWord);
-                  const isHesitated = hesitatedWords.has(cleanWord);
-                  const isCurrent = isRecording && currentWord === cleanWord;
-                  
-                  return (
-                    <span key={globalIndex}>
-                      <span
-                        className={cn(
-                          "transition-all duration-300",
-                          isIncorrect && "text-destructive font-medium animate-fade-out",
-                          isHesitated && !isIncorrect && "text-yellow-600 dark:text-yellow-400 font-medium animate-fade-out",
-                          !isIncorrect && !isHesitated && isCurrent && "animate-pulse font-semibold text-primary",
-                          !isIncorrect && !isHesitated && isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
-                          !isIncorrect && !isHesitated && !isSpoken && !isCurrent && "text-muted-foreground/70"
-                        )}
-                      >
-                        {word}
-                      </span>
-                      {wordIndex < segment.words.length - 1 && ' '}
-                    </span>
-                  );
-                })}
-                <span className="text-muted-foreground/50"> ]</span>
+                {isCollapsing && allSpoken ? (
+                  // Empty bracket state
+                  <span className="text-green-600 dark:text-green-400 font-semibold animate-fade-out">
+                    [ ]
+                  </span>
+                ) : (
+                  // Full bracket with words
+                  <>
+                    <span className="text-muted-foreground/50">[ </span>
+                    {segment.words.map((word, wordIndex) => {
+                      const globalIndex = segment.startIndex + wordIndex;
+                      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+                      const isSpoken = spokenWords.has(cleanWord);
+                      const isIncorrect = incorrectWords.has(cleanWord);
+                      const isHesitated = hesitatedWords.has(cleanWord);
+                      const isCurrent = isRecording && currentWord === cleanWord;
+                      
+                      return (
+                        <span key={globalIndex}>
+                          <span
+                            className={cn(
+                              "transition-all duration-300",
+                              isIncorrect && "text-destructive font-medium animate-fade-out",
+                              isHesitated && !isIncorrect && "text-yellow-600 dark:text-yellow-400 font-medium animate-fade-out",
+                              !isIncorrect && !isHesitated && isCurrent && "animate-pulse font-semibold text-primary",
+                              !isIncorrect && !isHesitated && isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
+                              !isIncorrect && !isHesitated && !isSpoken && !isCurrent && "text-muted-foreground/70"
+                            )}
+                          >
+                            {word}
+                          </span>
+                          {wordIndex < segment.words.length - 1 && ' '}
+                        </span>
+                      );
+                    })}
+                    <span className="text-muted-foreground/50"> ]</span>
+                  </>
+                )}
               </span>
             </span>
           );
