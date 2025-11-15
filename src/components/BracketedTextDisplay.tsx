@@ -113,11 +113,41 @@ const BracketedTextDisplay = ({
             );
           });
         } else {
-          // Hidden segment - show [] indicator
-          const spokenCount = segment.words.filter(word => 
+          // Hidden segment - show bracket with spoken words appearing inside
+          const spokenWordsInSegment = segment.words.filter(word => 
             spokenWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
-          ).length;
-          const allSpoken = spokenCount === segment.words.length;
+          );
+          const incorrectWordsInSegment = segment.words.filter(word => 
+            incorrectWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
+          );
+          const hesitatedWordsInSegment = segment.words.filter(word => 
+            hesitatedWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
+          );
+          
+          const allSpoken = spokenWordsInSegment.length === segment.words.length;
+          const hasErrors = incorrectWordsInSegment.length > 0 || hesitatedWordsInSegment.length > 0;
+          
+          // Determine what to show in the bracket
+          let bracketContent = "";
+          let bracketState: "empty" | "filling" | "complete" | "errors" = "empty";
+          
+          if (allSpoken && !hasErrors) {
+            // All words spoken correctly - show empty green bracket
+            bracketContent = "";
+            bracketState = "complete";
+          } else if (hasErrors && spokenWordsInSegment.length === segment.words.length) {
+            // All words attempted but some had errors - show only error words
+            bracketContent = [...incorrectWordsInSegment, ...hesitatedWordsInSegment].join(" ");
+            bracketState = "errors";
+          } else if (spokenWordsInSegment.length > 0) {
+            // Some words spoken - show them
+            bracketContent = spokenWordsInSegment.join(" ");
+            bracketState = "filling";
+          } else {
+            // No words spoken yet - empty blue pulsing bracket
+            bracketContent = "";
+            bracketState = "empty";
+          }
           
           const isCurrentBracket = isRecording && segment.words.some(word => {
             const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
@@ -128,14 +158,45 @@ const BracketedTextDisplay = ({
             <div
               key={segmentIndex}
               className={cn(
-                "px-4 py-2 rounded-full border-2 transition-all duration-300 flex items-center whitespace-nowrap",
-                allSpoken && "border-green-500 bg-green-50 dark:bg-green-900/20",
-                !allSpoken && isCurrentBracket && "border-primary bg-primary/10 animate-pulse",
-                !allSpoken && !isCurrentBracket && "border-muted-foreground/40 bg-muted/20"
+                "px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1 whitespace-nowrap",
+                bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500 animate-[scale-in_0.3s_ease-out]",
+                bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 animate-[scale-in_0.3s_ease-out]",
+                bracketState === "errors" && incorrectWordsInSegment.length > 0 && "bg-red-100 dark:bg-red-900/30 border-2 border-red-500 animate-[scale-in_0.3s_ease-out]",
+                bracketState === "filling" && "bg-primary/10 border-2 border-primary/40",
+                bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-2 border-primary animate-pulse",
+                bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/40"
               )}
             >
-              <span className="font-mono text-sm text-muted-foreground/50">
-                [ ]
+              <span className={cn(
+                "font-mono text-sm",
+                bracketState === "complete" && "text-green-600 dark:text-green-400",
+                bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "text-yellow-600 dark:text-yellow-400",
+                bracketState === "errors" && incorrectWordsInSegment.length > 0 && "text-red-600 dark:text-red-400",
+                bracketState === "filling" && "text-primary",
+                bracketState === "empty" && "text-muted-foreground/50"
+              )}>
+                [
+              </span>
+              {bracketContent && (
+                <span className={cn(
+                  "text-base px-1",
+                  bracketState === "complete" && "text-green-600 dark:text-green-400",
+                  bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "text-yellow-900 dark:text-yellow-300",
+                  bracketState === "errors" && incorrectWordsInSegment.length > 0 && "text-red-900 dark:text-red-300",
+                  bracketState === "filling" && "text-primary"
+                )}>
+                  {bracketContent}
+                </span>
+              )}
+              <span className={cn(
+                "font-mono text-sm",
+                bracketState === "complete" && "text-green-600 dark:text-green-400",
+                bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "text-yellow-600 dark:text-yellow-400",
+                bracketState === "errors" && incorrectWordsInSegment.length > 0 && "text-red-600 dark:text-red-400",
+                bracketState === "filling" && "text-primary",
+                bracketState === "empty" && "text-muted-foreground/50"
+              )}>
+                ]
               </span>
             </div>
           );
