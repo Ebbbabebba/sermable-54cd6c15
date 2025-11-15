@@ -64,6 +64,7 @@ const Practice = () => {
   });
   const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
+  const [incorrectWords, setIncorrectWords] = useState<Set<string>>(new Set());
   const [currentWord, setCurrentWord] = useState<string>("");
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -257,15 +258,36 @@ const Practice = () => {
           const fullTranscript = (finalTranscript + interimTranscript).trim();
           const transcriptWords = fullTranscript.toLowerCase().split(/\s+/);
           const newSpokenWords = new Set<string>();
+          const newIncorrectWords = new Set<string>();
           
-          transcriptWords.forEach(word => {
+          // Get expected words from the original speech
+          const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
+          
+          transcriptWords.forEach((word, index) => {
             const cleanWord = word.replace(/[^\w]/g, '');
             if (cleanWord) {
-              newSpokenWords.add(cleanWord);
+              // Check if this word exists in the expected text
+              if (allExpectedWords.includes(cleanWord)) {
+                newSpokenWords.add(cleanWord);
+              } else {
+                // Word spoken but doesn't match expected - mark as incorrect
+                newIncorrectWords.add(cleanWord);
+                console.log('❌ Incorrect word detected:', cleanWord);
+                
+                // Remove from incorrect after 2 seconds (fade-out duration)
+                setTimeout(() => {
+                  setIncorrectWords(prev => {
+                    const updated = new Set(prev);
+                    updated.delete(cleanWord);
+                    return updated;
+                  });
+                }, 2000);
+              }
             }
           });
           
           setSpokenWords(newSpokenWords);
+          setIncorrectWords(prev => new Set([...prev, ...newIncorrectWords]));
           
           // Track current word being spoken
           if (transcriptWords.length > 0) {
@@ -328,6 +350,7 @@ const Practice = () => {
     
     // Reset spoken words tracking
     setSpokenWords(new Set());
+    setIncorrectWords(new Set());
     setCurrentWord("");
 
     // Scroll to results area
@@ -691,6 +714,7 @@ const Practice = () => {
                           text={speech.text_original}
                           visibilityPercent={speech.base_word_visibility_percent || 100}
                           spokenWords={spokenWords}
+                          incorrectWords={incorrectWords}
                           currentWord={currentWord}
                           isRecording={isRecording}
                         />

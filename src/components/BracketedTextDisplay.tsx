@@ -4,6 +4,7 @@ interface BracketedTextDisplayProps {
   text: string;
   visibilityPercent: number;
   spokenWords?: Set<string>;
+  incorrectWords?: Set<string>;
   currentWord?: string;
   isRecording: boolean;
   className?: string;
@@ -13,6 +14,7 @@ const BracketedTextDisplay = ({
   text, 
   visibilityPercent, 
   spokenWords = new Set(),
+  incorrectWords = new Set(),
   currentWord = "",
   isRecording,
   className 
@@ -132,6 +134,7 @@ const BracketedTextDisplay = ({
                   const globalIndex = segment.startIndex + wordIndex;
                   const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
                   const isSpoken = spokenWords.has(cleanWord);
+                  const isIncorrect = incorrectWords.has(cleanWord);
                   const isCurrent = isRecording && currentWord === cleanWord;
                   
                   return (
@@ -139,9 +142,10 @@ const BracketedTextDisplay = ({
                       <span
                         className={cn(
                           "transition-all duration-300",
-                          isCurrent && "animate-pulse font-semibold text-primary",
-                          isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
-                          !isSpoken && !isCurrent && "text-muted-foreground/70"
+                          isIncorrect && "text-destructive font-medium animate-fade-out",
+                          !isIncorrect && isCurrent && "animate-pulse font-semibold text-primary",
+                          !isIncorrect && isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
+                          !isIncorrect && !isSpoken && !isCurrent && "text-muted-foreground/70"
                         )}
                       >
                         {word}
