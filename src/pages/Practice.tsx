@@ -65,7 +65,11 @@ const Practice = () => {
   const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
   const [incorrectWords, setIncorrectWords] = useState<Set<string>>(new Set());
+  const [hesitatedWords, setHesitatedWords] = useState<Set<string>>(new Set());
   const [currentWord, setCurrentWord] = useState<string>("");
+  const [expectedWordIndex, setExpectedWordIndex] = useState(0);
+  const lastWordTimeRef = useRef<number>(Date.now());
+  const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedChunkIndex = useRef(0);
@@ -196,6 +200,14 @@ const Practice = () => {
     setIsRecording(true);
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
+    setExpectedWordIndex(0);
+    lastWordTimeRef.current = Date.now();
+    
+    // Clear any existing hesitation timer
+    if (hesitationTimerRef.current) {
+      clearTimeout(hesitationTimerRef.current);
+      hesitationTimerRef.current = null;
+    }
     
     try {
       // Detect iOS/iPad to determine audio format
@@ -269,6 +281,39 @@ const Practice = () => {
               // Check if this word exists in the expected text
               if (allExpectedWords.includes(cleanWord)) {
                 newSpokenWords.add(cleanWord);
+                
+                // Clear hesitation timer when word is spoken
+                if (hesitationTimerRef.current) {
+                  clearTimeout(hesitationTimerRef.current);
+                  hesitationTimerRef.current = null;
+                }
+                
+                // Update expected word index and reset timer
+                const newIndex = allExpectedWords.findIndex((w, i) => i >= expectedWordIndex && w === cleanWord);
+                if (newIndex !== -1) {
+                  setExpectedWordIndex(newIndex + 1);
+                  lastWordTimeRef.current = Date.now();
+                  
+                  // Start new hesitation timer for next expected word
+                  const nextExpectedIndex = newIndex + 1;
+                  if (nextExpectedIndex < allExpectedWords.length) {
+                    const threshold = (nextExpectedIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                    hesitationTimerRef.current = setTimeout(() => {
+                      const nextWord = allExpectedWords[nextExpectedIndex];
+                      setHesitatedWords(prev => new Set([...prev, nextWord]));
+                      console.log('⚠️ Hesitation detected on word:', nextWord);
+                      
+                      // Remove from hesitated after 2 seconds (fade-out duration)
+                      setTimeout(() => {
+                        setHesitatedWords(prev => {
+                          const updated = new Set(prev);
+                          updated.delete(nextWord);
+                          return updated;
+                        });
+                      }, 2000);
+                    }, threshold);
+                  }
+                }
               } else {
                 // Word spoken but doesn't match expected - mark as incorrect
                 newIncorrectWords.add(cleanWord);
@@ -341,6 +386,12 @@ const Practice = () => {
       recognitionRef.current = null;
     }
     
+    // Clear hesitation timer
+    if (hesitationTimerRef.current) {
+      clearTimeout(hesitationTimerRef.current);
+      hesitationTimerRef.current = null;
+    }
+    
     // Clear the transcription interval
     if (transcriptionIntervalRef.current) {
       clearInterval(transcriptionIntervalRef.current);
@@ -351,7 +402,9 @@ const Practice = () => {
     // Reset spoken words tracking
     setSpokenWords(new Set());
     setIncorrectWords(new Set());
+    setHesitatedWords(new Set());
     setCurrentWord("");
+    setExpectedWordIndex(0);
 
     // Scroll to results area
     setTimeout(() => {
@@ -715,6 +768,7 @@ const Practice = () => {
                           visibilityPercent={speech.base_word_visibility_percent || 100}
                           spokenWords={spokenWords}
                           incorrectWords={incorrectWords}
+                          hesitatedWords={hesitatedWords}
                           currentWord={currentWord}
                           isRecording={isRecording}
                         />

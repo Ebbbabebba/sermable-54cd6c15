@@ -5,6 +5,7 @@ interface BracketedTextDisplayProps {
   visibilityPercent: number;
   spokenWords?: Set<string>;
   incorrectWords?: Set<string>;
+  hesitatedWords?: Set<string>;
   currentWord?: string;
   isRecording: boolean;
   className?: string;
@@ -15,6 +16,7 @@ const BracketedTextDisplay = ({
   visibilityPercent, 
   spokenWords = new Set(),
   incorrectWords = new Set(),
+  hesitatedWords = new Set(),
   currentWord = "",
   isRecording,
   className 
@@ -135,6 +137,7 @@ const BracketedTextDisplay = ({
                   const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
                   const isSpoken = spokenWords.has(cleanWord);
                   const isIncorrect = incorrectWords.has(cleanWord);
+                  const isHesitated = hesitatedWords.has(cleanWord);
                   const isCurrent = isRecording && currentWord === cleanWord;
                   
                   return (
@@ -143,9 +146,10 @@ const BracketedTextDisplay = ({
                         className={cn(
                           "transition-all duration-300",
                           isIncorrect && "text-destructive font-medium animate-fade-out",
-                          !isIncorrect && isCurrent && "animate-pulse font-semibold text-primary",
-                          !isIncorrect && isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
-                          !isIncorrect && !isSpoken && !isCurrent && "text-muted-foreground/70"
+                          isHesitated && !isIncorrect && "text-yellow-600 dark:text-yellow-400 font-medium animate-fade-out",
+                          !isIncorrect && !isHesitated && isCurrent && "animate-pulse font-semibold text-primary",
+                          !isIncorrect && !isHesitated && isSpoken && !isCurrent && "text-green-600 dark:text-green-400 font-medium",
+                          !isIncorrect && !isHesitated && !isSpoken && !isCurrent && "text-muted-foreground/70"
                         )}
                       >
                         {word}
