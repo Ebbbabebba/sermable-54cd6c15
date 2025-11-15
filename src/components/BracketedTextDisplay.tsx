@@ -98,28 +98,32 @@ const BracketedTextDisplay = ({
   };
 
   return (
-    <div className={cn("prose prose-lg max-w-none leading-relaxed", className)}>
+    <div className={cn("flex flex-col gap-3 text-2xl leading-relaxed", className)}>
       {segments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
-          // Show individual words
+          // Show individual words in column
           return (
-            <span key={segmentIndex}>
+            <div key={segmentIndex} className="flex flex-col gap-2">
               {segment.words.map((word, wordIndex) => {
                 const globalIndex = segment.startIndex + wordIndex;
+                const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+                const isSpoken = spokenWords.has(cleanWord);
+                
                 return (
                   <span
                     key={globalIndex}
                     className={cn(
-                      "inline-block px-1 rounded transition-all duration-200",
-                      getWordStyle(word, globalIndex)
+                      "px-2 py-1 rounded transition-all duration-300",
+                      isRecording && currentWord === cleanWord && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
+                      isRecording && isSpoken && currentWord !== cleanWord && "text-foreground/30 opacity-50",
+                      !isRecording && "text-foreground/80"
                     )}
                   >
                     {word}
                   </span>
                 );
               })}
-              {' '}
-            </span>
+            </div>
           );
         } else {
           // Check if this segment is completed
