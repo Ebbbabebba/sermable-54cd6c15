@@ -108,15 +108,20 @@ const BracketedTextDisplay = ({
                 const globalIndex = segment.startIndex + wordIndex;
                 const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
                 const isSpoken = spokenWords.has(cleanWord);
+                const isIncorrect = incorrectWords.has(cleanWord);
+                const isHesitated = hesitatedWords.has(cleanWord);
+                const isCurrent = isRecording && currentWord === cleanWord;
                 
                 return (
                   <span
                     key={globalIndex}
                     className={cn(
                       "px-2 py-1 rounded transition-all duration-300",
-                      isRecording && currentWord === cleanWord && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
-                      isRecording && isSpoken && currentWord !== cleanWord && "text-foreground/30 opacity-50",
-                      !isRecording && "text-foreground/80"
+                      isCurrent && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
+                      !isCurrent && isIncorrect && "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-300 font-medium scale-95 opacity-70",
+                      !isCurrent && !isIncorrect && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
+                      !isCurrent && !isIncorrect && !isHesitated && isSpoken && "text-foreground/30 opacity-50 scale-95",
+                      !isCurrent && !isIncorrect && !isHesitated && !isSpoken && "text-foreground/80"
                     )}
                   >
                     {word}
