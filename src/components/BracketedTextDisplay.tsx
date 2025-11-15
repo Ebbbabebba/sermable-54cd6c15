@@ -125,8 +125,11 @@ const BracketedTextDisplay = ({
             return (
               <div
                 key={globalIndex}
+                style={{
+                  transitionDelay: `${wordIndex * 50}ms`
+                }}
                 className={cn(
-                  "px-4 py-2 rounded-full transition-all duration-300 flex items-center whitespace-nowrap",
+                  "px-4 py-2 rounded-full transition-all duration-500 ease-out flex items-center whitespace-nowrap",
                   isCurrent && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
                   !isCurrent && isIncorrect && "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-300 font-medium scale-95 opacity-70",
                   !isCurrent && !isIncorrect && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
