@@ -67,6 +67,8 @@ const Practice = () => {
   const [incorrectWords, setIncorrectWords] = useState<Set<string>>(new Set());
   const [hesitatedWords, setHesitatedWords] = useState<Set<string>>(new Set());
   const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
+  const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
+  const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
   const [currentWord, setCurrentWord] = useState<string>("");
   const [expectedWordIndex, setExpectedWordIndex] = useState(0);
   const lastWordTimeRef = useRef<number>(Date.now());
@@ -198,7 +200,22 @@ const Practice = () => {
 
   const handleSegmentComplete = (segmentIndex: number) => {
     console.log('✅ Segment completed:', segmentIndex);
+    
+    // Calculate segment-specific performance
+    const errors = segmentErrors.get(segmentIndex) || 0;
+    const hesitations = segmentHesitations.get(segmentIndex) || 0;
+    const totalIssues = errors + hesitations;
+    
+    console.log(`📊 Segment ${segmentIndex} performance: ${errors} errors, ${hesitations} hesitations`);
+    
+    // Mark segment as completed
     setCompletedSegments(prev => new Set([...prev, segmentIndex]));
+    
+    // If this was a difficult segment (many errors/hesitations), the overall
+    // session accuracy will reflect this and adaptive learning will adjust accordingly
+    if (totalIssues > 3) {
+      console.log(`⚠️ Segment ${segmentIndex} had significant difficulty - this will be reflected in session accuracy`);
+    }
   };
 
   const handleRecordingStart = async () => {
@@ -307,36 +324,56 @@ const Practice = () => {
                     const nextExpectedIndex = newIndex + 1;
                     if (nextExpectedIndex < allExpectedWords.length) {
                       const threshold = (nextExpectedIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
-                      hesitationTimerRef.current = setTimeout(() => {
-                        const nextWord = allExpectedWords[nextExpectedIndex];
-                        setHesitatedWords(prev => new Set([...prev, nextWord]));
-                        console.log('⚠️ Hesitation detected on word:', nextWord);
-                        
-                        // Remove from hesitated after 2 seconds (fade-out duration)
-                        setTimeout(() => {
-                          setHesitatedWords(prev => {
-                            const updated = new Set(prev);
-                            updated.delete(nextWord);
-                            return updated;
-                          });
-                        }, 2000);
-                      }, threshold);
+                    hesitationTimerRef.current = setTimeout(() => {
+                      const nextWord = allExpectedWords[nextExpectedIndex];
+                      setHesitatedWords(prev => new Set([...prev, nextWord]));
+                      console.log('⚠️ Hesitation detected on word:', nextWord);
+                      
+                      // Track hesitation for segment-level performance
+                      const segmentIndex = Math.floor((nextExpectedIndex / allExpectedWords.length) * 10);
+                      setSegmentHesitations(prev => {
+                        const updated = new Map(prev);
+                        updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                        return updated;
+                      });
+                      
+                      // Remove from hesitated after 2 seconds (fade-out duration)
+                      setTimeout(() => {
+                        setHesitatedWords(prev => {
+                          const updated = new Set(prev);
+                          updated.delete(nextWord);
+                          return updated;
+                        });
+                      }, 2000);
+                    }, threshold);
                     }
                   }
-                } else {
-                  // Word spoken but doesn't match expected - mark as incorrect
-                  newIncorrectWords.add(cleanWord);
-                  console.log('❌ Incorrect word detected:', cleanWord);
-                  
-                  // Remove from incorrect after 2 seconds (fade-out duration)
-                  setTimeout(() => {
-                    setIncorrectWords(prev => {
-                      const updated = new Set(prev);
-                      updated.delete(cleanWord);
-                      return updated;
-                    });
-                  }, 2000);
+              } else {
+                // Word spoken but doesn't match expected - mark as incorrect
+                newIncorrectWords.add(cleanWord);
+                console.log('❌ Incorrect word detected:', cleanWord);
+                
+                // Track error for segment-level performance
+                const wordIndex = allExpectedWords.indexOf(cleanWord);
+                if (wordIndex !== -1) {
+                  // Find which segment this word belongs to
+                  const segmentIndex = Math.floor((wordIndex / allExpectedWords.length) * 10); // Rough estimate
+                  setSegmentErrors(prev => {
+                    const updated = new Map(prev);
+                    updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                    return updated;
+                  });
                 }
+                
+                // Remove from incorrect after 2 seconds (fade-out duration)
+                setTimeout(() => {
+                  setIncorrectWords(prev => {
+                    const updated = new Set(prev);
+                    updated.delete(cleanWord);
+                    return updated;
+                  });
+                }, 2000);
+              }
               }
             });
             
@@ -416,6 +453,8 @@ const Practice = () => {
     setIncorrectWords(new Set());
     setHesitatedWords(new Set());
     setCompletedSegments(new Set());
+    setSegmentErrors(new Map());
+    setSegmentHesitations(new Map());
     setCurrentWord("");
     setExpectedWordIndex(0);
 
