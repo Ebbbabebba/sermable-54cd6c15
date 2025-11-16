@@ -294,14 +294,16 @@ const Practice = () => {
           // Get expected words from the original speech
           const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
-          // Process words sequentially based on expected index
-          setSpokenWordsIndices(prevSpoken => {
-            const newSpokenIndices = new Set(prevSpoken);
+          // Process words sequentially - use functional update to get current index
+          setExpectedWordIndex(currentIndex => {
+            let newIndex = currentIndex;
             
-            transcriptWords.forEach((word) => {
+            // Find if the next expected word is in the transcript
+            for (const word of transcriptWords) {
               const cleanWord = word.replace(/[^\w]/g, '');
-              if (cleanWord && expectedWordIndex < allExpectedWords.length) {
-                const expectedWord = allExpectedWords[expectedWordIndex];
+              
+              if (cleanWord && newIndex < allExpectedWords.length) {
+                const expectedWord = allExpectedWords[newIndex];
                 
                 // Check if the spoken word matches the expected word
                 if (cleanWord === expectedWord || 
@@ -309,8 +311,8 @@ const Practice = () => {
                     expectedWord.includes(cleanWord)) {
                   
                   // Mark this index as spoken
-                  newSpokenIndices.add(expectedWordIndex);
-                  console.log('✓ Word spoken correctly:', expectedWord, 'at index', expectedWordIndex);
+                  setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
+                  console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
                   
                   // Clear any hesitation timer
                   if (hesitationTimerRef.current) {
@@ -319,19 +321,19 @@ const Practice = () => {
                   }
                   
                   // Move to next expected word
-                  const newIndex = expectedWordIndex + 1;
-                  setExpectedWordIndex(newIndex);
+                  newIndex++;
                   lastWordTimeRef.current = Date.now();
                   
                   // Start hesitation timer for next word
                   if (newIndex < allExpectedWords.length) {
                     const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                    const capturedIndex = newIndex; // Capture for closure
                     hesitationTimerRef.current = setTimeout(() => {
-                      setHesitatedWordsIndices(prev => new Set([...prev, newIndex]));
-                      console.log('⚠️ Hesitation detected at index:', newIndex);
+                      setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
+                      console.log('⚠️ Hesitation detected at index:', capturedIndex);
                       
                       // Track hesitation for segment
-                      const segmentIndex = Math.floor((newIndex / allExpectedWords.length) * 10);
+                      const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
                       setSegmentHesitations(prev => {
                         const updated = new Map(prev);
                         updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
@@ -342,17 +344,20 @@ const Practice = () => {
                       setTimeout(() => {
                         setHesitatedWordsIndices(prev => {
                           const updated = new Set(prev);
-                          updated.delete(newIndex);
+                          updated.delete(capturedIndex);
                           return updated;
                         });
                       }, 2000);
                     }, threshold);
                   }
+                  
+                  // Break after finding a match to process one word at a time
+                  break;
                 }
               }
-            });
+            }
             
-            return newSpokenIndices;
+            return newIndex;
           });
         };
         
