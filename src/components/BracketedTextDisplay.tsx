@@ -15,6 +15,7 @@ interface BracketedTextDisplayProps {
   className?: string;
   revealedSegments?: Set<number>; // Segments revealed due to hesitation
   filledPlaceholders?: Map<number, string>; // Content that fills "[]" placeholders
+  placeholderHesitations?: Set<number>; // Placeholders that had hesitations
 }
 
 // Common simple words to hide first
@@ -40,7 +41,8 @@ const BracketedTextDisplay = ({
   onSegmentStructureChange,
   className,
   revealedSegments = new Set(),
-  filledPlaceholders = new Map()
+  filledPlaceholders = new Map(),
+  placeholderHesitations = new Set()
 }: BracketedTextDisplayProps) => {
   const words = text.split(/\s+/).filter(w => w.trim());
   const totalWords = words.length;
@@ -126,10 +128,6 @@ const BracketedTextDisplay = ({
     }
   }, [visibilityPercent]);
 
-  // Find extra words that were spoken but not in original text
-  const allOriginalWords = new Set(words.map(w => w.toLowerCase().replace(/[^\w]/g, '')));
-  const extraSpokenWords = Array.from(incorrectWords).filter(word => !allOriginalWords.has(word));
-
   return (
     <div className={cn("flex flex-wrap gap-2 text-2xl items-center", className)}>
       {segments.map((segment, segmentIndex) => {
@@ -140,6 +138,29 @@ const BracketedTextDisplay = ({
             const isPlaceholder = word === "[]";
             const cleanWord = isPlaceholder ? "[]" : word.toLowerCase().replace(/[^\w]/g, '');
             const filledContent = isPlaceholder ? filledPlaceholders.get(globalIndex) : null;
+            
+            // If placeholder is filled correctly (no hesitation), don't render it
+            if (isPlaceholder && filledContent && !placeholderHesitations.has(globalIndex)) {
+              return null;
+            }
+            
+            // If placeholder had hesitation, show it with yellow styling in bracket format
+            if (isPlaceholder && filledContent && placeholderHesitations.has(globalIndex)) {
+              return (
+                <div
+                  key={globalIndex}
+                  style={{
+                    transitionDelay: `${wordIndex * 30}ms`
+                  }}
+                  className="px-4 py-2 rounded-full transition-all duration-300 ease-out flex items-center gap-1 whitespace-nowrap bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500"
+                >
+                  <span className="font-mono text-sm text-yellow-600 dark:text-yellow-400">[</span>
+                  <span className="text-base text-yellow-900 dark:text-yellow-300 font-medium">{filledContent}</span>
+                  <span className="font-mono text-sm text-yellow-600 dark:text-yellow-400">]</span>
+                </div>
+              );
+            }
+            
             const displayWord = filledContent || word;
             
             const isSpoken = spokenWords.has(cleanWord);
@@ -157,10 +178,9 @@ const BracketedTextDisplay = ({
                   "px-4 py-2 rounded-full transition-all duration-300 ease-out flex items-center whitespace-nowrap",
                   isPlaceholder && !filledContent && "border-2 border-dashed border-muted-foreground/40",
                   isCurrent && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
-                  !isCurrent && isIncorrect && "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-300 font-medium scale-95 opacity-70",
-                  !isCurrent && !isIncorrect && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
-                  !isCurrent && !isIncorrect && !isHesitated && isSpoken && "bg-muted/30 text-foreground/30 opacity-50 scale-95",
-                  !isCurrent && !isIncorrect && !isHesitated && !isSpoken && "bg-muted/20 text-foreground/80 border border-muted-foreground/20"
+                  !isCurrent && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
+                  !isCurrent && !isHesitated && isSpoken && "bg-muted/30 text-foreground/30 opacity-50 scale-95",
+                  !isCurrent && !isHesitated && !isSpoken && "bg-muted/20 text-foreground/80 border border-muted-foreground/20"
                 )}
               >
                 <span>{displayWord}</span>
@@ -263,17 +283,6 @@ const BracketedTextDisplay = ({
           );
         }
       })}
-      
-      {/* Show extra words spoken that aren't in the original text */}
-      {extraSpokenWords.map((word, index) => (
-        <div
-          key={`extra-${index}`}
-          className="px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2 whitespace-nowrap bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-300 font-medium scale-95 opacity-70"
-        >
-          <span className="text-red-600 dark:text-red-400 font-mono text-sm">✗</span>
-          <span>{word}</span>
-        </div>
-      ))}
     </div>
   );
 };
