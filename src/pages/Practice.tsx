@@ -62,6 +62,7 @@ const Practice = () => {
     firstWordHesitationThreshold: 4,
   });
   const [liveTranscription, setLiveTranscription] = useState("");
+  const [masteredWords, setMasteredWords] = useState<Set<string>>(new Set());
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedChunkIndex = useRef(0);
@@ -106,6 +107,19 @@ const Practice = () => {
 
       if (error) throw error;
       setSpeech(data);
+      
+      // Load mastered words for this speech (words spoken correctly 3+ times)
+      const { data: masteredData, error: masteredError } = await supabase
+        .from("mastered_words")
+        .select("word, times_spoken_correctly")
+        .eq("speech_id", id)
+        .gte("times_spoken_correctly", 3);
+
+      if (!masteredError && masteredData) {
+        const masteredSet = new Set(masteredData.map(m => m.word.toLowerCase()));
+        setMasteredWords(masteredSet);
+        console.log(`Loaded ${masteredSet.size} mastered words for speech ${id}`);
+      }
       
       // Check lock status with adaptive learning integration
       const { data: schedule } = await supabase
@@ -390,6 +404,51 @@ const Practice = () => {
           if (sessionError) {
             console.error('Error saving session:', sessionError);
           }
+
+          // Track mastered words
+          const originalWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
+          const missedWordsSet = new Set((data.missedWords || []).map(w => w.toLowerCase().replace(/[^\w]/g, '')));
+          const delayedWordsSet = new Set((data.delayedWords || []).map(w => w.toLowerCase().replace(/[^\w]/g, '')));
+          
+          // Words that were spoken correctly (not missed or delayed)
+          const correctWords = originalWords.filter(word => 
+            word.length > 2 && !missedWordsSet.has(word) && !delayedWordsSet.has(word)
+          );
+
+          // Deduplicate and update mastered words
+          const uniqueCorrectWords = [...new Set(correctWords)];
+          
+          for (const word of uniqueCorrectWords) {
+            const { data: existingWord } = await supabase
+              .from('mastered_words')
+              .select('id, times_spoken_correctly')
+              .eq('speech_id', speech!.id)
+              .eq('word', word)
+              .maybeSingle();
+
+            if (existingWord) {
+              // Increment counter for existing word
+              await supabase
+                .from('mastered_words')
+                .update({ 
+                  times_spoken_correctly: existingWord.times_spoken_correctly + 1,
+                  last_spoken_at: new Date().toISOString()
+                })
+                .eq('id', existingWord.id);
+            } else {
+              // Create new mastered word record
+              await supabase
+                .from('mastered_words')
+                .insert({
+                  speech_id: speech!.id,
+                  word: word,
+                  times_spoken_correctly: 1,
+                  last_spoken_at: new Date().toISOString()
+                });
+            }
+          }
+
+          console.log(`Tracked ${uniqueCorrectWords.length} correctly spoken words`);
 
           // Update adaptive learning metrics
           try {

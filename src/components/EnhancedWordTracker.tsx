@@ -10,6 +10,7 @@ interface EnhancedWordTrackerProps {
   showWordOnPause: boolean;
   animationStyle?: string;
   keywordMode: boolean;
+  masteredWords?: Set<string>;
   onTranscriptUpdate?: (transcript: string) => void;
   className?: string;
 }
@@ -90,6 +91,7 @@ const EnhancedWordTracker = ({
   showWordOnPause,
   animationStyle,
   keywordMode,
+  masteredWords = new Set(),
   onTranscriptUpdate,
   className,
 }: EnhancedWordTrackerProps) => {
@@ -127,24 +129,29 @@ const EnhancedWordTracker = ({
   // Initialize word states from text
   useEffect(() => {
     const words = text.split(/\s+/).filter((word) => word.length > 0);
-    const initialStates: WordState[] = words.map((word) => ({
-      text: word,
-      spoken: false,
-      isCurrent: false,
-      revealed: !keywordMode || isKeywordWord(word),
-      isKeyword: isKeywordWord(word),
-      manuallyRevealed: false,
-      performanceStatus: undefined,
-      timeToSpeak: 0,
-      hidden: false,
-      partialProgress: 0,
-      showAsHint: false,
-    }));
+    const initialStates: WordState[] = words.map((word) => {
+      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+      const isMastered = masteredWords.has(cleanWord);
+      
+      return {
+        text: word,
+        spoken: isMastered, // Mark mastered words as already spoken
+        isCurrent: false,
+        revealed: !keywordMode || isKeywordWord(word) || isMastered,
+        isKeyword: isKeywordWord(word),
+        manuallyRevealed: false,
+        performanceStatus: isMastered ? 'correct' : undefined,
+        timeToSpeak: 0,
+        hidden: isMastered, // Hide mastered words from the start
+        partialProgress: isMastered ? 1 : 0,
+        showAsHint: false,
+      };
+    });
     setWordStates(initialStates);
     setCurrentWordIndex(0);
     currentWordIndexRef.current = 0;
     lastSpokenIndexRef.current = -1;
-  }, [text, keywordMode]);
+  }, [text, keywordMode, masteredWords]);
 
   // Removed duplicate transcript processing - only use interval-based processing below
 
