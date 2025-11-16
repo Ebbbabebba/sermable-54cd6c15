@@ -295,8 +295,6 @@ const Practice = () => {
           const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
           // Process words sequentially - use functional update to get current index
-          let matchedIndex: number | null = null;
-          
           setExpectedWordIndex(currentIndex => {
             let newIndex = currentIndex;
             
@@ -312,8 +310,8 @@ const Practice = () => {
                     cleanWord.includes(expectedWord) || 
                     expectedWord.includes(cleanWord)) {
                   
-                  // Store the matched index for state update outside
-                  matchedIndex = newIndex;
+                  // Mark this index as spoken
+                  setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
                   console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
                   
                   // Clear any hesitation timer
@@ -361,11 +359,6 @@ const Practice = () => {
             
             return newIndex;
           });
-          
-          // Update spoken words indices after the state update completes
-          if (matchedIndex !== null) {
-            setSpokenWordsIndices(prev => new Set([...prev, matchedIndex]));
-          }
         };
         
         recognition.onerror = (event: any) => {
@@ -793,7 +786,7 @@ const Practice = () => {
                         )}
                         <BracketedTextDisplay
                           text={speech.text_original}
-                          visibilityPercent={100}
+                          visibilityPercent={speech.base_word_visibility_percent || 100}
                           spokenWordsIndices={spokenWordsIndices}
                           hesitatedWordsIndices={hesitatedWordsIndices}
                           currentWordIndex={expectedWordIndex}
