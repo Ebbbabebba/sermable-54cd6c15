@@ -73,6 +73,7 @@ const Practice = () => {
   const [currentWord, setCurrentWord] = useState<string>("");
   const [expectedWordIndex, setExpectedWordIndex] = useState(0);
   const [segmentStructure, setSegmentStructure] = useState<Array<{ startIndex: number; endIndex: number; isVisible: boolean }>>([]);
+  const [filledPlaceholders, setFilledPlaceholders] = useState<Map<number, string>>(new Map());
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
@@ -226,6 +227,7 @@ const Practice = () => {
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
     setExpectedWordIndex(0);
+    setFilledPlaceholders(new Map());
     lastWordTimeRef.current = Date.now();
     
     // Clear any existing hesitation timer
@@ -349,10 +351,20 @@ const Practice = () => {
                 
                 const expectedWord = allExpectedWords[currentExpectedIndex];
                 
-                // Check if spoken word matches expected word (with fuzzy tolerance)
-                if (fuzzyMatch(spokenWord, expectedWord)) {
+                // Check if expected word is a placeholder "[]"
+                const isPlaceholder = expectedWord === "[]";
+                
+                // Check if spoken word matches expected word (with fuzzy tolerance or placeholder)
+                if (isPlaceholder || fuzzyMatch(spokenWord, expectedWord)) {
                   console.log('✅ Match:', spokenWord, '→', expectedWord, 'at index', currentExpectedIndex);
-                  newSpokenWords.add(expectedWord); // Add the expected word (canonical form)
+                  
+                  if (isPlaceholder) {
+                    // Fill the placeholder with the spoken word
+                    setFilledPlaceholders(prev => new Map(prev).set(currentExpectedIndex, spokenWord));
+                    newSpokenWords.add("[]"); // Mark placeholder as spoken
+                  } else {
+                    newSpokenWords.add(expectedWord); // Add the expected word (canonical form)
+                  }
                   
                   // Clear hesitation timer
                   if (hesitationTimerRef.current) {
@@ -879,6 +891,8 @@ const Practice = () => {
                           currentWord={currentWord}
                           isRecording={isRecording}
                           onSegmentComplete={handleSegmentComplete}
+                          onSegmentStructureChange={setSegmentStructure}
+                          filledPlaceholders={filledPlaceholders}
                         />
                       </div>
                     </div>
