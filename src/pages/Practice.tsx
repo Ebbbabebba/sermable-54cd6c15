@@ -74,6 +74,7 @@ const Practice = () => {
   const [expectedWordIndex, setExpectedWordIndex] = useState(0);
   const [segmentStructure, setSegmentStructure] = useState<Array<{ startIndex: number; endIndex: number; isVisible: boolean }>>([]);
   const [filledPlaceholders, setFilledPlaceholders] = useState<Map<number, string>>(new Map());
+  const [placeholderHesitations, setPlaceholderHesitations] = useState<Set<number>>(new Set());
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
@@ -228,6 +229,7 @@ const Practice = () => {
     lastProcessedChunkIndex.current = 0;
     setExpectedWordIndex(0);
     setFilledPlaceholders(new Map());
+    setPlaceholderHesitations(new Set());
     lastWordTimeRef.current = Date.now();
     
     // Clear any existing hesitation timer
@@ -362,6 +364,11 @@ const Practice = () => {
                     // Fill the placeholder with the spoken word
                     setFilledPlaceholders(prev => new Map(prev).set(currentExpectedIndex, spokenWord));
                     newSpokenWords.add("[]"); // Mark placeholder as spoken
+                    
+                    // Check if this placeholder was hesitated on
+                    if (hesitatedWords.has(expectedWord)) {
+                      setPlaceholderHesitations(prev => new Set([...prev, currentExpectedIndex]));
+                    }
                   } else {
                     newSpokenWords.add(expectedWord); // Add the expected word (canonical form)
                   }
@@ -413,9 +420,8 @@ const Practice = () => {
                     }, threshold);
                   }
                 } else {
-                  // Word doesn't match - mark as incorrect but don't advance
+                  // Word doesn't match - don't advance, wait for correct word
                   console.log('❌ Mismatch:', spokenWord, '≠', expectedWord, 'at index', currentExpectedIndex);
-                  setIncorrectWords(prev => new Set([...prev, spokenWord]));
                   
                   // Track error for segment
                   const segmentIndex = segmentStructure.findIndex(seg => 
@@ -428,17 +434,6 @@ const Practice = () => {
                       return updated;
                     });
                   }
-                  
-                  // Clear incorrect marker after fade
-                  setTimeout(() => {
-                    setIncorrectWords(prev => {
-                      const updated = new Set(prev);
-                      updated.delete(spokenWord);
-                      return updated;
-                    });
-                  }, 2000);
-                  
-                  // Don't advance index - wait for correct word
                 }
               }
               
@@ -522,6 +517,7 @@ const Practice = () => {
     setSegmentStructure([]);
     setCurrentWord("");
     setExpectedWordIndex(0);
+    setPlaceholderHesitations(new Set());
 
     // Scroll to results area
     setTimeout(() => {
@@ -893,6 +889,7 @@ const Practice = () => {
                           onSegmentComplete={handleSegmentComplete}
                           onSegmentStructureChange={setSegmentStructure}
                           filledPlaceholders={filledPlaceholders}
+                          placeholderHesitations={placeholderHesitations}
                         />
                       </div>
                     </div>
