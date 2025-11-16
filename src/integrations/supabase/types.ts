@@ -102,6 +102,41 @@ export type Database = {
           },
         ]
       }
+      mastered_words: {
+        Row: {
+          created_at: string
+          id: string
+          last_spoken_at: string
+          speech_id: string
+          times_spoken_correctly: number
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_spoken_at?: string
+          speech_id: string
+          times_spoken_correctly?: number
+          word: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_spoken_at?: string
+          speech_id?: string
+          times_spoken_correctly?: number
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mastered_words_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practice_sessions: {
         Row: {
           analysis: string | null
@@ -338,6 +373,7 @@ export type Database = {
           base_word_visibility_percent: number | null
           consecutive_struggles: number | null
           created_at: string
+          current_segment_length: number | null
           ease_factor: number | null
           familiarity_level: string | null
           goal_date: string | null
@@ -347,9 +383,12 @@ export type Database = {
           mastery_level: number | null
           next_review_date: string | null
           performance_trend: number | null
+          practice_segment_end: number | null
+          practice_segment_start: number | null
           presentation_mode: string | null
           review_interval: number | null
           speech_language: string | null
+          target_segment_length: number | null
           text_current: string
           text_original: string
           title: string
@@ -360,6 +399,7 @@ export type Database = {
           base_word_visibility_percent?: number | null
           consecutive_struggles?: number | null
           created_at?: string
+          current_segment_length?: number | null
           ease_factor?: number | null
           familiarity_level?: string | null
           goal_date?: string | null
@@ -369,9 +409,12 @@ export type Database = {
           mastery_level?: number | null
           next_review_date?: string | null
           performance_trend?: number | null
+          practice_segment_end?: number | null
+          practice_segment_start?: number | null
           presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
+          target_segment_length?: number | null
           text_current: string
           text_original: string
           title: string
@@ -382,6 +425,7 @@ export type Database = {
           base_word_visibility_percent?: number | null
           consecutive_struggles?: number | null
           created_at?: string
+          current_segment_length?: number | null
           ease_factor?: number | null
           familiarity_level?: string | null
           goal_date?: string | null
@@ -391,9 +435,12 @@ export type Database = {
           mastery_level?: number | null
           next_review_date?: string | null
           performance_trend?: number | null
+          practice_segment_end?: number | null
+          practice_segment_start?: number | null
           presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
+          target_segment_length?: number | null
           text_current?: string
           text_original?: string
           title?: string
@@ -490,6 +537,15 @@ export type Database = {
             }
             Returns: number
           }
+      calculate_segment_length: {
+        Args: {
+          p_consecutive_struggles: number
+          p_current_segment_length: number
+          p_days_until_deadline: number
+          p_weighted_accuracy: number
+        }
+        Returns: number
+      }
       calculate_sm2_interval: {
         Args: {
           p_card_state: string
