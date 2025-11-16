@@ -228,9 +228,15 @@ const Practice = () => {
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
     setExpectedWordIndex(0);
+    setSpokenWords(new Set());  // Reset spoken words
+    setHesitatedWords(new Set());  // Reset hesitated words
+    setIncorrectWords(new Set());  // Reset incorrect words
+    setCurrentWord("");  // Reset current word
     setFilledPlaceholders(new Map());
     setPlaceholderHesitations(new Set());
     lastWordTimeRef.current = Date.now();
+    
+    console.log('🔄 Reset all tracking state for new recording');
     
     // Clear any existing hesitation timer
     if (hesitationTimerRef.current) {
@@ -345,32 +351,39 @@ const Practice = () => {
               const newSpokenWords = new Set(prevSpoken);
               let currentExpectedIndex = expectedWordIndex;
               
+              console.log('🎯 Word processing START - Expected index:', currentExpectedIndex, 'Previous spoken count:', prevSpoken.size);
+              
               // Process each new word sequentially
               for (const spokenWord of newWordsToProcess) {
                 if (!spokenWord || currentExpectedIndex >= allExpectedWords.length) {
+                  console.log('⏹️ Stopping - Empty word or end reached');
                   break;
                 }
                 
                 const expectedWord = allExpectedWords[currentExpectedIndex];
+                console.log(`🔍 Comparing: "${spokenWord}" vs "${expectedWord}" (index ${currentExpectedIndex})`);
                 
                 // Check if expected word is a placeholder "[]"
                 const isPlaceholder = expectedWord === "[]";
                 
                 // Check if spoken word matches expected word (with fuzzy tolerance or placeholder)
                 if (isPlaceholder || fuzzyMatch(spokenWord, expectedWord)) {
-                  console.log('✅ Match:', spokenWord, '→', expectedWord, 'at index', currentExpectedIndex);
+                  console.log(`✅ MATCH at index ${currentExpectedIndex}: "${spokenWord}" → "${expectedWord}"`);
                   
                   if (isPlaceholder) {
                     // Fill the placeholder with the spoken word
                     setFilledPlaceholders(prev => new Map(prev).set(currentExpectedIndex, spokenWord));
                     newSpokenWords.add("[]"); // Mark placeholder as spoken
+                    console.log('📝 Filled placeholder with:', spokenWord);
                     
                     // Check if this placeholder was hesitated on
                     if (hesitatedWords.has(expectedWord)) {
                       setPlaceholderHesitations(prev => new Set([...prev, currentExpectedIndex]));
+                      console.log('⚠️ Placeholder had hesitation');
                     }
                   } else {
                     newSpokenWords.add(expectedWord); // Add the expected word (canonical form)
+                    console.log(`✅ Added "${expectedWord}" to spoken words. Total now: ${newSpokenWords.size}`);
                   }
                   
                   // Clear hesitation timer
@@ -382,6 +395,7 @@ const Practice = () => {
                   // Update current word and move to next
                   setCurrentWord(expectedWord);
                   currentExpectedIndex++;
+                  console.log(`➡️ Moving to next word. New index: ${currentExpectedIndex}`);
                   lastWordTimeRef.current = Date.now();
                   
                   // Start hesitation timer for NEXT expected word
@@ -436,6 +450,8 @@ const Practice = () => {
                   }
                 }
               }
+              
+              console.log('📊 Word processing END - Final index:', currentExpectedIndex, 'Spoken words:', Array.from(newSpokenWords));
               
               // Update expected index after processing all words
               setExpectedWordIndex(currentExpectedIndex);
