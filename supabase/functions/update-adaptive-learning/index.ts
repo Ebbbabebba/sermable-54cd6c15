@@ -137,31 +137,14 @@ serve(async (req) => {
     const newVisibility = visibilityData || 100;
     console.log('Calculated word visibility:', newVisibility + '%');
 
-    // Get current speech data including segment info
+    // Get speech length for adaptive calculation
     const { data: speechData } = await supabase
       .from('speeches')
-      .select('text_current, current_segment_length')
+      .select('text_current')
       .eq('id', speechId)
       .single();
     
     const wordCount = speechData?.text_current?.split(/\s+/).length || 0;
-    const currentSegmentLength = speechData?.current_segment_length || 100;
-    
-    // Calculate optimal segment length using database function
-    const { data: segmentData, error: segmentError } = await supabase
-      .rpc('calculate_segment_length', {
-        p_weighted_accuracy: weightedAccuracy,
-        p_consecutive_struggles: consecutiveStruggles,
-        p_days_until_deadline: daysUntilDeadline,
-        p_current_segment_length: currentSegmentLength
-      });
-    
-    if (segmentError) {
-      console.error('Error calculating segment length:', segmentError);
-    }
-    
-    const newSegmentLength = segmentData || 100;
-    console.log('Segment length adjustment:', currentSegmentLength + '% → ' + newSegmentLength + '%');
 
     // Calculate adaptive practice frequency multiplier
     const { data: frequencyData, error: frequencyError } = await supabase
@@ -181,16 +164,14 @@ serve(async (req) => {
     const frequencyMultiplier = frequencyData || 1.0;
     console.log('Adaptive frequency multiplier:', frequencyMultiplier + 'x');
 
-    // Update speech performance tracking (store weighted accuracy and new segment length)
+    // Update speech performance tracking (store weighted accuracy)
     const { error: updateError } = await supabase
       .from('speeches')
       .update({
         last_accuracy: weightedAccuracy,
         performance_trend: newTrend,
         consecutive_struggles: consecutiveStruggles,
-        base_word_visibility_percent: newVisibility,
-        target_segment_length: newSegmentLength,
-        current_segment_length: newSegmentLength
+        base_word_visibility_percent: newVisibility
       })
       .eq('id', speechId);
 
@@ -306,8 +287,6 @@ serve(async (req) => {
         performanceWeight: Math.round(performanceWeight * 100),
         wordVisibility: newVisibility,
         currentVisibility: wordVisibilityPercent,
-        segmentLength: newSegmentLength,
-        segmentChanged: newSegmentLength !== currentSegmentLength,
         frequencyMultiplier,
         intervalMinutes: Math.round(adaptiveIntervalMinutes),
         nextReviewDate: nextReviewDate.toISOString(),
@@ -317,18 +296,6 @@ serve(async (req) => {
         adaptationRule: weightedAccuracy >= 70 && wordVisibilityPercent <= 30 ? 'increasing_interval' :
                         sessionAccuracy >= 80 && wordVisibilityPercent >= 70 ? 'keeping_short' :
                         weightedAccuracy < 50 ? 'shortening_interval' : 'moderate',
-        automationSummary: {
-          nextSessionTiming: adaptiveIntervalMinutes < 60 
-            ? `${Math.round(adaptiveIntervalMinutes)} minutes`
-            : adaptiveIntervalMinutes < 24 * 60
-            ? `${Math.round(adaptiveIntervalMinutes / 60)} hours`
-            : `${Math.round(adaptiveIntervalMinutes / (24 * 60))} days`,
-          nextSegmentSize: newSegmentLength === 100 ? 'Full speech' : `${newSegmentLength}% of speech`,
-          nextScriptSupport: `${newVisibility}% words visible`,
-          deadlineStatus: daysUntilDeadline <= 3 ? 'FINAL SPRINT - No notes allowed' :
-                         daysUntilDeadline <= 7 ? 'Last week - Minimal notes' :
-                         'Progressive learning - Notes allowed'
-        },
         recommendation
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

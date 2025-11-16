@@ -12,7 +12,6 @@ import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import EnhancedWordTracker from "@/components/EnhancedWordTracker";
-import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
@@ -63,20 +62,6 @@ const Practice = () => {
     firstWordHesitationThreshold: 4,
   });
   const [liveTranscription, setLiveTranscription] = useState("");
-  const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
-  const [incorrectWords, setIncorrectWords] = useState<Set<string>>(new Set());
-  const [hesitatedWords, setHesitatedWords] = useState<Set<string>>(new Set());
-  const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
-  const [revealedSegments, setRevealedSegments] = useState<Set<number>>(new Set());
-  const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
-  const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
-  const [currentWord, setCurrentWord] = useState<string>("");
-  const [expectedWordIndex, setExpectedWordIndex] = useState(0);
-  const [segmentStructure, setSegmentStructure] = useState<Array<{ startIndex: number; endIndex: number; isVisible: boolean }>>([]);
-  const [filledPlaceholders, setFilledPlaceholders] = useState<Map<number, string>>(new Map());
-  const [placeholderHesitations, setPlaceholderHesitations] = useState<Set<number>>(new Set());
-  const lastWordTimeRef = useRef<number>(Date.now());
-  const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedChunkIndex = useRef(0);
@@ -202,47 +187,11 @@ const Practice = () => {
     });
   };
 
-  const handleSegmentComplete = (segmentIndex: number) => {
-    console.log('✅ Segment completed:', segmentIndex);
-    
-    // Calculate segment-specific performance
-    const errors = segmentErrors.get(segmentIndex) || 0;
-    const hesitations = segmentHesitations.get(segmentIndex) || 0;
-    const totalIssues = errors + hesitations;
-    
-    console.log(`📊 Segment ${segmentIndex} performance: ${errors} errors, ${hesitations} hesitations`);
-    
-    // Mark segment as completed
-    setCompletedSegments(prev => new Set([...prev, segmentIndex]));
-    
-    // If this was a difficult segment (many errors/hesitations), the overall
-    // session accuracy will reflect this and adaptive learning will adjust accordingly
-    if (totalIssues > 3) {
-      console.log(`⚠️ Segment ${segmentIndex} had significant difficulty - this will be reflected in session accuracy`);
-    }
-  };
-
   const handleRecordingStart = async () => {
     console.log('=== handleRecordingStart CALLED ===');
     setIsRecording(true);
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
-    setExpectedWordIndex(0);
-    setSpokenWords(new Set());  // Reset spoken words
-    setHesitatedWords(new Set());  // Reset hesitated words
-    setIncorrectWords(new Set());  // Reset incorrect words
-    setCurrentWord("");  // Reset current word
-    setFilledPlaceholders(new Map());
-    setPlaceholderHesitations(new Set());
-    lastWordTimeRef.current = Date.now();
-    
-    console.log('🔄 Reset all tracking state for new recording');
-    
-    // Clear any existing hesitation timer
-    if (hesitationTimerRef.current) {
-      clearTimeout(hesitationTimerRef.current);
-      hesitationTimerRef.current = null;
-    }
     
     try {
       // Detect iOS/iPad to determine audio format
@@ -300,168 +249,6 @@ const Practice = () => {
               console.log('⏳ Interim transcript:', (finalTranscript + interimTranscript).trim());
             }
           }
-          
-          // Track spoken words for bracket visualization
-          const fullTranscript = (finalTranscript + interimTranscript).trim();
-          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
-          
-          // Get expected words from the original speech
-          const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
-          
-          // Levenshtein distance for fuzzy matching
-          const levenshtein = (a: string, b: string): number => {
-            if (!a || !b) return Math.max(a?.length || 0, b?.length || 0);
-            const matrix: number[][] = [];
-            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-            for (let i = 1; i <= b.length; i++) {
-              for (let j = 1; j <= a.length; j++) {
-                if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                  matrix[i][j] = matrix[i - 1][j - 1];
-                } else {
-                  matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1,
-                    matrix[i][j - 1] + 1,
-                    matrix[i - 1][j] + 1
-                  );
-                }
-              }
-            }
-            return matrix[b.length][a.length];
-          };
-          
-          // Fuzzy match with tolerance
-          const fuzzyMatch = (spoken: string, expected: string): boolean => {
-            if (!spoken || !expected) return false;
-            if (spoken === expected) return true;
-            const distance = levenshtein(spoken, expected);
-            const maxLength = Math.max(spoken.length, expected.length);
-            // Allow up to 2 character difference or 25% of word length
-            return distance <= Math.min(2, Math.ceil(maxLength * 0.25));
-          };
-          
-          // STRICT WORD-BY-WORD PROCESSING
-          // Process only NEW words that haven't been checked yet
-          const newWordsToProcess = transcriptWords.slice(lastProcessedChunkIndex.current);
-          
-          if (newWordsToProcess.length > 0) {
-            console.log('🔄 Processing new words:', newWordsToProcess, 'Expected index:', expectedWordIndex);
-            
-            setSpokenWords(prevSpoken => {
-              const newSpokenWords = new Set(prevSpoken);
-              let currentExpectedIndex = expectedWordIndex;
-              
-              console.log('🎯 Word processing START - Expected index:', currentExpectedIndex, 'Previous spoken count:', prevSpoken.size);
-              
-              // Process each new word sequentially
-              for (const spokenWord of newWordsToProcess) {
-                if (!spokenWord || currentExpectedIndex >= allExpectedWords.length) {
-                  console.log('⏹️ Stopping - Empty word or end reached');
-                  break;
-                }
-                
-                const expectedWord = allExpectedWords[currentExpectedIndex];
-                console.log(`🔍 Comparing: "${spokenWord}" vs "${expectedWord}" (index ${currentExpectedIndex})`);
-                
-                // Check if expected word is a placeholder "[]"
-                const isPlaceholder = expectedWord === "[]";
-                
-                // Check if spoken word matches expected word (with fuzzy tolerance or placeholder)
-                if (isPlaceholder || fuzzyMatch(spokenWord, expectedWord)) {
-                  console.log(`✅ MATCH at index ${currentExpectedIndex}: "${spokenWord}" → "${expectedWord}"`);
-                  
-                  if (isPlaceholder) {
-                    // Fill the placeholder with the spoken word
-                    setFilledPlaceholders(prev => new Map(prev).set(currentExpectedIndex, spokenWord));
-                    newSpokenWords.add("[]"); // Mark placeholder as spoken
-                    console.log('📝 Filled placeholder with:', spokenWord);
-                    
-                    // Check if this placeholder was hesitated on
-                    if (hesitatedWords.has(expectedWord)) {
-                      setPlaceholderHesitations(prev => new Set([...prev, currentExpectedIndex]));
-                      console.log('⚠️ Placeholder had hesitation');
-                    }
-                  } else {
-                    newSpokenWords.add(expectedWord); // Add the expected word (canonical form)
-                    console.log(`✅ Added "${expectedWord}" to spoken words. Total now: ${newSpokenWords.size}`);
-                  }
-                  
-                  // Clear hesitation timer
-                  if (hesitationTimerRef.current) {
-                    clearTimeout(hesitationTimerRef.current);
-                    hesitationTimerRef.current = null;
-                  }
-                  
-                  // Update current word and move to next
-                  setCurrentWord(expectedWord);
-                  currentExpectedIndex++;
-                  console.log(`➡️ Moving to next word. New index: ${currentExpectedIndex}`);
-                  lastWordTimeRef.current = Date.now();
-                  
-                  // Start hesitation timer for NEXT expected word
-                  if (currentExpectedIndex < allExpectedWords.length) {
-                    const threshold = (currentExpectedIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
-                    
-                    hesitationTimerRef.current = setTimeout(() => {
-                      const nextWord = allExpectedWords[currentExpectedIndex];
-                      setHesitatedWords(prev => new Set([...prev, nextWord]));
-                      console.log('⚠️ Hesitation on:', nextWord, 'at index', currentExpectedIndex);
-                      
-                      // Find segment for this word
-                      const segmentIndex = segmentStructure.findIndex(seg => 
-                        currentExpectedIndex >= seg.startIndex && currentExpectedIndex <= seg.endIndex
-                      );
-                      
-                      if (segmentIndex !== -1 && !segmentStructure[segmentIndex].isVisible) {
-                        setRevealedSegments(prev => new Set([...prev, segmentIndex]));
-                        console.log('👁️ Revealing segment:', segmentIndex);
-                        
-                        setSegmentHesitations(prev => {
-                          const updated = new Map(prev);
-                          updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                          return updated;
-                        });
-                      }
-                      
-                      // Clear hesitation marker after fade
-                      setTimeout(() => {
-                        setHesitatedWords(prev => {
-                          const updated = new Set(prev);
-                          updated.delete(nextWord);
-                          return updated;
-                        });
-                      }, 2000);
-                    }, threshold);
-                  }
-                } else {
-                  // Word doesn't match - don't advance, wait for correct word
-                  console.log('❌ Mismatch:', spokenWord, '≠', expectedWord, 'at index', currentExpectedIndex);
-                  
-                  // Track error for segment
-                  const segmentIndex = segmentStructure.findIndex(seg => 
-                    currentExpectedIndex >= seg.startIndex && currentExpectedIndex <= seg.endIndex
-                  );
-                  if (segmentIndex !== -1) {
-                    setSegmentErrors(prev => {
-                      const updated = new Map(prev);
-                      updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                      return updated;
-                    });
-                  }
-                }
-              }
-              
-              console.log('📊 Word processing END - Final index:', currentExpectedIndex, 'Spoken words:', Array.from(newSpokenWords));
-              
-              // Update expected index after processing all words
-              setExpectedWordIndex(currentExpectedIndex);
-              
-              return newSpokenWords;
-            });
-            
-            // Update last processed index to current transcript length
-            lastProcessedChunkIndex.current = transcriptWords.length;
-          }
         };
         
         recognition.onerror = (event: any) => {
@@ -509,31 +296,12 @@ const Practice = () => {
       recognitionRef.current = null;
     }
     
-    // Clear hesitation timer
-    if (hesitationTimerRef.current) {
-      clearTimeout(hesitationTimerRef.current);
-      hesitationTimerRef.current = null;
-    }
-    
     // Clear the transcription interval
     if (transcriptionIntervalRef.current) {
       clearInterval(transcriptionIntervalRef.current);
       transcriptionIntervalRef.current = null;
     }
     lastProcessedChunkIndex.current = 0;
-    
-    // Reset spoken words tracking
-    setSpokenWords(new Set());
-    setIncorrectWords(new Set());
-    setHesitatedWords(new Set());
-    setCompletedSegments(new Set());
-    setRevealedSegments(new Set());
-    setSegmentErrors(new Map());
-    setSegmentHesitations(new Map());
-    setSegmentStructure([]);
-    setCurrentWord("");
-    setExpectedWordIndex(0);
-    setPlaceholderHesitations(new Set());
 
     // Scroll to results area
     setTimeout(() => {
@@ -660,17 +428,12 @@ const Practice = () => {
                   <div className="space-y-2 text-sm">
                     <p className="font-semibold">{ruleExplanation}</p>
                     <p>{weightInfo}</p>
-                    <div className="border-t border-border pt-2 mt-2">
-                      <p className="font-semibold text-xs text-muted-foreground mb-1">AUTOMATIC ADJUSTMENTS:</p>
-                      <p>⏱️ Next: {adaptiveData.automationSummary?.nextSessionTiming}</p>
-                      <p>📏 Segment: {adaptiveData.automationSummary?.nextSegmentSize}</p>
-                      <p>👁️ Visibility: {adaptiveData.automationSummary?.nextScriptSupport}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{adaptiveData.automationSummary?.deadlineStatus}</p>
-                    </div>
-                    <p className="text-muted-foreground mt-2 border-t border-border pt-2">{adaptiveData.recommendation}</p>
+                    <p>📅 Next practice: {intervalInfo}</p>
+                    <p>👁️ New word visibility: {adaptiveData.wordVisibility}%</p>
+                    <p className="text-muted-foreground mt-2">{adaptiveData.recommendation}</p>
                   </div>
                 ),
-                duration: 10000,
+                duration: 8000,
               });
             }
           } catch (adaptiveErr) {
@@ -884,30 +647,30 @@ const Practice = () => {
                 ) : (
                   <>
                     <div className="p-6 bg-muted/30 rounded-lg">
-                      <div className="space-y-4">
-                        {isRecording && (
+                      {isRecording ? (
+                        <div className="space-y-4">
                           <div className="text-center mb-4">
                             <p className="text-sm text-muted-foreground">
-                              🎤 Recall the words in the brackets from memory
+                              🎤 Speak clearly. Words appear as you say them. Tap to reveal if stuck.
                             </p>
                           </div>
-                        )}
-                        <BracketedTextDisplay
-                          text={speech.text_original}
-                          visibilityPercent={speech.base_word_visibility_percent || 100}
-                          spokenWords={spokenWords}
-                          incorrectWords={incorrectWords}
-                          hesitatedWords={hesitatedWords}
-                          completedSegments={completedSegments}
-                          revealedSegments={revealedSegments}
-                          currentWord={currentWord}
-                          isRecording={isRecording}
-                          onSegmentComplete={handleSegmentComplete}
-                          onSegmentStructureChange={setSegmentStructure}
-                          filledPlaceholders={filledPlaceholders}
-                          placeholderHesitations={placeholderHesitations}
-                        />
-                      </div>
+                          <EnhancedWordTracker
+                            text={speech.text_current}
+                            isRecording={isRecording}
+                            transcription={liveTranscription}
+                            revealSpeed={settings.revealSpeed}
+                            showWordOnPause={settings.showWordOnPause}
+                            animationStyle={settings.animationStyle}
+                            keywordMode={settings.keywordMode}
+                          />
+                        </div>
+                      ) : (
+                        <div className="prose prose-lg max-w-none">
+                          <p className="whitespace-pre-wrap leading-relaxed">
+                            {speech.text_current}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-center">
