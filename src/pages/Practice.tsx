@@ -293,108 +293,151 @@ const Practice = () => {
           
           // Track spoken words for bracket visualization
           const fullTranscript = (finalTranscript + interimTranscript).trim();
-          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/);
+          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
           // Get expected words from the original speech
           const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
-          // SEQUENTIAL WORD PROGRESSION: Only accept the next expected word
-          setSpokenWords(prevSpoken => {
-            const newSpokenWords = new Set(prevSpoken);
-            
-            // Get the last word from transcript (most recent word spoken)
-            const lastSpokenWord = transcriptWords[transcriptWords.length - 1]?.replace(/[^\w]/g, '');
-            
-            if (lastSpokenWord && expectedWordIndex < allExpectedWords.length) {
-              const expectedWord = allExpectedWords[expectedWordIndex];
-              
-              // Check if the spoken word matches the expected word
-              if (lastSpokenWord === expectedWord) {
-                console.log('✅ Correct word spoken:', lastSpokenWord, 'at index', expectedWordIndex);
-                newSpokenWords.add(lastSpokenWord);
-                
-                // Clear hesitation timer
-                if (hesitationTimerRef.current) {
-                  clearTimeout(hesitationTimerRef.current);
-                  hesitationTimerRef.current = null;
+          // Levenshtein distance for fuzzy matching
+          const levenshtein = (a: string, b: string): number => {
+            if (!a || !b) return Math.max(a?.length || 0, b?.length || 0);
+            const matrix: number[][] = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+              for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                  matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                  matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                  );
                 }
-                
-                // Move to next word
-                setExpectedWordIndex(prev => prev + 1);
-                setCurrentWord(lastSpokenWord);
-                lastWordTimeRef.current = Date.now();
-                
-                // Start hesitation timer for next word
-                const nextIndex = expectedWordIndex + 1;
-                if (nextIndex < allExpectedWords.length) {
-                  const threshold = (nextIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
-                  
-                  hesitationTimerRef.current = setTimeout(() => {
-                    const nextWord = allExpectedWords[nextIndex];
-                    setHesitatedWords(prev => new Set([...prev, nextWord]));
-                    console.log('⚠️ Hesitation detected on word:', nextWord, 'at index', nextIndex);
-                    
-                    // Find which segment this word belongs to using segment structure
-                    const segmentIndex = segmentStructure.findIndex(seg => 
-                      nextIndex >= seg.startIndex && nextIndex <= seg.endIndex
-                    );
-                    
-                    if (segmentIndex !== -1) {
-                      setRevealedSegments(prev => new Set([...prev, segmentIndex]));
-                      console.log('👁️ Revealing segment:', segmentIndex);
-                      
-                      // Track hesitation for segment
-                      setSegmentHesitations(prev => {
-                        const updated = new Map(prev);
-                        updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                        return updated;
-                      });
-                    }
-                    
-                    // Remove from hesitated after fade-out
-                    setTimeout(() => {
-                      setHesitatedWords(prev => {
-                        const updated = new Set(prev);
-                        updated.delete(nextWord);
-                        return updated;
-                      });
-                    }, 2000);
-                  }, threshold);
-                }
-                // Word doesn't match - mark as incorrect
-                console.log('❌ Incorrect word:', lastSpokenWord, 'expected:', expectedWord);
-                setIncorrectWords(prev => new Set([...prev, lastSpokenWord]));
-                
-                // Track error for segment
-                const segmentIndex = segmentStructure.findIndex(seg => 
-                  expectedWordIndex >= seg.startIndex && expectedWordIndex <= seg.endIndex
-                );
-                if (segmentIndex !== -1) {
-                  setSegmentErrors(prev => {
-                    const updated = new Map(prev);
-                    updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                    return updated;
-                  });
-                }
-                
-                // Remove from incorrect after fade-out
-                setTimeout(() => {
-                  setIncorrectWords(prev => {
-                    const updated = new Set(prev);
-                    updated.delete(lastSpokenWord);
-                    return updated;
-                  });
-                }, 2000);
               }
             }
-            
-            return newSpokenWords;
-          });
+            return matrix[b.length][a.length];
+          };
           
-          // Track current word being spoken
-          if (transcriptWords.length > 0) {
-            const lastWord = transcriptWords[transcriptWords.length - 1].replace(/[^\w]/g, '');
-            setCurrentWord(lastWord);
+          // Fuzzy match with tolerance
+          const fuzzyMatch = (spoken: string, expected: string): boolean => {
+            if (!spoken || !expected) return false;
+            if (spoken === expected) return true;
+            const distance = levenshtein(spoken, expected);
+            const maxLength = Math.max(spoken.length, expected.length);
+            // Allow up to 2 character difference or 25% of word length
+            return distance <= Math.min(2, Math.ceil(maxLength * 0.25));
+          };
+          
+          // STRICT WORD-BY-WORD PROCESSING
+          // Process only NEW words that haven't been checked yet
+          const newWordsToProcess = transcriptWords.slice(lastProcessedChunkIndex.current);
+          
+          if (newWordsToProcess.length > 0) {
+            console.log('🔄 Processing new words:', newWordsToProcess, 'Expected index:', expectedWordIndex);
+            
+            setSpokenWords(prevSpoken => {
+              const newSpokenWords = new Set(prevSpoken);
+              let currentExpectedIndex = expectedWordIndex;
+              
+              // Process each new word sequentially
+              for (const spokenWord of newWordsToProcess) {
+                if (!spokenWord || currentExpectedIndex >= allExpectedWords.length) {
+                  break;
+                }
+                
+                const expectedWord = allExpectedWords[currentExpectedIndex];
+                
+                // Check if spoken word matches expected word (with fuzzy tolerance)
+                if (fuzzyMatch(spokenWord, expectedWord)) {
+                  console.log('✅ Match:', spokenWord, '→', expectedWord, 'at index', currentExpectedIndex);
+                  newSpokenWords.add(expectedWord); // Add the expected word (canonical form)
+                  
+                  // Clear hesitation timer
+                  if (hesitationTimerRef.current) {
+                    clearTimeout(hesitationTimerRef.current);
+                    hesitationTimerRef.current = null;
+                  }
+                  
+                  // Update current word and move to next
+                  setCurrentWord(expectedWord);
+                  currentExpectedIndex++;
+                  lastWordTimeRef.current = Date.now();
+                  
+                  // Start hesitation timer for NEXT expected word
+                  if (currentExpectedIndex < allExpectedWords.length) {
+                    const threshold = (currentExpectedIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                    
+                    hesitationTimerRef.current = setTimeout(() => {
+                      const nextWord = allExpectedWords[currentExpectedIndex];
+                      setHesitatedWords(prev => new Set([...prev, nextWord]));
+                      console.log('⚠️ Hesitation on:', nextWord, 'at index', currentExpectedIndex);
+                      
+                      // Find segment for this word
+                      const segmentIndex = segmentStructure.findIndex(seg => 
+                        currentExpectedIndex >= seg.startIndex && currentExpectedIndex <= seg.endIndex
+                      );
+                      
+                      if (segmentIndex !== -1 && !segmentStructure[segmentIndex].isVisible) {
+                        setRevealedSegments(prev => new Set([...prev, segmentIndex]));
+                        console.log('👁️ Revealing segment:', segmentIndex);
+                        
+                        setSegmentHesitations(prev => {
+                          const updated = new Map(prev);
+                          updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                          return updated;
+                        });
+                      }
+                      
+                      // Clear hesitation marker after fade
+                      setTimeout(() => {
+                        setHesitatedWords(prev => {
+                          const updated = new Set(prev);
+                          updated.delete(nextWord);
+                          return updated;
+                        });
+                      }, 2000);
+                    }, threshold);
+                  }
+                } else {
+                  // Word doesn't match - mark as incorrect but don't advance
+                  console.log('❌ Mismatch:', spokenWord, '≠', expectedWord, 'at index', currentExpectedIndex);
+                  setIncorrectWords(prev => new Set([...prev, spokenWord]));
+                  
+                  // Track error for segment
+                  const segmentIndex = segmentStructure.findIndex(seg => 
+                    currentExpectedIndex >= seg.startIndex && currentExpectedIndex <= seg.endIndex
+                  );
+                  if (segmentIndex !== -1) {
+                    setSegmentErrors(prev => {
+                      const updated = new Map(prev);
+                      updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                      return updated;
+                    });
+                  }
+                  
+                  // Clear incorrect marker after fade
+                  setTimeout(() => {
+                    setIncorrectWords(prev => {
+                      const updated = new Set(prev);
+                      updated.delete(spokenWord);
+                      return updated;
+                    });
+                  }, 2000);
+                  
+                  // Don't advance index - wait for correct word
+                }
+              }
+              
+              // Update expected index after processing all words
+              setExpectedWordIndex(currentExpectedIndex);
+              
+              return newSpokenWords;
+            });
+            
+            // Update last processed index to current transcript length
+            lastProcessedChunkIndex.current = transcriptWords.length;
           }
         };
         
