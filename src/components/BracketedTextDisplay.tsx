@@ -168,6 +168,19 @@ const BracketedTextDisplay = ({
             const isHesitated = hesitatedWords.has(cleanWord);
             const isCurrent = isRecording && currentWord === cleanWord;
             
+            // Debug logging
+            if (globalIndex < 10) {  // Only log first 10 words to avoid spam
+              console.log(`Word ${globalIndex} "${word}" (clean: "${cleanWord}"):`, {
+                isSpoken,
+                isIncorrect,
+                isHesitated,
+                isCurrent,
+                currentWord,
+                spokenWordsHas: spokenWords.has(cleanWord),
+                allSpokenWords: Array.from(spokenWords).slice(0, 5)  // Show first 5 for context
+              });
+            }
+            
             return (
               <div
                 key={globalIndex}
