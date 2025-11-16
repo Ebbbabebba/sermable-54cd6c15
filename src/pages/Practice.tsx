@@ -12,6 +12,7 @@ import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import EnhancedWordTracker from "@/components/EnhancedWordTracker";
+import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
@@ -62,6 +63,16 @@ const Practice = () => {
     firstWordHesitationThreshold: 4,
   });
   const [liveTranscription, setLiveTranscription] = useState("");
+  const [spokenWords, setSpokenWords] = useState<Set<string>>(new Set());
+  const [incorrectWords, setIncorrectWords] = useState<Set<string>>(new Set());
+  const [hesitatedWords, setHesitatedWords] = useState<Set<string>>(new Set());
+  const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
+  const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
+  const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
+  const [currentWord, setCurrentWord] = useState<string>("");
+  const [expectedWordIndex, setExpectedWordIndex] = useState(0);
+  const lastWordTimeRef = useRef<number>(Date.now());
+  const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
   const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastProcessedChunkIndex = useRef(0);
@@ -187,11 +198,39 @@ const Practice = () => {
     });
   };
 
+  const handleSegmentComplete = (segmentIndex: number) => {
+    console.log('✅ Segment completed:', segmentIndex);
+    
+    // Calculate segment-specific performance
+    const errors = segmentErrors.get(segmentIndex) || 0;
+    const hesitations = segmentHesitations.get(segmentIndex) || 0;
+    const totalIssues = errors + hesitations;
+    
+    console.log(`📊 Segment ${segmentIndex} performance: ${errors} errors, ${hesitations} hesitations`);
+    
+    // Mark segment as completed
+    setCompletedSegments(prev => new Set([...prev, segmentIndex]));
+    
+    // If this was a difficult segment (many errors/hesitations), the overall
+    // session accuracy will reflect this and adaptive learning will adjust accordingly
+    if (totalIssues > 3) {
+      console.log(`⚠️ Segment ${segmentIndex} had significant difficulty - this will be reflected in session accuracy`);
+    }
+  };
+
   const handleRecordingStart = async () => {
     console.log('=== handleRecordingStart CALLED ===');
     setIsRecording(true);
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
+    setExpectedWordIndex(0);
+    lastWordTimeRef.current = Date.now();
+    
+    // Clear any existing hesitation timer
+    if (hesitationTimerRef.current) {
+      clearTimeout(hesitationTimerRef.current);
+      hesitationTimerRef.current = null;
+    }
     
     try {
       // Detect iOS/iPad to determine audio format
@@ -249,6 +288,106 @@ const Practice = () => {
               console.log('⏳ Interim transcript:', (finalTranscript + interimTranscript).trim());
             }
           }
+          
+          // Track spoken words for bracket visualization
+          const fullTranscript = (finalTranscript + interimTranscript).trim();
+          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/);
+          
+          // Get expected words from the original speech
+          const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
+          
+          // Process all transcript words and merge with existing spoken words
+          setSpokenWords(prevSpoken => {
+            const newSpokenWords = new Set(prevSpoken);
+            const newIncorrectWords = new Set<string>();
+            
+            transcriptWords.forEach((word) => {
+              const cleanWord = word.replace(/[^\w]/g, '');
+              if (cleanWord) {
+                // Check if this word exists in the expected text
+                if (allExpectedWords.includes(cleanWord)) {
+                  newSpokenWords.add(cleanWord);
+                  
+                  // Clear hesitation timer when word is spoken
+                  if (hesitationTimerRef.current) {
+                    clearTimeout(hesitationTimerRef.current);
+                    hesitationTimerRef.current = null;
+                  }
+                  
+                  // Update expected word index and reset timer
+                  const newIndex = allExpectedWords.findIndex((w, i) => i >= expectedWordIndex && w === cleanWord);
+                  if (newIndex !== -1) {
+                    setExpectedWordIndex(newIndex + 1);
+                    lastWordTimeRef.current = Date.now();
+                    
+                    // Start new hesitation timer for next expected word
+                    const nextExpectedIndex = newIndex + 1;
+                    if (nextExpectedIndex < allExpectedWords.length) {
+                      const threshold = (nextExpectedIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                    hesitationTimerRef.current = setTimeout(() => {
+                      const nextWord = allExpectedWords[nextExpectedIndex];
+                      setHesitatedWords(prev => new Set([...prev, nextWord]));
+                      console.log('⚠️ Hesitation detected on word:', nextWord);
+                      
+                      // Track hesitation for segment-level performance
+                      const segmentIndex = Math.floor((nextExpectedIndex / allExpectedWords.length) * 10);
+                      setSegmentHesitations(prev => {
+                        const updated = new Map(prev);
+                        updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                        return updated;
+                      });
+                      
+                      // Remove from hesitated after 2 seconds (fade-out duration)
+                      setTimeout(() => {
+                        setHesitatedWords(prev => {
+                          const updated = new Set(prev);
+                          updated.delete(nextWord);
+                          return updated;
+                        });
+                      }, 2000);
+                    }, threshold);
+                    }
+                  }
+              } else {
+                // Word spoken but doesn't match expected - mark as incorrect
+                newIncorrectWords.add(cleanWord);
+                console.log('❌ Incorrect word detected:', cleanWord);
+                
+                // Track error for segment-level performance
+                const wordIndex = allExpectedWords.indexOf(cleanWord);
+                if (wordIndex !== -1) {
+                  // Find which segment this word belongs to
+                  const segmentIndex = Math.floor((wordIndex / allExpectedWords.length) * 10); // Rough estimate
+                  setSegmentErrors(prev => {
+                    const updated = new Map(prev);
+                    updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                    return updated;
+                  });
+                }
+                
+                // Remove from incorrect after 2 seconds (fade-out duration)
+                setTimeout(() => {
+                  setIncorrectWords(prev => {
+                    const updated = new Set(prev);
+                    updated.delete(cleanWord);
+                    return updated;
+                  });
+                }, 2000);
+              }
+              }
+            });
+            
+            // Update incorrect words
+            setIncorrectWords(prev => new Set([...prev, ...newIncorrectWords]));
+            
+            return newSpokenWords;
+          });
+          
+          // Track current word being spoken
+          if (transcriptWords.length > 0) {
+            const lastWord = transcriptWords[transcriptWords.length - 1].replace(/[^\w]/g, '');
+            setCurrentWord(lastWord);
+          }
         };
         
         recognition.onerror = (event: any) => {
@@ -296,12 +435,28 @@ const Practice = () => {
       recognitionRef.current = null;
     }
     
+    // Clear hesitation timer
+    if (hesitationTimerRef.current) {
+      clearTimeout(hesitationTimerRef.current);
+      hesitationTimerRef.current = null;
+    }
+    
     // Clear the transcription interval
     if (transcriptionIntervalRef.current) {
       clearInterval(transcriptionIntervalRef.current);
       transcriptionIntervalRef.current = null;
     }
     lastProcessedChunkIndex.current = 0;
+    
+    // Reset spoken words tracking
+    setSpokenWords(new Set());
+    setIncorrectWords(new Set());
+    setHesitatedWords(new Set());
+    setCompletedSegments(new Set());
+    setSegmentErrors(new Map());
+    setSegmentHesitations(new Map());
+    setCurrentWord("");
+    setExpectedWordIndex(0);
 
     // Scroll to results area
     setTimeout(() => {
@@ -428,12 +583,17 @@ const Practice = () => {
                   <div className="space-y-2 text-sm">
                     <p className="font-semibold">{ruleExplanation}</p>
                     <p>{weightInfo}</p>
-                    <p>📅 Next practice: {intervalInfo}</p>
-                    <p>👁️ New word visibility: {adaptiveData.wordVisibility}%</p>
-                    <p className="text-muted-foreground mt-2">{adaptiveData.recommendation}</p>
+                    <div className="border-t border-border pt-2 mt-2">
+                      <p className="font-semibold text-xs text-muted-foreground mb-1">AUTOMATIC ADJUSTMENTS:</p>
+                      <p>⏱️ Next: {adaptiveData.automationSummary?.nextSessionTiming}</p>
+                      <p>📏 Segment: {adaptiveData.automationSummary?.nextSegmentSize}</p>
+                      <p>👁️ Visibility: {adaptiveData.automationSummary?.nextScriptSupport}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{adaptiveData.automationSummary?.deadlineStatus}</p>
+                    </div>
+                    <p className="text-muted-foreground mt-2 border-t border-border pt-2">{adaptiveData.recommendation}</p>
                   </div>
                 ),
-                duration: 8000,
+                duration: 10000,
               });
             }
           } catch (adaptiveErr) {
@@ -647,30 +807,26 @@ const Practice = () => {
                 ) : (
                   <>
                     <div className="p-6 bg-muted/30 rounded-lg">
-                      {isRecording ? (
-                        <div className="space-y-4">
+                      <div className="space-y-4">
+                        {isRecording && (
                           <div className="text-center mb-4">
                             <p className="text-sm text-muted-foreground">
-                              🎤 Speak clearly. Words appear as you say them. Tap to reveal if stuck.
+                              🎤 Recall the words in the brackets from memory
                             </p>
                           </div>
-                          <EnhancedWordTracker
-                            text={speech.text_current}
-                            isRecording={isRecording}
-                            transcription={liveTranscription}
-                            revealSpeed={settings.revealSpeed}
-                            showWordOnPause={settings.showWordOnPause}
-                            animationStyle={settings.animationStyle}
-                            keywordMode={settings.keywordMode}
-                          />
-                        </div>
-                      ) : (
-                        <div className="prose prose-lg max-w-none">
-                          <p className="whitespace-pre-wrap leading-relaxed">
-                            {speech.text_current}
-                          </p>
-                        </div>
-                      )}
+                        )}
+                        <BracketedTextDisplay
+                          text={speech.text_original}
+                          visibilityPercent={speech.base_word_visibility_percent || 100}
+                          spokenWords={spokenWords}
+                          incorrectWords={incorrectWords}
+                          hesitatedWords={hesitatedWords}
+                          completedSegments={completedSegments}
+                          currentWord={currentWord}
+                          isRecording={isRecording}
+                          onSegmentComplete={handleSegmentComplete}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-center">
