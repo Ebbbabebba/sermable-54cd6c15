@@ -14,6 +14,7 @@ interface BracketedTextDisplayProps {
   onSegmentStructureChange?: (structure: Array<{ startIndex: number; endIndex: number; isVisible: boolean }>) => void;
   className?: string;
   revealedSegments?: Set<number>; // Segments revealed due to hesitation
+  filledPlaceholders?: Map<number, string>; // Content that fills "[]" placeholders
 }
 
 // Common simple words to hide first
@@ -38,7 +39,8 @@ const BracketedTextDisplay = ({
   onSegmentComplete,
   onSegmentStructureChange,
   className,
-  revealedSegments = new Set()
+  revealedSegments = new Set(),
+  filledPlaceholders = new Map()
 }: BracketedTextDisplayProps) => {
   const words = text.split(/\s+/).filter(w => w.trim());
   const totalWords = words.length;
@@ -135,7 +137,11 @@ const BracketedTextDisplay = ({
           // Show individual words as pills
           return segment.words.map((word, wordIndex) => {
             const globalIndex = segment.startIndex + wordIndex;
-            const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+            const isPlaceholder = word === "[]";
+            const cleanWord = isPlaceholder ? "[]" : word.toLowerCase().replace(/[^\w]/g, '');
+            const filledContent = isPlaceholder ? filledPlaceholders.get(globalIndex) : null;
+            const displayWord = filledContent || word;
+            
             const isSpoken = spokenWords.has(cleanWord);
             const isIncorrect = incorrectWords.has(cleanWord);
             const isHesitated = hesitatedWords.has(cleanWord);
@@ -149,6 +155,7 @@ const BracketedTextDisplay = ({
                 }}
                 className={cn(
                   "px-4 py-2 rounded-full transition-all duration-300 ease-out flex items-center whitespace-nowrap",
+                  isPlaceholder && !filledContent && "border-2 border-dashed border-muted-foreground/40",
                   isCurrent && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
                   !isCurrent && isIncorrect && "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-300 font-medium scale-95 opacity-70",
                   !isCurrent && !isIncorrect && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
@@ -156,7 +163,7 @@ const BracketedTextDisplay = ({
                   !isCurrent && !isIncorrect && !isHesitated && !isSpoken && "bg-muted/20 text-foreground/80 border border-muted-foreground/20"
                 )}
               >
-                <span>{word}</span>
+                <span>{displayWord}</span>
               </div>
             );
           });
