@@ -102,6 +102,41 @@ export type Database = {
           },
         ]
       }
+      mastered_words: {
+        Row: {
+          created_at: string
+          id: string
+          last_spoken_at: string
+          speech_id: string
+          times_spoken_correctly: number
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_spoken_at?: string
+          speech_id: string
+          times_spoken_correctly?: number
+          word: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_spoken_at?: string
+          speech_id?: string
+          times_spoken_correctly?: number
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mastered_words_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practice_sessions: {
         Row: {
           analysis: string | null

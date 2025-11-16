@@ -3,13 +3,10 @@ import { cn } from "@/lib/utils";
 interface BracketedTextDisplayProps {
   text: string;
   visibilityPercent: number;
-  spokenWords?: Set<string>;
-  incorrectWords?: Set<string>;
-  hesitatedWords?: Set<string>;
-  completedSegments?: Set<number>;
-  currentWord?: string;
+  spokenWordsIndices?: Set<number>;
+  hesitatedWordsIndices?: Set<number>;
+  currentWordIndex?: number;
   isRecording: boolean;
-  onSegmentComplete?: (segmentIndex: number) => void;
   className?: string;
 }
 
@@ -26,13 +23,10 @@ const SIMPLE_WORDS = new Set([
 const BracketedTextDisplay = ({ 
   text, 
   visibilityPercent, 
-  spokenWords = new Set(),
-  incorrectWords = new Set(),
-  hesitatedWords = new Set(),
-  completedSegments = new Set(),
-  currentWord = "",
+  spokenWordsIndices = new Set(),
+  hesitatedWordsIndices = new Set(),
+  currentWordIndex = -1,
   isRecording,
-  onSegmentComplete,
   className 
 }: BracketedTextDisplayProps) => {
   const words = text.split(/\s+/).filter(w => w.trim());
@@ -105,9 +99,6 @@ const BracketedTextDisplay = ({
     });
   }
 
-  // Find extra words that were spoken but not in original text
-  const allOriginalWords = new Set(words.map(w => w.toLowerCase().replace(/[^\w]/g, '')));
-  const extraSpokenWords = Array.from(incorrectWords).filter(word => !allOriginalWords.has(word));
 
   return (
     <div className={cn("flex flex-wrap gap-2 text-2xl items-center", className)}>
@@ -116,11 +107,9 @@ const BracketedTextDisplay = ({
           // Show individual words as pills
           return segment.words.map((word, wordIndex) => {
             const globalIndex = segment.startIndex + wordIndex;
-            const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
-            const isSpoken = spokenWords.has(cleanWord);
-            const isIncorrect = incorrectWords.has(cleanWord);
-            const isHesitated = hesitatedWords.has(cleanWord);
-            const isCurrent = isRecording && currentWord === cleanWord;
+            const isSpoken = spokenWordsIndices.has(globalIndex);
+            const isHesitated = hesitatedWordsIndices.has(globalIndex);
+            const isCurrent = isRecording && currentWordIndex === globalIndex;
             
             return (
               <div
@@ -128,10 +117,9 @@ const BracketedTextDisplay = ({
                 className={cn(
                   "px-4 py-2 rounded-full transition-all duration-300 flex items-center whitespace-nowrap",
                   isCurrent && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
-                  !isCurrent && isIncorrect && "bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-300 font-medium scale-95 opacity-70",
-                  !isCurrent && !isIncorrect && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
-                  !isCurrent && !isIncorrect && !isHesitated && isSpoken && "bg-muted/30 text-foreground/30 opacity-50 scale-95",
-                  !isCurrent && !isIncorrect && !isHesitated && !isSpoken && "bg-muted/20 text-foreground/80 border border-muted-foreground/20"
+                  !isCurrent && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
+                  !isCurrent && !isHesitated && isSpoken && "bg-muted/30 text-foreground/30 opacity-50 scale-95",
+                  !isCurrent && !isHesitated && !isSpoken && "bg-muted/20 text-foreground/80 border border-muted-foreground/20"
                 )}
               >
                 <span>{word}</span>
@@ -140,18 +128,19 @@ const BracketedTextDisplay = ({
           });
         } else {
           // Hidden segment - show bracket with spoken words appearing inside
-          const spokenWordsInSegment = segment.words.filter(word => 
-            spokenWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
-          );
-          const incorrectWordsInSegment = segment.words.filter(word => 
-            incorrectWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
-          );
-          const hesitatedWordsInSegment = segment.words.filter(word => 
-            hesitatedWords.has(word.toLowerCase().replace(/[^\w]/g, ''))
-          );
+          const spokenIndicesInSegment = segment.words
+            .map((_, idx) => segment.startIndex + idx)
+            .filter(idx => spokenWordsIndices.has(idx));
+          
+          const hesitatedIndicesInSegment = segment.words
+            .map((_, idx) => segment.startIndex + idx)
+            .filter(idx => hesitatedWordsIndices.has(idx));
+          
+          const spokenWordsInSegment = spokenIndicesInSegment.map(idx => words[idx]);
+          const hesitatedWordsInSegment = hesitatedIndicesInSegment.map(idx => words[idx]);
           
           const allSpoken = spokenWordsInSegment.length === segment.words.length;
-          const hasErrors = incorrectWordsInSegment.length > 0 || hesitatedWordsInSegment.length > 0;
+          const hasErrors = hesitatedWordsInSegment.length > 0;
           
           // Determine what to show in the bracket
           let bracketContent = "";
@@ -163,7 +152,7 @@ const BracketedTextDisplay = ({
             bracketState = "complete";
           } else if (hasErrors && spokenWordsInSegment.length === segment.words.length) {
             // All words attempted but some had errors - show only error words
-            bracketContent = [...incorrectWordsInSegment, ...hesitatedWordsInSegment].join(" ");
+            bracketContent = hesitatedWordsInSegment.join(" ");
             bracketState = "errors";
           } else if (spokenWordsInSegment.length > 0) {
             // Some words spoken - show them
@@ -175,9 +164,9 @@ const BracketedTextDisplay = ({
             bracketState = "empty";
           }
           
-          const isCurrentBracket = isRecording && segment.words.some(word => {
-            const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
-            return currentWord === cleanWord;
+          const isCurrentBracket = isRecording && segment.words.some((_, idx) => {
+            const globalIdx = segment.startIndex + idx;
+            return currentWordIndex === globalIdx;
           });
           
           return (
@@ -186,8 +175,7 @@ const BracketedTextDisplay = ({
               className={cn(
                 "px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1 whitespace-nowrap",
                 bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500 animate-[scale-in_0.3s_ease-out]",
-                bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 animate-[scale-in_0.3s_ease-out]",
-                bracketState === "errors" && incorrectWordsInSegment.length > 0 && "bg-red-100 dark:bg-red-900/30 border-2 border-red-500 animate-[scale-in_0.3s_ease-out]",
+                bracketState === "errors" && "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 animate-[scale-in_0.3s_ease-out]",
                 bracketState === "filling" && "bg-primary/10 border-2 border-primary/40",
                 bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-2 border-primary animate-pulse",
                 bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/40"
@@ -196,8 +184,7 @@ const BracketedTextDisplay = ({
               <span className={cn(
                 "font-mono text-sm",
                 bracketState === "complete" && "text-green-600 dark:text-green-400",
-                bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "text-yellow-600 dark:text-yellow-400",
-                bracketState === "errors" && incorrectWordsInSegment.length > 0 && "text-red-600 dark:text-red-400",
+                bracketState === "errors" && "text-yellow-600 dark:text-yellow-400",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
               )}>
@@ -207,8 +194,7 @@ const BracketedTextDisplay = ({
                 <span className={cn(
                   "text-base px-1",
                   bracketState === "complete" && "text-green-600 dark:text-green-400",
-                  bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "text-yellow-900 dark:text-yellow-300",
-                  bracketState === "errors" && incorrectWordsInSegment.length > 0 && "text-red-900 dark:text-red-300",
+                  bracketState === "errors" && "text-yellow-900 dark:text-yellow-300",
                   bracketState === "filling" && "text-primary"
                 )}>
                   {bracketContent}
@@ -217,8 +203,7 @@ const BracketedTextDisplay = ({
               <span className={cn(
                 "font-mono text-sm",
                 bracketState === "complete" && "text-green-600 dark:text-green-400",
-                bracketState === "errors" && hesitatedWordsInSegment.length > 0 && "text-yellow-600 dark:text-yellow-400",
-                bracketState === "errors" && incorrectWordsInSegment.length > 0 && "text-red-600 dark:text-red-400",
+                bracketState === "errors" && "text-yellow-600 dark:text-yellow-400",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
               )}>
@@ -228,17 +213,6 @@ const BracketedTextDisplay = ({
           );
         }
       })}
-      
-      {/* Show extra words spoken that aren't in the original text */}
-      {extraSpokenWords.map((word, index) => (
-        <div
-          key={`extra-${index}`}
-          className="px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2 whitespace-nowrap bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-300 font-medium scale-95 opacity-70"
-        >
-          <span className="text-red-600 dark:text-red-400 font-mono text-sm">✗</span>
-          <span>{word}</span>
-        </div>
-      ))}
     </div>
   );
 };
