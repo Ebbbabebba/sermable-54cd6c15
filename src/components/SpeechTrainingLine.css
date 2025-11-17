@@ -1,7 +1,7 @@
 /* Container for the line of words */
 .speech-line {
-  line-height: 2.5;
-  font-size: 1.125rem;
+  line-height: 2;
+  font-size: 1rem;
   font-family: sans-serif;
 }
 
@@ -10,42 +10,44 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 6px;
-  padding: 12px 16px;
+  margin: 4px;
+  padding: 8px 12px;
   border-radius: 9999px;
-  min-width: 60px;
-  min-height: 60px;
+  min-width: 45px;
+  min-height: 45px;
   transition:
-    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    font-weight 0.3s ease,
-    font-size 0.3s ease;
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    font-weight 0.2s ease,
+    font-size 0.2s ease;
 }
 
 /* Default gray word circle */
 .word-gray-circle {
   color: hsl(var(--foreground));
-  background-color: hsl(var(--muted) / 0.5);
-  border: 2px solid hsl(var(--muted-foreground) / 0.3);
+  background-color: hsl(var(--muted) / 0.4);
+  border: 2px solid hsl(var(--muted-foreground) / 0.25);
   transform: scale(1);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
-/* Words that have been spoken - faded gray circle */
+/* Words that have been spoken - heavily faded and shrunk */
 .past-word-circle {
-  opacity: 0.4;
+  opacity: 0.15;
   color: hsl(var(--muted-foreground));
-  background-color: hsl(var(--muted) / 0.2);
-  border: 2px solid hsl(var(--muted-foreground) / 0.2);
-  transform: scale(0.9);
-  font-size: 0.95rem;
+  background-color: hsl(var(--muted) / 0.1);
+  border: 1px solid hsl(var(--muted-foreground) / 0.1);
+  transform: scale(0.65);
+  font-size: 0.75rem;
+  min-width: 30px;
+  min-height: 30px;
   transition: 
-    opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), 
-    background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Current word being spoken - blue pulsing circle */
@@ -56,22 +58,22 @@
   background-color: hsl(var(--primary) / 0.15);
   border: 3px solid hsl(var(--primary));
   font-weight: 700;
-  font-size: 1.35rem;
-  min-width: 80px;
-  min-height: 80px;
-  animation: pulse-blue 1.2s ease-in-out infinite;
-  box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+  font-size: 1.2rem;
+  min-width: 55px;
+  min-height: 55px;
+  animation: pulse-blue 0.8s ease-in-out infinite;
+  box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
 }
 
-/* Blue pulse animation for current word */
+/* Blue pulse animation for current word - faster and smoother */
 @keyframes pulse-blue {
   0%, 100% {
     transform: scale(1.05);
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+    box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
   }
   50% {
-    transform: scale(1.15);
-    box-shadow: 0 0 30px hsl(var(--primary) / 0.6);
+    transform: scale(1.1);
+    box-shadow: 0 0 25px hsl(var(--primary) / 0.5);
   }
 }
 
@@ -81,11 +83,11 @@
   border: 2px solid hsl(45 100% 51% / 0.7);
   color: hsl(var(--foreground));
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transform: scale(1);
   transition: 
-    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Incorrect or skipped words - red circle */
@@ -94,11 +96,11 @@
   border: 2px solid hsl(0 84% 60% / 0.7);
   color: hsl(var(--foreground));
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transform: scale(1);
   transition: 
-    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Pulse animation for red errors */
