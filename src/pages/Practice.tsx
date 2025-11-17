@@ -69,6 +69,7 @@ const Practice = () => {
   const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
   const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
   const [expectedWordIndex, setExpectedWordIndex] = useState(0);
+  const [lastProcessedTranscriptLength, setLastProcessedTranscriptLength] = useState(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
@@ -222,6 +223,7 @@ const Practice = () => {
     setLiveTranscription("");
     lastProcessedChunkIndex.current = 0;
     setExpectedWordIndex(0);
+    setLastProcessedTranscriptLength(0);
     lastWordTimeRef.current = Date.now();
     
     // Clear any existing hesitation timer
@@ -289,76 +291,88 @@ const Practice = () => {
           
           // Track spoken words for bracket visualization
           const fullTranscript = (finalTranscript + interimTranscript).trim();
-          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/);
+          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
           
           // Get expected words from the original speech
           const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
-          // Process words sequentially - use functional update to get current index
-          setExpectedWordIndex(currentIndex => {
-            let newIndex = currentIndex;
+          // Only process NEW words from the transcript (not already processed)
+          setLastProcessedTranscriptLength(prevLength => {
+            const newWords = transcriptWords.slice(prevLength);
             
-            // Find if the next expected word is in the transcript
-            for (const word of transcriptWords) {
-              const cleanSpokenWord = word.toLowerCase().replace(/[^\w]/g, '');
-              
-              if (cleanSpokenWord && newIndex < allExpectedWords.length) {
-                const expectedWord = allExpectedWords[newIndex];
-                const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\w]/g, '');
-                
-                // Check if the spoken word matches the expected word (both cleaned and lowercase)
-                if (cleanSpokenWord === cleanExpectedWord || 
-                    cleanSpokenWord.includes(cleanExpectedWord) || 
-                    cleanExpectedWord.includes(cleanSpokenWord)) {
-                  
-                  // Mark this index as spoken
-                  setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
-                  console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
-                  
-                  // Clear any hesitation timer
-                  if (hesitationTimerRef.current) {
-                    clearTimeout(hesitationTimerRef.current);
-                    hesitationTimerRef.current = null;
-                  }
-                  
-                  // Move to next expected word
-                  newIndex++;
-                  lastWordTimeRef.current = Date.now();
-                  
-                  // Start hesitation timer for next word
-                  if (newIndex < allExpectedWords.length) {
-                    const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
-                    const capturedIndex = newIndex; // Capture for closure
-                    hesitationTimerRef.current = setTimeout(() => {
-                      setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
-                      console.log('⚠️ Hesitation detected at index:', capturedIndex);
-                      
-                      // Track hesitation for segment
-                      const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
-                      setSegmentHesitations(prev => {
-                        const updated = new Map(prev);
-                        updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                        return updated;
-                      });
-                      
-                      // Remove hesitation marker after 2 seconds
-                      setTimeout(() => {
-                        setHesitatedWordsIndices(prev => {
-                          const updated = new Set(prev);
-                          updated.delete(capturedIndex);
-                          return updated;
-                        });
-                      }, 2000);
-                    }, threshold);
-                  }
-                  
-                  // Break after finding a match to process one word at a time
-                  break;
-                }
-              }
+            if (newWords.length === 0) {
+              return prevLength; // No new words
             }
             
-            return newIndex;
+            console.log('🆕 New words detected:', newWords, 'Previous length:', prevLength);
+            
+            // Process new words sequentially
+            setExpectedWordIndex(currentIndex => {
+              let newIndex = currentIndex;
+              
+              for (const word of newWords) {
+                const cleanSpokenWord = word.replace(/[^\w]/g, '');
+                
+                if (cleanSpokenWord && newIndex < allExpectedWords.length) {
+                  const expectedWord = allExpectedWords[newIndex];
+                  const cleanExpectedWord = expectedWord.replace(/[^\w]/g, '');
+                  
+                  // Check if the spoken word matches the expected word
+                  if (cleanSpokenWord === cleanExpectedWord || 
+                      cleanSpokenWord.includes(cleanExpectedWord) || 
+                      cleanExpectedWord.includes(cleanSpokenWord)) {
+                    
+                    // Mark this index as spoken
+                    setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
+                    console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
+                    
+                    // Clear any hesitation timer
+                    if (hesitationTimerRef.current) {
+                      clearTimeout(hesitationTimerRef.current);
+                      hesitationTimerRef.current = null;
+                    }
+                    
+                    // Move to next expected word
+                    newIndex++;
+                    lastWordTimeRef.current = Date.now();
+                    
+                    // Start hesitation timer for next word
+                    if (newIndex < allExpectedWords.length) {
+                      const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                      const capturedIndex = newIndex;
+                      hesitationTimerRef.current = setTimeout(() => {
+                        setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
+                        console.log('⚠️ Hesitation detected at index:', capturedIndex);
+                        
+                        // Track hesitation for segment
+                        const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
+                        setSegmentHesitations(prev => {
+                          const updated = new Map(prev);
+                          updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                          return updated;
+                        });
+                        
+                        // Remove hesitation marker after 2 seconds
+                        setTimeout(() => {
+                          setHesitatedWordsIndices(prev => {
+                            const updated = new Set(prev);
+                            updated.delete(capturedIndex);
+                            return updated;
+                          });
+                        }, 2000);
+                      }, threshold);
+                    }
+                  } else {
+                    // Word doesn't match - skip it or handle mismatch
+                    console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
+                  }
+                }
+              }
+              
+              return newIndex;
+            });
+            
+            return transcriptWords.length; // Update processed length
           });
         };
         
@@ -427,6 +441,7 @@ const Practice = () => {
     setSegmentErrors(new Map());
     setSegmentHesitations(new Map());
     setExpectedWordIndex(0);
+    setLastProcessedTranscriptLength(0);
 
     // Scroll to results area
     setTimeout(() => {
