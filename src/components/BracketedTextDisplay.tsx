@@ -34,6 +34,7 @@ const BracketedTextDisplay = ({
   const totalWords = words.length;
   
   // Calculate which words should be visible based on importance
+  // DISTRIBUTED across all sections of the script
   const visibleIndices = new Set<number>();
   
   if (visibilityPercent >= 100) {
@@ -42,26 +43,38 @@ const BracketedTextDisplay = ({
       visibleIndices.add(i);
     }
   } else if (visibilityPercent > 0) {
-    // Prioritize hiding simple words first
-    const wordScores = words.map((word, index) => {
-      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
-      const isSimple = SIMPLE_WORDS.has(cleanWord);
-      
-      // Simple words get lower scores (hidden first)
-      // Important words get higher scores (kept visible longer)
-      return {
-        index,
-        score: isSimple ? 1 : 3,
-        word
-      };
-    });
-    
-    // Sort by score (highest first) and take top percentage
+    // Divide script into sections and distribute visible words evenly
+    const SECTION_COUNT = 10; // Divide script into 10 sections
+    const sectionSize = Math.ceil(totalWords / SECTION_COUNT);
     const visibleCount = Math.ceil((visibilityPercent / 100) * totalWords);
-    const sortedWords = wordScores.sort((a, b) => b.score - a.score);
+    const visiblePerSection = Math.ceil(visibleCount / SECTION_COUNT);
     
-    for (let i = 0; i < visibleCount && i < sortedWords.length; i++) {
-      visibleIndices.add(sortedWords[i].index);
+    // For each section, select the most important words to keep visible
+    for (let sectionIndex = 0; sectionIndex < SECTION_COUNT; sectionIndex++) {
+      const sectionStart = sectionIndex * sectionSize;
+      const sectionEnd = Math.min(sectionStart + sectionSize, totalWords);
+      
+      // Score words within this section
+      const sectionWords = [];
+      for (let i = sectionStart; i < sectionEnd; i++) {
+        const word = words[i];
+        const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+        const isSimple = SIMPLE_WORDS.has(cleanWord);
+        
+        sectionWords.push({
+          index: i,
+          score: isSimple ? 1 : 3, // Simple words hidden first, important words kept longer
+          word
+        });
+      }
+      
+      // Sort by score within this section and take top words
+      sectionWords.sort((a, b) => b.score - a.score);
+      
+      // Add visible words from this section
+      for (let i = 0; i < Math.min(visiblePerSection, sectionWords.length); i++) {
+        visibleIndices.add(sectionWords[i].index);
+      }
     }
   }
 
