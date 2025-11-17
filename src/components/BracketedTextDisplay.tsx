@@ -133,7 +133,7 @@ const BracketedTextDisplay = ({
                 key={globalIndex}
                 className={cn(
                   "word-block",
-                  isCurrent && "current-word",
+                  isCurrent && "current-word text-xl font-bold",
                   !isCurrent && isMissed && "word-red",
                   !isCurrent && !isMissed && isHesitated && "word-yellow",
                   !isCurrent && !isMissed && !isHesitated && isSpoken && "past-word",
