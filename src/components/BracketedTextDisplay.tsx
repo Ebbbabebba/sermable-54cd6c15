@@ -102,36 +102,32 @@ const BracketedTextDisplay = ({
 
 
   return (
-    <div className={cn("speech-line flex flex-col gap-2", className)}>
+    <div className={cn("speech-line flex flex-wrap gap-1 items-center", className)}>
       {segments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
-          // Show individual words in columns
-          return (
-            <div key={segmentIndex} className="flex flex-wrap gap-1 items-center">
-              {segment.words.map((word, wordIndex) => {
-                const globalIndex = segment.startIndex + wordIndex;
-                const isSpoken = spokenWordsIndices.has(globalIndex);
-                const isHesitated = hesitatedWordsIndices.has(globalIndex);
-                const isCurrent = isRecording && currentWordIndex === globalIndex;
-                
-                return (
-                  <span
-                    key={globalIndex}
-                    className={cn(
-                      "word-block relative inline-flex items-center justify-center",
-                      "before:content-[''] before:absolute before:inset-0 before:rounded-full before:border before:border-muted-foreground/30",
-                      isCurrent && "current-word before:border-primary before:border-2",
-                      !isCurrent && isHesitated && "word-yellow before:border-yellow-500",
-                      !isCurrent && !isHesitated && isSpoken && "past-word word-gray before:border-muted-foreground/20",
-                      !isCurrent && !isHesitated && !isSpoken && "word-gray before:border-muted-foreground/30"
-                    )}
-                  >
-                    {word}
-                  </span>
-                );
-              })}
-            </div>
-          );
+          // Show individual words inline with circles
+          return segment.words.map((word, wordIndex) => {
+            const globalIndex = segment.startIndex + wordIndex;
+            const isSpoken = spokenWordsIndices.has(globalIndex);
+            const isHesitated = hesitatedWordsIndices.has(globalIndex);
+            const isCurrent = isRecording && currentWordIndex === globalIndex;
+            
+            return (
+              <span
+                key={globalIndex}
+                className={cn(
+                  "word-block relative inline-flex items-center justify-center",
+                  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:border before:border-muted-foreground/30",
+                  isCurrent && "current-word before:border-primary before:border-2",
+                  !isCurrent && isHesitated && "word-yellow before:border-yellow-500",
+                  !isCurrent && !isHesitated && isSpoken && "past-word word-gray before:border-muted-foreground/20",
+                  !isCurrent && !isHesitated && !isSpoken && "word-gray before:border-muted-foreground/30"
+                )}
+              >
+                {word}
+              </span>
+            );
+          });
         } else {
           // Hidden segment - show bracket with spoken words appearing inside
           const spokenIndicesInSegment = segment.words
