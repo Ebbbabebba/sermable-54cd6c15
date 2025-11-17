@@ -170,15 +170,32 @@ const BracketedTextDisplay = ({
           let bracketState: "empty" | "filling" | "complete" | "errors" = "empty";
           
           if (allSpoken && !hasErrors) {
-            // All words spoken correctly - show empty green bracket
-            bracketContent = "";
-            bracketState = "complete";
-          } else if (hasErrors && spokenWordsInSegment.length === segment.words.length) {
-            // All words attempted but some had errors - show only error words
-            bracketContent = [...hesitatedWordsInSegment, ...missedWordsInSegment].join(" ");
-            bracketState = "errors";
+            // All words spoken correctly - bracket will turn green and disappear (don't render)
+            return null;
+          } else if (hasErrors) {
+            // Some errors - show ONLY error words (hesitated in yellow, missed in red)
+            const errorWords = [];
+            // Check each word in segment for errors
+            segment.words.forEach((word, idx) => {
+              const globalIdx = segment.startIndex + idx;
+              if (hesitatedWordsIndices.has(globalIdx)) {
+                errorWords.push({ word, type: 'hesitated' });
+              } else if (missedWordsIndices.has(globalIdx)) {
+                errorWords.push({ word, type: 'missed' });
+              }
+            });
+            
+            if (errorWords.length > 0) {
+              bracketState = "errors";
+              // Render error words with individual colors
+              bracketContent = errorWords.map(({ word, type }) => 
+                `<span class="${type === 'hesitated' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}">${word}</span>`
+              ).join(" ");
+            } else {
+              return null; // No errors to show
+            }
           } else if (spokenWordsInSegment.length > 0) {
-            // Some words spoken - show them
+            // Some words spoken correctly - show them filling in
             bracketContent = spokenWordsInSegment.join(" ");
             bracketState = "filling";
           } else {
@@ -197,8 +214,7 @@ const BracketedTextDisplay = ({
               key={segmentIndex}
               className={cn(
                 "px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1 whitespace-nowrap",
-                bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500 animate-[scale-in_0.3s_ease-out]",
-                bracketState === "errors" && "bg-yellow-100 dark:bg-yellow-900/30 border-2 border-yellow-500 animate-[scale-in_0.3s_ease-out]",
+                bracketState === "errors" && "bg-muted/20 border-2 border-muted-foreground/40",
                 bracketState === "filling" && "bg-primary/10 border-2 border-primary/40",
                 bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-2 border-primary animate-pulse",
                 bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/40"
@@ -206,27 +222,26 @@ const BracketedTextDisplay = ({
             >
               <span className={cn(
                 "font-mono text-sm",
-                bracketState === "complete" && "text-green-600 dark:text-green-400",
-                bracketState === "errors" && "text-yellow-600 dark:text-yellow-400",
+                bracketState === "errors" && "text-muted-foreground/50",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
               )}>
                 [
               </span>
               {bracketContent && (
-                <span className={cn(
-                  "text-base px-1",
-                  bracketState === "complete" && "text-green-600 dark:text-green-400",
-                  bracketState === "errors" && "text-yellow-900 dark:text-yellow-300",
-                  bracketState === "filling" && "text-primary"
-                )}>
-                  {bracketContent}
+                <span 
+                  className={cn(
+                    "text-base px-1",
+                    bracketState === "filling" && "text-primary"
+                  )}
+                  dangerouslySetInnerHTML={bracketState === "errors" ? { __html: bracketContent } : undefined}
+                >
+                  {bracketState !== "errors" && bracketContent}
                 </span>
               )}
               <span className={cn(
                 "font-mono text-sm",
-                bracketState === "complete" && "text-green-600 dark:text-green-400",
-                bracketState === "errors" && "text-yellow-600 dark:text-yellow-400",
+                bracketState === "errors" && "text-muted-foreground/50",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
               )}>
