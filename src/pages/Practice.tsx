@@ -322,9 +322,10 @@ const Practice = () => {
                   
                   // Check if the spoken word matches the expected word (more flexible matching)
                   const isExactMatch = cleanSpokenWord === cleanExpectedWord;
-                  const isPartialMatch = cleanSpokenWord.includes(cleanExpectedWord) || 
-                                        cleanExpectedWord.includes(cleanSpokenWord);
-                  const isSimilar = cleanSpokenWord.length > 2 && cleanExpectedWord.length > 2 &&
+                  const isPartialMatch = cleanSpokenWord.length >= 4 && cleanExpectedWord.length >= 4 &&
+                                        (cleanSpokenWord.includes(cleanExpectedWord) || 
+                                         cleanExpectedWord.includes(cleanSpokenWord));
+                  const isSimilar = cleanSpokenWord.length > 3 && cleanExpectedWord.length > 3 &&
                                    (cleanSpokenWord.startsWith(cleanExpectedWord.slice(0, 3)) ||
                                     cleanExpectedWord.startsWith(cleanSpokenWord.slice(0, 3)));
                   
@@ -377,9 +378,17 @@ const Practice = () => {
                     let foundAhead = false;
                     for (let lookAhead = 1; lookAhead <= 3 && (newIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
                       const futureWord = allExpectedWords[newIndex + lookAhead].toLowerCase().replace(/[^\w]/g, '');
-                      if (cleanSpokenWord === futureWord || 
-                          cleanSpokenWord.includes(futureWord) || 
-                          futureWord.includes(cleanSpokenWord)) {
+                      
+                      // Skip empty or very short words in lookahead
+                      if (futureWord.length < 2) continue;
+                      
+                      // Stricter matching for lookahead
+                      const isExactAheadMatch = cleanSpokenWord === futureWord;
+                      const isPartialAheadMatch = cleanSpokenWord.length >= 4 && futureWord.length >= 4 &&
+                                                  (cleanSpokenWord.includes(futureWord) || 
+                                                   futureWord.includes(cleanSpokenWord));
+                      
+                      if (isExactAheadMatch || isPartialAheadMatch) {
                         console.log('🔍 Found word ahead at +' + lookAhead + ':', futureWord);
                         // Mark skipped words as missed (specific indices only)
                         for (let skip = 0; skip < lookAhead; skip++) {
