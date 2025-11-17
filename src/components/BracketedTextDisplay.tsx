@@ -102,13 +102,11 @@ const BracketedTextDisplay = ({
 
 
   return (
-    <div className={cn("speech-line flex flex-wrap gap-2 items-start", className)}>
+    <div className={cn("speech-line flex flex-wrap gap-1 items-center", className)}>
       {segments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
-          // Show individual words in a column
-          return (
-            <div key={segmentIndex} className="flex flex-col gap-1">
-              {segment.words.map((word, wordIndex) => {
+          // Show individual words as pills
+          return segment.words.map((word, wordIndex) => {
             const globalIndex = segment.startIndex + wordIndex;
             const isSpoken = spokenWordsIndices.has(globalIndex);
             const isHesitated = hesitatedWordsIndices.has(globalIndex);
@@ -128,9 +126,7 @@ const BracketedTextDisplay = ({
                 {word}
               </span>
             );
-          })}
-            </div>
-          );
+          });
         } else {
           // Hidden segment - show bracket with spoken words appearing inside
           const spokenIndicesInSegment = segment.words
