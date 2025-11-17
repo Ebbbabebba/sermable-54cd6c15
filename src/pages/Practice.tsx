@@ -307,48 +307,6 @@ const Practice = () => {
             
             console.log('🆕 New words detected:', newWords, 'Previous length:', prevLength);
             
-            // Levenshtein distance for fuzzy matching
-            const levenshteinDistance = (str1: string, str2: string): number => {
-              const matrix: number[][] = [];
-              for (let i = 0; i <= str2.length; i++) {
-                matrix[i] = [i];
-              }
-              for (let j = 0; j <= str1.length; j++) {
-                matrix[0][j] = j;
-              }
-              for (let i = 1; i <= str2.length; i++) {
-                for (let j = 1; j <= str1.length; j++) {
-                  if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-                    matrix[i][j] = matrix[i - 1][j - 1];
-                  } else {
-                    matrix[i][j] = Math.min(
-                      matrix[i - 1][j - 1] + 1,
-                      matrix[i][j - 1] + 1,
-                      matrix[i - 1][j] + 1
-                    );
-                  }
-                }
-              }
-              return matrix[str2.length][str1.length];
-            };
-
-            // Check if two words match with fuzzy logic
-            const wordsMatch = (spoken: string, expected: string): boolean => {
-              const isExactMatch = spoken === expected;
-              const isPartialMatch = spoken.length >= 4 && expected.length >= 4 &&
-                                    (spoken.includes(expected) || expected.includes(spoken));
-              const isSimilar = spoken.length > 3 && expected.length > 3 &&
-                               (spoken.startsWith(expected.slice(0, 3)) || expected.startsWith(spoken.slice(0, 3)));
-              
-              // Fuzzy matching using Levenshtein distance
-              const maxLength = Math.max(spoken.length, expected.length);
-              const distance = levenshteinDistance(spoken, expected);
-              const similarity = 1 - distance / maxLength;
-              const isFuzzyMatch = similarity >= 0.75; // 75% similarity threshold
-              
-              return isExactMatch || isPartialMatch || isSimilar || isFuzzyMatch;
-            };
-
             // Process new words sequentially
             setExpectedWordIndex(currentIndex => {
               let newIndex = currentIndex;
@@ -362,7 +320,16 @@ const Practice = () => {
                   
                   console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', newIndex);
                   
-                  if (wordsMatch(cleanSpokenWord, cleanExpectedWord)) {
+                  // Check if the spoken word matches the expected word (more flexible matching)
+                  const isExactMatch = cleanSpokenWord === cleanExpectedWord;
+                  const isPartialMatch = cleanSpokenWord.length >= 4 && cleanExpectedWord.length >= 4 &&
+                                        (cleanSpokenWord.includes(cleanExpectedWord) || 
+                                         cleanExpectedWord.includes(cleanSpokenWord));
+                  const isSimilar = cleanSpokenWord.length > 3 && cleanExpectedWord.length > 3 &&
+                                   (cleanSpokenWord.startsWith(cleanExpectedWord.slice(0, 3)) ||
+                                    cleanExpectedWord.startsWith(cleanSpokenWord.slice(0, 3)));
+                  
+                  if (isExactMatch || isPartialMatch || isSimilar) {
                     // Mark this index as spoken
                     setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
                     console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
@@ -407,16 +374,21 @@ const Practice = () => {
                     // Word doesn't match - check if it matches a future word (user might have skipped)
                     console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
                     
-                    // Look ahead up to 5 words to see if user skipped ahead
+                    // Look ahead up to 3 words to see if user skipped ahead
                     let foundAhead = false;
-                    for (let lookAhead = 1; lookAhead <= 5 && (newIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
+                    for (let lookAhead = 1; lookAhead <= 3 && (newIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
                       const futureWord = allExpectedWords[newIndex + lookAhead].toLowerCase().replace(/[^\w]/g, '');
                       
                       // Skip empty or very short words in lookahead
                       if (futureWord.length < 2) continue;
                       
-                      // Use fuzzy matching for lookahead as well
-                      if (wordsMatch(cleanSpokenWord, futureWord)) {
+                      // Stricter matching for lookahead
+                      const isExactAheadMatch = cleanSpokenWord === futureWord;
+                      const isPartialAheadMatch = cleanSpokenWord.length >= 4 && futureWord.length >= 4 &&
+                                                  (cleanSpokenWord.includes(futureWord) || 
+                                                   futureWord.includes(cleanSpokenWord));
+                      
+                      if (isExactAheadMatch || isPartialAheadMatch) {
                         console.log('🔍 Found word ahead at +' + lookAhead + ':', futureWord);
                         // Mark skipped words as missed (specific indices only)
                         for (let skip = 0; skip < lookAhead; skip++) {
@@ -462,11 +434,12 @@ const Practice = () => {
                       }
                     }
                     
-                    // If word wasn't found anywhere in look-ahead, don't immediately mark as missed
-                    // The word might come later or user might correct themselves
+                    // If word wasn't found anywhere, mark current expected word as missed and advance
                     if (!foundAhead) {
-                      console.log('⚠️ Word not found in look-ahead window:', cleanSpokenWord, 'expected:', cleanExpectedWord);
-                      // Don't advance or mark as missed yet - wait for more context
+                      console.log('❌ No match found, marking as missed and advancing:', cleanExpectedWord, 'at index', newIndex);
+                      setMissedWordsIndices(prev => new Set([...prev, newIndex]));
+                      newIndex++;
+                      lastWordTimeRef.current = Date.now();
                     }
                   }
                 }
