@@ -300,15 +300,16 @@ const Practice = () => {
             
             // Find if the next expected word is in the transcript
             for (const word of transcriptWords) {
-              const cleanWord = word.replace(/[^\w]/g, '');
+              const cleanSpokenWord = word.toLowerCase().replace(/[^\w]/g, '');
               
-              if (cleanWord && newIndex < allExpectedWords.length) {
+              if (cleanSpokenWord && newIndex < allExpectedWords.length) {
                 const expectedWord = allExpectedWords[newIndex];
+                const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\w]/g, '');
                 
-                // Check if the spoken word matches the expected word
-                if (cleanWord === expectedWord || 
-                    cleanWord.includes(expectedWord) || 
-                    expectedWord.includes(cleanWord)) {
+                // Check if the spoken word matches the expected word (both cleaned and lowercase)
+                if (cleanSpokenWord === cleanExpectedWord || 
+                    cleanSpokenWord.includes(cleanExpectedWord) || 
+                    cleanExpectedWord.includes(cleanSpokenWord)) {
                   
                   // Mark this index as spoken
                   setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
