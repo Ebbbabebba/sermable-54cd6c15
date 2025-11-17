@@ -311,17 +311,23 @@ const Practice = () => {
               let newIndex = currentIndex;
               
               for (const word of newWords) {
-                const cleanSpokenWord = word.replace(/[^\w]/g, '');
+                const cleanSpokenWord = word.toLowerCase().replace(/[^\w]/g, '');
                 
                 if (cleanSpokenWord && newIndex < allExpectedWords.length) {
                   const expectedWord = allExpectedWords[newIndex];
-                  const cleanExpectedWord = expectedWord.replace(/[^\w]/g, '');
+                  const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\w]/g, '');
                   
-                  // Check if the spoken word matches the expected word
-                  if (cleanSpokenWord === cleanExpectedWord || 
-                      cleanSpokenWord.includes(cleanExpectedWord) || 
-                      cleanExpectedWord.includes(cleanSpokenWord)) {
-                    
+                  console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', newIndex);
+                  
+                  // Check if the spoken word matches the expected word (more flexible matching)
+                  const isExactMatch = cleanSpokenWord === cleanExpectedWord;
+                  const isPartialMatch = cleanSpokenWord.includes(cleanExpectedWord) || 
+                                        cleanExpectedWord.includes(cleanSpokenWord);
+                  const isSimilar = cleanSpokenWord.length > 2 && cleanExpectedWord.length > 2 &&
+                                   (cleanSpokenWord.startsWith(cleanExpectedWord.slice(0, 3)) ||
+                                    cleanExpectedWord.startsWith(cleanSpokenWord.slice(0, 3)));
+                  
+                  if (isExactMatch || isPartialMatch || isSimilar) {
                     // Mark this index as spoken
                     setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
                     console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
@@ -363,8 +369,26 @@ const Practice = () => {
                       }, threshold);
                     }
                   } else {
-                    // Word doesn't match - skip it or handle mismatch
+                    // Word doesn't match - check if it matches a future word (user might have skipped)
                     console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
+                    
+                    // Look ahead up to 3 words to see if user skipped ahead
+                    let foundAhead = false;
+                    for (let lookAhead = 1; lookAhead <= 3 && (newIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
+                      const futureWord = allExpectedWords[newIndex + lookAhead].toLowerCase().replace(/[^\w]/g, '');
+                      if (cleanSpokenWord === futureWord || 
+                          cleanSpokenWord.includes(futureWord) || 
+                          futureWord.includes(cleanSpokenWord)) {
+                        console.log('🔍 Found word ahead at +' + lookAhead + ':', futureWord);
+                        // Mark skipped words as missed
+                        for (let skip = 0; skip < lookAhead; skip++) {
+                          console.log('❌ Skipped word at index:', newIndex + skip);
+                        }
+                        newIndex += lookAhead;
+                        foundAhead = true;
+                        break;
+                      }
+                    }
                   }
                 }
               }
