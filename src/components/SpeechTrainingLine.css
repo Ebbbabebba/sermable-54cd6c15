@@ -18,23 +18,25 @@
     opacity 0.3s ease;
 }
 
-/* Default gray word */
+/* Default gray word - filled background */
 .word-gray {
-  color: hsl(var(--muted-foreground));
-  background-color: transparent;
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--muted) / 0.5);
 }
 
-/* Words that have been spoken - faded like Duolingo */
+/* Words that have been spoken - faded with gray background */
 .past-word {
-  opacity: 0.4;
-  transition: opacity 0.5s ease;
+  opacity: 0.5;
+  background-color: hsl(var(--muted) / 0.3);
+  transition: opacity 0.5s ease, background-color 0.5s ease;
 }
 
-/* Current word being spoken - pulse like Duolingo */
+/* Current word being spoken - pulse with highlighted background */
 .current-word {
   opacity: 1;
   position: relative;
   color: hsl(var(--foreground));
+  background-color: hsl(var(--primary) / 0.2);
   font-weight: 600;
   animation: pulse 1s ease-in-out infinite;
 }
@@ -49,19 +51,17 @@
   }
 }
 
-/* Hesitated words - like Duolingo's warning color */
+/* Hesitated words - filled yellow background */
 .word-yellow {
-  background-color: hsl(45 100% 51% / 0.3);
+  background-color: hsl(45 100% 51% / 0.5);
   color: hsl(var(--foreground));
-  border-bottom: 2px solid hsl(45 100% 51%);
   font-weight: 600;
 }
 
-/* Incorrect or skipped words - like Duolingo's error color */
+/* Incorrect or skipped words - filled red background */
 .word-red {
-  background-color: hsl(0 84% 60% / 0.3);
+  background-color: hsl(0 84% 60% / 0.5);
   color: hsl(var(--foreground));
-  border-bottom: 2px solid hsl(0 84% 60%);
   font-weight: 600;
 }
 

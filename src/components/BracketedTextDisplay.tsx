@@ -116,12 +116,11 @@ const BracketedTextDisplay = ({
               <span
                 key={globalIndex}
                 className={cn(
-                  "word-block relative inline-flex items-center justify-center",
-                  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:border before:border-muted-foreground/30",
-                  isCurrent && "current-word before:border-primary before:border-2",
-                  !isCurrent && isHesitated && "word-yellow before:border-yellow-500",
-                  !isCurrent && !isHesitated && isSpoken && "past-word word-gray before:border-muted-foreground/20",
-                  !isCurrent && !isHesitated && !isSpoken && "word-gray before:border-muted-foreground/30"
+                  "word-block",
+                  isCurrent && "current-word",
+                  !isCurrent && isHesitated && "word-yellow",
+                  !isCurrent && !isHesitated && isSpoken && "past-word",
+                  !isCurrent && !isHesitated && !isSpoken && "word-gray"
                 )}
               >
                 {word}
