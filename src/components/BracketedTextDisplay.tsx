@@ -228,15 +228,18 @@ const BracketedTextDisplay = ({
               )}>
                 [
               </span>
-              {bracketContent && (
+              {bracketContent && bracketState === "errors" && (
                 <span 
-                  className={cn(
-                    "text-base px-1",
-                    bracketState === "filling" && "text-primary"
-                  )}
-                  dangerouslySetInnerHTML={bracketState === "errors" ? { __html: bracketContent } : undefined}
-                >
-                  {bracketState !== "errors" && bracketContent}
+                  className="text-base px-1"
+                  dangerouslySetInnerHTML={{ __html: bracketContent }}
+                />
+              )}
+              {bracketContent && bracketState !== "errors" && (
+                <span className={cn(
+                  "text-base px-1",
+                  bracketState === "filling" && "text-primary"
+                )}>
+                  {bracketContent}
                 </span>
               )}
               <span className={cn(
