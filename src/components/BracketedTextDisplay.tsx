@@ -102,31 +102,35 @@ const BracketedTextDisplay = ({
 
 
   return (
-    <div className={cn("speech-line flex flex-wrap gap-1 items-center", className)}>
+    <div className={cn("speech-line flex flex-col gap-2", className)}>
       {segments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
-          // Show individual words as pills
-          return segment.words.map((word, wordIndex) => {
+          // Show individual words in columns
+          return (
+            <div key={segmentIndex} className="flex flex-wrap gap-1 items-center">
+              {segment.words.map((word, wordIndex) => {
             const globalIndex = segment.startIndex + wordIndex;
             const isSpoken = spokenWordsIndices.has(globalIndex);
             const isHesitated = hesitatedWordsIndices.has(globalIndex);
             const isCurrent = isRecording && currentWordIndex === globalIndex;
             
-            return (
-              <span
-                key={globalIndex}
-                className={cn(
-                  "word-block",
-                  isCurrent && "current-word",
-                  !isCurrent && isHesitated && "word-yellow",
-                  !isCurrent && !isHesitated && isSpoken && "past-word word-gray",
-                  !isCurrent && !isHesitated && !isSpoken && "word-gray"
-                )}
-              >
-                {word}
-              </span>
-            );
-          });
+                return (
+                  <span
+                    key={globalIndex}
+                    className={cn(
+                      "word-block",
+                      isCurrent && "current-word",
+                      !isCurrent && isHesitated && "word-yellow",
+                      !isCurrent && !isHesitated && isSpoken && "past-word word-gray",
+                      !isCurrent && !isHesitated && !isSpoken && "word-gray"
+                    )}
+                  >
+                    {word}
+                  </span>
+                );
+              })}
+            </div>
+          );
         } else {
           // Hidden segment - show bracket with spoken words appearing inside
           const spokenIndicesInSegment = segment.words
