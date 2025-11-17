@@ -215,7 +215,7 @@ const BracketedTextDisplay = ({
               key={segmentIndex}
               className={cn(
                 "px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1 whitespace-nowrap",
-                bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500 animate-fade-out",
+                bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500",
                 bracketState === "errors" && "bg-muted/20 border-2 border-muted-foreground/40",
                 bracketState === "filling" && "bg-primary/10 border-2 border-primary/40",
                 bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-2 border-primary animate-pulse",
