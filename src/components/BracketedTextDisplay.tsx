@@ -170,8 +170,9 @@ const BracketedTextDisplay = ({
           let bracketState: "empty" | "filling" | "complete" | "errors" = "empty";
           
           if (allSpoken && !hasErrors) {
-            // All words spoken correctly - bracket will turn green and disappear (don't render)
-            return null;
+            // All words spoken correctly - show empty green bracket briefly
+            bracketContent = "";
+            bracketState = "complete";
           } else if (hasErrors) {
             // Some errors - show ONLY error words (hesitated in yellow, missed in red)
             const errorWords = [];
@@ -214,6 +215,7 @@ const BracketedTextDisplay = ({
               key={segmentIndex}
               className={cn(
                 "px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1 whitespace-nowrap",
+                bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500 animate-fade-out",
                 bracketState === "errors" && "bg-muted/20 border-2 border-muted-foreground/40",
                 bracketState === "filling" && "bg-primary/10 border-2 border-primary/40",
                 bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-2 border-primary animate-pulse",
@@ -222,6 +224,7 @@ const BracketedTextDisplay = ({
             >
               <span className={cn(
                 "font-mono text-sm",
+                bracketState === "complete" && "text-green-600 dark:text-green-400",
                 bracketState === "errors" && "text-muted-foreground/50",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
@@ -244,6 +247,7 @@ const BracketedTextDisplay = ({
               )}
               <span className={cn(
                 "font-mono text-sm",
+                bracketState === "complete" && "text-green-600 dark:text-green-400",
                 bracketState === "errors" && "text-muted-foreground/50",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
