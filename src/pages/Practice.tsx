@@ -826,7 +826,7 @@ const Practice = () => {
                         )}
                         <BracketedTextDisplay
                           text={speech.text_original}
-                          visibilityPercent={100}
+                          visibilityPercent={speech.base_word_visibility_percent || 100}
                           spokenWordsIndices={spokenWordsIndices}
                           hesitatedWordsIndices={hesitatedWordsIndices}
                           currentWordIndex={expectedWordIndex}
