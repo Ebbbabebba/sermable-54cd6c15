@@ -120,7 +120,7 @@ const BracketedTextDisplay = ({
     <div className={cn("speech-line flex flex-wrap gap-1 items-center", className)}>
       {segments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
-          // Show individual words inline with circles
+          // Show individual words in circles
           return segment.words.map((word, wordIndex) => {
             const globalIndex = segment.startIndex + wordIndex;
             const isSpoken = spokenWordsIndices.has(globalIndex);
@@ -132,12 +132,12 @@ const BracketedTextDisplay = ({
               <span
                 key={globalIndex}
                 className={cn(
-                  "word-block",
-                  isCurrent && "current-word text-xl font-bold",
-                  !isCurrent && isMissed && "word-red",
-                  !isCurrent && !isMissed && isHesitated && "word-yellow",
-                  !isCurrent && !isMissed && !isHesitated && isSpoken && "past-word",
-                  !isCurrent && !isMissed && !isHesitated && !isSpoken && "word-gray"
+                  "word-circle",
+                  isCurrent && "current-word-circle",
+                  !isCurrent && isMissed && "word-red-circle",
+                  !isCurrent && !isMissed && isHesitated && "word-yellow-circle",
+                  !isCurrent && !isMissed && !isHesitated && isSpoken && "past-word-circle",
+                  !isCurrent && !isMissed && !isHesitated && !isSpoken && "word-gray-circle"
                 )}
               >
                 {word}
