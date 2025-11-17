@@ -387,8 +387,40 @@ const Practice = () => {
                           setMissedWordsIndices(prev => new Set([...prev, skippedIndex]));
                           console.log('❌ Skipped word at index:', skippedIndex);
                         }
-                        newIndex += lookAhead;
+                        // Mark the spoken word (at future position) as correctly spoken
+                        setSpokenWordsIndices(prev => new Set([...prev, newIndex + lookAhead]));
+                        console.log('✓ Word spoken correctly (found ahead):', futureWord, 'at index', newIndex + lookAhead);
+                        
+                        newIndex += lookAhead + 1; // Move past the spoken word
                         foundAhead = true;
+                        lastWordTimeRef.current = Date.now();
+                        
+                        // Start hesitation timer for next word
+                        if (newIndex < allExpectedWords.length) {
+                          const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                          const capturedIndex = newIndex;
+                          hesitationTimerRef.current = setTimeout(() => {
+                            setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
+                            console.log('⚠️ Hesitation detected at index:', capturedIndex);
+                            
+                            // Track hesitation for segment
+                            const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
+                            setSegmentHesitations(prev => {
+                              const updated = new Map(prev);
+                              updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+                              return updated;
+                            });
+                            
+                            // Remove hesitation marker after 2 seconds
+                            setTimeout(() => {
+                              setHesitatedWordsIndices(prev => {
+                                const updated = new Set(prev);
+                                updated.delete(capturedIndex);
+                                return updated;
+                              });
+                            }, 2000);
+                          }, threshold);
+                        }
                         break;
                       }
                     }
