@@ -109,20 +109,21 @@ const BracketedTextDisplay = ({
           return (
             <div key={segmentIndex} className="flex flex-wrap gap-1 items-center">
               {segment.words.map((word, wordIndex) => {
-            const globalIndex = segment.startIndex + wordIndex;
-            const isSpoken = spokenWordsIndices.has(globalIndex);
-            const isHesitated = hesitatedWordsIndices.has(globalIndex);
-            const isCurrent = isRecording && currentWordIndex === globalIndex;
-            
+                const globalIndex = segment.startIndex + wordIndex;
+                const isSpoken = spokenWordsIndices.has(globalIndex);
+                const isHesitated = hesitatedWordsIndices.has(globalIndex);
+                const isCurrent = isRecording && currentWordIndex === globalIndex;
+                
                 return (
                   <span
                     key={globalIndex}
                     className={cn(
-                      "word-block",
-                      isCurrent && "current-word",
-                      !isCurrent && isHesitated && "word-yellow",
-                      !isCurrent && !isHesitated && isSpoken && "past-word word-gray",
-                      !isCurrent && !isHesitated && !isSpoken && "word-gray"
+                      "word-block relative inline-flex items-center justify-center",
+                      "before:content-[''] before:absolute before:inset-0 before:rounded-full before:border before:border-muted-foreground/30",
+                      isCurrent && "current-word before:border-primary before:border-2",
+                      !isCurrent && isHesitated && "word-yellow before:border-yellow-500",
+                      !isCurrent && !isHesitated && isSpoken && "past-word word-gray before:border-muted-foreground/20",
+                      !isCurrent && !isHesitated && !isSpoken && "word-gray before:border-muted-foreground/30"
                     )}
                   >
                     {word}
