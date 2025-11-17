@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import "./SpeechTrainingLine.css";
 
 interface BracketedTextDisplayProps {
   text: string;
@@ -101,7 +102,7 @@ const BracketedTextDisplay = ({
 
 
   return (
-    <div className={cn("flex flex-wrap gap-2 text-2xl items-center", className)}>
+    <div className={cn("speech-line flex flex-wrap gap-1 items-center", className)}>
       {segments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
           // Show individual words as pills
@@ -112,18 +113,18 @@ const BracketedTextDisplay = ({
             const isCurrent = isRecording && currentWordIndex === globalIndex;
             
             return (
-              <div
+              <span
                 key={globalIndex}
                 className={cn(
-                  "px-4 py-2 rounded-full transition-all duration-300 flex items-center whitespace-nowrap",
-                  isCurrent && "bg-primary/20 text-primary font-semibold scale-105 animate-pulse",
-                  !isCurrent && isHesitated && "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300 font-medium scale-95 opacity-70",
-                  !isCurrent && !isHesitated && isSpoken && "bg-muted/30 text-foreground/30 opacity-50 scale-95",
-                  !isCurrent && !isHesitated && !isSpoken && "bg-muted/20 text-foreground/80 border border-muted-foreground/20"
+                  "word-block",
+                  isCurrent && "current-word",
+                  !isCurrent && isHesitated && "word-yellow",
+                  !isCurrent && !isHesitated && isSpoken && "past-word word-gray",
+                  !isCurrent && !isHesitated && !isSpoken && "word-gray"
                 )}
               >
-                <span>{word}</span>
-              </div>
+                {word}
+              </span>
             );
           });
         } else {
