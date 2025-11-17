@@ -65,6 +65,7 @@ const Practice = () => {
   const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWordsIndices, setSpokenWordsIndices] = useState<Set<number>>(new Set());
   const [hesitatedWordsIndices, setHesitatedWordsIndices] = useState<Set<number>>(new Set());
+  const [missedWordsIndices, setMissedWordsIndices] = useState<Set<number>>(new Set());
   const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
   const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
   const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
@@ -380,9 +381,11 @@ const Practice = () => {
                           cleanSpokenWord.includes(futureWord) || 
                           futureWord.includes(cleanSpokenWord)) {
                         console.log('🔍 Found word ahead at +' + lookAhead + ':', futureWord);
-                        // Mark skipped words as missed
+                        // Mark skipped words as missed (specific indices only)
                         for (let skip = 0; skip < lookAhead; skip++) {
-                          console.log('❌ Skipped word at index:', newIndex + skip);
+                          const skippedIndex = newIndex + skip;
+                          setMissedWordsIndices(prev => new Set([...prev, skippedIndex]));
+                          console.log('❌ Skipped word at index:', skippedIndex);
                         }
                         newIndex += lookAhead;
                         foundAhead = true;
@@ -461,6 +464,7 @@ const Practice = () => {
     // Reset spoken words tracking
     setSpokenWordsIndices(new Set());
     setHesitatedWordsIndices(new Set());
+    setMissedWordsIndices(new Set());
     setCompletedSegments(new Set());
     setSegmentErrors(new Map());
     setSegmentHesitations(new Map());
@@ -829,6 +833,7 @@ const Practice = () => {
                           visibilityPercent={speech.base_word_visibility_percent || 100}
                           spokenWordsIndices={spokenWordsIndices}
                           hesitatedWordsIndices={hesitatedWordsIndices}
+                          missedWordsIndices={missedWordsIndices}
                           currentWordIndex={expectedWordIndex}
                           isRecording={isRecording}
                         />

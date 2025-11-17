@@ -6,6 +6,7 @@ interface BracketedTextDisplayProps {
   visibilityPercent: number;
   spokenWordsIndices?: Set<number>;
   hesitatedWordsIndices?: Set<number>;
+  missedWordsIndices?: Set<number>;
   currentWordIndex?: number;
   isRecording: boolean;
   className?: string;
@@ -26,6 +27,7 @@ const BracketedTextDisplay = ({
   visibilityPercent, 
   spokenWordsIndices = new Set(),
   hesitatedWordsIndices = new Set(),
+  missedWordsIndices = new Set(),
   currentWordIndex = -1,
   isRecording,
   className 
@@ -123,6 +125,7 @@ const BracketedTextDisplay = ({
             const globalIndex = segment.startIndex + wordIndex;
             const isSpoken = spokenWordsIndices.has(globalIndex);
             const isHesitated = hesitatedWordsIndices.has(globalIndex);
+            const isMissed = missedWordsIndices.has(globalIndex);
             const isCurrent = isRecording && currentWordIndex === globalIndex;
             
             return (
@@ -131,9 +134,10 @@ const BracketedTextDisplay = ({
                 className={cn(
                   "word-block",
                   isCurrent && "current-word",
-                  !isCurrent && isHesitated && "word-yellow",
-                  !isCurrent && !isHesitated && isSpoken && "past-word",
-                  !isCurrent && !isHesitated && !isSpoken && "word-gray"
+                  !isCurrent && isMissed && "word-red",
+                  !isCurrent && !isMissed && isHesitated && "word-yellow",
+                  !isCurrent && !isMissed && !isHesitated && isSpoken && "past-word",
+                  !isCurrent && !isMissed && !isHesitated && !isSpoken && "word-gray"
                 )}
               >
                 {word}
@@ -150,11 +154,16 @@ const BracketedTextDisplay = ({
             .map((_, idx) => segment.startIndex + idx)
             .filter(idx => hesitatedWordsIndices.has(idx));
           
+          const missedIndicesInSegment = segment.words
+            .map((_, idx) => segment.startIndex + idx)
+            .filter(idx => missedWordsIndices.has(idx));
+          
           const spokenWordsInSegment = spokenIndicesInSegment.map(idx => words[idx]);
           const hesitatedWordsInSegment = hesitatedIndicesInSegment.map(idx => words[idx]);
+          const missedWordsInSegment = missedIndicesInSegment.map(idx => words[idx]);
           
           const allSpoken = spokenWordsInSegment.length === segment.words.length;
-          const hasErrors = hesitatedWordsInSegment.length > 0;
+          const hasErrors = hesitatedWordsInSegment.length > 0 || missedWordsInSegment.length > 0;
           
           // Determine what to show in the bracket
           let bracketContent = "";
@@ -166,7 +175,7 @@ const BracketedTextDisplay = ({
             bracketState = "complete";
           } else if (hasErrors && spokenWordsInSegment.length === segment.words.length) {
             // All words attempted but some had errors - show only error words
-            bracketContent = hesitatedWordsInSegment.join(" ");
+            bracketContent = [...hesitatedWordsInSegment, ...missedWordsInSegment].join(" ");
             bracketState = "errors";
           } else if (spokenWordsInSegment.length > 0) {
             // Some words spoken - show them
