@@ -433,14 +433,6 @@ const Practice = () => {
                         break;
                       }
                     }
-                    
-                    // If word wasn't found anywhere, mark current expected word as missed and advance
-                    if (!foundAhead) {
-                      console.log('❌ No match found, marking as missed and advancing:', cleanExpectedWord, 'at index', newIndex);
-                      setMissedWordsIndices(prev => new Set([...prev, newIndex]));
-                      newIndex++;
-                      lastWordTimeRef.current = Date.now();
-                    }
                   }
                 }
               }
