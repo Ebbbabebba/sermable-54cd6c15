@@ -331,6 +331,17 @@ const Practice = () => {
                   if (isExactMatch || isPartialMatch || isSimilar) {
                     // Mark this index as spoken
                     setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
+                    // Remove from missed/hesitated if it was marked before
+                    setMissedWordsIndices(prev => {
+                      const updated = new Set(prev);
+                      updated.delete(newIndex);
+                      return updated;
+                    });
+                    setHesitatedWordsIndices(prev => {
+                      const updated = new Set(prev);
+                      updated.delete(newIndex);
+                      return updated;
+                    });
                     console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
                     
                     // Clear any hesitation timer
@@ -389,6 +400,17 @@ const Practice = () => {
                         }
                         // Mark the spoken word (at future position) as correctly spoken
                         setSpokenWordsIndices(prev => new Set([...prev, newIndex + lookAhead]));
+                        // Remove from missed/hesitated if it was marked before
+                        setMissedWordsIndices(prev => {
+                          const updated = new Set(prev);
+                          updated.delete(newIndex + lookAhead);
+                          return updated;
+                        });
+                        setHesitatedWordsIndices(prev => {
+                          const updated = new Set(prev);
+                          updated.delete(newIndex + lookAhead);
+                          return updated;
+                        });
                         console.log('✓ Word spoken correctly (found ahead):', futureWord, 'at index', newIndex + lookAhead);
                         
                         newIndex += lookAhead + 1; // Move past the spoken word
