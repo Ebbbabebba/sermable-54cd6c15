@@ -151,7 +151,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <CardTitle className="truncate">{speech.title}</CardTitle>
+              <CardTitle className="truncate capitalize">{speech.title}</CardTitle>
               <CardDescription className="mt-1">
                 Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
               </CardDescription>
