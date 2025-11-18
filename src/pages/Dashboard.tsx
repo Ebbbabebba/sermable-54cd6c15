@@ -333,49 +333,6 @@ const Dashboard = () => {
             </Card>
           )}
 
-          {/* Stats Cards */}
-          {speeches.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up">
-              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm hover:scale-105">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Speeches</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{speeches.length}</div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm hover:scale-105">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Active Goals</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-accent" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
-                    {speeches.filter((s) => new Date(s.goal_date) >= new Date()).length}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm hover:scale-105">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Practice Sessions</CardTitle>
-                  <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-success" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold bg-gradient-to-r from-success to-primary bg-clip-text text-transparent">0</div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
           {/* Speeches Section */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -385,25 +342,32 @@ const Dashboard = () => {
                   Manage and practice your speeches
                 </p>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <ArrowUpDown className="w-4 h-4" />
-                    <span className="text-xs">Sort</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSortBy('deadline')}>
-                    By Deadline
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('created')}>
-                    Recently Created
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('updated')}>
-                    Recently Updated
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-2">
+                {speeches.length > 0 && (
+                  <div className="text-xs px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground font-medium">
+                    {speeches.length} {speeches.length === 1 ? 'speech' : 'speeches'}
+                  </div>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-2">
+                      <ArrowUpDown className="w-4 h-4" />
+                      <span className="text-xs">Sort</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortBy('deadline')}>
+                      By Deadline
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('created')}>
+                      Recently Created
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('updated')}>
+                      Recently Updated
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
 
             {speeches.length === 0 ? (
