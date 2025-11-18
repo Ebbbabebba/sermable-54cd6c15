@@ -4,10 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, LogOut, BookOpen, Calendar, TrendingUp, Settings, Menu } from "lucide-react";
+import { Plus, LogOut, BookOpen, Calendar, TrendingUp, Settings, Menu, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
@@ -20,6 +26,7 @@ interface Speech {
   text_current: string;
   goal_date: string;
   created_at: string;
+  updated_at: string;
 }
 
 const Dashboard = () => {
@@ -32,6 +39,7 @@ const Dashboard = () => {
   const [monthlySpeeches, setMonthlySpeeches] = useState(0);
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -220,7 +228,7 @@ const Dashboard = () => {
       {/* Header */}
       <header className="border-b border-border/40 backdrop-blur-lg bg-background/80 sticky top-0 z-50 flex-shrink-0 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Spacetalk</h1>
+          <h1 className="text-2xl font-bold text-foreground">Sermable</h1>
           
           {/* Desktop Navigation */}
           {!isMobile && (
@@ -377,6 +385,25 @@ const Dashboard = () => {
                   Manage and practice your speeches
                 </p>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <ArrowUpDown className="w-4 h-4" />
+                    <span className="text-xs">Sort</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy('deadline')}>
+                    By Deadline
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('created')}>
+                    Recently Created
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('updated')}>
+                    Recently Updated
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {speeches.length === 0 ? (
@@ -397,15 +424,31 @@ const Dashboard = () => {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {speeches.map((speech, index) => (
-                  <div 
-                    key={speech.id}
-                    className="animate-scale-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <SpeechCard speech={speech} onUpdate={loadSpeeches} />
-                  </div>
-                ))}
+                {(() => {
+                  // Sort speeches based on selected criteria
+                  const sortedSpeeches = [...speeches].sort((a, b) => {
+                    if (sortBy === 'deadline') {
+                      if (!a.goal_date && !b.goal_date) return 0;
+                      if (!a.goal_date) return 1;
+                      if (!b.goal_date) return -1;
+                      return new Date(a.goal_date).getTime() - new Date(b.goal_date).getTime();
+                    } else if (sortBy === 'created') {
+                      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                    } else {
+                      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+                    }
+                  });
+
+                  return sortedSpeeches.map((speech, index) => (
+                    <div 
+                      key={speech.id}
+                      className="animate-scale-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <SpeechCard speech={speech} onUpdate={loadSpeeches} />
+                    </div>
+                  ));
+                })()}
               </div>
             )}
           </div>
