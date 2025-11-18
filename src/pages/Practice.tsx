@@ -275,48 +275,37 @@ const Practice = () => {
         recognition.onresult = (event: any) => {
           console.log('✅ Speech recognition result received!', event.results.length);
           let interimTranscript = '';
-          let newFinalTranscript = '';
           
-          // Separate final and interim transcripts
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
             console.log('📢 Transcript:', transcript, 'isFinal:', event.results[i].isFinal);
             if (event.results[i].isFinal) {
-              newFinalTranscript += transcript + ' ';
+              finalTranscript += transcript + ' ';
+              setLiveTranscription(finalTranscript.trim());
+              console.log('✔️ Final transcript updated:', finalTranscript.trim());
             } else {
               interimTranscript += transcript;
+              setLiveTranscription((finalTranscript + interimTranscript).trim());
+              console.log('⏳ Interim transcript:', (finalTranscript + interimTranscript).trim());
             }
           }
           
-          // Update final transcript accumulator
-          if (newFinalTranscript) {
-            finalTranscript += newFinalTranscript;
-            console.log('✔️ Final transcript updated:', finalTranscript.trim());
-          }
-          
-          // Update live transcription display (final + interim)
-          setLiveTranscription((finalTranscript + interimTranscript).trim());
-          
-          // ONLY process final transcripts for word marking
-          if (!newFinalTranscript) {
-            console.log('⏳ Interim transcript only, skipping word marking');
-            return;
-          }
+          // Track spoken words for bracket visualization
+          const fullTranscript = (finalTranscript + interimTranscript).trim();
+          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
           
           // Get expected words from the original speech
           const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
-          // Process ONLY the new final words
-          const finalWords = finalTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
-          
+          // Only process NEW words from the transcript (not already processed)
           setLastProcessedTranscriptLength(prevLength => {
-            const newWords = finalWords.slice(prevLength);
+            const newWords = transcriptWords.slice(prevLength);
             
             if (newWords.length === 0) {
-              return prevLength; // No new final words
+              return prevLength; // No new words
             }
             
-            console.log('🆕 New FINAL words detected:', newWords, 'Previous length:', prevLength);
+            console.log('🆕 New words detected:', newWords, 'Previous length:', prevLength);
             
             // Process new words sequentially
             setExpectedWordIndex(currentIndex => {
@@ -331,27 +320,20 @@ const Practice = () => {
                   
                   console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', newIndex);
                   
-                  // Strict exact matching for all words (including short words)
+                  // Check if the spoken word matches the expected word (more flexible matching)
                   const isExactMatch = cleanSpokenWord === cleanExpectedWord;
+                  const isPartialMatch = cleanSpokenWord.includes(cleanExpectedWord) || 
+                                        cleanExpectedWord.includes(cleanSpokenWord);
+                  const isSimilar = cleanSpokenWord.length > 2 && cleanExpectedWord.length > 2 &&
+                                   (cleanSpokenWord.startsWith(cleanExpectedWord.slice(0, 3)) ||
+                                    cleanExpectedWord.startsWith(cleanSpokenWord.slice(0, 3)));
                   
-                  if (isExactMatch) {
-                    // Mark this index as spoken correctly
+                  if (isExactMatch || isPartialMatch || isSimilar) {
+                    // Mark this index as spoken
                     setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
                     console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
                     
-                    // Remove from missed/hesitated sets if present
-                    setMissedWordsIndices(prev => {
-                      const updated = new Set(prev);
-                      updated.delete(newIndex);
-                      return updated;
-                    });
-                    setHesitatedWordsIndices(prev => {
-                      const updated = new Set(prev);
-                      updated.delete(newIndex);
-                      return updated;
-                    });
-                    
-                    // Clear any active hesitation timer
+                    // Clear any hesitation timer
                     if (hesitationTimerRef.current) {
                       clearTimeout(hesitationTimerRef.current);
                       hesitationTimerRef.current = null;
@@ -366,8 +348,8 @@ const Practice = () => {
                       const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
                       const capturedIndex = newIndex;
                       hesitationTimerRef.current = setTimeout(() => {
-                        console.log('⚠️ Hesitation timer expired at index:', capturedIndex);
                         setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
+                        console.log('⚠️ Hesitation detected at index:', capturedIndex);
                         
                         // Track hesitation for segment
                         const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
@@ -391,30 +373,20 @@ const Practice = () => {
                     // Word doesn't match - check if it matches a future word (user might have skipped)
                     console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
                     
-                    // Look ahead up to 5 words to see if user skipped ahead
+                    // Look ahead up to 3 words to see if user skipped ahead
                     let foundAhead = false;
-                    for (let lookAhead = 1; lookAhead <= 5 && (newIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
+                    for (let lookAhead = 1; lookAhead <= 3 && (newIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
                       const futureWord = allExpectedWords[newIndex + lookAhead].toLowerCase().replace(/[^\w]/g, '');
-                      
-                      // Strict exact matching for lookahead
-                      if (cleanSpokenWord === futureWord) {
+                      if (cleanSpokenWord === futureWord || 
+                          cleanSpokenWord.includes(futureWord) || 
+                          futureWord.includes(cleanSpokenWord)) {
                         console.log('🔍 Found word ahead at +' + lookAhead + ':', futureWord);
-                        
                         // Mark skipped words as missed (specific indices only)
                         for (let skip = 0; skip < lookAhead; skip++) {
                           const skippedIndex = newIndex + skip;
                           setMissedWordsIndices(prev => new Set([...prev, skippedIndex]));
-                          console.log('❌ Skipped word at index:', skippedIndex, allExpectedWords[skippedIndex]);
-                          
-                          // Track error for segment
-                          const segmentIndex = Math.floor((skippedIndex / allExpectedWords.length) * 10);
-                          setSegmentErrors(prev => {
-                            const updated = new Map(prev);
-                            updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                            return updated;
-                          });
+                          console.log('❌ Skipped word at index:', skippedIndex);
                         }
-                        
                         // Mark the spoken word (at future position) as correctly spoken
                         setSpokenWordsIndices(prev => new Set([...prev, newIndex + lookAhead]));
                         console.log('✓ Word spoken correctly (found ahead):', futureWord, 'at index', newIndex + lookAhead);
@@ -423,19 +395,13 @@ const Practice = () => {
                         foundAhead = true;
                         lastWordTimeRef.current = Date.now();
                         
-                        // Clear any hesitation timer
-                        if (hesitationTimerRef.current) {
-                          clearTimeout(hesitationTimerRef.current);
-                          hesitationTimerRef.current = null;
-                        }
-                        
                         // Start hesitation timer for next word
                         if (newIndex < allExpectedWords.length) {
                           const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
                           const capturedIndex = newIndex;
                           hesitationTimerRef.current = setTimeout(() => {
-                            console.log('⚠️ Hesitation timer expired at index:', capturedIndex);
                             setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
+                            console.log('⚠️ Hesitation detected at index:', capturedIndex);
                             
                             // Track hesitation for segment
                             const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
@@ -458,12 +424,6 @@ const Practice = () => {
                         break;
                       }
                     }
-                    
-                    // If word wasn't found in lookahead, don't mark as missed yet
-                    // The hesitation timer will handle marking it if needed
-                    if (!foundAhead) {
-                      console.log('⚠️ Word not found in sequence, waiting for hesitation timer or next word');
-                    }
                   }
                 }
               }
@@ -471,7 +431,7 @@ const Practice = () => {
               return newIndex;
             });
             
-            return finalWords.length; // Update processed length to final words only
+            return transcriptWords.length; // Update processed length
           });
         };
         

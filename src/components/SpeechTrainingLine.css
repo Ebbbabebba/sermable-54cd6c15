@@ -1,106 +1,83 @@
 /* Container for the line of words */
 .speech-line {
   line-height: 2;
-  font-size: 1rem;
+  font-size: 1.125rem;
   font-family: sans-serif;
 }
 
-/* Individual word circles - base style */
-.word-circle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 4px;
-  padding: 8px 12px;
-  border-radius: 9999px;
-  min-width: 45px;
-  min-height: 45px;
+/* Individual word blocks */
+.word-block {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
   transition:
-    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    font-weight 0.2s ease,
-    font-size 0.2s ease;
+    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    font-weight 0.3s ease;
 }
 
-/* Default gray word circle */
-.word-gray-circle {
+/* Default gray word - filled background */
+.word-gray {
   color: hsl(var(--foreground));
-  background-color: hsl(var(--muted) / 0.4);
-  border: 2px solid hsl(var(--muted-foreground) / 0.25);
+  background-color: hsl(var(--muted) / 0.5);
   transform: scale(1);
-  font-size: 0.95rem;
 }
 
-/* Words that have been spoken - heavily faded and shrunk */
-.past-word-circle {
-  opacity: 0.15;
-  color: hsl(var(--muted-foreground));
-  background-color: hsl(var(--muted) / 0.1);
-  border: 1px solid hsl(var(--muted-foreground) / 0.1);
-  transform: scale(0.65);
-  font-size: 0.75rem;
-  min-width: 30px;
-  min-height: 30px;
+/* Words that have been spoken - faded with gray background */
+.past-word {
+  opacity: 0.5;
+  background-color: hsl(var(--muted) / 0.3);
+  transform: scale(0.95);
   transition: 
-    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+    background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Current word being spoken - blue pulsing circle */
-.current-word-circle {
+/* Current word being spoken - pulse with highlighted background */
+.current-word {
   opacity: 1;
   position: relative;
-  color: hsl(var(--primary));
-  background-color: hsl(var(--primary) / 0.15);
-  border: 3px solid hsl(var(--primary));
-  font-weight: 700;
-  font-size: 1.2rem;
-  min-width: 55px;
-  min-height: 55px;
-  animation: pulse-blue 0.8s ease-in-out infinite;
-  box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--primary) / 0.2);
+  font-weight: 600;
+  transform: scale(1.05);
+  animation: pulse 1s ease-in-out infinite;
 }
 
-/* Blue pulse animation for current word - faster and smoother */
-@keyframes pulse-blue {
+/* Pulse animation for current word - smooth scale */
+@keyframes pulse {
   0%, 100% {
     transform: scale(1.05);
-    box-shadow: 0 0 15px hsl(var(--primary) / 0.4);
   }
   50% {
-    transform: scale(1.1);
-    box-shadow: 0 0 25px hsl(var(--primary) / 0.5);
+    transform: scale(1.15);
   }
 }
 
-/* Hesitated words - yellow circle */
-.word-yellow-circle {
-  background-color: hsl(45 100% 51% / 0.3);
-  border: 2px solid hsl(45 100% 51% / 0.7);
+/* Hesitated words - filled yellow background */
+.word-yellow {
+  background-color: hsl(45 100% 51% / 0.5);
   color: hsl(var(--foreground));
   font-weight: 600;
-  font-size: 0.95rem;
   transform: scale(1);
   transition: 
-    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Incorrect or skipped words - red circle */
-.word-red-circle {
-  background-color: hsl(0 84% 60% / 0.3);
-  border: 2px solid hsl(0 84% 60% / 0.7);
+/* Incorrect or skipped words - filled red background */
+.word-red {
+  background-color: hsl(0 84% 60% / 0.5);
   color: hsl(var(--foreground));
   font-weight: 600;
-  font-size: 0.95rem;
   transform: scale(1);
   transition: 
-    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Pulse animation for red errors */
