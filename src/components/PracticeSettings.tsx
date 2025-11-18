@@ -135,10 +135,10 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
               </Select>
             </div>
 
-            {/* Hesitation Threshold */}
+            {/* Support Word Delay */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label htmlFor="hesitation">Hesitation Time (mid-sentence)</Label>
+                <Label htmlFor="hesitation">Support Word Delay</Label>
                 <span className="text-sm text-muted-foreground">{settings.hesitationThreshold}s</span>
               </div>
               <Slider
@@ -151,7 +151,7 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Mark word yellow if you pause this long between words
+                Time before support word appears on screen
               </p>
             </div>
 
