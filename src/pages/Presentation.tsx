@@ -471,7 +471,7 @@ const Presentation = () => {
           </Button>
 
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold">{speech.title}</h1>
+            <h1 className="text-4xl font-bold capitalize">{speech.title}</h1>
             <p className="text-muted-foreground">
               {modeLabel} Mode • {speech.text_original.split(/\s+/).length} words
             </p>

@@ -909,7 +909,7 @@ const Practice = () => {
               {speech && (
                 <>
                   <div className="border-l pl-4 hidden md:block">
-                    <h1 className="text-lg font-semibold">{speech.title}</h1>
+                    <h1 className="text-lg font-semibold capitalize">{speech.title}</h1>
                     {speech.goal_date && (
                       <p className="text-sm text-muted-foreground">
                         Goal: {format(new Date(speech.goal_date), "PPP")}

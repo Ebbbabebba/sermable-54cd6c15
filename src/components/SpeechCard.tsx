@@ -223,7 +223,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Speech?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete "{speech.title}" and all associated practice sessions.
+                  This will permanently delete "<span className="capitalize">{speech.title}</span>" and all associated practice sessions.
                   This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
