@@ -208,7 +208,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-secondary/20">
       {/* Streak Celebration */}
       {showStreakCelebration && (
         <StreakCelebration 
@@ -218,37 +218,35 @@ const Dashboard = () => {
       )}
 
       {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-50 shadow-sm flex-shrink-0">
+      <header className="border-b border-border/40 backdrop-blur-lg bg-background/80 sticky top-0 z-50 flex-shrink-0 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Sermable</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Spacetalk</h1>
           
           {/* Desktop Navigation */}
           {!isMobile && (
-            <div className="flex items-center gap-4">
-              <Button onClick={() => setUploadDialogOpen(true)} variant="default">
+            <div className="flex items-center gap-3">
+              <Button onClick={() => setUploadDialogOpen(true)} variant="gradient">
                 <Plus className="h-4 w-4 mr-2" />
                 New Speech
               </Button>
-              <div className="text-sm">
-                <span className="font-medium capitalize">{subscriptionTier}</span> Plan
+              <div className="text-sm px-4 py-2 rounded-full bg-primary/10 text-primary font-medium">
+                <span className="capitalize">{subscriptionTier}</span>
                 {subscriptionTier === 'free' && (
-                  <span className="text-muted-foreground ml-2">
-                    ({monthlySpeeches}/2 speeches this month)
+                  <span className="ml-2">
+                    {monthlySpeeches}/2
                   </span>
                 )}
               </div>
               {subscriptionTier === 'free' && (
                 <Button variant="default" size="sm" onClick={handleUpgradeToPremium}>
-                  Upgrade to Premium
+                  Upgrade
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
+              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="rounded-full">
+                <Settings className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full">
+                <LogOut className="h-5 w-5" />
               </Button>
             </div>
           )}
@@ -329,70 +327,84 @@ const Dashboard = () => {
 
           {/* Stats Cards */}
           {speeches.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-up">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slide-up">
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm hover:scale-105">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Speeches</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Speeches</CardTitle>
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{speeches.length}</div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{speeches.length}</div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm hover:scale-105">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Goals</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Active Goals</CardTitle>
+                  <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-accent" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
                     {speeches.filter((s) => new Date(s.goal_date) >= new Date()).length}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm hover:scale-105">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Practice Sessions</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Practice Sessions</CardTitle>
+                  <div className="h-10 w-10 rounded-xl bg-success/10 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-success" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-success to-primary bg-clip-text text-transparent">0</div>
                 </CardContent>
               </Card>
             </div>
           )}
 
           {/* Speeches Section */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-semibold">Your Speeches</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">Your Speeches</h3>
+                <p className="text-sm text-muted-foreground mt-1">
                   Manage and practice your speeches
                 </p>
               </div>
             </div>
 
             {speeches.length === 0 ? (
-              <Card className="p-12 text-center">
-                <div className="mx-auto w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
-                  <BookOpen className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">No speeches yet</h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Upload your first speech to start practicing. Set a goal date and let AI help you memorize it.
-                </p>
-                <Button onClick={() => setUploadDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Upload Your First Speech
-                </Button>
+              <Card className="shadow-xl border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm animate-fade-in">
+                <CardContent className="py-16 text-center">
+                  <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-float">
+                    <BookOpen className="h-10 w-10 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">No speeches yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto text-base">
+                    Upload your first speech to start practicing. Set a goal date and let AI help you memorize it.
+                  </p>
+                  <Button onClick={() => setUploadDialogOpen(true)} variant="gradient" size="lg">
+                    <Plus className="h-5 w-5 mr-2" />
+                    Upload Your First Speech
+                  </Button>
+                </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {speeches.map((speech) => (
-                  <SpeechCard key={speech.id} speech={speech} onUpdate={loadSpeeches} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {speeches.map((speech, index) => (
+                  <div 
+                    key={speech.id}
+                    className="animate-scale-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <SpeechCard speech={speech} onUpdate={loadSpeeches} />
+                  </div>
                 ))}
               </div>
             )}
@@ -404,10 +416,11 @@ const Dashboard = () => {
       {isMobile && (
         <Button
           onClick={() => setUploadDialogOpen(true)}
-          className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-lg z-50"
+          className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-2xl z-50 animate-pulse-glow"
+          variant="gradient"
           size="icon"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-7 w-7" />
         </Button>
       )}
 
