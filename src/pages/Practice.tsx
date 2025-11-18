@@ -71,6 +71,8 @@ const Practice = () => {
   const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
   const [expectedWordIndex, setExpectedWordIndex] = useState(0);
   const [lastProcessedTranscriptLength, setLastProcessedTranscriptLength] = useState(0);
+  const [supportWord, setSupportWord] = useState<string | null>(null);
+  const [supportWordIndex, setSupportWordIndex] = useState<number | null>(null);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
@@ -225,6 +227,8 @@ const Practice = () => {
     lastProcessedChunkIndex.current = 0;
     setExpectedWordIndex(0);
     setLastProcessedTranscriptLength(0);
+    setSupportWord(null);
+    setSupportWordIndex(null);
     lastWordTimeRef.current = Date.now();
     
     // Clear any existing hesitation timer
@@ -329,20 +333,31 @@ const Practice = () => {
                                     cleanExpectedWord.startsWith(cleanSpokenWord.slice(0, 3)));
                   
                   if (isExactMatch || isPartialMatch || isSimilar) {
-                    // Mark this index as spoken
-                    setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
-                    // Remove from missed/hesitated if it was marked before
-                    setMissedWordsIndices(prev => {
-                      const updated = new Set(prev);
-                      updated.delete(newIndex);
-                      return updated;
-                    });
-                    setHesitatedWordsIndices(prev => {
-                      const updated = new Set(prev);
-                      updated.delete(newIndex);
-                      return updated;
-                    });
-                    console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
+                    // Check if this word was shown as support word
+                    if (supportWordIndex === newIndex) {
+                      // User said it correctly after support word - mark yellow
+                      setHesitatedWordsIndices(prev => new Set([...prev, newIndex]));
+                      console.log('✓ Support word spoken correctly (yellow):', expectedWord, 'at index', newIndex);
+                    } else {
+                      // Normal correct word - mark as spoken
+                      setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
+                      // Remove from missed/hesitated if it was marked before
+                      setMissedWordsIndices(prev => {
+                        const updated = new Set(prev);
+                        updated.delete(newIndex);
+                        return updated;
+                      });
+                      setHesitatedWordsIndices(prev => {
+                        const updated = new Set(prev);
+                        updated.delete(newIndex);
+                        return updated;
+                      });
+                      console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
+                    }
+                    
+                    // Hide support word if any
+                    setSupportWord(null);
+                    setSupportWordIndex(null);
                     
                     // Clear any hesitation timer
                     if (hesitationTimerRef.current) {
@@ -354,13 +369,16 @@ const Practice = () => {
                     newIndex++;
                     lastWordTimeRef.current = Date.now();
                     
-                    // Start hesitation timer for next word
+                    // Start hesitation timer for next word (shows support word after 2s)
                     if (newIndex < allExpectedWords.length) {
-                      const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
+                      const threshold = 2000; // Always 2 seconds for support word
                       const capturedIndex = newIndex;
                       hesitationTimerRef.current = setTimeout(() => {
-                        setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
-                        console.log('⚠️ Hesitation detected at index:', capturedIndex);
+                        // Show support word instead of just marking as hesitated
+                        const wordToShow = allExpectedWords[capturedIndex];
+                        setSupportWord(wordToShow);
+                        setSupportWordIndex(capturedIndex);
+                        console.log('💡 Support word shown:', wordToShow, 'at index:', capturedIndex);
                         
                         // Track hesitation for segment
                         const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
@@ -381,70 +399,63 @@ const Practice = () => {
                       }, threshold);
                     }
                   } else {
-                    // Word doesn't match - check if it matches a future word (user might have skipped)
+                    // Word doesn't match - show support word and handle next word logic
                     console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
                     
-                    // Look ahead up to 3 words to see if user skipped ahead
-                    let foundAhead = false;
-                    for (let lookAhead = 1; lookAhead <= 3 && (newIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
-                      const futureWord = allExpectedWords[newIndex + lookAhead].toLowerCase().replace(/[^\w]/g, '');
-                      if (cleanSpokenWord === futureWord || 
-                          cleanSpokenWord.includes(futureWord) || 
-                          futureWord.includes(cleanSpokenWord)) {
-                        console.log('🔍 Found word ahead at +' + lookAhead + ':', futureWord);
-                        // Mark skipped words as missed (specific indices only)
-                        for (let skip = 0; skip < lookAhead; skip++) {
-                          const skippedIndex = newIndex + skip;
-                          setMissedWordsIndices(prev => new Set([...prev, skippedIndex]));
-                          console.log('❌ Skipped word at index:', skippedIndex);
-                        }
-                        // Mark the spoken word (at future position) as correctly spoken
-                        setSpokenWordsIndices(prev => new Set([...prev, newIndex + lookAhead]));
-                        // Remove from missed/hesitated if it was marked before
-                        setMissedWordsIndices(prev => {
-                          const updated = new Set(prev);
-                          updated.delete(newIndex + lookAhead);
-                          return updated;
-                        });
-                        setHesitatedWordsIndices(prev => {
-                          const updated = new Set(prev);
-                          updated.delete(newIndex + lookAhead);
-                          return updated;
-                        });
-                        console.log('✓ Word spoken correctly (found ahead):', futureWord, 'at index', newIndex + lookAhead);
+                    // If support word is showing, this is the "next word" that should hide it
+                    if (supportWord && supportWordIndex !== null) {
+                      // Mark support word as red (missed)
+                      setMissedWordsIndices(prev => new Set([...prev, supportWordIndex]));
+                      console.log('❌ Support word not spoken correctly (red):', supportWord, 'at index', supportWordIndex);
+                      
+                      // Hide support word
+                      setSupportWord(null);
+                      setSupportWordIndex(null);
+                      
+                      // Try to find the spoken word ahead
+                      let found = false;
+                      const maxLookAhead = 5;
+                      
+                      for (let lookAhead = 1; lookAhead <= maxLookAhead && (supportWordIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
+                        const futureWord = allExpectedWords[supportWordIndex + lookAhead];
+                        const cleanFutureWord = futureWord.toLowerCase().replace(/[^\w]/g, '');
                         
-                        newIndex += lookAhead + 1; // Move past the spoken word
-                        foundAhead = true;
-                        lastWordTimeRef.current = Date.now();
+                        const isFutureMatch = cleanSpokenWord === cleanFutureWord ||
+                                             cleanSpokenWord.includes(cleanFutureWord) ||
+                                             cleanFutureWord.includes(cleanSpokenWord);
                         
-                        // Start hesitation timer for next word
-                        if (newIndex < allExpectedWords.length) {
-                          const threshold = (newIndex === 0 ? settings.firstWordHesitationThreshold : settings.hesitationThreshold) * 1000;
-                          const capturedIndex = newIndex;
-                          hesitationTimerRef.current = setTimeout(() => {
-                            setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
-                            console.log('⚠️ Hesitation detected at index:', capturedIndex);
-                            
-                            // Track hesitation for segment
-                            const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
-                            setSegmentHesitations(prev => {
-                              const updated = new Map(prev);
-                              updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                              return updated;
-                            });
-                            
-                            // Remove hesitation marker after 2 seconds
-                            setTimeout(() => {
-                              setHesitatedWordsIndices(prev => {
-                                const updated = new Set(prev);
-                                updated.delete(capturedIndex);
-                                return updated;
-                              });
-                            }, 2000);
-                          }, threshold);
+                        if (isFutureMatch) {
+                          found = true;
+                          setSpokenWordsIndices(prev => new Set([...prev, supportWordIndex + lookAhead]));
+                          newIndex = supportWordIndex + lookAhead + 1;
+                          console.log('✓ Found word after support word skip:', futureWord);
+                          lastWordTimeRef.current = Date.now();
+                          
+                          // Start hesitation timer for next word
+                          if (newIndex < allExpectedWords.length) {
+                            const threshold = 2000;
+                            const capturedIndex = newIndex;
+                            hesitationTimerRef.current = setTimeout(() => {
+                              const wordToShow = allExpectedWords[capturedIndex];
+                              setSupportWord(wordToShow);
+                              setSupportWordIndex(capturedIndex);
+                              console.log('💡 Support word shown:', wordToShow);
+                            }, threshold);
+                          }
+                          break;
                         }
-                        break;
                       }
+                      
+                      if (!found) {
+                        newIndex = supportWordIndex + 1;
+                      }
+                    } else {
+                      // No support word showing - first incorrect word, show support word
+                      const wordToShow = allExpectedWords[newIndex];
+                      setSupportWord(wordToShow);
+                      setSupportWordIndex(newIndex);
+                      console.log('💡 Support word shown after incorrect word:', wordToShow, 'at index:', newIndex);
+                      // Don't advance index yet - wait for next word
                     }
                   }
                 }
@@ -882,6 +893,18 @@ const Practice = () => {
                             </p>
                           </div>
                         )}
+                        
+                        {/* Support Word Prompt */}
+                        {supportWord && (
+                          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                            <div className="bg-yellow-100 dark:bg-yellow-900/50 text-black dark:text-yellow-100 px-12 py-8 rounded-2xl shadow-2xl border-4 border-yellow-400 dark:border-yellow-600 animate-scale-in">
+                              <p className="text-6xl font-bold text-center uppercase tracking-wide">
+                                {supportWord}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
                         <BracketedTextDisplay
                           text={speech.text_original}
                           visibilityPercent={speech.base_word_visibility_percent || 100}
