@@ -7,6 +7,8 @@ export interface AudioRecorderHandle {
   getCurrentAudioBlob: () => Blob | null;
   getNewChunks: (lastIndex: number) => { chunks: Blob[], currentIndex: number } | null;
   getCurrentFormat: () => string;
+  stopRecording: () => void;
+  startRecording: () => void;
 }
 
 interface AudioRecorderProps {
@@ -68,7 +70,17 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
     useImperativeHandle(ref, () => ({
       getCurrentAudioBlob,
       getNewChunks,
-      getCurrentFormat: () => mimeTypeRef.current
+      getCurrentFormat: () => mimeTypeRef.current,
+      stopRecording: () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          console.log('Stopping recording via ref...');
+          mediaRecorderRef.current.stop();
+          mediaRecorderRef.current = null;
+        }
+      },
+      startRecording: async () => {
+        await startRecording();
+      }
     }));
 
     const startRecording = async () => {

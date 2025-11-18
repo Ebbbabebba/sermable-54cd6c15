@@ -740,61 +740,210 @@ const Practice = () => {
 
   if (!speech) return null;
 
+  // Focus Mode: Full-screen minimal practice view
+  if (isPracticing && !showResults) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <LoadingOverlay isVisible={isProcessing} />
+        
+        {/* Exit button */}
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (isRecording) {
+                audioRecorderRef.current?.stopRecording();
+              }
+              setIsPracticing(false);
+              setIsRecording(false);
+            }}
+            className="rounded-full hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Support Word Prompt */}
+        {supportWord && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+            <div className="bg-yellow-100 text-black px-12 py-8 rounded-2xl shadow-2xl border-4 border-yellow-400 animate-scale-in">
+              <p className="text-6xl font-bold text-center uppercase tracking-wide">
+                {supportWord}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Centered text content */}
+        <div className="flex-1 flex items-center justify-center px-8 pb-32">
+          <div className="max-w-3xl w-full">
+            <BracketedTextDisplay
+              text={speech.text_original}
+              visibilityPercent={speech.base_word_visibility_percent || 100}
+              spokenWordsIndices={spokenWordsIndices}
+              hesitatedWordsIndices={hesitatedWordsIndices}
+              missedWordsIndices={missedWordsIndices}
+              currentWordIndex={expectedWordIndex}
+              isRecording={isRecording}
+            />
+          </div>
+        </div>
+
+        {/* Bottom recording button */}
+        <div className="fixed bottom-8 left-0 right-0 flex justify-center">
+          <Button
+            size="lg"
+            onClick={() => {
+              if (isRecording) {
+                audioRecorderRef.current?.stopRecording();
+              } else {
+                handleRecordingStart();
+              }
+            }}
+            disabled={isProcessing}
+            className="rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-shadow"
+          >
+            {isRecording ? (
+              <>
+                <Square className="h-5 w-5 mr-2" />
+                Stop Recording
+              </>
+            ) : (
+              <>
+                <Play className="h-5 w-5 mr-2" />
+                Start Recording
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Hidden audio recorder */}
+        <div className="hidden">
+          <AudioRecorder
+            ref={audioRecorderRef}
+            isRecording={isRecording}
+            onStart={handleRecordingStart}
+            onStop={handleRecordingStop}
+            disabled={isProcessing}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Analysis screen: Clean, minimal results view
+  if (showResults && sessionResults) {
+    return (
+      <div className="min-h-screen bg-white">
+        <LoadingOverlay isVisible={isProcessing} />
+        
+        {/* Exit button */}
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/dashboard")}
+            className="rounded-full hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Centered analysis content */}
+        <div className="container mx-auto px-4 py-16 max-w-4xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2 text-gray-900">Practice Complete</h1>
+            <p className="text-lg text-gray-600">Here's how you did</p>
+          </div>
+
+          <div ref={resultsRef} className="animate-fade-in">
+            <PracticeResults
+              accuracy={sessionResults.accuracy}
+              missedWords={sessionResults.missedWords}
+              delayedWords={sessionResults.delayedWords}
+              analysis={sessionResults.analysis}
+              transcription={sessionResults.transcription}
+              originalText={speech.text_original}
+              currentText={speech.text_current}
+            />
+          </div>
+
+          <div className="flex justify-center mt-8">
+            <Button
+              size="lg"
+              onClick={() => navigate("/dashboard")}
+              className="rounded-full px-8"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pre-practice screen: Start screen with lock/unlock
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <LoadingOverlay isVisible={isProcessing} />
-      
-      <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/presentation/${id}`)}>
-            <Presentation className="h-4 w-4 mr-2" />
-            Enter Presentation Mode
-          </Button>
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/dashboard")}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              {speech && (
+                <>
+                  <div className="border-l pl-4 hidden md:block">
+                    <h1 className="text-lg font-semibold">{speech.title}</h1>
+                    {speech.goal_date && (
+                      <p className="text-sm text-muted-foreground">
+                        Goal: {format(new Date(speech.goal_date), "PPP")}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/presentation/${id}`)}
+              >
+                <Presentation className="h-4 w-4 mr-2" />
+                Presentation Mode
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="space-y-6">
-          <div className="animate-fade-in">
-            <h1 className="text-4xl font-bold mb-2">{speech.title}</h1>
-            <p className="text-muted-foreground">
-              Practice session • {speech.text_current.split(/\s+/).filter(Boolean).length} words
-            </p>
-          </div>
-
-          {/* Ad Placeholder - Free Users */}
-          {subscriptionTier === 'free' && (
-            <Card className="bg-muted/30 border-dashed">
-              <CardContent className="flex items-center justify-center py-6">
-                <p className="text-sm text-muted-foreground">Ad Space - Upgrade to remove ads</p>
-              </CardContent>
-            </Card>
-          )}
-
-          <PracticeSettings settings={settings} onSettingsChange={setSettings} />
-
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Session Progress</CardTitle>
-              <CardDescription>Track your practice performance</CardDescription>
+              <CardTitle>Your Progress</CardTitle>
+              <CardDescription>Track your memorization journey</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Memorization</span>
-                  <span className="font-medium">
-                    {(() => {
-                      const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
-                      const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
-                      const wordsMemorized = Math.max(0, originalWords - currentWords);
-                      const memorizationProgress = originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
-                      return `${memorizationProgress}%`;
-                    })()}
-                  </span>
+                  <span className="text-muted-foreground">Words Memorized</span>
+                  <span className="font-medium">{(() => {
+                  const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
+                  const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
+                  const wordsMemorized = Math.max(0, originalWords - currentWords);
+                  return originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
+                })()}%</span>
                 </div>
                 <Progress value={(() => {
                   const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
@@ -803,168 +952,61 @@ const Practice = () => {
                   return originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
                 })()} />
               </div>
-              {sessionResults && (
-                <div className="space-y-2 pt-2 border-t">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Last Session Accuracy</span>
-                    <span className="font-medium">{sessionResults.accuracy}%</span>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
-          {!showResults && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Practice Mode</CardTitle>
-                    <CardDescription>
-                      {!isPracticing
-                        ? "Click start to begin your practice session"
-                        : isRecording
-                        ? "Recording... speak clearly"
-                        : isProcessing
-                        ? "AI is analyzing your performance..."
-                        : "Read the text aloud and record yourself"}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {!isPracticing ? (
-                  <div className="text-center py-12 space-y-4">
-                    {isLocked && !overrideLock && (
-                      <div className="mb-4 p-4 bg-muted rounded-lg">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <Lock className="h-5 w-5 text-muted-foreground" />
-                          <p className="font-medium">
-                            Done for today
-                          </p>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Come back{" "}
-                          {nextReviewDate && (
-                            <LockCountdown 
-                              nextReviewDate={nextReviewDate} 
-                              className="font-medium text-foreground" 
-                            />
-                          )}
-                          {" "}to practice again
-                        </p>
-                        {subscriptionTier !== 'free' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-3"
-                            onClick={handleOverrideLock}
-                          >
-                            <Unlock className="h-4 w-4 mr-2" />
-                            Practice Anyway
-                          </Button>
-                        )}
-                        {subscriptionTier === 'free' && (
-                          <p className="text-xs text-muted-foreground mt-3">
-                            Upgrade to premium to practice anytime
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {(!isLocked || overrideLock) && (
-                      <Button 
-                        size="lg" 
-                        onClick={handleStartPractice}
-                      >
-                        <Play className="h-5 w-5 mr-2" />
-                        Start Practice Session
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <div className="p-6 bg-muted/30 rounded-lg">
-                      <div className="space-y-4">
-                        {isRecording && (
-                          <div className="text-center mb-4">
-                            <p className="text-sm text-muted-foreground">
-                              🎤 Recall the words in the brackets from memory
-                            </p>
-                          </div>
-                        )}
-                        
-                        {/* Support Word Prompt */}
-                        {supportWord && (
-                          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-                            <div className="bg-yellow-100 dark:bg-yellow-900/50 text-black dark:text-yellow-100 px-12 py-8 rounded-2xl shadow-2xl border-4 border-yellow-400 dark:border-yellow-600 animate-scale-in">
-                              <p className="text-6xl font-bold text-center uppercase tracking-wide">
-                                {supportWord}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <BracketedTextDisplay
-                          text={speech.text_original}
-                          visibilityPercent={speech.base_word_visibility_percent || 100}
-                          spokenWordsIndices={spokenWordsIndices}
-                          hesitatedWordsIndices={hesitatedWordsIndices}
-                          missedWordsIndices={missedWordsIndices}
-                          currentWordIndex={expectedWordIndex}
-                          isRecording={isRecording}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center">
-                    <AudioRecorder
-                      ref={audioRecorderRef}
-                      isRecording={isRecording}
-                      onStart={handleRecordingStart}
-                      onStop={handleRecordingStop}
-                      disabled={isProcessing}
-                    />
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {showResults && sessionResults && (
-            <div ref={resultsRef} className="animate-fade-in">
-                    <PracticeResults
-                      accuracy={sessionResults.accuracy}
-                      missedWords={sessionResults.missedWords}
-                      delayedWords={sessionResults.delayedWords}
-                      analysis={sessionResults.analysis}
-                      transcription={sessionResults.transcription}
-                      originalText={speech.text_original}
-                      currentText={speech.text_current}
-                    />
-
-              {sessionResults.cueText !== speech.text_current && (
-                <Card className="mt-4">
-                  <CardHeader>
-                    <CardTitle>Updated Cue Script</CardTitle>
-                    <CardDescription>
-                      Focus on these key words for your next practice
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="p-4 bg-primary/5 rounded-lg">
-                      <p className="text-lg leading-relaxed">
-                        {sessionResults.cueText}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12 space-y-4">
+                {isLocked && !overrideLock && (
+                  <div className="mb-4 p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Lock className="h-5 w-5 text-muted-foreground" />
+                      <p className="font-medium">
+                        Done for today
                       </p>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-3">
-                      This simplified version will be used in your next practice session.
+                    <p className="text-sm text-muted-foreground">
+                      Come back{" "}
+                      {nextReviewDate && (
+                        <LockCountdown 
+                          nextReviewDate={nextReviewDate} 
+                          className="font-medium text-foreground" 
+                        />
+                      )}
+                      {" "}to practice again
                     </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+                    {subscriptionTier !== 'free' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-3"
+                        onClick={handleOverrideLock}
+                      >
+                        <Unlock className="h-4 w-4 mr-2" />
+                        Practice Anyway
+                      </Button>
+                    )}
+                    {subscriptionTier === 'free' && (
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Upgrade to premium to practice anytime
+                      </p>
+                    )}
+                  </div>
+                )}
+                {(!isLocked || overrideLock) && (
+                  <Button 
+                    size="lg" 
+                    onClick={handleStartPractice}
+                    className="rounded-full px-8"
+                  >
+                    <Play className="h-5 w-5 mr-2" />
+                    Start Practice
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
