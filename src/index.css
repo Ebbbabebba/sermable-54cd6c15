@@ -8,97 +8,114 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Soft, calming cream/beige base */
-    --background: 38 45% 96%;
-    --foreground: 220 15% 20%;
+    /* Apple-inspired clean backgrounds with subtle gradients */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
-    /* Clean white cards */
+    /* Frosted glass cards */
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 20%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 20%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Gentle blue accent for focus */
-    --primary: 210 70% 55%;
+    /* Vibrant iOS-style blue */
+    --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft secondary */
-    --secondary: 38 35% 92%;
-    --secondary-foreground: 220 15% 20%;
+    /* Soft secondary with subtle tint */
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
 
-    /* Muted for subtle elements */
-    --muted: 38 30% 90%;
-    --muted-foreground: 220 10% 45%;
+    /* Muted with cool undertone */
+    --muted: 210 20% 92%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Accent with warmth */
-    --accent: 25 85% 65%;
+    /* Vibrant orange accent */
+    --accent: 28 87% 55%;
     --accent-foreground: 0 0% 100%;
 
-    /* Success state */
-    --success: 140 55% 50%;
+    /* iOS green */
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning state for hesitations */
-    --warning: 45 90% 55%;
+    /* iOS yellow/amber */
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 75% 60%;
+    /* iOS red */
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
     /* Subtle borders */
-    --border: 38 25% 88%;
-    --input: 38 25% 88%;
-    --ring: 210 70% 55%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 211 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Clean Duolingo-inspired colors */
-    --success-green: 140 81% 47%;
-    --word-bg: 0 0% 95%;
-    --word-text: 0 0% 13%;
+    /* Additional vibrant colors */
+    --success-green: 142 76% 36%;
+    --word-bg: 210 20% 95%;
+    --word-text: 222 47% 11%;
 
-    /* Custom properties for smooth animations */
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(235 84% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(28 87% 55%) 0%, hsl(340 82% 52%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(158 64% 52%) 100%);
+    
+    /* Shadows - Apple-style depth */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+    /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --transition-spring: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
-    --background: 220 20% 12%;
-    --foreground: 38 30% 95%;
+    --background: 222 47% 8%;
+    --foreground: 210 20% 98%;
 
-    --card: 220 18% 15%;
-    --card-foreground: 38 30% 95%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 20% 98%;
 
-    --popover: 220 18% 15%;
-    --popover-foreground: 38 30% 95%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 20% 98%;
 
-    --primary: 210 70% 60%;
+    --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 38 30% 95%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 38 20% 65%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 25 75% 60%;
+    --accent: 28 87% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 140 50% 45%;
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 45 85% 50%;
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 55%;
+    --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 22%;
-    --input: 220 15% 22%;
-    --ring: 210 70% 60%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 211 100% 50%;
+
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 40%) 0%, hsl(235 84% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(28 87% 45%) 0%, hsl(340 82% 42%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 26%) 0%, hsl(158 64% 42%) 100%);
   }
 }
 
