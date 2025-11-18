@@ -157,20 +157,25 @@ const BracketedTextDisplay = ({
           const allProcessed = processedCount === segment.words.length;
           
           // Determine what to show in the bracket
-          let bracketContent = "";
+          let bracketContent: string[] = [];
           let bracketState: "empty" | "filling" | "complete" = "empty";
           
           if (allProcessed) {
             // All words processed - show empty green bracket
-            bracketContent = "";
+            bracketContent = [];
             bracketState = "complete";
           } else if (processedCount > 0) {
-            // Some words processed - show filling indicator
-            bracketContent = `${processedCount}/${segment.words.length}`;
+            // Some words processed - show the actual words spoken
+            bracketContent = segment.words.filter((_, idx) => {
+              const globalIdx = segment.startIndex + idx;
+              return spokenWordsIndices.has(globalIdx) || 
+                     hesitatedWordsIndices.has(globalIdx) || 
+                     missedWordsIndices.has(globalIdx);
+            });
             bracketState = "filling";
           } else {
             // No words processed yet - empty blue pulsing bracket
-            bracketContent = "";
+            bracketContent = [];
             bracketState = "empty";
           }
           
@@ -198,12 +203,12 @@ const BracketedTextDisplay = ({
               )}>
                 [
               </span>
-              {bracketContent && (
+              {bracketContent.length > 0 && (
                 <span className={cn(
-                  "text-sm px-1 font-mono",
-                  bracketState === "filling" && "text-primary"
+                  "text-sm px-1",
+                  bracketState === "filling" && "text-foreground/70"
                 )}>
-                  {bracketContent}
+                  {bracketContent.join(" ")}
                 </span>
               )}
               <span className={cn(
