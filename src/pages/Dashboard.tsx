@@ -313,7 +313,7 @@ const Dashboard = () => {
         <div className="space-y-8">
           {/* Welcome Section */}
           <div className="animate-fade-in">
-            <h2 className="text-3xl font-bold mb-2">
+            <h2 className="text-3xl font-bold mb-2 capitalize">
               Welcome back, {user?.user_metadata?.full_name || "there"}!
             </h2>
             <p className="text-muted-foreground">
