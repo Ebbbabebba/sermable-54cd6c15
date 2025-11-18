@@ -59,7 +59,7 @@ const Practice = () => {
     showWordOnPause: true,
     animationStyle: 'playful',
     keywordMode: false,
-    hesitationThreshold: 2,
+    hesitationThreshold: 3,
     firstWordHesitationThreshold: 4,
   });
   const [liveTranscription, setLiveTranscription] = useState("");
@@ -369,16 +369,17 @@ const Practice = () => {
                     newIndex++;
                     lastWordTimeRef.current = Date.now();
                     
-                    // Start hesitation timer for next word (shows support word after 2s)
+                    // Start hesitation timer for next word (shows support word after configured delay)
                     if (newIndex < allExpectedWords.length) {
-                      const threshold = 2000; // Always 2 seconds for support word
+                      const threshold = settings.hesitationThreshold * 1000;
                       const capturedIndex = newIndex;
                       hesitationTimerRef.current = setTimeout(() => {
-                        // Show support word instead of just marking as hesitated
+                        // Show support word and mark it yellow immediately
                         const wordToShow = allExpectedWords[capturedIndex];
                         setSupportWord(wordToShow);
                         setSupportWordIndex(capturedIndex);
-                        console.log('💡 Support word shown:', wordToShow, 'at index:', capturedIndex);
+                        setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
+                        console.log('💡 Support word shown (marked yellow):', wordToShow, 'at index:', capturedIndex);
                         
                         // Track hesitation for segment
                         const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
@@ -387,15 +388,6 @@ const Practice = () => {
                           updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
                           return updated;
                         });
-                        
-                        // Remove hesitation marker after 2 seconds
-                        setTimeout(() => {
-                          setHesitatedWordsIndices(prev => {
-                            const updated = new Set(prev);
-                            updated.delete(capturedIndex);
-                            return updated;
-                          });
-                        }, 2000);
                       }, threshold);
                     }
                   } else {
@@ -404,7 +396,12 @@ const Practice = () => {
                     
                     // If support word is showing, this is the "next word" that should hide it
                     if (supportWord && supportWordIndex !== null) {
-                      // Mark support word as red (missed)
+                      // Remove from hesitated (yellow) and mark as red (missed)
+                      setHesitatedWordsIndices(prev => {
+                        const updated = new Set(prev);
+                        updated.delete(supportWordIndex);
+                        return updated;
+                      });
                       setMissedWordsIndices(prev => new Set([...prev, supportWordIndex]));
                       console.log('❌ Support word not spoken correctly (red):', supportWord, 'at index', supportWordIndex);
                       
@@ -433,12 +430,13 @@ const Practice = () => {
                           
                           // Start hesitation timer for next word
                           if (newIndex < allExpectedWords.length) {
-                            const threshold = 2000;
+                            const threshold = settings.hesitationThreshold * 1000;
                             const capturedIndex = newIndex;
                             hesitationTimerRef.current = setTimeout(() => {
                               const wordToShow = allExpectedWords[capturedIndex];
                               setSupportWord(wordToShow);
                               setSupportWordIndex(capturedIndex);
+                              setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
                               console.log('💡 Support word shown:', wordToShow);
                             }, threshold);
                           }
@@ -450,11 +448,12 @@ const Practice = () => {
                         newIndex = supportWordIndex + 1;
                       }
                     } else {
-                      // No support word showing - first incorrect word, show support word
+                      // No support word showing - first incorrect word, show support word and mark yellow
                       const wordToShow = allExpectedWords[newIndex];
                       setSupportWord(wordToShow);
                       setSupportWordIndex(newIndex);
-                      console.log('💡 Support word shown after incorrect word:', wordToShow, 'at index:', newIndex);
+                      setHesitatedWordsIndices(prev => new Set([...prev, newIndex]));
+                      console.log('💡 Support word shown after incorrect word (marked yellow):', wordToShow, 'at index:', newIndex);
                       // Don't advance index yet - wait for next word
                     }
                   }
