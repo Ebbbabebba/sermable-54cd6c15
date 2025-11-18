@@ -237,33 +237,19 @@ const Practice = () => {
       hesitationTimerRef.current = null;
     }
     
+    // Set up speech recognition
+    await setupSpeechRecognition();
+  };
+
+  const setupSpeechRecognition = async () => {
     try {
-      // Detect iOS/iPad to determine audio format
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      
-      // Determine audio format for recording
-      let audioFormat = 'audio/webm';
-      if (isIOS) {
-        if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          audioFormat = 'audio/mp4';
-        } else if (MediaRecorder.isTypeSupported('audio/aac')) {
-          audioFormat = 'audio/aac';
-        } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
-          audioFormat = 'audio/mpeg';
-        }
-      }
-      audioFormatRef.current = audioFormat;
-      console.log('🎙️ Recording with format:', audioFormat);
-      
       // Detect language from speech text
       const { detectTextLanguage } = await import('@/utils/languageDetection');
       const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
       console.log('🌍 Detected language:', detectedLang);
       
-      // Start Web Speech API for instant transcription on ALL devices
+      // Start Web Speech API for instant transcription
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      console.log('🔍 SpeechRecognition available?', !!SpeechRecognition);
       
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
@@ -369,8 +355,17 @@ const Practice = () => {
                     newIndex++;
                     lastWordTimeRef.current = Date.now();
                     
-                    // Start hesitation timer for next word (shows support word after configured delay)
-                    if (newIndex < allExpectedWords.length) {
+                    // Check if we've reached the last word - automatically stop recording
+                    if (newIndex >= allExpectedWords.length) {
+                      console.log('🎉 Last word spoken! Auto-stopping recording...');
+                      // Stop recording automatically
+                      setTimeout(() => {
+                        if (audioRecorderRef.current) {
+                          audioRecorderRef.current.stopRecording();
+                        }
+                      }, 500); // Small delay to ensure last word is fully processed
+                    } else {
+                      // Start hesitation timer for next word (shows support word after configured delay)
                       const threshold = settings.hesitationThreshold * 1000;
                       const capturedIndex = newIndex;
                       hesitationTimerRef.current = setTimeout(() => {
@@ -794,11 +789,22 @@ const Practice = () => {
         <div className="fixed bottom-8 left-0 right-0 flex justify-center">
           <Button
             size="lg"
-            onClick={() => {
+            onClick={async () => {
               if (isRecording) {
-                audioRecorderRef.current?.stopRecording();
+                // Stop recording
+                if (audioRecorderRef.current) {
+                  audioRecorderRef.current.stopRecording();
+                }
+                // Stop speech recognition
+                if (recognitionRef.current) {
+                  recognitionRef.current.stop();
+                }
               } else {
-                handleRecordingStart();
+                // Start recording and speech recognition
+                await handleRecordingStart();
+                if (audioRecorderRef.current) {
+                  await audioRecorderRef.current.startRecording();
+                }
               }
             }}
             disabled={isProcessing}
