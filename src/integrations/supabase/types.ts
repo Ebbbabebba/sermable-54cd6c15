@@ -105,24 +105,30 @@ export type Database = {
       mastered_words: {
         Row: {
           created_at: string
+          hesitated_count: number | null
           id: string
           last_spoken_at: string
+          missed_count: number | null
           speech_id: string
           times_spoken_correctly: number
           word: string
         }
         Insert: {
           created_at?: string
+          hesitated_count?: number | null
           id?: string
           last_spoken_at?: string
+          missed_count?: number | null
           speech_id: string
           times_spoken_correctly?: number
           word: string
         }
         Update: {
           created_at?: string
+          hesitated_count?: number | null
           id?: string
           last_spoken_at?: string
+          missed_count?: number | null
           speech_id?: string
           times_spoken_correctly?: number
           word?: string
