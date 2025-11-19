@@ -618,6 +618,23 @@ const Practice = () => {
             console.error('Error saving session:', sessionError);
           }
 
+          // Update adaptive word hiding based on performance
+          try {
+            const { error: hideError } = await supabase.functions.invoke('update-adaptive-word-hiding', {
+              body: {
+                speechId: speech!.id,
+                missedWords: data.missedWords || [],
+                hesitatedWords: data.delayedWords || []
+              }
+            });
+
+            if (hideError) {
+              console.error('Error updating word hiding:', hideError);
+            }
+          } catch (err) {
+            console.error('Failed to update word hiding:', err);
+          }
+
           // Update adaptive learning metrics
           try {
             const { data: adaptiveData, error: adaptiveError } = await supabase.functions.invoke('update-adaptive-learning', {
