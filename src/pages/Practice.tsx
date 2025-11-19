@@ -305,6 +305,12 @@ const Practice = () => {
                 const cleanSpokenWord = word.toLowerCase().replace(/[^\w]/g, '');
                 
                 if (cleanSpokenWord && newIndex < allExpectedWords.length) {
+                  // Hide support word immediately when ANY word is spoken
+                  const wasSupportWordShowing = supportWord !== null;
+                  const previousSupportWordIndex = supportWordIndex;
+                  setSupportWord(null);
+                  setSupportWordIndex(null);
+                  
                   const expectedWord = allExpectedWords[newIndex];
                   const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\w]/g, '');
                   
@@ -320,7 +326,7 @@ const Practice = () => {
                   
                   if (isExactMatch || isPartialMatch || isSimilar) {
                     // Check if this word was shown as support word
-                    if (supportWordIndex === newIndex) {
+                    if (wasSupportWordShowing && previousSupportWordIndex === newIndex) {
                       // User said it correctly after support word - mark yellow
                       setHesitatedWordsIndices(prev => new Set([...prev, newIndex]));
                       console.log('✓ Support word spoken correctly (yellow):', expectedWord, 'at index', newIndex);
@@ -340,10 +346,6 @@ const Practice = () => {
                       });
                       console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
                     }
-                    
-                    // Hide support word if any
-                    setSupportWord(null);
-                    setSupportWordIndex(null);
                     
                     // Clear any hesitation timer
                     if (hesitationTimerRef.current) {
@@ -386,30 +388,26 @@ const Practice = () => {
                       }, threshold);
                     }
                   } else {
-                    // Word doesn't match - show support word and handle next word logic
+                    // Word doesn't match
                     console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
                     
-                    // If support word is showing, this is the "next word" that should hide it
-                    if (supportWord && supportWordIndex !== null) {
+                    // If support word was showing, mark it as missed (red)
+                    if (wasSupportWordShowing && previousSupportWordIndex !== null) {
                       // Remove from hesitated (yellow) and mark as red (missed)
                       setHesitatedWordsIndices(prev => {
                         const updated = new Set(prev);
-                        updated.delete(supportWordIndex);
+                        updated.delete(previousSupportWordIndex);
                         return updated;
                       });
-                      setMissedWordsIndices(prev => new Set([...prev, supportWordIndex]));
-                      console.log('❌ Support word not spoken correctly (red):', supportWord, 'at index', supportWordIndex);
-                      
-                      // Hide support word
-                      setSupportWord(null);
-                      setSupportWordIndex(null);
+                      setMissedWordsIndices(prev => new Set([...prev, previousSupportWordIndex]));
+                      console.log('❌ Support word not spoken correctly (red):', allExpectedWords[previousSupportWordIndex], 'at index', previousSupportWordIndex);
                       
                       // Try to find the spoken word ahead
                       let found = false;
                       const maxLookAhead = 5;
                       
-                      for (let lookAhead = 1; lookAhead <= maxLookAhead && (supportWordIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
-                        const futureWord = allExpectedWords[supportWordIndex + lookAhead];
+                      for (let lookAhead = 1; lookAhead <= maxLookAhead && (previousSupportWordIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
+                        const futureWord = allExpectedWords[previousSupportWordIndex + lookAhead];
                         const cleanFutureWord = futureWord.toLowerCase().replace(/[^\w]/g, '');
                         
                         const isFutureMatch = cleanSpokenWord === cleanFutureWord ||
@@ -418,8 +416,8 @@ const Practice = () => {
                         
                         if (isFutureMatch) {
                           found = true;
-                          setSpokenWordsIndices(prev => new Set([...prev, supportWordIndex + lookAhead]));
-                          newIndex = supportWordIndex + lookAhead + 1;
+                          setSpokenWordsIndices(prev => new Set([...prev, previousSupportWordIndex + lookAhead]));
+                          newIndex = previousSupportWordIndex + lookAhead + 1;
                           console.log('✓ Found word after support word skip:', futureWord);
                           lastWordTimeRef.current = Date.now();
                           
@@ -440,16 +438,11 @@ const Practice = () => {
                       }
                       
                       if (!found) {
-                        newIndex = supportWordIndex + 1;
+                        newIndex = previousSupportWordIndex + 1;
                       }
                     } else {
-                      // No support word showing - first incorrect word, show support word and mark yellow
-                      const wordToShow = allExpectedWords[newIndex];
-                      setSupportWord(wordToShow);
-                      setSupportWordIndex(newIndex);
-                      setHesitatedWordsIndices(prev => new Set([...prev, newIndex]));
-                      console.log('💡 Support word shown after incorrect word (marked yellow):', wordToShow, 'at index:', newIndex);
-                      // Don't advance index yet - wait for next word
+                      // No support word was showing - continue processing
+                      newIndex++;
                     }
                   }
                 }
@@ -778,7 +771,7 @@ const Practice = () => {
 
         {/* Support Word Prompt */}
         {supportWord && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none animate-fade-in">
             <div className="bg-yellow-100 text-black px-12 py-8 rounded-2xl shadow-2xl border-4 border-yellow-400 animate-scale-in">
               <p className="text-6xl font-bold text-center uppercase tracking-wide">
                 {supportWord}
