@@ -7,6 +7,99 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Common word variations that should be accepted as equivalent
+const COMMON_VARIATIONS: Record<string, string[]> = {
+  "going to": ["gonna", "going to"],
+  "want to": ["wanna", "want to"],
+  "got to": ["gotta", "got to"],
+  "kind of": ["kinda", "kind of"],
+  "sort of": ["sorta", "sort of"],
+  "because": ["because", "cause", "cuz"],
+  "them": ["them", "'em"],
+  "you": ["you", "ya", "yah"],
+  "and": ["and", "n"],
+};
+
+// Acceptable homophone swaps (speech recognition errors)
+const ACCEPTABLE_SWAPS = [
+  ["their", "there", "they're"],
+  ["your", "you're"],
+  ["its", "it's"],
+  ["to", "too", "two"],
+  ["then", "than"],
+  ["here", "hear"],
+  ["know", "no"],
+  ["write", "right"],
+  ["see", "sea"],
+  ["for", "four"],
+];
+
+// Filler words to ignore
+const FILLER_WORDS = new Set([
+  "um", "uh", "like", "you know", "sort of", "kind of", 
+  "i mean", "actually", "basically", "literally", "seriously"
+]);
+
+// Levenshtein distance for fuzzy word matching
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+// Check if two words are similar enough (fuzzy matching)
+function isSimilarWord(word1: string, word2: string): boolean {
+  const w1 = word1.toLowerCase().trim();
+  const w2 = word2.toLowerCase().trim();
+  
+  // Exact match
+  if (w1 === w2) return true;
+  
+  // Check common variations
+  for (const [standard, variations] of Object.entries(COMMON_VARIATIONS)) {
+    if (variations.includes(w1) && variations.includes(w2)) return true;
+  }
+  
+  // Check acceptable swaps (homophones)
+  for (const group of ACCEPTABLE_SWAPS) {
+    if (group.includes(w1) && group.includes(w2)) return true;
+  }
+  
+  // Length difference too large = different words
+  const maxLength = Math.max(w1.length, w2.length);
+  if (Math.abs(w1.length - w2.length) > maxLength * 0.4) return false;
+  
+  // Calculate Levenshtein distance
+  const distance = levenshteinDistance(w1, w2);
+  
+  // Allow 1-2 character differences for words > 4 letters
+  if (w1.length > 4 && distance <= 2) return true;
+  if (w1.length <= 4 && distance <= 1) return true;
+  
+  return false;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -105,6 +198,50 @@ serve(async (req) => {
     const spokenText = transcriptionData.text;
     console.log('Transcription complete:', spokenText.substring(0, 100));
 
+    // Pre-analysis: Check word overlap with fuzzy matching
+    console.log('Pre-analysis: Checking word overlap...');
+    const originalWords = originalText.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+    const spokenWords = spokenText.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+    
+    // Remove filler words from spoken text
+    const cleanSpoken = spokenWords.filter((w: string) => !FILLER_WORDS.has(w));
+    
+    // Count fuzzy matches
+    let matchCount = 0;
+    const matched = new Set<number>();
+    for (const origWord of originalWords) {
+      for (let i = 0; i < cleanSpoken.length; i++) {
+        if (!matched.has(i) && isSimilarWord(origWord, cleanSpoken[i])) {
+          matchCount++;
+          matched.add(i);
+          break;
+        }
+      }
+    }
+    
+    const overlapPercent = originalWords.length > 0 ? (matchCount / originalWords.length) * 100 : 0;
+    console.log(`Word overlap: ${matchCount}/${originalWords.length} (${overlapPercent.toFixed(1)}%)`);
+    
+    // If overlap is too low, it's likely a different speech
+    if (overlapPercent < 35) {
+      console.log('⚠️ Low word overlap detected - likely different speech');
+      return new Response(
+        JSON.stringify({
+          transcription: spokenText,
+          accuracy: Math.min(15, overlapPercent / 2),
+          missedWords: originalWords.slice(0, 20),
+          delayedWords: [],
+          connectorWords: [],
+          difficultyScore: 50,
+          analysis: "The spoken content doesn't match the original speech. Please speak the correct speech.",
+          cueText: originalText,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Step 2: Use AI to analyze the speech and identify issues
     console.log('Analyzing speech patterns...');
     
@@ -115,17 +252,37 @@ Spoken text: "${spokenText}"
 Language: ${audioLanguage}
 Speaker skill level: ${skillLevel || 'beginner'}
 
-CRITICAL INSTRUCTIONS:
-- The user is practicing the FULL speech above
-- They may only be shown simplified keywords as cues, but they must speak the ENTIRE speech
-- Compare the spoken text against the FULL original speech text word by word
-- Calculate accuracy based on how much of the FULL speech was spoken correctly
-- Be LENIENT with pronunciation variations and similar-sounding words
-- Consider words correct if they sound similar (e.g., "Eva" vs "Ebba", "shares" vs "chairs")
-- PENALIZE WORD REPETITIONS: If the user repeats words unnecessarily (not in original text), reduce accuracy
-- Only mark words as MISSED if they are completely absent from spoken text
-- Only mark as DELAYED if there's an obvious long pause before the word
-- Focus on the overall message delivery and flow of the COMPLETE speech
+VALIDATION RULES - BALANCED APPROACH:
+
+ACCEPT AS CORRECT:
+✅ Contractions and expansions: "I'm" = "I am", "gonna" = "going to", "wanna" = "want to", "gotta" = "got to"
+✅ Pronunciation variants of the SAME word: Different pronunciations of "tomato", "either", regional accents
+✅ Speech recognition errors (homophones): "their/there/they're", "your/you're", "its/it's", "to/too/two"
+✅ Filler words: Completely IGNORE "um", "uh", "like", "you know", "I mean" - don't penalize at all
+✅ Minor word order changes IF natural: "I really think" = "I think really" (accept if meaning unchanged)
+✅ Common contractions: "cause" = "because", "'em" = "them", "ya" = "you"
+
+REJECT AS INCORRECT:
+❌ Semantically different words: "shares" ≠ "chairs", "Alex" ≠ "Ebba", "investment" ≠ "environment", "morning" ≠ "evening"
+❌ Completely missing words (not just skipped filler words)
+❌ Speaking about a different topic or subject matter entirely
+❌ Adding long segments of completely unrelated content
+❌ Excessive word repetition that changes meaning (saying same word 5+ times)
+
+ACCURACY CALCULATION:
+- Base accuracy = (matching words / total original words) × 100
+- Use fuzzy matching: Allow 1-2 character differences in similar words
+- IGNORE filler word differences completely
+- Only penalize if word is semantically different OR completely missing
+- If spoken text is about a completely different topic, accuracy should be 0-20%
+- If 70%+ words match but topic is different, accuracy should be 30-50%
+- Natural pronunciation variations should NOT reduce accuracy
+
+CONTEXT VALIDATION:
+- Check if the general topic/theme matches (not just individual words)
+- Example: Original about "daily routine" but spoken about "investment strategies" = different speech (0-20% accuracy)
+- Example: Original about "Alex's morning" but spoken about "Sarah's evening" = different speech (0-20% accuracy)
+- Example: Original about "climate change" but spoken about "weather forecast" = different speech (30-50% accuracy)
 
 CONNECTOR WORD DETECTION:
 Identify small connector words (articles, prepositions, conjunctions) from the original text:
@@ -139,12 +296,12 @@ Calculate based on:
 - Speaking pace required
 
 Compare them and identify:
-1. accuracy: percentage match (0-100) based on how much of the FULL original speech was spoken correctly, MINUS penalties for word repetitions
-2. missedWords: array of words COMPLETELY missing from spoken text (be strict - only clear omissions from the FULL speech)
+1. accuracy: percentage match (0-100) based on fuzzy word matching with natural speech tolerance
+2. missedWords: array of words COMPLETELY missing from spoken text (only clear omissions, ignore acceptable variations)
 3. delayedWords: array of words with obvious long pauses (be strict - only clear hesitations)
-4. connectorWords: array of connector words found in the original text (small words that could be hidden in practice)
+4. connectorWords: array of connector words found in the original text
 5. difficultyScore: 0-100 score indicating speech complexity
-6. analysis: brief encouraging feedback about their delivery of the FULL speech
+6. analysis: brief encouraging feedback focusing on content accuracy
 
 Return ONLY this JSON structure with no extra text:
 {
@@ -224,6 +381,28 @@ Return ONLY this JSON structure with no extra text:
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
       throw new Error(`JSON parse error: ${errorMessage}`);
     }
+
+    // Post-analysis validation: Safety checks
+    console.log('Post-analysis validation...');
+    
+    // Safety check 1: If AI gave high accuracy but fuzzy overlap is low, adjust
+    if (analysis.accuracy > 60 && overlapPercent < 50) {
+      console.log('⚠️ High AI accuracy but low word overlap - adjusting down');
+      const adjustedAccuracy = Math.max(overlapPercent * 0.8, 20);
+      analysis.accuracy = Math.min(analysis.accuracy, adjustedAccuracy);
+      analysis.analysis = "The content doesn't match the original speech closely enough. Focus on speaking the exact words from your speech.";
+    }
+    
+    // Safety check 2: If too many words marked as missed, cap accuracy
+    const missedPercentage = originalWords.length > 0 
+      ? (analysis.missedWords.length / originalWords.length) * 100 
+      : 0;
+    if (missedPercentage > 50) {
+      console.log(`⚠️ High missed percentage (${missedPercentage.toFixed(1)}%) - capping accuracy`);
+      analysis.accuracy = Math.min(analysis.accuracy, 50 - missedPercentage);
+    }
+    
+    console.log(`Final accuracy after validation: ${analysis.accuracy}%`);
 
     // Get schedule info to determine practice history
     const { data: schedule } = await supabase
