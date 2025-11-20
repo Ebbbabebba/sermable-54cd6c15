@@ -145,8 +145,23 @@ const BracketedTextDisplay = ({
             );
           });
         } else {
-          // Hidden segment - bracket shows current word being processed only
-          // Count processed words (all states: correct, hesitated, missed)
+          // Hidden segment - only show words that are red (missed) or yellow (hesitated)
+          // Words said correctly without support should remain hidden
+          
+          // Collect words that need to stay visible (red or yellow only)
+          const visibleErrorWords: Array<{ word: string, globalIndex: number, isMissed: boolean, isHesitated: boolean }> = [];
+          
+          segment.words.forEach((word, idx) => {
+            const globalIdx = segment.startIndex + idx;
+            const isMissed = missedWordsIndices.has(globalIdx);
+            const isHesitated = hesitatedWordsIndices.has(globalIdx);
+            
+            if (isMissed || isHesitated) {
+              visibleErrorWords.push({ word, globalIndex: globalIdx, isMissed, isHesitated });
+            }
+          });
+          
+          // Count all processed words (including correctly spoken ones)
           const processedCount = segment.words.filter((_, idx) => {
             const globalIdx = segment.startIndex + idx;
             return spokenWordsIndices.has(globalIdx) || 
@@ -155,27 +170,22 @@ const BracketedTextDisplay = ({
           }).length;
           
           const allProcessed = processedCount === segment.words.length;
+          const hasErrors = visibleErrorWords.length > 0;
           
-          // Determine what to show in the bracket
-          let bracketContent: string[] = [];
-          let bracketState: "empty" | "filling" | "complete" = "empty";
+          // Determine bracket state
+          let bracketState: "empty" | "filling" | "complete" | "error" = "empty";
           
-          if (allProcessed) {
-            // All words processed - show empty green bracket
-            bracketContent = [];
+          if (allProcessed && !hasErrors) {
+            // All words processed correctly - show empty green bracket
             bracketState = "complete";
+          } else if (hasErrors) {
+            // Some words have errors - show them
+            bracketState = "error";
           } else if (processedCount > 0) {
-            // Some words processed - show the actual words spoken
-            bracketContent = segment.words.filter((_, idx) => {
-              const globalIdx = segment.startIndex + idx;
-              return spokenWordsIndices.has(globalIdx) || 
-                     hesitatedWordsIndices.has(globalIdx) || 
-                     missedWordsIndices.has(globalIdx);
-            });
+            // Some words processed (correctly) - filling but nothing to show
             bracketState = "filling";
           } else {
             // No words processed yet - empty blue pulsing bracket
-            bracketContent = [];
             bracketState = "empty";
           }
           
@@ -190,6 +200,7 @@ const BracketedTextDisplay = ({
               className={cn(
                 "px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1 whitespace-nowrap",
                 bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500",
+                bracketState === "error" && "bg-muted/20 border-2 border-muted-foreground/40",
                 bracketState === "filling" && "bg-primary/10 border-2 border-primary/40",
                 bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-2 border-primary animate-pulse",
                 bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/40"
@@ -198,22 +209,32 @@ const BracketedTextDisplay = ({
               <span className={cn(
                 "font-mono text-sm",
                 bracketState === "complete" && "text-green-600 dark:text-green-400",
+                bracketState === "error" && "text-muted-foreground/50",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
               )}>
                 [
               </span>
-              {bracketContent.length > 0 && (
-                <span className={cn(
-                  "text-sm px-1",
-                  bracketState === "filling" && "text-foreground/70"
-                )}>
-                  {bracketContent.join(" ")}
-                </span>
+              {visibleErrorWords.length > 0 && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  {visibleErrorWords.map((errorWord, idx) => (
+                    <span
+                      key={`${errorWord.globalIndex}-${idx}`}
+                      className={cn(
+                        "text-sm px-1.5 py-0.5 rounded transition-all duration-300",
+                        errorWord.isMissed && "bg-red-500/20 text-red-700 dark:text-red-400 font-semibold",
+                        !errorWord.isMissed && errorWord.isHesitated && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 font-semibold"
+                      )}
+                    >
+                      {errorWord.word}
+                    </span>
+                  ))}
+                </div>
               )}
               <span className={cn(
                 "font-mono text-sm",
                 bracketState === "complete" && "text-green-600 dark:text-green-400",
+                bracketState === "error" && "text-muted-foreground/50",
                 bracketState === "filling" && "text-primary",
                 bracketState === "empty" && "text-muted-foreground/50"
               )}>
