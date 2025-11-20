@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import "./SpeechTrainingLine.css";
+import { Check, Circle } from "lucide-react";
 
 interface BracketedTextDisplayProps {
   text: string;
@@ -115,10 +116,30 @@ const BracketedTextDisplay = ({
     });
   }
 
+  // Split large hidden segments into smaller chunks (max 4 words per bracket)
+  const MAX_WORDS_PER_BRACKET = 4;
+  const finalSegments: Array<{ words: string[], isVisible: boolean, startIndex: number }> = [];
+  
+  segments.forEach(segment => {
+    if (!segment.isVisible && segment.words.length > MAX_WORDS_PER_BRACKET) {
+      // Split this hidden segment into smaller chunks
+      for (let i = 0; i < segment.words.length; i += MAX_WORDS_PER_BRACKET) {
+        const chunkWords = segment.words.slice(i, i + MAX_WORDS_PER_BRACKET);
+        finalSegments.push({
+          words: chunkWords,
+          isVisible: false,
+          startIndex: segment.startIndex + i
+        });
+      }
+    } else {
+      finalSegments.push(segment);
+    }
+  });
+
 
   return (
     <div className={cn("speech-line flex flex-wrap gap-1 items-center", className)}>
-      {segments.map((segment, segmentIndex) => {
+      {finalSegments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
           // Show individual words inline with circles
           return segment.words.map((word, wordIndex) => {
@@ -198,14 +219,22 @@ const BracketedTextDisplay = ({
             <div
               key={segmentIndex}
               className={cn(
-                "px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-1 whitespace-nowrap",
+                "px-3 py-2 rounded-full transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap relative",
                 bracketState === "complete" && "bg-green-50 dark:bg-green-900/20 border-2 border-green-500",
                 bracketState === "error" && "bg-muted/20 border-2 border-muted-foreground/40",
-                bracketState === "filling" && "bg-primary/10 border-2 border-primary/40",
-                bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-2 border-primary animate-pulse",
+                bracketState === "filling" && "bg-primary/10 border-2 border-primary/50",
+                bracketState === "empty" && isCurrentBracket && "bg-primary/10 border-4 border-primary shadow-lg shadow-primary/50 scale-105 animate-pulse",
                 bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/40"
               )}
             >
+              {/* Icon indicator for bracket state */}
+              {bracketState === "complete" && (
+                <Check className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+              )}
+              {bracketState === "filling" && (
+                <Circle className="w-3 h-3 text-primary animate-pulse" />
+              )}
+              
               <span className={cn(
                 "font-mono text-sm",
                 bracketState === "complete" && "text-green-600 dark:text-green-400",
@@ -215,6 +244,24 @@ const BracketedTextDisplay = ({
               )}>
                 [
               </span>
+              
+              {/* Word count badge or progress indicator */}
+              {bracketState === "empty" && (
+                <span className={cn(
+                  "text-xs font-semibold px-1.5 py-0.5 rounded-full",
+                  isCurrentBracket ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}>
+                  {segment.words.length}
+                </span>
+              )}
+              
+              {bracketState === "filling" && (
+                <span className="text-xs font-semibold text-primary">
+                  {processedCount}/{segment.words.length}
+                </span>
+              )}
+              
+              {/* Error words display */}
               {visibleErrorWords.length > 0 && (
                 <div className="flex items-center gap-1 flex-wrap">
                   {visibleErrorWords.map((errorWord, idx) => (
@@ -229,8 +276,12 @@ const BracketedTextDisplay = ({
                       {errorWord.word}
                     </span>
                   ))}
+                  <span className="text-xs font-semibold text-muted-foreground ml-1">
+                    {visibleErrorWords.length}
+                  </span>
                 </div>
               )}
+              
               <span className={cn(
                 "font-mono text-sm",
                 bracketState === "complete" && "text-green-600 dark:text-green-400",
