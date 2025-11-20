@@ -59,9 +59,11 @@ const Practice = () => {
     showWordOnPause: true,
     animationStyle: 'playful',
     keywordMode: false,
-    hesitationThreshold: 3,
-    firstWordHesitationThreshold: 4,
+    hesitationThreshold: 5,
+    firstWordHesitationThreshold: 6,
   });
+  const [averageWordDelay, setAverageWordDelay] = useState<number>(2000); // Track user's average pace
+  const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
   const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWordsIndices, setSpokenWordsIndices] = useState<Set<number>>(new Set());
   const [hesitatedWordsIndices, setHesitatedWordsIndices] = useState<Set<number>>(new Set());
@@ -230,6 +232,8 @@ const Practice = () => {
     setSupportWord(null);
     setSupportWordIndex(null);
     lastWordTimeRef.current = Date.now();
+    wordTimingsRef.current = []; // Reset pace tracking
+    setAverageWordDelay(2000); // Reset to default pace
     
     // Clear any existing hesitation timer
     if (hesitationTimerRef.current) {
@@ -355,7 +359,22 @@ const Practice = () => {
                     
                     // Move to next expected word
                     newIndex++;
-                    lastWordTimeRef.current = Date.now();
+                    const currentTime = Date.now();
+                    const timeSinceLastWord = currentTime - lastWordTimeRef.current;
+                    lastWordTimeRef.current = currentTime;
+                    
+                    // Track word timing for adaptive pace (ignore very first word)
+                    if (newIndex > 1 && timeSinceLastWord < 10000) { // Ignore pauses > 10s
+                      wordTimingsRef.current.push(timeSinceLastWord);
+                      // Keep only last 10 timings for rolling average
+                      if (wordTimingsRef.current.length > 10) {
+                        wordTimingsRef.current.shift();
+                      }
+                      // Calculate average pace
+                      const avgPace = wordTimingsRef.current.reduce((a, b) => a + b, 0) / wordTimingsRef.current.length;
+                      setAverageWordDelay(avgPace);
+                      console.log('📊 Average speaking pace:', Math.round(avgPace), 'ms per word');
+                    }
                     
                     // Check if we've reached the last word - automatically stop recording
                     if (newIndex >= allExpectedWords.length) {
@@ -367,8 +386,14 @@ const Practice = () => {
                         }
                       }, 500); // Small delay to ensure last word is fully processed
                     } else {
-                      // Start hesitation timer for next word (shows support word after configured delay)
-                      const threshold = settings.hesitationThreshold * 1000;
+                      // Adaptive hesitation threshold based on user's speaking pace
+                      // Use whichever is longer: user's average pace + buffer, or configured threshold
+                      const basePace = averageWordDelay + 1500; // Add 1.5s buffer to average pace
+                      const configuredThreshold = settings.hesitationThreshold * 1000;
+                      const adaptiveThreshold = Math.max(basePace, configuredThreshold);
+                      
+                      console.log('⏱️ Adaptive threshold:', Math.round(adaptiveThreshold), 'ms (base:', Math.round(basePace), 'configured:', configuredThreshold, ')');
+                      
                       const capturedIndex = newIndex;
                       hesitationTimerRef.current = setTimeout(() => {
                         // Show support word and mark it yellow immediately
@@ -385,7 +410,7 @@ const Practice = () => {
                           updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
                           return updated;
                         });
-                      }, threshold);
+                      }, adaptiveThreshold);
                     }
                   } else {
                     // Word doesn't match
@@ -421,9 +446,12 @@ const Practice = () => {
                           console.log('✓ Found word after support word skip:', futureWord);
                           lastWordTimeRef.current = Date.now();
                           
-                          // Start hesitation timer for next word
+                          // Start adaptive hesitation timer for next word
                           if (newIndex < allExpectedWords.length) {
-                            const threshold = settings.hesitationThreshold * 1000;
+                            const basePace = averageWordDelay + 1500;
+                            const configuredThreshold = settings.hesitationThreshold * 1000;
+                            const adaptiveThreshold = Math.max(basePace, configuredThreshold);
+                            
                             const capturedIndex = newIndex;
                             hesitationTimerRef.current = setTimeout(() => {
                               const wordToShow = allExpectedWords[capturedIndex];
@@ -431,7 +459,7 @@ const Practice = () => {
                               setSupportWordIndex(capturedIndex);
                               setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
                               console.log('💡 Support word shown:', wordToShow);
-                            }, threshold);
+                            }, adaptiveThreshold);
                           }
                           break;
                         }
