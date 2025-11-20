@@ -769,13 +769,29 @@ const Practice = () => {
           </Button>
         </div>
 
-        {/* Support Word Prompt */}
+        {/* Enhanced Support Word Prompt with Hint */}
         {supportWord && (
           <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none animate-fade-in">
-            <div className="bg-yellow-100 text-black px-12 py-8 rounded-2xl shadow-2xl border-4 border-yellow-400 animate-scale-in">
-              <p className="text-6xl font-bold text-center uppercase tracking-wide">
-                {supportWord}
-              </p>
+            <div className="flex flex-col items-center gap-4">
+              {/* Hint: First 2 letters */}
+              <div className="bg-primary/10 text-primary px-6 py-3 rounded-full backdrop-blur-sm border border-primary/30 animate-pulse">
+                <p className="text-sm font-medium">
+                  Hint: {supportWord.slice(0, 2)}...
+                </p>
+              </div>
+              
+              {/* Full support word */}
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 text-black px-12 py-8 rounded-2xl shadow-2xl border-4 border-yellow-400 animate-scale-in relative">
+                <div className="absolute -top-3 -left-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                  Support Word
+                </div>
+                <p className="text-6xl font-bold text-center tracking-wide">
+                  {supportWord}
+                </p>
+                <p className="text-center text-sm text-gray-600 mt-2">
+                  Say this word to continue
+                </p>
+              </div>
             </div>
           </div>
         )}
