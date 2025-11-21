@@ -17,110 +17,6 @@ import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeS
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 
-// ===== FUZZY WORD MATCHING UTILITIES (SYNCED WITH BACKEND) =====
-
-// Levenshtein distance calculation for fuzzy matching
-function levenshteinDistance(a: string, b: string): number {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-  
-  const matrix: number[][] = [];
-  
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-  
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-  
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-  
-  return matrix[b.length][a.length];
-}
-
-// Common variations and acceptable word swaps
-const COMMON_VARIATIONS: Record<string, string[]> = {
-  "going to": ["gonna", "going to", "going", "to"],
-  "want to": ["wanna", "want to", "want", "to"],
-  "got to": ["gotta", "got to", "got", "to"],
-  "kind of": ["kinda", "kind of", "kind", "of"],
-  "sort of": ["sorta", "sort of", "sort", "of"],
-  "because": ["because", "cause", "cuz", "cos"],
-  "them": ["them", "em"],
-  "you": ["you", "ya", "yah"],
-  "have to": ["hafta", "have to", "have", "to"],
-  "ought to": ["oughta", "ought to", "ought", "to"],
-};
-
-const ACCEPTABLE_SWAPS = [
-  ["their", "there", "they're", "theyre"],
-  ["your", "you're", "youre"],
-  ["its", "it's"],
-  ["to", "too", "two"],
-  ["then", "than"],
-  ["whose", "who's", "whos"],
-  ["were", "we're", "where"],
-];
-
-const FILLER_WORDS = ['um', 'uh', 'like', 'you know', 'sort of', 'kind of', 'i mean', 'well', 'so', 'basically', 'actually', 'literally'];
-
-// Intelligent fuzzy word matching (same logic as backend)
-function isSimilarWord(spoken: string, expected: string): boolean {
-  const spokenLower = spoken.toLowerCase();
-  const expectedLower = expected.toLowerCase();
-  
-  // Exact match
-  if (spokenLower === expectedLower) return true;
-  
-  // Check common variations (contractions, informal speech)
-  for (const [canonical, variants] of Object.entries(COMMON_VARIATIONS)) {
-    if (variants.includes(spokenLower) && variants.includes(expectedLower)) {
-      return true;
-    }
-  }
-  
-  // Check acceptable swaps (homophones, common confusions)
-  for (const group of ACCEPTABLE_SWAPS) {
-    if (group.includes(spokenLower) && group.includes(expectedLower)) {
-      return true;
-    }
-  }
-  
-  // Length difference too large = different words
-  const maxLength = Math.max(spoken.length, expected.length);
-  if (Math.abs(spoken.length - expected.length) > maxLength * 0.4) {
-    return false;
-  }
-  
-  // Calculate Levenshtein distance for fuzzy matching
-  const distance = levenshteinDistance(spokenLower, expectedLower);
-  
-  // More tolerant matching - allow more character differences
-  // For longer words (>6 chars), allow up to 3 character differences
-  // For medium words (4-6 chars), allow up to 2 character differences  
-  // For short words (<=4 chars), allow 1 character difference
-  if (spoken.length > 6 && distance <= 3) return true;
-  if (spoken.length > 4 && distance <= 2) return true;
-  if (spoken.length <= 4 && distance <= 1) return true;
-  
-  return false;
-}
-
-// ===== END FUZZY MATCHING UTILITIES =====
-
 interface Speech {
   id: string;
   title: string;
@@ -163,8 +59,8 @@ const Practice = () => {
     showWordOnPause: true,
     animationStyle: 'playful',
     keywordMode: false,
-    hesitationThreshold: 2, // Yellow after 2 seconds
-    firstWordHesitationThreshold: 3, // First word can take a bit longer
+    hesitationThreshold: 5,
+    firstWordHesitationThreshold: 6,
   });
   const [averageWordDelay, setAverageWordDelay] = useState<number>(2000); // Track user's average pace
   const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
@@ -412,12 +308,6 @@ const Practice = () => {
               for (const word of newWords) {
                 const cleanSpokenWord = word.toLowerCase().replace(/[^\w]/g, '');
                 
-                // Filter filler words - they don't affect accuracy
-                if (FILLER_WORDS.includes(cleanSpokenWord)) {
-                  console.log('🗣️ Ignoring filler word:', cleanSpokenWord);
-                  continue;
-                }
-                
                 if (cleanSpokenWord && newIndex < allExpectedWords.length) {
                   // Hide support word immediately when ANY word is spoken
                   const wasSupportWordShowing = supportWord !== null;
@@ -430,15 +320,15 @@ const Practice = () => {
                   
                   console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', newIndex);
                   
-                  // Use intelligent fuzzy matching (same as backend)
-                  if (isSimilarWord(cleanSpokenWord, cleanExpectedWord)) {
-                    const distance = levenshteinDistance(cleanSpokenWord, cleanExpectedWord);
-                    console.log('✓ Word matched:', {
-                      spoken: cleanSpokenWord,
-                      expected: cleanExpectedWord,
-                      distance: distance,
-                      method: distance === 0 ? 'exact' : distance <= 2 ? 'fuzzy' : 'variation'
-                    });
+                  // Check if the spoken word matches the expected word (more flexible matching)
+                  const isExactMatch = cleanSpokenWord === cleanExpectedWord;
+                  const isPartialMatch = cleanSpokenWord.includes(cleanExpectedWord) || 
+                                        cleanExpectedWord.includes(cleanSpokenWord);
+                  const isSimilar = cleanSpokenWord.length > 2 && cleanExpectedWord.length > 2 &&
+                                   (cleanSpokenWord.startsWith(cleanExpectedWord.slice(0, 3)) ||
+                                    cleanExpectedWord.startsWith(cleanSpokenWord.slice(0, 3)));
+                  
+                  if (isExactMatch || isPartialMatch || isSimilar) {
                     // Check if this word was shown as support word
                     if (wasSupportWordShowing && previousSupportWordIndex === newIndex) {
                       // User said it correctly after support word - mark yellow
@@ -498,7 +388,7 @@ const Practice = () => {
                     } else {
                       // Adaptive hesitation threshold based on user's speaking pace
                       // Use whichever is longer: user's average pace + buffer, or configured threshold
-                      const basePace = averageWordDelay + 2000; // 2s buffer for hesitation threshold
+                      const basePace = averageWordDelay + 1500; // Add 1.5s buffer to average pace
                       const configuredThreshold = settings.hesitationThreshold * 1000;
                       const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                       
@@ -523,13 +413,8 @@ const Practice = () => {
                       }, adaptiveThreshold);
                     }
                   } else {
-                    const distance = levenshteinDistance(cleanSpokenWord, cleanExpectedWord);
-                    console.log('❌ Word rejected:', {
-                      spoken: cleanSpokenWord,
-                      expected: cleanExpectedWord,
-                      distance: distance,
-                      reason: 'too different'
-                    });
+                    // Word doesn't match
+                    console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
                     
                     // If support word was showing, mark it as missed (red)
                     if (wasSupportWordShowing && previousSupportWordIndex !== null) {
@@ -550,8 +435,11 @@ const Practice = () => {
                         const futureWord = allExpectedWords[previousSupportWordIndex + lookAhead];
                         const cleanFutureWord = futureWord.toLowerCase().replace(/[^\w]/g, '');
                         
-                        // Use fuzzy matching for lookahead
-                        if (isSimilarWord(cleanSpokenWord, cleanFutureWord)) {
+                        const isFutureMatch = cleanSpokenWord === cleanFutureWord ||
+                                             cleanSpokenWord.includes(cleanFutureWord) ||
+                                             cleanFutureWord.includes(cleanSpokenWord);
+                        
+                        if (isFutureMatch) {
                           found = true;
                           setSpokenWordsIndices(prev => new Set([...prev, previousSupportWordIndex + lookAhead]));
                           newIndex = previousSupportWordIndex + lookAhead + 1;
@@ -560,7 +448,7 @@ const Practice = () => {
                           
                           // Start adaptive hesitation timer for next word
                           if (newIndex < allExpectedWords.length) {
-                            const basePace = averageWordDelay + 2000; // 2s buffer for hesitation threshold
+                            const basePace = averageWordDelay + 1500;
                             const configuredThreshold = settings.hesitationThreshold * 1000;
                             const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                             
@@ -581,31 +469,8 @@ const Practice = () => {
                         newIndex = previousSupportWordIndex + 1;
                       }
                     } else {
-                      // No support word showing - look ahead to see if user skipped this word
-                      let found = false;
-                      for (let lookahead = 1; lookahead <= 4 && (newIndex + lookahead) < allExpectedWords.length; lookahead++) {
-                        const nextExpectedWord = allExpectedWords[newIndex + lookahead];
-                        const cleanNextExpected = nextExpectedWord.toLowerCase().replace(/[^\w]/g, '');
-                        
-                        // Use fuzzy matching for lookahead
-                        if (isSimilarWord(cleanSpokenWord, cleanNextExpected)) {
-                          // User jumped ahead - mark skipped words as RED (missed)
-                          console.log(`❌ User skipped ${lookahead} word(s) - marking as RED`);
-                          for (let i = newIndex; i < newIndex + lookahead; i++) {
-                            setMissedWordsIndices(prev => new Set([...prev, i]));
-                            console.log('❌ Word SKIPPED (marked red):', allExpectedWords[i], 'at index', i);
-                          }
-                          newIndex += lookahead;
-                          found = true;
-                          break;
-                        }
-                      }
-                      
-                      if (!found) {
-                        console.log('⚠️ Unrecognized word spoken. Expected:', cleanExpectedWord, 'but got:', cleanSpokenWord);
-                        // Don't mark as red immediately - let hesitation timer handle it
-                        // Just ignore this word and continue waiting for the correct word
-                      }
+                      // No support word was showing - continue processing
+                      newIndex++;
                     }
                   }
                 }
@@ -911,7 +776,7 @@ const Practice = () => {
   // Focus Mode: Full-screen minimal practice view
   if (isPracticing && !showResults) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 flex flex-col relative">
+      <div className="min-h-screen bg-white flex flex-col">
         <LoadingOverlay isVisible={isProcessing} />
         
         {/* Exit button */}
