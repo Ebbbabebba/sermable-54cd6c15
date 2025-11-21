@@ -498,7 +498,7 @@ const Practice = () => {
                     } else {
                       // Adaptive hesitation threshold based on user's speaking pace
                       // Use whichever is longer: user's average pace + buffer, or configured threshold
-                      const basePace = averageWordDelay + 2500; // Add 2.5s buffer to average pace for more forgiveness
+                      const basePace = averageWordDelay + 3500; // 3.5s buffer - more forgiving
                       const configuredThreshold = settings.hesitationThreshold * 1000;
                       const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                       
@@ -589,17 +589,16 @@ const Practice = () => {
                         
                         // Use fuzzy matching for lookahead
                         if (isSimilarWord(cleanSpokenWord, cleanNextExpected)) {
-                          // User jumped ahead - only mark skipped words as missed if jump is more than 1 word
-                          if (lookahead > 1) {
+                          // User jumped ahead - only mark as hesitated (not missed) if jump is significant
+                          if (lookahead > 2) {
+                            // Mark skipped words as hesitated (yellow) not missed (red)
+                            console.log(`⚠️ User jumped ahead by ${lookahead} words - marking as hesitated`);
                             for (let i = newIndex; i < newIndex + lookahead; i++) {
-                              setMissedWordsIndices(prev => new Set([...prev, i]));
-                              console.log('❌ Word skipped/missed:', allExpectedWords[i], 'at index', i);
+                              setHesitatedWordsIndices(prev => new Set([...prev, i]));
+                              console.log('⚠️ Word skipped (marked yellow):', allExpectedWords[i], 'at index', i);
                             }
-                          } else {
-                            // Just 1 word ahead - mark only the skipped word as missed
-                            setMissedWordsIndices(prev => new Set([...prev, newIndex]));
-                            console.log('❌ Word skipped:', allExpectedWords[newIndex], 'at index', newIndex);
                           }
+                          // If only 1-2 words ahead, don't mark anything - user is just speaking naturally
                           newIndex += lookahead;
                           found = true;
                           break;
