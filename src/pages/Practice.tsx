@@ -163,8 +163,8 @@ const Practice = () => {
     showWordOnPause: true,
     animationStyle: 'playful',
     keywordMode: false,
-    hesitationThreshold: 6,
-    firstWordHesitationThreshold: 8,
+    hesitationThreshold: 2, // Yellow after 2 seconds
+    firstWordHesitationThreshold: 3, // First word can take a bit longer
   });
   const [averageWordDelay, setAverageWordDelay] = useState<number>(2000); // Track user's average pace
   const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
@@ -498,7 +498,7 @@ const Practice = () => {
                     } else {
                       // Adaptive hesitation threshold based on user's speaking pace
                       // Use whichever is longer: user's average pace + buffer, or configured threshold
-                      const basePace = averageWordDelay + 3500; // 3.5s buffer - more forgiving
+                      const basePace = averageWordDelay + 2000; // 2s buffer for hesitation threshold
                       const configuredThreshold = settings.hesitationThreshold * 1000;
                       const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                       
@@ -560,7 +560,7 @@ const Practice = () => {
                           
                           // Start adaptive hesitation timer for next word
                           if (newIndex < allExpectedWords.length) {
-                            const basePace = averageWordDelay + 2500;
+                            const basePace = averageWordDelay + 2000; // 2s buffer for hesitation threshold
                             const configuredThreshold = settings.hesitationThreshold * 1000;
                             const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                             
@@ -589,16 +589,12 @@ const Practice = () => {
                         
                         // Use fuzzy matching for lookahead
                         if (isSimilarWord(cleanSpokenWord, cleanNextExpected)) {
-                          // User jumped ahead - only mark as hesitated (not missed) if jump is significant
-                          if (lookahead > 2) {
-                            // Mark skipped words as hesitated (yellow) not missed (red)
-                            console.log(`⚠️ User jumped ahead by ${lookahead} words - marking as hesitated`);
-                            for (let i = newIndex; i < newIndex + lookahead; i++) {
-                              setHesitatedWordsIndices(prev => new Set([...prev, i]));
-                              console.log('⚠️ Word skipped (marked yellow):', allExpectedWords[i], 'at index', i);
-                            }
+                          // User jumped ahead - mark skipped words as RED (missed)
+                          console.log(`❌ User skipped ${lookahead} word(s) - marking as RED`);
+                          for (let i = newIndex; i < newIndex + lookahead; i++) {
+                            setMissedWordsIndices(prev => new Set([...prev, i]));
+                            console.log('❌ Word SKIPPED (marked red):', allExpectedWords[i], 'at index', i);
                           }
-                          // If only 1-2 words ahead, don't mark anything - user is just speaking naturally
                           newIndex += lookahead;
                           found = true;
                           break;
