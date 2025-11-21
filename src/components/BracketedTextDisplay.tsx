@@ -350,7 +350,11 @@ const BracketedTextDisplay = ({
                     ))}
                     <span className={cn(
                       "text-xs font-semibold px-2 py-1 rounded-full ml-1",
-                      visibleErrorWords.some(w => w.isMissed) ? "bg-red-500/30 text-red-700" : "bg-yellow-500/30 text-yellow-700"
+                      visibleErrorWords.some(w => w.isMissed) && visibleErrorWords.some(w => w.isHesitated && !w.isMissed)
+                        ? "bg-gradient-to-r from-red-500/30 to-yellow-500/30 text-red-700"
+                        : visibleErrorWords.some(w => w.isMissed)
+                        ? "bg-red-500/30 text-red-700"
+                        : "bg-yellow-500/30 text-yellow-700"
                     )}>
                       {visibleErrorWords.length}
                     </span>
