@@ -93,7 +93,8 @@ function isSimilarWord(word1: string, word2: string): boolean {
   // Calculate Levenshtein distance
   const distance = levenshteinDistance(w1, w2);
   
-  // Allow 1-2 character differences for words > 4 letters
+  // Match frontend tolerance - more lenient for natural speech
+  if (w1.length > 6 && distance <= 3) return true;
   if (w1.length > 4 && distance <= 2) return true;
   if (w1.length <= 4 && distance <= 1) return true;
   
