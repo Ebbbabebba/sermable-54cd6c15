@@ -108,7 +108,11 @@ function isSimilarWord(spoken: string, expected: string): boolean {
   // Calculate Levenshtein distance for fuzzy matching
   const distance = levenshteinDistance(spokenLower, expectedLower);
   
-  // Allow 1-2 character differences for words > 4 letters (e.g., "shars" = "shares")
+  // More tolerant matching - allow more character differences
+  // For longer words (>6 chars), allow up to 3 character differences
+  // For medium words (4-6 chars), allow up to 2 character differences  
+  // For short words (<=4 chars), allow 1 character difference
+  if (spoken.length > 6 && distance <= 3) return true;
   if (spoken.length > 4 && distance <= 2) return true;
   if (spoken.length <= 4 && distance <= 1) return true;
   

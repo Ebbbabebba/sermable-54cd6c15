@@ -295,20 +295,10 @@ const BracketedTextDisplay = ({
                 <Circle className="w-3 h-3 text-primary animate-pulse" />
               )}
               
-              <span className={cn(
-                "font-mono text-sm",
-                bracketState === "complete" && "text-green-600 dark:text-green-400",
-                bracketState === "error" && "text-muted-foreground/50",
-                bracketState === "filling" && "text-primary",
-                bracketState === "empty" && "text-muted-foreground/50"
-              )}>
-                [
-              </span>
-              
               {/* Word count badge or progress indicator */}
               {bracketState === "empty" && (
                 <span className={cn(
-                  "text-xs font-semibold px-1.5 py-0.5 rounded-full",
+                  "text-xs font-semibold px-2 py-1 rounded-full",
                   isCurrentBracket ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 )}>
                   {segment.words.length}
@@ -316,7 +306,9 @@ const BracketedTextDisplay = ({
               )}
               
               {bracketState === "filling" && (
-                <span className="text-xs font-semibold text-primary">
+                <span className={cn(
+                  "text-xs font-semibold px-2 py-1 rounded-full bg-primary/20 text-primary"
+                )}>
                   {processedCount}/{segment.words.length}
                 </span>
               )}
@@ -357,7 +349,7 @@ const BracketedTextDisplay = ({
                       </Tooltip>
                     ))}
                     <span className={cn(
-                      "text-xs font-semibold px-1.5 py-0.5 rounded-full ml-1",
+                      "text-xs font-semibold px-2 py-1 rounded-full ml-1",
                       visibleErrorWords.some(w => w.isMissed) ? "bg-red-500/30 text-red-700" : "bg-yellow-500/30 text-yellow-700"
                     )}>
                       {visibleErrorWords.length}
@@ -365,16 +357,6 @@ const BracketedTextDisplay = ({
                   </div>
                 </TooltipProvider>
               )}
-              
-              <span className={cn(
-                "font-mono text-sm",
-                bracketState === "complete" && "text-green-600 dark:text-green-400",
-                bracketState === "error" && "text-muted-foreground/50",
-                bracketState === "filling" && "text-primary",
-                bracketState === "empty" && "text-muted-foreground/50"
-              )}>
-                ]
-              </span>
             </div>
           );
         }
