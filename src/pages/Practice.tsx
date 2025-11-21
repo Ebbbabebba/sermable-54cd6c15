@@ -907,7 +907,7 @@ const Practice = () => {
   // Focus Mode: Full-screen minimal practice view
   if (isPracticing && !showResults) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 flex flex-col relative">
         <LoadingOverlay isVisible={isProcessing} />
         
         {/* Exit button */}
