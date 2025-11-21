@@ -34,7 +34,28 @@ const BracketedTextDisplay = ({
   isRecording,
   className 
 }: BracketedTextDisplayProps) => {
-  const words = text.split(/\s+/).filter(w => w.trim());
+  // Split into sentences first to respect sentence boundaries
+  const sentences = text.split(/([.!?]+)/).filter(s => s.trim());
+  
+  // Process sentences and words, preserving punctuation separately
+  const words: string[] = [];
+  const sentenceBreaks = new Set<number>(); // Track where sentences end
+  
+  sentences.forEach((sentence, idx) => {
+    // Skip punctuation-only segments
+    if (/^[.!?]+$/.test(sentence)) {
+      return;
+    }
+    
+    const sentenceWords = sentence.split(/\s+/).filter(w => w.trim());
+    sentenceWords.forEach(word => words.push(word));
+    
+    // Mark the end of this sentence
+    if (words.length > 0) {
+      sentenceBreaks.add(words.length - 1);
+    }
+  });
+  
   const totalWords = words.length;
   
   // Calculate which words should be visible based on importance
@@ -82,7 +103,7 @@ const BracketedTextDisplay = ({
     }
   }
 
-  // Group words into segments of visible/hidden
+  // Group words into segments of visible/hidden, respecting sentence boundaries
   const segments: Array<{ words: string[], isVisible: boolean, startIndex: number }> = [];
   let currentSegment: string[] = [];
   let currentSegmentVisible = visibleIndices.has(0);
@@ -90,8 +111,20 @@ const BracketedTextDisplay = ({
 
   words.forEach((word, index) => {
     const shouldBeVisible = visibleIndices.has(index);
+    const isSentenceEnd = sentenceBreaks.has(index);
     
-    if (shouldBeVisible !== currentSegmentVisible) {
+    // Force new segment at sentence boundaries (no dots in brackets)
+    if (isSentenceEnd && currentSegment.length > 0) {
+      currentSegment.push(word);
+      segments.push({ 
+        words: currentSegment, 
+        isVisible: currentSegmentVisible,
+        startIndex: segmentStartIndex
+      });
+      currentSegment = [];
+      segmentStartIndex = index + 1;
+      currentSegmentVisible = visibleIndices.has(index + 1);
+    } else if (shouldBeVisible !== currentSegmentVisible) {
       // Save current segment and start new one
       if (currentSegment.length > 0) {
         segments.push({ 
