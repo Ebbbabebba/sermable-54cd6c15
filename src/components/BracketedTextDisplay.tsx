@@ -172,7 +172,7 @@ const BracketedTextDisplay = ({
 
 
   return (
-    <div className={cn("speech-line flex flex-wrap gap-1 items-center", className)}>
+    <div className={cn("speech-line flex flex-wrap gap-1 items-center text-2xl", className)}>
       {finalSegments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
           // Show individual words inline with circles
