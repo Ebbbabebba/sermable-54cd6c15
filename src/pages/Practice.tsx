@@ -159,8 +159,8 @@ const Practice = () => {
     showWordOnPause: true,
     animationStyle: 'playful',
     keywordMode: false,
-    hesitationThreshold: 5,
-    firstWordHesitationThreshold: 6,
+    hesitationThreshold: 6,
+    firstWordHesitationThreshold: 8,
   });
   const [averageWordDelay, setAverageWordDelay] = useState<number>(2000); // Track user's average pace
   const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
@@ -494,7 +494,7 @@ const Practice = () => {
                     } else {
                       // Adaptive hesitation threshold based on user's speaking pace
                       // Use whichever is longer: user's average pace + buffer, or configured threshold
-                      const basePace = averageWordDelay + 1500; // Add 1.5s buffer to average pace
+                      const basePace = averageWordDelay + 2500; // Add 2.5s buffer to average pace for more forgiveness
                       const configuredThreshold = settings.hesitationThreshold * 1000;
                       const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                       
@@ -556,7 +556,7 @@ const Practice = () => {
                           
                           // Start adaptive hesitation timer for next word
                           if (newIndex < allExpectedWords.length) {
-                            const basePace = averageWordDelay + 1500;
+                            const basePace = averageWordDelay + 2500;
                             const configuredThreshold = settings.hesitationThreshold * 1000;
                             const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                             
@@ -579,16 +579,22 @@ const Practice = () => {
                     } else {
                       // No support word showing - look ahead to see if user skipped this word
                       let found = false;
-                      for (let lookahead = 1; lookahead <= 2 && (newIndex + lookahead) < allExpectedWords.length; lookahead++) {
+                      for (let lookahead = 1; lookahead <= 4 && (newIndex + lookahead) < allExpectedWords.length; lookahead++) {
                         const nextExpectedWord = allExpectedWords[newIndex + lookahead];
                         const cleanNextExpected = nextExpectedWord.toLowerCase().replace(/[^\w]/g, '');
                         
                         // Use fuzzy matching for lookahead
                         if (isSimilarWord(cleanSpokenWord, cleanNextExpected)) {
-                          // User skipped word(s), mark them as missed
-                          for (let i = newIndex; i < newIndex + lookahead; i++) {
-                            setMissedWordsIndices(prev => new Set([...prev, i]));
-                            console.log('❌ Word skipped/missed:', allExpectedWords[i], 'at index', i);
+                          // User jumped ahead - only mark skipped words as missed if jump is more than 1 word
+                          if (lookahead > 1) {
+                            for (let i = newIndex; i < newIndex + lookahead; i++) {
+                              setMissedWordsIndices(prev => new Set([...prev, i]));
+                              console.log('❌ Word skipped/missed:', allExpectedWords[i], 'at index', i);
+                            }
+                          } else {
+                            // Just 1 word ahead - mark only the skipped word as missed
+                            setMissedWordsIndices(prev => new Set([...prev, newIndex]));
+                            console.log('❌ Word skipped:', allExpectedWords[newIndex], 'at index', newIndex);
                           }
                           newIndex += lookahead;
                           found = true;
@@ -597,10 +603,9 @@ const Practice = () => {
                       }
                       
                       if (!found) {
-                        console.log('❌ Wrong word spoken. Expected:', cleanExpectedWord, 'but got:', cleanSpokenWord);
-                        // Mark the expected word as missed (red)
-                        setMissedWordsIndices(prev => new Set([...prev, newIndex]));
-                        // Don't advance index - still waiting for this word
+                        console.log('⚠️ Unrecognized word spoken. Expected:', cleanExpectedWord, 'but got:', cleanSpokenWord);
+                        // Don't mark as red immediately - let hesitation timer handle it
+                        // Just ignore this word and continue waiting for the correct word
                       }
                     }
                   }
