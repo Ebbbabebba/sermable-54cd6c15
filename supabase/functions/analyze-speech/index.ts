@@ -369,6 +369,9 @@ Return ONLY this JSON structure with no extra text:
       if (!Array.isArray(analysis.connectorWords)) {
         analysis.connectorWords = [];
       }
+      if (!Array.isArray(analysis.extraWords)) {
+        analysis.extraWords = [];
+      }
       if (typeof analysis.difficultyScore !== 'number') {
         analysis.difficultyScore = 50;
       }
@@ -570,6 +573,7 @@ Return ONLY the simplified text.`;
         accuracy: analysis.accuracy,
         missedWords: analysis.missedWords || [],
         delayedWords: analysis.delayedWords || [],
+        extraWords: analysis.extraWords || [],
         connectorWords: analysis.connectorWords || [],
         difficultyScore: analysis.difficultyScore || 50,
         analysis: analysis.analysis || 'Good practice session',
