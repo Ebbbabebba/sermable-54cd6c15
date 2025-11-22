@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
+import { areWordsSimilar, isFillerWord } from "@/utils/wordMatching";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Play, RotateCcw, Presentation, Lock, Unlock, X, Square } from "lucide-react";
@@ -308,27 +309,29 @@ const Practice = () => {
               for (const word of newWords) {
                 const cleanSpokenWord = word.toLowerCase().replace(/[^\w]/g, '');
                 
+                // Ignore filler words completely
+                if (cleanSpokenWord && isFillerWord(cleanSpokenWord)) {
+                  console.log('🔇 Ignoring filler word:', cleanSpokenWord);
+                  continue;
+                }
+                
                 if (cleanSpokenWord && newIndex < allExpectedWords.length) {
-                  // Hide support word immediately when ANY word is spoken
                   const wasSupportWordShowing = supportWord !== null;
                   const previousSupportWordIndex = supportWordIndex;
-                  setSupportWord(null);
-                  setSupportWordIndex(null);
                   
                   const expectedWord = allExpectedWords[newIndex];
                   const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\w]/g, '');
                   
                   console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', newIndex);
                   
-                  // Check if the spoken word matches the expected word (more flexible matching)
-                  const isExactMatch = cleanSpokenWord === cleanExpectedWord;
-                  const isPartialMatch = cleanSpokenWord.includes(cleanExpectedWord) || 
-                                        cleanExpectedWord.includes(cleanSpokenWord);
-                  const isSimilar = cleanSpokenWord.length > 2 && cleanExpectedWord.length > 2 &&
-                                   (cleanSpokenWord.startsWith(cleanExpectedWord.slice(0, 3)) ||
-                                    cleanExpectedWord.startsWith(cleanSpokenWord.slice(0, 3)));
+                  // Use strict word matching from shared utility
+                  const isMatch = areWordsSimilar(cleanSpokenWord, cleanExpectedWord);
                   
-                  if (isExactMatch || isPartialMatch || isSimilar) {
+                  if (isMatch) {
+                    // MATCH - hide support word and process
+                    setSupportWord(null);
+                    setSupportWordIndex(null);
+                    
                     // Check if this word was shown as support word
                     if (wasSupportWordShowing && previousSupportWordIndex === newIndex) {
                       // User said it correctly after support word - mark yellow
@@ -363,17 +366,20 @@ const Practice = () => {
                     const timeSinceLastWord = currentTime - lastWordTimeRef.current;
                     lastWordTimeRef.current = currentTime;
                     
-                    // Track word timing for adaptive pace (ignore very first word)
-                    if (newIndex > 1 && timeSinceLastWord < 10000) { // Ignore pauses > 10s
+                    // Track word timing for adaptive pace - use last 5 timings for faster response
+                    if (newIndex > 1 && timeSinceLastWord < 8000) { // Ignore extreme pauses > 8s
                       wordTimingsRef.current.push(timeSinceLastWord);
-                      // Keep only last 10 timings for rolling average
-                      if (wordTimingsRef.current.length > 10) {
+                      // Keep only last 5 timings for faster adaptation
+                      if (wordTimingsRef.current.length > 5) {
                         wordTimingsRef.current.shift();
                       }
-                      // Calculate average pace
-                      const avgPace = wordTimingsRef.current.reduce((a, b) => a + b, 0) / wordTimingsRef.current.length;
-                      setAverageWordDelay(avgPace);
-                      console.log('📊 Average speaking pace:', Math.round(avgPace), 'ms per word');
+                      // Calculate average pace, filtering outliers
+                      const validTimings = wordTimingsRef.current.filter(t => t < 8000);
+                      if (validTimings.length > 0) {
+                        const avgPace = validTimings.reduce((a, b) => a + b, 0) / validTimings.length;
+                        setAverageWordDelay(avgPace);
+                        console.log('📊 Average speaking pace:', Math.round(avgPace), 'ms per word');
+                      }
                     }
                     
                     // Check if we've reached the last word - automatically stop recording
@@ -387,7 +393,6 @@ const Practice = () => {
                       }, 500); // Small delay to ensure last word is fully processed
                     } else {
                       // Adaptive hesitation threshold based on user's speaking pace
-                      // Use whichever is longer: user's average pace + buffer, or configured threshold
                       const basePace = averageWordDelay + 1500; // Add 1.5s buffer to average pace
                       const configuredThreshold = settings.hesitationThreshold * 1000;
                       const adaptiveThreshold = Math.max(basePace, configuredThreshold);
@@ -413,10 +418,10 @@ const Practice = () => {
                       }, adaptiveThreshold);
                     }
                   } else {
-                    // Word doesn't match
+                    // NO MATCH
                     console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
                     
-                    // If support word was showing, mark it as missed (red)
+                    // If support word was showing, handle it specially
                     if (wasSupportWordShowing && previousSupportWordIndex !== null) {
                       // Remove from hesitated (yellow) and mark as red (missed)
                       setHesitatedWordsIndices(prev => {
@@ -427,50 +432,43 @@ const Practice = () => {
                       setMissedWordsIndices(prev => new Set([...prev, previousSupportWordIndex]));
                       console.log('❌ Support word not spoken correctly (red):', allExpectedWords[previousSupportWordIndex], 'at index', previousSupportWordIndex);
                       
-                      // Try to find the spoken word ahead
-                      let found = false;
-                      const maxLookAhead = 5;
+                      // Hide the support popup now that it's resolved
+                      setSupportWord(null);
+                      setSupportWordIndex(null);
                       
-                      for (let lookAhead = 1; lookAhead <= maxLookAhead && (previousSupportWordIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
-                        const futureWord = allExpectedWords[previousSupportWordIndex + lookAhead];
-                        const cleanFutureWord = futureWord.toLowerCase().replace(/[^\w]/g, '');
+                      // Move exactly one word ahead (no jumping)
+                      newIndex = previousSupportWordIndex + 1;
+                      lastWordTimeRef.current = Date.now();
+                      
+                      // Check if this new spoken word matches the next expected word
+                      if (newIndex < allExpectedWords.length) {
+                        const nextExpectedWord = allExpectedWords[newIndex];
+                        if (areWordsSimilar(cleanSpokenWord, nextExpectedWord)) {
+                          // It matches the next word! Mark it correct and advance
+                          setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
+                          console.log('✓ Matched next word after skip:', nextExpectedWord);
+                          newIndex++;
+                        }
                         
-                        const isFutureMatch = cleanSpokenWord === cleanFutureWord ||
-                                             cleanSpokenWord.includes(cleanFutureWord) ||
-                                             cleanFutureWord.includes(cleanSpokenWord);
-                        
-                        if (isFutureMatch) {
-                          found = true;
-                          setSpokenWordsIndices(prev => new Set([...prev, previousSupportWordIndex + lookAhead]));
-                          newIndex = previousSupportWordIndex + lookAhead + 1;
-                          console.log('✓ Found word after support word skip:', futureWord);
-                          lastWordTimeRef.current = Date.now();
+                        // Start hesitation timer for the current position
+                        if (newIndex < allExpectedWords.length) {
+                          const basePace = averageWordDelay + 1500;
+                          const configuredThreshold = settings.hesitationThreshold * 1000;
+                          const adaptiveThreshold = Math.max(basePace, configuredThreshold);
                           
-                          // Start adaptive hesitation timer for next word
-                          if (newIndex < allExpectedWords.length) {
-                            const basePace = averageWordDelay + 1500;
-                            const configuredThreshold = settings.hesitationThreshold * 1000;
-                            const adaptiveThreshold = Math.max(basePace, configuredThreshold);
-                            
-                            const capturedIndex = newIndex;
-                            hesitationTimerRef.current = setTimeout(() => {
-                              const wordToShow = allExpectedWords[capturedIndex];
-                              setSupportWord(wordToShow);
-                              setSupportWordIndex(capturedIndex);
-                              setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
-                              console.log('💡 Support word shown:', wordToShow);
-                            }, adaptiveThreshold);
-                          }
-                          break;
+                          const capturedIndex = newIndex;
+                          hesitationTimerRef.current = setTimeout(() => {
+                            const wordToShow = allExpectedWords[capturedIndex];
+                            setSupportWord(wordToShow);
+                            setSupportWordIndex(capturedIndex);
+                            setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
+                            console.log('💡 Support word shown:', wordToShow);
+                          }, adaptiveThreshold);
                         }
                       }
-                      
-                      if (!found) {
-                        newIndex = previousSupportWordIndex + 1;
-                      }
                     } else {
-                      // No support word was showing - continue processing
-                      newIndex++;
+                      // No support word showing - don't advance, just ignore this non-matching word
+                      console.log('🔇 Ignoring non-matching word (not advancing index)');
                     }
                   }
                 }
