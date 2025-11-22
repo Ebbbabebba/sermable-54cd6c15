@@ -11,8 +11,6 @@ interface BracketedTextDisplayProps {
   missedWordsIndices?: Set<number>;
   currentWordIndex?: number;
   isRecording: boolean;
-  averageWordDelay?: number;
-  supportWordShowing?: boolean;
   className?: string;
 }
 
@@ -34,8 +32,6 @@ const BracketedTextDisplay = ({
   missedWordsIndices = new Set(),
   currentWordIndex = -1,
   isRecording,
-  averageWordDelay = 2000,
-  supportWordShowing = false,
   className 
 }: BracketedTextDisplayProps) => {
   const words = text.split(/\s+/).filter(w => w.trim());
@@ -154,12 +150,6 @@ const BracketedTextDisplay = ({
             const isMissed = missedWordsIndices.has(globalIndex);
             const isCurrent = isRecording && currentWordIndex === globalIndex;
             
-            // Calculate adaptive pulse speed based on user's speaking pace
-            // Convert ms to seconds for animation duration
-            const pulseDuration = supportWordShowing 
-              ? 2.0 // Pause/slow when support word is showing (hesitation)
-              : Math.max(0.6, Math.min(2.0, averageWordDelay / 1000)); // Between 0.6s and 2s
-            
             return (
               <TooltipProvider key={globalIndex}>
                 <Tooltip>
@@ -167,15 +157,12 @@ const BracketedTextDisplay = ({
                     <span
                       className={cn(
                         "word-block transition-all duration-300",
-                        isCurrent && "current-word text-3xl font-bold",
+                        isCurrent && "current-word text-xl font-bold",
                         !isCurrent && isMissed && "word-red scale-95",
                         !isCurrent && !isMissed && isHesitated && "word-yellow scale-95",
                         !isCurrent && !isMissed && !isHesitated && isSpoken && "past-word opacity-40",
                         !isCurrent && !isMissed && !isHesitated && !isSpoken && "word-gray"
                       )}
-                      style={isCurrent ? {
-                        animation: `pulse ${pulseDuration}s ease-in-out infinite`
-                      } : undefined}
                     >
                       {word}
                     </span>

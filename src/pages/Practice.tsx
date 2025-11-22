@@ -835,8 +835,6 @@ const Practice = () => {
               missedWordsIndices={missedWordsIndices}
               currentWordIndex={expectedWordIndex}
               isRecording={isRecording}
-              averageWordDelay={averageWordDelay}
-              supportWordShowing={supportWord !== null}
             />
           </div>
         </div>

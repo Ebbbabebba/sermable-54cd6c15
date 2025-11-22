@@ -4,17 +4,10 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ExtraWord {
-  word: string;
-  afterWordIndex: number;
-  isNatural: boolean;
-}
-
 interface PracticeResultsProps {
   accuracy: number;
   missedWords: string[];
   delayedWords: string[];
-  extraWords?: ExtraWord[];
   analysis: string;
   transcription: string;
   originalText: string;
@@ -25,7 +18,6 @@ const PracticeResults = ({
   accuracy, 
   missedWords, 
   delayedWords, 
-  extraWords = [],
   analysis, 
   transcription,
   originalText,
@@ -184,43 +176,22 @@ const PracticeResults = ({
                   cw => cw.toLowerCase().replace(/[^\w]/g, '') === word.toLowerCase().replace(/[^\w]/g, '')
                 );
                 
-                // Find extra words that come after this word
-                const extraWordsAfter = extraWords.filter(ew => ew.afterWordIndex === index);
-                
                 return (
-                  <>
-                    <span
-                      key={index}
-                      className={cn(
-                        "inline-block px-2.5 py-1 rounded-md font-medium transition-all",
-                        status === 'missed' && "bg-destructive/20 text-destructive border border-destructive/40",
-                        status === 'hesitated' && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500/40",
-                        status === 'correct' && !wasHiddenDuringPractice && "bg-success/10 text-success-foreground/80",
-                        status === 'correct' && wasHiddenDuringPractice && "bg-muted/40 text-muted-foreground/50 text-sm opacity-60",
-                      )}
-                      style={{
-                        fontSize: wasHiddenDuringPractice && status === 'correct' ? '0.875rem' : '1rem',
-                      }}
-                    >
-                      {word}
-                    </span>
-                    {extraWordsAfter.map((extraWord, eIdx) => (
-                      <span
-                        key={`extra-${index}-${eIdx}`}
-                        className={cn(
-                          "inline-block px-2.5 py-1 rounded-md font-medium transition-all animate-shimmer",
-                          extraWord.isNatural 
-                            ? "bg-primary/10 text-primary border border-primary/30" 
-                            : "bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-500/40"
-                        )}
-                        style={{
-                          animation: 'shimmer 2s ease-in-out infinite',
-                        }}
-                      >
-                        {extraWord.word}
-                      </span>
-                    ))}
-                  </>
+                  <span
+                    key={index}
+                    className={cn(
+                      "inline-block px-2.5 py-1 rounded-md font-medium transition-all",
+                      status === 'missed' && "bg-destructive/20 text-destructive border border-destructive/40",
+                      status === 'hesitated' && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500/40",
+                      status === 'correct' && !wasHiddenDuringPractice && "bg-success/10 text-success-foreground/80",
+                      status === 'correct' && wasHiddenDuringPractice && "bg-muted/40 text-muted-foreground/50 text-sm opacity-60",
+                    )}
+                    style={{
+                      fontSize: wasHiddenDuringPractice && status === 'correct' ? '0.875rem' : '1rem',
+                    }}
+                  >
+                    {word}
+                  </span>
                 );
               })}
             </div>
@@ -242,20 +213,6 @@ const PracticeResults = ({
               <div className="w-4 h-4 rounded bg-muted/40 opacity-60"></div>
               <span>Hidden cue (mastered)</span>
             </div>
-            {extraWords.length > 0 && (
-              <>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-primary/10 border border-primary/30 animate-shimmer"></div>
-                  <span>Extra word (natural)</span>
-                </div>
-                {extraWords.some(ew => !ew.isNatural) && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-orange-500/20 border border-orange-500/40 animate-shimmer"></div>
-                    <span>Extra word (careful)</span>
-                  </div>
-                )}
-              </>
-            )}
           </div>
         </div>
 
