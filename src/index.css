@@ -8,61 +8,65 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Apple-inspired clean backgrounds with subtle gradients */
-    --background: 210 20% 98%;
+    /* Clean white space backgrounds */
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
 
-    /* Frosted glass cards */
+    /* Pure white cards with subtle shadows */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Vibrant iOS-style blue */
-    --primary: 211 100% 50%;
+    /* Vibrant cosmic blue */
+    --primary: 220 100% 58%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft secondary with subtle tint */
-    --secondary: 214 32% 91%;
+    /* Soft space gray with blue tint */
+    --secondary: 220 15% 94%;
     --secondary-foreground: 222 47% 11%;
 
-    /* Muted with cool undertone */
-    --muted: 210 20% 92%;
-    --muted-foreground: 215 16% 47%;
+    /* Muted with cosmic undertone */
+    --muted: 220 12% 95%;
+    --muted-foreground: 220 10% 46%;
 
-    /* Vibrant orange accent */
-    --accent: 28 87% 55%;
+    /* Vibrant cosmic purple accent */
+    --accent: 270 70% 60%;
     --accent-foreground: 0 0% 100%;
 
-    /* iOS green */
-    --success: 142 76% 36%;
+    /* Vibrant teal success */
+    --success: 172 70% 45%;
     --success-foreground: 0 0% 100%;
 
-    /* iOS yellow/amber */
-    --warning: 38 92% 50%;
+    /* Vibrant amber warning */
+    --warning: 38 95% 58%;
     --warning-foreground: 0 0% 100%;
 
-    /* iOS red */
-    --destructive: 4 90% 58%;
+    /* Vibrant coral red */
+    --destructive: 355 85% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Subtle borders */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 211 100% 50%;
+    /* Subtle cosmic borders */
+    --border: 220 15% 90%;
+    --input: 220 15% 93%;
+    --ring: 220 100% 58%;
 
     --radius: 1rem;
 
-    /* Additional vibrant colors */
-    --success-green: 142 76% 36%;
-    --word-bg: 210 20% 95%;
+    /* Additional vibrant cosmic colors */
+    --success-green: 172 70% 45%;
+    --cosmic-teal: 180 65% 50%;
+    --cosmic-purple: 270 70% 60%;
+    --cosmic-pink: 320 75% 65%;
+    --word-bg: 220 15% 96%;
     --word-text: 222 47% 11%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(235 84% 60%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(28 87% 55%) 0%, hsl(340 82% 52%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(158 64% 52%) 100%);
+    /* Vibrant cosmic gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(260 85% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(320 75% 65%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(172 70% 45%) 0%, hsl(180 65% 50%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(270 70% 60%) 50%, hsl(320 75% 65%) 100%);
     
     /* Shadows - Apple-style depth */
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -87,35 +91,36 @@ All colors MUST be HSL.
     --popover: 222 47% 11%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 211 100% 50%;
+    --primary: 220 100% 62%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
+    --secondary: 220 20% 18%;
     --secondary-foreground: 210 20% 98%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 15% 65%;
 
-    --accent: 28 87% 55%;
+    --accent: 270 70% 65%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
+    --success: 172 70% 50%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 95% 62%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 4 90% 58%;
+    --destructive: 355 85% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 211 100% 50%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 220 100% 62%;
 
-    /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(211 100% 40%) 0%, hsl(235 84% 50%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(28 87% 45%) 0%, hsl(340 82% 42%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 26%) 0%, hsl(158 64% 42%) 100%);
+    /* Dark mode vibrant gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(260 85% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(320 75% 65%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(172 70% 45%) 0%, hsl(180 65% 50%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(270 70% 60%) 50%, hsl(320 75% 65%) 100%);
   }
 }
 
