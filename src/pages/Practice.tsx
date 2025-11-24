@@ -16,6 +16,7 @@ import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
+import SegmentProgress from "@/components/SegmentProgress";
 
 interface Speech {
   id: string;
@@ -24,6 +25,18 @@ interface Speech {
   text_current: string;
   goal_date: string;
   base_word_visibility_percent: number | null;
+}
+
+interface Segment {
+  id: string;
+  segment_order: number;
+  start_word_index: number;
+  end_word_index: number;
+  segment_text: string;
+  is_mastered: boolean;
+  times_practiced: number;
+  average_accuracy: number | null;
+  merged_with_next: boolean;
 }
 
 interface SessionResults {
@@ -43,6 +56,9 @@ const Practice = () => {
   const { toast } = useToast();
   const resultsRef = useRef<HTMLDivElement>(null);
   const [speech, setSpeech] = useState<Speech | null>(null);
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [activeSegmentIndices, setActiveSegmentIndices] = useState<number[]>([]);
+  const [activeSegmentText, setActiveSegmentText] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isPracticing, setIsPracticing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -107,6 +123,42 @@ const Practice = () => {
     loadUserProfile();
   }, []);
 
+  const determineActiveSegments = (allSegments: Segment[]) => {
+    if (allSegments.length === 0) {
+      setActiveSegmentIndices([]);
+      setActiveSegmentText("");
+      return;
+    }
+
+    // Find the first unmastered segment
+    const firstUnmasteredIndex = allSegments.findIndex(s => !s.is_mastered);
+    
+    if (firstUnmasteredIndex === -1) {
+      // All segments mastered - practice the whole speech
+      setActiveSegmentIndices(allSegments.map(s => s.segment_order));
+      setActiveSegmentText(allSegments.map(s => s.segment_text).join(' '));
+      return;
+    }
+
+    // Check if we should merge with previous segment
+    if (firstUnmasteredIndex > 0) {
+      const previousSegment = allSegments[firstUnmasteredIndex - 1];
+      
+      // If previous segment is mastered, practice both together
+      if (previousSegment.is_mastered) {
+        const currentSegment = allSegments[firstUnmasteredIndex];
+        setActiveSegmentIndices([previousSegment.segment_order, currentSegment.segment_order]);
+        setActiveSegmentText(`${previousSegment.segment_text} ${currentSegment.segment_text}`);
+        return;
+      }
+    }
+
+    // Practice only the current unmastered segment
+    const currentSegment = allSegments[firstUnmasteredIndex];
+    setActiveSegmentIndices([currentSegment.segment_order]);
+    setActiveSegmentText(currentSegment.segment_text);
+  };
+
   useEffect(() => {
     loadSpeech();
   }, [id]);
@@ -121,6 +173,20 @@ const Practice = () => {
 
       if (error) throw error;
       setSpeech(data);
+
+      // Load segments
+      const { data: segmentsData, error: segmentsError } = await supabase
+        .from("speech_segments")
+        .select("*")
+        .eq("speech_id", id)
+        .order("segment_order", { ascending: true });
+
+      if (segmentsError) {
+        console.error('Error loading segments:', segmentsError);
+      } else if (segmentsData) {
+        setSegments(segmentsData);
+        determineActiveSegments(segmentsData);
+      }
       
       // Check lock status with adaptive learning integration
       const { data: schedule } = await supabase
@@ -185,10 +251,24 @@ const Practice = () => {
     setIsPracticing(true);
     setShowResults(false);
     setSessionResults(null);
-    toast({
-      title: "Practice mode activated",
-      description: "Read your speech aloud when ready, then start recording.",
-    });
+    
+    // Show segment info
+    if (activeSegmentIndices.length > 0) {
+      const segmentInfo = activeSegmentIndices.length === 1
+        ? `Learning Segment ${activeSegmentIndices[0] + 1}`
+        : `Practicing Segments ${activeSegmentIndices[0] + 1} & ${activeSegmentIndices[1] + 1} together`;
+      
+      toast({
+        title: "Practice mode activated",
+        description: `${segmentInfo}. Read aloud when ready, then start recording.`,
+        duration: 5000,
+      });
+    } else {
+      toast({
+        title: "Practice mode activated",
+        description: "Read your speech aloud when ready, then start recording.",
+      });
+    }
   };
   
   const handleOverrideLock = () => {
@@ -288,8 +368,8 @@ const Practice = () => {
           const fullTranscript = (finalTranscript + interimTranscript).trim();
           const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
           
-          // Get expected words from the original speech
-          const allExpectedWords = speech!.text_original.toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
+          // Get expected words from the active segment or full speech
+          const allExpectedWords = (activeSegmentText || speech!.text_original).toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
           
           // Only process NEW words from the transcript (not already processed)
           setLastProcessedTranscriptLength(prevLength => {
@@ -594,7 +674,7 @@ const Practice = () => {
           const { data, error } = await supabase.functions.invoke('analyze-speech', {
             body: {
               audio: base64Audio,
-              originalText: speech!.text_original, // Always analyze against FULL original speech
+              originalText: activeSegmentText || speech!.text_original, // Analyze active segment or full speech
               speechId: speech!.id,
               userTier: subscriptionTier,
               language: detectedLang,
@@ -637,6 +717,60 @@ const Practice = () => {
 
           if (sessionError) {
             console.error('Error saving session:', sessionError);
+          }
+
+          // Update segment performance
+          if (activeSegmentIndices.length > 0) {
+            for (const segmentOrder of activeSegmentIndices) {
+              const segment = segments.find(s => s.segment_order === segmentOrder);
+              if (segment) {
+                const newTimesPracticed = segment.times_practiced + 1;
+                const oldAvg = segment.average_accuracy || 0;
+                const newAvg = oldAvg === 0 
+                  ? data.accuracy 
+                  : (oldAvg * segment.times_practiced + data.accuracy) / newTimesPracticed;
+                
+                // Mark as mastered if accuracy >= 85% and practiced at least twice
+                const isMastered = newAvg >= 85 && newTimesPracticed >= 2;
+
+                await supabase
+                  .from('speech_segments')
+                  .update({
+                    times_practiced: newTimesPracticed,
+                    average_accuracy: newAvg,
+                    last_practiced_at: new Date().toISOString(),
+                    is_mastered: isMastered,
+                  })
+                  .eq('id', segment.id);
+
+                console.log(`📊 Segment ${segmentOrder} updated: ${newTimesPracticed}x practiced, ${Math.round(newAvg)}% avg, mastered: ${isMastered}`);
+              }
+            }
+
+            // Reload segments to update active segments
+            const { data: updatedSegments } = await supabase
+              .from("speech_segments")
+              .select("*")
+              .eq("speech_id", id)
+              .order("segment_order", { ascending: true });
+
+            if (updatedSegments) {
+              setSegments(updatedSegments);
+              determineActiveSegments(updatedSegments);
+
+              // Check if we should merge segments
+              const shouldMerge = activeSegmentIndices.length === 2 &&
+                updatedSegments.filter(s => activeSegmentIndices.includes(s.segment_order))
+                  .every(s => s.is_mastered);
+
+              if (shouldMerge) {
+                toast({
+                  title: "🎉 Segments Merged!",
+                  description: "Great work! Both segments are now merged into your learning flow.",
+                  duration: 5000,
+                });
+              }
+            }
           }
 
           // Update adaptive word hiding based on performance
@@ -828,7 +962,7 @@ const Practice = () => {
         <div className="flex-1 flex items-center justify-center px-8 pb-32">
           <div className="max-w-3xl w-full">
             <BracketedTextDisplay
-              text={speech.text_original}
+              text={activeSegmentText || speech.text_original}
               visibilityPercent={speech.base_word_visibility_percent || 100}
               spokenWordsIndices={spokenWordsIndices}
               hesitatedWordsIndices={hesitatedWordsIndices}
@@ -989,6 +1123,31 @@ const Practice = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
+          {/* Active Segment Info */}
+          {segments.length > 0 && activeSegmentIndices.length > 0 && (
+            <Card className="border-primary bg-gradient-to-r from-primary/5 to-primary/10">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary rounded-lg">
+                    <span className="text-2xl">📚</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">
+                      {activeSegmentIndices.length === 1 
+                        ? `Learning Segment ${activeSegmentIndices[0] + 1}` 
+                        : `Practicing Segments ${activeSegmentIndices[0] + 1} & ${activeSegmentIndices[1] + 1} Together`}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {activeSegmentIndices.length === 1
+                        ? "Master this section, then we'll merge it with the next one"
+                        : "Great progress! You're merging learned segments"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Your Progress</CardTitle>
@@ -1014,6 +1173,14 @@ const Practice = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Segment Progress */}
+          {segments.length > 0 && (
+            <SegmentProgress 
+              segments={segments} 
+              activeSegmentIndices={activeSegmentIndices} 
+            />
+          )}
 
           <Card>
             <CardContent className="pt-6">

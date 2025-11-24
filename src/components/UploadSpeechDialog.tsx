@@ -129,6 +129,19 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
 
       if (error) throw error;
 
+      // Segment the speech automatically
+      console.log('🔄 Segmenting speech...');
+      const { error: segmentError } = await supabase.functions.invoke('segment-speech', {
+        body: { speechId: newSpeech.id }
+      });
+
+      if (segmentError) {
+        console.error('⚠️ Error segmenting speech:', segmentError);
+        // Don't fail the whole process if segmentation fails
+      } else {
+        console.log('✅ Speech segmented successfully');
+      }
+
       // Check memorization feasibility
       const { data: feasibilityData, error: feasibilityError } = await (supabase as any)
         .rpc('assess_memorization_feasibility', { p_speech_id: newSpeech.id });
