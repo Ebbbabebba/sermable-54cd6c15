@@ -374,6 +374,59 @@ export type Database = {
           },
         ]
       }
+      speech_segments: {
+        Row: {
+          average_accuracy: number | null
+          created_at: string
+          end_word_index: number
+          id: string
+          is_mastered: boolean
+          last_practiced_at: string | null
+          merged_with_next: boolean
+          segment_order: number
+          segment_text: string
+          speech_id: string
+          start_word_index: number
+          times_practiced: number
+        }
+        Insert: {
+          average_accuracy?: number | null
+          created_at?: string
+          end_word_index: number
+          id?: string
+          is_mastered?: boolean
+          last_practiced_at?: string | null
+          merged_with_next?: boolean
+          segment_order: number
+          segment_text: string
+          speech_id: string
+          start_word_index: number
+          times_practiced?: number
+        }
+        Update: {
+          average_accuracy?: number | null
+          created_at?: string
+          end_word_index?: number
+          id?: string
+          is_mastered?: boolean
+          last_practiced_at?: string | null
+          merged_with_next?: boolean
+          segment_order?: number
+          segment_text?: string
+          speech_id?: string
+          start_word_index?: number
+          times_practiced?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speech_segments_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       speeches: {
         Row: {
           base_word_visibility_percent: number | null
