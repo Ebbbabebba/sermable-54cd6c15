@@ -48,8 +48,42 @@ serve(async (req) => {
     // Segment based on natural boundaries
     let currentSegmentStart = 0;
     let segmentOrder = 0;
-    const TARGET_SEGMENT_SIZE = 30; // ~30 words per segment
-    const MIN_SEGMENT_SIZE = 15;
+    
+    // Determine segment size based on total speech length
+    const totalWords = words.length;
+    let TARGET_SEGMENT_SIZE: number;
+    let MIN_SEGMENT_SIZE: number;
+    
+    if (totalWords <= 100) {
+      // Short speech: 1-2 segments of ~50 words
+      TARGET_SEGMENT_SIZE = 50;
+      MIN_SEGMENT_SIZE = 30;
+    } else if (totalWords <= 300) {
+      // Medium speech: 3-6 segments of ~50 words
+      TARGET_SEGMENT_SIZE = 50;
+      MIN_SEGMENT_SIZE = 30;
+    } else {
+      // Long speech: Many small segments of ~40 words
+      TARGET_SEGMENT_SIZE = 40;
+      MIN_SEGMENT_SIZE = 25;
+    }
+    
+    console.log(`📏 Speech length: ${totalWords} words. Target segment size: ${TARGET_SEGMENT_SIZE} words`);
+
+    // If speech is short enough, don't segment it
+    if (totalWords <= MIN_SEGMENT_SIZE) {
+      console.log('📝 Speech is short - no segmentation needed');
+      const segmentText = text.trim();
+      segments.push({
+        speech_id: speechId,
+        segment_order: 0,
+        start_word_index: 0,
+        end_word_index: totalWords - 1,
+        segment_text: segmentText,
+      });
+    } else {
+      // Segment longer speeches
+      console.log('✂️ Segmenting speech into manageable chunks');
 
     // Split by paragraphs first
     const paragraphs = text.split(/\n\n+/);
@@ -115,6 +149,7 @@ serve(async (req) => {
         }
       }
     }
+    } // Close else block for segmentation
 
     console.log(`✅ Created ${segments.length} segments`);
 

@@ -1124,7 +1124,7 @@ const Practice = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Active Segment Info */}
-          {segments.length > 0 && activeSegmentIndices.length > 0 && (
+          {segments.length > 1 && activeSegmentIndices.length > 0 && (
             <Card className="border-primary bg-gradient-to-r from-primary/5 to-primary/10">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
@@ -1134,13 +1134,32 @@ const Practice = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">
                       {activeSegmentIndices.length === 1 
-                        ? `Learning Segment ${activeSegmentIndices[0] + 1}` 
-                        : `Practicing Segments ${activeSegmentIndices[0] + 1} & ${activeSegmentIndices[1] + 1} Together`}
+                        ? `Learning Segment ${activeSegmentIndices[0] + 1} of ${segments.length}` 
+                        : `Merging Segments ${activeSegmentIndices[0] + 1} & ${activeSegmentIndices[1] + 1}`}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {activeSegmentIndices.length === 1
-                        ? "Master this section, then we'll merge it with the next one"
-                        : "Great progress! You're merging learned segments"}
+                        ? `Practicing ${Math.ceil(activeSegmentText.split(/\s+/).length)} words - Master this, then we'll merge it with the next section`
+                        : `Great progress! Combining ${Math.ceil(activeSegmentText.split(/\s+/).length)} words from mastered segments`}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Single segment or full speech info */}
+          {segments.length <= 1 && (
+            <Card className="border-cosmic-teal/20 bg-gradient-to-r from-cosmic-teal/5 to-cosmic-teal/10">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-cosmic-teal rounded-lg">
+                    <span className="text-2xl">📝</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">Practice Full Speech</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {speech.text_original.split(/\s+/).length} words total
                     </p>
                   </div>
                 </div>

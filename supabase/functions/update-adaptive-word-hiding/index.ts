@@ -5,14 +5,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Common simple words to hide first
+// Common simple grammatical words to hide first (articles, prepositions, conjunctions, auxiliary verbs)
 const SIMPLE_WORDS = new Set([
-  'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-  'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
-  'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
-  'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might',
-  'that', 'this', 'these', 'those', 'it', 'its', 'as', 'if', 'then', 'than',
-  'so', 'very', 'just', 'can', 'your', 'my', 'our', 'their', 'his', 'her'
+  // Articles
+  'the', 'a', 'an',
+  // Conjunctions
+  'and', 'or', 'but', 'nor', 'yet', 'so',
+  // Prepositions
+  'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'down',
+  'about', 'into', 'through', 'during', 'after', 'before', 'between', 'among',
+  'under', 'over', 'above', 'below', 'across', 'along', 'around', 'behind',
+  // Auxiliary verbs
+  'is', 'are', 'was', 'were', 'be', 'been', 'being',
+  'have', 'has', 'had', 'having',
+  'do', 'does', 'did', 'doing',
+  'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can',
+  // Pronouns
+  'i', 'you', 'he', 'she', 'it', 'we', 'they',
+  'me', 'him', 'her', 'us', 'them',
+  'my', 'your', 'his', 'her', 'its', 'our', 'their',
+  'mine', 'yours', 'hers', 'ours', 'theirs',
+  'this', 'that', 'these', 'those',
+  // Common adverbs
+  'very', 'just', 'so', 'too', 'also', 'well', 'then', 'now', 'here', 'there',
+  // Other common words
+  'as', 'if', 'than', 'when', 'where', 'who', 'what', 'which', 'how', 'why',
+  'all', 'some', 'any', 'each', 'every', 'both', 'few', 'many', 'much', 'more', 'most'
 ]);
 
 interface WordPerformance {
@@ -142,14 +160,15 @@ Deno.serve(async (req) => {
         }
       }
 
-      // RULE 3: Hide simple words first (after 2 correct attempts)
-      if (perf.isSimple && perf.correctCount >= 2) {
+      // RULE 3: Hide simple grammatical words first (after just 1 correct attempt)
+      // These are words like "the", "and", "or", "is", "a" - very easy to recall
+      if (perf.isSimple && perf.correctCount >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
         wordsToHide.add(index)
         return
       }
 
-      // RULE 4: Hide harder words progressively (after 4 correct attempts)
-      if (!perf.isSimple && perf.correctCount >= 4) {
+      // RULE 4: Hide harder words progressively (after 3 correct attempts without errors)
+      if (!perf.isSimple && perf.correctCount >= 3 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
         wordsToHide.add(index)
         return
       }
