@@ -232,17 +232,20 @@ const EnhancedWordTracker = ({
                   hesitationTimers.current.delete(i);
                 }
                 
-                // Start new hesitation timer (2s)
+                // Start new hesitation timer (1s for regular words, 3s for sentence start)
+                const isStartOfSentence = i === 0 || updatedStates[i - 1]?.text.match(/[.!?]$/);
+                const hesitationDelay = isStartOfSentence ? 3000 : 1000;
+                
                 const hesitationTimer = setTimeout(() => {
                   setWordStates((states) => {
                     const updated = [...states];
                     if (i < updated.length && updated[i].hidden && !updated[i].spoken) {
-                      // Show remaining part of word after 2s hesitation
+                      // Show remaining part of word after hesitation
                       updated[i] = { ...updated[i], showAsHint: true };
                     }
                     return updated;
                   });
-                }, 2000) as unknown as number;
+                }, hesitationDelay) as unknown as number;
                 hesitationTimers.current.set(i, hesitationTimer);
               }
             }
@@ -290,8 +293,11 @@ const EnhancedWordTracker = ({
             }
             
             // MATCH - determine performance status based on TIMING ONLY
+            // Check if this is start of sentence for timing threshold
+            const isStartOfSentence = scriptPosition === 0 || updatedStates[scriptPosition - 1]?.text.match(/[.!?]$/);
+            const hesitationThreshold = isStartOfSentence ? 3000 : 1000;
             const timeAtWord = wordTimestamps.current.get(scriptPosition);
-            const tookTooLong = timeAtWord ? now - timeAtWord >= 2000 : false;
+            const tookTooLong = timeAtWord ? now - timeAtWord >= hesitationThreshold : false;
 
             // Check if this word was shown in forgotten popup
             const wasForgotten = forgottenWordPopup?.wordIndex === scriptPosition;
@@ -304,7 +310,7 @@ const EnhancedWordTracker = ({
               similarity;
             
             console.log(
-              `✅ "${updatedStates[scriptPosition].text}" spoken ${tookTooLong ? "with hesitation (2+ seconds)" : "correctly"}${finalSimilarity < 0.65 ? ` (${Math.round(finalSimilarity * 100)}% pronunciation match)` : ''}`
+              `✅ "${updatedStates[scriptPosition].text}" spoken ${tookTooLong ? `with hesitation (${hesitationThreshold / 1000}+ seconds)` : "correctly"}${finalSimilarity < 0.65 ? ` (${Math.round(finalSimilarity * 100)}% pronunciation match)` : ''}`
             );
 
             updatedStates[scriptPosition] = {
@@ -500,8 +506,12 @@ const EnhancedWordTracker = ({
         if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
           wordTimestamps.current.set(currentIdx, now);
           
-          // If this word is hidden and not yet spoken, start 3s hint timer
+          // If this word is hidden and not yet spoken, start hint timer
+          // 3s for first word after sentence, 1s for other words
           if (updatedStates[currentIdx].hidden && !hiddenWordTimers.current.has(currentIdx)) {
+            const isStartOfSentence = currentIdx === 0 || updatedStates[currentIdx - 1]?.text.match(/[.!?]$/);
+            const hintDelay = isStartOfSentence ? 3000 : 1000;
+            
             const timer = setTimeout(() => {
               setWordStates((states) => {
                 const updated = [...states];
@@ -510,7 +520,7 @@ const EnhancedWordTracker = ({
                 }
                 return updated;
               });
-            }, 3000) as unknown as number;
+            }, hintDelay) as unknown as number;
             hiddenWordTimers.current.set(currentIdx, timer);
           }
         }
@@ -589,7 +599,7 @@ const EnhancedWordTracker = ({
         if (currentWord.hidden && !currentWord.spoken && !forgottenWordPopup) {
           // Determine pause threshold based on position
           const isStartOfSentence = currentIdx === 0 || wordStates[currentIdx - 1]?.text.match(/[.!?]$/);
-          const pauseThreshold = isStartOfSentence ? 4000 : 2000;
+          const pauseThreshold = isStartOfSentence ? 3000 : 1000;
 
           if (timeSinceProgress >= pauseThreshold) {
             console.log(`⚠️ Forgotten word detected: "${currentWord.text}" (paused ${timeSinceProgress}ms)`);
