@@ -216,7 +216,28 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-secondary/20">
+    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at top, hsl(240, 20%, 10%), hsl(240, 20%, 4%))' }}>
+      {/* Animated space background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(240,_20%,_10%),_hsl(240,_20%,_4%))]" />
+        {/* Twinkling stars */}
+        {Array.from({ length: 100 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full animate-pulse"
+            style={{
+              width: Math.random() * 3 + 1 + 'px',
+              height: Math.random() * 3 + 1 + 'px',
+              left: Math.random() * 100 + '%',
+              top: Math.random() * 100 + '%',
+              background: ['hsl(217, 91%, 60%)', 'hsl(270, 100%, 70%)', 'hsl(330, 100%, 70%)', 'hsl(180, 100%, 60%)', 'white'][Math.floor(Math.random() * 5)],
+              opacity: Math.random() * 0.7 + 0.3,
+              animationDuration: Math.random() * 3 + 2 + 's',
+              animationDelay: Math.random() * 2 + 's',
+              boxShadow: '0 0 10px currentColor',
+            }}
+          />
+        ))}
       {/* Streak Celebration */}
       {showStreakCelebration && (
         <StreakCelebration 
@@ -225,8 +246,10 @@ const Dashboard = () => {
         />
       )}
 
+      </div>
+
       {/* Header */}
-      <header className="border-b border-border/40 backdrop-blur-lg bg-background/80 sticky top-0 z-50 flex-shrink-0 shadow-sm">
+      <header className="border-b border-border/40 backdrop-blur-xl bg-card/50 sticky top-0 z-50 flex-shrink-0 shadow-lg relative">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">Sermable</h1>
           
@@ -309,7 +332,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 pb-24 overflow-y-auto flex-1">
+      <main className="container mx-auto px-4 py-8 pb-24 overflow-y-auto flex-1 relative z-10">
         <div className="space-y-8">
           {/* Welcome Section */}
           <div className="animate-fade-in">

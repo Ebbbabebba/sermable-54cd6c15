@@ -8,72 +8,76 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Clean white space backgrounds */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Deep space backgrounds */
+    --background: 240 20% 4%;
+    --foreground: 210 40% 98%;
 
-    /* Pure white cards with subtle shadows */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    /* Dark cosmic cards */
+    --card: 240 15% 8%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 240 15% 8%;
+    --popover-foreground: 210 40% 98%;
 
     /* Vibrant cosmic blue */
-    --primary: 220 100% 58%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
 
-    /* Soft space gray with blue tint */
-    --secondary: 220 15% 94%;
-    --secondary-foreground: 222 47% 11%;
+    /* Space gray with cosmic tint */
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 210 40% 98%;
 
-    /* Muted with cosmic undertone */
-    --muted: 220 12% 95%;
-    --muted-foreground: 220 10% 46%;
+    /* Muted space tones */
+    --muted: 240 10% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    /* Vibrant cosmic purple accent */
-    --accent: 270 70% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* Electric cosmic purple accent */
+    --accent: 280 100% 70%;
+    --accent-foreground: 210 40% 98%;
 
     /* Vibrant teal success */
-    --success: 172 70% 45%;
-    --success-foreground: 0 0% 100%;
+    --success: 172 70% 50%;
+    --success-foreground: 210 40% 98%;
 
     /* Vibrant amber warning */
     --warning: 38 95% 58%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 240 20% 4%;
 
     /* Vibrant coral red */
     --destructive: 355 85% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
 
     /* Subtle cosmic borders */
-    --border: 220 15% 90%;
-    --input: 220 15% 93%;
-    --ring: 220 100% 58%;
+    --border: 240 10% 20%;
+    --input: 240 10% 15%;
+    --ring: 217 91% 60%;
 
     --radius: 1rem;
 
     /* Additional vibrant cosmic colors */
-    --success-green: 172 70% 45%;
-    --cosmic-teal: 180 65% 50%;
-    --cosmic-purple: 270 70% 60%;
-    --cosmic-pink: 320 75% 65%;
-    --word-bg: 220 15% 96%;
-    --word-text: 222 47% 11%;
+    --success-green: 172 70% 50%;
+    --cosmic-teal: 180 100% 60%;
+    --cosmic-purple: 270 100% 70%;
+    --cosmic-pink: 330 100% 70%;
+    --cosmic-blue: 217 91% 60%;
+    --word-bg: 240 10% 15%;
+    --word-text: 210 40% 98%;
 
     /* Vibrant cosmic gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(260 85% 65%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(320 75% 65%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(172 70% 45%) 0%, hsl(180 65% 50%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(270 70% 60%) 50%, hsl(320 75% 65%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(270 100% 70%) 0%, hsl(330 100% 70%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(172 70% 50%) 0%, hsl(180 100% 60%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 50%, hsl(330 100% 70%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(240 20% 10%), hsl(240 20% 4%));
     
-    /* Shadows - Apple-style depth */
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    /* Glowing shadows for space theme */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 30px rgba(66, 153, 225, 0.4);
+    --shadow-cosmic: 0 0 40px rgba(139, 92, 246, 0.3);
 
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -82,11 +86,12 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 20% 98%;
+    /* Already using dark space theme as default */
+    --background: 240 20% 4%;
+    --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;
-    --card-foreground: 210 20% 98%;
+    --card: 240 15% 8%;
+    --card-foreground: 210 40% 98%;
 
     --popover: 222 47% 11%;
     --popover-foreground: 210 20% 98%;
