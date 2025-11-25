@@ -910,7 +910,27 @@ const Practice = () => {
   // Focus Mode: Full-screen minimal practice view
   if (isPracticing && !showResults) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+        {/* Space background stars for dark mode */}
+        <div className="fixed inset-0 pointer-events-none z-0 dark:block light:hidden">
+          {Array.from({ length: 100 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full animate-pulse"
+              style={{
+                width: Math.random() * 2 + 1 + 'px',
+                height: Math.random() * 2 + 1 + 'px',
+                left: Math.random() * 100 + '%',
+                top: Math.random() * 100 + '%',
+                background: ['hsl(217, 91%, 60%)', 'hsl(270, 100%, 70%)', 'hsl(330, 100%, 70%)', 'hsl(180, 100%, 60%)', 'white'][Math.floor(Math.random() * 5)],
+                opacity: Math.random() * 0.5 + 0.2,
+                animationDuration: Math.random() * 3 + 2 + 's',
+                animationDelay: Math.random() * 2 + 's',
+                boxShadow: '0 0 8px currentColor',
+              }}
+            />
+          ))}
+        </div>
         <LoadingOverlay isVisible={isProcessing} />
         
         {/* Exit button */}
@@ -925,7 +945,7 @@ const Practice = () => {
               setIsPracticing(false);
               setIsRecording(false);
             }}
-            className="rounded-full hover:bg-gray-100"
+            className="rounded-full hover:bg-card/80 backdrop-blur-sm"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -1029,7 +1049,7 @@ const Practice = () => {
   // Analysis screen: Clean, minimal results view
   if (showResults && sessionResults) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <LoadingOverlay isVisible={isProcessing} />
         
         {/* Exit button */}
@@ -1038,7 +1058,7 @@ const Practice = () => {
             variant="ghost"
             size="icon"
             onClick={() => navigate("/dashboard")}
-            className="rounded-full hover:bg-gray-100"
+            className="rounded-full hover:bg-card/80"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -1047,8 +1067,8 @@ const Practice = () => {
         {/* Centered analysis content */}
         <div className="container mx-auto px-4 py-16 max-w-4xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2 text-gray-900">Practice Complete</h1>
-            <p className="text-lg text-gray-600">Here's how you did</p>
+            <h1 className="text-3xl font-bold mb-2">Practice Complete</h1>
+            <p className="text-lg text-muted-foreground">Here's how you did</p>
           </div>
 
           <div ref={resultsRef} className="animate-fade-in">
