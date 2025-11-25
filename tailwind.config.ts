@@ -51,6 +51,7 @@ export default {
           teal: "hsl(var(--cosmic-teal))",
           purple: "hsl(var(--cosmic-purple))",
           pink: "hsl(var(--cosmic-pink))",
+          blue: "hsl(var(--cosmic-blue))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
