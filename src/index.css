@@ -85,47 +85,47 @@ All colors MUST be HSL.
     --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
-  .dark {
-    /* Already using dark space theme as default */
-    --background: 240 20% 4%;
-    --foreground: 210 40% 98%;
+  .light {
+    /* Clean white theme */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
-    --card: 240 15% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
 
-    --primary: 220 100% 62%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 18%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 220 20% 18%;
-    --muted-foreground: 220 15% 65%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 270 70% 65%;
+    --accent: 280 100% 70%;
     --accent-foreground: 0 0% 100%;
 
     --success: 172 70% 50%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 95% 62%;
+    --warning: 38 95% 58%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 355 85% 65%;
+    --destructive: 355 85% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 18%;
-    --input: 220 20% 18%;
-    --ring: 220 100% 62%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 217 91% 60%;
 
-    /* Dark mode vibrant gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(260 85% 65%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(270 70% 60%) 0%, hsl(320 75% 65%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(172 70% 45%) 0%, hsl(180 65% 50%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(220 100% 58%) 0%, hsl(270 70% 60%) 50%, hsl(320 75% 65%) 100%);
+    /* Light mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(270 100% 70%) 0%, hsl(330 100% 70%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(172 70% 50%) 0%, hsl(180 100% 60%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 50%, hsl(330 100% 70%) 100%);
   }
 }
 
