@@ -17,6 +17,7 @@ import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeS
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import SegmentProgress from "@/components/SegmentProgress";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
   id: string;
@@ -54,6 +55,7 @@ const Practice = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme } = useTheme();
   const resultsRef = useRef<HTMLDivElement>(null);
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -911,25 +913,31 @@ const Practice = () => {
   if (isPracticing && !showResults) {
     return (
       <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-        {/* Space background stars for dark mode */}
-        <div className="fixed inset-0 pointer-events-none z-0 dark:block light:hidden">
-          {Array.from({ length: 100 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full animate-pulse"
-              style={{
-                width: Math.random() * 2 + 1 + 'px',
-                height: Math.random() * 2 + 1 + 'px',
-                left: Math.random() * 100 + '%',
-                top: Math.random() * 100 + '%',
-                background: ['hsl(217, 91%, 60%)', 'hsl(270, 100%, 70%)', 'hsl(330, 100%, 70%)', 'hsl(180, 100%, 60%)', 'white'][Math.floor(Math.random() * 5)],
-                opacity: Math.random() * 0.5 + 0.2,
-                animationDuration: Math.random() * 3 + 2 + 's',
-                animationDelay: Math.random() * 2 + 's',
-                boxShadow: '0 0 8px currentColor',
-              }}
-            />
-          ))}
+        {/* Space background stars */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          {Array.from({ length: 100 }).map((_, i) => {
+            const starColors = theme === 'light' 
+              ? ['hsl(217, 91%, 50%)', 'hsl(270, 100%, 60%)', 'hsl(330, 100%, 60%)', 'hsl(180, 100%, 50%)', 'hsl(240, 10%, 30%)']
+              : ['hsl(217, 91%, 60%)', 'hsl(270, 100%, 70%)', 'hsl(330, 100%, 70%)', 'hsl(180, 100%, 60%)', 'white'];
+            
+            return (
+              <div
+                key={i}
+                className="absolute rounded-full animate-pulse"
+                style={{
+                  width: Math.random() * 2 + 1 + 'px',
+                  height: Math.random() * 2 + 1 + 'px',
+                  left: Math.random() * 100 + '%',
+                  top: Math.random() * 100 + '%',
+                  background: starColors[Math.floor(Math.random() * starColors.length)],
+                  opacity: theme === 'light' ? Math.random() * 0.3 + 0.15 : Math.random() * 0.5 + 0.2,
+                  animationDuration: Math.random() * 3 + 2 + 's',
+                  animationDelay: Math.random() * 2 + 's',
+                  boxShadow: theme === 'light' ? '0 0 4px currentColor' : '0 0 8px currentColor',
+                }}
+              />
+            );
+          })}
         </div>
         <LoadingOverlay isVisible={isProcessing} />
         
