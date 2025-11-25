@@ -16,7 +16,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, hsl(240, 20%, 10%), hsl(240, 20%, 4%))' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, hsl(240, 20%, 12%), hsl(240, 20%, 6%))' }}>
       {/* Animated space background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {/* Twinkling stars */}
@@ -59,7 +59,7 @@ const Index = () => {
           </div>
           
           {/* Tagline */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in">
+          <p className="text-lg md:text-xl text-foreground/70 mb-8 animate-fade-in">
             Master your speech.
           </p>
         </div>
@@ -69,8 +69,8 @@ const Index = () => {
           <Button 
             size="lg" 
             onClick={() => handleNavigation("/auth")}
-            className="w-full text-base font-bold py-6 uppercase tracking-wider shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-primary via-accent to-cosmic-pink text-primary-foreground hover:scale-105"
-            style={{ boxShadow: '0 0 30px rgba(139, 92, 246, 0.4)' }}
+            className="w-full text-base font-semibold py-6 uppercase tracking-wider shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-primary via-accent to-cosmic-pink text-white hover:scale-105"
+            style={{ boxShadow: '0 0 20px rgba(139, 92, 246, 0.25)' }}
           >
             Get Started
           </Button>
@@ -78,8 +78,8 @@ const Index = () => {
             size="lg" 
             variant="outline"
             onClick={() => handleNavigation("/auth")}
-            className="w-full text-base font-bold py-6 uppercase tracking-wider border-2 border-primary text-primary-foreground bg-card/50 backdrop-blur-sm hover:bg-card/80 hover:scale-105 transition-all"
-            style={{ boxShadow: '0 0 20px rgba(66, 153, 225, 0.3)' }}
+            className="w-full text-base font-semibold py-6 uppercase tracking-wider border-2 border-primary/40 text-foreground/90 bg-card/30 backdrop-blur-sm hover:bg-card/50 hover:border-primary/60 hover:scale-105 transition-all"
+            style={{ boxShadow: '0 0 15px rgba(66, 153, 225, 0.15)' }}
           >
             I already have an account
           </Button>
