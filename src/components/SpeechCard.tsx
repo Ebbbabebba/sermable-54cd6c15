@@ -174,9 +174,12 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
             <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
               <Lock className="h-4 w-4 text-muted-foreground" />
               <div className="flex-1 text-sm">
-                <div className="font-medium">Done for today</div>
+                <div className="font-medium">Spaced repetition active</div>
                 <div className="text-muted-foreground">
-                  Exercise <LockCountdown nextReviewDate={nextReviewDate} />
+                  Next review <LockCountdown nextReviewDate={nextReviewDate} />
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Taking breaks helps memory consolidation
                 </div>
               </div>
             </div>
@@ -245,21 +248,24 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
                 <Lock className="h-8 w-8 text-muted-foreground" />
               </div>
             </div>
-            <DialogTitle className="text-center text-xl">Done for today</DialogTitle>
+            <DialogTitle className="text-center text-xl">Spaced Repetition Active</DialogTitle>
             <DialogDescription className="text-center pt-2">
-              You've completed your review for this speech. Come back{" "}
+              Your brain is processing what you've learned. Come back{" "}
               {nextReviewDate && <LockCountdown nextReviewDate={nextReviewDate} className="font-medium text-foreground" />}
-              {" "}to practice again.
+              {" "}for optimal memory retention.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-success" />
-                <span className="font-medium">Spaced repetition active</span>
+                <span className="font-medium">Why the wait?</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Our algorithm schedules your next review based on your performance and deadline to optimize memorization.
+                Spaced repetition is scientifically proven to boost long-term memory. The wait time is calculated based on your performance, deadline, and how much of the script you've memorized (not just read).
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                <strong>Tip:</strong> Reducing script visibility increases your memorization weight and can shorten future intervals.
               </p>
             </div>
             

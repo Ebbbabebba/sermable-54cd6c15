@@ -802,9 +802,22 @@ const Practice = () => {
               }
             });
 
+            // Handle visibility gate error
             if (adaptiveError) {
+              // Check if it's a visibility gate error
+              if (adaptiveError.message?.includes('visibility_gate') || adaptiveData?.error === 'visibility_gate') {
+                toast({
+                  variant: "destructive",
+                  title: "📖 Reduce Script Visibility",
+                  description: adaptiveData?.message || "To continue progressing, hide at least 10% more words from your script. This helps strengthen your memory!",
+                  duration: 8000,
+                });
+                return; // Don't show other errors
+              }
               console.error('Error updating adaptive learning:', adaptiveError);
-            } else if (adaptiveData) {
+            }
+            
+            if (adaptiveData && !adaptiveData.error) {
               console.log('Adaptive learning updated:', adaptiveData);
               
               // Show detailed adaptation info to user
