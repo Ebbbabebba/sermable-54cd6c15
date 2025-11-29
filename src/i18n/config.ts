@@ -7,6 +7,7 @@ import fr from './locales/fr.json';
 import de from './locales/de.json';
 import it from './locales/it.json';
 import pt from './locales/pt.json';
+import sv from './locales/sv.json';
 
 // Initialize synchronously to ensure it's ready before React renders
 i18n
@@ -20,6 +21,7 @@ i18n
       de: { translation: de },
       it: { translation: it },
       pt: { translation: pt },
+      sv: { translation: sv },
     },
     fallbackLng: 'en',
     interpolation: {
