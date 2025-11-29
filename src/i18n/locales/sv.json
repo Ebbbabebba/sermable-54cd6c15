@@ -1,0 +1,119 @@
+{
+  "app": {
+    "name": "Sermable",
+    "tagline": "Bemästra ditt tal med AI-driven övning"
+  },
+  "nav": {
+    "home": "Hem",
+    "dashboard": "Instrumentpanel",
+    "practice": "Öva",
+    "signOut": "Logga ut",
+    "signIn": "Logga in"
+  },
+  "home": {
+    "hero": {
+      "title": "Bemästra ditt tal med AI-driven övning",
+      "subtitle": "Förbättra dina talförmågor med personlig feedback och repetitionsinlärning",
+      "cta": "Börja öva"
+    },
+    "features": {
+      "title": "Funktioner",
+      "aiAnalysis": {
+        "title": "AI-talanalys",
+        "description": "Få omedelbar feedback på din talförmåga"
+      },
+      "spacedRepetition": {
+        "title": "Repetitionsinlärning",
+        "description": "Optimera inlärningen med vetenskapligt baserad schemaläggning"
+      },
+      "realTimeTracking": {
+        "title": "Realtidsspårning",
+        "description": "Följ med visuell ordmarkering"
+      }
+    }
+  },
+  "auth": {
+    "signIn": "Logga in",
+    "signUp": "Registrera",
+    "email": "E-post",
+    "password": "Lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "forgotPassword": "Glömt lösenord?",
+    "noAccount": "Har du inget konto?",
+    "haveAccount": "Har du redan ett konto?",
+    "loading": "Laddar...",
+    "signInError": "Fel vid inloggning",
+    "signUpError": "Fel vid registrering",
+    "passwordMismatch": "Lösenorden stämmer inte överens"
+  },
+  "dashboard": {
+    "title": "Mina tal",
+    "uploadSpeech": "Ladda upp tal",
+    "noSpeeches": "Inga tal än. Ladda upp ditt första tal för att komma igång!",
+    "words": "ord",
+    "dueToday": "Förfaller idag",
+    "overdue": "Försenad",
+    "loading": "Laddar tal..."
+  },
+  "upload": {
+    "title": "Ladda upp nytt tal",
+    "speechTitle": "Talrubrik",
+    "speechText": "Taltext",
+    "goalDate": "Målsättningsdatum",
+    "optional": "valfritt",
+    "cancel": "Avbryt",
+    "upload": "Ladda upp",
+    "uploading": "Laddar upp...",
+    "success": "Talet har laddats upp!",
+    "error": "Det gick inte att ladda upp talet",
+    "wordLimit": "Ordgräns",
+    "monthlyLimit": "Månatlig talgräns",
+    "limitReached": "Gränsen nådd",
+    "pasteText": "Klistra in din taltext här...",
+    "languageDetected": "Språk upptäckt och gränssnitt uppdaterat"
+  },
+  "practice": {
+    "title": "Övningssession",
+    "startRecording": "Starta inspelning",
+    "stopRecording": "Stoppa inspelning",
+    "analyzing": "Analyserar...",
+    "ready": "Redo att spela in",
+    "recording": "Spelar in...",
+    "paused": "Pausad",
+    "results": {
+      "title": "Övningsresultat",
+      "accuracy": "Noggrannhet",
+      "missedWords": "Missade ord",
+      "delayedWords": "Försenade ord",
+      "feedback": "Feedback",
+      "cueText": "Övningstext",
+      "retry": "Försök igen",
+      "dashboard": "Tillbaka till instrumentpanelen"
+    },
+    "settings": {
+      "title": "Övningsinställningar",
+      "language": "Språk",
+      "revealSpeed": "Avslöjningshastighet",
+      "showOnPause": "Visa ord vid paus",
+      "animationStyle": "Animationsstil",
+      "styles": {
+        "fade": "Tona",
+        "slide": "Glida",
+        "highlight": "Markera"
+      }
+    }
+  },
+  "common": {
+    "loading": "Laddar...",
+    "error": "Fel",
+    "success": "Lyckades",
+    "cancel": "Avbryt",
+    "save": "Spara",
+    "delete": "Ta bort",
+    "edit": "Redigera",
+    "back": "Tillbaka",
+    "next": "Nästa",
+    "previous": "Föregående",
+    "close": "Stäng"
+  }
+}

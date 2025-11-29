@@ -8,6 +8,7 @@ const langCodeMap: Record<string, string> = {
   'deu': 'de',
   'ita': 'it',
   'por': 'pt',
+  'swe': 'sv',
 };
 
 export const detectTextLanguage = (text: string): string | null => {
