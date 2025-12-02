@@ -1,11 +1,40 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import FloatingAstronaut2D from "@/components/FloatingAstronaut2D";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
   const [flyAway, setFlyAway] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuthAndOnboarding = async () => {
+      // Check if onboarding has been completed
+      const onboardingComplete = localStorage.getItem("onboarding_complete");
+      
+      if (!onboardingComplete) {
+        // First-time user, show onboarding
+        navigate("/onboarding", { replace: true });
+        return;
+      }
+
+      // Check if user is already logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // User is logged in, go directly to dashboard
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // User has completed onboarding but not logged in, show landing page
+      setIsLoading(false);
+    };
+
+    checkAuthAndOnboarding();
+  }, [navigate]);
 
   const handleNavigation = (path: string) => {
     setFlyAway(true);
@@ -14,6 +43,20 @@ const Index = () => {
       navigate(path);
     }, 1000);
   };
+
+  // Show nothing while checking auth status
+  if (isLoading) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'radial-gradient(ellipse at center, hsl(240, 20%, 12%), hsl(240, 20%, 6%))' }}
+      >
+        <div className="animate-pulse">
+          <FloatingAstronaut2D />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, hsl(240, 20%, 12%), hsl(240, 20%, 6%))' }}>
