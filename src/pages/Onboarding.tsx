@@ -31,15 +31,19 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showText, setShowText] = useState(false);
+  const [triggerWave, setTriggerWave] = useState(false);
 
   const currentContent = ONBOARDING_STEPS[currentStep];
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1;
 
-  // Show text after 1 second
+  // Show text after 1 second and trigger wave
   useEffect(() => {
     setShowText(false);
+    setTriggerWave(false);
+    
     const timer = setTimeout(() => {
       setShowText(true);
+      setTriggerWave(true);
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -101,7 +105,7 @@ const Onboarding = () => {
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 max-w-4xl w-full">
           {/* Astronaut */}
           <div className="flex-shrink-0">
-            <FloatingAstronaut2D />
+            <FloatingAstronaut2D triggerWave={triggerWave} />
           </div>
 
           {/* Speech bubble - beside astronaut */}
