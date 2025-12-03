@@ -258,137 +258,254 @@ serve(async (req) => {
     }
 
     // ============================================================
-    // ENHANCED SPACED REPETITION ALGORITHM
+    // ENHANCED SPACED REPETITION ALGORITHM v2
     // ============================================================
-    // STAGE 1: EARLY LEARNING (Sessions 1-5)
-    //   Force high frequency (2-6 hours) regardless of performance
-    //   Goal: Build familiarity, prevent false confidence from reading
+    // Core principle: Lock duration reflects TRUE memorization quality
     //
-    // STAGE 2: PROGRESSIVE MEMORIZATION (Sessions 6+)
-    //   Adapt based on weighted performance + visibility reduction
+    // SHORT LOCKS (1 min - 2 hours): 
+    //   - Poor performance OR high script visibility OR struggling
+    //   - Near deadline emergency
     //
-    // KEY FACTORS:
-    //   - Weighted accuracy (true memorization indicator)
-    //   - Word visibility % (notes reliance)
-    //   - Learning velocity (improvement rate)
-    //   - Consecutive struggles (difficulty patterns)
-    //   - Deadline urgency (time pressure)
+    // MEDIUM LOCKS (2-12 hours):
+    //   - Decent performance with moderate visibility
+    //   - Early learning stage
+    //   - Moderate deadline pressure
+    //
+    // LONG LOCKS (12-48 hours):
+    //   - Good weighted performance with low visibility
+    //   - Consistent improvement trend
+    //   - No deadline pressure
+    //
+    // VERY LONG LOCKS (2-7 days):
+    //   - Excellent performance with minimal/no notes
+    //   - Proven mastery over multiple sessions
+    //   - Distant deadline
     // ============================================================
     
     let adaptiveIntervalMinutes: number;
-    const baseIntervalMinutes = 12 * 60; // 12 hour base (reduced from 24h for more frequent reinforcement)
     
-    // STAGE 1: EARLY LEARNING - Force frequent practice (Extended to 10 sessions)
+    // Calculate "memorization ease" - how quickly user learns THIS speech
+    // Based on: improvement rate, consistency, struggle patterns
+    let memorizationEaseScore = 50; // 0-100 scale, 50 = average
+    
+    // Factor 1: Learning velocity (how fast improving)
+    if (learningVelocity > 10) memorizationEaseScore += 20;
+    else if (learningVelocity > 5) memorizationEaseScore += 10;
+    else if (learningVelocity < -10) memorizationEaseScore -= 20;
+    else if (learningVelocity < -5) memorizationEaseScore -= 10;
+    
+    // Factor 2: Consistency (fewer struggles = easier)
+    memorizationEaseScore -= consecutiveStruggles * 8;
+    
+    // Factor 3: Current performance vs visibility (true recall ability)
+    const trueRecallScore = weightedAccuracy * (1 - wordVisibilityPercent / 100);
+    memorizationEaseScore += (trueRecallScore - 50) * 0.5;
+    
+    // Factor 4: Session count progress (more sessions = more data = adjust)
+    if (sessionCount >= 5 && weightedAccuracy >= 70) memorizationEaseScore += 5;
+    if (sessionCount >= 10 && weightedAccuracy >= 75) memorizationEaseScore += 10;
+    
+    // Clamp to valid range
+    memorizationEaseScore = Math.max(0, Math.min(100, memorizationEaseScore));
+    
+    console.log('Memorization ease calculation:', {
+      baseScore: 50,
+      velocityAdjust: learningVelocity > 10 ? '+20' : learningVelocity > 5 ? '+10' : learningVelocity < -10 ? '-20' : learningVelocity < -5 ? '-10' : '0',
+      strugglePenalty: -consecutiveStruggles * 8,
+      trueRecallBonus: ((trueRecallScore - 50) * 0.5).toFixed(1),
+      finalScore: memorizationEaseScore.toFixed(1) + '/100'
+    });
+    
+    // Calculate "deadline pressure" as continuous factor (0-10 scale)
+    // 0 = no pressure, 10 = maximum urgency
+    let deadlinePressure = 0;
+    if (daysUntilDeadline <= 0) {
+      deadlinePressure = 10; // Past deadline - maximum urgency
+    } else if (daysUntilDeadline === 1) {
+      deadlinePressure = 9;
+    } else if (daysUntilDeadline === 2) {
+      deadlinePressure = 8;
+    } else if (daysUntilDeadline <= 3) {
+      deadlinePressure = 7;
+    } else if (daysUntilDeadline <= 5) {
+      deadlinePressure = 6;
+    } else if (daysUntilDeadline <= 7) {
+      deadlinePressure = 5;
+    } else if (daysUntilDeadline <= 10) {
+      deadlinePressure = 4;
+    } else if (daysUntilDeadline <= 14) {
+      deadlinePressure = 3;
+    } else if (daysUntilDeadline <= 21) {
+      deadlinePressure = 2;
+    } else if (daysUntilDeadline <= 30) {
+      deadlinePressure = 1;
+    } else {
+      deadlinePressure = 0;
+    }
+    
+    // STAGE 1: EARLY LEARNING (Sessions 1-10)
+    // Force frequent practice to build foundation
     if (isEarlyStage) {
-      console.log('🎯 EARLY STAGE: Enforcing high practice frequency');
+      console.log('🎯 EARLY STAGE: Building foundation');
       
-      if (sessionCount <= 3) {
-        // First 3 sessions: 2-4 hours regardless of performance
-        adaptiveIntervalMinutes = 2 * 60 + Math.random() * 2 * 60;
-      } else if (sessionCount <= 6) {
-        // Sessions 4-6: 3-5 hours, slightly adaptive
-        const baseEarly = 3 * 60;
-        const adjustment = weightedAccuracy >= 75 ? 2 * 60 : weightedAccuracy >= 60 ? 1 * 60 : 0;
-        adaptiveIntervalMinutes = baseEarly + adjustment;
-      } else {
-        // Sessions 7-10: 4-8 hours, more adaptive but still constrained
-        const baseEarly = 4 * 60;
-        const adjustment = weightedAccuracy >= 80 ? 4 * 60 : 
-                          weightedAccuracy >= 70 ? 3 * 60 : 
-                          weightedAccuracy >= 60 ? 2 * 60 : 1 * 60;
-        adaptiveIntervalMinutes = baseEarly + adjustment;
+      // Base interval scales with session count
+      const sessionProgress = sessionCount / 10; // 0 to 1
+      const baseMinutes = 60 + (sessionProgress * 300); // 1 hour to 6 hours
+      
+      // Adjust for performance (but keep frequent)
+      let performanceMultiplier = 1.0;
+      if (weightedAccuracy >= 85 && wordVisibilityPercent < 50) {
+        performanceMultiplier = 1.8; // Reward true memorization early
+      } else if (weightedAccuracy >= 75) {
+        performanceMultiplier = 1.4;
+      } else if (weightedAccuracy >= 65) {
+        performanceMultiplier = 1.2;
+      } else if (weightedAccuracy < 50) {
+        performanceMultiplier = 0.5; // Struggling - practice sooner
+      } else if (weightedAccuracy < 60) {
+        performanceMultiplier = 0.7;
       }
       
-      console.log(`Early stage interval: ${Math.round(adaptiveIntervalMinutes / 60)} hours (session ${sessionCount + 1}/10)`);
+      // Adjust for memorization ease
+      const easeMultiplier = 0.7 + (memorizationEaseScore / 100) * 0.6; // 0.7 to 1.3
+      
+      // Deadline pressure override for early stage
+      const pressureMultiplier = Math.max(0.3, 1 - (deadlinePressure * 0.07));
+      
+      adaptiveIntervalMinutes = baseMinutes * performanceMultiplier * easeMultiplier * pressureMultiplier;
+      
+      // Cap early stage: 30 min to 8 hours
+      adaptiveIntervalMinutes = Math.max(30, Math.min(8 * 60, adaptiveIntervalMinutes));
+      
+      console.log(`Early stage interval: ${Math.round(adaptiveIntervalMinutes)} min (session ${sessionCount + 1}/10)`, {
+        base: Math.round(baseMinutes) + 'min',
+        performanceMultiplier: performanceMultiplier.toFixed(2),
+        easeMultiplier: easeMultiplier.toFixed(2),
+        pressureMultiplier: pressureMultiplier.toFixed(2)
+      });
     }
     // STAGE 2: ESTABLISHED LEARNING - Full adaptive algorithm
     else {
       console.log('📈 ESTABLISHED STAGE: Full adaptive scheduling');
       
-      // Calculate base interval using comprehensive factors
+      // ========== PERFORMANCE-BASED INTERVAL MATRIX ==========
+      // Maps weighted accuracy + visibility to base interval
       
-      // Factor 1: Performance quality with STRICT visibility context (prevents gaming)
-      let performanceFactor = 1.0;
+      let baseIntervalHours: number;
       
-      // HIGH VISIBILITY PENALTY: Prevents gaming by reading script
+      // HIGH VISIBILITY (80-100%): User is mostly reading
+      // Cap intervals regardless of "accuracy" since it's not true memorization
       if (wordVisibilityPercent >= 80) {
-        // Reading mode: Cap at 1 day max regardless of accuracy
-        performanceFactor = weightedAccuracy >= 90 ? 1.5 : 
-                           weightedAccuracy >= 80 ? 1.0 : 
-                           weightedAccuracy >= 70 ? 0.8 : 0.5;
-      } else if (wordVisibilityPercent >= 60) {
-        // Heavy notes: Cap at 1.5 days
-        performanceFactor = weightedAccuracy >= 85 ? 2.0 : 
-                           weightedAccuracy >= 75 ? 1.5 : 
-                           weightedAccuracy >= 65 ? 1.0 : 0.6;
-      } else if (wordVisibilityPercent >= 40) {
-        // Moderate notes: Up to 2 days
-        performanceFactor = weightedAccuracy >= 80 ? 2.5 : 
-                           weightedAccuracy >= 70 ? 2.0 : 
-                           weightedAccuracy >= 60 ? 1.2 : 0.7;
-      } else if (wordVisibilityPercent >= 20) {
-        // Light notes: Up to 3 days
-        performanceFactor = weightedAccuracy >= 85 ? 3.5 : 
-                           weightedAccuracy >= 75 ? 2.5 : 
-                           weightedAccuracy >= 65 ? 1.5 : 0.8;
-      } else {
-        // True mastery (minimal visibility): Full range
-        if (weightedAccuracy >= 85) {
-          performanceFactor = 4.0 + (weightedAccuracy - 85) / 10; // 4-5.5 days
-        } else if (weightedAccuracy >= 75) {
-          performanceFactor = 3.0 + (weightedAccuracy - 75) / 10; // 3-4 days
-        } else if (weightedAccuracy >= 65) {
-          performanceFactor = 2.0 + (weightedAccuracy - 65) / 10; // 2-3 days
-        } else if (weightedAccuracy >= 50) {
-          performanceFactor = 1.0 + (weightedAccuracy - 50) / 15; // 1-2 days
-        } else {
-          performanceFactor = 0.25 + (weightedAccuracy / 100) * 0.75; // 3-9 hours
-        }
+        if (weightedAccuracy >= 90) baseIntervalHours = 3;
+        else if (weightedAccuracy >= 80) baseIntervalHours = 2;
+        else if (weightedAccuracy >= 70) baseIntervalHours = 1.5;
+        else if (weightedAccuracy >= 60) baseIntervalHours = 1;
+        else baseIntervalHours = 0.5;
+        console.log('📖 High visibility mode - capped intervals');
+      }
+      // MODERATE VISIBILITY (50-79%): Mixed reading/recall
+      else if (wordVisibilityPercent >= 50) {
+        if (weightedAccuracy >= 85) baseIntervalHours = 8;
+        else if (weightedAccuracy >= 75) baseIntervalHours = 6;
+        else if (weightedAccuracy >= 65) baseIntervalHours = 4;
+        else if (weightedAccuracy >= 55) baseIntervalHours = 2;
+        else baseIntervalHours = 1;
+        console.log('📝 Moderate visibility - balanced intervals');
+      }
+      // LOW VISIBILITY (20-49%): Real memorization happening
+      else if (wordVisibilityPercent >= 20) {
+        if (weightedAccuracy >= 90) baseIntervalHours = 36;
+        else if (weightedAccuracy >= 80) baseIntervalHours = 24;
+        else if (weightedAccuracy >= 70) baseIntervalHours = 16;
+        else if (weightedAccuracy >= 60) baseIntervalHours = 10;
+        else if (weightedAccuracy >= 50) baseIntervalHours = 6;
+        else baseIntervalHours = 3;
+        console.log('🧠 Low visibility - rewarding true recall');
+      }
+      // MINIMAL/NO VISIBILITY (0-19%): True mastery test
+      else {
+        if (weightedAccuracy >= 95) baseIntervalHours = 168; // 7 days
+        else if (weightedAccuracy >= 90) baseIntervalHours = 96; // 4 days
+        else if (weightedAccuracy >= 85) baseIntervalHours = 72; // 3 days
+        else if (weightedAccuracy >= 80) baseIntervalHours = 48; // 2 days
+        else if (weightedAccuracy >= 70) baseIntervalHours = 24; // 1 day
+        else if (weightedAccuracy >= 60) baseIntervalHours = 12;
+        else if (weightedAccuracy >= 50) baseIntervalHours = 6;
+        else baseIntervalHours = 2;
+        console.log('🌟 Minimal visibility - true mastery intervals');
       }
       
-      // Factor 2: Learning velocity bonus (improving fast = can space more)
-      const velocityFactor = learningVelocity > 5 ? 1.2 : learningVelocity < -5 ? 0.8 : 1.0;
+      adaptiveIntervalMinutes = baseIntervalHours * 60;
       
-      // Factor 3: Notes reduction bonus (reducing visibility = true learning)
-      const visibilityFactor = isReducingNotes && weightedAccuracy >= 60 ? 1.15 : 1.0;
+      // ========== MODIFIERS ==========
       
-      // Factor 4: Struggle penalty (repeated struggles = need more practice)
-      const strugglePenalty = consecutiveStruggles >= 3 ? 0.5 : 
-                             consecutiveStruggles >= 2 ? 0.7 :
-                             consecutiveStruggles >= 1 ? 0.85 : 1.0;
+      // Modifier 1: Memorization ease (0.6x to 1.4x)
+      const easeModifier = 0.6 + (memorizationEaseScore / 100) * 0.8;
       
-      // Combine all factors
-      adaptiveIntervalMinutes = baseIntervalMinutes * performanceFactor * velocityFactor * visibilityFactor * strugglePenalty;
+      // Modifier 2: Learning velocity bonus/penalty
+      let velocityModifier = 1.0;
+      if (learningVelocity > 10) velocityModifier = 1.25;
+      else if (learningVelocity > 5) velocityModifier = 1.15;
+      else if (learningVelocity < -10) velocityModifier = 0.6;
+      else if (learningVelocity < -5) velocityModifier = 0.75;
+      
+      // Modifier 3: Visibility reduction bonus (rewarding progress)
+      const visibilityBonus = isReducingNotes && weightedAccuracy >= 60 ? 1.2 : 1.0;
+      
+      // Modifier 4: Consecutive struggles penalty
+      let struggleModifier = 1.0;
+      if (consecutiveStruggles >= 4) struggleModifier = 0.3;
+      else if (consecutiveStruggles >= 3) struggleModifier = 0.5;
+      else if (consecutiveStruggles >= 2) struggleModifier = 0.7;
+      else if (consecutiveStruggles >= 1) struggleModifier = 0.85;
+      
+      // Modifier 5: Deadline pressure (strongest modifier)
+      const pressureModifier = Math.max(0.1, 1 - (deadlinePressure * 0.09));
+      
+      // Apply all modifiers
+      adaptiveIntervalMinutes = adaptiveIntervalMinutes * easeModifier * velocityModifier * visibilityBonus * struggleModifier * pressureModifier;
       
       console.log('Interval calculation:', {
-        base: '12 hours',
-        visibilityPercent: wordVisibilityPercent + '%',
-        performanceFactor: performanceFactor.toFixed(2) + 'x',
-        velocityFactor: velocityFactor.toFixed(2) + 'x',
-        visibilityFactor: visibilityFactor.toFixed(2) + 'x',
-        strugglePenalty: strugglePenalty.toFixed(2) + 'x',
-        result: Math.round(adaptiveIntervalMinutes / 60) + ' hours'
+        baseHours: baseIntervalHours,
+        visibility: wordVisibilityPercent + '%',
+        weightedAccuracy: weightedAccuracy.toFixed(1),
+        modifiers: {
+          ease: easeModifier.toFixed(2) + 'x',
+          velocity: velocityModifier.toFixed(2) + 'x',
+          visibilityBonus: visibilityBonus.toFixed(2) + 'x',
+          struggle: struggleModifier.toFixed(2) + 'x',
+          pressure: pressureModifier.toFixed(2) + 'x'
+        },
+        resultMinutes: Math.round(adaptiveIntervalMinutes)
       });
     }
     
-    // CRITICAL: Deadline urgency caps (override all calculations)
+    // ========== HARD DEADLINE CAPS ==========
+    // These override everything - can't risk missing deadline
     const originalInterval = adaptiveIntervalMinutes;
-    if (daysUntilDeadline <= 1) {
+    
+    if (daysUntilDeadline <= 0) {
+      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 30); // Max 30 min if past deadline
+    } else if (daysUntilDeadline === 1) {
+      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 60); // Max 1 hour
+    } else if (daysUntilDeadline === 2) {
       adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 2 * 60); // Max 2 hours
-    } else if (daysUntilDeadline <= 2) {
+    } else if (daysUntilDeadline <= 3) {
       adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 4 * 60); // Max 4 hours
     } else if (daysUntilDeadline <= 5) {
       adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 8 * 60); // Max 8 hours
-    } else if (daysUntilDeadline <= 10) {
+    } else if (daysUntilDeadline <= 7) {
+      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 12 * 60); // Max 12 hours
+    } else if (daysUntilDeadline <= 14) {
       adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 24 * 60); // Max 1 day
     }
     
     if (originalInterval !== adaptiveIntervalMinutes) {
-      console.log(`⚠️ Deadline cap applied: ${Math.round(originalInterval / 60)}h → ${Math.round(adaptiveIntervalMinutes / 60)}h`);
+      console.log(`⚠️ Deadline cap: ${Math.round(originalInterval / 60)}h → ${Math.round(adaptiveIntervalMinutes / 60)}h (${daysUntilDeadline} days left)`);
     }
     
-    // Absolute bounds: 1 minute to 14 days
-    adaptiveIntervalMinutes = Math.max(1, Math.min(14 * 24 * 60, adaptiveIntervalMinutes));
+    // Absolute bounds: 1 minute to 7 days
+    adaptiveIntervalMinutes = Math.max(1, Math.min(7 * 24 * 60, adaptiveIntervalMinutes));
     const nextReviewDate = new Date(Date.now() + adaptiveIntervalMinutes * 60 * 1000);
     const adaptiveIntervalDays = adaptiveIntervalMinutes / (24 * 60);
 
@@ -419,28 +536,43 @@ serve(async (req) => {
       ? `${Math.round(adaptiveIntervalMinutes)} minute${Math.round(adaptiveIntervalMinutes) !== 1 ? 's' : ''}`
       : adaptiveIntervalMinutes < 24 * 60
       ? `${Math.round(adaptiveIntervalMinutes / 60)} hour${Math.round(adaptiveIntervalMinutes / 60) !== 1 ? 's' : ''}`
-      : `${Math.round(adaptiveIntervalDays)} day${Math.round(adaptiveIntervalDays) !== 1 ? 's' : ''}`;
+      : `${(adaptiveIntervalDays).toFixed(1)} day${adaptiveIntervalDays >= 2 ? 's' : ''}`;
     
-    if (isEarlyStage) {
-      recommendation = `🎯 Early learning phase (${sessionCount + 1}/10). Building solid foundation - practice again in ${timeUntilNext}.`;
-    } else if (daysUntilDeadline <= 1) {
-      recommendation = '🚨 Presentation is tomorrow/today! Focus on flow and confidence, not perfection.';
+    // Priority-based recommendation system
+    if (daysUntilDeadline <= 0) {
+      recommendation = '🚨 Past deadline! Practice intensively - every rep counts now.';
+    } else if (daysUntilDeadline === 1) {
+      recommendation = '🚨 Tomorrow is the day! Focus on confidence and flow, not perfection.';
     } else if (daysUntilDeadline <= 3) {
-      recommendation = '⚠️ Final countdown! Do complete run-throughs with minimal notes.';
+      recommendation = `⚠️ ${daysUntilDeadline} days left! Complete run-throughs with minimal notes. Practice in ${timeUntilNext}.`;
+    } else if (isEarlyStage) {
+      if (weightedAccuracy >= 80 && wordVisibilityPercent < 50) {
+        recommendation = `🌟 Impressive early performance! You're memorizing faster than average. Next in ${timeUntilNext}.`;
+      } else if (weightedAccuracy < 50) {
+        recommendation = `💪 Early learning phase (${sessionCount + 1}/10). Don't worry about mistakes - focus on familiarity. Practice in ${timeUntilNext}.`;
+      } else {
+        recommendation = `🎯 Building foundation (${sessionCount + 1}/10). Consistency is key right now. Next in ${timeUntilNext}.`;
+      }
     } else if (consecutiveStruggles >= 3) {
-      recommendation = '💪 Multiple struggles detected. Take it slower and practice with more support words visible.';
-    } else if (weightedAccuracy >= 80 && wordVisibilityPercent <= 20 && learningVelocity > 0) {
-      recommendation = `🌟 Outstanding! True mastery with minimal notes. You've earned ${timeUntilNext} break.`;
-    } else if (weightedAccuracy >= 70 && isReducingNotes) {
-      recommendation = `🎯 Great progress! You're reducing notes AND maintaining accuracy. Next in ${timeUntilNext}.`;
-    } else if (sessionAccuracy >= 90 && wordVisibilityPercent >= 70) {
-      recommendation = '📖 High accuracy but still reading. Hide at least 10% more words to truly test your memory!';
-    } else if (learningVelocity < -5) {
-      recommendation = `📉 Performance declining. More frequent practice scheduled (${timeUntilNext}) to get back on track.`;
-    } else if (weightedAccuracy >= 60) {
-      recommendation = `✅ Solid progress! Keep up the momentum. Practice in ${timeUntilNext}.`;
+      recommendation = `💪 Having trouble with this speech. Try practicing smaller sections with more visible words. Next in ${timeUntilNext}.`;
+    } else if (weightedAccuracy >= 85 && wordVisibilityPercent <= 20) {
+      recommendation = `🌟 True mastery! ${weightedAccuracy.toFixed(0)}% accuracy with minimal notes. You've earned a ${timeUntilNext} break.`;
+    } else if (weightedAccuracy >= 80 && wordVisibilityPercent <= 40) {
+      recommendation = `🎯 Excellent recall! Keep reducing visible words to strengthen memory further. Next in ${timeUntilNext}.`;
+    } else if (sessionAccuracy >= 85 && wordVisibilityPercent >= 70) {
+      recommendation = `📖 Great reading, but hide more words to test real memory! You'll unlock longer breaks. Next in ${timeUntilNext}.`;
+    } else if (learningVelocity > 10) {
+      recommendation = `🚀 You're improving fast! Keep this momentum going. Next in ${timeUntilNext}.`;
+    } else if (learningVelocity < -10) {
+      recommendation = `📉 Performance declining - scheduling more frequent practice (${timeUntilNext}) to help you recover.`;
+    } else if (memorizationEaseScore >= 70) {
+      recommendation = `✨ This speech comes naturally to you! ${timeUntilNext} until next session.`;
+    } else if (memorizationEaseScore <= 30) {
+      recommendation = `🔄 This is a challenging one. More frequent practice (${timeUntilNext}) will help build mastery.`;
+    } else if (weightedAccuracy >= 70) {
+      recommendation = `✅ Good progress! Practice in ${timeUntilNext}.`;
     } else {
-      recommendation = `🔄 Building mastery takes time. Practice scheduled in ${timeUntilNext}.`;
+      recommendation = `🔄 Keep practicing! Next session in ${timeUntilNext}.`;
     }
 
     console.log('Adaptive learning update complete');
@@ -465,33 +597,45 @@ serve(async (req) => {
         learningStage: isEarlyStage ? 'early' : 'established',
         learningVelocity: Math.round(learningVelocity * 10) / 10,
         isReducingNotes,
+        memorizationEaseScore: Math.round(memorizationEaseScore),
+        deadlinePressure,
         adaptationFactors: {
           earlyStageBonus: isEarlyStage,
-          performanceQuality: weightedAccuracy >= 70 && wordVisibilityPercent <= 40 ? 'excellent' :
+          memorizationEase: memorizationEaseScore >= 70 ? 'easy' :
+                           memorizationEaseScore >= 50 ? 'average' :
+                           memorizationEaseScore >= 30 ? 'challenging' : 'difficult',
+          performanceQuality: weightedAccuracy >= 80 && wordVisibilityPercent <= 30 ? 'mastery' :
+                              weightedAccuracy >= 70 && wordVisibilityPercent <= 50 ? 'excellent' :
                               weightedAccuracy >= 60 ? 'good' :
                               weightedAccuracy >= 50 ? 'moderate' : 'struggling',
-          learningVelocity: learningVelocity > 5 ? 'fast' : learningVelocity < -5 ? 'declining' : 'steady',
+          learningVelocity: learningVelocity > 10 ? 'rapid' : 
+                            learningVelocity > 5 ? 'fast' : 
+                            learningVelocity < -10 ? 'declining_fast' :
+                            learningVelocity < -5 ? 'declining' : 'steady',
           notesReduction: isReducingNotes ? 'yes' : 'no',
-          strugglePattern: consecutiveStruggles >= 3 ? 'severe' :
+          strugglePattern: consecutiveStruggles >= 4 ? 'severe' :
+                          consecutiveStruggles >= 3 ? 'high' :
                           consecutiveStruggles >= 2 ? 'moderate' :
                           consecutiveStruggles >= 1 ? 'slight' : 'none',
-          deadlineUrgency: daysUntilDeadline <= 2 ? 'critical' :
-                          daysUntilDeadline <= 5 ? 'high' :
-                          daysUntilDeadline <= 10 ? 'moderate' : 'low'
+          deadlineUrgency: deadlinePressure >= 8 ? 'critical' :
+                          deadlinePressure >= 6 ? 'high' :
+                          deadlinePressure >= 4 ? 'moderate' :
+                          deadlinePressure >= 2 ? 'low' : 'none'
         },
         automationSummary: {
           nextSessionTiming: adaptiveIntervalMinutes < 60 
             ? `${Math.round(adaptiveIntervalMinutes)} minutes`
             : adaptiveIntervalMinutes < 24 * 60
-            ? `${Math.round(adaptiveIntervalMinutes / 60)} hours`
-            : `${Math.round(adaptiveIntervalMinutes / (24 * 60))} days`,
+            ? `${(adaptiveIntervalMinutes / 60).toFixed(1)} hours`
+            : `${(adaptiveIntervalMinutes / (24 * 60)).toFixed(1)} days`,
           nextSegmentSize: newSegmentLength === 100 ? 'Full speech' : `${newSegmentLength}% of speech`,
           nextScriptSupport: `${newVisibility}% words visible`,
-          deadlineStatus: daysUntilDeadline <= 3 ? 'FINAL SPRINT - Minimal notes' :
-                         daysUntilDeadline <= 7 ? 'Last week - Reducing notes' :
-                         daysUntilDeadline <= 14 ? 'Two weeks - Progressive reduction' :
-                         'Progressive learning - Notes allowed',
-          learningPhase: isEarlyStage ? `Building familiarity (${sessionCount + 1}/5)` : 'Adaptive mastery'
+          deadlineStatus: daysUntilDeadline <= 1 ? 'FINAL DAY' :
+                         daysUntilDeadline <= 3 ? 'FINAL SPRINT' :
+                         daysUntilDeadline <= 7 ? 'Last week' :
+                         daysUntilDeadline <= 14 ? 'Two weeks out' :
+                         'Comfortable timeline',
+          learningPhase: isEarlyStage ? `Foundation building (${sessionCount + 1}/10)` : 'Adaptive mastery'
         },
         recommendation
       }),
