@@ -26,3 +26,18 @@ verify_jwt = true
 
 [functions.analyze-freestyle-session]
 verify_jwt = true
+
+[functions.update-sm2-schedule]
+verify_jwt = true
+
+[functions.update-adaptive-learning]
+verify_jwt = true
+
+[functions.update-adaptive-word-hiding]
+verify_jwt = true
+
+[functions.segment-speech]
+verify_jwt = true
+
+[functions.send-adaptive-notifications]
+verify_jwt = false

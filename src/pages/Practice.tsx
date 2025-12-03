@@ -17,6 +17,7 @@ import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeS
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import SegmentProgress from "@/components/SegmentProgress";
+import AnkiRating, { AnkiRatingValue } from "@/components/AnkiRating";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
@@ -93,6 +94,12 @@ const Practice = () => {
   const [lastProcessedTranscriptLength, setLastProcessedTranscriptLength] = useState(0);
   const [supportWord, setSupportWord] = useState<string | null>(null);
   const [supportWordIndex, setSupportWordIndex] = useState<number | null>(null);
+  // Anki SM-2 rating state
+  const [hasRated, setHasRated] = useState(false);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [cardState, setCardState] = useState<'new' | 'learning' | 'review' | 'relearning'>('new');
+  const [easeFactor, setEaseFactor] = useState(2.5);
+  const [currentInterval, setCurrentInterval] = useState(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
@@ -193,35 +200,47 @@ const Practice = () => {
       // Check lock status with adaptive learning integration
       const { data: schedule } = await supabase
         .from("schedules")
-        .select("next_review_date, interval_days")
+        .select("next_review_date, interval_days, card_state, ease_factor")
         .eq("speech_id", id)
         .order("created_at", { ascending: false })
         .limit(1)
         .single();
         
-      if (schedule?.next_review_date) {
-        const reviewDate = new Date(schedule.next_review_date);
-        setNextReviewDate(reviewDate);
+      if (schedule) {
+        // Load SM-2 state
+        setCardState((schedule.card_state as 'new' | 'learning' | 'review' | 'relearning') || 'new');
+        setEaseFactor(schedule.ease_factor || 2.5);
+        setCurrentInterval((schedule.interval_days || 0) * 1440); // Convert days to minutes
         
-        console.log('🔒 Lock status check:', {
-          nextReviewDate: reviewDate,
-          now: new Date(),
-          isInFuture: reviewDate > new Date(),
-          subscriptionTier,
-          intervalDays: schedule.interval_days
-        });
-        
-        // Lock for free users when review date is in future (adaptive interval)
-        if (subscriptionTier === 'free' && reviewDate > new Date()) {
-          setIsLocked(true);
-          console.log('🔒 Speech locked until:', reviewDate);
-        } else {
-          setIsLocked(false);
-          console.log('🔓 Speech unlocked');
+        if (schedule.next_review_date) {
+          const reviewDate = new Date(schedule.next_review_date);
+          setNextReviewDate(reviewDate);
+          
+          console.log('🔒 Lock status check:', {
+            nextReviewDate: reviewDate,
+            now: new Date(),
+            isInFuture: reviewDate > new Date(),
+            subscriptionTier,
+            intervalDays: schedule.interval_days,
+            cardState: schedule.card_state,
+            easeFactor: schedule.ease_factor
+          });
+          
+          // Lock for free users when review date is in future (adaptive interval)
+          if (subscriptionTier === 'free' && reviewDate > new Date()) {
+            setIsLocked(true);
+            console.log('🔒 Speech locked until:', reviewDate);
+          } else {
+            setIsLocked(false);
+            console.log('🔓 Speech unlocked');
+          }
         }
       } else {
         // No schedule yet, allow practice
         setIsLocked(false);
+        setCardState('new');
+        setEaseFactor(2.5);
+        setCurrentInterval(0);
         console.log('📝 No schedule found, allowing practice');
       }
     } catch (error: any) {
@@ -792,72 +811,8 @@ const Practice = () => {
             console.error('Failed to update word hiding:', err);
           }
 
-          // Update adaptive learning metrics
-          try {
-            const { data: adaptiveData, error: adaptiveError } = await supabase.functions.invoke('update-adaptive-learning', {
-              body: {
-                speechId: speech!.id,
-                sessionAccuracy: data.accuracy,
-                wordVisibilityPercent: speech!.base_word_visibility_percent || 100
-              }
-            });
-
-            // Handle visibility gate error
-            if (adaptiveError) {
-              // Check if it's a visibility gate error
-              if (adaptiveError.message?.includes('visibility_gate') || adaptiveData?.error === 'visibility_gate') {
-                toast({
-                  variant: "destructive",
-                  title: "📖 Reduce Script Visibility",
-                  description: adaptiveData?.message || "To continue progressing, hide at least 10% more words from your script. This helps strengthen your memory!",
-                  duration: 8000,
-                });
-                return; // Don't show other errors
-              }
-              console.error('Error updating adaptive learning:', adaptiveError);
-            }
-            
-            if (adaptiveData && !adaptiveData.error) {
-              console.log('Adaptive learning updated:', adaptiveData);
-              
-              // Show detailed adaptation info to user
-              const ruleExplanation = {
-                increasing_interval: '✅ Excellent memorization! Increasing practice interval.',
-                keeping_short: '📖 High accuracy but still using script. Keeping interval short.',
-                shortening_interval: '💪 Struggling detected. Shortening interval for more practice.',
-                moderate: '🔄 Moderate progress. Standard adjustment applied.'
-              }[adaptiveData.adaptationRule || 'moderate'];
-              
-              const weightInfo = `Raw: ${adaptiveData.rawAccuracy}% → Weighted: ${adaptiveData.weightedAccuracy}% (${adaptiveData.performanceWeight}% weight due to ${adaptiveData.currentVisibility}% script visibility)`;
-              
-              const intervalInfo = adaptiveData.intervalMinutes < 60 
-                ? `${adaptiveData.intervalMinutes} minutes`
-                : adaptiveData.intervalMinutes < 24 * 60
-                ? `${Math.round(adaptiveData.intervalMinutes / 60)} hours`
-                : `${Math.round(adaptiveData.intervalMinutes / (24 * 60))} days`;
-              
-              toast({
-                title: "🎯 Adaptive Training Update",
-                description: (
-                  <div className="space-y-2 text-sm">
-                    <p className="font-semibold">{ruleExplanation}</p>
-                    <p>{weightInfo}</p>
-                    <div className="border-t border-border pt-2 mt-2">
-                      <p className="font-semibold text-xs text-muted-foreground mb-1">AUTOMATIC ADJUSTMENTS:</p>
-                      <p>⏱️ Next: {adaptiveData.automationSummary?.nextSessionTiming}</p>
-                      <p>📏 Segment: {adaptiveData.automationSummary?.nextSegmentSize}</p>
-                      <p>👁️ Visibility: {adaptiveData.automationSummary?.nextScriptSupport}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{adaptiveData.automationSummary?.deadlineStatus}</p>
-                    </div>
-                    <p className="text-muted-foreground mt-2 border-t border-border pt-2">{adaptiveData.recommendation}</p>
-                  </div>
-                ),
-                duration: 10000,
-              });
-            }
-          } catch (adaptiveErr) {
-            console.error('Failed to update adaptive learning:', adaptiveErr);
-          }
+          // Note: Schedule updates are now handled by the SM-2 rating system
+          // User will rate their performance after viewing results
 
           // Update speech with new cue text
           const { error: updateError } = await supabase
@@ -873,7 +828,7 @@ const Practice = () => {
 
           toast({
             title: "Analysis complete!",
-            description: `${data.accuracy}% accuracy. Check your results below.`,
+            description: `${data.accuracy}% accuracy. Rate your recall to set your next review.`,
           });
         } catch (innerError: any) {
           console.error('Error in analysis:', innerError);
@@ -906,10 +861,66 @@ const Practice = () => {
     }
   };
 
+  const handleAnkiRate = async (rating: AnkiRatingValue) => {
+    if (!sessionResults || !speech) return;
+    
+    setIsSubmittingRating(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-sm2-schedule', {
+        body: {
+          speechId: speech.id,
+          userRating: rating,
+          sessionAccuracy: sessionResults.accuracy,
+          wordVisibilityPercent: speech.base_word_visibility_percent || 100
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      setHasRated(true);
+      
+      // Update local state with new schedule data
+      if (data) {
+        setCardState(data.newState);
+        setEaseFactor(data.easeFactor);
+        setCurrentInterval(data.intervalMinutes);
+        
+        if (data.nextReviewDate) {
+          setNextReviewDate(new Date(data.nextReviewDate));
+        }
+
+        toast({
+          title: "📚 Schedule Updated",
+          description: data.recommendation,
+          duration: 6000,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error updating SM-2 schedule:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to update schedule",
+        description: error.message || "Please try again",
+      });
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
+
   const handleNewSession = () => {
     setShowResults(false);
     setSessionResults(null);
     setIsPracticing(false);
+    setHasRated(false);
   };
 
   if (loading) {
@@ -1104,14 +1115,40 @@ const Practice = () => {
             />
           </div>
 
+          {/* Anki-style Rating */}
+          {!hasRated && (
+            <div className="mt-8 animate-fade-in">
+              <AnkiRating
+                onRate={handleAnkiRate}
+                isSubmitting={isSubmittingRating}
+                currentState={cardState}
+                currentInterval={currentInterval}
+                easeFactor={easeFactor}
+              />
+            </div>
+          )}
+
+          {/* Show next review info after rating */}
+          {hasRated && nextReviewDate && (
+            <div className="mt-8 text-center p-4 bg-muted/30 rounded-lg animate-fade-in">
+              <p className="text-sm text-muted-foreground">
+                Next review scheduled for{" "}
+                <span className="font-medium text-foreground">
+                  {format(nextReviewDate, "MMM dd, yyyy 'at' HH:mm")}
+                </span>
+              </p>
+            </div>
+          )}
+
           <div className="flex justify-center mt-8">
             <Button
               size="lg"
               onClick={() => navigate("/dashboard")}
               className="rounded-full px-8"
+              disabled={!hasRated && !isSubmittingRating}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              {hasRated ? 'Back to Dashboard' : 'Rate your performance first'}
             </Button>
           </div>
         </div>
