@@ -1,161 +1,119 @@
 /* Container for the line of words */
 .speech-line {
-  line-height: 2;
-  font-size: 1.125rem;
-  font-family: sans-serif;
+  line-height: 2.2;
+  font-size: 1.25rem;
+  font-family: inherit;
 }
 
 /* Individual word blocks */
 .word-block {
   display: inline-block;
-  margin: 0 4px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  margin: 0 3px;
+  padding: 6px 10px;
+  border-radius: 8px;
   transition:
-    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    font-weight 0.3s ease;
+    background-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
-/* Default gray word - filled background */
+/* 1. Black text = words that still need to be said (neutral, upcoming) */
+.word-pending {
+  color: hsl(var(--foreground));
+  background-color: transparent;
+  opacity: 1;
+}
+
+/* 2. Blue flashing = current word to say now */
+.word-current {
+  color: hsl(217 91% 60%);
+  background-color: hsl(217 91% 60% / 0.15);
+  font-weight: 700;
+  font-size: 1.1em;
+  transform: scale(1.08);
+  animation: current-flash 1.2s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes current-flash {
+  0%, 100% {
+    background-color: hsl(217 91% 60% / 0.15);
+    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4);
+  }
+  50% {
+    background-color: hsl(217 91% 60% / 0.3);
+    box-shadow: 0 0 12px 4px hsl(217 91% 60% / 0.3);
+  }
+}
+
+/* 3. Yellow = pause/hesitation (waited too long) */
+.word-yellow {
+  color: hsl(45 100% 35%);
+  background-color: hsl(45 100% 51% / 0.3);
+  font-weight: 600;
+}
+
+/* 4. Red = wrong word (said wrong, skipped, or broke sequence) */
+.word-red {
+  color: hsl(0 84% 45%);
+  background-color: hsl(0 84% 60% / 0.25);
+  font-weight: 600;
+}
+
+/* 5. Gray = spoken correctly but not yet mastered (faded but readable) */
+.word-spoken {
+  color: hsl(var(--muted-foreground));
+  background-color: transparent;
+  opacity: 0.5;
+}
+
+/* Legacy class mappings for compatibility */
 .word-gray {
   color: hsl(var(--foreground));
-  background-color: hsl(var(--muted) / 0.5);
-  transform: scale(1);
-}
-
-/* Words that have been spoken - faded with gray background */
-.past-word {
-  opacity: 0.5;
-  background-color: hsl(var(--muted) / 0.3);
-  transform: scale(0.95);
-  animation: success-fade 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  transition: 
-    opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-    background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Recovery animation for words that were corrected after error */
-.word-recovered {
-  animation: recovery-pulse 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Current word being spoken - pulse with highlighted background */
-.current-word {
+  background-color: transparent;
   opacity: 1;
-  position: relative;
-  color: hsl(var(--foreground));
-  background-color: hsl(var(--primary) / 0.2);
-  font-weight: 600;
-  transform: scale(1.05);
-  animation: pulse 1s ease-in-out infinite;
 }
 
-/* Pulse animation for current word - smooth scale */
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1.05);
-  }
-  50% {
-    transform: scale(1.15);
-  }
+.past-word {
+  color: hsl(var(--muted-foreground));
+  background-color: transparent;
+  opacity: 0.5;
 }
 
-/* Hesitated words - filled yellow background with subtle shake */
-.word-yellow {
-  background-color: hsl(45 100% 51% / 0.5);
-  color: hsl(var(--foreground));
-  font-weight: 600;
-  transform: scale(1);
-  border: 2px solid hsl(45 100% 51% / 0.7);
-  box-shadow: 0 2px 8px hsl(45 100% 51% / 0.3);
-  animation: subtle-shake 0.3s ease-in-out;
-  transition: 
-    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Incorrect or skipped words - filled red background with shake */
-.word-red {
-  background-color: hsl(0 84% 60% / 0.5);
-  color: hsl(var(--foreground));
-  font-weight: 600;
-  transform: scale(1);
-  border: 2px solid hsl(0 84% 60% / 0.7);
-  box-shadow: 0 2px 8px hsl(0 84% 60% / 0.3);
-  animation: error-shake 0.4s ease-in-out;
-  transition: 
-    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Pulse animation for red errors */
-@keyframes pulse-animation {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.08);
-  }
-}
-
-.pulse {
-  animation: pulse-animation 0.5s ease-in-out;
-  animation-fill-mode: forwards;
+.current-word {
+  color: hsl(217 91% 60%);
+  background-color: hsl(217 91% 60% / 0.15);
+  font-weight: 700;
+  font-size: 1.1em;
+  transform: scale(1.08);
+  animation: current-flash 1.2s ease-in-out infinite;
 }
 
 /* Shake animation for errors */
 @keyframes error-shake {
-  0%, 100% { transform: translateX(0) scale(0.95); }
-  25% { transform: translateX(-4px) scale(1); }
-  50% { transform: translateX(4px) scale(1); }
-  75% { transform: translateX(-4px) scale(1); }
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-3px); }
 }
 
-/* Subtle shake for hesitations */
-@keyframes subtle-shake {
-  0%, 100% { transform: translateY(0) scale(0.95); }
-  50% { transform: translateY(-2px) scale(1); }
-}
-
-/* Success animation for correctly spoken words */
+/* Success fade animation */
 @keyframes success-fade {
-  0% { 
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-  100% { 
-    opacity: 0.5;
-    transform: scale(0.95);
-  }
+  0% { opacity: 1; }
+  100% { opacity: 0.5; }
 }
 
 /* Recovery animation when error is corrected */
-@keyframes recovery-pulse {
-  0% { 
-    background-color: hsl(142 76% 36% / 0.4);
-    transform: scale(1.1);
-  }
-  50% {
-    background-color: hsl(142 76% 36% / 0.2);
-    transform: scale(1.05);
-  }
-  100% { 
-    background-color: hsl(var(--muted) / 0.3);
-    transform: scale(0.95);
-  }
+.word-recovered {
+  animation: recovery-pulse 0.4s ease;
 }
 
-/* CSS variables for colors */
-:root {
-  --primary: 220 90% 56%; /* example blue for cursor */
-  --muted-foreground: 210 10% 50%; /* muted gray for words */
+@keyframes recovery-pulse {
+  0% { 
+    background-color: hsl(142 76% 36% / 0.3);
+  }
+  100% { 
+    background-color: transparent;
+  }
 }
