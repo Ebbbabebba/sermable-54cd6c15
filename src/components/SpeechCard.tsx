@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Play, Trash2, Presentation, Lock, CheckCircle2 } from "lucide-react";
+import { Calendar, Play, Trash2, Presentation, Lock, CheckCircle2, Clock, TrendingUp } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,8 +48,10 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const { toast } = useToast();
   const [isLocked, setIsLocked] = useState(false);
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
+  const [intervalMinutes, setIntervalMinutes] = useState<number | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [showLockDialog, setShowLockDialog] = useState(false);
+  const [lastAccuracy, setLastAccuracy] = useState<number | null>(null);
   
   const goalDate = new Date(speech.goal_date);
   const today = new Date();
@@ -83,15 +85,31 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
         // Get schedule data to check if locked
         const { data: schedule } = await supabase
           .from("schedules")
-          .select("next_review_date")
+          .select("next_review_date, interval_days")
           .eq("speech_id", speech.id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
+        
+        // Get speech performance data
+        const { data: speechData } = await supabase
+          .from("speeches")
+          .select("last_accuracy")
+          .eq("id", speech.id)
+          .single();
+          
+        if (speechData?.last_accuracy) {
+          setLastAccuracy(speechData.last_accuracy);
+        }
           
         if (schedule?.next_review_date) {
           const reviewDate = new Date(schedule.next_review_date);
           setNextReviewDate(reviewDate);
+          
+          // Calculate interval in minutes from interval_days
+          if (schedule.interval_days) {
+            setIntervalMinutes(schedule.interval_days * 24 * 60);
+          }
           
           // Lock only for free users when review date is in future
           if (profile?.subscription_tier === 'free' && reviewDate > new Date()) {
@@ -171,16 +189,22 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           </div>
 
           {isLocked && nextReviewDate && (
-            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
-              <Lock className="h-4 w-4 text-muted-foreground" />
-              <div className="flex-1 text-sm">
-                <div className="font-medium">Spaced repetition active</div>
-                <div className="text-muted-foreground">
-                  Next review <LockCountdown nextReviewDate={nextReviewDate} />
+            <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm">Next practice</span>
+                  <LockCountdown nextReviewDate={nextReviewDate} className="text-primary font-semibold" />
                 </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Taking breaks helps memory consolidation
-                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {lastAccuracy !== null && lastAccuracy >= 80 
+                    ? "Great progress! Rest helps memory consolidation."
+                    : lastAccuracy !== null && lastAccuracy >= 60
+                    ? "Good effort! Short break to absorb the material."
+                    : "Keep practicing - frequent reps build memory."}
+                </p>
               </div>
             </div>
           )}
@@ -244,34 +268,41 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <Lock className="h-8 w-8 text-muted-foreground" />
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Clock className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <DialogTitle className="text-center text-xl">Spaced Repetition Active</DialogTitle>
+            <DialogTitle className="text-center text-xl">Automatic Practice Schedule</DialogTitle>
             <DialogDescription className="text-center pt-2">
-              Your brain is processing what you've learned. Come back{" "}
+              Based on your performance, your next practice is scheduled{" "}
               {nextReviewDate && <LockCountdown nextReviewDate={nextReviewDate} className="font-medium text-foreground" />}
-              {" "}for optimal memory retention.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+            <div className="bg-primary/5 p-4 rounded-lg space-y-3 border border-primary/10">
               <div className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <span className="font-medium">Why the wait?</span>
+                <TrendingUp className="h-4 w-4 text-primary" />
+                <span className="font-medium">How it works</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Spaced repetition is scientifically proven to boost long-term memory. The wait time is calculated based on your performance, deadline, and how much of the script you've memorized (not just read).
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                <strong>Tip:</strong> Reducing script visibility increases your memorization weight and can shorten future intervals.
-              </p>
+              <ul className="text-xs text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span><strong>High accuracy + low script visibility</strong> = longer breaks (up to 24h)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span><strong>Low accuracy or high visibility</strong> = shorter breaks (5-30 min)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span><strong>Deadline approaching</strong> = more frequent practice automatically</span>
+                </li>
+              </ul>
             </div>
             
             {subscriptionTier !== 'free' && (
               <p className="text-xs text-center text-muted-foreground">
-                Premium members can practice anytime by clicking "Practice Anyway"
+                Premium members can practice anytime
               </p>
             )}
           </div>

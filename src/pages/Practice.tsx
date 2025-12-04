@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, Lock, Unlock, X, Square } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, Lock, Unlock, X, Square, Clock, TrendingUp, Eye, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
@@ -17,7 +17,6 @@ import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeS
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import SegmentProgress from "@/components/SegmentProgress";
-import AnkiRating, { AnkiRatingValue } from "@/components/AnkiRating";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
@@ -94,12 +93,15 @@ const Practice = () => {
   const [lastProcessedTranscriptLength, setLastProcessedTranscriptLength] = useState(0);
   const [supportWord, setSupportWord] = useState<string | null>(null);
   const [supportWordIndex, setSupportWordIndex] = useState<number | null>(null);
-  // Anki SM-2 rating state
-  const [hasRated, setHasRated] = useState(false);
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
-  const [cardState, setCardState] = useState<'new' | 'learning' | 'review' | 'relearning'>('new');
-  const [easeFactor, setEaseFactor] = useState(2.5);
-  const [currentInterval, setCurrentInterval] = useState(0);
+  // Auto-scheduling state (no manual rating)
+  const [adaptiveScheduleResult, setAdaptiveScheduleResult] = useState<{
+    intervalMinutes: number;
+    nextReviewDate: string;
+    weightedAccuracy: number;
+    wordVisibility: number;
+    recommendation: string;
+    learningStage: string;
+  } | null>(null);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
@@ -207,11 +209,6 @@ const Practice = () => {
         .single();
         
       if (schedule) {
-        // Load SM-2 state
-        setCardState((schedule.card_state as 'new' | 'learning' | 'review' | 'relearning') || 'new');
-        setEaseFactor(schedule.ease_factor || 2.5);
-        setCurrentInterval((schedule.interval_days || 0) * 1440); // Convert days to minutes
-        
         if (schedule.next_review_date) {
           const reviewDate = new Date(schedule.next_review_date);
           setNextReviewDate(reviewDate);
@@ -221,9 +218,7 @@ const Practice = () => {
             now: new Date(),
             isInFuture: reviewDate > new Date(),
             subscriptionTier,
-            intervalDays: schedule.interval_days,
-            cardState: schedule.card_state,
-            easeFactor: schedule.ease_factor
+            intervalDays: schedule.interval_days
           });
           
           // Lock for free users when review date is in future (adaptive interval)
@@ -238,9 +233,6 @@ const Practice = () => {
       } else {
         // No schedule yet, allow practice
         setIsLocked(false);
-        setCardState('new');
-        setEaseFactor(2.5);
-        setCurrentInterval(0);
         console.log('📝 No schedule found, allowing practice');
       }
     } catch (error: any) {
@@ -811,8 +803,42 @@ const Practice = () => {
             console.error('Failed to update word hiding:', err);
           }
 
-          // Note: Schedule updates are now handled by the SM-2 rating system
-          // User will rate their performance after viewing results
+          // AUTOMATIC SCHEDULING: Call adaptive learning - no manual rating needed
+          try {
+            const { data: { session: authSession } } = await supabase.auth.getSession();
+            if (authSession) {
+              const { data: scheduleData, error: scheduleError } = await supabase.functions.invoke('update-adaptive-learning', {
+                body: {
+                  speechId: speech!.id,
+                  sessionAccuracy: data.accuracy,
+                  wordVisibilityPercent: speech!.base_word_visibility_percent || 100
+                },
+                headers: {
+                  Authorization: `Bearer ${authSession.access_token}`
+                }
+              });
+
+              if (scheduleError) {
+                console.error('Error updating adaptive schedule:', scheduleError);
+              } else if (scheduleData) {
+                console.log('📊 Adaptive schedule updated:', scheduleData);
+                setAdaptiveScheduleResult({
+                  intervalMinutes: scheduleData.intervalMinutes,
+                  nextReviewDate: scheduleData.nextReviewDate,
+                  weightedAccuracy: scheduleData.weightedAccuracy,
+                  wordVisibility: scheduleData.wordVisibility,
+                  recommendation: scheduleData.recommendation,
+                  learningStage: scheduleData.learningStage
+                });
+                
+                if (scheduleData.nextReviewDate) {
+                  setNextReviewDate(new Date(scheduleData.nextReviewDate));
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Failed to update adaptive schedule:', err);
+          }
 
           // Update speech with new cue text
           const { error: updateError } = await supabase
@@ -861,66 +887,11 @@ const Practice = () => {
     }
   };
 
-  const handleAnkiRate = async (rating: AnkiRatingValue) => {
-    if (!sessionResults || !speech) return;
-    
-    setIsSubmittingRating(true);
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session');
-      }
-
-      const { data, error } = await supabase.functions.invoke('update-sm2-schedule', {
-        body: {
-          speechId: speech.id,
-          userRating: rating,
-          sessionAccuracy: sessionResults.accuracy,
-          wordVisibilityPercent: speech.base_word_visibility_percent || 100
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-
-      if (error) throw error;
-
-      setHasRated(true);
-      
-      // Update local state with new schedule data
-      if (data) {
-        setCardState(data.newState);
-        setEaseFactor(data.easeFactor);
-        setCurrentInterval(data.intervalMinutes);
-        
-        if (data.nextReviewDate) {
-          setNextReviewDate(new Date(data.nextReviewDate));
-        }
-
-        toast({
-          title: "📚 Schedule Updated",
-          description: data.recommendation,
-          duration: 6000,
-        });
-      }
-    } catch (error: any) {
-      console.error('Error updating SM-2 schedule:', error);
-      toast({
-        variant: "destructive",
-        title: "Failed to update schedule",
-        description: error.message || "Please try again",
-      });
-    } finally {
-      setIsSubmittingRating(false);
-    }
-  };
-
   const handleNewSession = () => {
     setShowResults(false);
     setSessionResults(null);
     setIsPracticing(false);
-    setHasRated(false);
+    setAdaptiveScheduleResult(null);
   };
 
   if (loading) {
@@ -1115,21 +1086,58 @@ const Practice = () => {
             />
           </div>
 
-          {/* Anki-style Rating */}
-          {!hasRated && (
-            <div className="mt-8 animate-fade-in">
-              <AnkiRating
-                onRate={handleAnkiRate}
-                isSubmitting={isSubmittingRating}
-                currentState={cardState}
-                currentInterval={currentInterval}
-                easeFactor={easeFactor}
-              />
-            </div>
+          {/* Automatic Schedule Info */}
+          {adaptiveScheduleResult && (
+            <Card className="mt-8 border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 animate-fade-in">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
+                  <div className="flex items-center justify-center gap-2 text-primary">
+                    <Clock className="h-5 w-5" />
+                    <span className="font-semibold text-lg">Next Practice</span>
+                  </div>
+                  
+                  <div className="text-3xl font-bold">
+                    {adaptiveScheduleResult.intervalMinutes < 60 
+                      ? `${Math.round(adaptiveScheduleResult.intervalMinutes)} min`
+                      : adaptiveScheduleResult.intervalMinutes < 24 * 60
+                      ? `${(adaptiveScheduleResult.intervalMinutes / 60).toFixed(1)} hours`
+                      : `${(adaptiveScheduleResult.intervalMinutes / (24 * 60)).toFixed(1)} days`}
+                  </div>
+                  
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    {adaptiveScheduleResult.recommendation}
+                  </p>
+
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border/50">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                        <Target className="h-3 w-3" />
+                        <span className="text-xs">Weighted Score</span>
+                      </div>
+                      <span className="font-semibold">{Math.round(adaptiveScheduleResult.weightedAccuracy)}%</span>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                        <Eye className="h-3 w-3" />
+                        <span className="text-xs">Script Visible</span>
+                      </div>
+                      <span className="font-semibold">{Math.round(speech.base_word_visibility_percent || 100)}%</span>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                        <TrendingUp className="h-3 w-3" />
+                        <span className="text-xs">Stage</span>
+                      </div>
+                      <span className="font-semibold capitalize">{adaptiveScheduleResult.learningStage}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
-          {/* Show next review info after rating */}
-          {hasRated && nextReviewDate && (
+          {/* Show next review date if available */}
+          {!adaptiveScheduleResult && nextReviewDate && (
             <div className="mt-8 text-center p-4 bg-muted/30 rounded-lg animate-fade-in">
               <p className="text-sm text-muted-foreground">
                 Next review scheduled for{" "}
@@ -1145,10 +1153,9 @@ const Practice = () => {
               size="lg"
               onClick={() => navigate("/dashboard")}
               className="rounded-full px-8"
-              disabled={!hasRated && !isSubmittingRating}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              {hasRated ? 'Back to Dashboard' : 'Rate your performance first'}
+              Back to Dashboard
             </Button>
           </div>
         </div>
