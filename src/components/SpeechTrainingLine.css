@@ -1,21 +1,22 @@
 /* Container for the line of words */
 .speech-line {
-  line-height: 2.2;
-  font-size: 1.25rem;
+  line-height: 2.4;
+  font-size: 1.5rem;
   font-family: inherit;
 }
 
 /* Individual word blocks */
 .word-block {
   display: inline-block;
-  margin: 0 3px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  margin: 0 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
   transition:
     background-color 0.3s ease,
     color 0.3s ease,
     transform 0.3s ease,
-    opacity 0.3s ease;
+    opacity 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 /* 1. Black text = words that still need to be said (neutral, upcoming) */
@@ -28,44 +29,47 @@
 /* 2. Blue flashing = current word to say now */
 .word-current {
   color: hsl(217 91% 60%);
-  background-color: hsl(217 91% 60% / 0.15);
+  background-color: hsl(217 91% 60% / 0.2);
   font-weight: 700;
-  font-size: 1.1em;
-  transform: scale(1.08);
-  animation: current-flash 1.2s ease-in-out infinite;
-  border-radius: 8px;
+  font-size: 1.2em;
+  transform: scale(1.12);
+  animation: current-flash 1s ease-in-out infinite;
+  border-radius: 12px;
+  box-shadow: 0 0 20px 6px hsl(217 91% 60% / 0.3);
 }
 
 @keyframes current-flash {
   0%, 100% {
-    background-color: hsl(217 91% 60% / 0.15);
-    box-shadow: 0 0 0 0 hsl(217 91% 60% / 0.4);
+    background-color: hsl(217 91% 60% / 0.2);
+    box-shadow: 0 0 20px 6px hsl(217 91% 60% / 0.3);
   }
   50% {
-    background-color: hsl(217 91% 60% / 0.3);
-    box-shadow: 0 0 12px 4px hsl(217 91% 60% / 0.3);
+    background-color: hsl(217 91% 60% / 0.35);
+    box-shadow: 0 0 30px 10px hsl(217 91% 60% / 0.5);
   }
 }
 
 /* 3. Yellow = pause/hesitation (waited too long) */
 .word-yellow {
-  color: hsl(45 100% 35%);
-  background-color: hsl(45 100% 51% / 0.3);
+  color: hsl(45 100% 30%);
+  background-color: hsl(45 100% 51% / 0.35);
   font-weight: 600;
+  border: 2px solid hsl(45 100% 45% / 0.5);
 }
 
 /* 4. Red = wrong word (said wrong, skipped, or broke sequence) */
 .word-red {
-  color: hsl(0 84% 45%);
-  background-color: hsl(0 84% 60% / 0.25);
+  color: hsl(0 84% 40%);
+  background-color: hsl(0 84% 60% / 0.3);
   font-weight: 600;
+  border: 2px solid hsl(0 84% 50% / 0.5);
 }
 
 /* 5. Gray = spoken correctly but not yet mastered (faded but readable) */
 .word-spoken {
   color: hsl(var(--muted-foreground));
   background-color: transparent;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 /* Legacy class mappings for compatibility */
@@ -78,30 +82,31 @@
 .past-word {
   color: hsl(var(--muted-foreground));
   background-color: transparent;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 .current-word {
   color: hsl(217 91% 60%);
-  background-color: hsl(217 91% 60% / 0.15);
+  background-color: hsl(217 91% 60% / 0.2);
   font-weight: 700;
-  font-size: 1.1em;
-  transform: scale(1.08);
-  animation: current-flash 1.2s ease-in-out infinite;
+  font-size: 1.2em;
+  transform: scale(1.12);
+  animation: current-flash 1s ease-in-out infinite;
+  box-shadow: 0 0 20px 6px hsl(217 91% 60% / 0.3);
 }
 
 /* Shake animation for errors */
 @keyframes error-shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  50% { transform: translateX(3px); }
-  75% { transform: translateX(-3px); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
 }
 
 /* Success fade animation */
 @keyframes success-fade {
   0% { opacity: 1; }
-  100% { opacity: 0.5; }
+  100% { opacity: 0.4; }
 }
 
 /* Recovery animation when error is corrected */
@@ -111,9 +116,64 @@
 
 @keyframes recovery-pulse {
   0% { 
-    background-color: hsl(142 76% 36% / 0.3);
+    background-color: hsl(142 76% 36% / 0.4);
+    box-shadow: 0 0 15px hsl(142 76% 36% / 0.5);
   }
   100% { 
     background-color: transparent;
+    box-shadow: none;
   }
+}
+
+/* Active bracket styling */
+.bracket-active {
+  animation: bracket-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes bracket-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px 5px hsl(217 91% 60% / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 35px 12px hsl(217 91% 60% / 0.6);
+  }
+}
+
+/* Bracket container hover effect */
+.bracket-container {
+  transition: all 0.2s ease;
+}
+
+.bracket-container:hover {
+  transform: translateY(-2px);
+}
+
+/* Word unfold animation */
+@keyframes word-unfold {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.5) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1) translateY(0);
+  }
+}
+
+.word-unfold {
+  animation: word-unfold 0.3s ease-out forwards;
+}
+
+/* Hint float animation */
+@keyframes hint-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.hint-float {
+  animation: hint-float 2s ease-in-out infinite;
 }
