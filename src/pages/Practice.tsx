@@ -93,6 +93,8 @@ const Practice = () => {
   const [lastProcessedTranscriptLength, setLastProcessedTranscriptLength] = useState(0);
   const [supportWord, setSupportWord] = useState<string | null>(null);
   const [supportWordIndex, setSupportWordIndex] = useState<number | null>(null);
+  const [hintLevel, setHintLevel] = useState<0 | 1 | 2 | 3>(0); // Progressive hint level
+  const hintTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Auto-scheduling state (no manual rating)
   const [adaptiveScheduleResult, setAdaptiveScheduleResult] = useState<{
     intervalMinutes: number;
@@ -324,6 +326,7 @@ const Practice = () => {
     setLastProcessedTranscriptLength(0);
     setSupportWord(null);
     setSupportWordIndex(null);
+    setHintLevel(0);
     lastWordTimeRef.current = Date.now();
     wordTimingsRef.current = []; // Reset pace tracking
     setAverageWordDelay(2000); // Reset to default pace
@@ -333,9 +336,72 @@ const Practice = () => {
       clearTimeout(hesitationTimerRef.current);
       hesitationTimerRef.current = null;
     }
+    if (hintTimerRef.current) {
+      clearTimeout(hintTimerRef.current);
+      hintTimerRef.current = null;
+    }
     
     // Set up speech recognition
     await setupSpeechRecognition();
+  };
+
+  // Start progressive hint timer for a word
+  const startProgressiveHints = (wordIndex: number, expectedWords: string[]) => {
+    // Clear existing hint timers
+    if (hesitationTimerRef.current) clearTimeout(hesitationTimerRef.current);
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    setHintLevel(0);
+    setSupportWord(null);
+    setSupportWordIndex(null);
+    
+    const wordToShow = expectedWords[wordIndex];
+    const basePace = averageWordDelay + 1000;
+    const configuredThreshold = settings.hesitationThreshold * 1000;
+    
+    // Level 1: First letter hint (after 1s or pace)
+    const level1Delay = Math.max(basePace, 1000);
+    hesitationTimerRef.current = setTimeout(() => {
+      setSupportWord(wordToShow);
+      setSupportWordIndex(wordIndex);
+      setHintLevel(1);
+      console.log('💡 Hint level 1 (first letter):', wordToShow.slice(0, 1) + '___');
+      
+      // Level 2: More letters (after another 1s)
+      hintTimerRef.current = setTimeout(() => {
+        setHintLevel(2);
+        console.log('💡 Hint level 2 (half word):', wordToShow.slice(0, Math.ceil(wordToShow.length / 2)) + '...');
+        
+        // Level 3: Full word (after another 1s) - mark as hesitated
+        hintTimerRef.current = setTimeout(() => {
+          setHintLevel(3);
+          setHesitatedWordsIndices(prev => new Set([...prev, wordIndex]));
+          console.log('💡 Hint level 3 (full word - marked yellow):', wordToShow);
+          
+          // Track hesitation for segment
+          const segmentIndex = Math.floor((wordIndex / expectedWords.length) * 10);
+          setSegmentHesitations(prev => {
+            const updated = new Map(prev);
+            updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
+            return updated;
+          });
+        }, 1000);
+      }, 1000);
+    }, level1Delay);
+  };
+
+  // Clear hint when word is spoken
+  const clearHints = () => {
+    if (hesitationTimerRef.current) {
+      clearTimeout(hesitationTimerRef.current);
+      hesitationTimerRef.current = null;
+    }
+    if (hintTimerRef.current) {
+      clearTimeout(hintTimerRef.current);
+      hintTimerRef.current = null;
+    }
+    setSupportWord(null);
+    setSupportWordIndex(null);
+    setHintLevel(0);
   };
 
   const setupSpeechRecognition = async () => {
@@ -444,11 +510,8 @@ const Practice = () => {
                       console.log('✓ Word spoken correctly:', expectedWord, 'at index', newIndex);
                     }
                     
-                    // Clear any hesitation timer
-                    if (hesitationTimerRef.current) {
-                      clearTimeout(hesitationTimerRef.current);
-                      hesitationTimerRef.current = null;
-                    }
+                    // Clear any hesitation/hint timers
+                    clearHints();
                     
                     // Move to next expected word
                     newIndex++;
@@ -479,31 +542,8 @@ const Practice = () => {
                         }
                       }, 500); // Small delay to ensure last word is fully processed
                     } else {
-                      // Adaptive hesitation threshold based on user's speaking pace
-                      // Use whichever is longer: user's average pace + buffer, or configured threshold
-                      const basePace = averageWordDelay + 1500; // Add 1.5s buffer to average pace
-                      const configuredThreshold = settings.hesitationThreshold * 1000;
-                      const adaptiveThreshold = Math.max(basePace, configuredThreshold);
-                      
-                      console.log('⏱️ Adaptive threshold:', Math.round(adaptiveThreshold), 'ms (base:', Math.round(basePace), 'configured:', configuredThreshold, ')');
-                      
-                      const capturedIndex = newIndex;
-                      hesitationTimerRef.current = setTimeout(() => {
-                        // Show support word and mark it yellow immediately
-                        const wordToShow = allExpectedWords[capturedIndex];
-                        setSupportWord(wordToShow);
-                        setSupportWordIndex(capturedIndex);
-                        setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
-                        console.log('💡 Support word shown (marked yellow):', wordToShow, 'at index:', capturedIndex);
-                        
-                        // Track hesitation for segment
-                        const segmentIndex = Math.floor((capturedIndex / allExpectedWords.length) * 10);
-                        setSegmentHesitations(prev => {
-                          const updated = new Map(prev);
-                          updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
-                          return updated;
-                        });
-                      }, adaptiveThreshold);
+                      // Start progressive hints for next word
+                      startProgressiveHints(newIndex, allExpectedWords);
                     }
                   } else {
                     // Word doesn't match
@@ -539,20 +579,9 @@ const Practice = () => {
                           console.log('✓ Found word after support word skip:', futureWord);
                           lastWordTimeRef.current = Date.now();
                           
-                          // Start adaptive hesitation timer for next word
+                          // Start progressive hints for next word
                           if (newIndex < allExpectedWords.length) {
-                            const basePace = averageWordDelay + 1500;
-                            const configuredThreshold = settings.hesitationThreshold * 1000;
-                            const adaptiveThreshold = Math.max(basePace, configuredThreshold);
-                            
-                            const capturedIndex = newIndex;
-                            hesitationTimerRef.current = setTimeout(() => {
-                              const wordToShow = allExpectedWords[capturedIndex];
-                              setSupportWord(wordToShow);
-                              setSupportWordIndex(capturedIndex);
-                              setHesitatedWordsIndices(prev => new Set([...prev, capturedIndex]));
-                              console.log('💡 Support word shown:', wordToShow);
-                            }, adaptiveThreshold);
+                            startProgressiveHints(newIndex, allExpectedWords);
                           }
                           break;
                         }
@@ -954,36 +983,11 @@ const Practice = () => {
           </Button>
         </div>
 
-        {/* Enhanced Support Word Prompt with Hint */}
-        {supportWord && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none animate-fade-in">
-            <div className="flex flex-col items-center gap-4">
-              {/* Hint: First 2 letters */}
-              <div className="bg-primary/10 text-primary px-6 py-3 rounded-full backdrop-blur-sm border border-primary/30 animate-pulse">
-                <p className="text-sm font-medium">
-                  Hint: {supportWord.slice(0, 2)}...
-                </p>
-              </div>
-              
-              {/* Full support word */}
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 text-black px-12 py-8 rounded-2xl shadow-2xl border-4 border-yellow-400 animate-scale-in relative">
-                <div className="absolute -top-3 -left-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                  Support Word
-                </div>
-                <p className="text-6xl font-bold text-center tracking-wide">
-                  {supportWord}
-                </p>
-                <p className="text-center text-sm text-gray-600 mt-2">
-                  Say this word to continue
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Removed: Giant overlay popup - hints now appear inline in BracketedTextDisplay */}
 
         {/* Centered text content */}
         <div className="flex-1 flex items-center justify-center px-8 pb-32">
-          <div className="max-w-3xl w-full">
+          <div className="max-w-4xl w-full">
             <BracketedTextDisplay
               text={activeSegmentText || speech.text_original}
               visibilityPercent={speech.base_word_visibility_percent || 100}
@@ -992,6 +996,12 @@ const Practice = () => {
               missedWordsIndices={missedWordsIndices}
               currentWordIndex={expectedWordIndex}
               isRecording={isRecording}
+              hintingWordIndex={supportWordIndex ?? -1}
+              hintLevel={hintLevel}
+              onPeekWord={(index) => {
+                // Mark peeked words as hesitated
+                setHesitatedWordsIndices(prev => new Set([...prev, index]));
+              }}
             />
           </div>
         </div>
