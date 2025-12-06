@@ -82,10 +82,10 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           setSubscriptionTier(profile.subscription_tier);
         }
         
-        // Get schedule data to check if locked
+        // Get schedule data - use next_review_date directly for accurate timing
         const { data: schedule } = await supabase
           .from("schedules")
-          .select("next_review_date, interval_days")
+          .select("next_review_date, last_reviewed_at")
           .eq("speech_id", speech.id)
           .order("created_at", { ascending: false })
           .limit(1)
@@ -104,16 +104,21 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           
         if (schedule?.next_review_date) {
           const reviewDate = new Date(schedule.next_review_date);
+          const now = new Date();
           setNextReviewDate(reviewDate);
           
-          // Calculate interval in minutes from interval_days
-          if (schedule.interval_days) {
-            setIntervalMinutes(schedule.interval_days * 24 * 60);
+          // Calculate actual interval in minutes from the timestamps
+          if (schedule.last_reviewed_at) {
+            const lastReviewed = new Date(schedule.last_reviewed_at);
+            const actualIntervalMs = reviewDate.getTime() - lastReviewed.getTime();
+            setIntervalMinutes(Math.round(actualIntervalMs / (1000 * 60)));
           }
           
           // Lock only for free users when review date is in future
-          if (profile?.subscription_tier === 'free' && reviewDate > new Date()) {
+          if (profile?.subscription_tier === 'free' && reviewDate > now) {
             setIsLocked(true);
+          } else {
+            setIsLocked(false);
           }
         }
       } catch (error) {
@@ -122,6 +127,10 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
     };
     
     checkLockStatus();
+    
+    // Re-check lock status every minute to update countdown
+    const interval = setInterval(checkLockStatus, 60000);
+    return () => clearInterval(interval);
   }, [speech.id]);
 
   const handleCardClick = () => {
