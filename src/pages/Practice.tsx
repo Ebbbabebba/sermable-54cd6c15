@@ -26,6 +26,7 @@ interface Speech {
   text_current: string;
   goal_date: string;
   base_word_visibility_percent: number | null;
+  speech_language: string | null;
 }
 
 interface Segment {
@@ -404,12 +405,35 @@ const Practice = () => {
     setHintLevel(0);
   };
 
+  // Map language code to speech recognition locale
+  const getRecognitionLocale = (lang: string): string => {
+    const localeMap: Record<string, string> = {
+      'sv': 'sv-SE',
+      'en': 'en-US',
+      'es': 'es-ES',
+      'fr': 'fr-FR',
+      'de': 'de-DE',
+      'it': 'it-IT',
+      'pt': 'pt-PT',
+    };
+    return localeMap[lang] || 'en-US';
+  };
+
   const setupSpeechRecognition = async () => {
     try {
-      // Detect language from speech text
-      const { detectTextLanguage } = await import('@/utils/languageDetection');
-      const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
-      console.log('🌍 Detected language:', detectedLang);
+      // Use speech's stored language first, then detect from text as fallback
+      let speechLang = speech?.speech_language || 'en';
+      
+      // If speech language is not set or is default, try to detect from text
+      if (!speech?.speech_language || speech.speech_language === 'en') {
+        const { detectTextLanguage } = await import('@/utils/languageDetection');
+        const detectedLang = detectTextLanguage(speech!.text_current);
+        if (detectedLang) {
+          speechLang = detectedLang;
+        }
+      }
+      
+      console.log('🌍 Using language for speech recognition:', speechLang);
       
       // Start Web Speech API for instant transcription
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -419,9 +443,9 @@ const Practice = () => {
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.maxAlternatives = 3;
-        recognition.lang = detectedLang === 'sv' ? 'sv-SE' : detectedLang === 'en' ? 'en-US' : 'en-US';
+        recognition.lang = getRecognitionLocale(speechLang);
         
-        console.log('📝 Recognition configured with lang:', recognition.lang);
+        console.log('📝 Recognition configured with locale:', recognition.lang);
         
         let finalTranscript = '';
         
