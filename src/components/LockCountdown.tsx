@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { formatDistanceToNow, differenceInHours, differenceInMinutes } from "date-fns";
+import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
 
 interface LockCountdownProps {
   nextReviewDate: Date;
@@ -8,43 +8,55 @@ interface LockCountdownProps {
 
 const LockCountdown = ({ nextReviewDate, className = "" }: LockCountdownProps) => {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
-  const [isLessThan24Hours, setIsLessThan24Hours] = useState(false);
 
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const hours = differenceInHours(nextReviewDate, now);
-      const minutes = differenceInMinutes(nextReviewDate, now);
+      const totalMinutes = differenceInMinutes(nextReviewDate, now);
+      const totalSeconds = differenceInSeconds(nextReviewDate, now);
 
-      if (minutes < 0) {
+      if (totalSeconds <= 0) {
         setTimeRemaining("Ready now!");
-        setIsLessThan24Hours(false);
         return;
       }
 
-      if (hours < 24) {
-        setIsLessThan24Hours(true);
-        if (hours < 1) {
-          setTimeRemaining(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+      const days = differenceInDays(nextReviewDate, now);
+      const hours = differenceInHours(nextReviewDate, now) % 24;
+      const minutes = totalMinutes % 60;
+
+      if (days > 0) {
+        // More than 1 day: show days and hours
+        if (hours > 0) {
+          setTimeRemaining(`in ${days}d ${hours}h`);
         } else {
-          const remainingMinutes = minutes % 60;
-          setTimeRemaining(`${hours}h ${remainingMinutes}m`);
+          setTimeRemaining(`in ${days} day${days !== 1 ? 's' : ''}`);
         }
+      } else if (hours > 0) {
+        // Less than 1 day: show hours and minutes
+        if (minutes > 0) {
+          setTimeRemaining(`in ${hours}h ${minutes}m`);
+        } else {
+          setTimeRemaining(`in ${hours} hour${hours !== 1 ? 's' : ''}`);
+        }
+      } else if (minutes > 0) {
+        // Less than 1 hour: show minutes
+        setTimeRemaining(`in ${minutes} minute${minutes !== 1 ? 's' : ''}`);
       } else {
-        setIsLessThan24Hours(false);
-        setTimeRemaining(formatDistanceToNow(nextReviewDate, { addSuffix: false }));
+        // Less than 1 minute
+        setTimeRemaining("in less than a minute");
       }
     };
 
     updateCountdown();
-    const interval = setInterval(updateCountdown, 60000); // Update every minute
+    // Update every 10 seconds for more responsive countdown
+    const interval = setInterval(updateCountdown, 10000);
 
     return () => clearInterval(interval);
   }, [nextReviewDate]);
 
   return (
     <span className={className}>
-      {isLessThan24Hours ? timeRemaining : `in ${timeRemaining}`}
+      {timeRemaining}
     </span>
   );
 };
