@@ -356,23 +356,31 @@ const Practice = () => {
     setSupportWordIndex(null);
     
     const wordToShow = expectedWords[wordIndex];
-    const basePace = averageWordDelay + 1000;
-    const configuredThreshold = settings.hesitationThreshold * 1000;
     
-    // Level 1: First letter hint (after 1s or pace)
-    const level1Delay = Math.max(basePace, 1000);
+    // Adaptive timing based on user's speaking pace
+    // Fast speakers (< 400ms avg): shorter delays (500ms min)
+    // Slow speakers (> 1500ms avg): longer delays (1500ms)
+    // Normal speakers: scale proportionally
+    const minDelay = 400; // Allow very fast speakers
+    const maxDelay = 2000; // Cap for slow speakers
+    const paceMultiplier = 1.5; // Give 1.5x their average pace before hint
+    
+    const adaptiveDelay = Math.min(maxDelay, Math.max(minDelay, averageWordDelay * paceMultiplier));
+    const stepDelay = Math.min(1000, Math.max(400, averageWordDelay * 0.8)); // Steps scale with pace
+    
+    // Level 1: First letter hint (adaptive to user pace)
     hesitationTimerRef.current = setTimeout(() => {
       setSupportWord(wordToShow);
       setSupportWordIndex(wordIndex);
       setHintLevel(1);
-      console.log('💡 Hint level 1 (first letter):', wordToShow.slice(0, 1) + '___');
+      console.log('💡 Hint level 1 (first letter):', wordToShow.slice(0, 1) + '___', 'delay:', adaptiveDelay);
       
-      // Level 2: More letters (after another 1s)
+      // Level 2: More letters (adaptive step)
       hintTimerRef.current = setTimeout(() => {
         setHintLevel(2);
-        console.log('💡 Hint level 2 (half word):', wordToShow.slice(0, Math.ceil(wordToShow.length / 2)) + '...');
+        console.log('💡 Hint level 2 (half word):', wordToShow.slice(0, Math.ceil(wordToShow.length / 2)) + '...', 'step:', stepDelay);
         
-        // Level 3: Full word (after another 1s) - mark as hesitated
+        // Level 3: Full word (after another step) - mark as hesitated
         hintTimerRef.current = setTimeout(() => {
           setHintLevel(3);
           setHesitatedWordsIndices(prev => new Set([...prev, wordIndex]));
@@ -385,9 +393,9 @@ const Practice = () => {
             updated.set(segmentIndex, (updated.get(segmentIndex) || 0) + 1);
             return updated;
           });
-        }, 1000);
-      }, 1000);
-    }, level1Delay);
+        }, stepDelay);
+      }, stepDelay);
+    }, adaptiveDelay);
   };
 
   // Clear hint when word is spoken

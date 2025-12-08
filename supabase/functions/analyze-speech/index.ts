@@ -198,10 +198,12 @@ serve(async (req) => {
     const spokenText = transcriptionData.text;
     console.log('Transcription complete:', spokenText.substring(0, 100));
 
-    // Pre-analysis: Check word overlap with fuzzy matching
+// Pre-analysis: Check word overlap with fuzzy matching
     console.log('Pre-analysis: Checking word overlap...');
-    const originalWords = originalText.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
-    const spokenWords = spokenText.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+    // Use regex that preserves Nordic/accented characters when cleaning words
+    const cleanWord = (w: string) => w.replace(/[^\p{L}\p{N}]/gu, '');
+    const originalWords = originalText.toLowerCase().split(/\s+/).map(cleanWord).filter((w: string) => w.length > 1);
+    const spokenWords = spokenText.toLowerCase().split(/\s+/).map(cleanWord).filter((w: string) => w.length > 1);
     
     // Remove filler words from spoken text
     const cleanSpoken = spokenWords.filter((w: string) => !FILLER_WORDS.has(w));
