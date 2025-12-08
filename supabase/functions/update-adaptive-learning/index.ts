@@ -148,22 +148,13 @@ serve(async (req) => {
     const visibilityDelta = previousVisibility - wordVisibilityPercent;
     const isReducingNotes = visibilityDelta > 5; // Reduced visibility by 5%+
     
-    // VISIBILITY PROGRESSION GATE: Enforce reduction every 3 sessions
-    const visibilityProgressionBlocked = sessionCount > 0 && sessionCount % 3 === 0 && wordVisibilityPercent > 80;
+    // VISIBILITY GUIDANCE: Log suggestion but don't block the user
+    // The system automatically hides words based on performance - this is informational only
+    const shouldSuggestHidingWords = sessionCount > 0 && sessionCount % 3 === 0 && wordVisibilityPercent > 80;
     
-    if (visibilityProgressionBlocked && daysUntilDeadline > 7) {
-      console.warn('⚠️ VISIBILITY GATE: User must reduce script visibility to progress');
-      return new Response(
-        JSON.stringify({
-          error: 'visibility_gate',
-          message: 'To continue progressing, you need to hide more words from your script. Try reducing your visible words by at least 10%.',
-          currentVisibility: wordVisibilityPercent,
-          requiredVisibility: 70,
-          sessionCount,
-          recommendation: 'Practice with fewer visible words to strengthen your memory before continuing.'
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (shouldSuggestHidingWords && daysUntilDeadline > 7) {
+      console.log('💡 Suggestion: User could benefit from practicing with fewer visible words');
+      // Continue processing - don't block the user
     }
     
     console.log('Performance analysis:', {
