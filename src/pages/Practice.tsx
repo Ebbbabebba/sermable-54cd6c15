@@ -472,7 +472,8 @@ const Practice = () => {
           const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
           
           // Get expected words from the active segment or full speech
-          const allExpectedWords = (activeSegmentText || speech!.text_original).toLowerCase().split(/\s+/).map(w => w.replace(/[^\w]/g, ''));
+          // Use regex that preserves Nordic/accented characters (äöüåéèñ etc)
+          const allExpectedWords = (activeSegmentText || speech!.text_original).toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
           
           // Only process NEW words from the transcript (not already processed)
           setLastProcessedTranscriptLength(prevLength => {
@@ -489,7 +490,8 @@ const Practice = () => {
               let newIndex = currentIndex;
               
               for (const word of newWords) {
-                const cleanSpokenWord = word.toLowerCase().replace(/[^\w]/g, '');
+                // Preserve Nordic/accented characters when cleaning
+                const cleanSpokenWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
                 
                 if (cleanSpokenWord && newIndex < allExpectedWords.length) {
                   // Hide support word immediately when ANY word is spoken
@@ -499,7 +501,7 @@ const Practice = () => {
                   setSupportWordIndex(null);
                   
                   const expectedWord = allExpectedWords[newIndex];
-                  const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\w]/g, '');
+                  const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
                   
                   console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', newIndex);
                   
@@ -590,7 +592,7 @@ const Practice = () => {
                       
                       for (let lookAhead = 1; lookAhead <= maxLookAhead && (previousSupportWordIndex + lookAhead) < allExpectedWords.length; lookAhead++) {
                         const futureWord = allExpectedWords[previousSupportWordIndex + lookAhead];
-                        const cleanFutureWord = futureWord.toLowerCase().replace(/[^\w]/g, '');
+                        const cleanFutureWord = futureWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
                         
                         const isFutureMatch = cleanSpokenWord === cleanFutureWord ||
                                              cleanSpokenWord.includes(cleanFutureWord) ||
