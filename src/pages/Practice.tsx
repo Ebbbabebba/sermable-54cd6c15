@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, Lock, Unlock, X, Square, Clock, TrendingUp, Eye, Target } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, Lock, Unlock, X, Square, Clock, TrendingUp, Eye, Target, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
@@ -73,6 +75,8 @@ const Practice = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [overrideLock, setOverrideLock] = useState(false);
+  const [isEditingScript, setIsEditingScript] = useState(false);
+  const [editedScriptText, setEditedScriptText] = useState("");
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
     revealSpeed: 5,
     showWordOnPause: true,
@@ -957,6 +961,43 @@ const Practice = () => {
     setAdaptiveScheduleResult(null);
   };
 
+  const handleOpenEditScript = () => {
+    if (speech) {
+      setEditedScriptText(speech.text_original);
+      setIsEditingScript(true);
+    }
+  };
+
+  const handleSaveScript = async () => {
+    if (!speech || !editedScriptText.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('speeches')
+        .update({ 
+          text_original: editedScriptText.trim(),
+          text_current: editedScriptText.trim() // Reset current text to match
+        })
+        .eq('id', speech.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Script updated",
+        description: "Your speech text has been saved.",
+      });
+      
+      setIsEditingScript(false);
+      loadSpeech(); // Reload to get fresh data
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to save",
+        description: error.message,
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1240,6 +1281,14 @@ const Practice = () => {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={handleOpenEditScript}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Script
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => navigate(`/presentation/${id}`)}
               >
                 <Presentation className="h-4 w-4 mr-2" />
@@ -1384,6 +1433,32 @@ const Practice = () => {
           </Card>
         </div>
       </main>
+
+      {/* Edit Script Dialog */}
+      <Dialog open={isEditingScript} onOpenChange={setIsEditingScript}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Edit Script</DialogTitle>
+            <DialogDescription>
+              Make changes to your speech text. This will reset your memorization progress.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={editedScriptText}
+            onChange={(e) => setEditedScriptText(e.target.value)}
+            className="min-h-[300px] font-mono text-sm"
+            placeholder="Enter your speech text..."
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingScript(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveScript}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
