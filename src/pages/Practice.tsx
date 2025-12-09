@@ -972,15 +972,35 @@ const Practice = () => {
     if (!speech || !editedScriptText.trim()) return;
     
     try {
+      // Update the speech text
       const { error } = await supabase
         .from('speeches')
         .update({ 
           text_original: editedScriptText.trim(),
-          text_current: editedScriptText.trim() // Reset current text to match
+          text_current: editedScriptText.trim()
         })
         .eq('id', speech.id);
       
       if (error) throw error;
+      
+      // Delete existing segments so they get regenerated with new text
+      await supabase
+        .from('speech_segments')
+        .delete()
+        .eq('speech_id', speech.id);
+      
+      // Create a single new segment with the updated text
+      await supabase
+        .from('speech_segments')
+        .insert({
+          speech_id: speech.id,
+          segment_order: 0,
+          segment_text: editedScriptText.trim(),
+          start_word_index: 0,
+          end_word_index: editedScriptText.trim().split(/\s+/).length - 1,
+          is_mastered: false,
+          times_practiced: 0
+        });
       
       toast({
         title: "Script updated",
@@ -988,6 +1008,9 @@ const Practice = () => {
       });
       
       setIsEditingScript(false);
+      
+      // Update local state immediately for practice
+      setActiveSegmentText(editedScriptText.trim());
       loadSpeech(); // Reload to get fresh data
     } catch (error: any) {
       toast({
