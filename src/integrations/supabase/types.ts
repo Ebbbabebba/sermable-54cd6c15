@@ -533,15 +533,15 @@ export type Database = {
       }
       calculate_next_interval:
         | {
+            Args: { accuracy: number; current_interval: number }
+            Returns: number
+          }
+        | {
             Args: {
               accuracy: number
               current_interval: number
               difficulty_level?: string
             }
-            Returns: number
-          }
-        | {
-            Args: { accuracy: number; current_interval: number }
             Returns: number
           }
       calculate_next_review: {
@@ -572,6 +572,15 @@ export type Database = {
               p_days_until_deadline: number
               p_last_accuracy: number
               p_performance_trend: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_days_until_deadline: number
+              p_last_accuracy: number
+              p_performance_trend: number
               p_word_count?: number
             }
             Returns: number
@@ -584,15 +593,6 @@ export type Database = {
               p_performance_trend: number
               p_word_count?: number
               p_word_visibility?: number
-            }
-            Returns: number
-          }
-        | {
-            Args: {
-              p_consecutive_struggles: number
-              p_days_until_deadline: number
-              p_last_accuracy: number
-              p_performance_trend: number
             }
             Returns: number
           }

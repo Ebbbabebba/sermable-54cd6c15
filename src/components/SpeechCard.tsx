@@ -317,13 +317,11 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           </div>
           <DialogFooter className="flex gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setShowLockDialog(false)} className="flex-1">
-              Got it
+              Wait
             </Button>
-            {subscriptionTier !== 'free' && (
-              <Button onClick={handlePracticeAnyway} className="flex-1">
-                Practice Anyway
-              </Button>
-            )}
+            <Button onClick={handlePracticeAnyway} className="flex-1">
+              Practice Now
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
