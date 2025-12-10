@@ -41,6 +41,9 @@ interface Segment {
   times_practiced: number;
   average_accuracy: number | null;
   merged_with_next: boolean;
+  visibility_percent?: number;
+  anchor_keywords?: number[];
+  next_review_at?: string;
 }
 
 interface SessionResults {
@@ -853,21 +856,50 @@ const Practice = () => {
             }
           }
 
-          // Update adaptive word hiding based on performance
+          // Calculate hidden indices from text_current (words in brackets are hidden)
+          const extractHiddenIndices = (textCurrent: string): number[] => {
+            const hiddenIndices: number[] = [];
+            const words = textCurrent.split(/\s+/).filter(w => w.trim());
+            let originalIndex = 0;
+            
+            words.forEach(word => {
+              if (word.startsWith('[') && word.endsWith(']')) {
+                hiddenIndices.push(originalIndex);
+              }
+              originalIndex++;
+            });
+            
+            return hiddenIndices;
+          };
+
+          const hiddenIndices = extractHiddenIndices(speech!.text_current || speech!.text_original);
+
+          // Get current segment ID for segment-based tracking
+          const currentSegmentId = segments.find(s => 
+            activeSegmentIndices.includes(s.segment_order)
+          )?.id;
+
+          // Update segment word mastery with hidden word failure tracking
           try {
-            const { error: hideError } = await supabase.functions.invoke('update-adaptive-word-hiding', {
+            const { error: masteryError } = await supabase.functions.invoke('update-segment-word-mastery', {
               body: {
                 speechId: speech!.id,
+                segmentId: currentSegmentId,
                 missedWords: data.missedWords || [],
-                hesitatedWords: data.delayedWords || []
+                hesitatedWords: data.delayedWords || [],
+                missedIndices: Array.from(missedWordsIndices),
+                hesitatedIndices: Array.from(hesitatedWordsIndices),
+                hiddenIndices: hiddenIndices
               }
             });
 
-            if (hideError) {
-              console.error('Error updating word hiding:', hideError);
+            if (masteryError) {
+              console.error('Error updating segment word mastery:', masteryError);
+            } else {
+              console.log('✅ Segment word mastery updated with hidden word tracking');
             }
           } catch (err) {
-            console.error('Failed to update word hiding:', err);
+            console.error('Failed to update segment word mastery:', err);
           }
 
           // AUTOMATIC SCHEDULING: Call adaptive learning - no manual rating needed

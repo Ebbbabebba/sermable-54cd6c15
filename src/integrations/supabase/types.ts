@@ -106,7 +106,10 @@ export type Database = {
         Row: {
           created_at: string
           hesitated_count: number | null
+          hidden_hesitate_count: number | null
+          hidden_miss_count: number | null
           id: string
+          is_anchor_keyword: boolean | null
           last_spoken_at: string
           missed_count: number | null
           speech_id: string
@@ -116,7 +119,10 @@ export type Database = {
         Insert: {
           created_at?: string
           hesitated_count?: number | null
+          hidden_hesitate_count?: number | null
+          hidden_miss_count?: number | null
           id?: string
+          is_anchor_keyword?: boolean | null
           last_spoken_at?: string
           missed_count?: number | null
           speech_id: string
@@ -126,7 +132,10 @@ export type Database = {
         Update: {
           created_at?: string
           hesitated_count?: number | null
+          hidden_hesitate_count?: number | null
+          hidden_miss_count?: number | null
           id?: string
+          is_anchor_keyword?: boolean | null
           last_spoken_at?: string
           missed_count?: number | null
           speech_id?: string
@@ -374,8 +383,63 @@ export type Database = {
           },
         ]
       }
+      speech_phrases: {
+        Row: {
+          created_at: string | null
+          end_word_index: number
+          id: string
+          is_hidden: boolean | null
+          phrase_text: string
+          segment_id: string | null
+          speech_id: string
+          start_word_index: number
+          times_correct: number | null
+          times_missed: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_word_index: number
+          id?: string
+          is_hidden?: boolean | null
+          phrase_text: string
+          segment_id?: string | null
+          speech_id: string
+          start_word_index: number
+          times_correct?: number | null
+          times_missed?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          end_word_index?: number
+          id?: string
+          is_hidden?: boolean | null
+          phrase_text?: string
+          segment_id?: string | null
+          speech_id?: string
+          start_word_index?: number
+          times_correct?: number | null
+          times_missed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speech_phrases_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "speech_segments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speech_phrases_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       speech_segments: {
         Row: {
+          anchor_keywords: number[] | null
           average_accuracy: number | null
           created_at: string
           end_word_index: number
@@ -383,13 +447,16 @@ export type Database = {
           is_mastered: boolean
           last_practiced_at: string | null
           merged_with_next: boolean
+          next_review_at: string | null
           segment_order: number
           segment_text: string
           speech_id: string
           start_word_index: number
           times_practiced: number
+          visibility_percent: number | null
         }
         Insert: {
+          anchor_keywords?: number[] | null
           average_accuracy?: number | null
           created_at?: string
           end_word_index: number
@@ -397,13 +464,16 @@ export type Database = {
           is_mastered?: boolean
           last_practiced_at?: string | null
           merged_with_next?: boolean
+          next_review_at?: string | null
           segment_order: number
           segment_text: string
           speech_id: string
           start_word_index: number
           times_practiced?: number
+          visibility_percent?: number | null
         }
         Update: {
+          anchor_keywords?: number[] | null
           average_accuracy?: number | null
           created_at?: string
           end_word_index?: number
@@ -411,11 +481,13 @@ export type Database = {
           is_mastered?: boolean
           last_practiced_at?: string | null
           merged_with_next?: boolean
+          next_review_at?: string | null
           segment_order?: number
           segment_text?: string
           speech_id?: string
           start_word_index?: number
           times_practiced?: number
+          visibility_percent?: number | null
         }
         Relationships: [
           {
