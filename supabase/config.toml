@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.send-adaptive-notifications]
 verify_jwt = false
+
+[functions.update-segment-word-mastery]
+verify_jwt = true
