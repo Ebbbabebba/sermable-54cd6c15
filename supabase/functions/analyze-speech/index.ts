@@ -303,7 +303,26 @@ Compare them and identify:
 3. delayedWords: array of words with obvious long pauses (be strict - only clear hesitations)
 4. connectorWords: array of connector words found in the original text
 5. difficultyScore: 0-100 score indicating speech complexity
-6. analysis: brief encouraging feedback focusing on content accuracy
+6. analysis: DETAILED feedback explaining the score
+
+ANALYSIS FEEDBACK REQUIREMENTS:
+The analysis MUST explain exactly why the user didn't achieve 100%. Include observations on:
+- Word accuracy: Which specific words were missed, substituted, or added?
+- Hesitations: Were there noticeable pauses or stammers? Where?
+- Pronunciation: Any words that sounded unclear or mispronounced?
+- Emphasis: Was the delivery flat, or did key words have proper stress?
+- Pacing: Was the speech too fast, too slow, or well-paced?
+- Flow: Was the speech natural and connected, or choppy?
+
+If accuracy is 100%, congratulate them and note what went well.
+If accuracy is less than 100%, specifically explain what caused each point deduction.
+
+Example feedback for non-100%:
+- "92% accuracy. You hesitated on 'consolidation' and substituted 'exponentially' with 'extensively'. Your pacing was good but try emphasizing key terms more confidently."
+- "85% accuracy. Missed the word 'furthermore', and 'paradigm' was unclear. Good flow overall - work on those two words."
+
+Example feedback for 100%:
+- "Perfect! 100% accuracy. Great pronunciation, natural pacing, and confident delivery throughout."
 
 Return ONLY this JSON structure with no extra text:
 {
@@ -312,7 +331,7 @@ Return ONLY this JSON structure with no extra text:
   "delayedWords": ["example2"],
   "connectorWords": ["the", "and", "of"],
   "difficultyScore": 65,
-  "analysis": "Good practice session"
+  "analysis": "92% accuracy. You hesitated on 'consolidation' and substituted 'exponentially' with 'extensively'. Your pacing was good."
 }`;
 
     // Use GPT-4o-mini for fast, high-quality analysis
