@@ -83,7 +83,6 @@
   color: hsl(var(--muted-foreground));
   background-color: transparent;
   opacity: 0.4;
-  animation: success-fade 0.6s ease-out forwards;
 }
 
 .current-word {
@@ -107,7 +106,7 @@
 /* Success fade animation */
 @keyframes success-fade {
   0% { opacity: 1; }
-  100% { opacity: 0.1; }
+  100% { opacity: 0.4; }
 }
 
 /* Recovery animation when error is corrected */
