@@ -632,7 +632,10 @@ const Practice = () => {
                         newIndex = previousSupportWordIndex + 1;
                       }
                     } else {
-                      // No support word was showing - continue processing
+                      // No support word was showing – treat this as skipping the current word
+                      // Mark the current expected word as MISSED (red) so it doesn't stay white
+                      setMissedWordsIndices(prev => new Set([...prev, newIndex]));
+                      console.log('❌ Word marked as missed due to mismatch:', expectedWord, 'at index', newIndex);
                       newIndex++;
                     }
                   }
