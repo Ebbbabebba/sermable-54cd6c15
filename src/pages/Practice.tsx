@@ -94,6 +94,7 @@ const Practice = () => {
   const [spokenWordsIndices, setSpokenWordsIndices] = useState<Set<number>>(new Set());
   const [hesitatedWordsIndices, setHesitatedWordsIndices] = useState<Set<number>>(new Set());
   const [missedWordsIndices, setMissedWordsIndices] = useState<Set<number>>(new Set());
+  const [currentHiddenIndices, setCurrentHiddenIndices] = useState<Set<number>>(new Set()); // Track hidden word indices for context-aware coloring
   const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
   const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
   const [segmentHesitations, setSegmentHesitations] = useState<Map<number, number>>(new Map());
@@ -179,6 +180,42 @@ const Practice = () => {
     setActiveSegmentIndices([currentSegment.segment_order]);
     setActiveSegmentText(currentSegment.segment_text);
   };
+
+  // Extract hidden word indices from segment text (words inside [...] are hidden)
+  const extractHiddenIndices = (text: string): Set<number> => {
+    const hiddenIndices = new Set<number>();
+    let globalWordIndex = 0;
+    
+    // Split by bracket boundaries
+    const parts = text.split(/(\[[^\]]*\])/);
+    
+    for (const part of parts) {
+      if (part.startsWith('[') && part.endsWith(']')) {
+        // This is a bracketed (hidden) section
+        const bracketContent = part.slice(1, -1);
+        const wordsInBracket = bracketContent.split(/\s+/).filter(w => w.trim());
+        for (let i = 0; i < wordsInBracket.length; i++) {
+          hiddenIndices.add(globalWordIndex + i);
+        }
+        globalWordIndex += wordsInBracket.length;
+      } else {
+        // Visible words
+        const visibleWords = part.split(/\s+/).filter(w => w.trim());
+        globalWordIndex += visibleWords.length;
+      }
+    }
+    
+    console.log('🔍 Extracted hidden indices:', [...hiddenIndices]);
+    return hiddenIndices;
+  };
+
+  // Update hidden indices when segment text changes
+  useEffect(() => {
+    if (activeSegmentText) {
+      const hiddenSet = extractHiddenIndices(activeSegmentText);
+      setCurrentHiddenIndices(hiddenSet);
+    }
+  }, [activeSegmentText]);
 
   useEffect(() => {
     loadSpeech();
@@ -387,11 +424,16 @@ const Practice = () => {
         setHintLevel(2);
         console.log('💡 Hint level 2 (half word):', wordToShow.slice(0, Math.ceil(wordToShow.length / 2)) + '...', 'step:', stepDelay);
         
-        // Level 3: Full word (after another step) - mark as hesitated
+        // Level 3: Full word (after another step) - mark as hesitated ONLY if hidden
         hintTimerRef.current = setTimeout(() => {
           setHintLevel(3);
-          setHesitatedWordsIndices(prev => new Set([...prev, wordIndex]));
-          console.log('💡 Hint level 3 (full word - marked yellow):', wordToShow);
+          // Only mark as hesitated (yellow) if the word is hidden
+          if (currentHiddenIndices.has(wordIndex)) {
+            setHesitatedWordsIndices(prev => new Set([...prev, wordIndex]));
+            console.log('💡 Hint level 3 (full word - marked yellow, hidden word):', wordToShow);
+          } else {
+            console.log('💡 Hint level 3 (full word shown, visible word - no yellow):', wordToShow);
+          }
           
           // Track hesitation for segment
           const segmentIndex = Math.floor((wordIndex / expectedWords.length) * 10);
@@ -531,9 +573,14 @@ const Practice = () => {
                   if (isExactMatch || isPartialMatch || isSimilar) {
                     // Check if this word was shown as support word
                     if (wasSupportWordShowing && previousSupportWordIndex === newIndex) {
-                      // User said it correctly after support word - mark yellow
-                      setHesitatedWordsIndices(prev => new Set([...prev, newIndex]));
-                      console.log('✓ Support word spoken correctly (yellow):', expectedWord, 'at index', newIndex);
+                      // User said it correctly after support word - mark yellow ONLY if hidden
+                      if (currentHiddenIndices.has(newIndex)) {
+                        setHesitatedWordsIndices(prev => new Set([...prev, newIndex]));
+                        console.log('✓ Hidden support word spoken correctly (yellow):', expectedWord, 'at index', newIndex);
+                      } else {
+                        setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
+                        console.log('✓ Visible support word spoken correctly (gray):', expectedWord, 'at index', newIndex);
+                      }
                     } else {
                       // Normal correct word - mark as spoken
                       setSpokenWordsIndices(prev => new Set([...prev, newIndex]));
@@ -590,16 +637,20 @@ const Practice = () => {
                     // Word doesn't match
                     console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
                     
-                    // If support word was showing, mark it as missed (red)
+                    // If support word was showing, mark it as missed (red) ONLY if hidden
                     if (wasSupportWordShowing && previousSupportWordIndex !== null) {
-                      // Remove from hesitated (yellow) and mark as red (missed)
+                      // Remove from hesitated (yellow) and mark as red (missed) ONLY if hidden
                       setHesitatedWordsIndices(prev => {
                         const updated = new Set(prev);
                         updated.delete(previousSupportWordIndex);
                         return updated;
                       });
-                      setMissedWordsIndices(prev => new Set([...prev, previousSupportWordIndex]));
-                      console.log('❌ Support word not spoken correctly (red):', allExpectedWords[previousSupportWordIndex], 'at index', previousSupportWordIndex);
+                      if (currentHiddenIndices.has(previousSupportWordIndex)) {
+                        setMissedWordsIndices(prev => new Set([...prev, previousSupportWordIndex]));
+                        console.log('❌ Hidden support word not spoken correctly (red):', allExpectedWords[previousSupportWordIndex], 'at index', previousSupportWordIndex);
+                      } else {
+                        console.log('⏭️ Visible support word skipped (no red):', allExpectedWords[previousSupportWordIndex], 'at index', previousSupportWordIndex);
+                      }
                       
                       // Try to find the spoken word ahead
                       let found = false;
@@ -633,9 +684,13 @@ const Practice = () => {
                       }
                     } else {
                       // No support word was showing – treat this as skipping the current word
-                      // Mark the current expected word as MISSED (red) so it doesn't stay white
-                      setMissedWordsIndices(prev => new Set([...prev, newIndex]));
-                      console.log('❌ Word marked as missed due to mismatch:', expectedWord, 'at index', newIndex);
+                      // Mark as missed (red) ONLY if the word is hidden
+                      if (currentHiddenIndices.has(newIndex)) {
+                        setMissedWordsIndices(prev => new Set([...prev, newIndex]));
+                        console.log('❌ Hidden word marked as missed due to mismatch:', expectedWord, 'at index', newIndex);
+                      } else {
+                        console.log('⏭️ Visible word skipped (no red mark):', expectedWord, 'at index', newIndex);
+                      }
                       newIndex++;
                     }
                   }
