@@ -281,6 +281,67 @@ serve(async (req) => {
     
     let adaptiveIntervalMinutes: number;
     
+    // ============================================================
+    // PERSONALIZATION: Fetch user learning analytics
+    // ============================================================
+    const { data: userAnalytics } = await supabase
+      .from('user_learning_analytics')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+    
+    // Personalization modifiers based on historical learning patterns
+    let personalizationModifier = 1.0;
+    let personalOptimalSegmentLength = 50;
+    let personalVisibilityReductionRate = 10;
+    
+    if (userAnalytics && userAnalytics.total_sessions_completed >= 3) {
+      console.log('📊 Applying personalization from', userAnalytics.total_sessions_completed, 'sessions');
+      
+      // Check if practicing during preferred hours (performance boost)
+      const currentHour = new Date().getHours();
+      const preferredHours = userAnalytics.preferred_practice_hours || [];
+      const isPeakHour = preferredHours.includes(currentHour);
+      
+      if (isPeakHour) {
+        personalizationModifier *= 1.15; // 15% longer intervals during peak performance hours
+        console.log('⭐ Practicing during peak performance hour');
+      }
+      
+      // Adjust based on user's overall mastery velocity
+      const masteryVelocity = userAnalytics.overall_mastery_velocity || 0;
+      if (masteryVelocity > 10) {
+        personalizationModifier *= 1.25; // Fast learner - longer intervals
+      } else if (masteryVelocity > 5) {
+        personalizationModifier *= 1.1;
+      } else if (masteryVelocity < -5) {
+        personalizationModifier *= 0.85; // Needs more frequent practice
+      } else if (masteryVelocity < -10) {
+        personalizationModifier *= 0.7;
+      }
+      
+      // Use personalized optimal segment length
+      personalOptimalSegmentLength = userAnalytics.optimal_segment_length || 50;
+      personalVisibilityReductionRate = userAnalytics.preferred_visibility_reduction_rate || 10;
+      
+      // Adjust for retention decay pattern
+      const decayRate = userAnalytics.retention_decay_rate || 0.5;
+      if (decayRate > 0.6) {
+        personalizationModifier *= 0.85; // Faster forgetting - shorter intervals
+      } else if (decayRate < 0.3) {
+        personalizationModifier *= 1.15; // Slower forgetting - longer intervals
+      }
+      
+      console.log('Personalization applied:', {
+        isPeakHour,
+        masteryVelocity: masteryVelocity.toFixed(2),
+        decayRate: decayRate.toFixed(2),
+        modifier: personalizationModifier.toFixed(2),
+        optimalSegment: personalOptimalSegmentLength,
+        visibilityRate: personalVisibilityReductionRate
+      });
+    }
+    
     // Calculate "memorization ease" - how quickly user learns THIS speech
     // Based on: improvement rate, consistency, struggle patterns
     let memorizationEaseScore = 50; // 0-100 scale, 50 = average
@@ -301,6 +362,14 @@ serve(async (req) => {
     // Factor 4: Session count progress (more sessions = more data = adjust)
     if (sessionCount >= 5 && weightedAccuracy >= 70) memorizationEaseScore += 5;
     if (sessionCount >= 10 && weightedAccuracy >= 75) memorizationEaseScore += 10;
+    
+    // Factor 5: Personalization bonus for experienced users
+    if (userAnalytics && userAnalytics.total_sessions_completed >= 10) {
+      const avgRetained = userAnalytics.avg_words_retained_per_session || 0;
+      if (avgRetained > wordCount * 0.8) {
+        memorizationEaseScore += 10; // High retention history
+      }
+    }
     
     // Clamp to valid range
     memorizationEaseScore = Math.max(0, Math.min(100, memorizationEaseScore));
@@ -369,7 +438,8 @@ serve(async (req) => {
       // Deadline pressure override for early stage
       const pressureMultiplier = Math.max(0.3, 1 - (deadlinePressure * 0.07));
       
-      adaptiveIntervalMinutes = baseMinutes * performanceMultiplier * easeMultiplier * pressureMultiplier;
+      // Apply personalization if available (even in early stage)
+      adaptiveIntervalMinutes = baseMinutes * performanceMultiplier * easeMultiplier * pressureMultiplier * personalizationModifier;
       
       // Cap early stage: 30 min to 8 hours
       adaptiveIntervalMinutes = Math.max(30, Math.min(8 * 60, adaptiveIntervalMinutes));
@@ -378,7 +448,8 @@ serve(async (req) => {
         base: Math.round(baseMinutes) + 'min',
         performanceMultiplier: performanceMultiplier.toFixed(2),
         easeMultiplier: easeMultiplier.toFixed(2),
-        pressureMultiplier: pressureMultiplier.toFixed(2)
+        pressureMultiplier: pressureMultiplier.toFixed(2),
+        personalization: personalizationModifier.toFixed(2)
       });
     }
     // STAGE 2: ESTABLISHED LEARNING - Full adaptive algorithm
@@ -459,8 +530,8 @@ serve(async (req) => {
       // Modifier 5: Deadline pressure (strongest modifier)
       const pressureModifier = Math.max(0.1, 1 - (deadlinePressure * 0.09));
       
-      // Apply all modifiers
-      adaptiveIntervalMinutes = adaptiveIntervalMinutes * easeModifier * velocityModifier * visibilityBonus * struggleModifier * pressureModifier;
+      // Apply all modifiers including personalization
+      adaptiveIntervalMinutes = adaptiveIntervalMinutes * easeModifier * velocityModifier * visibilityBonus * struggleModifier * pressureModifier * personalizationModifier;
       
       console.log('Interval calculation:', {
         baseHours: baseIntervalHours,
@@ -471,7 +542,8 @@ serve(async (req) => {
           velocity: velocityModifier.toFixed(2) + 'x',
           visibilityBonus: visibilityBonus.toFixed(2) + 'x',
           struggle: struggleModifier.toFixed(2) + 'x',
-          pressure: pressureModifier.toFixed(2) + 'x'
+          pressure: pressureModifier.toFixed(2) + 'x',
+          personalization: personalizationModifier.toFixed(2) + 'x'
         },
         resultMinutes: Math.round(adaptiveIntervalMinutes)
       });
@@ -525,6 +597,149 @@ serve(async (req) => {
 
     if (scheduleError) {
       console.error('Error updating schedule:', scheduleError);
+    }
+
+    // ============================================================
+    // USER LEARNING ANALYTICS - Personalization Data Collection
+    // ============================================================
+    const currentHour = new Date().getHours();
+    
+    // Get existing analytics or create new
+    const { data: existingAnalytics } = await supabase
+      .from('user_learning_analytics')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+    
+    // Calculate session metrics
+    const wordsInSession = wordCount;
+    const hesitationRate = 1 - (sessionAccuracy / 100); // Simplified hesitation estimation
+    
+    // Calculate words per minute from session history
+    const { data: recentSession } = await supabase
+      .from('practice_sessions')
+      .select('duration, speech_id')
+      .eq('speech_id', speechId)
+      .order('session_date', { ascending: false })
+      .limit(1)
+      .single();
+    
+    const sessionDurationMinutes = (recentSession?.duration || 120) / 60;
+    const wordsPerMinute = wordsInSession / Math.max(1, sessionDurationMinutes);
+    
+    if (existingAnalytics) {
+      // Update existing analytics with rolling averages
+      const totalSessions = existingAnalytics.total_sessions_completed + 1;
+      
+      // Update practice hour performance (track performance by hour)
+      const hourPerformance = existingAnalytics.practice_hour_performance || {};
+      const hourKey = currentHour.toString();
+      const hourData = hourPerformance[hourKey] || { sessions: 0, avgAccuracy: 0 };
+      hourData.avgAccuracy = ((hourData.avgAccuracy * hourData.sessions) + weightedAccuracy) / (hourData.sessions + 1);
+      hourData.sessions += 1;
+      hourPerformance[hourKey] = hourData;
+      
+      // Find preferred practice hours (top 3 hours with best performance)
+      const hourEntries = Object.entries(hourPerformance)
+        .filter(([_, data]: [string, any]) => data.sessions >= 2)
+        .sort((a: any, b: any) => b[1].avgAccuracy - a[1].avgAccuracy)
+        .slice(0, 3)
+        .map(([hour]) => parseInt(hour));
+      
+      // Calculate rolling averages
+      const newAvgWordsPerMinute = ((existingAnalytics.avg_words_per_minute * existingAnalytics.total_sessions_completed) + wordsPerMinute) / totalSessions;
+      const newAvgHesitationRate = ((existingAnalytics.avg_hesitation_rate * existingAnalytics.total_sessions_completed) + hesitationRate) / totalSessions;
+      const newAvgWordsRetained = ((existingAnalytics.avg_words_retained_per_session * existingAnalytics.total_sessions_completed) + (wordsInSession * (sessionAccuracy / 100))) / totalSessions;
+      
+      // Calculate retention decay rate based on performance over sessions
+      let decayRate = existingAnalytics.retention_decay_rate;
+      if (learningVelocity > 0) {
+        decayRate = Math.max(0.1, decayRate - 0.02); // Slower decay if improving
+      } else if (learningVelocity < -5) {
+        decayRate = Math.min(0.9, decayRate + 0.03); // Faster decay if declining
+      }
+      
+      // Calculate optimal segment length based on success patterns
+      let optimalSegment = existingAnalytics.optimal_segment_length;
+      if (weightedAccuracy >= 80 && currentSegmentLength <= 60) {
+        optimalSegment = Math.min(100, optimalSegment + 5); // Can handle larger segments
+      } else if (weightedAccuracy < 60 && currentSegmentLength >= 50) {
+        optimalSegment = Math.max(20, optimalSegment - 5); // Needs smaller segments
+      }
+      
+      // Calculate visibility reduction rate preference
+      let visibilityRate = existingAnalytics.preferred_visibility_reduction_rate;
+      if (isReducingNotes && weightedAccuracy >= 75) {
+        visibilityRate = Math.min(20, visibilityRate + 1); // Can handle faster reduction
+      } else if (!isReducingNotes && consecutiveStruggles >= 2) {
+        visibilityRate = Math.max(3, visibilityRate - 1); // Needs slower reduction
+      }
+      
+      // Calculate struggle recovery pattern
+      let recoveryTime = existingAnalytics.struggle_recovery_sessions;
+      if (consecutiveStruggles === 0 && existingAnalytics.total_sessions_completed > 5) {
+        recoveryTime = Math.max(1, recoveryTime - 0.1); // Recovers quickly
+      } else if (consecutiveStruggles >= 3) {
+        recoveryTime = Math.min(5, recoveryTime + 0.2); // Takes longer to recover
+      }
+      
+      // Calculate mastery velocity (how fast user reaches mastery)
+      const masteryVelocity = learningVelocity > 0 
+        ? (existingAnalytics.overall_mastery_velocity + learningVelocity) / 2
+        : existingAnalytics.overall_mastery_velocity * 0.95;
+      
+      // Update analytics
+      const { error: analyticsError } = await supabase
+        .from('user_learning_analytics')
+        .update({
+          preferred_practice_hours: hourEntries.length > 0 ? hourEntries : existingAnalytics.preferred_practice_hours,
+          practice_hour_performance: hourPerformance,
+          avg_words_per_minute: newAvgWordsPerMinute,
+          avg_hesitation_rate: newAvgHesitationRate,
+          avg_words_retained_per_session: newAvgWordsRetained,
+          retention_decay_rate: decayRate,
+          optimal_segment_length: optimalSegment,
+          preferred_visibility_reduction_rate: visibilityRate,
+          struggle_recovery_sessions: recoveryTime,
+          total_sessions_completed: totalSessions,
+          total_words_practiced: existingAnalytics.total_words_practiced + wordsInSession,
+          overall_mastery_velocity: masteryVelocity,
+          optimal_review_interval_minutes: Math.round(adaptiveIntervalMinutes)
+        })
+        .eq('user_id', user.id);
+      
+      if (analyticsError) {
+        console.error('Error updating learning analytics:', analyticsError);
+      } else {
+        console.log('📊 Learning analytics updated:', {
+          totalSessions,
+          preferredHours: hourEntries,
+          avgWPM: newAvgWordsPerMinute.toFixed(1),
+          optimalSegment,
+          masteryVelocity: masteryVelocity.toFixed(2)
+        });
+      }
+    } else {
+      // Create new analytics record
+      const { error: insertError } = await supabase
+        .from('user_learning_analytics')
+        .insert({
+          user_id: user.id,
+          preferred_practice_hours: [currentHour],
+          practice_hour_performance: { [currentHour]: { sessions: 1, avgAccuracy: weightedAccuracy } },
+          avg_words_per_minute: wordsPerMinute,
+          avg_hesitation_rate: hesitationRate,
+          avg_words_retained_per_session: wordsInSession * (sessionAccuracy / 100),
+          total_sessions_completed: 1,
+          total_words_practiced: wordsInSession,
+          overall_mastery_velocity: learningVelocity
+        });
+      
+      if (insertError) {
+        console.error('Error creating learning analytics:', insertError);
+      } else {
+        console.log('📊 Learning analytics created for user');
+      }
     }
 
     // Generate enhanced recommendation based on learning stage and performance
@@ -617,8 +832,19 @@ serve(async (req) => {
           deadlineUrgency: deadlinePressure >= 8 ? 'critical' :
                           deadlinePressure >= 6 ? 'high' :
                           deadlinePressure >= 4 ? 'moderate' :
-                          deadlinePressure >= 2 ? 'low' : 'none'
+                          deadlinePressure >= 2 ? 'low' : 'none',
+          personalizationActive: personalizationModifier !== 1.0,
+          personalizationModifier: personalizationModifier
         },
+        personalization: userAnalytics ? {
+          totalSessionsAnalyzed: userAnalytics.total_sessions_completed,
+          preferredPracticeHours: userAnalytics.preferred_practice_hours,
+          avgWordsPerMinute: Math.round(userAnalytics.avg_words_per_minute * 10) / 10,
+          avgHesitationRate: Math.round((userAnalytics.avg_hesitation_rate || 0) * 100),
+          retentionDecayRate: Math.round((userAnalytics.retention_decay_rate || 0.5) * 100),
+          optimalSegmentLength: userAnalytics.optimal_segment_length,
+          masteryVelocity: Math.round((userAnalytics.overall_mastery_velocity || 0) * 10) / 10
+        } : null,
         automationSummary: {
           nextSessionTiming: adaptiveIntervalMinutes < 60 
             ? `${Math.round(adaptiveIntervalMinutes)} minutes`
@@ -632,7 +858,8 @@ serve(async (req) => {
                          daysUntilDeadline <= 7 ? 'Last week' :
                          daysUntilDeadline <= 14 ? 'Two weeks out' :
                          'Comfortable timeline',
-          learningPhase: isEarlyStage ? `Foundation building (${sessionCount + 1}/10)` : 'Adaptive mastery'
+          learningPhase: isEarlyStage ? `Foundation building (${sessionCount + 1}/10)` : 'Adaptive mastery',
+          personalized: userAnalytics ? true : false
         },
         recommendation
       }),

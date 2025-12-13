@@ -588,6 +588,105 @@ export type Database = {
           },
         ]
       }
+      user_learning_analytics: {
+        Row: {
+          avg_hesitation_rate: number | null
+          avg_response_delay_ms: number | null
+          avg_words_per_minute: number | null
+          avg_words_retained_per_session: number | null
+          created_at: string | null
+          id: string
+          optimal_review_interval_minutes: number | null
+          optimal_segment_length: number | null
+          overall_mastery_velocity: number | null
+          practice_hour_performance: Json | null
+          preferred_practice_hours: number[] | null
+          preferred_visibility_reduction_rate: number | null
+          retention_decay_rate: number | null
+          struggle_recovery_sessions: number | null
+          total_sessions_completed: number | null
+          total_words_practiced: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avg_hesitation_rate?: number | null
+          avg_response_delay_ms?: number | null
+          avg_words_per_minute?: number | null
+          avg_words_retained_per_session?: number | null
+          created_at?: string | null
+          id?: string
+          optimal_review_interval_minutes?: number | null
+          optimal_segment_length?: number | null
+          overall_mastery_velocity?: number | null
+          practice_hour_performance?: Json | null
+          preferred_practice_hours?: number[] | null
+          preferred_visibility_reduction_rate?: number | null
+          retention_decay_rate?: number | null
+          struggle_recovery_sessions?: number | null
+          total_sessions_completed?: number | null
+          total_words_practiced?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avg_hesitation_rate?: number | null
+          avg_response_delay_ms?: number | null
+          avg_words_per_minute?: number | null
+          avg_words_retained_per_session?: number | null
+          created_at?: string | null
+          id?: string
+          optimal_review_interval_minutes?: number | null
+          optimal_segment_length?: number | null
+          overall_mastery_velocity?: number | null
+          practice_hour_performance?: Json | null
+          preferred_practice_hours?: number[] | null
+          preferred_visibility_reduction_rate?: number | null
+          retention_decay_rate?: number | null
+          struggle_recovery_sessions?: number | null
+          total_sessions_completed?: number | null
+          total_words_practiced?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_word_mastery: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_seen_at: string | null
+          mastery_level: number | null
+          total_correct: number | null
+          total_hesitated: number | null
+          total_missed: number | null
+          user_id: string
+          word: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          mastery_level?: number | null
+          total_correct?: number | null
+          total_hesitated?: number | null
+          total_missed?: number | null
+          user_id: string
+          word: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          mastery_level?: number | null
+          total_correct?: number | null
+          total_hesitated?: number | null
+          total_missed?: number | null
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
