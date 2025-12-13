@@ -750,20 +750,19 @@ const EnhancedWordTracker = ({
       return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 scale-110 animate-pulse font-semibold border border-blue-500/40");
     }
 
-    // AFTER word is spoken and faded:
+    // AFTER word is spoken - ALWAYS fade out
+    if (word.spoken) {
+      // Missed/Skipped - RED, fades out
+      if (word.performanceStatus === "missed") {
+        return cn(base, "bg-red-500/20 text-red-600 dark:text-red-400 border-b-2 border-red-500/40 animate-fade-out");
+      }
 
-    // Missed/Skipped - RED, fades to dots
-    if (word.performanceStatus === "missed" && word.hidden) {
-      return cn(base, "bg-red-500/20 text-red-600 dark:text-red-400 border-b-2 border-red-500/40 animate-fade-out");
-    }
+      // Hesitated - YELLOW, fades out
+      if (word.performanceStatus === "hesitated") {
+        return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40 animate-fade-out");
+      }
 
-    // Hesitated - YELLOW, fades to dots
-    if (word.performanceStatus === "hesitated" && word.hidden) {
-      return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40 animate-fade-out");
-    }
-
-    // Correct - gray fade out (no blue, no pulse)
-    if (word.spoken && word.performanceStatus === "correct" && word.hidden) {
+      // Correct or any spoken word - gray fade out
       return cn(base, "bg-muted/30 text-muted-foreground/40 animate-fade-out");
     }
 
