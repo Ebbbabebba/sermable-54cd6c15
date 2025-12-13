@@ -236,11 +236,12 @@ serve(async (req) => {
     const frequencyMultiplier = frequencyData || 1.0;
     console.log('Adaptive frequency multiplier:', frequencyMultiplier + 'x');
 
-    // Update speech performance tracking (store weighted accuracy and new segment length)
+    // Update speech performance tracking
+    // Store weighted accuracy for algorithm, but raw accuracy is returned for display
     const { error: updateError } = await supabase
       .from('speeches')
       .update({
-        last_accuracy: weightedAccuracy,
+        last_accuracy: sessionAccuracy, // Store RAW accuracy for user-facing display
         performance_trend: newTrend,
         consecutive_struggles: consecutiveStruggles,
         base_word_visibility_percent: newVisibility,

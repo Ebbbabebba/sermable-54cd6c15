@@ -24,16 +24,18 @@ serve(async (req) => {
 
     console.log('📝 Segmenting speech:', speechId);
 
-    // Get the speech
+    // Get the speech with user_id
     const { data: speech, error: speechError } = await supabase
       .from('speeches')
-      .select('text_original')
+      .select('text_original, user_id')
       .eq('id', speechId)
       .single();
 
     if (speechError || !speech) {
       throw new Error('Speech not found');
     }
+    
+    const userId = speech.user_id;
 
     const text = speech.text_original;
     const words = text.split(/\s+/);
@@ -167,12 +169,94 @@ serve(async (req) => {
     if (insertError) {
       throw insertError;
     }
+    
+    // ========== CROSS-SPEECH LEARNING ==========
+    // Initialize mastered_words from user's global word mastery
+    console.log('🧠 Initializing cross-speech word mastery...');
+    
+    // Get user's global word mastery
+    const { data: userMastery } = await supabase
+      .from('user_word_mastery')
+      .select('word, mastery_level, total_correct')
+      .eq('user_id', userId)
+      .gt('mastery_level', 30); // Only words with decent mastery
+    
+    if (userMastery && userMastery.length > 0) {
+      console.log(`📚 Found ${userMastery.length} mastered words from previous speeches`);
+      
+      // Create a map for quick lookup
+      const masteryMap = new Map(userMastery.map((m: any) => [m.word.toLowerCase(), m]));
+      
+      // Process words in the new speech
+      const wordsToPreMaster: any[] = [];
+      const wordsToHide: number[] = [];
+      
+      words.forEach((word: string, index: number) => {
+        const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+        if (!cleanWord) return;
+        
+        const existing = masteryMap.get(cleanWord);
+        if (existing) {
+          // User already knows this word from other speeches
+          const shouldHide = existing.mastery_level >= 60 && existing.total_correct >= 3;
+          
+          wordsToPreMaster.push({
+            speech_id: speechId,
+            word: cleanWord,
+            times_spoken_correctly: Math.min(existing.total_correct, 5), // Cap at 5
+            missed_count: 0,
+            hesitated_count: 0,
+            hidden_miss_count: 0,
+            hidden_hesitate_count: 0,
+            is_anchor_keyword: false
+          });
+          
+          if (shouldHide) {
+            wordsToHide.push(index);
+          }
+        }
+      });
+      
+      // Insert pre-mastered words
+      if (wordsToPreMaster.length > 0) {
+        await supabase
+          .from('mastered_words')
+          .upsert(wordsToPreMaster, { onConflict: 'speech_id,word' });
+        console.log(`✅ Pre-initialized ${wordsToPreMaster.length} words from cross-speech mastery`);
+      }
+      
+      // Update text_current with pre-hidden words
+      if (wordsToHide.length > 0) {
+        const modifiedWords = words.map((word: string, index: number) => {
+          if (wordsToHide.includes(index)) {
+            return `[${word}]`;
+          }
+          return word;
+        });
+        
+        const textCurrent = modifiedWords.join(' ');
+        const visibilityPercent = Math.round(((words.length - wordsToHide.length) / words.length) * 100);
+        
+        await supabase
+          .from('speeches')
+          .update({ 
+            text_current: textCurrent,
+            base_word_visibility_percent: visibilityPercent
+          })
+          .eq('id', speechId);
+        
+        console.log(`📝 Pre-hidden ${wordsToHide.length} words (${100 - visibilityPercent}% hidden from cross-speech mastery)`);
+      }
+    } else {
+      console.log('📝 No cross-speech mastery found - starting fresh');
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         segmentCount: segments.length,
-        segments 
+        segments,
+        crossSpeechWordsApplied: userMastery?.length || 0
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -307,6 +307,9 @@ Deno.serve(async (req) => {
     // Generate/update phrase chunks
     await generatePhraseChunks(supabaseClient, speechId, words, wordMasteryMap)
 
+    // Sync to user_word_mastery for cross-speech learning
+    await syncToUserWordMastery(supabaseClient, speech.user_id, wordMasteryMap)
+
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -418,4 +421,57 @@ async function generatePhraseChunks(
   }
 
   console.log(`Generated ${phrases.length} phrase chunks`)
+}
+
+// Sync word mastery to user-level for cross-speech learning
+async function syncToUserWordMastery(
+  supabase: any,
+  userId: string,
+  wordMasteryMap: Map<string, WordMasteryData>
+) {
+  console.log(`Syncing ${wordMasteryMap.size} words to user_word_mastery for user ${userId}`)
+  
+  for (const [word, data] of wordMasteryMap.entries()) {
+    // Get current user-level mastery
+    const { data: existing } = await supabase
+      .from('user_word_mastery')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('word', word)
+      .single()
+    
+    // Calculate mastery level (0-100 scale)
+    const totalAttempts = data.correctCount + data.missedCount + data.hesitatedCount
+    const masteryLevel = totalAttempts > 0 
+      ? Math.min(100, (data.correctCount / totalAttempts) * 100 * (1 + Math.log10(totalAttempts + 1) * 0.2))
+      : 0
+    
+    if (existing) {
+      // Update existing record
+      await supabase
+        .from('user_word_mastery')
+        .update({
+          total_correct: existing.total_correct + data.correctCount,
+          total_missed: existing.total_missed + data.missedCount,
+          total_hesitated: existing.total_hesitated + data.hesitatedCount,
+          mastery_level: Math.max(existing.mastery_level, masteryLevel), // Keep highest mastery
+          last_seen_at: new Date().toISOString()
+        })
+        .eq('id', existing.id)
+    } else {
+      // Insert new record
+      await supabase
+        .from('user_word_mastery')
+        .insert({
+          user_id: userId,
+          word: word,
+          total_correct: data.correctCount,
+          total_missed: data.missedCount,
+          total_hesitated: data.hesitatedCount,
+          mastery_level: masteryLevel
+        })
+    }
+  }
+  
+  console.log(`User word mastery sync complete`)
 }
