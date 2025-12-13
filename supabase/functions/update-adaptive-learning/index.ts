@@ -126,17 +126,23 @@ serve(async (req) => {
     const newTrend = Math.max(-1, Math.min(1, accuracyDelta / 30));
     
     // Track consecutive struggles with severity weighting
+    // CRITICAL: Use RAW accuracy for struggle detection - don't penalize users for high visibility
     let consecutiveStruggles = speech.consecutive_struggles || 0;
-    if (weightedAccuracy < 50) {
-      // Severe struggle: big penalty
-      consecutiveStruggles += (weightedAccuracy < 30 ? 2 : 1);
-    } else if (weightedAccuracy >= 65) {
-      // Good recovery: reset faster
+    
+    if (sessionAccuracy >= 95) {
+      // Near-perfect or perfect raw delivery - reset struggles completely
+      consecutiveStruggles = 0;
+    } else if (sessionAccuracy >= 85) {
+      // Good raw delivery - reduce struggles significantly
       consecutiveStruggles = Math.max(0, consecutiveStruggles - 2);
-    } else if (weightedAccuracy >= 50) {
-      // Moderate recovery
+    } else if (sessionAccuracy >= 70) {
+      // Decent raw delivery - reduce struggles
       consecutiveStruggles = Math.max(0, consecutiveStruggles - 1);
+    } else if (sessionAccuracy < 60) {
+      // Actually struggling with words - increment
+      consecutiveStruggles += (sessionAccuracy < 40 ? 2 : 1);
     }
+    // Between 60-70%: no change to consecutive struggles
     
     // Calculate days until deadline
     const goalDate = new Date(speech.goal_date);
