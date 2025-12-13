@@ -1496,22 +1496,24 @@ const Practice = () => {
             <CardContent className="pt-6">
               <div className="text-center py-12 space-y-4">
                 {isLocked && !overrideLock && (
-                  <div className="mb-4 p-4 bg-muted rounded-lg">
+                  <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <Lock className="h-5 w-5 text-muted-foreground" />
-                      <p className="font-medium">
-                        Done for today
+                      <Clock className="h-6 w-6 text-primary animate-pulse" />
+                      <p className="font-bold text-lg">
+                        🎯 Next session due!
                       </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-md font-medium">
                       Come back{" "}
                       {nextReviewDate && (
                         <LockCountdown 
                           nextReviewDate={nextReviewDate} 
-                          className="font-medium text-foreground" 
+                          className="font-bold text-primary" 
                         />
                       )}
-                      {" "}to practice again
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      ⚡ Practicing at the right time strengthens your memory 3x more!
                     </p>
                     {subscriptionTier !== 'free' && (
                       <Button 
@@ -1521,13 +1523,21 @@ const Practice = () => {
                         onClick={handleOverrideLock}
                       >
                         <Unlock className="h-4 w-4 mr-2" />
-                        Practice Anyway
+                        Practice Now Anyway
                       </Button>
                     )}
                     {subscriptionTier === 'free' && (
-                      <p className="text-xs text-muted-foreground mt-3">
-                        Upgrade to premium to practice anytime
-                      </p>
+                      <div className="mt-3 p-2 bg-background/50 rounded text-sm">
+                        🔓 <strong>Premium:</strong> Practice anytime you want
+                        <Button 
+                          variant="link" 
+                          size="sm" 
+                          className="ml-2 h-auto p-0"
+                          onClick={() => navigate('/settings')}
+                        >
+                          Upgrade
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
