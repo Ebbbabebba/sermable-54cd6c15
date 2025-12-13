@@ -997,21 +997,13 @@ const Practice = () => {
             console.error('Failed to update adaptive schedule:', err);
           }
 
-          // Update speech with new cue text
-          const { error: updateError } = await supabase
-            .from('speeches')
-            .update({ text_current: data.cueText })
-            .eq('id', speech!.id);
-
-          if (updateError) {
-            console.error('Error updating speech:', updateError);
-          } else {
-            loadSpeech();
-          }
+          // Don't overwrite the main script with AI cue text.
+          // Cue text is used only for analysis display, while
+          // progressive word hiding is driven by the adaptive mastery system.
 
           toast({
             title: "Analysis complete!",
-            description: `${data.accuracy}% accuracy. Rate your recall to set your next review.`,
+            description: `${data.accuracy}% accuracy.`,
           });
         } catch (innerError: any) {
           console.error('Error in analysis:', innerError);
