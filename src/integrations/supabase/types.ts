@@ -588,6 +588,42 @@ export type Database = {
           },
         ]
       }
+      user_word_mastery: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_seen_at: string | null
+          mastery_level: number | null
+          total_correct: number | null
+          total_hesitated: number | null
+          total_missed: number | null
+          user_id: string
+          word: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          mastery_level?: number | null
+          total_correct?: number | null
+          total_hesitated?: number | null
+          total_missed?: number | null
+          user_id: string
+          word: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          mastery_level?: number | null
+          total_correct?: number | null
+          total_hesitated?: number | null
+          total_missed?: number | null
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
