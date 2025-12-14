@@ -191,6 +191,7 @@ Deno.serve(async (req) => {
     // Calculate which words to hide based on new logic
     const wordsToHide = new Set<number>()
     const anchorKeywordIndices: number[] = []
+    const candidatesToHide: Array<{ index: number; priority: number; isSimple: boolean }> = []
 
     words.forEach((word: string, index: number) => {
       const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
@@ -221,18 +222,34 @@ Deno.serve(async (req) => {
         }
       }
 
-      // RULE 4: Simple words hide after 1 clean correct
+      // RULE 4: Simple words hide after 1 clean correct - track as candidate
       if (data.isSimple && data.correctCount >= 1 && data.missedCount === 0 && data.hesitatedCount === 0) {
-        wordsToHide.add(index)
+        candidatesToHide.push({ index, priority: 1, isSimple: true })
         return
       }
 
-      // RULE 5: Harder words need 3 clean corrects
+      // RULE 5: Harder words need 3 clean corrects - track as candidate
       if (!data.isSimple && data.correctCount >= 3 && data.missedCount === 0 && data.hesitatedCount === 0) {
-        wordsToHide.add(index)
+        candidatesToHide.push({ index, priority: 2, isSimple: false })
         return
       }
     })
+
+    // GRADUAL HIDING: Only hide 1 word per session for smooth progression
+    // Prioritize simple words first (priority 1), then harder words (priority 2)
+    const MAX_NEW_WORDS_TO_HIDE_PER_SESSION = 1
+    
+    // Sort candidates: simple words first, then by index for consistency
+    candidatesToHide.sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority
+      return a.index - b.index
+    })
+
+    // Only take the first N candidates
+    const newWordsToHide = candidatesToHide.slice(0, MAX_NEW_WORDS_TO_HIDE_PER_SESSION)
+    newWordsToHide.forEach(candidate => wordsToHide.add(candidate.index))
+    
+    console.log(`Candidates to hide: ${candidatesToHide.length}, actually hiding ${newWordsToHide.length} new word(s)`)
 
     // Create text_current with brackets around hidden words
     const modifiedWords = words.map((word: string, index: number) => {
