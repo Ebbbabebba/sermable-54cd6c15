@@ -804,6 +804,24 @@ const EnhancedWordTracker = ({
     }
   }, [currentWordIndex]);
 
+  // Helper to check if a word is in a bracket with remaining unspoken words
+  const hasBracketUnspokenWords = (index: number): boolean => {
+    const word = wordStates[index];
+    if (!word?.hidden) return false;
+    
+    // Find bracket bounds
+    let start = index;
+    while (start > 0 && wordStates[start - 1]?.hidden) start--;
+    let end = index;
+    while (end < wordStates.length - 1 && wordStates[end + 1]?.hidden) end++;
+    
+    // Check if any word in bracket is still unspoken
+    for (let i = start; i <= end; i++) {
+      if (!wordStates[i].spoken) return true;
+    }
+    return false;
+  };
+
   const getWordClassName = (word: WordState, index: number) => {
     const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-in-out";
 
@@ -822,7 +840,7 @@ const EnhancedWordTracker = ({
       return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 scale-110 animate-pulse font-semibold border border-blue-500/40");
     }
 
-    // AFTER word is spoken - ALWAYS fade out smoothly
+    // AFTER word is spoken - check bracket state
     if (word.spoken) {
       const fadeOutBase = "transition-all duration-700 ease-out";
       
@@ -836,7 +854,12 @@ const EnhancedWordTracker = ({
         return cn(base, fadeOutBase, "bg-yellow-500/15 text-yellow-500/60 dark:text-yellow-400/60 border-b-2 border-yellow-500/30 opacity-50 scale-[0.98] blur-[0.3px]");
       }
 
-      // Correct or any spoken word - smooth gray fade out
+      // If this spoken word is in a bracket that still has unspoken words, show YELLOW (in progress)
+      if (word.hidden && hasBracketUnspokenWords(index)) {
+        return cn(base, fadeOutBase, "bg-yellow-500/15 text-yellow-500/60 dark:text-yellow-400/60 border-b-2 border-yellow-500/30 opacity-60 scale-[0.98]");
+      }
+
+      // Correct or any spoken word - smooth gray fade out (bracket complete)
       return cn(base, fadeOutBase, "bg-transparent text-muted-foreground/40 opacity-40 scale-[0.98] blur-[0.3px]");
     }
 
