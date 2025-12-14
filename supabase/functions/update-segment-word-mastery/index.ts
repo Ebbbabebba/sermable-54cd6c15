@@ -5,29 +5,40 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Simple grammatical words that should be hidden first
+// ONLY true junk/filler words that can be hidden - very restrictive
+// These are words that add no semantic meaning and are easy to fill in
 const SIMPLE_WORDS = new Set([
-  'the', 'a', 'an', 'and', 'or', 'but', 'nor', 'yet', 'so',
-  'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'down',
-  'about', 'into', 'through', 'during', 'after', 'before', 'between', 'among',
-  'under', 'over', 'above', 'below', 'across', 'along', 'around', 'behind',
-  'is', 'are', 'was', 'were', 'be', 'been', 'being',
-  'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing',
-  'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can',
-  'i', 'you', 'he', 'she', 'it', 'we', 'they',
-  'me', 'him', 'her', 'us', 'them',
-  'my', 'your', 'his', 'her', 'its', 'our', 'their',
-  'mine', 'yours', 'hers', 'ours', 'theirs',
-  'this', 'that', 'these', 'those',
-  'very', 'just', 'so', 'too', 'also', 'well', 'then', 'now', 'here', 'there',
-  'as', 'if', 'than', 'when', 'where', 'who', 'what', 'which', 'how', 'why',
-  'all', 'some', 'any', 'each', 'every', 'both', 'few', 'many', 'much', 'more', 'most',
-  // Swedish common words
-  'och', 'är', 'att', 'det', 'en', 'ett', 'av', 'för', 'på', 'med', 'som',
-  'har', 'till', 'den', 'de', 'om', 'så', 'men', 'nu', 'kan', 'ska',
-  'jag', 'du', 'han', 'hon', 'vi', 'ni', 'dem', 'sig', 'sin', 'sitt', 'sina',
-  'var', 'inte', 'från', 'eller', 'när', 'hur', 'vad', 'vem', 'där', 'här'
+  // English conjunctions and short prepositions ONLY
+  'and', 'or', 'but', 'so', 'yet', 'nor',
+  'in', 'on', 'at', 'to', 'of', 'by', 'for',
+  'a', 'an', 'the',
+  'is', 'are', 'was', 'were', 'be',
+  'it', 'its',
+  // Swedish equivalents
+  'och', 'eller', 'men', 'så',
+  'i', 'på', 'av', 'för', 'till', 'med',
+  'en', 'ett', 'den', 'det',
+  'är', 'var'
 ])
+
+// Words that should NEVER be hidden - content words, unique words, hard words
+const isContentWord = (word: string): boolean => {
+  const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+  
+  // Never hide words longer than 5 characters (they're likely content words)
+  if (cleanWord.length > 5) return true
+  
+  // Never hide words with special characters (like ä, ö, å in Swedish)
+  if (/[äöåéèêëàáâãüïîôûùúñçšž]/i.test(cleanWord)) return true
+  
+  // Never hide capitalized words (proper nouns, start of sentences)
+  if (/^[A-ZÄÖÅÉÈÊËÀÁÂÃÜÏÎÔÛÙÚÑÇŠŽ]/.test(word)) return true
+  
+  // Never hide words with numbers
+  if (/\d/.test(word)) return true
+  
+  return false
+}
 
 interface WordMasteryData {
   word: string
@@ -150,6 +161,9 @@ Deno.serve(async (req) => {
 
       let data = wordMasteryMap.get(cleanWord)
       if (!data) {
+        // Check if this is a content word that should never be hidden
+        const isContent = isContentWord(word)
+        
         data = {
           word: cleanWord,
           wordIndex: index,
@@ -159,7 +173,8 @@ Deno.serve(async (req) => {
           hiddenMissCount: existing?.hidden_miss_count || 0,
           hiddenHesitateCount: existing?.hidden_hesitate_count || 0,
           isAnchorKeyword: existing?.is_anchor_keyword || false,
-          isSimple: SIMPLE_WORDS.has(cleanWord),
+          // Only mark as simple if it's in SIMPLE_WORDS AND not a content word
+          isSimple: SIMPLE_WORDS.has(cleanWord) && !isContent,
           wasHidden
         }
         wordMasteryMap.set(cleanWord, data)
@@ -258,6 +273,19 @@ Deno.serve(async (req) => {
       // Skip if already in wordsToHide (preserved from previous session)
       if (wordsToHide.has(index)) return
 
+      // RULE 0: NEVER hide content words (hard/unique words like "adaptivt")
+      if (isContentWord(word)) {
+        console.log(`Skipping content word: "${word}"`)
+        return // Keep visible - it's a content/hard word
+      }
+
+      // RULE 0.5: NEVER hide words that end with sentence punctuation (. ! ?)
+      // This prevents combining different sentences in one hidden chunk
+      if (/[.!?]$/.test(word)) {
+        console.log(`Skipping sentence-ending word: "${word}"`)
+        return // Keep visible - it's at end of sentence
+      }
+
       // RULE 1: Anchor keywords NEVER get hidden - they stay visible as cue words
       if (data.isAnchorKeyword) {
         anchorKeywordIndices.push(index)
@@ -283,30 +311,28 @@ Deno.serve(async (req) => {
       
       const consecutiveCorrect = (data as any).consecutiveCorrect || 0
 
-      // RULE 4: Simple words - need 2 consecutive correct sessions (not just 1)
-      // This implements the "2x tested = stable" rule
+      // RULE 4: ONLY simple/junk words can be hidden
+      // Need 2 consecutive correct sessions
       if (data.isSimple && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 1, isSimple: true })
         return
       }
 
-      // RULE 5: Harder words need 3 clean corrects AND 2 consecutive sessions
-      if (!data.isSimple && data.correctCount >= 3 && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
-        candidatesToHide.push({ index, priority: 2, isSimple: false })
-        return
-      }
+      // NOTE: Hard words (non-simple) are NOT hidden anymore - only simple junk words
     })
 
     // PROGRESSIVE HIDING SPEED based on session count
-    // Sessions 1-5: 1 word per session (gentle start)
-    // Sessions 6-15: 2 words per session (accelerating)
-    // Sessions 16+: 3 words per session (but cap at 5% of total words)
+    // Sessions 1-10: 1 word per session (VERY gentle start - only junk words)
+    // Sessions 11-20: 2 words per session (slightly faster)
+    // Sessions 21+: 3 words per session (but still only junk words, cap at 3% of total)
     let maxNewWordsToHide = 1
-    if (totalSessions >= 16) {
-      maxNewWordsToHide = Math.min(3, Math.ceil(words.length * 0.05))
-    } else if (totalSessions >= 6) {
+    if (totalSessions >= 21) {
+      maxNewWordsToHide = Math.min(3, Math.ceil(words.length * 0.03))
+    } else if (totalSessions >= 11) {
       maxNewWordsToHide = 2
     }
+    // Ensure we always hide at least 1 if there are candidates
+    maxNewWordsToHide = Math.max(1, maxNewWordsToHide)
     
     console.log(`Session ${totalSessions + 1}: Max new words to hide = ${maxNewWordsToHide}`)
     
