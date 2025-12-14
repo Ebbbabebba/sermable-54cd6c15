@@ -825,47 +825,46 @@ const EnhancedWordTracker = ({
   };
 
   const getWordClassName = (word: WordState, index: number) => {
-    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-in-out";
+    // Base styles - NO scale transforms to prevent jumping
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-colors transition-opacity duration-300 ease-out";
 
-    // Hidden word shown as hint (after 3s delay or 2s hesitation)
+    // Hidden word shown as hint (after delay)
     if (word.showAsHint && word.hidden && !word.spoken) {
-      return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40 animate-pulse");
+      return cn(base, "bg-primary/15 text-primary border border-primary/30 word-pulse");
     }
 
-    // Hidden word with pulsing blue dots
+    // Hidden word with pulsing bracket indicator
     if (word.hidden && !word.spoken && !word.showAsHint) {
-      return cn(base, "bg-blue-500/10 text-blue-600 dark:text-blue-400 animate-pulse min-w-[80px] text-center");
+      return cn(base, "bg-primary/10 text-primary word-pulse-subtle min-w-[80px] text-center");
     }
 
-    // Current word being spoken - blue pulse animation
+    // Current word being spoken - smooth blue glow (no scale!)
     if (word.isCurrent && isRecording && !word.spoken) {
-      return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 scale-110 animate-pulse font-semibold border border-blue-500/40");
+      return cn(base, "bg-primary/20 text-primary font-semibold border border-primary/40 shadow-[0_0_12px_rgba(59,130,246,0.4)] word-pulse");
     }
 
     // AFTER word is spoken - check bracket state
     if (word.spoken) {
-      const fadeOutBase = "transition-all duration-700 ease-out";
-      
-      // Missed/Skipped - RED, fades out smoothly
+      // Missed/Skipped - RED
       if (word.performanceStatus === "missed") {
-        return cn(base, fadeOutBase, "bg-red-500/15 text-red-500/60 dark:text-red-400/60 border-b-2 border-red-500/30 opacity-50 scale-[0.98] blur-[0.3px]");
+        return cn(base, "bg-destructive/10 text-destructive/60 border-b-2 border-destructive/30 opacity-50");
       }
 
-      // Hesitated - YELLOW, fades out smoothly
+      // Hesitated - YELLOW
       if (word.performanceStatus === "hesitated") {
-        return cn(base, fadeOutBase, "bg-yellow-500/15 text-yellow-500/60 dark:text-yellow-400/60 border-b-2 border-yellow-500/30 opacity-50 scale-[0.98] blur-[0.3px]");
+        return cn(base, "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/30 opacity-60");
       }
 
-      // If this spoken word is in a bracket that still has unspoken words, show YELLOW (in progress)
+      // In-progress bracket - YELLOW
       if (word.hidden && hasBracketUnspokenWords(index)) {
-        return cn(base, fadeOutBase, "bg-yellow-500/15 text-yellow-500/60 dark:text-yellow-400/60 border-b-2 border-yellow-500/30 opacity-60 scale-[0.98]");
+        return cn(base, "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/30 opacity-60");
       }
 
-      // Correct or any spoken word - smooth gray fade out (bracket complete)
-      return cn(base, fadeOutBase, "bg-transparent text-muted-foreground/40 opacity-40 scale-[0.98] blur-[0.3px]");
+      // Correct - smooth gray fade
+      return cn(base, "bg-transparent text-muted-foreground/40 opacity-40");
     }
 
-    // In keyword mode, hidden words show as "..." - can be clicked when not recording
+    // Keyword mode hidden words
     if (keywordMode && !word.isKeyword && !word.manuallyRevealed && !word.spoken && !isRecording) {
       return cn(
         base,
@@ -874,7 +873,7 @@ const EnhancedWordTracker = ({
       );
     }
 
-    // Default - unspoken word (gray background)
+    // Default - unspoken word
     return cn(base, "bg-muted/50 text-muted-foreground");
   };
 
