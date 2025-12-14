@@ -357,6 +357,10 @@ const EnhancedWordTracker = ({
             }
             userIsTrying.current = false; // Reset effort tracking
             
+            // Reset progress time so hints can trigger for the NEXT hidden word in bracket
+            // This ensures multi-word brackets continue getting hints
+            lastProgressTime.current = Date.now();
+            
             // Trigger popup reintegration animation if this word was in popup
             if (wasForgotten) {
               setForgottenWordPopup({ wordIndex: scriptPosition, isAnimating: true });
@@ -849,16 +853,58 @@ const EnhancedWordTracker = ({
     return cn(base, "bg-muted/50 text-muted-foreground");
   };
 
+  // Helper to find bracket group (consecutive hidden words)
+  const findBracketGroup = (index: number): { start: number; end: number; count: number; unspokenCount: number; firstUnspoken: number } | null => {
+    const word = wordStates[index];
+    if (!word?.hidden) return null;
+    
+    // Find start of bracket group (first consecutive hidden word)
+    let start = index;
+    while (start > 0 && wordStates[start - 1]?.hidden) {
+      start--;
+    }
+    
+    // Find end of bracket group (last consecutive hidden word)
+    let end = index;
+    while (end < wordStates.length - 1 && wordStates[end + 1]?.hidden) {
+      end++;
+    }
+    
+    // Count unspoken words and find first unspoken
+    let unspokenCount = 0;
+    let firstUnspoken = -1;
+    for (let i = start; i <= end; i++) {
+      if (!wordStates[i].spoken && !wordStates[i].showAsHint) {
+        unspokenCount++;
+        if (firstUnspoken === -1) firstUnspoken = i;
+      }
+    }
+    
+    return { start, end, count: end - start + 1, unspokenCount, firstUnspoken };
+  };
+
   const renderWordContent = (word: WordState, index: number) => {
     // Show hint after delay or hesitation
     if (word.showAsHint && word.hidden && !word.spoken) {
       return word.text;
     }
 
-    // Hidden word - show [N] where N = word count in bracket
+    // Hidden word - show [N] where N = remaining unspoken words in bracket
     if (word.hidden && !word.spoken && !word.showAsHint) {
-      // Check if this is part of a bracket group (consecutive hidden words)
-      // For now, show single word count as [1]
+      const bracket = findBracketGroup(index);
+      
+      if (bracket && bracket.unspokenCount > 0) {
+        // Only render bracket notation for the FIRST UNSPOKEN word in the group
+        if (index === bracket.firstUnspoken) {
+          // Show count of remaining unspoken words
+          return `[${bracket.unspokenCount}]`;
+        }
+        
+        // For subsequent unspoken words in the same bracket, return null (skip)
+        // They'll be included in the count shown at firstUnspoken
+        return null;
+      }
+      
       // Progressive hints: show first letters on hesitation
       if (word.partialProgress > 0.1 && word.partialProgress < 1) {
         const lettersToShow = Math.ceil(word.text.length * word.partialProgress);
@@ -985,6 +1031,15 @@ const EnhancedWordTracker = ({
 
           // Check if this word should be part of a hidden group (before performance status)
           const isPartOfHiddenGroup = keywordMode && !word.isKeyword && !word.manuallyRevealed;
+
+          // Skip rendering hidden words that are NOT the first unspoken in their bracket
+          if (word.hidden && !word.spoken && !word.showAsHint) {
+            const bracket = findBracketGroup(index);
+            // If this isn't the first unspoken word in the bracket, skip rendering
+            if (bracket && bracket.firstUnspoken !== -1 && index !== bracket.firstUnspoken) {
+              return null;
+            }
+          }
 
           // Skip rendering if this is a hidden word that's part of a group (not the first in the group)
           // BUT only if it doesn't have a performance status (which needs individual rendering)
