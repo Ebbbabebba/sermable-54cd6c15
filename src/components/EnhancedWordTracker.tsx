@@ -825,43 +825,43 @@ const EnhancedWordTracker = ({
   };
 
   const getWordClassName = (word: WordState, index: number) => {
-    // Base styles with smooth, calm transitions
+    // Base styles - fixed dimensions to prevent layout shifts
     const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium word-smooth-transition";
 
     // Hidden word shown as hint (after delay)
     if (word.showAsHint && word.hidden && !word.spoken) {
-      return cn(base, "bg-primary/15 text-primary border border-primary/30 word-pulse");
+      return cn(base, "bg-primary/12 text-primary border border-primary/25 word-breathe");
     }
 
     // Hidden word with pulsing bracket indicator
     if (word.hidden && !word.spoken && !word.showAsHint) {
-      return cn(base, "bg-primary/10 text-primary word-pulse-subtle min-w-[80px] text-center");
+      return cn(base, "bg-primary/8 text-primary word-breathe-subtle min-w-[80px] text-center");
     }
 
-    // Current word being spoken - smooth blue glow (no scale!)
+    // Current word being spoken - calm blue glow, NO font-weight change to prevent shifts
     if (word.isCurrent && isRecording && !word.spoken) {
-      return cn(base, "bg-primary/20 text-primary font-semibold border border-primary/40 shadow-[0_0_12px_rgba(59,130,246,0.4)] word-pulse");
+      return cn(base, "bg-primary/15 text-primary border border-primary/30 word-glow-current");
     }
 
     // AFTER word is spoken - check bracket state
     if (word.spoken) {
       // Missed/Skipped - RED
       if (word.performanceStatus === "missed") {
-        return cn(base, "bg-destructive/10 text-destructive/60 border-b-2 border-destructive/30 opacity-50");
+        return cn(base, "bg-destructive/8 text-destructive/50 border-b-2 border-destructive/25 opacity-45");
       }
 
       // Hesitated - YELLOW
       if (word.performanceStatus === "hesitated") {
-        return cn(base, "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/30 opacity-60");
+        return cn(base, "bg-yellow-500/8 text-yellow-600/70 dark:text-yellow-400/70 border-b-2 border-yellow-500/25 opacity-55");
       }
 
       // In-progress bracket - YELLOW
       if (word.hidden && hasBracketUnspokenWords(index)) {
-        return cn(base, "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/30 opacity-60");
+        return cn(base, "bg-yellow-500/8 text-yellow-600/70 dark:text-yellow-400/70 border-b-2 border-yellow-500/25 opacity-55");
       }
 
       // Correct - smooth gray fade
-      return cn(base, "bg-transparent text-muted-foreground/40 opacity-40");
+      return cn(base, "bg-transparent text-muted-foreground/35 opacity-35");
     }
 
     // Keyword mode hidden words
@@ -874,7 +874,7 @@ const EnhancedWordTracker = ({
     }
 
     // Default - unspoken word
-    return cn(base, "bg-muted/50 text-muted-foreground");
+    return cn(base, "bg-muted/40 text-muted-foreground");
   };
 
   // Helper to find bracket group (consecutive hidden words)
