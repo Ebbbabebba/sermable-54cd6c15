@@ -143,9 +143,9 @@ const Settings = () => {
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="space-y-6">
           <div className="animate-fade-in">
-            <h1 className="text-4xl font-bold mb-2">Settings</h1>
+            <h1 className="text-4xl font-bold mb-2">{t('settings.title')}</h1>
             <p className="text-muted-foreground">
-              Customize your Sermable experience
+              {t('settings.subtitle')}
             </p>
           </div>
 
@@ -154,50 +154,50 @@ const Settings = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Crown className="h-5 w-5 text-primary" />
-                <CardTitle>Subscription</CardTitle>
+                <CardTitle>{t('settings.subscription.title')}</CardTitle>
               </div>
               <CardDescription>
-                Unlock premium features and enhance your learning
+                {t('settings.subscription.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Premium Features */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Why Premium?</h3>
+                <h3 className="font-semibold text-lg">{t('settings.subscription.whyPremium')}</h3>
                 <div className="grid gap-3">
                   <div className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">Override Spaced Repetition Lock</p>
-                      <p className="text-sm text-muted-foreground">Practice anytime with "Practice Anyway" button</p>
+                      <p className="font-medium">{t('settings.subscription.overrideLock')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.subscription.overrideLockDesc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">Unlimited Speeches</p>
-                      <p className="text-sm text-muted-foreground">Upload and practice unlimited speech texts</p>
+                      <p className="font-medium">{t('settings.subscription.unlimitedSpeeches')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.subscription.unlimitedSpeechesDesc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">Advanced Analytics</p>
-                      <p className="text-sm text-muted-foreground">Detailed performance insights and progress tracking</p>
+                      <p className="font-medium">{t('settings.subscription.advancedAnalytics')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.subscription.advancedAnalyticsDesc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">Streak Freeze</p>
-                      <p className="text-sm text-muted-foreground">Protect your streak when life gets busy</p>
+                      <p className="font-medium">{t('settings.subscription.streakFreeze')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.subscription.streakFreezeDesc')}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">Priority Support</p>
-                      <p className="text-sm text-muted-foreground">Get help faster with dedicated support</p>
+                      <p className="font-medium">{t('settings.subscription.prioritySupport')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.subscription.prioritySupportDesc')}</p>
                     </div>
                   </div>
                 </div>
@@ -207,13 +207,13 @@ const Settings = () => {
 
               {/* Pricing Options */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Choose Your Plan</h3>
+                <h3 className="font-semibold text-lg">{t('settings.subscription.choosePlan')}</h3>
                 
                 {showStudentPricing ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 mb-4">
                       <GraduationCap className="h-5 w-5 text-primary" />
-                      <p className="text-sm font-medium">Student Pricing</p>
+                      <p className="text-sm font-medium">{t('settings.subscription.studentPricing')}</p>
                     </div>
                     
                     <button
@@ -226,13 +226,13 @@ const Settings = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold">Monthly Student Plan</p>
-                          <p className="text-sm text-muted-foreground">Billed monthly</p>
+                          <p className="font-semibold">{t('settings.subscription.studentMonthly')}</p>
+                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedMonthly')}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold">€3.90</p>
                           <p className="text-xs text-muted-foreground line-through">€7.90</p>
-                          <p className="text-xs text-primary">50% off</p>
+                          <p className="text-xs text-primary">{t('settings.subscription.studentDiscount')}</p>
                         </div>
                       </div>
                     </button>
@@ -247,13 +247,13 @@ const Settings = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold">Annual Student Plan</p>
-                          <p className="text-sm text-muted-foreground">Billed yearly • Save 33%</p>
+                          <p className="font-semibold">{t('settings.subscription.studentAnnual')}</p>
+                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedYearly')} • {t('settings.subscription.save')} 33%</p>
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold">€39.90</p>
                           <p className="text-xs text-muted-foreground line-through">€79.90</p>
-                          <p className="text-xs text-primary">50% off</p>
+                          <p className="text-xs text-primary">{t('settings.subscription.studentDiscount')}</p>
                         </div>
                       </div>
                     </button>
@@ -264,7 +264,7 @@ const Settings = () => {
                       onClick={() => setShowStudentPricing(false)}
                       className="w-full"
                     >
-                      Back to regular pricing
+                      {t('settings.subscription.backToRegular')}
                     </Button>
                   </div>
                 ) : (
@@ -279,12 +279,12 @@ const Settings = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold">Monthly Plan</p>
-                          <p className="text-sm text-muted-foreground">Billed monthly</p>
+                          <p className="font-semibold">{t('settings.subscription.monthly')}</p>
+                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedMonthly')}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold">€7.90</p>
-                          <p className="text-xs text-muted-foreground">per month</p>
+                          <p className="text-xs text-muted-foreground">{t('settings.subscription.perMonth')}</p>
                         </div>
                       </div>
                     </button>
@@ -298,16 +298,16 @@ const Settings = () => {
                       }`}
                     >
                       <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md font-medium">
-                        Save 33%
+                        {t('settings.subscription.save')} 33%
                       </div>
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="font-semibold">Annual Plan</p>
-                          <p className="text-sm text-muted-foreground">Billed yearly</p>
+                          <p className="font-semibold">{t('settings.subscription.annual')}</p>
+                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedYearly')}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold">€79.90</p>
-                          <p className="text-xs text-muted-foreground">€6.66/month</p>
+                          <p className="text-xs text-muted-foreground">€6.66/{t('settings.subscription.perMonth').split(' ')[0]}</p>
                         </div>
                       </div>
                     </button>
@@ -323,7 +323,7 @@ const Settings = () => {
                   onClick={() => setShowStudentPricing(true)}
                 >
                   <GraduationCap className="h-4 w-4 mr-2" />
-                  Student? Click here!
+                  {t('settings.subscription.studentButton')}
                 </Button>
               )}
 
@@ -334,12 +334,12 @@ const Settings = () => {
                 disabled={!selectedPlan}
                 onClick={() => {
                   toast({
-                    title: "Coming soon!",
-                    description: "Premium subscription will be available soon.",
+                    title: t('settings.subscription.comingSoon'),
+                    description: t('settings.subscription.comingSoonDesc'),
                   });
                 }}
               >
-                Continue with {selectedPlan === 'monthly' ? 'Monthly' : selectedPlan === 'annual' ? 'Annual' : ''} Plan
+                {t('settings.subscription.continueWith')} {selectedPlan === 'monthly' ? t('settings.subscription.monthly') : selectedPlan === 'annual' ? t('settings.subscription.annual') : ''} 
               </Button>
             </CardContent>
           </Card>
@@ -349,18 +349,18 @@ const Settings = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 {theme === 'dark' ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
-                <CardTitle>Appearance</CardTitle>
+                <CardTitle>{t('settings.appearance.title')}</CardTitle>
               </div>
               <CardDescription>
-                Customize how Sermable looks
+                {t('settings.appearance.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="theme-toggle">Theme</Label>
+                  <Label htmlFor="theme-toggle">{t('settings.appearance.theme')}</Label>
                   <p className="text-sm text-muted-foreground">
-                    {theme === 'dark' ? 'Dark space theme with cosmic colors' : 'Clean white theme'}
+                    {theme === 'dark' ? t('settings.appearance.darkTheme') : t('settings.appearance.lightTheme')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -381,15 +381,15 @@ const Settings = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Languages className="h-5 w-5 text-primary" />
-                <CardTitle>Language</CardTitle>
+                <CardTitle>{t('settings.language.title')}</CardTitle>
               </div>
               <CardDescription>
-                Choose your preferred language for the app interface
+                {t('settings.language.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Label htmlFor="app-language">App Language</Label>
+                <Label htmlFor="app-language">{t('settings.language.appLanguage')}</Label>
                 <Select
                   value={currentLanguage}
                   onValueChange={handleLanguageChange}
@@ -409,7 +409,7 @@ const Settings = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Menus, buttons, and descriptions will display in this language. Your speech text language is detected separately.
+                  {t('settings.language.hint')}
                 </p>
               </div>
             </CardContent>
@@ -420,10 +420,10 @@ const Settings = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-primary" />
-                <CardTitle>Profile & Streak</CardTitle>
+                <CardTitle>{t('settings.profile.title')}</CardTitle>
               </div>
               <CardDescription>
-                Track your practice consistency
+                {t('settings.profile.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -431,26 +431,26 @@ const Settings = () => {
                 <div className="rounded-lg bg-muted/50 p-4 space-y-2">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Flame className="h-4 w-4" />
-                    <span className="text-sm">Current Streak</span>
+                    <span className="text-sm">{t('settings.profile.currentStreak')}</span>
                   </div>
                   <div className="text-3xl font-bold">{currentStreak}</div>
-                  <div className="text-xs text-muted-foreground">days</div>
+                  <div className="text-xs text-muted-foreground">{t('settings.profile.days')}</div>
                 </div>
 
                 <div className="rounded-lg bg-muted/50 p-4 space-y-2">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Trophy className="h-4 w-4" />
-                    <span className="text-sm">Best Streak</span>
+                    <span className="text-sm">{t('settings.profile.bestStreak')}</span>
                   </div>
                   <div className="text-3xl font-bold">{bestStreak}</div>
-                  <div className="text-xs text-muted-foreground">days</div>
+                  <div className="text-xs text-muted-foreground">{t('settings.profile.days')}</div>
                 </div>
               </div>
 
               <div className="rounded-lg bg-primary/10 p-4 space-y-2">
-                <p className="text-sm font-medium">Keep your streak alive!</p>
+                <p className="text-sm font-medium">{t('settings.profile.keepStreak')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Practice at least once every day to maintain your streak. Your streak resets if you miss a day.
+                  {t('settings.profile.keepStreakDesc')}
                 </p>
               </div>
             </CardContent>
@@ -459,16 +459,16 @@ const Settings = () => {
           {/* Account Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>Account</CardTitle>
+              <CardTitle>{t('settings.account.title')}</CardTitle>
               <CardDescription>
-                Manage your account settings
+                {t('settings.account.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                <p className="text-sm font-medium">Personalized Learning</p>
+                <p className="text-sm font-medium">{t('settings.account.personalizedLearning')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Your practice schedule is automatically personalized based on your performance and speech deadlines.
+                  {t('settings.account.personalizedLearningDesc')}
                 </p>
               </div>
             </CardContent>
@@ -479,28 +479,27 @@ const Settings = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
-                <CardTitle>Notifications</CardTitle>
+                <CardTitle>{t('settings.notifications.title')}</CardTitle>
               </div>
               <CardDescription>
-                Get reminders when speeches are due for review
+                {t('settings.notifications.description')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!isNativePlatform ? (
                 <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                  <p className="text-sm font-medium">Native App Required</p>
+                  <p className="text-sm font-medium">{t('settings.notifications.nativeRequired')}</p>
                   <p className="text-xs text-muted-foreground">
-                    Lock screen push notifications are only available in the native mobile app. 
-                    To get notifications on your iPhone or Android device, you'll need to install the app.
+                    {t('settings.notifications.nativeRequiredDesc')}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Push Notifications</Label>
+                      <Label>{t('settings.notifications.pushNotifications')}</Label>
                       <p className="text-xs text-muted-foreground">
-                        Receive reminders on your lock screen
+                        {t('settings.notifications.pushNotificationsDesc')}
                       </p>
                     </div>
                     <Switch
@@ -516,7 +515,7 @@ const Settings = () => {
                   {notificationsEnabled && (
                     <div className="rounded-lg bg-primary/10 p-3">
                       <p className="text-xs text-muted-foreground">
-                        ✓ You'll receive notifications when speeches are due for review based on your progress.
+                        ✓ {t('settings.notifications.enabled')}
                       </p>
                     </div>
                   )}
