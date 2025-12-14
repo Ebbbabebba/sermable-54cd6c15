@@ -787,21 +787,20 @@ const EnhancedWordTracker = ({
       return word.text;
     }
 
-    // Hidden word - show progressive dots based on partial progress
+    // Hidden word - show [N] where N = word count in bracket
     if (word.hidden && !word.spoken && !word.showAsHint) {
-      const wordLength = word.text.length;
-      const dotsToShow = Math.ceil(wordLength * word.partialProgress);
-      const dotsRemaining = Math.max(3, wordLength - dotsToShow);
-      
-      // Show filled portion + remaining dots
-      if (dotsToShow > 0 && word.partialProgress > 0.1) {
-        const filledPortion = word.text.substring(0, dotsToShow);
-        const dots = ".".repeat(dotsRemaining);
-        return `${filledPortion}${dots}`;
+      // Check if this is part of a bracket group (consecutive hidden words)
+      // For now, show single word count as [1]
+      // Progressive hints: show first letters on hesitation
+      if (word.partialProgress > 0.1 && word.partialProgress < 1) {
+        const lettersToShow = Math.ceil(word.text.length * word.partialProgress);
+        const shownPart = word.text.substring(0, lettersToShow);
+        const remaining = word.text.length - lettersToShow;
+        return `${shownPart}${"_".repeat(remaining)}`;
       }
       
-      // Default: show dots representing word length (min 3, max word length)
-      return ".".repeat(Math.min(Math.max(3, wordLength), 12));
+      // Default: show [1] for single hidden word
+      return "[1]";
     }
 
     // In keyword mode, check if this is the start of a hidden word group

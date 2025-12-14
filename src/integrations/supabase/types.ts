@@ -104,6 +104,7 @@ export type Database = {
       }
       mastered_words: {
         Row: {
+          consecutive_sessions_correct: number | null
           created_at: string
           hesitated_count: number | null
           hidden_hesitate_count: number | null
@@ -117,6 +118,7 @@ export type Database = {
           word: string
         }
         Insert: {
+          consecutive_sessions_correct?: number | null
           created_at?: string
           hesitated_count?: number | null
           hidden_hesitate_count?: number | null
@@ -130,6 +132,7 @@ export type Database = {
           word: string
         }
         Update: {
+          consecutive_sessions_correct?: number | null
           created_at?: string
           hesitated_count?: number | null
           hidden_hesitate_count?: number | null
