@@ -50,7 +50,9 @@ interface WordMasteryData {
   hiddenHesitateCount: number
   isAnchorKeyword: boolean
   isSimple: boolean
+  isSentenceEnding: boolean
   wasHidden: boolean
+  lastPerformance: 'correct' | 'missed' | 'hesitated' | 'none'
 }
 
 interface PhraseData {
@@ -163,6 +165,8 @@ Deno.serve(async (req) => {
       if (!data) {
         // Check if this is a content word that should never be hidden
         const isContent = isContentWord(word)
+        // Check if word ends with sentence punctuation
+        const endsWithPunctuation = /[.!?]$/.test(word.trim())
         
         data = {
           word: cleanWord,
@@ -173,9 +177,11 @@ Deno.serve(async (req) => {
           hiddenMissCount: existing?.hidden_miss_count || 0,
           hiddenHesitateCount: existing?.hidden_hesitate_count || 0,
           isAnchorKeyword: existing?.is_anchor_keyword || false,
-          // Only mark as simple if it's in SIMPLE_WORDS AND not a content word
-          isSimple: SIMPLE_WORDS.has(cleanWord) && !isContent,
-          wasHidden
+          // Only mark as simple if it's in SIMPLE_WORDS AND not a content word AND not sentence-ending
+          isSimple: SIMPLE_WORDS.has(cleanWord) && !isContent && !endsWithPunctuation,
+          isSentenceEnding: endsWithPunctuation,
+          wasHidden,
+          lastPerformance: 'none'
         }
         wordMasteryMap.set(cleanWord, data)
       }
@@ -273,19 +279,6 @@ Deno.serve(async (req) => {
       // Skip if already in wordsToHide (preserved from previous session)
       if (wordsToHide.has(index)) return
 
-      // RULE 0: NEVER hide content words (hard/unique words like "adaptivt")
-      if (isContentWord(word)) {
-        console.log(`Skipping content word: "${word}"`)
-        return // Keep visible - it's a content/hard word
-      }
-
-      // RULE 0.5: NEVER hide words that end with sentence punctuation (. ! ?)
-      // This prevents combining different sentences in one hidden chunk
-      if (/[.!?]$/.test(word)) {
-        console.log(`Skipping sentence-ending word: "${word}"`)
-        return // Keep visible - it's at end of sentence
-      }
-
       // RULE 1: Anchor keywords NEVER get hidden - they stay visible as cue words
       if (data.isAnchorKeyword) {
         anchorKeywordIndices.push(index)
@@ -310,15 +303,26 @@ Deno.serve(async (req) => {
       }
       
       const consecutiveCorrect = (data as any).consecutiveCorrect || 0
+      
+      // Check if this is a content word or sentence-ending word (these hide LAST)
+      const isHardWord = isContentWord(word)
+      const isSentenceEnding = /[.!?]$/.test(word.trim())
 
-      // RULE 4: ONLY simple/junk words can be hidden
+      // RULE 4: Simple/junk words - hide FIRST (priority 1)
       // Need 2 consecutive correct sessions
-      if (data.isSimple && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
+      if (data.isSimple && !isSentenceEnding && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 1, isSimple: true })
         return
       }
 
-      // NOTE: Hard words (non-simple) are NOT hidden anymore - only simple junk words
+      // RULE 5: Sentence-ending words AND hard content words - hide LAST (priority 3)
+      // These are the hardest words that disappear together at the very end
+      // Need 5+ consecutive correct sessions with no errors
+      if ((isSentenceEnding || isHardWord) && consecutiveCorrect >= 5 && data.missedCount === 0 && data.hesitatedCount === 0) {
+        candidatesToHide.push({ index, priority: 3, isSimple: false })
+        console.log(`Hard word "${word}" eligible for hiding (${consecutiveCorrect} consecutive correct)`)
+        return
+      }
     })
 
     // PROGRESSIVE HIDING SPEED based on session count
