@@ -31,6 +31,7 @@ const Settings = () => {
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
     { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
