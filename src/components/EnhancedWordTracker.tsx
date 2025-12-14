@@ -750,20 +750,22 @@ const EnhancedWordTracker = ({
       return cn(base, "bg-blue-500/20 text-blue-600 dark:text-blue-400 scale-110 animate-pulse font-semibold border border-blue-500/40");
     }
 
-    // AFTER word is spoken - ALWAYS fade out
+    // AFTER word is spoken - ALWAYS fade out smoothly
     if (word.spoken) {
-      // Missed/Skipped - RED, fades out
+      const fadeOutBase = "transition-all duration-700 ease-out";
+      
+      // Missed/Skipped - RED, fades out smoothly
       if (word.performanceStatus === "missed") {
-        return cn(base, "bg-red-500/20 text-red-600 dark:text-red-400 border-b-2 border-red-500/40 animate-fade-out");
+        return cn(base, fadeOutBase, "bg-red-500/15 text-red-500/60 dark:text-red-400/60 border-b-2 border-red-500/30 opacity-50 scale-[0.98] blur-[0.3px]");
       }
 
-      // Hesitated - YELLOW, fades out
+      // Hesitated - YELLOW, fades out smoothly
       if (word.performanceStatus === "hesitated") {
-        return cn(base, "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-b-2 border-yellow-500/40 animate-fade-out");
+        return cn(base, fadeOutBase, "bg-yellow-500/15 text-yellow-500/60 dark:text-yellow-400/60 border-b-2 border-yellow-500/30 opacity-50 scale-[0.98] blur-[0.3px]");
       }
 
-      // Correct or any spoken word - gray fade out
-      return cn(base, "bg-muted/30 text-muted-foreground/40 animate-fade-out");
+      // Correct or any spoken word - smooth gray fade out
+      return cn(base, fadeOutBase, "bg-transparent text-muted-foreground/40 opacity-40 scale-[0.98] blur-[0.3px]");
     }
 
     // In keyword mode, hidden words show as "..." - can be clicked when not recording
