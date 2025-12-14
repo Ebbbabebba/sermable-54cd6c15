@@ -335,4 +335,31 @@ All colors MUST be HSL.
     transform: translateX(100%);
   }
 }
+
+/* Smooth word pulse - no scale transforms to prevent layout jumping */
+@keyframes wordPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px hsl(var(--primary) / 0.5);
+  }
+}
+
+@keyframes wordPulseSubtle {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.word-pulse {
+  animation: wordPulse 1.8s ease-in-out infinite;
+}
+
+.word-pulse-subtle {
+  animation: wordPulseSubtle 1.8s ease-in-out infinite;
+}
 }
