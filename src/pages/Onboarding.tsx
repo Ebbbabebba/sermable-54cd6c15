@@ -3,40 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import FloatingAstronaut2D from "@/components/FloatingAstronaut2D";
 import { ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-const ONBOARDING_STEPS = [
-  {
-    title: "Welcome to Sermable!",
-    message: "I'm here to help you memorize your speeches and presentations with ease. Let me show you how it works!",
-  },
-  {
-    title: "Speech Practice",
-    message: "Paste your speech text and practice speaking it out loud. I'll track your progress in real-time and highlight any words you miss or hesitate on.",
-  },
-  {
-    title: "Adaptive Cue Words",
-    message: "As you improve, I'll gradually hide words to challenge your memory. Struggling? I'll show them again. It's like having a smart teleprompter!",
-  },
-  {
-    title: "Learning Mode",
-    message: "I use spaced repetition - a scientifically proven technique - to schedule your practice sessions for optimal memorization. You'll master your speech faster!",
-  },
-  {
-    title: "Presentation Mode",
-    message: "When you're ready, switch to Presentation Mode for a full run-through. Get detailed feedback on accuracy, timing, and areas to improve.",
-  },
-];
+const ONBOARDING_KEYS = ['welcome', 'practice', 'adaptive', 'learning', 'presentation'];
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showText, setShowText] = useState(false);
   const [triggerWave, setTriggerWave] = useState(false);
+  const { t } = useTranslation();
 
-  const currentContent = ONBOARDING_STEPS[currentStep];
-  const isLastStep = currentStep === ONBOARDING_STEPS.length - 1;
+  const currentKey = ONBOARDING_KEYS[currentStep];
+  const isLastStep = currentStep === ONBOARDING_KEYS.length - 1;
 
-  // Show text after 1 second and trigger wave
   useEffect(() => {
     setShowText(false);
     setTriggerWave(false);
@@ -68,7 +48,6 @@ const Onboarding = () => {
       className="min-h-screen flex flex-col relative overflow-hidden"
       style={{ background: 'radial-gradient(ellipse at center, hsl(240, 20%, 12%), hsl(240, 20%, 6%))' }}
     >
-      {/* Slow moving stars background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {Array.from({ length: 80 }).map((_, i) => (
           <div
@@ -89,28 +68,23 @@ const Onboarding = () => {
         ))}
       </div>
 
-      {/* Skip button */}
       <div className="absolute top-6 right-6 z-20">
         <Button
           variant="ghost"
           onClick={handleSkip}
           className="text-foreground/60 hover:text-foreground/90"
         >
-          Skip
+          {t('onboarding.skip')}
         </Button>
       </div>
 
-      {/* Main content - Astronaut and speech bubble side by side */}
       <div className="flex-1 flex items-center justify-center px-6 relative z-10">
         <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 max-w-4xl w-full">
-          {/* Astronaut */}
           <div className="flex-shrink-0">
             <FloatingAstronaut2D triggerWave={triggerWave} />
           </div>
 
-          {/* Speech bubble - beside astronaut */}
           <div className="relative flex-1 max-w-md w-full">
-            {/* Bubble pointer - points left on desktop */}
             <div 
               className="hidden md:block absolute top-1/2 -left-3 -translate-y-1/2 w-0 h-0"
               style={{
@@ -119,7 +93,6 @@ const Onboarding = () => {
                 borderRight: '12px solid hsl(240, 20%, 18%)',
               }}
             />
-            {/* Bubble pointer - points up on mobile */}
             <div 
               className="md:hidden absolute -top-3 left-8 w-0 h-0"
               style={{
@@ -129,7 +102,6 @@ const Onboarding = () => {
               }}
             />
             
-            {/* Bubble content */}
             <div 
               className={`rounded-2xl p-6 border border-primary/30 transition-all duration-500 ${showText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
               style={{ 
@@ -143,19 +115,18 @@ const Onboarding = () => {
                   backgroundImage: 'linear-gradient(135deg, hsl(217, 91%, 60%), hsl(270, 100%, 70%))',
                 }}
               >
-                {currentContent.title}
+                {t(`onboarding.steps.${currentKey}.title`)}
               </h2>
               <p className="text-foreground/80 leading-relaxed">
-                {currentContent.message}
+                {t(`onboarding.steps.${currentKey}.message`)}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Progress dots */}
       <div className="flex justify-center gap-2 pb-4 relative z-10">
-        {ONBOARDING_STEPS.map((_, index) => (
+        {ONBOARDING_KEYS.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentStep(index)}
@@ -170,7 +141,6 @@ const Onboarding = () => {
         ))}
       </div>
 
-      {/* Bottom button */}
       <div className="px-6 pb-8 max-w-md w-full mx-auto relative z-10">
         <Button
           size="lg"
@@ -179,7 +149,7 @@ const Onboarding = () => {
           className="w-full text-base font-semibold py-6 uppercase tracking-wider shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-primary via-accent to-cosmic-pink text-white hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
           style={{ boxShadow: '0 0 20px rgba(139, 92, 246, 0.25)' }}
         >
-          {isLastStep ? "Get Started" : "Continue"}
+          {isLastStep ? t('onboarding.getStarted') : t('onboarding.continue')}
           <ChevronRight className="ml-2 h-5 w-5" />
         </Button>
       </div>

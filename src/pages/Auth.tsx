@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,9 +17,9 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -42,8 +43,8 @@ const Auth = () => {
         if (error) throw error;
 
         toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in.",
+          title: t('auth.welcomeBackToast'),
+          description: t('auth.signInSuccess'),
         });
         navigate("/dashboard");
       } else {
@@ -61,15 +62,15 @@ const Auth = () => {
         if (error) throw error;
 
         toast({
-          title: "Account created!",
-          description: "Welcome to Sermable. Let's get you started.",
+          title: t('auth.accountCreated'),
+          description: t('auth.welcomeToSermable'),
         });
         navigate("/dashboard");
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('common.error'),
         description: error.message,
       });
     } finally {
@@ -82,23 +83,23 @@ const Auth = () => {
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="space-y-2">
           <CardTitle className="text-3xl text-center">
-            {isLogin ? "Welcome Back" : "Get Started"}
+            {isLogin ? t('auth.welcomeBack') : t('auth.getStarted')}
           </CardTitle>
           <CardDescription className="text-center">
             {isLogin
-              ? "Sign in to continue your practice"
-              : "Create an account to start memorizing"}
+              ? t('auth.signInToContinue')
+              : t('auth.createAccount')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{t('auth.fullName')}</Label>
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="Your name"
+                  placeholder={t('auth.yourName')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required={!isLogin}
@@ -106,7 +107,7 @@ const Auth = () => {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -117,7 +118,7 @@ const Auth = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -132,12 +133,12 @@ const Auth = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Please wait
+                  {t('auth.loading')}
                 </>
               ) : isLogin ? (
-                "Sign In"
+                t('auth.signIn')
               ) : (
-                "Create Account"
+                t('auth.signUp')
               )}
             </Button>
           </form>
@@ -149,8 +150,8 @@ const Auth = () => {
               className="text-primary hover:underline"
             >
               {isLogin
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Sign in"}
+                ? t('auth.noAccount')
+                : t('auth.haveAccount')}
             </button>
           </div>
         </CardContent>

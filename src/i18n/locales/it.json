@@ -1,16 +1,23 @@
 {
   "app": {
     "name": "Sermable",
-    "tagline": "Padroneggia il tuo Discorso con la Pratica Potenziata dall'IA"
+    "tagline": "Padroneggia il tuo discorso."
   },
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
     "practice": "Esercitati",
     "signOut": "Disconnetti",
-    "signIn": "Accedi"
+    "signIn": "Accedi",
+    "menu": "Menu",
+    "settings": "Impostazioni",
+    "newSpeech": "Nuovo discorso",
+    "upgrade": "Aggiorna",
+    "upgradeToPremium": "Passa a Premium"
   },
   "home": {
+    "getStarted": "Inizia",
+    "haveAccount": "Ho già un account",
     "hero": {
       "title": "Padroneggia il tuo Discorso con la Pratica Potenziata dall'IA",
       "subtitle": "Trasforma le tue abilità oratorie con feedback personalizzato e apprendimento a ripetizione dilazionata",
@@ -33,27 +40,83 @@
     }
   },
   "auth": {
+    "welcomeBack": "Bentornato",
+    "getStarted": "Inizia",
+    "signInToContinue": "Accedi per continuare a esercitarti",
+    "createAccount": "Crea un account per iniziare a memorizzare",
+    "fullName": "Nome completo",
+    "yourName": "Il tuo nome",
     "signIn": "Accedi",
     "signUp": "Registrati",
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Conferma Password",
     "forgotPassword": "Password dimenticata?",
-    "noAccount": "Non hai un account?",
-    "haveAccount": "Hai già un account?",
-    "loading": "Caricamento...",
+    "noAccount": "Non hai un account? Registrati",
+    "haveAccount": "Hai già un account? Accedi",
+    "loading": "Attendi",
     "signInError": "Errore di accesso",
     "signUpError": "Errore di registrazione",
-    "passwordMismatch": "Le password non corrispondono"
+    "passwordMismatch": "Le password non corrispondono",
+    "welcomeBackToast": "Bentornato!",
+    "signInSuccess": "Hai effettuato l'accesso.",
+    "accountCreated": "Account creato!",
+    "welcomeToSermable": "Benvenuto su Sermable. Iniziamo."
   },
   "dashboard": {
     "title": "I Miei Discorsi",
+    "welcomeBack": "Bentornato",
+    "continueOrStart": "Continua a esercitarti o inizia un nuovo discorso.",
+    "yourSpeeches": "I tuoi discorsi",
+    "manageSpeeches": "Gestisci ed esercitati con i tuoi discorsi",
+    "speech": "discorso",
+    "speeches": "discorsi",
+    "sort": "Ordina",
+    "byDeadline": "Per scadenza",
+    "recentlyCreated": "Creati di recente",
+    "recentlyUpdated": "Aggiornati di recente",
+    "noSpeeches": "Ancora nessun discorso",
+    "noSpeechesDesc": "Carica il tuo primo discorso per iniziare. Imposta una data obiettivo e lascia che l'IA ti aiuti a memorizzare.",
+    "uploadFirst": "Carica il tuo primo discorso",
+    "adSpace": "Spazio pubblicitario - Aggiorna per rimuovere le pubblicità",
     "uploadSpeech": "Carica Discorso",
-    "noSpeeches": "Ancora nessun discorso. Carica il tuo primo discorso per iniziare!",
     "words": "parole",
     "dueToday": "Previsto oggi",
     "overdue": "In ritardo",
-    "loading": "Caricamento discorsi..."
+    "loading": "Caricamento dei tuoi discorsi...",
+    "errorLoading": "Errore nel caricamento dei discorsi",
+    "upgraded": "Passato a Premium!",
+    "upgradedDesc": "Ora hai accesso a tutte le funzionalità premium.",
+    "upgradeFailed": "Aggiornamento fallito",
+    "plan": "Piano",
+    "speechesThisMonth": "discorsi questo mese"
+  },
+  "onboarding": {
+    "skip": "Salta",
+    "continue": "Continua",
+    "getStarted": "Inizia",
+    "steps": {
+      "welcome": {
+        "title": "Benvenuto su Sermable!",
+        "message": "Sono qui per aiutarti a memorizzare i tuoi discorsi e presentazioni con facilità. Lascia che ti mostri come funziona!"
+      },
+      "practice": {
+        "title": "Pratica del discorso",
+        "message": "Incolla il testo del tuo discorso ed esercitati a dirlo ad alta voce. Seguirò i tuoi progressi in tempo reale ed evidenzierò le parole che salti o su cui esiti."
+      },
+      "adaptive": {
+        "title": "Parole chiave adattive",
+        "message": "Man mano che migliori, nasconderò gradualmente le parole per sfidare la tua memoria. Difficoltà? Le mostrerò di nuovo. È come avere un telepromter intelligente!"
+      },
+      "learning": {
+        "title": "Modalità apprendimento",
+        "message": "Uso la ripetizione dilazionata - una tecnica scientificamente provata - per pianificare le tue sessioni per una memorizzazione ottimale. Padroneggerai il tuo discorso più velocemente!"
+      },
+      "presentation": {
+        "title": "Modalità presentazione",
+        "message": "Quando sei pronto, passa alla Modalità Presentazione per una prova completa. Ottieni feedback dettagliato su precisione, tempismo e aree da migliorare."
+      }
+    }
   },
   "upload": {
     "title": "Carica Nuovo Discorso",
