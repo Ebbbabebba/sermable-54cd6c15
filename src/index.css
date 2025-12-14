@@ -340,15 +340,17 @@ All colors MUST be HSL.
 @keyframes wordPulse {
   0%, 100% {
     box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
+    background-color: hsl(var(--primary) / 0.15);
   }
   50% {
-    box-shadow: 0 0 16px hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 18px hsl(var(--primary) / 0.5);
+    background-color: hsl(var(--primary) / 0.25);
   }
 }
 
 @keyframes wordPulseSubtle {
   0%, 100% {
-    opacity: 0.7;
+    opacity: 0.75;
   }
   50% {
     opacity: 1;
@@ -356,10 +358,20 @@ All colors MUST be HSL.
 }
 
 .word-pulse {
-  animation: wordPulse 1.8s ease-in-out infinite;
+  animation: wordPulse 2s ease-in-out infinite;
 }
 
 .word-pulse-subtle {
-  animation: wordPulseSubtle 1.8s ease-in-out infinite;
+  animation: wordPulseSubtle 2s ease-in-out infinite;
+}
+
+/* Smooth word state transitions */
+.word-transition {
+  transition: 
+    background-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 500ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 400ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 }
