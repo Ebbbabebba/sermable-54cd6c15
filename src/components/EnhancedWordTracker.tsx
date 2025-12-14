@@ -394,13 +394,15 @@ const EnhancedWordTracker = ({
             if (currentWord.hidden && !currentWord.spoken) {
               console.log(`🛑 BLOCKED: Current word "${currentWord.text}" is hidden - waiting for user to say it`);
               
-              // If in liquid column and wrong word spoken, freeze that part yellow
-              if (liquidColumn && scriptPosition >= liquidColumn.start && scriptPosition <= liquidColumn.end) {
+              // Mark THIS hidden word as hesitated when user says wrong word (junk word)
+              // The CURRENT hidden word gets the yellow mark, not previous words
+              if (!updatedStates[scriptPosition].performanceStatus) {
                 updatedStates[scriptPosition] = {
                   ...updatedStates[scriptPosition],
-                  liquidError: true,
-                  performanceStatus: "hesitated"
+                  performanceStatus: "hesitated", // Mark this word as struggled
+                  liquidError: liquidColumn && scriptPosition >= liquidColumn.start && scriptPosition <= liquidColumn.end,
                 };
+                console.log(`⚠️ "${currentWord.text}" marked HESITATED (user said "${transcribedWord}" instead)`);
               }
               
               // USER IS TRYING - mark effort for faster hint timing
