@@ -12,11 +12,12 @@
   padding: 8px 12px;
   border-radius: 10px;
   transition:
-    background-color 0.3s ease,
-    color 0.3s ease,
-    transform 0.3s ease,
-    opacity 0.3s ease,
-    box-shadow 0.3s ease;
+    background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 1. Black text = words that still need to be said (neutral, upcoming) */
@@ -69,7 +70,28 @@
 .word-spoken {
   color: hsl(var(--muted-foreground));
   background-color: transparent;
-  opacity: 0.4;
+  opacity: 0.35;
+  filter: blur(0.3px);
+  transform: scale(0.98);
+  animation: smooth-fade-out 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes smooth-fade-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.99);
+    filter: blur(0.1px);
+  }
+  100% {
+    opacity: 0.35;
+    transform: scale(0.98);
+    filter: blur(0.3px);
+  }
 }
 
 /* Legacy class mappings for compatibility */
@@ -82,7 +104,10 @@
 .past-word {
   color: hsl(var(--muted-foreground));
   background-color: transparent;
-  opacity: 0.4;
+  opacity: 0.35;
+  filter: blur(0.3px);
+  transform: scale(0.98);
+  animation: smooth-fade-out 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .current-word {
@@ -103,10 +128,23 @@
   75% { transform: translateX(-4px); }
 }
 
-/* Success fade animation */
+/* Success fade animation - smooth and gradual */
 @keyframes success-fade {
-  0% { opacity: 1; }
-  100% { opacity: 0.4; }
+  0% { 
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  40% {
+    opacity: 0.7;
+    transform: scale(0.995);
+    filter: blur(0.1px);
+  }
+  100% { 
+    opacity: 0.35;
+    transform: scale(0.98);
+    filter: blur(0.3px);
+  }
 }
 
 /* Recovery animation when error is corrected */
