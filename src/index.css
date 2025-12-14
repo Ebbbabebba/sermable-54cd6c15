@@ -336,42 +336,56 @@ All colors MUST be HSL.
   }
 }
 
-/* Very slow, calm word pulse */
-@keyframes wordPulse {
+/* Very slow, gentle breathing glow for current word */
+@keyframes wordBreathe {
   0%, 100% {
-    box-shadow: 0 0 6px hsl(var(--primary) / 0.25);
-    background-color: hsl(var(--primary) / 0.12);
+    box-shadow: 0 0 4px hsl(var(--primary) / 0.2);
+    background-color: hsl(var(--primary) / 0.1);
   }
   50% {
-    box-shadow: 0 0 14px hsl(var(--primary) / 0.4);
-    background-color: hsl(var(--primary) / 0.2);
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.35);
+    background-color: hsl(var(--primary) / 0.16);
   }
 }
 
-@keyframes wordPulseSubtle {
+@keyframes wordBreatheSubtle {
   0%, 100% {
-    opacity: 0.8;
+    opacity: 0.85;
   }
   50% {
     opacity: 1;
   }
 }
 
-.word-pulse {
-  animation: wordPulse 3.5s ease-in-out infinite;
+/* Steady glow for current word - very slow breathing */
+@keyframes currentWordGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 14px hsl(var(--primary) / 0.45);
+  }
 }
 
-.word-pulse-subtle {
-  animation: wordPulseSubtle 3s ease-in-out infinite;
+.word-breathe {
+  animation: wordBreathe 5s ease-in-out infinite;
 }
 
-/* Ultra-smooth word state transitions */
+.word-breathe-subtle {
+  animation: wordBreatheSubtle 4s ease-in-out infinite;
+}
+
+.word-glow-current {
+  animation: currentWordGlow 4s ease-in-out infinite;
+}
+
+/* Ultra-smooth word state transitions - no layout shifts */
 .word-smooth-transition {
   transition: 
-    background-color 800ms cubic-bezier(0.22, 1, 0.36, 1),
-    color 800ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 700ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    background-color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 800ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 800ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 }
