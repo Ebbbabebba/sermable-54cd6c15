@@ -5,33 +5,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Common simple grammatical words to hide first (articles, prepositions, conjunctions, auxiliary verbs)
+// ONLY true junk/filler words that can be hidden first
 const SIMPLE_WORDS = new Set([
-  // Articles
-  'the', 'a', 'an',
-  // Conjunctions
-  'and', 'or', 'but', 'nor', 'yet', 'so',
-  // Prepositions
-  'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'down',
-  'about', 'into', 'through', 'during', 'after', 'before', 'between', 'among',
-  'under', 'over', 'above', 'below', 'across', 'along', 'around', 'behind',
-  // Auxiliary verbs
-  'is', 'are', 'was', 'were', 'be', 'been', 'being',
-  'have', 'has', 'had', 'having',
-  'do', 'does', 'did', 'doing',
-  'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can',
-  // Pronouns
-  'i', 'you', 'he', 'she', 'it', 'we', 'they',
-  'me', 'him', 'her', 'us', 'them',
-  'my', 'your', 'his', 'her', 'its', 'our', 'their',
-  'mine', 'yours', 'hers', 'ours', 'theirs',
-  'this', 'that', 'these', 'those',
-  // Common adverbs
-  'very', 'just', 'so', 'too', 'also', 'well', 'then', 'now', 'here', 'there',
-  // Other common words
-  'as', 'if', 'than', 'when', 'where', 'who', 'what', 'which', 'how', 'why',
-  'all', 'some', 'any', 'each', 'every', 'both', 'few', 'many', 'much', 'more', 'most'
-]);
+  // English conjunctions and short prepositions ONLY
+  'and', 'or', 'but', 'so', 'yet', 'nor',
+  'in', 'on', 'at', 'to', 'of', 'by', 'for',
+  'a', 'an', 'the',
+  'is', 'are', 'was', 'were', 'be',
+  'it', 'its',
+  // Swedish equivalents
+  'och', 'eller', 'men', 'så',
+  'i', 'på', 'av', 'för', 'till', 'med',
+  'en', 'ett', 'den', 'det',
+  'är', 'var'
+])
+
+// Words that should be hidden LAST - content words, unique words, hard words
+const isContentWord = (word: string): boolean => {
+  const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+  
+  // Words longer than 5 characters are content words
+  if (cleanWord.length > 5) return true
+  
+  // Words with special characters (like ä, ö, å in Swedish)
+  if (/[äöåéèêëàáâãüïîôûùúñçšž]/i.test(cleanWord)) return true
+  
+  // Capitalized words (proper nouns, start of sentences)
+  if (/^[A-ZÄÖÅÉÈÊËÀÁÂÃÜÏÎÔÛÙÚÑÇŠŽ]/.test(word)) return true
+  
+  // Words with numbers
+  if (/\d/.test(word)) return true
+  
+  return false
+}
 
 interface WordPerformance {
   word: string;
@@ -39,6 +45,7 @@ interface WordPerformance {
   missedCount: number;
   hesitatedCount: number;
   isSimple: boolean;
+  isSentenceEnding: boolean;
   lastPerformance: 'correct' | 'missed' | 'hesitated' | 'none';
 }
 
@@ -84,27 +91,30 @@ Deno.serve(async (req) => {
     
     // Initialize performance for all words
     words.forEach((word: string) => {
-      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '')
+      const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
       if (cleanWord && !wordPerformanceMap.has(cleanWord)) {
         const mastered = masteredWords?.find((m: any) => m.word === cleanWord)
+        const isContent = isContentWord(word)
+        const endsWithPunctuation = /[.!?]$/.test(word.trim())
         wordPerformanceMap.set(cleanWord, {
           word: cleanWord,
           correctCount: mastered?.times_spoken_correctly || 0,
           missedCount: mastered?.missed_count || 0,
           hesitatedCount: mastered?.hesitated_count || 0,
-          isSimple: SIMPLE_WORDS.has(cleanWord),
+          isSimple: SIMPLE_WORDS.has(cleanWord) && !isContent && !endsWithPunctuation,
+          isSentenceEnding: endsWithPunctuation,
           lastPerformance: 'none'
         })
       }
     })
 
     // Create sets for quick lookup
-    const missedSet = new Set(missedWords.map((w: string) => w.toLowerCase().replace(/[^\w]/g, '')))
-    const hesitatedSet = new Set(hesitatedWords.map((w: string) => w.toLowerCase().replace(/[^\w]/g, '')))
+    const missedSet = new Set(missedWords.map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')))
+    const hesitatedSet = new Set(hesitatedWords.map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')))
 
     // Update performance based on this session
     words.forEach((word: string) => {
-      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '')
+      const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
       const perf = wordPerformanceMap.get(cleanWord)
       if (!perf) return
 
@@ -138,10 +148,11 @@ Deno.serve(async (req) => {
     }
 
     // Determine which words should be hidden
+    // Priority: simple words first, then hard words + sentence-ending words LAST
     const wordsToHide = new Set<number>()
     
     words.forEach((word: string, index: number) => {
-      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '')
+      const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
       const perf = wordPerformanceMap.get(cleanWord)
       
       if (!perf || !cleanWord) return
@@ -160,15 +171,20 @@ Deno.serve(async (req) => {
         }
       }
 
-      // RULE 3: Hide simple grammatical words first (after just 1 correct attempt)
-      // These are words like "the", "and", "or", "is", "a" - very easy to recall
-      if (perf.isSimple && perf.correctCount >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
+      // Check if this is a hard word or sentence-ending word
+      const isHardWord = isContentWord(word)
+      const isSentenceEnding = /[.!?]$/.test(word.trim())
+
+      // RULE 3: Hide simple grammatical words first (after 1 correct attempt)
+      // These are words like "and", "or", "is", "a" - very easy to recall
+      if (perf.isSimple && !isSentenceEnding && perf.correctCount >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
         wordsToHide.add(index)
         return
       }
 
-      // RULE 4: Hide harder words progressively (after 3 correct attempts without errors)
-      if (!perf.isSimple && perf.correctCount >= 3 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
+      // RULE 4: Hide hard words + sentence-ending words LAST (after 5+ correct attempts)
+      // These disappear together as the "hardest" words based on performance
+      if ((isHardWord || isSentenceEnding) && perf.correctCount >= 5 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
         wordsToHide.add(index)
         return
       }
