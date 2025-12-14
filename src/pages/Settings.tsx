@@ -21,7 +21,7 @@ const Settings = () => {
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
-  const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
@@ -54,15 +54,6 @@ const Settings = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("skill_level")
-          .eq("id", user.id)
-          .single();
-
-        if (profile) {
-          setSkillLevel((profile.skill_level || 'beginner') as 'beginner' | 'intermediate' | 'advanced');
-        }
 
         // Calculate streak
         const { data: sessions } = await supabase
@@ -137,31 +128,6 @@ const Settings = () => {
     loadUserData();
   }, [i18n.language]);
 
-  const handleSkillLevelChange = async (level: 'beginner' | 'intermediate' | 'advanced') => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({ skill_level: level })
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      setSkillLevel(level);
-      toast({
-        title: "Skill level updated",
-        description: "Your practice schedule will be adjusted accordingly",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Failed to update skill level",
-        description: error.message,
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -415,18 +381,15 @@ const Settings = () => {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Languages className="h-5 w-5 text-primary" />
-                <CardTitle>Language & Region</CardTitle>
+                <CardTitle>Language</CardTitle>
               </div>
               <CardDescription>
-                Choose your preferred language for the app interface. Text language is detected automatically when you paste content.
+                Choose your preferred language for the app interface
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent>
               <div className="space-y-3">
-                <Label htmlFor="app-language" className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  App Interface Language
-                </Label>
+                <Label htmlFor="app-language">App Language</Label>
                 <Select
                   value={currentLanguage}
                   onValueChange={handleLanguageChange}
@@ -446,20 +409,8 @@ const Settings = () => {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  The app will display menus, buttons, and settings in this language.
+                  Menus, buttons, and descriptions will display in this language. Your speech text language is detected separately.
                 </p>
-              </div>
-
-              <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                <div className="flex items-start gap-2">
-                  <Languages className="h-4 w-4 mt-0.5 text-primary" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Automatic Text Language Detection</p>
-                    <p className="text-xs text-muted-foreground">
-                      When you paste speech text, Sermable automatically detects the language and updates the interface to match. This ensures a seamless experience in your preferred language.
-                    </p>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -510,57 +461,14 @@ const Settings = () => {
             <CardHeader>
               <CardTitle>Account</CardTitle>
               <CardDescription>
-                Manage your account settings and preferences
+                Manage your account settings
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Skill Level */}
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="skill-level">Speaking Skill Level</Label>
-                  <p className="text-sm text-muted-foreground">
-                    This adjusts your practice schedule and notification frequency
-                  </p>
-                </div>
-                <Select value={skillLevel} onValueChange={(value) => handleSkillLevelChange(value as 'beginner' | 'intermediate' | 'advanced')}>
-                  <SelectTrigger id="skill-level">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="beginner">
-                      <div className="flex flex-col">
-                        <span>Beginner</span>
-                        <span className="text-xs text-muted-foreground">
-                          Slower pace, more frequent reviews
-                        </span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="intermediate">
-                      <div className="flex flex-col">
-                        <span>Intermediate</span>
-                        <span className="text-xs text-muted-foreground">
-                          Balanced progression
-                        </span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="advanced">
-                      <div className="flex flex-col">
-                        <span>Advanced</span>
-                        <span className="text-xs text-muted-foreground">
-                          Faster pace, longer intervals
-                        </span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
+            <CardContent>
               <div className="rounded-lg bg-muted/50 p-4 space-y-2">
                 <p className="text-sm font-medium">Personalized Learning</p>
                 <p className="text-xs text-muted-foreground">
-                  Your skill level combined with speech deadlines determines review frequency. Advanced speakers progress faster with longer intervals between reviews, while beginners get more frequent practice sessions.
+                  Your practice schedule is automatically personalized based on your performance and speech deadlines.
                 </p>
               </div>
             </CardContent>
