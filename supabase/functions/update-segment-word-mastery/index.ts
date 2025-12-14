@@ -113,6 +113,29 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('speech_id', speechId)
 
+    // Get practice session count for this speech (for progressive hiding scaling)
+    const { count: sessionCount } = await supabaseClient
+      .from('practice_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('speech_id', speechId)
+    
+    const totalSessions = sessionCount || 0
+    console.log(`Total practice sessions for speech: ${totalSessions}`)
+
+    // Parse existing text_current to find already-hidden words
+    const currentText = speech.text_current || speech.text_original
+    const alreadyHiddenIndices = new Set<number>()
+    let wordIndex = 0
+    const currentWords = currentText.split(/\s+/).filter((w: string) => w.trim())
+    currentWords.forEach((word: string) => {
+      // Check if word is wrapped in brackets [word]
+      if (word.startsWith('[') && word.endsWith(']')) {
+        alreadyHiddenIndices.add(wordIndex)
+      }
+      wordIndex++
+    })
+    console.log(`Already hidden word indices: ${Array.from(alreadyHiddenIndices).join(', ')}`)
+
     // Build word mastery map
     const wordMasteryMap = new Map<string, WordMasteryData>()
     
@@ -142,9 +165,14 @@ Deno.serve(async (req) => {
         wordMasteryMap.set(cleanWord, data)
       }
 
+      // Get existing consecutive correct count
+      const existingWord = masteredWords?.find((m: any) => m.word === cleanWord)
+      let consecutiveCorrect = existingWord?.consecutive_sessions_correct || 0
+
       // Update counts based on this session
       if (wasMissed) {
         data.missedCount++
+        consecutiveCorrect = 0 // Reset consecutive correct on any miss
         if (wasHidden) {
           data.hiddenMissCount++
           // If missed while hidden 2+ times, mark as anchor keyword
@@ -155,6 +183,7 @@ Deno.serve(async (req) => {
         }
       } else if (wasHesitated) {
         data.hesitatedCount++
+        consecutiveCorrect = 0 // Reset consecutive correct on hesitation
         if (wasHidden) {
           data.hiddenHesitateCount++
           // If hesitated while hidden 3+ times, mark as anchor keyword
@@ -164,9 +193,13 @@ Deno.serve(async (req) => {
           }
         }
       } else {
-        // Spoken correctly
+        // Spoken correctly - increment consecutive correct
         data.correctCount++
+        consecutiveCorrect++
       }
+      
+      // Store consecutive correct in the data for later use
+      ;(data as any).consecutiveCorrect = consecutiveCorrect
     })
 
     // Update mastered_words table with enhanced tracking
@@ -182,6 +215,7 @@ Deno.serve(async (req) => {
           hidden_miss_count: data.hiddenMissCount,
           hidden_hesitate_count: data.hiddenHesitateCount,
           is_anchor_keyword: data.isAnchorKeyword,
+          consecutive_sessions_correct: (data as any).consecutiveCorrect || 0,
           last_spoken_at: new Date().toISOString()
         }, {
           onConflict: 'speech_id,word'
@@ -193,11 +227,36 @@ Deno.serve(async (req) => {
     const anchorKeywordIndices: number[] = []
     const candidatesToHide: Array<{ index: number; priority: number; isSimple: boolean }> = []
 
+    // FIRST: Preserve all already-hidden words (from previous sessions)
+    alreadyHiddenIndices.forEach(idx => {
+      const word = words[idx]
+      if (!word) return
+      const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+      const data = wordMasteryMap.get(cleanWord)
+      
+      // Only un-hide if word was missed/hesitated while hidden (needs recovery)
+      if (data && (data.hiddenMissCount > 0 || data.hiddenHesitateCount > 0)) {
+        const recoveryNeeded = (data.hiddenMissCount * 3) + (data.hiddenHesitateCount * 2)
+        if (data.correctCount < recoveryNeeded) {
+          console.log(`Un-hiding word "${cleanWord}" - needs recovery (${data.correctCount}/${recoveryNeeded} correct)`)
+          return // Don't add to wordsToHide - word will become visible
+        }
+      }
+      
+      // Keep the word hidden
+      wordsToHide.add(idx)
+    })
+    
+    console.log(`Preserving ${wordsToHide.size} already-hidden words from previous sessions`)
+
     words.forEach((word: string, index: number) => {
       const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
       const data = wordMasteryMap.get(cleanWord)
       
       if (!data || !cleanWord) return
+      
+      // Skip if already in wordsToHide (preserved from previous session)
+      if (wordsToHide.has(index)) return
 
       // RULE 1: Anchor keywords NEVER get hidden - they stay visible as cue words
       if (data.isAnchorKeyword) {
@@ -221,23 +280,35 @@ Deno.serve(async (req) => {
           return // Keep visible
         }
       }
+      
+      const consecutiveCorrect = (data as any).consecutiveCorrect || 0
 
-      // RULE 4: Simple words hide after 1 clean correct - track as candidate
-      if (data.isSimple && data.correctCount >= 1 && data.missedCount === 0 && data.hesitatedCount === 0) {
+      // RULE 4: Simple words - need 2 consecutive correct sessions (not just 1)
+      // This implements the "2x tested = stable" rule
+      if (data.isSimple && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 1, isSimple: true })
         return
       }
 
-      // RULE 5: Harder words need 3 clean corrects - track as candidate
-      if (!data.isSimple && data.correctCount >= 3 && data.missedCount === 0 && data.hesitatedCount === 0) {
+      // RULE 5: Harder words need 3 clean corrects AND 2 consecutive sessions
+      if (!data.isSimple && data.correctCount >= 3 && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 2, isSimple: false })
         return
       }
     })
 
-    // GRADUAL HIDING: Only hide 1 word per session for smooth progression
-    // Prioritize simple words first (priority 1), then harder words (priority 2)
-    const MAX_NEW_WORDS_TO_HIDE_PER_SESSION = 1
+    // PROGRESSIVE HIDING SPEED based on session count
+    // Sessions 1-5: 1 word per session (gentle start)
+    // Sessions 6-15: 2 words per session (accelerating)
+    // Sessions 16+: 3 words per session (but cap at 5% of total words)
+    let maxNewWordsToHide = 1
+    if (totalSessions >= 16) {
+      maxNewWordsToHide = Math.min(3, Math.ceil(words.length * 0.05))
+    } else if (totalSessions >= 6) {
+      maxNewWordsToHide = 2
+    }
+    
+    console.log(`Session ${totalSessions + 1}: Max new words to hide = ${maxNewWordsToHide}`)
     
     // Sort candidates: simple words first, then by index for consistency
     candidatesToHide.sort((a, b) => {
@@ -245,11 +316,12 @@ Deno.serve(async (req) => {
       return a.index - b.index
     })
 
-    // Only take the first N candidates
-    const newWordsToHide = candidatesToHide.slice(0, MAX_NEW_WORDS_TO_HIDE_PER_SESSION)
+    // Only take the first N candidates for NEW hiding
+    const newWordsToHide = candidatesToHide.slice(0, maxNewWordsToHide)
     newWordsToHide.forEach(candidate => wordsToHide.add(candidate.index))
     
-    console.log(`Candidates to hide: ${candidatesToHide.length}, actually hiding ${newWordsToHide.length} new word(s)`)
+    console.log(`Candidates to hide: ${candidatesToHide.length}, actually hiding ${newWordsToHide.length} NEW word(s)`)
+    console.log(`Total hidden words: ${wordsToHide.size} (${alreadyHiddenIndices.size} preserved + ${newWordsToHide.length} new)`)
 
     // Create text_current with brackets around hidden words
     const modifiedWords = words.map((word: string, index: number) => {
