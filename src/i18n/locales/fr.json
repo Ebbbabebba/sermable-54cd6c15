@@ -1,16 +1,23 @@
 {
   "app": {
     "name": "Sermable",
-    "tagline": "Maîtrisez votre Discours avec la Pratique Assistée par IA"
+    "tagline": "Maîtrisez votre discours."
   },
   "nav": {
     "home": "Accueil",
     "dashboard": "Tableau de bord",
     "practice": "Pratiquer",
     "signOut": "Se déconnecter",
-    "signIn": "Se connecter"
+    "signIn": "Se connecter",
+    "menu": "Menu",
+    "settings": "Paramètres",
+    "newSpeech": "Nouveau discours",
+    "upgrade": "Mettre à niveau",
+    "upgradeToPremium": "Passer à Premium"
   },
   "home": {
+    "getStarted": "Commencer",
+    "haveAccount": "J'ai déjà un compte",
     "hero": {
       "title": "Maîtrisez votre Discours avec la Pratique Assistée par IA",
       "subtitle": "Transformez vos compétences oratoires avec des retours personnalisés et un apprentissage par répétition espacée",
@@ -33,27 +40,83 @@
     }
   },
   "auth": {
+    "welcomeBack": "Bon retour",
+    "getStarted": "Commencer",
+    "signInToContinue": "Connectez-vous pour continuer à pratiquer",
+    "createAccount": "Créez un compte pour commencer à mémoriser",
+    "fullName": "Nom complet",
+    "yourName": "Votre nom",
     "signIn": "Se connecter",
     "signUp": "S'inscrire",
     "email": "Email",
     "password": "Mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
     "forgotPassword": "Mot de passe oublié?",
-    "noAccount": "Pas de compte?",
-    "haveAccount": "Vous avez déjà un compte?",
-    "loading": "Chargement...",
+    "noAccount": "Pas de compte? Inscrivez-vous",
+    "haveAccount": "Déjà un compte? Connectez-vous",
+    "loading": "Patientez",
     "signInError": "Erreur de connexion",
     "signUpError": "Erreur d'inscription",
-    "passwordMismatch": "Les mots de passe ne correspondent pas"
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "welcomeBackToast": "Bon retour!",
+    "signInSuccess": "Vous êtes connecté.",
+    "accountCreated": "Compte créé!",
+    "welcomeToSermable": "Bienvenue sur Sermable. Commençons."
   },
   "dashboard": {
     "title": "Mes Discours",
+    "welcomeBack": "Bon retour",
+    "continueOrStart": "Continuez à pratiquer ou commencez un nouveau discours.",
+    "yourSpeeches": "Vos discours",
+    "manageSpeeches": "Gérez et pratiquez vos discours",
+    "speech": "discours",
+    "speeches": "discours",
+    "sort": "Trier",
+    "byDeadline": "Par échéance",
+    "recentlyCreated": "Créés récemment",
+    "recentlyUpdated": "Mis à jour récemment",
+    "noSpeeches": "Pas encore de discours",
+    "noSpeechesDesc": "Téléchargez votre premier discours pour commencer. Définissez une date objectif et laissez l'IA vous aider à mémoriser.",
+    "uploadFirst": "Téléchargez votre premier discours",
+    "adSpace": "Espace publicitaire - Mettez à niveau pour supprimer les pubs",
     "uploadSpeech": "Télécharger un Discours",
-    "noSpeeches": "Aucun discours pour le moment. Téléchargez votre premier discours pour commencer!",
     "words": "mots",
     "dueToday": "À faire aujourd'hui",
     "overdue": "En retard",
-    "loading": "Chargement des discours..."
+    "loading": "Chargement de vos discours...",
+    "errorLoading": "Erreur de chargement des discours",
+    "upgraded": "Passé à Premium!",
+    "upgradedDesc": "Vous avez maintenant accès à toutes les fonctionnalités premium.",
+    "upgradeFailed": "Échec de la mise à niveau",
+    "plan": "Plan",
+    "speechesThisMonth": "discours ce mois"
+  },
+  "onboarding": {
+    "skip": "Passer",
+    "continue": "Continuer",
+    "getStarted": "Commencer",
+    "steps": {
+      "welcome": {
+        "title": "Bienvenue sur Sermable!",
+        "message": "Je suis là pour vous aider à mémoriser vos discours et présentations facilement. Laissez-moi vous montrer comment ça marche!"
+      },
+      "practice": {
+        "title": "Pratique du discours",
+        "message": "Collez votre texte et entraînez-vous à le dire à voix haute. Je suivrai votre progression en temps réel et soulignerai les mots manqués ou hésités."
+      },
+      "adaptive": {
+        "title": "Mots-clés adaptatifs",
+        "message": "À mesure que vous progressez, je cacherai progressivement des mots pour défier votre mémoire. Difficultés? Je les remontrerai. C'est comme un téléprompteur intelligent!"
+      },
+      "learning": {
+        "title": "Mode apprentissage",
+        "message": "J'utilise la répétition espacée - une technique scientifiquement prouvée - pour planifier vos sessions pour une mémorisation optimale. Vous maîtriserez votre discours plus vite!"
+      },
+      "presentation": {
+        "title": "Mode présentation",
+        "message": "Quand vous êtes prêt, passez en Mode Présentation pour une répétition complète. Obtenez des retours détaillés sur la précision, le timing et les points à améliorer."
+      }
+    }
   },
   "upload": {
     "title": "Télécharger un Nouveau Discours",

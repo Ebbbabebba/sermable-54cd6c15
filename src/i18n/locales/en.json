@@ -1,16 +1,23 @@
 {
   "app": {
     "name": "Sermable",
-    "tagline": "Master Your Speech with AI-Powered Practice"
+    "tagline": "Master your speech."
   },
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
     "practice": "Practice",
     "signOut": "Sign Out",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "menu": "Menu",
+    "settings": "Settings",
+    "newSpeech": "New Speech",
+    "upgrade": "Upgrade",
+    "upgradeToPremium": "Upgrade to Premium"
   },
   "home": {
+    "getStarted": "Get Started",
+    "haveAccount": "I already have an account",
     "hero": {
       "title": "Master Your Speech with AI-Powered Practice",
       "subtitle": "Transform your speaking skills with personalized feedback and spaced repetition learning",
@@ -33,27 +40,83 @@
     }
   },
   "auth": {
+    "welcomeBack": "Welcome Back",
+    "getStarted": "Get Started",
+    "signInToContinue": "Sign in to continue your practice",
+    "createAccount": "Create an account to start memorizing",
+    "fullName": "Full Name",
+    "yourName": "Your name",
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
     "forgotPassword": "Forgot Password?",
-    "noAccount": "Don't have an account?",
-    "haveAccount": "Already have an account?",
-    "loading": "Loading...",
+    "noAccount": "Don't have an account? Sign up",
+    "haveAccount": "Already have an account? Sign in",
+    "loading": "Please wait",
     "signInError": "Error signing in",
     "signUpError": "Error signing up",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "welcomeBackToast": "Welcome back!",
+    "signInSuccess": "You've successfully logged in.",
+    "accountCreated": "Account created!",
+    "welcomeToSermable": "Welcome to Sermable. Let's get you started."
   },
   "dashboard": {
     "title": "My Speeches",
+    "welcomeBack": "Welcome back",
+    "continueOrStart": "Continue practicing or start a new speech.",
+    "yourSpeeches": "Your Speeches",
+    "manageSpeeches": "Manage and practice your speeches",
+    "speech": "speech",
+    "speeches": "speeches",
+    "sort": "Sort",
+    "byDeadline": "By Deadline",
+    "recentlyCreated": "Recently Created",
+    "recentlyUpdated": "Recently Updated",
+    "noSpeeches": "No speeches yet",
+    "noSpeechesDesc": "Upload your first speech to start practicing. Set a goal date and let AI help you memorize it.",
+    "uploadFirst": "Upload Your First Speech",
+    "adSpace": "Ad Space - Upgrade to remove ads",
     "uploadSpeech": "Upload Speech",
-    "noSpeeches": "No speeches yet. Upload your first speech to get started!",
     "words": "words",
     "dueToday": "Due today",
     "overdue": "Overdue",
-    "loading": "Loading speeches..."
+    "loading": "Loading your speeches...",
+    "errorLoading": "Error loading speeches",
+    "upgraded": "Upgraded to Premium!",
+    "upgradedDesc": "You now have access to all premium features.",
+    "upgradeFailed": "Upgrade failed",
+    "plan": "Plan",
+    "speechesThisMonth": "speeches this month"
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "continue": "Continue",
+    "getStarted": "Get Started",
+    "steps": {
+      "welcome": {
+        "title": "Welcome to Sermable!",
+        "message": "I'm here to help you memorize your speeches and presentations with ease. Let me show you how it works!"
+      },
+      "practice": {
+        "title": "Speech Practice",
+        "message": "Paste your speech text and practice speaking it out loud. I'll track your progress in real-time and highlight any words you miss or hesitate on."
+      },
+      "adaptive": {
+        "title": "Adaptive Cue Words",
+        "message": "As you improve, I'll gradually hide words to challenge your memory. Struggling? I'll show them again. It's like having a smart teleprompter!"
+      },
+      "learning": {
+        "title": "Learning Mode",
+        "message": "I use spaced repetition - a scientifically proven technique - to schedule your practice sessions for optimal memorization. You'll master your speech faster!"
+      },
+      "presentation": {
+        "title": "Presentation Mode",
+        "message": "When you're ready, switch to Presentation Mode for a full run-through. Get detailed feedback on accuracy, timing, and areas to improve."
+      }
+    }
   },
   "upload": {
     "title": "Upload New Speech",

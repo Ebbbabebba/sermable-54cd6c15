@@ -1,30 +1,37 @@
 {
   "app": {
     "name": "Sermable",
-    "tagline": "Bemästra ditt tal med AI-driven övning"
+    "tagline": "Bemästra ditt tal."
   },
   "nav": {
     "home": "Hem",
-    "dashboard": "Instrumentpanel",
+    "dashboard": "Kontrollpanel",
     "practice": "Öva",
     "signOut": "Logga ut",
-    "signIn": "Logga in"
+    "signIn": "Logga in",
+    "menu": "Meny",
+    "settings": "Inställningar",
+    "newSpeech": "Nytt tal",
+    "upgrade": "Uppgradera",
+    "upgradeToPremium": "Uppgradera till Premium"
   },
   "home": {
+    "getStarted": "Kom igång",
+    "haveAccount": "Jag har redan ett konto",
     "hero": {
       "title": "Bemästra ditt tal med AI-driven övning",
-      "subtitle": "Förbättra dina talförmågor med personlig feedback och repetitionsinlärning",
+      "subtitle": "Förvandla dina talförmågor med personlig feedback och mellanrumsrepetition",
       "cta": "Börja öva"
     },
     "features": {
       "title": "Funktioner",
       "aiAnalysis": {
         "title": "AI-talanalys",
-        "description": "Få omedelbar feedback på din talförmåga"
+        "description": "Få omedelbar feedback på din presentation"
       },
       "spacedRepetition": {
-        "title": "Repetitionsinlärning",
-        "description": "Optimera inlärningen med vetenskapligt baserad schemaläggning"
+        "title": "Mellanrumsrepetition",
+        "description": "Optimera lärande med vetenskapligt bevisade scheman"
       },
       "realTimeTracking": {
         "title": "Realtidsspårning",
@@ -33,44 +40,100 @@
     }
   },
   "auth": {
+    "welcomeBack": "Välkommen tillbaka",
+    "getStarted": "Kom igång",
+    "signInToContinue": "Logga in för att fortsätta öva",
+    "createAccount": "Skapa ett konto för att börja memorera",
+    "fullName": "Fullständigt namn",
+    "yourName": "Ditt namn",
     "signIn": "Logga in",
-    "signUp": "Registrera",
+    "signUp": "Registrera dig",
     "email": "E-post",
     "password": "Lösenord",
     "confirmPassword": "Bekräfta lösenord",
     "forgotPassword": "Glömt lösenord?",
-    "noAccount": "Har du inget konto?",
-    "haveAccount": "Har du redan ett konto?",
-    "loading": "Laddar...",
+    "noAccount": "Har du inget konto? Registrera dig",
+    "haveAccount": "Har du redan ett konto? Logga in",
+    "loading": "Vänta",
     "signInError": "Fel vid inloggning",
     "signUpError": "Fel vid registrering",
-    "passwordMismatch": "Lösenorden stämmer inte överens"
+    "passwordMismatch": "Lösenorden matchar inte",
+    "welcomeBackToast": "Välkommen tillbaka!",
+    "signInSuccess": "Du har loggat in.",
+    "accountCreated": "Konto skapat!",
+    "welcomeToSermable": "Välkommen till Sermable. Låt oss komma igång."
   },
   "dashboard": {
     "title": "Mina tal",
+    "welcomeBack": "Välkommen tillbaka",
+    "continueOrStart": "Fortsätt öva eller starta ett nytt tal.",
+    "yourSpeeches": "Dina tal",
+    "manageSpeeches": "Hantera och öva dina tal",
+    "speech": "tal",
+    "speeches": "tal",
+    "sort": "Sortera",
+    "byDeadline": "Efter deadline",
+    "recentlyCreated": "Nyligen skapade",
+    "recentlyUpdated": "Nyligen uppdaterade",
+    "noSpeeches": "Inga tal ännu",
+    "noSpeechesDesc": "Ladda upp ditt första tal för att börja öva. Sätt ett måldatum och låt AI hjälpa dig memorera.",
+    "uploadFirst": "Ladda upp ditt första tal",
+    "adSpace": "Annonsplats - Uppgradera för att ta bort annonser",
     "uploadSpeech": "Ladda upp tal",
-    "noSpeeches": "Inga tal än. Ladda upp ditt första tal för att komma igång!",
     "words": "ord",
     "dueToday": "Förfaller idag",
     "overdue": "Försenad",
-    "loading": "Laddar tal..."
+    "loading": "Laddar dina tal...",
+    "errorLoading": "Fel vid laddning av tal",
+    "upgraded": "Uppgraderad till Premium!",
+    "upgradedDesc": "Du har nu tillgång till alla premiumfunktioner.",
+    "upgradeFailed": "Uppgradering misslyckades",
+    "plan": "Plan",
+    "speechesThisMonth": "tal denna månad"
+  },
+  "onboarding": {
+    "skip": "Hoppa över",
+    "continue": "Fortsätt",
+    "getStarted": "Kom igång",
+    "steps": {
+      "welcome": {
+        "title": "Välkommen till Sermable!",
+        "message": "Jag är här för att hjälpa dig memorera dina tal och presentationer med lätthet. Låt mig visa dig hur det fungerar!"
+      },
+      "practice": {
+        "title": "Talövning",
+        "message": "Klistra in din taltext och öva på att säga den högt. Jag spårar dina framsteg i realtid och markerar ord du missar eller tvekar på."
+      },
+      "adaptive": {
+        "title": "Adaptiva ledord",
+        "message": "När du förbättras döljer jag gradvis ord för att utmana ditt minne. Har du svårt? Jag visar dem igen. Det är som att ha en smart teleprompter!"
+      },
+      "learning": {
+        "title": "Inlärningsläge",
+        "message": "Jag använder mellanrumsrepetition - en vetenskapligt bevisad teknik - för att schemalägga dina övningssessioner för optimal memorering. Du lär dig ditt tal snabbare!"
+      },
+      "presentation": {
+        "title": "Presentationsläge",
+        "message": "När du är redo, byt till Presentationsläge för en fullständig genomkörning. Få detaljerad feedback om noggrannhet, timing och områden att förbättra."
+      }
+    }
   },
   "upload": {
     "title": "Ladda upp nytt tal",
-    "speechTitle": "Talrubrik",
+    "speechTitle": "Taltitel",
     "speechText": "Taltext",
-    "goalDate": "Målsättningsdatum",
+    "goalDate": "Måldatum",
     "optional": "valfritt",
     "cancel": "Avbryt",
     "upload": "Ladda upp",
     "uploading": "Laddar upp...",
-    "success": "Talet har laddats upp!",
-    "error": "Det gick inte att ladda upp talet",
+    "success": "Talet laddades upp!",
+    "error": "Kunde inte ladda upp talet",
     "wordLimit": "Ordgräns",
     "monthlyLimit": "Månatlig talgräns",
     "limitReached": "Gränsen nådd",
     "pasteText": "Klistra in din taltext här...",
-    "languageDetected": "Språk upptäckt och gränssnitt uppdaterat"
+    "languageDetected": "Språk upptäcktes och gränssnitt uppdaterades"
   },
   "practice": {
     "title": "Övningssession",
@@ -86,19 +149,19 @@
       "missedWords": "Missade ord",
       "delayedWords": "Försenade ord",
       "feedback": "Feedback",
-      "cueText": "Övningstext",
+      "cueText": "Övningsledning",
       "retry": "Försök igen",
-      "dashboard": "Tillbaka till instrumentpanelen"
+      "dashboard": "Tillbaka till kontrollpanelen"
     },
     "settings": {
       "title": "Övningsinställningar",
       "language": "Språk",
-      "revealSpeed": "Avslöjningshastighet",
+      "revealSpeed": "Visningshastighet",
       "showOnPause": "Visa ord vid paus",
       "animationStyle": "Animationsstil",
       "styles": {
         "fade": "Tona",
-        "slide": "Glida",
+        "slide": "Glid",
         "highlight": "Markera"
       }
     }
@@ -111,14 +174,14 @@
       "description": "Lås upp premiumfunktioner och förbättra ditt lärande",
       "whyPremium": "Varför Premium?",
       "choosePlan": "Välj din plan",
-      "overrideLock": "Kringgå repetitionslås",
+      "overrideLock": "Åsidosätt mellanrumslås",
       "overrideLockDesc": "Öva när som helst med \"Öva ändå\"-knappen",
       "unlimitedSpeeches": "Obegränsade tal",
-      "unlimitedSpeechesDesc": "Ladda upp och öva obegränsat antal tal",
+      "unlimitedSpeechesDesc": "Ladda upp och öva obegränsade taltexter",
       "advancedAnalytics": "Avancerad analys",
-      "advancedAnalyticsDesc": "Detaljerade prestationsinsikter och framstegsspårning",
-      "streakFreeze": "Frys din serie",
-      "streakFreezeDesc": "Skydda din serie när livet blir hektiskt",
+      "advancedAnalyticsDesc": "Detaljerade prestandainsikter och framstegsspårning",
+      "streakFreeze": "Streakfrysning",
+      "streakFreezeDesc": "Skydda din streak när livet blir hektiskt",
       "prioritySupport": "Prioriterad support",
       "prioritySupportDesc": "Få hjälp snabbare med dedikerad support",
       "monthly": "Månadsplan",
@@ -128,15 +191,15 @@
       "perMonth": "per månad",
       "save": "Spara",
       "studentPricing": "Studentpriser",
-      "studentMonthly": "Månadsplan för studenter",
-      "studentAnnual": "Årsplan för studenter",
+      "studentMonthly": "Studentmånadsplan",
+      "studentAnnual": "Studentårsplan",
       "studentDiscount": "50% rabatt",
-      "backToRegular": "Tillbaka till vanliga priser",
+      "backToRegular": "Tillbaka till ordinarie priser",
       "studentButton": "Student? Klicka här!",
       "continueWith": "Fortsätt med",
       "plan": "Plan",
       "comingSoon": "Kommer snart!",
-      "comingSoonDesc": "Premiumprenumeration kommer snart."
+      "comingSoonDesc": "Premium-prenumeration kommer snart att vara tillgänglig."
     },
     "appearance": {
       "title": "Utseende",
@@ -149,16 +212,16 @@
       "title": "Språk",
       "description": "Välj ditt föredragna språk för appgränssnittet",
       "appLanguage": "Appspråk",
-      "hint": "Menyer, knappar och beskrivningar visas på detta språk. Ditt talspråk detekteras separat."
+      "hint": "Menyer, knappar och beskrivningar visas på detta språk. Ditt taltextspråk upptäcks separat."
     },
     "profile": {
-      "title": "Profil & Serie",
-      "description": "Spåra din övningskontinuitet",
-      "currentStreak": "Nuvarande serie",
-      "bestStreak": "Bästa serie",
+      "title": "Profil & Streak",
+      "description": "Spåra din övningskonsekvens",
+      "currentStreak": "Nuvarande streak",
+      "bestStreak": "Bästa streak",
       "days": "dagar",
-      "keepStreak": "Håll din serie vid liv!",
-      "keepStreakDesc": "Öva minst en gång om dagen för att behålla din serie. Din serie nollställs om du missar en dag."
+      "keepStreak": "Håll din streak vid liv!",
+      "keepStreakDesc": "Öva minst en gång varje dag för att behålla din streak. Din streak återställs om du missar en dag."
     },
     "account": {
       "title": "Konto",
@@ -167,13 +230,13 @@
       "personalizedLearningDesc": "Ditt övningsschema anpassas automatiskt baserat på din prestation och taldeadlines."
     },
     "notifications": {
-      "title": "Notifikationer",
-      "description": "Få påminnelser när tal behöver repeteras",
+      "title": "Aviseringar",
+      "description": "Få påminnelser när tal är redo för granskning",
       "nativeRequired": "Nativ app krävs",
-      "nativeRequiredDesc": "Push-notifikationer på låsskärmen är endast tillgängliga i den nativa mobilappen. För att få notifikationer på din iPhone eller Android behöver du installera appen.",
-      "pushNotifications": "Push-notifikationer",
+      "nativeRequiredDesc": "Push-notiser på låsskärmen är endast tillgängliga i den nativa mobilappen. För att få aviseringar på din iPhone eller Android-enhet måste du installera appen.",
+      "pushNotifications": "Push-notiser",
       "pushNotificationsDesc": "Ta emot påminnelser på din låsskärm",
-      "enabled": "Du kommer att få notifikationer när tal behöver repeteras baserat på dina framsteg."
+      "enabled": "Du kommer att få aviseringar när tal är redo för granskning baserat på dina framsteg."
     },
     "legal": {
       "termsTitle": "Villkor",
@@ -195,7 +258,7 @@
     "success": "Lyckades",
     "cancel": "Avbryt",
     "save": "Spara",
-    "delete": "Ta bort",
+    "delete": "Radera",
     "edit": "Redigera",
     "back": "Tillbaka",
     "next": "Nästa",

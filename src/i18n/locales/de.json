@@ -1,16 +1,23 @@
 {
   "app": {
     "name": "Sermable",
-    "tagline": "Meistern Sie Ihre Rede mit KI-gestützter Übung"
+    "tagline": "Meistern Sie Ihre Rede."
   },
   "nav": {
     "home": "Startseite",
     "dashboard": "Dashboard",
     "practice": "Üben",
     "signOut": "Abmelden",
-    "signIn": "Anmelden"
+    "signIn": "Anmelden",
+    "menu": "Menü",
+    "settings": "Einstellungen",
+    "newSpeech": "Neue Rede",
+    "upgrade": "Upgraden",
+    "upgradeToPremium": "Auf Premium upgraden"
   },
   "home": {
+    "getStarted": "Loslegen",
+    "haveAccount": "Ich habe bereits ein Konto",
     "hero": {
       "title": "Meistern Sie Ihre Rede mit KI-gestützter Übung",
       "subtitle": "Verwandeln Sie Ihre Sprechfähigkeiten mit personalisiertem Feedback und wissenschaftlich fundiertem Lernen",
@@ -33,27 +40,83 @@
     }
   },
   "auth": {
+    "welcomeBack": "Willkommen zurück",
+    "getStarted": "Loslegen",
+    "signInToContinue": "Melden Sie sich an, um weiter zu üben",
+    "createAccount": "Erstellen Sie ein Konto, um mit dem Auswendiglernen zu beginnen",
+    "fullName": "Vollständiger Name",
+    "yourName": "Ihr Name",
     "signIn": "Anmelden",
     "signUp": "Registrieren",
     "email": "E-Mail",
     "password": "Passwort",
     "confirmPassword": "Passwort bestätigen",
     "forgotPassword": "Passwort vergessen?",
-    "noAccount": "Noch kein Konto?",
-    "haveAccount": "Bereits ein Konto?",
-    "loading": "Wird geladen...",
+    "noAccount": "Noch kein Konto? Registrieren",
+    "haveAccount": "Bereits ein Konto? Anmelden",
+    "loading": "Bitte warten",
     "signInError": "Fehler bei der Anmeldung",
     "signUpError": "Fehler bei der Registrierung",
-    "passwordMismatch": "Passwörter stimmen nicht überein"
+    "passwordMismatch": "Passwörter stimmen nicht überein",
+    "welcomeBackToast": "Willkommen zurück!",
+    "signInSuccess": "Sie sind angemeldet.",
+    "accountCreated": "Konto erstellt!",
+    "welcomeToSermable": "Willkommen bei Sermable. Legen wir los."
   },
   "dashboard": {
     "title": "Meine Reden",
+    "welcomeBack": "Willkommen zurück",
+    "continueOrStart": "Üben Sie weiter oder beginnen Sie eine neue Rede.",
+    "yourSpeeches": "Ihre Reden",
+    "manageSpeeches": "Verwalten und üben Sie Ihre Reden",
+    "speech": "Rede",
+    "speeches": "Reden",
+    "sort": "Sortieren",
+    "byDeadline": "Nach Frist",
+    "recentlyCreated": "Kürzlich erstellt",
+    "recentlyUpdated": "Kürzlich aktualisiert",
+    "noSpeeches": "Noch keine Reden",
+    "noSpeechesDesc": "Laden Sie Ihre erste Rede hoch, um zu beginnen. Legen Sie ein Zieldatum fest und lassen Sie die KI Ihnen beim Auswendiglernen helfen.",
+    "uploadFirst": "Laden Sie Ihre erste Rede hoch",
+    "adSpace": "Werbefläche - Upgraden, um Werbung zu entfernen",
     "uploadSpeech": "Rede Hochladen",
-    "noSpeeches": "Noch keine Reden. Laden Sie Ihre erste Rede hoch, um zu beginnen!",
     "words": "Wörter",
     "dueToday": "Heute fällig",
     "overdue": "Überfällig",
-    "loading": "Reden werden geladen..."
+    "loading": "Ihre Reden werden geladen...",
+    "errorLoading": "Fehler beim Laden der Reden",
+    "upgraded": "Auf Premium upgegradet!",
+    "upgradedDesc": "Sie haben jetzt Zugang zu allen Premium-Funktionen.",
+    "upgradeFailed": "Upgrade fehlgeschlagen",
+    "plan": "Plan",
+    "speechesThisMonth": "Reden diesen Monat"
+  },
+  "onboarding": {
+    "skip": "Überspringen",
+    "continue": "Weiter",
+    "getStarted": "Loslegen",
+    "steps": {
+      "welcome": {
+        "title": "Willkommen bei Sermable!",
+        "message": "Ich bin hier, um Ihnen zu helfen, Ihre Reden und Präsentationen leicht auswendig zu lernen. Lassen Sie mich Ihnen zeigen, wie es funktioniert!"
+      },
+      "practice": {
+        "title": "Redeübung",
+        "message": "Fügen Sie Ihren Redetext ein und üben Sie, ihn laut zu sprechen. Ich verfolge Ihren Fortschritt in Echtzeit und markiere Wörter, die Sie verpassen oder bei denen Sie zögern."
+      },
+      "adaptive": {
+        "title": "Adaptive Stichwörter",
+        "message": "Wenn Sie sich verbessern, verstecke ich nach und nach Wörter, um Ihr Gedächtnis herauszufordern. Schwierigkeiten? Ich zeige sie wieder. Es ist wie ein intelligenter Teleprompter!"
+      },
+      "learning": {
+        "title": "Lernmodus",
+        "message": "Ich verwende verteilte Wiederholung - eine wissenschaftlich bewährte Technik - um Ihre Übungssitzungen für optimales Auswendiglernen zu planen. Sie werden Ihre Rede schneller beherrschen!"
+      },
+      "presentation": {
+        "title": "Präsentationsmodus",
+        "message": "Wenn Sie bereit sind, wechseln Sie in den Präsentationsmodus für einen vollständigen Durchlauf. Erhalten Sie detailliertes Feedback zu Genauigkeit, Timing und Verbesserungsbereichen."
+      }
+    }
   },
   "upload": {
     "title": "Neue Rede Hochladen",
