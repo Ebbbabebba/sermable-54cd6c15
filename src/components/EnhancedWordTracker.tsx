@@ -570,7 +570,7 @@ const EnhancedWordTracker = ({
           isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken,
         }));
       });
-    }, 10); // Process every 10ms for minimal latency
+    }, 50); // Process every 50ms for smoother visual updates
 
     return () => clearInterval(intervalId);
   }, [isRecording, transcription, liquidColumn]);
@@ -825,8 +825,8 @@ const EnhancedWordTracker = ({
   };
 
   const getWordClassName = (word: WordState, index: number) => {
-    // Base styles with smooth transitions for color, opacity, and shadow changes
-    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]";
+    // Base styles with smooth, calm transitions
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium word-smooth-transition";
 
     // Hidden word shown as hint (after delay)
     if (word.showAsHint && word.hidden && !word.spoken) {
