@@ -103,6 +103,92 @@
       }
     }
   },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your Sermable experience",
+    "subscription": {
+      "title": "Subscription",
+      "description": "Unlock premium features and enhance your learning",
+      "whyPremium": "Why Premium?",
+      "choosePlan": "Choose Your Plan",
+      "overrideLock": "Override Spaced Repetition Lock",
+      "overrideLockDesc": "Practice anytime with \"Practice Anyway\" button",
+      "unlimitedSpeeches": "Unlimited Speeches",
+      "unlimitedSpeechesDesc": "Upload and practice unlimited speech texts",
+      "advancedAnalytics": "Advanced Analytics",
+      "advancedAnalyticsDesc": "Detailed performance insights and progress tracking",
+      "streakFreeze": "Streak Freeze",
+      "streakFreezeDesc": "Protect your streak when life gets busy",
+      "prioritySupport": "Priority Support",
+      "prioritySupportDesc": "Get help faster with dedicated support",
+      "monthly": "Monthly Plan",
+      "annual": "Annual Plan",
+      "billedMonthly": "Billed monthly",
+      "billedYearly": "Billed yearly",
+      "perMonth": "per month",
+      "save": "Save",
+      "studentPricing": "Student Pricing",
+      "studentMonthly": "Monthly Student Plan",
+      "studentAnnual": "Annual Student Plan",
+      "studentDiscount": "50% off",
+      "backToRegular": "Back to regular pricing",
+      "studentButton": "Student? Click here!",
+      "continueWith": "Continue with",
+      "plan": "Plan",
+      "comingSoon": "Coming soon!",
+      "comingSoonDesc": "Premium subscription will be available soon."
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize how Sermable looks",
+      "theme": "Theme",
+      "darkTheme": "Dark space theme with cosmic colors",
+      "lightTheme": "Clean white theme"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose your preferred language for the app interface",
+      "appLanguage": "App Language",
+      "hint": "Menus, buttons, and descriptions will display in this language. Your speech text language is detected separately."
+    },
+    "profile": {
+      "title": "Profile & Streak",
+      "description": "Track your practice consistency",
+      "currentStreak": "Current Streak",
+      "bestStreak": "Best Streak",
+      "days": "days",
+      "keepStreak": "Keep your streak alive!",
+      "keepStreakDesc": "Practice at least once every day to maintain your streak. Your streak resets if you miss a day."
+    },
+    "account": {
+      "title": "Account",
+      "description": "Manage your account settings",
+      "personalizedLearning": "Personalized Learning",
+      "personalizedLearningDesc": "Your practice schedule is automatically personalized based on your performance and speech deadlines."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Get reminders when speeches are due for review",
+      "nativeRequired": "Native App Required",
+      "nativeRequiredDesc": "Lock screen push notifications are only available in the native mobile app. To get notifications on your iPhone or Android device, you'll need to install the app.",
+      "pushNotifications": "Push Notifications",
+      "pushNotificationsDesc": "Receive reminders on your lock screen",
+      "enabled": "You'll receive notifications when speeches are due for review based on your progress."
+    },
+    "legal": {
+      "termsTitle": "Terms & Conditions",
+      "termsDescription": "Read our legal agreements",
+      "termsOfService": "Terms of Service",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "support": {
+      "title": "Support",
+      "description": "Get help and send feedback",
+      "contactSupport": "Contact Support",
+      "contactSupportDesc": "Have questions or need help? Reach out to us."
+    },
+    "signOut": "Sign Out"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

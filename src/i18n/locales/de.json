@@ -103,6 +103,92 @@
       }
     }
   },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Passen Sie Ihre Sermable-Erfahrung an",
+    "subscription": {
+      "title": "Abonnement",
+      "description": "Schalten Sie Premium-Funktionen frei und verbessern Sie Ihr Lernen",
+      "whyPremium": "Warum Premium?",
+      "choosePlan": "Wählen Sie Ihren Plan",
+      "overrideLock": "Wiederholungssperre umgehen",
+      "overrideLockDesc": "Üben Sie jederzeit mit der \"Trotzdem üben\"-Taste",
+      "unlimitedSpeeches": "Unbegrenzte Reden",
+      "unlimitedSpeechesDesc": "Laden Sie unbegrenzt Reden hoch und üben Sie",
+      "advancedAnalytics": "Erweiterte Analysen",
+      "advancedAnalyticsDesc": "Detaillierte Leistungseinblicke und Fortschrittsverfolgung",
+      "streakFreeze": "Serie einfrieren",
+      "streakFreezeDesc": "Schützen Sie Ihre Serie, wenn das Leben hektisch wird",
+      "prioritySupport": "Prioritäts-Support",
+      "prioritySupportDesc": "Erhalten Sie schneller Hilfe mit dediziertem Support",
+      "monthly": "Monatsplan",
+      "annual": "Jahresplan",
+      "billedMonthly": "Monatlich abgerechnet",
+      "billedYearly": "Jährlich abgerechnet",
+      "perMonth": "pro Monat",
+      "save": "Sparen",
+      "studentPricing": "Studentenpreise",
+      "studentMonthly": "Monatlicher Studentenplan",
+      "studentAnnual": "Jährlicher Studentenplan",
+      "studentDiscount": "50% Rabatt",
+      "backToRegular": "Zurück zu regulären Preisen",
+      "studentButton": "Student? Hier klicken!",
+      "continueWith": "Weiter mit",
+      "plan": "Plan",
+      "comingSoon": "Demnächst verfügbar!",
+      "comingSoonDesc": "Premium-Abonnement wird bald verfügbar sein."
+    },
+    "appearance": {
+      "title": "Erscheinungsbild",
+      "description": "Passen Sie das Aussehen von Sermable an",
+      "theme": "Thema",
+      "darkTheme": "Dunkles Weltraumthema mit kosmischen Farben",
+      "lightTheme": "Sauberes weißes Thema"
+    },
+    "language": {
+      "title": "Sprache",
+      "description": "Wählen Sie Ihre bevorzugte Sprache für die App-Oberfläche",
+      "appLanguage": "App-Sprache",
+      "hint": "Menüs, Schaltflächen und Beschreibungen werden in dieser Sprache angezeigt. Ihre Redesprache wird separat erkannt."
+    },
+    "profile": {
+      "title": "Profil & Serie",
+      "description": "Verfolgen Sie Ihre Übungskontinuität",
+      "currentStreak": "Aktuelle Serie",
+      "bestStreak": "Beste Serie",
+      "days": "Tage",
+      "keepStreak": "Halten Sie Ihre Serie am Leben!",
+      "keepStreakDesc": "Üben Sie mindestens einmal täglich, um Ihre Serie zu erhalten. Ihre Serie wird zurückgesetzt, wenn Sie einen Tag verpassen."
+    },
+    "account": {
+      "title": "Konto",
+      "description": "Verwalten Sie Ihre Kontoeinstellungen",
+      "personalizedLearning": "Personalisiertes Lernen",
+      "personalizedLearningDesc": "Ihr Übungsplan wird automatisch basierend auf Ihrer Leistung und Ihren Redefristen personalisiert."
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "description": "Erhalten Sie Erinnerungen, wenn Reden zur Wiederholung fällig sind",
+      "nativeRequired": "Native App erforderlich",
+      "nativeRequiredDesc": "Push-Benachrichtigungen auf dem Sperrbildschirm sind nur in der nativen mobilen App verfügbar. Um Benachrichtigungen auf Ihrem iPhone oder Android zu erhalten, müssen Sie die App installieren.",
+      "pushNotifications": "Push-Benachrichtigungen",
+      "pushNotificationsDesc": "Erhalten Sie Erinnerungen auf Ihrem Sperrbildschirm",
+      "enabled": "Sie erhalten Benachrichtigungen, wenn Reden basierend auf Ihrem Fortschritt zur Wiederholung fällig sind."
+    },
+    "legal": {
+      "termsTitle": "Nutzungsbedingungen",
+      "termsDescription": "Lesen Sie unsere rechtlichen Vereinbarungen",
+      "termsOfService": "Nutzungsbedingungen",
+      "privacyPolicy": "Datenschutzrichtlinie"
+    },
+    "support": {
+      "title": "Support",
+      "description": "Erhalten Sie Hilfe und senden Sie Feedback",
+      "contactSupport": "Support kontaktieren",
+      "contactSupportDesc": "Haben Sie Fragen oder brauchen Hilfe? Kontaktieren Sie uns."
+    },
+    "signOut": "Abmelden"
+  },
   "common": {
     "loading": "Wird geladen...",
     "error": "Fehler",

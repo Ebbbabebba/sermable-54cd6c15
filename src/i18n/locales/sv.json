@@ -103,6 +103,92 @@
       }
     }
   },
+  "settings": {
+    "title": "Inställningar",
+    "subtitle": "Anpassa din Sermable-upplevelse",
+    "subscription": {
+      "title": "Prenumeration",
+      "description": "Lås upp premiumfunktioner och förbättra ditt lärande",
+      "whyPremium": "Varför Premium?",
+      "choosePlan": "Välj din plan",
+      "overrideLock": "Kringgå repetitionslås",
+      "overrideLockDesc": "Öva när som helst med \"Öva ändå\"-knappen",
+      "unlimitedSpeeches": "Obegränsade tal",
+      "unlimitedSpeechesDesc": "Ladda upp och öva obegränsat antal tal",
+      "advancedAnalytics": "Avancerad analys",
+      "advancedAnalyticsDesc": "Detaljerade prestationsinsikter och framstegsspårning",
+      "streakFreeze": "Frys din serie",
+      "streakFreezeDesc": "Skydda din serie när livet blir hektiskt",
+      "prioritySupport": "Prioriterad support",
+      "prioritySupportDesc": "Få hjälp snabbare med dedikerad support",
+      "monthly": "Månadsplan",
+      "annual": "Årsplan",
+      "billedMonthly": "Faktureras månadsvis",
+      "billedYearly": "Faktureras årligen",
+      "perMonth": "per månad",
+      "save": "Spara",
+      "studentPricing": "Studentpriser",
+      "studentMonthly": "Månadsplan för studenter",
+      "studentAnnual": "Årsplan för studenter",
+      "studentDiscount": "50% rabatt",
+      "backToRegular": "Tillbaka till vanliga priser",
+      "studentButton": "Student? Klicka här!",
+      "continueWith": "Fortsätt med",
+      "plan": "Plan",
+      "comingSoon": "Kommer snart!",
+      "comingSoonDesc": "Premiumprenumeration kommer snart."
+    },
+    "appearance": {
+      "title": "Utseende",
+      "description": "Anpassa hur Sermable ser ut",
+      "theme": "Tema",
+      "darkTheme": "Mörkt rymdtema med kosmiska färger",
+      "lightTheme": "Rent vitt tema"
+    },
+    "language": {
+      "title": "Språk",
+      "description": "Välj ditt föredragna språk för appgränssnittet",
+      "appLanguage": "Appspråk",
+      "hint": "Menyer, knappar och beskrivningar visas på detta språk. Ditt talspråk detekteras separat."
+    },
+    "profile": {
+      "title": "Profil & Serie",
+      "description": "Spåra din övningskontinuitet",
+      "currentStreak": "Nuvarande serie",
+      "bestStreak": "Bästa serie",
+      "days": "dagar",
+      "keepStreak": "Håll din serie vid liv!",
+      "keepStreakDesc": "Öva minst en gång om dagen för att behålla din serie. Din serie nollställs om du missar en dag."
+    },
+    "account": {
+      "title": "Konto",
+      "description": "Hantera dina kontoinställningar",
+      "personalizedLearning": "Personligt lärande",
+      "personalizedLearningDesc": "Ditt övningsschema anpassas automatiskt baserat på din prestation och taldeadlines."
+    },
+    "notifications": {
+      "title": "Notifikationer",
+      "description": "Få påminnelser när tal behöver repeteras",
+      "nativeRequired": "Nativ app krävs",
+      "nativeRequiredDesc": "Push-notifikationer på låsskärmen är endast tillgängliga i den nativa mobilappen. För att få notifikationer på din iPhone eller Android behöver du installera appen.",
+      "pushNotifications": "Push-notifikationer",
+      "pushNotificationsDesc": "Ta emot påminnelser på din låsskärm",
+      "enabled": "Du kommer att få notifikationer när tal behöver repeteras baserat på dina framsteg."
+    },
+    "legal": {
+      "termsTitle": "Villkor",
+      "termsDescription": "Läs våra juridiska avtal",
+      "termsOfService": "Användarvillkor",
+      "privacyPolicy": "Integritetspolicy"
+    },
+    "support": {
+      "title": "Support",
+      "description": "Få hjälp och skicka feedback",
+      "contactSupport": "Kontakta support",
+      "contactSupportDesc": "Har du frågor eller behöver hjälp? Kontakta oss."
+    },
+    "signOut": "Logga ut"
+  },
   "common": {
     "loading": "Laddar...",
     "error": "Fel",

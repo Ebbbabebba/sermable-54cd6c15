@@ -103,6 +103,92 @@
       }
     }
   },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Personaliza tu experiencia en Sermable",
+    "subscription": {
+      "title": "Suscripción",
+      "description": "Desbloquea funciones premium y mejora tu aprendizaje",
+      "whyPremium": "¿Por qué Premium?",
+      "choosePlan": "Elige tu plan",
+      "overrideLock": "Omitir bloqueo de repetición",
+      "overrideLockDesc": "Practica en cualquier momento con el botón \"Practicar de todos modos\"",
+      "unlimitedSpeeches": "Discursos ilimitados",
+      "unlimitedSpeechesDesc": "Sube y practica discursos ilimitados",
+      "advancedAnalytics": "Análisis avanzados",
+      "advancedAnalyticsDesc": "Información detallada del rendimiento y seguimiento del progreso",
+      "streakFreeze": "Congelar racha",
+      "streakFreezeDesc": "Protege tu racha cuando la vida se pone ocupada",
+      "prioritySupport": "Soporte prioritario",
+      "prioritySupportDesc": "Obtén ayuda más rápido con soporte dedicado",
+      "monthly": "Plan mensual",
+      "annual": "Plan anual",
+      "billedMonthly": "Facturado mensualmente",
+      "billedYearly": "Facturado anualmente",
+      "perMonth": "por mes",
+      "save": "Ahorra",
+      "studentPricing": "Precios para estudiantes",
+      "studentMonthly": "Plan mensual estudiantil",
+      "studentAnnual": "Plan anual estudiantil",
+      "studentDiscount": "50% de descuento",
+      "backToRegular": "Volver a precios regulares",
+      "studentButton": "¿Estudiante? ¡Haz clic aquí!",
+      "continueWith": "Continuar con",
+      "plan": "Plan",
+      "comingSoon": "¡Próximamente!",
+      "comingSoonDesc": "La suscripción premium estará disponible pronto."
+    },
+    "appearance": {
+      "title": "Apariencia",
+      "description": "Personaliza cómo se ve Sermable",
+      "theme": "Tema",
+      "darkTheme": "Tema espacial oscuro con colores cósmicos",
+      "lightTheme": "Tema blanco limpio"
+    },
+    "language": {
+      "title": "Idioma",
+      "description": "Elige tu idioma preferido para la interfaz de la app",
+      "appLanguage": "Idioma de la app",
+      "hint": "Los menús, botones y descripciones se mostrarán en este idioma. El idioma de tu discurso se detecta por separado."
+    },
+    "profile": {
+      "title": "Perfil y racha",
+      "description": "Sigue tu consistencia de práctica",
+      "currentStreak": "Racha actual",
+      "bestStreak": "Mejor racha",
+      "days": "días",
+      "keepStreak": "¡Mantén tu racha viva!",
+      "keepStreakDesc": "Practica al menos una vez al día para mantener tu racha. Tu racha se reinicia si pierdes un día."
+    },
+    "account": {
+      "title": "Cuenta",
+      "description": "Gestiona la configuración de tu cuenta",
+      "personalizedLearning": "Aprendizaje personalizado",
+      "personalizedLearningDesc": "Tu horario de práctica se personaliza automáticamente según tu rendimiento y fechas límite."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "description": "Recibe recordatorios cuando los discursos necesiten repaso",
+      "nativeRequired": "Se requiere app nativa",
+      "nativeRequiredDesc": "Las notificaciones push en la pantalla de bloqueo solo están disponibles en la app móvil nativa. Para recibir notificaciones en tu iPhone o Android, necesitas instalar la app.",
+      "pushNotifications": "Notificaciones push",
+      "pushNotificationsDesc": "Recibe recordatorios en tu pantalla de bloqueo",
+      "enabled": "Recibirás notificaciones cuando los discursos necesiten repaso según tu progreso."
+    },
+    "legal": {
+      "termsTitle": "Términos y condiciones",
+      "termsDescription": "Lee nuestros acuerdos legales",
+      "termsOfService": "Términos de servicio",
+      "privacyPolicy": "Política de privacidad"
+    },
+    "support": {
+      "title": "Soporte",
+      "description": "Obtén ayuda y envía comentarios",
+      "contactSupport": "Contactar soporte",
+      "contactSupportDesc": "¿Tienes preguntas o necesitas ayuda? Contáctanos."
+    },
+    "signOut": "Cerrar sesión"
+  },
   "common": {
     "loading": "Cargando...",
     "error": "Error",

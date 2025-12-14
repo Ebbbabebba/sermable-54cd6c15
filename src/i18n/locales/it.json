@@ -103,6 +103,92 @@
       }
     }
   },
+  "settings": {
+    "title": "Impostazioni",
+    "subtitle": "Personalizza la tua esperienza Sermable",
+    "subscription": {
+      "title": "Abbonamento",
+      "description": "Sblocca le funzionalità premium e migliora il tuo apprendimento",
+      "whyPremium": "Perché Premium?",
+      "choosePlan": "Scegli il tuo piano",
+      "overrideLock": "Ignora blocco ripetizione",
+      "overrideLockDesc": "Esercitati in qualsiasi momento con il pulsante \"Esercitati comunque\"",
+      "unlimitedSpeeches": "Discorsi illimitati",
+      "unlimitedSpeechesDesc": "Carica ed esercitati con discorsi illimitati",
+      "advancedAnalytics": "Analisi avanzate",
+      "advancedAnalyticsDesc": "Informazioni dettagliate sulle prestazioni e monitoraggio dei progressi",
+      "streakFreeze": "Congela serie",
+      "streakFreezeDesc": "Proteggi la tua serie quando la vita diventa frenetica",
+      "prioritySupport": "Supporto prioritario",
+      "prioritySupportDesc": "Ricevi aiuto più velocemente con supporto dedicato",
+      "monthly": "Piano mensile",
+      "annual": "Piano annuale",
+      "billedMonthly": "Fatturato mensilmente",
+      "billedYearly": "Fatturato annualmente",
+      "perMonth": "al mese",
+      "save": "Risparmia",
+      "studentPricing": "Prezzi studenti",
+      "studentMonthly": "Piano mensile studenti",
+      "studentAnnual": "Piano annuale studenti",
+      "studentDiscount": "50% di sconto",
+      "backToRegular": "Torna ai prezzi normali",
+      "studentButton": "Studente? Clicca qui!",
+      "continueWith": "Continua con",
+      "plan": "Piano",
+      "comingSoon": "Prossimamente!",
+      "comingSoonDesc": "L'abbonamento premium sarà presto disponibile."
+    },
+    "appearance": {
+      "title": "Aspetto",
+      "description": "Personalizza l'aspetto di Sermable",
+      "theme": "Tema",
+      "darkTheme": "Tema spaziale scuro con colori cosmici",
+      "lightTheme": "Tema bianco pulito"
+    },
+    "language": {
+      "title": "Lingua",
+      "description": "Scegli la tua lingua preferita per l'interfaccia",
+      "appLanguage": "Lingua dell'app",
+      "hint": "Menu, pulsanti e descrizioni verranno visualizzati in questa lingua. La lingua del tuo discorso viene rilevata separatamente."
+    },
+    "profile": {
+      "title": "Profilo e serie",
+      "description": "Monitora la tua costanza di pratica",
+      "currentStreak": "Serie attuale",
+      "bestStreak": "Migliore serie",
+      "days": "giorni",
+      "keepStreak": "Mantieni viva la tua serie!",
+      "keepStreakDesc": "Esercitati almeno una volta al giorno per mantenere la tua serie. La serie si azzera se salti un giorno."
+    },
+    "account": {
+      "title": "Account",
+      "description": "Gestisci le impostazioni del tuo account",
+      "personalizedLearning": "Apprendimento personalizzato",
+      "personalizedLearningDesc": "Il tuo programma di pratica viene personalizzato automaticamente in base alle tue prestazioni e scadenze."
+    },
+    "notifications": {
+      "title": "Notifiche",
+      "description": "Ricevi promemoria quando i discorsi devono essere ripetuti",
+      "nativeRequired": "App nativa richiesta",
+      "nativeRequiredDesc": "Le notifiche push sulla schermata di blocco sono disponibili solo nell'app mobile nativa. Per ricevere notifiche su iPhone o Android, devi installare l'app.",
+      "pushNotifications": "Notifiche push",
+      "pushNotificationsDesc": "Ricevi promemoria sulla schermata di blocco",
+      "enabled": "Riceverai notifiche quando i discorsi devono essere ripetuti in base ai tuoi progressi."
+    },
+    "legal": {
+      "termsTitle": "Termini e condizioni",
+      "termsDescription": "Leggi i nostri accordi legali",
+      "termsOfService": "Termini di servizio",
+      "privacyPolicy": "Informativa sulla privacy"
+    },
+    "support": {
+      "title": "Supporto",
+      "description": "Ricevi aiuto e invia feedback",
+      "contactSupport": "Contatta il supporto",
+      "contactSupportDesc": "Hai domande o hai bisogno di aiuto? Contattaci."
+    },
+    "signOut": "Disconnetti"
+  },
   "common": {
     "loading": "Caricamento...",
     "error": "Errore",

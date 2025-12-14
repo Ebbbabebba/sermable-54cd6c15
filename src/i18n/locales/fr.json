@@ -103,6 +103,92 @@
       }
     }
   },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Personnalisez votre expérience Sermable",
+    "subscription": {
+      "title": "Abonnement",
+      "description": "Débloquez les fonctionnalités premium et améliorez votre apprentissage",
+      "whyPremium": "Pourquoi Premium?",
+      "choosePlan": "Choisissez votre plan",
+      "overrideLock": "Ignorer le verrouillage de répétition",
+      "overrideLockDesc": "Pratiquez à tout moment avec le bouton \"Pratiquer quand même\"",
+      "unlimitedSpeeches": "Discours illimités",
+      "unlimitedSpeechesDesc": "Téléchargez et pratiquez des discours illimités",
+      "advancedAnalytics": "Analyses avancées",
+      "advancedAnalyticsDesc": "Informations détaillées sur les performances et suivi des progrès",
+      "streakFreeze": "Geler la série",
+      "streakFreezeDesc": "Protégez votre série quand la vie devient chargée",
+      "prioritySupport": "Support prioritaire",
+      "prioritySupportDesc": "Obtenez de l'aide plus rapidement avec un support dédié",
+      "monthly": "Plan mensuel",
+      "annual": "Plan annuel",
+      "billedMonthly": "Facturé mensuellement",
+      "billedYearly": "Facturé annuellement",
+      "perMonth": "par mois",
+      "save": "Économisez",
+      "studentPricing": "Tarifs étudiants",
+      "studentMonthly": "Plan mensuel étudiant",
+      "studentAnnual": "Plan annuel étudiant",
+      "studentDiscount": "50% de réduction",
+      "backToRegular": "Retour aux tarifs normaux",
+      "studentButton": "Étudiant? Cliquez ici!",
+      "continueWith": "Continuer avec",
+      "plan": "Plan",
+      "comingSoon": "Bientôt disponible!",
+      "comingSoonDesc": "L'abonnement premium sera bientôt disponible."
+    },
+    "appearance": {
+      "title": "Apparence",
+      "description": "Personnalisez l'apparence de Sermable",
+      "theme": "Thème",
+      "darkTheme": "Thème spatial sombre avec couleurs cosmiques",
+      "lightTheme": "Thème blanc épuré"
+    },
+    "language": {
+      "title": "Langue",
+      "description": "Choisissez votre langue préférée pour l'interface",
+      "appLanguage": "Langue de l'application",
+      "hint": "Les menus, boutons et descriptions s'afficheront dans cette langue. La langue de votre discours est détectée séparément."
+    },
+    "profile": {
+      "title": "Profil et série",
+      "description": "Suivez votre régularité de pratique",
+      "currentStreak": "Série actuelle",
+      "bestStreak": "Meilleure série",
+      "days": "jours",
+      "keepStreak": "Maintenez votre série!",
+      "keepStreakDesc": "Pratiquez au moins une fois par jour pour maintenir votre série. Votre série est réinitialisée si vous manquez un jour."
+    },
+    "account": {
+      "title": "Compte",
+      "description": "Gérez les paramètres de votre compte",
+      "personalizedLearning": "Apprentissage personnalisé",
+      "personalizedLearningDesc": "Votre programme de pratique est automatiquement personnalisé en fonction de vos performances et délais."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Recevez des rappels quand les discours doivent être révisés",
+      "nativeRequired": "Application native requise",
+      "nativeRequiredDesc": "Les notifications push sur l'écran de verrouillage ne sont disponibles que dans l'application mobile native. Pour recevoir des notifications sur votre iPhone ou Android, vous devez installer l'application.",
+      "pushNotifications": "Notifications push",
+      "pushNotificationsDesc": "Recevez des rappels sur votre écran de verrouillage",
+      "enabled": "Vous recevrez des notifications quand les discours doivent être révisés selon vos progrès."
+    },
+    "legal": {
+      "termsTitle": "Conditions générales",
+      "termsDescription": "Lisez nos accords juridiques",
+      "termsOfService": "Conditions d'utilisation",
+      "privacyPolicy": "Politique de confidentialité"
+    },
+    "support": {
+      "title": "Support",
+      "description": "Obtenez de l'aide et envoyez vos commentaires",
+      "contactSupport": "Contacter le support",
+      "contactSupportDesc": "Des questions ou besoin d'aide? Contactez-nous."
+    },
+    "signOut": "Se déconnecter"
+  },
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",
