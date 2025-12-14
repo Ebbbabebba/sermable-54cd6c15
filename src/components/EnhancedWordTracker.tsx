@@ -825,8 +825,8 @@ const EnhancedWordTracker = ({
   };
 
   const getWordClassName = (word: WordState, index: number) => {
-    // Base styles - NO scale transforms to prevent jumping
-    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-colors transition-opacity duration-300 ease-out";
+    // Base styles with smooth transitions for color, opacity, and shadow changes
+    const base = "inline-block px-3 py-1.5 mx-1 my-1 rounded-md font-medium transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]";
 
     // Hidden word shown as hint (after delay)
     if (word.showAsHint && word.hidden && !word.spoken) {
