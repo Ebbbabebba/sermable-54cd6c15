@@ -336,21 +336,21 @@ All colors MUST be HSL.
   }
 }
 
-/* Smooth word pulse - no scale transforms to prevent layout jumping */
+/* Very slow, calm word pulse */
 @keyframes wordPulse {
   0%, 100% {
-    box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
-    background-color: hsl(var(--primary) / 0.15);
+    box-shadow: 0 0 6px hsl(var(--primary) / 0.25);
+    background-color: hsl(var(--primary) / 0.12);
   }
   50% {
-    box-shadow: 0 0 18px hsl(var(--primary) / 0.5);
-    background-color: hsl(var(--primary) / 0.25);
+    box-shadow: 0 0 14px hsl(var(--primary) / 0.4);
+    background-color: hsl(var(--primary) / 0.2);
   }
 }
 
 @keyframes wordPulseSubtle {
   0%, 100% {
-    opacity: 0.75;
+    opacity: 0.8;
   }
   50% {
     opacity: 1;
@@ -358,20 +358,20 @@ All colors MUST be HSL.
 }
 
 .word-pulse {
-  animation: wordPulse 2s ease-in-out infinite;
+  animation: wordPulse 3.5s ease-in-out infinite;
 }
 
 .word-pulse-subtle {
-  animation: wordPulseSubtle 2s ease-in-out infinite;
+  animation: wordPulseSubtle 3s ease-in-out infinite;
 }
 
-/* Smooth word state transitions - calm and fluid */
+/* Ultra-smooth word state transitions */
 .word-smooth-transition {
   transition: 
-    background-color 600ms cubic-bezier(0.25, 0.1, 0.25, 1),
-    color 600ms cubic-bezier(0.25, 0.1, 0.25, 1),
-    opacity 700ms cubic-bezier(0.25, 0.1, 0.25, 1),
-    box-shadow 500ms cubic-bezier(0.25, 0.1, 0.25, 1),
-    border-color 500ms cubic-bezier(0.25, 0.1, 0.25, 1);
+    background-color 800ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 800ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 }
