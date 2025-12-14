@@ -67,6 +67,7 @@ const Practice = () => {
   const [segments, setSegments] = useState<Segment[]>([]);
   const [activeSegmentIndices, setActiveSegmentIndices] = useState<number[]>([]);
   const [activeSegmentText, setActiveSegmentText] = useState<string>("");
+  const [activeSegmentOriginalText, setActiveSegmentOriginalText] = useState<string>(""); // Original text for active segment (for analysis)
   const [loading, setLoading] = useState(true);
   const [isPracticing, setIsPracticing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -145,12 +146,24 @@ const Practice = () => {
     loadUserProfile();
   }, []);
 
-  const determineActiveSegments = (allSegments: Segment[]) => {
+  const determineActiveSegments = (allSegments: Segment[], speechData?: Speech | null) => {
+    const currentSpeech = speechData || speech;
+    
     if (allSegments.length === 0) {
       setActiveSegmentIndices([]);
       setActiveSegmentText("");
+      setActiveSegmentOriginalText("");
       return;
     }
+
+    // Helper to extract original text from speech using segment word indices
+    const getOriginalTextForSegments = (segs: Segment[]): string => {
+      if (!currentSpeech?.text_original) return "";
+      const originalWords = currentSpeech.text_original.split(/\s+/);
+      const startIdx = Math.min(...segs.map(s => s.start_word_index));
+      const endIdx = Math.max(...segs.map(s => s.end_word_index));
+      return originalWords.slice(startIdx, endIdx + 1).join(' ');
+    };
 
     // Find the first unmastered segment
     const firstUnmasteredIndex = allSegments.findIndex(s => !s.is_mastered);
@@ -159,6 +172,7 @@ const Practice = () => {
       // All segments mastered - practice the whole speech
       setActiveSegmentIndices(allSegments.map(s => s.segment_order));
       setActiveSegmentText(allSegments.map(s => s.segment_text).join(' '));
+      setActiveSegmentOriginalText(currentSpeech?.text_original || "");
       return;
     }
 
@@ -169,8 +183,10 @@ const Practice = () => {
       // If previous segment is mastered, practice both together
       if (previousSegment.is_mastered) {
         const currentSegment = allSegments[firstUnmasteredIndex];
+        const activeSegs = [previousSegment, currentSegment];
         setActiveSegmentIndices([previousSegment.segment_order, currentSegment.segment_order]);
         setActiveSegmentText(`${previousSegment.segment_text} ${currentSegment.segment_text}`);
+        setActiveSegmentOriginalText(getOriginalTextForSegments(activeSegs));
         return;
       }
     }
@@ -179,6 +195,7 @@ const Practice = () => {
     const currentSegment = allSegments[firstUnmasteredIndex];
     setActiveSegmentIndices([currentSegment.segment_order]);
     setActiveSegmentText(currentSegment.segment_text);
+    setActiveSegmentOriginalText(getOriginalTextForSegments([currentSegment]));
   };
 
   // Extract hidden word indices from segment text (words inside [...] are hidden)
@@ -243,7 +260,7 @@ const Practice = () => {
         console.error('Error loading segments:', segmentsError);
       } else if (segmentsData) {
         setSegments(segmentsData);
-        determineActiveSegments(segmentsData);
+        determineActiveSegments(segmentsData, data);
       }
       
       // Check lock status with adaptive learning integration
@@ -1271,8 +1288,8 @@ const Practice = () => {
               delayedWords={sessionResults.delayedWords}
               analysis={sessionResults.analysis}
               transcription={sessionResults.transcription}
-              originalText={speech.text_original}
-              currentText={speech.text_current}
+              originalText={activeSegmentOriginalText || speech.text_original}
+              currentText={activeSegmentText || speech.text_current}
             />
           </div>
 
