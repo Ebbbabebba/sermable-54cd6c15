@@ -262,3 +262,31 @@
     background-color: hsl(45 100% 51% / 0.3);
   }
 }
+
+/* Teleprompter strip animations */
+@keyframes teleprompter-slide-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes teleprompter-slide-down {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* Try prompt pulse */
+.teleprompter-try {
+  animation: teleprompter-slide-up 0.3s ease-out, hint-pulse 1.5s ease-in-out infinite;
+}
