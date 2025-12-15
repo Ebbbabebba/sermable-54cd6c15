@@ -6,48 +6,121 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface WordPerformance {
+  word: string;
+  index: number;
+  status: "correct" | "hesitated" | "missed" | "skipped";
+  timeToSpeak?: number;
+  wasPrompted: boolean;
+  wrongWordsSaid?: string[];
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { transcript, originalText, speechId, durationSeconds } = await req.json();
+    const { transcript, originalText, speechId, durationSeconds, wordPerformance } = await req.json();
     
-    console.log('Analyzing presentation:', { speechId, durationSeconds });
+    console.log('Analyzing presentation:', { speechId, durationSeconds, hasWordPerformance: !!wordPerformance });
 
-    // Calculate accuracy and detect issues
     const originalWords = originalText.toLowerCase().trim().split(/\s+/);
-    const spokenWords = transcript.toLowerCase().trim().split(/\s+/);
+    let accuracy: number;
+    let hesitations: number;
+    let missedWords: string[] = [];
+    let skippedWords: string[] = [];
+    let promptedWords: string[] = [];
+    let wrongAttempts: { word: string; attempts: string[] }[] = [];
     
-    const originalSet = new Set(originalWords);
-    const spokenSet = new Set(spokenWords);
-    
-    // Find missed words
-    const missedWords = originalWords.filter((word: string) => !spokenSet.has(word));
-    
-    // Calculate accuracy
-    const matchedWords = originalWords.filter((word: string) => spokenSet.has(word)).length;
-    const accuracy = (matchedWords / originalWords.length) * 100;
-    
-    // Detect hesitations (filler words and repeated words)
-    const fillerWords = ['um', 'uh', 'like', 'you know', 'actually', 'basically', 'so'];
-    let hesitations = 0;
-    spokenWords.forEach((word: string) => {
-      if (fillerWords.includes(word)) hesitations++;
-    });
-    
-    // Generate AI feedback using Lovable AI
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
+    // Use detailed word performance if available (from strict mode)
+    if (wordPerformance && wordPerformance.length > 0) {
+      console.log('Using detailed word performance data:', wordPerformance.length, 'words');
+      
+      const correctCount = wordPerformance.filter((w: WordPerformance) => w.status === 'correct').length;
+      const hesitatedCount = wordPerformance.filter((w: WordPerformance) => w.status === 'hesitated').length;
+      const missedCount = wordPerformance.filter((w: WordPerformance) => w.status === 'missed').length;
+      const skippedCount = wordPerformance.filter((w: WordPerformance) => w.status === 'skipped').length;
+      
+      // Accuracy: correct = 100%, hesitated = 50%, missed/skipped = 0%
+      const totalWords = wordPerformance.length;
+      accuracy = ((correctCount * 1.0 + hesitatedCount * 0.5) / totalWords) * 100;
+      hesitations = hesitatedCount;
+      
+      missedWords = wordPerformance
+        .filter((w: WordPerformance) => w.status === 'missed')
+        .map((w: WordPerformance) => w.word);
+      
+      skippedWords = wordPerformance
+        .filter((w: WordPerformance) => w.status === 'skipped')
+        .map((w: WordPerformance) => w.word);
+      
+      promptedWords = wordPerformance
+        .filter((w: WordPerformance) => w.wasPrompted)
+        .map((w: WordPerformance) => w.word);
+      
+      wrongAttempts = wordPerformance
+        .filter((w: WordPerformance) => w.wrongWordsSaid && w.wrongWordsSaid.length > 0)
+        .map((w: WordPerformance) => ({ word: w.word, attempts: w.wrongWordsSaid! }));
+      
+      console.log('Performance stats:', { 
+        correct: correctCount, 
+        hesitated: hesitatedCount, 
+        missed: missedCount, 
+        skipped: skippedCount,
+        prompted: promptedWords.length,
+        wrongAttempts: wrongAttempts.length
+      });
+      
+    } else if (transcript) {
+      // Fallback to transcript-based analysis
+      console.log('Using transcript-based analysis');
+      
+      const spokenWords = transcript.toLowerCase().trim().split(/\s+/);
+      const originalSet = new Set(originalWords);
+      const spokenSet = new Set(spokenWords);
+      
+      missedWords = originalWords.filter((word: string) => !spokenSet.has(word));
+      const matchedWords = originalWords.filter((word: string) => spokenSet.has(word)).length;
+      accuracy = (matchedWords / originalWords.length) * 100;
+      
+      // Detect hesitations (filler words)
+      const fillerWords = ['um', 'uh', 'like', 'you know', 'actually', 'basically', 'so', 'eh', 'ah'];
+      hesitations = 0;
+      spokenWords.forEach((word: string) => {
+        if (fillerWords.includes(word)) hesitations++;
+      });
+    } else {
+      // No data available
+      accuracy = 0;
+      hesitations = 0;
+      missedWords = originalWords;
     }
 
+    // Generate AI feedback using Lovable AI
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    
     let feedbackSummary = '';
     let feedbackAdvice = '';
     let feedbackNextStep = '';
 
     if (LOVABLE_API_KEY) {
+      // Build detailed performance context for AI
+      let performanceContext = `
+Accuracy: ${accuracy.toFixed(1)}%
+Duration: ${durationSeconds}s
+Hesitations/Struggles: ${hesitations}
+Missed Words: ${missedWords.length > 0 ? missedWords.slice(0, 10).join(', ') : 'None'}
+Skipped Words: ${skippedWords.length > 0 ? skippedWords.slice(0, 10).join(', ') : 'None'}
+Words where prompt was needed: ${promptedWords.length > 0 ? promptedWords.slice(0, 10).join(', ') : 'None'}`;
+
+      if (wrongAttempts.length > 0) {
+        performanceContext += `\n\nWrong word attempts (user said something different):`;
+        wrongAttempts.slice(0, 5).forEach(w => {
+          performanceContext += `\n- Expected "${w.word}", user said: ${w.attempts.join(', ')}`;
+        });
+      }
+
       const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -59,23 +132,25 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'You are a speech coach providing constructive feedback on presentations. Be encouraging but honest. Keep feedback concise and actionable.'
+              content: `You are a speech coach providing constructive feedback on presentations. Be encouraging but honest and specific. 
+
+IMPORTANT: 
+- If accuracy is 100%, celebrate it!
+- If accuracy is below 100%, be specific about WHY (missed words, skipped sections, needed prompts)
+- Mention specific words the user struggled with
+- If they said wrong words, explain what happened
+- Keep feedback concise and actionable`
             },
             {
               role: 'user',
-              content: `Analyze this presentation performance:
-              
-Accuracy: ${accuracy.toFixed(1)}%
-Duration: ${durationSeconds}s
-Hesitations: ${hesitations}
-Missed Words: ${missedWords.length}
+              content: `Analyze this strict presentation mode performance:
+${performanceContext}
 
-Original speech: ${originalText.substring(0, 500)}...
-Actual transcript: ${transcript.substring(0, 500)}...
+Original speech excerpt: ${originalText.substring(0, 300)}...
 
-Provide:
-1. A brief summary of the performance (2-3 sentences)
-2. Specific advice for improvement (2-3 bullet points)
+Provide specific, actionable feedback:
+1. A brief summary of the performance (2-3 sentences, be specific about what went well and what didn't)
+2. Specific advice for improvement (2-3 bullet points, mention actual words if there were issues)
 3. One clear next step to practice
 
 Format your response as JSON:
@@ -95,35 +170,63 @@ Format your response as JSON:
         const content = aiData.choices[0].message.content;
         
         try {
-          const parsed = JSON.parse(content);
+          // Extract JSON from response (handle markdown code blocks)
+          let jsonContent = content;
+          const jsonMatch = content.match(/```json?\n?([\s\S]*?)\n?```/);
+          if (jsonMatch) {
+            jsonContent = jsonMatch[1];
+          }
+          
+          const parsed = JSON.parse(jsonContent);
           feedbackSummary = parsed.summary || 'Good effort on your presentation!';
           feedbackAdvice = parsed.advice || 'Continue practicing to improve fluency.';
           feedbackNextStep = parsed.nextStep || 'Practice again focusing on the missed words.';
         } catch (e) {
-          console.error('Failed to parse AI feedback:', e);
-          feedbackSummary = 'Good effort on your presentation!';
+          console.error('Failed to parse AI feedback:', e, 'Raw content:', content);
+          feedbackSummary = accuracy >= 90 ? 'Excellent performance!' : 'Good effort, keep practicing!';
           feedbackAdvice = 'Continue practicing to improve fluency and reduce hesitations.';
-          feedbackNextStep = 'Practice the sections where you missed words.';
+          feedbackNextStep = 'Practice the sections where you needed prompts.';
         }
       } else {
         console.error('AI gateway error:', await aiResponse.text());
       }
-    } else {
-      feedbackSummary = accuracy >= 90 ? 'Excellent presentation!' : accuracy >= 75 ? 'Good job! Some areas to improve.' : 'Keep practicing - you\'ll get there!';
-      feedbackAdvice = missedWords.length > 0 ? `Focus on memorizing these words: ${missedWords.slice(0, 5).join(', ')}` : 'Great memory! Work on reducing filler words.';
-      feedbackNextStep = 'Practice again, focusing on smooth delivery without pauses.';
+    }
+    
+    // Fallback feedback if AI not available
+    if (!feedbackSummary) {
+      if (accuracy >= 95) {
+        feedbackSummary = 'Outstanding! You delivered the speech almost perfectly!';
+      } else if (accuracy >= 85) {
+        feedbackSummary = 'Great job! You remembered most of the speech with only minor struggles.';
+      } else if (accuracy >= 70) {
+        feedbackSummary = 'Good effort! Some sections need more practice.';
+      } else {
+        feedbackSummary = 'Keep practicing! Focus on the sections where you needed help.';
+      }
+      
+      if (promptedWords.length > 0) {
+        feedbackAdvice = `Focus on memorizing: ${promptedWords.slice(0, 5).join(', ')}`;
+      } else if (missedWords.length > 0) {
+        feedbackAdvice = `Review these words: ${missedWords.slice(0, 5).join(', ')}`;
+      } else {
+        feedbackAdvice = 'Work on maintaining a steady pace without pauses.';
+      }
+      
+      feedbackNextStep = 'Practice again, aiming for a smooth delivery without pauses.';
     }
 
     return new Response(
       JSON.stringify({
         accuracy: parseFloat(accuracy.toFixed(2)),
         hesitations,
-        missedWords,
+        missedWords: [...missedWords, ...skippedWords],
+        promptedWords,
+        wrongAttempts,
         durationSeconds,
         feedbackSummary,
         feedbackAdvice,
         feedbackNextStep,
-        transcript,
+        transcript: transcript || '',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
