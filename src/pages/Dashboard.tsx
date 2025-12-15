@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface Speech {
 }
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [speeches, setSpeeches] = useState<Speech[]>([]);
   const [loading, setLoading] = useState(true);
@@ -194,13 +196,13 @@ const Dashboard = () => {
 
       setSubscriptionTier('regular');
       toast({
-        title: "Upgraded to Premium!",
-        description: "You now have access to all premium features.",
+        title: t('dashboard.upgraded'),
+        description: t('dashboard.upgradedDesc'),
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Upgrade failed",
+        title: t('dashboard.upgradeFailed'),
         description: error.message,
       });
     }
@@ -211,7 +213,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Loading your speeches...</p>
+          <p className="text-muted-foreground">{t('dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -237,7 +239,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-3">
               <Button onClick={() => setUploadDialogOpen(true)} variant="gradient">
                 <Plus className="h-4 w-4 mr-2" />
-                New Speech
+                {t('nav.newSpeech')}
               </Button>
               <div className="text-sm px-4 py-2 rounded-full bg-primary/10 text-primary font-medium">
                 <span className="capitalize">{subscriptionTier}</span>
@@ -249,7 +251,7 @@ const Dashboard = () => {
               </div>
               {subscriptionTier === 'free' && (
                 <Button variant="default" size="sm" onClick={handleUpgradeToPremium}>
-                  Upgrade
+                  {t('nav.upgrade')}
                 </Button>
               )}
               <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="rounded-full">
@@ -271,14 +273,14 @@ const Dashboard = () => {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
+                  <SheetTitle>{t('nav.menu')}</SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col gap-4 mt-6">
                   <div className="text-sm pb-4 border-b">
-                    <span className="font-medium capitalize">{subscriptionTier}</span> Plan
+                    <span className="font-medium capitalize">{subscriptionTier}</span> {t('dashboard.plan')}
                     {subscriptionTier === 'free' && (
                       <div className="text-muted-foreground mt-1">
-                        {monthlySpeeches}/2 speeches this month
+                        {monthlySpeeches}/2 {t('dashboard.speechesThisMonth')}
                       </div>
                     )}
                   </div>
@@ -287,7 +289,7 @@ const Dashboard = () => {
                       handleUpgradeToPremium();
                       setMobileMenuOpen(false);
                     }}>
-                      Upgrade to Premium
+                      {t('nav.upgradeToPremium')}
                     </Button>
                   )}
                   <Button variant="outline" onClick={() => {
@@ -295,14 +297,14 @@ const Dashboard = () => {
                     setMobileMenuOpen(false);
                   }}>
                     <Settings className="h-4 w-4 mr-2" />
-                    Settings
+                    {t('nav.settings')}
                   </Button>
                   <Button variant="outline" onClick={() => {
                     handleLogout();
                     setMobileMenuOpen(false);
                   }}>
                     <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    {t('nav.signOut')}
                   </Button>
                 </div>
               </SheetContent>
@@ -316,10 +318,10 @@ const Dashboard = () => {
           {/* Welcome Section */}
           <div className="animate-fade-in">
             <h2 className="text-3xl font-bold mb-2 capitalize">
-              Welcome back, {user?.user_metadata?.full_name || "there"}!
+              {t('dashboard.welcomeBack')}, {user?.user_metadata?.full_name || "there"}!
             </h2>
             <p className="text-muted-foreground">
-              Continue practicing or start a new speech.
+              {t('dashboard.continueOrStart')}
             </p>
           </div>
 
@@ -330,7 +332,7 @@ const Dashboard = () => {
           {subscriptionTier === 'free' && (
             <Card className="bg-muted/30 border-dashed">
               <CardContent className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">Ad Space - Upgrade to remove ads</p>
+                <p className="text-sm text-muted-foreground">{t('dashboard.adSpace')}</p>
               </CardContent>
             </Card>
           )}
@@ -339,33 +341,33 @@ const Dashboard = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">Your Speeches</h3>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">{t('dashboard.yourSpeeches')}</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Manage and practice your speeches
+                  {t('dashboard.manageSpeeches')}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {speeches.length > 0 && (
                   <div className="text-xs px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground font-medium">
-                    {speeches.length} {speeches.length === 1 ? 'speech' : 'speeches'}
+                    {speeches.length} {speeches.length === 1 ? t('dashboard.speech') : t('dashboard.speeches')}
                   </div>
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">
                       <ArrowUpDown className="w-4 h-4" />
-                      <span className="text-xs">Sort</span>
+                      <span className="text-xs">{t('dashboard.sort')}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setSortBy('deadline')}>
-                      By Deadline
+                      {t('dashboard.byDeadline')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSortBy('created')}>
-                      Recently Created
+                      {t('dashboard.recentlyCreated')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSortBy('updated')}>
-                      Recently Updated
+                      {t('dashboard.recentlyUpdated')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -378,13 +380,13 @@ const Dashboard = () => {
                   <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-float">
                     <BookOpen className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">No speeches yet</h3>
+                  <h3 className="text-xl font-bold mb-2">{t('dashboard.noSpeeches')}</h3>
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto text-base">
-                    Upload your first speech to start practicing. Set a goal date and let AI help you memorize it.
+                    {t('dashboard.noSpeechesDesc')}
                   </p>
                   <Button onClick={() => setUploadDialogOpen(true)} variant="gradient" size="lg">
                     <Plus className="h-5 w-5 mr-2" />
-                    Upload Your First Speech
+                    {t('dashboard.uploadFirst')}
                   </Button>
                 </CardContent>
               </Card>
