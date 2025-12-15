@@ -9,75 +9,75 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Deep space backgrounds */
-    --background: 240 20% 4%;
-    --foreground: 210 40% 98%;
+    --background: 230 15% 6%;
+    --foreground: 210 20% 92%;
 
     /* Dark cosmic cards */
-    --card: 240 15% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 230 12% 10%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 240 15% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 230 12% 10%;
+    --popover-foreground: 210 20% 92%;
 
-    /* Vibrant cosmic blue */
-    --primary: 217 91% 60%;
-    --primary-foreground: 210 40% 98%;
+    /* Muted blue - less saturated */
+    --primary: 215 65% 55%;
+    --primary-foreground: 210 20% 98%;
 
-    /* Space gray with cosmic tint */
-    --secondary: 240 10% 12%;
-    --secondary-foreground: 210 40% 98%;
+    /* Space gray with subtle tint */
+    --secondary: 230 8% 14%;
+    --secondary-foreground: 210 20% 92%;
 
     /* Muted space tones */
-    --muted: 240 10% 15%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 230 8% 18%;
+    --muted-foreground: 215 15% 55%;
 
-    /* Electric cosmic purple accent */
-    --accent: 280 100% 70%;
-    --accent-foreground: 210 40% 98%;
+    /* Soft purple accent - less electric */
+    --accent: 265 50% 60%;
+    --accent-foreground: 210 20% 98%;
 
-    /* Vibrant teal success */
-    --success: 172 70% 50%;
-    --success-foreground: 210 40% 98%;
+    /* Muted teal success */
+    --success: 160 45% 45%;
+    --success-foreground: 210 20% 98%;
 
-    /* Vibrant amber warning */
-    --warning: 38 95% 58%;
-    --warning-foreground: 240 20% 4%;
+    /* Softer amber warning */
+    --warning: 38 70% 52%;
+    --warning-foreground: 230 15% 6%;
 
-    /* Vibrant coral red */
-    --destructive: 355 85% 60%;
-    --destructive-foreground: 210 40% 98%;
+    /* Muted coral red */
+    --destructive: 355 60% 55%;
+    --destructive-foreground: 210 20% 98%;
 
     /* Subtle cosmic borders */
-    --border: 240 10% 20%;
-    --input: 240 10% 15%;
-    --ring: 217 91% 60%;
+    --border: 230 8% 22%;
+    --input: 230 8% 18%;
+    --ring: 215 65% 55%;
 
     --radius: 1rem;
 
-    /* Additional vibrant cosmic colors */
-    --success-green: 172 70% 50%;
-    --cosmic-teal: 180 100% 60%;
-    --cosmic-purple: 270 100% 70%;
-    --cosmic-pink: 330 100% 70%;
-    --cosmic-blue: 217 91% 60%;
-    --word-bg: 240 10% 15%;
-    --word-text: 210 40% 98%;
+    /* Additional muted cosmic colors */
+    --success-green: 160 45% 45%;
+    --cosmic-teal: 175 45% 50%;
+    --cosmic-purple: 265 50% 60%;
+    --cosmic-pink: 330 50% 60%;
+    --cosmic-blue: 215 65% 55%;
+    --word-bg: 230 8% 18%;
+    --word-text: 210 20% 92%;
 
-    /* Vibrant cosmic gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(270 100% 70%) 0%, hsl(330 100% 70%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(172 70% 50%) 0%, hsl(180 100% 60%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 50%, hsl(330 100% 70%) 100%);
-    --gradient-space: radial-gradient(ellipse at top, hsl(240 20% 10%), hsl(240 20% 4%));
+    /* Softer cosmic gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(215 65% 55%) 0%, hsl(265 50% 60%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(265 50% 60%) 0%, hsl(330 50% 60%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 45% 45%) 0%, hsl(175 45% 50%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(215 65% 55%) 0%, hsl(265 50% 60%) 50%, hsl(330 50% 60%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(230 15% 12%), hsl(230 15% 6%));
     
-    /* Glowing shadows for space theme */
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
-    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-    --shadow-glow: 0 0 30px rgba(66, 153, 225, 0.4);
-    --shadow-cosmic: 0 0 40px rgba(139, 92, 246, 0.3);
+    /* Subtle shadows */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.25);
+    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 25px rgba(100, 140, 200, 0.25);
+    --shadow-cosmic: 0 0 35px rgba(130, 100, 180, 0.2);
 
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -87,45 +87,45 @@ All colors MUST be HSL.
 
   .light {
     /* Clean white theme */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 0 0% 99%;
+    --foreground: 230 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 230 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 230 15% 15%;
 
-    --primary: 217 91% 60%;
+    --primary: 215 60% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 230 10% 94%;
+    --secondary-foreground: 230 12% 20%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 230 10% 94%;
+    --muted-foreground: 230 8% 45%;
 
-    --accent: 280 100% 70%;
+    --accent: 265 45% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 172 70% 50%;
+    --success: 160 40% 42%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 95% 58%;
+    --warning: 38 65% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 355 85% 60%;
+    --destructive: 355 55% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 217 91% 60%;
+    --border: 230 10% 88%;
+    --input: 230 10% 88%;
+    --ring: 215 60% 50%;
 
-    /* Light mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(270 100% 70%) 0%, hsl(330 100% 70%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(172 70% 50%) 0%, hsl(180 100% 60%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 100% 70%) 50%, hsl(330 100% 70%) 100%);
+    /* Light mode gradients - softer */
+    --gradient-primary: linear-gradient(135deg, hsl(215 60% 50%) 0%, hsl(265 45% 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(265 45% 55%) 0%, hsl(330 45% 55%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 40% 42%) 0%, hsl(175 40% 48%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(215 60% 50%) 0%, hsl(265 45% 55%) 50%, hsl(330 45% 55%) 100%);
   }
 }
 
