@@ -124,7 +124,7 @@ export default {
   					transform: 'translateY(0)'
   				}
   			},
-  			'shimmer': {
+  			shimmer: {
   				'0%': {
   					backgroundPosition: '-1000px 0'
   				},
@@ -132,7 +132,7 @@ export default {
   					backgroundPosition: '1000px 0'
   				}
   			},
-  			'float': {
+  			float: {
   				'0%, 100%': {
   					transform: 'translateY(0)'
   				},
@@ -155,8 +155,8 @@ export default {
   			'fade-in': 'fade-in 0.5s ease-out',
   			'scale-in': 'scale-in 0.3s ease-out',
   			'slide-up': 'slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-  			'shimmer': 'shimmer 2s infinite linear',
-  			'float': 'float 3s ease-in-out infinite',
+  			shimmer: 'shimmer 2s infinite linear',
+  			float: 'float 3s ease-in-out infinite',
   			'pulse-glow': 'pulse-glow 2s ease-in-out infinite'
   		},
   		boxShadow: {
@@ -170,7 +170,7 @@ export default {
   		},
   		fontFamily: {
   			sans: [
-  				'Source Sans Pro',
+  				'DM Sans',
   				'ui-sans-serif',
   				'system-ui',
   				'-apple-system',
@@ -183,7 +183,7 @@ export default {
   				'sans-serif'
   			],
   			serif: [
-  				'Source Serif Pro',
+  				'Crimson Pro',
   				'ui-serif',
   				'Georgia',
   				'Cambria',
@@ -192,7 +192,7 @@ export default {
   				'serif'
   			],
   			mono: [
-  				'Source Code Pro',
+  				'SF Mono',
   				'ui-monospace',
   				'SFMono-Regular',
   				'Menlo',
