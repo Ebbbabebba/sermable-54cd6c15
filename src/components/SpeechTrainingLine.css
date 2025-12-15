@@ -5,19 +5,27 @@
   font-family: inherit;
 }
 
-/* Individual word blocks */
+/* Individual word blocks - longer, smoother transitions */
 .word-block {
   display: inline-block;
   margin: 0 4px;
   padding: 8px 12px;
   border-radius: 10px;
+  /* Much longer transitions for smoothness */
   transition:
-    background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    filter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+    color 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+    opacity 0.8s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 0.6s cubic-bezier(0.25, 0.1, 0.25, 1),
+    filter 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
+    text-shadow 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Upcoming words - full visibility, ready state */
+.word-upcoming {
+  color: hsl(var(--foreground));
+  background-color: transparent;
+  opacity: 0.95;
 }
 
 /* 1. Black text = words that still need to be said (neutral, upcoming) */
@@ -27,71 +35,106 @@
   opacity: 1;
 }
 
-/* 2. Blue flashing = current word to say now (slow 5s breathing glow) */
+/* Phrase highlight - soft background for words in current phrase */
+.phrase-highlight {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--primary) / 0.06);
+  border-radius: 8px;
+  opacity: 1;
+}
+
+/* 2. Current word - very slow breathing glow (7s cycle for calm feel) */
 .word-current {
   color: hsl(217 91% 60%);
   background-color: hsl(217 91% 60% / 0.12);
   font-weight: 600;
-  animation: current-glow 5s ease-in-out infinite;
+  animation: gentle-glow 7s ease-in-out infinite;
   border-radius: 12px;
-  box-shadow: 0 0 12px 3px hsl(217 91% 60% / 0.2);
 }
 
-@keyframes current-glow {
+.current-word-gentle {
+  color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / 0.08);
+  font-weight: 600;
+  animation: gentle-glow 7s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@keyframes gentle-glow {
   0%, 100% {
-    background-color: hsl(217 91% 60% / 0.1);
-    box-shadow: 0 0 12px 3px hsl(217 91% 60% / 0.15);
+    background-color: hsl(217 91% 60% / 0.08);
+    box-shadow: 0 0 8px 2px hsl(217 91% 60% / 0.12);
+    text-shadow: 0 0 4px hsl(217 91% 60% / 0.3);
   }
   50% {
-    background-color: hsl(217 91% 60% / 0.2);
-    box-shadow: 0 0 20px 6px hsl(217 91% 60% / 0.3);
+    background-color: hsl(217 91% 60% / 0.14);
+    box-shadow: 0 0 14px 4px hsl(217 91% 60% / 0.2);
+    text-shadow: 0 0 8px hsl(217 91% 60% / 0.4);
+  }
+}
+
+/* Legacy current-glow animation - slower version */
+@keyframes current-glow {
+  0%, 100% {
+    background-color: hsl(217 91% 60% / 0.08);
+    box-shadow: 0 0 10px 3px hsl(217 91% 60% / 0.12);
+  }
+  50% {
+    background-color: hsl(217 91% 60% / 0.15);
+    box-shadow: 0 0 18px 6px hsl(217 91% 60% / 0.2);
   }
 }
 
 /* 3. Yellow = pause/hesitation (waited too long) - distinct amber tint */
 .word-yellow {
   color: hsl(38 92% 35%);
-  background-color: hsl(45 100% 51% / 0.4);
+  background-color: hsl(45 100% 51% / 0.35);
   font-weight: 600;
-  border: 2px solid hsl(45 100% 45% / 0.6);
-  box-shadow: 0 0 8px 2px hsl(45 100% 50% / 0.25);
+  border: 2px solid hsl(45 100% 45% / 0.5);
+  box-shadow: 0 0 6px 2px hsl(45 100% 50% / 0.2);
 }
 
-/* 4. Red = wrong word (said wrong, skipped, or broke sequence) - higher contrast */
+/* 4. Red = wrong word (said wrong, skipped, or broke sequence) */
 .word-red {
   color: hsl(0 84% 35%);
-  background-color: hsl(0 84% 60% / 0.4);
+  background-color: hsl(0 84% 60% / 0.35);
   font-weight: 600;
-  border: 2px solid hsl(0 84% 50% / 0.65);
-  box-shadow: 0 0 8px 2px hsl(0 84% 50% / 0.3);
+  border: 2px solid hsl(0 84% 50% / 0.55);
+  box-shadow: 0 0 6px 2px hsl(0 84% 50% / 0.2);
   opacity: 0.85;
+  animation: error-subtle-pulse 4s ease-in-out infinite;
 }
 
-/* 5. Gray = spoken correctly but not yet mastered (faded but readable, smooth slide-fade) */
+@keyframes error-subtle-pulse {
+  0%, 100% { box-shadow: 0 0 4px 1px hsl(0 84% 50% / 0.15); }
+  50% { box-shadow: 0 0 8px 3px hsl(0 84% 50% / 0.2); }
+}
+
+/* 5. Gray/Spoken = spoken correctly - smooth long fade */
 .word-spoken {
   color: hsl(var(--muted-foreground));
   background-color: transparent;
-  opacity: 0.3;
-  filter: blur(0.3px);
-  transform: scale(0.98) translateX(-3px);
-  animation: smooth-slide-fade-out 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0.28;
+  filter: blur(0.25px);
+  animation: smooth-long-fade 1s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
-@keyframes smooth-slide-fade-out {
+@keyframes smooth-long-fade {
   0% {
     opacity: 1;
-    transform: scale(1) translateX(0);
     filter: blur(0);
   }
-  40% {
-    opacity: 0.65;
-    transform: scale(0.995) translateX(-1px);
+  30% {
+    opacity: 0.7;
     filter: blur(0.1px);
   }
+  60% {
+    opacity: 0.45;
+    filter: blur(0.2px);
+  }
   100% {
-    opacity: 0.3;
-    transform: scale(0.98) translateX(-3px);
-    filter: blur(0.3px);
+    opacity: 0.28;
+    filter: blur(0.25px);
   }
 }
 
@@ -99,62 +142,49 @@
 .word-gray {
   color: hsl(var(--foreground));
   background-color: transparent;
-  opacity: 1;
+  opacity: 0.95;
 }
 
 .past-word {
   color: hsl(var(--muted-foreground));
   background-color: transparent;
-  opacity: 0.35;
-  filter: blur(0.3px);
-  transform: scale(0.98);
-  animation: smooth-fade-out 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0.28;
+  filter: blur(0.25px);
+  animation: smooth-long-fade 1s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
 .current-word {
   color: hsl(217 91% 60%);
-  background-color: hsl(217 91% 60% / 0.15);
+  background-color: hsl(217 91% 60% / 0.1);
   font-weight: 600;
-  animation: current-glow 5s ease-in-out infinite;
-  box-shadow: 0 0 15px 4px hsl(217 91% 60% / 0.2);
+  animation: gentle-glow 7s ease-in-out infinite;
 }
 
-/* Shake animation for errors */
-@keyframes error-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-4px); }
-}
-
-/* Success fade animation - smooth and gradual */
+/* Success fade animation - very smooth and gradual */
 @keyframes success-fade {
   0% { 
     opacity: 1;
-    transform: scale(1);
     filter: blur(0);
   }
   40% {
-    opacity: 0.7;
-    transform: scale(0.995);
+    opacity: 0.6;
     filter: blur(0.1px);
   }
   100% { 
-    opacity: 0.35;
-    transform: scale(0.98);
-    filter: blur(0.3px);
+    opacity: 0.28;
+    filter: blur(0.25px);
   }
 }
 
 /* Recovery animation when error is corrected */
 .word-recovered {
-  animation: recovery-pulse 0.4s ease;
+  animation: recovery-pulse 0.5s ease;
 }
 
 @keyframes recovery-pulse {
   0% { 
-    background-color: hsl(142 76% 36% / 0.4);
-    box-shadow: 0 0 15px hsl(142 76% 36% / 0.5);
+    background-color: hsl(142 76% 36% / 0.35);
+    box-shadow: 0 0 12px hsl(142 76% 36% / 0.4);
   }
   100% { 
     background-color: transparent;
@@ -162,23 +192,23 @@
   }
 }
 
-/* Active bracket styling */
+/* Active bracket styling - slower pulse */
 .bracket-active {
-  animation: bracket-glow 1.5s ease-in-out infinite;
+  animation: bracket-glow 4s ease-in-out infinite;
 }
 
 @keyframes bracket-glow {
   0%, 100% {
-    box-shadow: 0 0 20px 5px hsl(217 91% 60% / 0.4);
+    box-shadow: 0 0 15px 4px hsl(217 91% 60% / 0.3);
   }
   50% {
-    box-shadow: 0 0 35px 12px hsl(217 91% 60% / 0.6);
+    box-shadow: 0 0 25px 8px hsl(217 91% 60% / 0.45);
   }
 }
 
 /* Bracket container hover effect */
 .bracket-container {
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .bracket-container:hover {
@@ -193,25 +223,25 @@
   min-width: 2rem;
   padding: 4px 8px;
   border-radius: 8px;
-  background: linear-gradient(135deg, hsl(217 91% 60% / 0.15), hsl(217 91% 60% / 0.1));
-  border: 1.5px dashed hsl(217 91% 60% / 0.4);
+  background: linear-gradient(135deg, hsl(217 91% 60% / 0.12), hsl(217 91% 60% / 0.08));
+  border: 1.5px dashed hsl(217 91% 60% / 0.35);
   color: hsl(217 91% 60%);
   font-weight: 600;
   font-size: 0.9em;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .hidden-bracket:hover {
-  background: linear-gradient(135deg, hsl(217 91% 60% / 0.25), hsl(217 91% 60% / 0.15));
-  border-color: hsl(217 91% 60% / 0.6);
-  transform: scale(1.05);
+  background: linear-gradient(135deg, hsl(217 91% 60% / 0.2), hsl(217 91% 60% / 0.12));
+  border-color: hsl(217 91% 60% / 0.5);
+  transform: scale(1.03);
 }
 
 /* Word unfold animation */
 @keyframes word-unfold {
   0% {
     opacity: 0;
-    transform: scaleX(0.5) translateY(-5px);
+    transform: scaleX(0.7) translateY(-4px);
   }
   100% {
     opacity: 1;
@@ -220,40 +250,40 @@
 }
 
 .word-unfold {
-  animation: word-unfold 0.3s ease-out forwards;
+  animation: word-unfold 0.4s ease-out forwards;
 }
 
-/* Hint float animation */
+/* Hint float animation - slower */
 @keyframes hint-float {
   0%, 100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
 }
 
 .hint-float {
-  animation: hint-float 2s ease-in-out infinite;
+  animation: hint-float 3s ease-in-out infinite;
 }
 
 /* Progressive hint reveal */
 .hint-reveal {
   color: hsl(45 100% 40%);
-  background-color: hsl(45 100% 51% / 0.2);
-  border: 1px solid hsl(45 100% 45% / 0.4);
+  background-color: hsl(45 100% 51% / 0.18);
+  border: 1px solid hsl(45 100% 45% / 0.35);
   border-radius: 6px;
   padding: 2px 6px;
-  animation: hint-pulse 1.5s ease-in-out infinite;
+  animation: hint-pulse-slow 2.5s ease-in-out infinite;
 }
 
-@keyframes hint-pulse {
+@keyframes hint-pulse-slow {
   0%, 100% {
     opacity: 0.9;
   }
   50% {
     opacity: 1;
-    background-color: hsl(45 100% 51% / 0.3);
+    background-color: hsl(45 100% 51% / 0.25);
   }
 }
 
@@ -280,7 +310,7 @@
   }
 }
 
-/* Try prompt pulse */
+/* Try prompt pulse - slower */
 .teleprompter-try {
-  animation: teleprompter-slide-up 0.3s ease-out, hint-pulse 1.5s ease-in-out infinite;
+  animation: teleprompter-slide-up 0.4s ease-out, hint-pulse-slow 2.5s ease-in-out infinite;
 }

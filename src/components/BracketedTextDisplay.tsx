@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import "./SpeechTrainingLine.css";
 import { Check, Circle, Eye, Sparkles } from "lucide-react";
@@ -29,6 +29,29 @@ const SIMPLE_WORDS = new Set([
   'that', 'this', 'these', 'those', 'it', 'its', 'as', 'if', 'then', 'than',
   'so', 'very', 'just', 'can', 'your', 'my', 'our', 'their', 'his', 'her'
 ]);
+
+// Group words into natural phrases based on punctuation
+const groupIntoNaturalPhrases = (words: string[]): { startIndex: number; endIndex: number }[] => {
+  const phrases: { startIndex: number; endIndex: number }[] = [];
+  let phraseStart = 0;
+  
+  words.forEach((word, index) => {
+    // Check if word ends with punctuation that marks a phrase boundary
+    const endsWithPause = /[,;:\-–—]$/.test(word);
+    const endsWithSentence = /[.!?]$/.test(word);
+    
+    // Create phrase boundary at punctuation or every 4-6 words for natural rhythm
+    const phraseLength = index - phraseStart + 1;
+    const shouldBreak = endsWithPause || endsWithSentence || phraseLength >= 5;
+    
+    if (shouldBreak || index === words.length - 1) {
+      phrases.push({ startIndex: phraseStart, endIndex: index });
+      phraseStart = index + 1;
+    }
+  });
+  
+  return phrases;
+};
 
 const BracketedTextDisplay = ({ 
   text, 
@@ -154,6 +177,17 @@ const BracketedTextDisplay = ({
     return word;
   };
 
+  // Group words into natural phrases for smoother highlighting
+  const naturalPhrases = useMemo(() => groupIntoNaturalPhrases(words), [words]);
+  
+  // Find which phrase the current word belongs to
+  const currentPhraseIndex = useMemo(() => {
+    if (currentWordIndex < 0) return -1;
+    return naturalPhrases.findIndex(
+      phrase => currentWordIndex >= phrase.startIndex && currentWordIndex <= phrase.endIndex
+    );
+  }, [currentWordIndex, naturalPhrases]);
+
   return (
     <div className={cn("speech-line flex flex-wrap gap-1.5 items-center leading-relaxed", className)}>
       {finalSegments.map((segment, segmentIndex) => {
@@ -166,19 +200,40 @@ const BracketedTextDisplay = ({
             const isCurrent = isRecording && currentWordIndex === globalIndex;
             const isHinting = hintingWordIndex === globalIndex && hintLevel > 0;
             
+            // Check if this word is in the current phrase (for phrase-based highlighting)
+            const wordPhraseIndex = naturalPhrases.findIndex(
+              phrase => globalIndex >= phrase.startIndex && globalIndex <= phrase.endIndex
+            );
+            const isInCurrentPhrase = isRecording && wordPhraseIndex === currentPhraseIndex && currentPhraseIndex >= 0;
+            const isPhraseSpoken = isInCurrentPhrase && naturalPhrases[wordPhraseIndex] && 
+              spokenWordsIndices.has(naturalPhrases[wordPhraseIndex].startIndex);
+            
             return (
               <TooltipProvider key={globalIndex}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <motion.span
-                      layout
+                      layout="position"
+                      layoutId={`word-${globalIndex}`}
+                      transition={{ 
+                        layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+                        opacity: { duration: 0.5, ease: "easeOut" }
+                      }}
                       className={cn(
-                        "word-block transition-all duration-300 relative",
-                        isCurrent && "current-word text-2xl font-bold scale-110",
+                        "word-block relative inline-block",
+                        // Smooth fade transition for all states
+                        "transition-all duration-500 ease-out",
+                        // Current word - gentle pulse, no scale change for stability
+                        isCurrent && "current-word-gentle",
+                        // Current phrase highlight (soft background)
+                        !isCurrent && isInCurrentPhrase && !isSpoken && "phrase-highlight",
+                        // Error states
                         !isCurrent && isMissed && "word-red",
                         !isCurrent && !isMissed && isHesitated && "word-yellow",
-                        !isCurrent && !isMissed && !isHesitated && isSpoken && "past-word opacity-40",
-                        !isCurrent && !isMissed && !isHesitated && !isSpoken && "word-gray"
+                        // Spoken words fade out smoothly
+                        !isCurrent && !isMissed && !isHesitated && isSpoken && "word-spoken",
+                        // Unspoken words
+                        !isCurrent && !isMissed && !isHesitated && !isSpoken && !isInCurrentPhrase && "word-upcoming"
                       )}
                     >
                       {word}
@@ -189,6 +244,7 @@ const BracketedTextDisplay = ({
                             initial={{ opacity: 0, y: -20, scale: 0.8 }}
                             animate={{ opacity: 1, y: -35, scale: 1 }}
                             exit={{ opacity: 0, y: -10, scale: 0.9 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
                             className={cn(
                               "absolute left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-semibold z-20",
                               hintLevel === 1 && "bg-primary/20 text-primary border border-primary/40",
