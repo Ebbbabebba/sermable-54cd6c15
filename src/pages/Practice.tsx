@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -94,6 +94,16 @@ const Practice = () => {
   // Use refs for real-time tracking to avoid stale closures
   const expectedWordIndexRef = useRef<number>(0);
   const processedTranscriptLengthRef = useRef<number>(0);
+  
+  // Word processing queue for staggered visual updates
+  interface QueuedWord {
+    action: 'spoken' | 'hesitated' | 'missed';
+    index: number;
+    word: string;
+  }
+  const wordQueueRef = useRef<QueuedWord[]>([]);
+  const isProcessingQueueRef = useRef(false);
+  const queueProcessorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWordsIndices, setSpokenWordsIndices] = useState<Set<number>>(new Set());
   const [hesitatedWordsIndices, setHesitatedWordsIndices] = useState<Set<number>>(new Set());
@@ -460,6 +470,50 @@ const Practice = () => {
     setHintLevel(0);
   };
 
+  // Staggered word queue processor for smooth word-by-word visual updates
+  const processWordQueue = useCallback(() => {
+    if (wordQueueRef.current.length === 0) {
+      isProcessingQueueRef.current = false;
+      return;
+    }
+    
+    isProcessingQueueRef.current = true;
+    const item = wordQueueRef.current.shift()!;
+    
+    // Process single word visual update
+    if (item.action === 'spoken') {
+      setSpokenWordsIndices(prev => new Set([...prev, item.index]));
+      setMissedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
+      setHesitatedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
+    } else if (item.action === 'hesitated') {
+      setHesitatedWordsIndices(prev => new Set([...prev, item.index]));
+    } else if (item.action === 'missed') {
+      setMissedWordsIndices(prev => new Set([...prev, item.index]));
+    }
+    
+    console.log(`🔄 Queue processed: ${item.action} "${item.word}" at ${item.index}, remaining: ${wordQueueRef.current.length}`);
+    
+    // Schedule next word with adaptive stagger delay based on speaking pace
+    // Fast: 50ms, Normal: 80ms, Slow: 120ms
+    const staggerDelay = averageWordDelay < 400 ? 50 : averageWordDelay < 700 ? 80 : 120;
+    
+    if (wordQueueRef.current.length > 0) {
+      queueProcessorTimeoutRef.current = setTimeout(processWordQueue, staggerDelay);
+    } else {
+      isProcessingQueueRef.current = false;
+    }
+  }, [averageWordDelay]);
+
+  // Helper to queue word actions
+  const queueWordAction = useCallback((action: 'spoken' | 'hesitated' | 'missed', index: number, word: string) => {
+    wordQueueRef.current.push({ action, index, word });
+    
+    // Start processing if not already running
+    if (!isProcessingQueueRef.current) {
+      processWordQueue();
+    }
+  }, [processWordQueue]);
+
   // Map language code to speech recognition locale
   const getRecognitionLocale = (lang: string): string => {
     const localeMap: Record<string, string> = {
@@ -593,17 +647,15 @@ const Practice = () => {
               // Check if this word was shown as support word
               if (wasSupportWordShowing && previousSupportWordIndex === currentIdx) {
                 if (currentHiddenIndices.has(currentIdx)) {
-                  setHesitatedWordsIndices(prev => new Set([...prev, currentIdx]));
+                  queueWordAction('hesitated', currentIdx, expectedWord);
                   console.log('✓ Hidden support word spoken correctly (yellow):', expectedWord, 'at index', currentIdx);
                 } else {
-                  setSpokenWordsIndices(prev => new Set([...prev, currentIdx]));
+                  queueWordAction('spoken', currentIdx, expectedWord);
                   console.log('✓ Visible support word spoken correctly (gray):', expectedWord, 'at index', currentIdx);
                 }
               } else {
-                // Normal correct word - mark as spoken (fade out)
-                setSpokenWordsIndices(prev => new Set([...prev, currentIdx]));
-                setMissedWordsIndices(prev => { const u = new Set(prev); u.delete(currentIdx); return u; });
-                setHesitatedWordsIndices(prev => { const u = new Set(prev); u.delete(currentIdx); return u; });
+                // Normal correct word - queue for staggered fade out
+                queueWordAction('spoken', currentIdx, expectedWord);
                 console.log('✓ Word spoken correctly:', expectedWord, 'at index', currentIdx);
               }
               
@@ -649,20 +701,20 @@ const Practice = () => {
                   matchFound = true;
                   console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
                   
-                  // Mark ALL words from current to matched position as spoken (fade them out)
+                  // Queue ALL words from current to matched position for staggered fade out
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
-                      // Skipped words - mark as spoken (fade out) if visible, or missed if hidden
+                      // Skipped words - queue as spoken (fade out) if visible, or missed if hidden
                       if (currentHiddenIndices.has(i)) {
-                        setMissedWordsIndices(prev => new Set([...prev, i]));
+                        queueWordAction('missed', i, allExpectedWords[i]);
                         console.log('❌ Hidden skipped word (red):', allExpectedWords[i], 'at index', i);
                       } else {
-                        setSpokenWordsIndices(prev => new Set([...prev, i]));
+                        queueWordAction('spoken', i, allExpectedWords[i]);
                         console.log('⏭️ Visible skipped word (fade out):', allExpectedWords[i], 'at index', i);
                       }
                     } else {
-                      // Matched word - mark as spoken
-                      setSpokenWordsIndices(prev => new Set([...prev, i]));
+                      // Matched word - queue as spoken
+                      queueWordAction('spoken', i, allExpectedWords[i]);
                       console.log('✓ Matched word spoken:', allExpectedWords[i], 'at index', i);
                     }
                   }
@@ -681,19 +733,18 @@ const Practice = () => {
               if (!matchFound) {
                 // Handle support word case
                 if (wasSupportWordShowing && previousSupportWordIndex !== null) {
-                  setHesitatedWordsIndices(prev => { const u = new Set(prev); u.delete(previousSupportWordIndex); return u; });
                   if (currentHiddenIndices.has(previousSupportWordIndex)) {
-                    setMissedWordsIndices(prev => new Set([...prev, previousSupportWordIndex]));
+                    queueWordAction('missed', previousSupportWordIndex, allExpectedWords[previousSupportWordIndex]);
                     console.log('❌ Hidden support word missed (red):', allExpectedWords[previousSupportWordIndex]);
                   }
                   currentIdx = previousSupportWordIndex + 1;
                 } else {
-                  // No match found - mark current as skipped and move on
+                  // No match found - queue current as skipped and move on
                   if (currentHiddenIndices.has(currentIdx)) {
-                    setMissedWordsIndices(prev => new Set([...prev, currentIdx]));
+                    queueWordAction('missed', currentIdx, expectedWord);
                     console.log('❌ Hidden word missed:', expectedWord, 'at index', currentIdx);
                   } else {
-                    setSpokenWordsIndices(prev => new Set([...prev, currentIdx]));
+                    queueWordAction('spoken', currentIdx, expectedWord);
                     console.log('⏭️ Visible word skipped (fade out):', expectedWord, 'at index', currentIdx);
                   }
                   currentIdx++;
@@ -756,6 +807,14 @@ const Practice = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
+    }
+    
+    // Clear word processing queue
+    wordQueueRef.current = [];
+    isProcessingQueueRef.current = false;
+    if (queueProcessorTimeoutRef.current) {
+      clearTimeout(queueProcessorTimeoutRef.current);
+      queueProcessorTimeoutRef.current = null;
     }
     
     // Clear hesitation timer
