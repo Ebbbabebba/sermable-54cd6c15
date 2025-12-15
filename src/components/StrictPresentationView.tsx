@@ -23,14 +23,13 @@ interface StrictPresentationViewProps {
   onPerformanceData: (data: WordPerformance[]) => void;
 }
 
-// Normalize text for comparison
+// Normalize text for comparison (Unicode-aware)
 const normalizeWord = (text: string): string => {
   return text
     .toLowerCase()
-    .replace(/[åä]/g, "a")
-    .replace(/[öø]/g, "o")
-    .replace(/æ/g, "ae")
-    .replace(/[^\w]/g, "");
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+    .replace(/[^\p{L}\p{N}]/gu, ""); // Keep only letters and numbers (Unicode-aware)
 };
 
 // Calculate word similarity
@@ -136,8 +135,9 @@ export const StrictPresentationView = ({
     try {
       recognition.start();
       recognitionRef.current = recognition;
+      console.log("🎤 Speech recognition started, lang:", speechLanguage || "en-US");
     } catch (e) {
-      console.error("Failed to start recognition");
+      console.error("Failed to start recognition:", e);
     }
 
     return () => {
