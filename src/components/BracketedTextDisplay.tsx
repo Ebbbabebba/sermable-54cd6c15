@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface BracketedTextDisplayProps {
   text: string;
-  visibilityPercent: number;
+  hiddenWordIndices?: Set<number>; // Use this instead of visibilityPercent when provided
+  visibilityPercent?: number; // Fallback if hiddenWordIndices not provided
   spokenWordsIndices?: Set<number>;
   hesitatedWordsIndices?: Set<number>;
   missedWordsIndices?: Set<number>;
@@ -31,7 +32,8 @@ const SIMPLE_WORDS = new Set([
 
 const BracketedTextDisplay = ({ 
   text, 
-  visibilityPercent, 
+  hiddenWordIndices,
+  visibilityPercent = 100, 
   spokenWordsIndices = new Set(),
   hesitatedWordsIndices = new Set(),
   missedWordsIndices = new Set(),
@@ -48,14 +50,25 @@ const BracketedTextDisplay = ({
   const words = text.split(/\s+/).filter(w => w.trim());
   const totalWords = words.length;
   
-  // Calculate which words should be visible based on importance
+  // Calculate which words should be visible
+  // Use hiddenWordIndices if provided, otherwise fall back to visibilityPercent calculation
   const visibleIndices = new Set<number>();
   
-  if (visibilityPercent >= 100) {
+  if (hiddenWordIndices && hiddenWordIndices.size > 0) {
+    // Use provided hidden indices - all words NOT in hiddenWordIndices are visible
+    for (let i = 0; i < totalWords; i++) {
+      if (!hiddenWordIndices.has(i)) {
+        visibleIndices.add(i);
+      }
+    }
+    console.log('📊 Using hiddenWordIndices, visible:', [...visibleIndices], 'hidden:', [...hiddenWordIndices]);
+  } else if (visibilityPercent >= 100) {
+    // All words visible
     for (let i = 0; i < totalWords; i++) {
       visibleIndices.add(i);
     }
   } else if (visibilityPercent > 0) {
+    // Calculate based on visibility percent and word importance
     const SECTION_COUNT = 10;
     const sectionSize = Math.ceil(totalWords / SECTION_COUNT);
     const visibleCount = Math.ceil((visibilityPercent / 100) * totalWords);

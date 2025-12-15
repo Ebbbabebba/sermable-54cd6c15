@@ -201,6 +201,11 @@ const Practice = () => {
     setActiveSegmentOriginalText(getOriginalTextForSegments([currentSegment]));
   };
 
+  // Clean bracket notation from text (keep words, remove [ and ])
+  const cleanBracketNotation = (text: string): string => {
+    return text.replace(/\[|\]/g, '');
+  };
+
   // Extract hidden word indices from segment text (words inside [...] are hidden)
   const extractHiddenIndices = (text: string): Set<number> => {
     const hiddenIndices = new Set<number>();
@@ -521,8 +526,9 @@ const Practice = () => {
           const fullTranscript = (finalTranscript + interimTranscript).trim();
           const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
           
-          // Get expected words from the active segment or full speech
-          const allExpectedWords = (activeSegmentText || speech!.text_original).toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
+          // Get expected words from the active segment or full speech (clean bracket notation first)
+          const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
+          const allExpectedWords = cleanedText.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
           
           // Helper: Levenshtein distance for fuzzy matching
           const levenshtein = (a: string, b: string): number => {
@@ -1174,8 +1180,8 @@ const Practice = () => {
         <div className="flex-1 flex items-center justify-center px-8 pb-32">
           <div className="max-w-4xl w-full">
             <BracketedTextDisplay
-              text={activeSegmentText || speech.text_original}
-              visibilityPercent={speech.base_word_visibility_percent || 100}
+              text={cleanBracketNotation(activeSegmentText || speech.text_original)}
+              hiddenWordIndices={currentHiddenIndices}
               spokenWordsIndices={spokenWordsIndices}
               hesitatedWordsIndices={hesitatedWordsIndices}
               missedWordsIndices={missedWordsIndices}
@@ -1184,7 +1190,6 @@ const Practice = () => {
               hintingWordIndex={supportWordIndex ?? -1}
               hintLevel={hintLevel}
               onPeekWord={(index) => {
-                // Mark peeked words as hesitated
                 setHesitatedWordsIndices(prev => new Set([...prev, index]));
               }}
             />
