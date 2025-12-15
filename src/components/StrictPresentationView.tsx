@@ -23,6 +23,37 @@ interface StrictPresentationViewProps {
   onPerformanceData: (data: WordPerformance[]) => void;
 }
 
+// Map short language codes to full locale codes for Web Speech API
+const getRecognitionLanguage = (lang: string): string => {
+  if (!lang) return "en-US";
+  
+  // Already a full locale code
+  if (lang.includes("-") || lang.includes("_")) {
+    return lang.replace("_", "-");
+  }
+  
+  const langMap: Record<string, string> = {
+    en: "en-US",
+    sv: "sv-SE",
+    de: "de-DE",
+    fr: "fr-FR",
+    es: "es-ES",
+    it: "it-IT",
+    pt: "pt-PT",
+    nl: "nl-NL",
+    da: "da-DK",
+    no: "nb-NO",
+    fi: "fi-FI",
+    pl: "pl-PL",
+    ru: "ru-RU",
+    ja: "ja-JP",
+    ko: "ko-KR",
+    zh: "zh-CN",
+  };
+  
+  return langMap[lang.toLowerCase()] || `${lang}-${lang.toUpperCase()}`;
+};
+
 // Normalize text for comparison (Unicode-aware)
 const normalizeWord = (text: string): string => {
   return text
@@ -72,6 +103,8 @@ export const StrictPresentationView = ({
   const transcriptRef = useRef<string>("");
   const wrongAttempts = useRef<string[]>([]);
   const lastProgressTime = useRef<number>(Date.now());
+  const restartAttemptsRef = useRef<number>(0);
+  const maxRestartAttempts = 10;
   
   const words = text.split(/\s+/).filter(w => w.length > 0);
   
@@ -80,18 +113,43 @@ export const StrictPresentationView = ({
 
   // Initialize speech recognition
   useEffect(() => {
-    if (!isRecording) return;
+    if (!isRecording) {
+      restartAttemptsRef.current = 0;
+      return;
+    }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.error("Speech recognition not supported");
+      console.error("❌ Speech recognition not supported in this browser");
       return;
     }
+
+    const recognitionLang = getRecognitionLanguage(speechLanguage);
+    console.log("🎤 Initializing speech recognition with language:", recognitionLang, "(from:", speechLanguage, ")");
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = speechLanguage || "en-US";
+    recognition.lang = recognitionLang;
+    recognition.maxAlternatives = 3;
+
+    recognition.onstart = () => {
+      console.log("🎤 Speech recognition STARTED - listening for:", recognitionLang);
+      restartAttemptsRef.current = 0;
+    };
+
+    recognition.onaudiostart = () => {
+      console.log("🔊 Audio capture started");
+    };
+
+    recognition.onsoundstart = () => {
+      console.log("🔉 Sound detected");
+    };
+
+    recognition.onspeechstart = () => {
+      console.log("🗣️ Speech detected");
+      setAudioLevel(0.6);
+    };
 
     recognition.onresult = (event: any) => {
       let finalTranscript = "";
@@ -99,8 +157,11 @@ export const StrictPresentationView = ({
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
+        const confidence = event.results[i][0].confidence;
+        
         if (event.results[i].isFinal) {
           finalTranscript += transcript + " ";
+          console.log("📝 Final transcript:", transcript, "(confidence:", (confidence * 100).toFixed(1) + "%)");
         } else {
           interimTranscript += transcript;
         }
@@ -119,31 +180,54 @@ export const StrictPresentationView = ({
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
+      const errorType = event.error;
+      console.warn("⚠️ Speech recognition error:", errorType);
+      
+      // Handle specific errors
+      if (errorType === "no-speech") {
+        console.log("No speech detected - waiting...");
+      } else if (errorType === "audio-capture") {
+        console.error("❌ No microphone found or permission denied");
+      } else if (errorType === "not-allowed") {
+        console.error("❌ Microphone permission denied");
+      }
+      // 'aborted' errors are expected during restart, don't log them heavily
     };
 
     recognition.onend = () => {
-      if (isRecording) {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.error("Failed to restart recognition");
-        }
+      console.log("🎤 Speech recognition ended");
+      
+      if (isRecording && restartAttemptsRef.current < maxRestartAttempts) {
+        restartAttemptsRef.current++;
+        console.log("🔄 Restarting speech recognition (attempt", restartAttemptsRef.current, ")");
+        
+        // Add delay before restart to prevent rapid restart loops
+        setTimeout(() => {
+          if (isRecording && recognitionRef.current) {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.error("Failed to restart recognition:", e);
+            }
+          }
+        }, 300);
+      } else if (restartAttemptsRef.current >= maxRestartAttempts) {
+        console.error("❌ Max restart attempts reached - speech recognition stopped");
       }
     };
 
     try {
       recognition.start();
       recognitionRef.current = recognition;
-      console.log("🎤 Speech recognition started, lang:", speechLanguage || "en-US");
     } catch (e) {
-      console.error("Failed to start recognition:", e);
+      console.error("❌ Failed to start recognition:", e);
     }
 
     return () => {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
+          recognitionRef.current = null;
         } catch (e) {}
       }
     };
