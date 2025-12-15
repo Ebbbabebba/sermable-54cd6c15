@@ -27,28 +27,24 @@
   opacity: 1;
 }
 
-/* 2. Blue flashing = current word to say now (calmer 1.8s cycle) */
+/* 2. Blue flashing = current word to say now (slow 5s breathing glow) */
 .word-current {
   color: hsl(217 91% 60%);
-  background-color: hsl(217 91% 60% / 0.15);
-  font-weight: 700;
-  font-size: 1.2em;
-  transform: scale(1.08);
-  animation: current-flash 1.8s ease-in-out infinite;
+  background-color: hsl(217 91% 60% / 0.12);
+  font-weight: 600;
+  animation: current-glow 5s ease-in-out infinite;
   border-radius: 12px;
-  box-shadow: 0 0 15px 4px hsl(217 91% 60% / 0.25);
+  box-shadow: 0 0 12px 3px hsl(217 91% 60% / 0.2);
 }
 
-@keyframes current-flash {
+@keyframes current-glow {
   0%, 100% {
-    background-color: hsl(217 91% 60% / 0.15);
-    box-shadow: 0 0 15px 4px hsl(217 91% 60% / 0.25);
-    transform: scale(1.08);
+    background-color: hsl(217 91% 60% / 0.1);
+    box-shadow: 0 0 12px 3px hsl(217 91% 60% / 0.15);
   }
   50% {
-    background-color: hsl(217 91% 60% / 0.25);
-    box-shadow: 0 0 22px 6px hsl(217 91% 60% / 0.35);
-    transform: scale(1.1);
+    background-color: hsl(217 91% 60% / 0.2);
+    box-shadow: 0 0 20px 6px hsl(217 91% 60% / 0.3);
   }
 }
 
@@ -117,12 +113,10 @@
 
 .current-word {
   color: hsl(217 91% 60%);
-  background-color: hsl(217 91% 60% / 0.2);
-  font-weight: 700;
-  font-size: 1.2em;
-  transform: scale(1.12);
-  animation: current-flash 1s ease-in-out infinite;
-  box-shadow: 0 0 20px 6px hsl(217 91% 60% / 0.3);
+  background-color: hsl(217 91% 60% / 0.15);
+  font-weight: 600;
+  animation: current-glow 5s ease-in-out infinite;
+  box-shadow: 0 0 15px 4px hsl(217 91% 60% / 0.2);
 }
 
 /* Shake animation for errors */
