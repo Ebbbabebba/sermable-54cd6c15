@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
@@ -17,6 +17,7 @@ import EnhancedWordTracker from "@/components/EnhancedWordTracker";
 import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import LockCountdown from "@/components/LockCountdown";
 
 import SegmentProgress from "@/components/SegmentProgress";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -76,6 +77,8 @@ const Practice = () => {
   const [showResults, setShowResults] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  const [isLocked, setIsLocked] = useState(false);
+  const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [editedScriptText, setEditedScriptText] = useState("");
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
@@ -260,6 +263,27 @@ const Practice = () => {
         determineActiveSegments(segmentsData, data);
       }
       
+      // Check lock status based on AI-recommended next review time
+      const { data: schedule } = await supabase
+        .from("schedules")
+        .select("next_review_date")
+        .eq("speech_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (schedule?.next_review_date) {
+        const reviewDate = new Date(schedule.next_review_date);
+        setNextReviewDate(reviewDate);
+        
+        // Lock if review date is in future
+        if (reviewDate > new Date()) {
+          setIsLocked(true);
+          console.log('🔒 Speech locked until AI-recommended time:', reviewDate);
+        } else {
+          setIsLocked(false);
+        }
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -273,6 +297,15 @@ const Practice = () => {
   };
 
   const handleStartPractice = () => {
+    // Check if locked
+    if (isLocked && nextReviewDate) {
+      toast({
+        title: "Practice Scheduled",
+        description: `The AI recommends practicing again ${nextReviewDate ? format(nextReviewDate, "'at' HH:mm") : 'soon'}. Starting anyway...`,
+        duration: 3000,
+      });
+    }
+    
     console.log('✅ Starting practice session');
     setIsPracticing(true);
     setShowResults(false);
@@ -944,6 +977,11 @@ const Practice = () => {
                   learningStage: scheduleData.learningStage
                 });
                 
+                // Update lock state with new AI-recommended time
+                if (scheduleData.nextReviewDate) {
+                  setNextReviewDate(new Date(scheduleData.nextReviewDate));
+                  setIsLocked(true);
+                }
               }
             }
           } catch (err) {
@@ -1429,13 +1467,29 @@ const Practice = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-12 space-y-4">
+                {isLocked && nextReviewDate && (
+                  <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Clock className="h-5 w-5 text-primary" />
+                      <p className="font-medium">
+                        AI-Recommended Practice Time
+                      </p>
+                    </div>
+                    <p className="text-lg font-semibold text-primary">
+                      <LockCountdown nextReviewDate={nextReviewDate} />
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Optimal spacing strengthens memory retention
+                    </p>
+                  </div>
+                )}
                 <Button 
                   size="lg" 
                   onClick={handleStartPractice}
                   className="rounded-full px-8"
                 >
                   <Play className="h-5 w-5 mr-2" />
-                  Start Practice
+                  {isLocked ? "Practice Anyway" : "Start Practice"}
                 </Button>
               </div>
             </CardContent>
