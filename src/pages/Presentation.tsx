@@ -8,7 +8,17 @@ import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { FreestylePresentation } from "@/components/FreestylePresentation";
 import { FreestyleSummary } from "@/components/FreestyleSummary";
+import { StrictPresentationView } from "@/components/StrictPresentationView";
 import { cn } from "@/lib/utils";
+
+interface WordPerformance {
+  word: string;
+  index: number;
+  status: "correct" | "hesitated" | "missed" | "skipped";
+  timeToSpeak?: number;
+  wasPrompted: boolean;
+  wrongWordsSaid?: string[];
+}
 
 interface Speech {
   id: string;
@@ -59,6 +69,7 @@ const Presentation = () => {
   // Results
   const [sessionResults, setSessionResults] = useState<any>(null);
   const [freestyleResults, setFreestyleResults] = useState<any>(null);
+  const [wordPerformanceData, setWordPerformanceData] = useState<WordPerformance[]>([]);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -536,69 +547,77 @@ const Presentation = () => {
     );
   }
 
-  // Show live presentation
-  const displayText = speech.text_current || speech.text_original;
-  const minutes = Math.floor(elapsedTime / 60);
-  const seconds = elapsedTime % 60;
+  // Handle performance data from strict presentation view
+  const handlePerformanceData = async (data: WordPerformance[]) => {
+    setWordPerformanceData(data);
+    setIsProcessing(true);
+    const duration = Math.floor((Date.now() - startTime) / 1000);
 
+    try {
+      toast({
+        title: "Processing...",
+        description: "Analyzing your presentation",
+      });
+
+      // Analyze presentation with detailed word performance
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-presentation', {
+        body: {
+          originalText: speech!.text_original,
+          speechId: speech!.id,
+          durationSeconds: duration,
+          wordPerformance: data,
+        }
+      });
+
+      if (analysisError) throw analysisError;
+
+      // Save to database
+      const { error: saveError } = await supabase
+        .from('presentation_sessions')
+        .insert({
+          speech_id: speech!.id,
+          transcript: analysisData.transcript,
+          accuracy: analysisData.accuracy,
+          hesitations: analysisData.hesitations,
+          missed_words: analysisData.missedWords,
+          duration_seconds: duration,
+          feedback_summary: analysisData.feedbackSummary,
+          feedback_advice: analysisData.feedbackAdvice,
+          feedback_next_step: analysisData.feedbackNextStep,
+        });
+
+      if (saveError) {
+        console.error('Error saving session:', saveError);
+      }
+
+      setSessionResults(analysisData);
+      setStage('summary');
+      setIsProcessing(false);
+
+    } catch (error: any) {
+      console.error('Error processing:', error);
+      toast({
+        variant: "destructive",
+        title: "Processing failed",
+        description: error.message,
+      });
+      setIsProcessing(false);
+      setStage('prep');
+    }
+  };
+
+  // Show strict presentation live view
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Timer & Status */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-background/95 backdrop-blur-sm px-6 py-3 rounded-full border border-border shadow-lg">
-        <div className="flex items-center gap-2">
-          {isRecording ? (
-            <>
-              <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm font-medium">Recording</span>
-            </>
-          ) : (
-            <>
-              <div className="w-3 h-3 rounded-full bg-muted" />
-              <span className="text-sm font-medium text-muted-foreground">Ready</span>
-            </>
-          )}
-        </div>
-        <div className="text-sm font-mono">
-          {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <div 
-          className="max-w-4xl mx-auto leading-relaxed text-center"
-          style={{ fontSize: `${fontSize}px` }}
-        >
-          {displayText.split(/\s+/).map((word, index) => (
-            <span key={index} className="inline-block px-1 opacity-80">
-              {word}{' '}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Bottom Controls */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-        <Button
-          size="lg"
-          variant={isRecording ? "destructive" : "default"}
-          onClick={isRecording ? handleStopRecording : handleRecordingStart}
-          disabled={isProcessing}
-          className="rounded-full h-16 w-16 p-0 shadow-lg"
-        >
-          {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-        </Button>
-      </div>
-
-      {isProcessing && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-lg font-medium">Analyzing your presentation...</p>
-          </div>
-        </div>
-      )}
-    </div>
+    <StrictPresentationView
+      text={speech.text_original}
+      speechLanguage={speech.speech_language || 'en-US'}
+      isRecording={isRecording}
+      isProcessing={isProcessing}
+      elapsedTime={elapsedTime}
+      onStartRecording={handleRecordingStart}
+      onStopRecording={handleStopRecording}
+      onPerformanceData={handlePerformanceData}
+    />
   );
 };
 
