@@ -494,8 +494,8 @@ const Practice = () => {
     console.log(`🔄 Queue processed: ${item.action} "${item.word}" at ${item.index}, remaining: ${wordQueueRef.current.length}`);
     
     // Schedule next word with adaptive stagger delay based on speaking pace
-    // Fast: 50ms, Normal: 80ms, Slow: 120ms
-    const staggerDelay = averageWordDelay < 400 ? 50 : averageWordDelay < 700 ? 80 : 120;
+    // Smoother: 100ms for fast, 150ms for normal, 200ms for slow
+    const staggerDelay = averageWordDelay < 400 ? 100 : averageWordDelay < 700 ? 150 : 200;
     
     if (wordQueueRef.current.length > 0) {
       queueProcessorTimeoutRef.current = setTimeout(processWordQueue, staggerDelay);
