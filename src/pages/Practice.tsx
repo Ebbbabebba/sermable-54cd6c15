@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, Lock, Unlock, X, Square, Clock, TrendingUp, Eye, Target, Pencil } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
@@ -17,7 +17,7 @@ import EnhancedWordTracker from "@/components/EnhancedWordTracker";
 import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
-import LockCountdown from "@/components/LockCountdown";
+
 import SegmentProgress from "@/components/SegmentProgress";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -76,9 +76,6 @@ const Practice = () => {
   const [showResults, setShowResults] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
-  const [isLocked, setIsLocked] = useState(false);
-  const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
-  const [overrideLock, setOverrideLock] = useState(false);
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [editedScriptText, setEditedScriptText] = useState("");
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
@@ -263,42 +260,6 @@ const Practice = () => {
         determineActiveSegments(segmentsData, data);
       }
       
-      // Check lock status with adaptive learning integration
-      const { data: schedule } = await supabase
-        .from("schedules")
-        .select("next_review_date, interval_days, card_state, ease_factor")
-        .eq("speech_id", id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-        
-      if (schedule) {
-        if (schedule.next_review_date) {
-          const reviewDate = new Date(schedule.next_review_date);
-          setNextReviewDate(reviewDate);
-          
-          console.log('🔒 Lock status check:', {
-            nextReviewDate: reviewDate,
-            now: new Date(),
-            isInFuture: reviewDate > new Date(),
-            subscriptionTier,
-            intervalDays: schedule.interval_days
-          });
-          
-          // Lock for free users when review date is in future (adaptive interval)
-          if (subscriptionTier === 'free' && reviewDate > new Date()) {
-            setIsLocked(true);
-            console.log('🔒 Speech locked until:', reviewDate);
-          } else {
-            setIsLocked(false);
-            console.log('🔓 Speech unlocked');
-          }
-        }
-      } else {
-        // No schedule yet, allow practice
-        setIsLocked(false);
-        console.log('📝 No schedule found, allowing practice');
-      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -312,18 +273,6 @@ const Practice = () => {
   };
 
   const handleStartPractice = () => {
-    // Check if locked and not overridden
-    if (isLocked && !overrideLock && subscriptionTier === 'free') {
-      console.log('🚫 Practice blocked - speech is locked');
-      toast({
-        variant: "destructive",
-        title: "Speech Locked",
-        description: `This speech is scheduled for review ${nextReviewDate ? format(nextReviewDate, 'MMM dd, yyyy \'at\' HH:mm') : 'soon'}. The adaptive learning system has determined the optimal practice timing based on your performance.`,
-        duration: 6000,
-      });
-      return;
-    }
-    
     console.log('✅ Starting practice session');
     setIsPracticing(true);
     setShowResults(false);
@@ -348,16 +297,6 @@ const Practice = () => {
     }
   };
   
-  const handleOverrideLock = () => {
-    setOverrideLock(true);
-    setIsPracticing(true);
-    setShowResults(false);
-    setSessionResults(null);
-    toast({
-      title: "Practice session activated",
-      description: "Read your speech aloud when ready, then start recording.",
-    });
-  };
 
   const handleSegmentComplete = (segmentIndex: number) => {
     console.log('✅ Segment completed:', segmentIndex);
@@ -1005,9 +944,6 @@ const Practice = () => {
                   learningStage: scheduleData.learningStage
                 });
                 
-                if (scheduleData.nextReviewDate) {
-                  setNextReviewDate(new Date(scheduleData.nextReviewDate));
-                }
               }
             }
           } catch (err) {
@@ -1299,7 +1235,7 @@ const Practice = () => {
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
                   <div className="flex items-center justify-center gap-2 text-primary">
-                    <Clock className="h-5 w-5" />
+                    <Target className="h-5 w-5" />
                     <span className="font-semibold text-lg">Next Practice</span>
                   </div>
                   
@@ -1332,7 +1268,7 @@ const Practice = () => {
                     </div>
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <TrendingUp className="h-3 w-3" />
+                        <Target className="h-3 w-3" />
                         <span className="text-xs">Stage</span>
                       </div>
                       <span className="font-semibold capitalize">{adaptiveScheduleResult.learningStage}</span>
@@ -1343,17 +1279,6 @@ const Practice = () => {
             </Card>
           )}
 
-          {/* Show next review date if available */}
-          {!adaptiveScheduleResult && nextReviewDate && (
-            <div className="mt-8 text-center p-4 bg-muted/30 rounded-lg animate-fade-in">
-              <p className="text-sm text-muted-foreground">
-                Next review scheduled for{" "}
-                <span className="font-medium text-foreground">
-                  {format(nextReviewDate, "MMM dd, yyyy 'at' HH:mm")}
-                </span>
-              </p>
-            </div>
-          )}
 
           <div className="flex justify-center mt-8">
             <Button
@@ -1504,62 +1429,14 @@ const Practice = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-12 space-y-4">
-                {isLocked && !overrideLock && (
-                  <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Clock className="h-6 w-6 text-primary animate-pulse" />
-                      <p className="font-bold text-lg">
-                        🎯 Next session due!
-                      </p>
-                    </div>
-                    <p className="text-md font-medium">
-                      Come back{" "}
-                      {nextReviewDate && (
-                        <LockCountdown 
-                          nextReviewDate={nextReviewDate} 
-                          className="font-bold text-primary" 
-                        />
-                      )}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      ⚡ Practicing at the right time strengthens your memory 3x more!
-                    </p>
-                    {subscriptionTier !== 'free' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="mt-3"
-                        onClick={handleOverrideLock}
-                      >
-                        <Unlock className="h-4 w-4 mr-2" />
-                        Practice Now Anyway
-                      </Button>
-                    )}
-                    {subscriptionTier === 'free' && (
-                      <div className="mt-3 p-2 bg-background/50 rounded text-sm">
-                        🔓 <strong>Premium:</strong> Practice anytime you want
-                        <Button 
-                          variant="link" 
-                          size="sm" 
-                          className="ml-2 h-auto p-0"
-                          onClick={() => navigate('/settings')}
-                        >
-                          Upgrade
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {(!isLocked || overrideLock) && (
-                  <Button 
-                    size="lg" 
-                    onClick={handleStartPractice}
-                    className="rounded-full px-8"
-                  >
-                    <Play className="h-5 w-5 mr-2" />
-                    Start Practice
-                  </Button>
-                )}
+                <Button 
+                  size="lg" 
+                  onClick={handleStartPractice}
+                  className="rounded-full px-8"
+                >
+                  <Play className="h-5 w-5 mr-2" />
+                  Start Practice
+                </Button>
               </div>
             </CardContent>
           </Card>
