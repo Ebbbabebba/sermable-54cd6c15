@@ -1342,58 +1342,9 @@ const Practice = () => {
               transcription={sessionResults.transcription}
               originalText={activeSegmentOriginalText || speech.text_original}
               currentText={activeSegmentText || speech.text_current}
+              adaptiveScheduleResult={adaptiveScheduleResult}
             />
           </div>
-
-          {/* Automatic Schedule Info */}
-          {adaptiveScheduleResult && (
-            <Card className="mt-8 border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 animate-fade-in">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <div className="flex items-center justify-center gap-2 text-primary">
-                    <Target className="h-5 w-5" />
-                    <span className="font-semibold text-lg">Next Practice</span>
-                  </div>
-                  
-                  <div className="text-3xl font-bold">
-                    {adaptiveScheduleResult.intervalMinutes < 60 
-                      ? `${Math.round(adaptiveScheduleResult.intervalMinutes)} min`
-                      : adaptiveScheduleResult.intervalMinutes < 24 * 60
-                      ? `${(adaptiveScheduleResult.intervalMinutes / 60).toFixed(1)} hours`
-                      : `${(adaptiveScheduleResult.intervalMinutes / (24 * 60)).toFixed(1)} days`}
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    {adaptiveScheduleResult.recommendation}
-                  </p>
-
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border/50">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Target className="h-3 w-3" />
-                        <span className="text-xs">Weighted Score</span>
-                      </div>
-                      <span className="font-semibold">{Math.round(adaptiveScheduleResult.weightedAccuracy)}%</span>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Eye className="h-3 w-3" />
-                        <span className="text-xs">Script Visible</span>
-                      </div>
-                      <span className="font-semibold">{Math.round(speech.base_word_visibility_percent || 100)}%</span>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Target className="h-3 w-3" />
-                        <span className="text-xs">Stage</span>
-                      </div>
-                      <span className="font-semibold capitalize">{adaptiveScheduleResult.learningStage}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
 
           <div className="flex justify-center mt-8">
