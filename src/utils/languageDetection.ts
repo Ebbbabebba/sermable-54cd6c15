@@ -12,11 +12,11 @@ const langCodeMap: Record<string, string> = {
 };
 
 export const detectTextLanguage = (text: string): string | null => {
-  if (!text || text.trim().length < 20) {
+  if (!text || text.trim().length < 10) {
     return null; // Not enough text to reliably detect language
   }
 
-  const detectedCode = franc(text, { minLength: 20 });
+  const detectedCode = franc(text, { minLength: 10 });
   
   if (detectedCode === 'und') {
     return null; // Undetermined language
