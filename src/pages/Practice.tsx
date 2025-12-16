@@ -7,7 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
@@ -81,6 +91,7 @@ const Practice = () => {
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [editedScriptText, setEditedScriptText] = useState("");
+  const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [settings, setSettings] = useState<PracticeSettingsConfig>({
     revealSpeed: 5,
     showWordOnPause: true,
@@ -1546,34 +1557,104 @@ const Practice = () => {
             <CardContent className="pt-6">
               <div className="text-center py-12 space-y-4">
                 {isLocked && nextReviewDate && (
-                  <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Clock className="h-5 w-5 text-primary" />
-                      <p className="font-medium">
-                        AI-Recommended Practice Time
-                      </p>
-                    </div>
-                    <p className="text-lg font-semibold text-primary">
-                      <LockCountdown nextReviewDate={nextReviewDate} />
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Optimal spacing strengthens memory retention
-                    </p>
-                  </div>
+                  <>
+                    {subscriptionTier === 'free' ? (
+                      // Free users: Hard lock
+                      <div className="mb-4 p-6 bg-gradient-to-r from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20">
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <Lock className="h-6 w-6 text-destructive" />
+                          <p className="font-semibold text-lg">Practice Locked</p>
+                        </div>
+                        <p className="text-2xl font-bold text-destructive mb-2">
+                          <LockCountdown nextReviewDate={nextReviewDate} />
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Spaced repetition works best when you practice at the optimal time.
+                          <br />
+                          Practicing too early can actually hurt memorization.
+                        </p>
+                        <div className="pt-4 border-t border-border/50">
+                          <p className="text-sm text-muted-foreground mb-3">
+                            <Crown className="h-4 w-4 inline mr-1 text-amber-500" />
+                            Premium members can practice anytime
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate("/settings")}
+                            className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+                          >
+                            <Crown className="h-4 w-4 mr-2" />
+                            Upgrade to Premium
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Premium users: Soft warning
+                      <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <Clock className="h-5 w-5 text-primary" />
+                          <p className="font-medium">
+                            AI-Recommended Practice Time
+                          </p>
+                        </div>
+                        <p className="text-lg font-semibold text-primary">
+                          <LockCountdown nextReviewDate={nextReviewDate} />
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Optimal spacing strengthens memory retention
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
                 <Button 
                   size="lg" 
-                  onClick={handleStartPractice}
+                  onClick={() => {
+                    if (isLocked && subscriptionTier !== 'free') {
+                      setShowTimingWarning(true);
+                    } else if (!isLocked || subscriptionTier === 'free') {
+                      if (!isLocked) handleStartPractice();
+                    }
+                  }}
+                  disabled={isLocked && subscriptionTier === 'free'}
                   className="rounded-full px-8"
                 >
                   <Play className="h-5 w-5 mr-2" />
-                  {isLocked ? "Practice Anyway" : "Start Practice"}
+                  {isLocked ? (subscriptionTier === 'free' ? "Locked" : "Practice Anyway") : "Start Practice"}
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
+
+      {/* Premium User Timing Warning Dialog */}
+      <AlertDialog open={showTimingWarning} onOpenChange={setShowTimingWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Practicing Early
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                The AI recommends waiting until <strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong> for optimal memory retention.
+              </p>
+              <p className="text-muted-foreground">
+                Spaced repetition is most effective when you practice at the right intervals. 
+                Practicing too early may reduce long-term retention, though some practice is always better than none.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Wait for Optimal Time</AlertDialogCancel>
+            <AlertDialogAction onClick={handleStartPractice}>
+              Practice Now Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Edit Script Dialog */}
       <Dialog open={isEditingScript} onOpenChange={setIsEditingScript}>
