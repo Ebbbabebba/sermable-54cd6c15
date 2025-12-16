@@ -879,10 +879,16 @@ const Practice = () => {
             description: "AI is analyzing your practice session",
           });
 
-          // Detect language from speech text
-          const { detectTextLanguage } = await import('@/utils/languageDetection');
-          const detectedLang = detectTextLanguage(speech!.text_current) || 'en';
-          console.log('Using language for analysis:', detectedLang);
+          // Use stored speech language, fallback to text detection
+          let detectedLang = speech?.speech_language || 'en';
+          if (!speech?.speech_language || speech.speech_language === 'en') {
+            const { detectTextLanguage } = await import('@/utils/languageDetection');
+            const textDetectedLang = detectTextLanguage(speech!.text_current);
+            if (textDetectedLang) {
+              detectedLang = textDetectedLang;
+            }
+          }
+          console.log('Using language for analysis:', detectedLang, '(stored:', speech?.speech_language, ')');
 
           // Get current session for auth
           const { data: { session } } = await supabase.auth.getSession();
