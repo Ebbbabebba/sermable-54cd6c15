@@ -563,24 +563,52 @@ serve(async (req) => {
     const adaptiveIntervalDays = adaptiveIntervalMinutes / (24 * 60);
 
     // Update schedule with enhanced tracking
-    const { error: scheduleError } = await supabase
+    // First check if schedule exists for this speech
+    const { data: existingSchedule } = await supabase
       .from('schedules')
-      .upsert({
-        speech_id: speechId,
-        session_date: new Date().toISOString().split('T')[0],
-        completed: true,
-        next_review_date: nextReviewDate.toISOString(),
-        interval_days: Math.ceil(adaptiveIntervalDays),
-        adaptive_frequency_multiplier: frequencyMultiplier,
-        days_until_deadline: daysUntilDeadline,
-        last_reviewed_at: new Date().toISOString(),
-        review_count: sessionCount + 1
-      }, {
-        onConflict: 'speech_id'
-      });
+      .select('id')
+      .eq('speech_id', speechId)
+      .single();
+    
+    let scheduleError;
+    if (existingSchedule) {
+      // Update existing schedule
+      const { error } = await supabase
+        .from('schedules')
+        .update({
+          session_date: new Date().toISOString().split('T')[0],
+          completed: true,
+          next_review_date: nextReviewDate.toISOString(),
+          interval_days: Math.ceil(adaptiveIntervalDays),
+          adaptive_frequency_multiplier: frequencyMultiplier,
+          days_until_deadline: daysUntilDeadline,
+          last_reviewed_at: new Date().toISOString(),
+          review_count: sessionCount + 1
+        })
+        .eq('speech_id', speechId);
+      scheduleError = error;
+    } else {
+      // Insert new schedule
+      const { error } = await supabase
+        .from('schedules')
+        .insert({
+          speech_id: speechId,
+          session_date: new Date().toISOString().split('T')[0],
+          completed: true,
+          next_review_date: nextReviewDate.toISOString(),
+          interval_days: Math.ceil(adaptiveIntervalDays),
+          adaptive_frequency_multiplier: frequencyMultiplier,
+          days_until_deadline: daysUntilDeadline,
+          last_reviewed_at: new Date().toISOString(),
+          review_count: sessionCount + 1
+        });
+      scheduleError = error;
+    }
 
     if (scheduleError) {
       console.error('Error updating schedule:', scheduleError);
+    } else {
+      console.log('✅ Schedule updated successfully with next_review_date:', nextReviewDate.toISOString());
     }
 
     // ============================================================
@@ -683,8 +711,8 @@ serve(async (req) => {
           avg_words_retained_per_session: newAvgWordsRetained,
           retention_decay_rate: decayRate,
           optimal_segment_length: optimalSegment,
-          preferred_visibility_reduction_rate: visibilityRate,
-          struggle_recovery_sessions: recoveryTime,
+          preferred_visibility_reduction_rate: Math.round(visibilityRate),
+          struggle_recovery_sessions: Math.round(recoveryTime),
           total_sessions_completed: totalSessions,
           total_words_practiced: existingAnalytics.total_words_practiced + wordsInSession,
           overall_mastery_velocity: masteryVelocity,
