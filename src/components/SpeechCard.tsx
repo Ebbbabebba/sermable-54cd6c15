@@ -2,12 +2,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Play, Trash2, Presentation, Clock } from "lucide-react";
+import { Calendar, Play, Trash2, Presentation } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +18,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import LockCountdown from "./LockCountdown";
 
 interface Speech {
   id: string;
@@ -38,8 +36,6 @@ interface SpeechCardProps {
 const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
-  const [isLocked, setIsLocked] = useState(false);
   
   const goalDate = new Date(speech.goal_date);
   const today = new Date();
@@ -51,32 +47,6 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
   const wordsMemorized = Math.max(0, originalWords - currentWords);
   const progress = originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
-
-  useEffect(() => {
-    const checkSchedule = async () => {
-      try {
-        const { data: schedule } = await supabase
-          .from("schedules")
-          .select("next_review_date")
-          .eq("speech_id", speech.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (schedule?.next_review_date) {
-          const reviewDate = new Date(schedule.next_review_date);
-          setNextReviewDate(reviewDate);
-          setIsLocked(reviewDate > new Date());
-        }
-      } catch (error) {
-        console.error('Error checking schedule:', error);
-      }
-    };
-    
-    checkSchedule();
-    const interval = setInterval(checkSchedule, 60000);
-    return () => clearInterval(interval);
-  }, [speech.id]);
 
   const handleCardClick = () => {
     navigate(`/practice/${speech.id}`);
@@ -131,16 +101,6 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           <Calendar className="h-4 w-4" />
           <span>Goal: {format(goalDate, "MMM dd, yyyy")}</span>
         </div>
-
-        {isLocked && nextReviewDate && (
-          <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
-            <Clock className="h-4 w-4 text-primary" />
-            <div className="flex-1">
-              <span className="text-sm">Next practice </span>
-              <LockCountdown nextReviewDate={nextReviewDate} className="text-primary font-medium text-sm" />
-            </div>
-          </div>
-        )}
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
