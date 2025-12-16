@@ -1,8 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+interface AdaptiveScheduleResult {
+  intervalMinutes: number;
+  recommendation: string;
+  nextReviewDate: string;
+}
 
 interface PracticeResultsProps {
   accuracy: number;
@@ -12,6 +18,7 @@ interface PracticeResultsProps {
   transcription: string;
   originalText: string;
   currentText: string;
+  adaptiveScheduleResult?: AdaptiveScheduleResult | null;
 }
 
 const PracticeResults = ({ 
@@ -21,7 +28,8 @@ const PracticeResults = ({
   analysis, 
   transcription,
   originalText,
-  currentText
+  currentText,
+  adaptiveScheduleResult
 }: PracticeResultsProps) => {
   // Parse words and determine their status
   const originalWords = originalText.split(/\s+/).filter(word => word.length > 0);
@@ -130,6 +138,32 @@ const PracticeResults = ({
           <h4 className="font-semibold">AI Feedback</h4>
           <p className="text-sm text-muted-foreground">{analysis}</p>
         </div>
+
+        {/* Recommended Next Practice */}
+        {adaptiveScheduleResult && (
+          <div className="p-4 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-primary">Recommended Next Practice:</span>
+                  <span className="font-bold text-lg">
+                    {adaptiveScheduleResult.intervalMinutes < 60 
+                      ? `${Math.round(adaptiveScheduleResult.intervalMinutes)} min`
+                      : adaptiveScheduleResult.intervalMinutes < 24 * 60
+                      ? `${(adaptiveScheduleResult.intervalMinutes / 60).toFixed(1)} hours`
+                      : `${(adaptiveScheduleResult.intervalMinutes / (24 * 60)).toFixed(1)} days`}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {adaptiveScheduleResult.recommendation}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Problem Words */}
         {(missedWords.length > 0 || delayedWords.length > 0) && (
