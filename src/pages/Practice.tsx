@@ -541,19 +541,28 @@ const Practice = () => {
 
   const setupSpeechRecognition = async () => {
     try {
+      // Log the current speech data to debug language issues
+      console.log('🔍 Speech data at recognition setup:', {
+        id: speech?.id,
+        speech_language: speech?.speech_language,
+        text_preview: speech?.text_current?.substring(0, 50)
+      });
+      
       // Use speech's stored language first, then detect from text as fallback
       let speechLang = speech?.speech_language || 'en';
       
-      // If speech language is not set or is default, try to detect from text
-      if (!speech?.speech_language || speech.speech_language === 'en') {
+      // Only fallback to detection if speech_language is null/undefined (not if it's 'en')
+      // This ensures we respect explicitly set languages
+      if (!speech?.speech_language) {
         const { detectTextLanguage } = await import('@/utils/languageDetection');
         const detectedLang = detectTextLanguage(speech!.text_current);
         if (detectedLang) {
           speechLang = detectedLang;
+          console.log('🔍 Detected language from text:', detectedLang);
         }
       }
       
-      console.log('🌍 Using language for speech recognition:', speechLang);
+      console.log('🌍 Using language for speech recognition:', speechLang, '(stored:', speech?.speech_language, ')');
       
       // Start Web Speech API for instant transcription
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
