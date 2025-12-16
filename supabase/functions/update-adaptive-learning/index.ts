@@ -562,25 +562,60 @@ serve(async (req) => {
     const nextReviewDate = new Date(Date.now() + adaptiveIntervalMinutes * 60 * 1000);
     const adaptiveIntervalDays = adaptiveIntervalMinutes / (24 * 60);
 
-    // Update schedule with enhanced tracking
-    const { error: scheduleError } = await supabase
+    // Update schedule with enhanced tracking - use update then insert fallback
+    const sessionDate = new Date().toISOString().split('T')[0];
+    
+    // First try to update existing schedule for this speech
+    const { data: existingSchedule } = await supabase
       .from('schedules')
-      .upsert({
-        speech_id: speechId,
-        session_date: new Date().toISOString().split('T')[0],
-        completed: true,
-        next_review_date: nextReviewDate.toISOString(),
-        interval_days: Math.ceil(adaptiveIntervalDays),
-        adaptive_frequency_multiplier: frequencyMultiplier,
-        days_until_deadline: daysUntilDeadline,
-        last_reviewed_at: new Date().toISOString(),
-        review_count: sessionCount + 1
-      }, {
-        onConflict: 'speech_id'
-      });
-
-    if (scheduleError) {
-      console.error('Error updating schedule:', scheduleError);
+      .select('id')
+      .eq('speech_id', speechId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (existingSchedule) {
+      // Update existing schedule
+      const { error: updateError } = await supabase
+        .from('schedules')
+        .update({
+          session_date: sessionDate,
+          completed: true,
+          next_review_date: nextReviewDate.toISOString(),
+          interval_days: Math.ceil(adaptiveIntervalDays),
+          adaptive_frequency_multiplier: frequencyMultiplier,
+          days_until_deadline: daysUntilDeadline,
+          last_reviewed_at: new Date().toISOString(),
+          review_count: sessionCount + 1
+        })
+        .eq('id', existingSchedule.id);
+      
+      if (updateError) {
+        console.error('Error updating schedule:', updateError);
+      } else {
+        console.log(`✅ Schedule updated: next review in ${Math.round(adaptiveIntervalMinutes)} minutes`);
+      }
+    } else {
+      // Insert new schedule
+      const { error: insertError } = await supabase
+        .from('schedules')
+        .insert({
+          speech_id: speechId,
+          session_date: sessionDate,
+          completed: true,
+          next_review_date: nextReviewDate.toISOString(),
+          interval_days: Math.ceil(adaptiveIntervalDays),
+          adaptive_frequency_multiplier: frequencyMultiplier,
+          days_until_deadline: daysUntilDeadline,
+          last_reviewed_at: new Date().toISOString(),
+          review_count: sessionCount + 1
+        });
+      
+      if (insertError) {
+        console.error('Error inserting schedule:', insertError);
+      } else {
+        console.log(`✅ Schedule created: next review in ${Math.round(adaptiveIntervalMinutes)} minutes`);
+      }
     }
 
     // ============================================================
