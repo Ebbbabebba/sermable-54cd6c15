@@ -549,31 +549,15 @@ serve(async (req) => {
       });
     }
     
-    // ========== HARD DEADLINE CAPS ==========
-    // These override everything - can't risk missing deadline
-    const originalInterval = adaptiveIntervalMinutes;
+    // ========== AI-RECOMMENDED INTERVAL (No Hard Caps) ==========
+    // The deadline pressure is already factored into the algorithm through pressureModifier
+    // Allow the AI to fully determine optimal spacing based on performance, visibility, and learning factors
+    console.log(`🤖 AI-calculated interval: ${Math.round(adaptiveIntervalMinutes)} min (${(adaptiveIntervalMinutes / 60).toFixed(1)}h)`, {
+      daysUntilDeadline,
+      deadlinePressureApplied: deadlinePressure > 0
+    });
     
-    if (daysUntilDeadline <= 0) {
-      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 30); // Max 30 min if past deadline
-    } else if (daysUntilDeadline === 1) {
-      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 60); // Max 1 hour
-    } else if (daysUntilDeadline === 2) {
-      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 2 * 60); // Max 2 hours
-    } else if (daysUntilDeadline <= 3) {
-      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 4 * 60); // Max 4 hours
-    } else if (daysUntilDeadline <= 5) {
-      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 8 * 60); // Max 8 hours
-    } else if (daysUntilDeadline <= 7) {
-      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 12 * 60); // Max 12 hours
-    } else if (daysUntilDeadline <= 14) {
-      adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, 24 * 60); // Max 1 day
-    }
-    
-    if (originalInterval !== adaptiveIntervalMinutes) {
-      console.log(`⚠️ Deadline cap: ${Math.round(originalInterval / 60)}h → ${Math.round(adaptiveIntervalMinutes / 60)}h (${daysUntilDeadline} days left)`);
-    }
-    
-    // Absolute bounds: 1 minute to 7 days
+    // Absolute bounds: 1 minute to 7 days (soft guidance, not hard caps)
     adaptiveIntervalMinutes = Math.max(1, Math.min(7 * 24 * 60, adaptiveIntervalMinutes));
     const nextReviewDate = new Date(Date.now() + adaptiveIntervalMinutes * 60 * 1000);
     const adaptiveIntervalDays = adaptiveIntervalMinutes / (24 * 60);
