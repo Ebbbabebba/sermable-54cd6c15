@@ -305,24 +305,31 @@ Compare them and identify:
 5. difficultyScore: 0-100 score indicating speech complexity
 6. analysis: DETAILED feedback explaining the score
 
-ANALYSIS FEEDBACK REQUIREMENTS:
-The analysis MUST explain exactly why the user didn't achieve 100%. Include observations on:
-- Word accuracy: Which specific words were missed, substituted, or added?
-- Hesitations: Were there noticeable pauses or stammers? Where?
-- Pronunciation: Any words that sounded unclear or mispronounced?
-- Emphasis: Was the delivery flat, or did key words have proper stress?
-- Pacing: Was the speech too fast, too slow, or well-paced?
-- Flow: Was the speech natural and connected, or choppy?
+ANALYSIS FEEDBACK REQUIREMENTS (CRITICAL - BE SPECIFIC):
+The analysis MUST explain exactly why the user didn't achieve 100%. YOU MUST include:
 
-If accuracy is 100%, congratulate them and note what went well.
-If accuracy is less than 100%, specifically explain what caused each point deduction.
+1. **WORD-LEVEL SPECIFICS** (REQUIRED for <100%):
+   - List EXACT words that were missed: "You skipped 'furthermore' and 'consequently'"
+   - List EXACT word substitutions: "You said 'shares' instead of 'chairs'"
+   - List EXACT hesitations: "You paused before saying 'paradigm'"
 
-Example feedback for non-100%:
-- "92% accuracy. You hesitated on 'consolidation' and substituted 'exponentially' with 'extensively'. Your pacing was good but try emphasizing key terms more confidently."
-- "85% accuracy. Missed the word 'furthermore', and 'paradigm' was unclear. Good flow overall - work on those two words."
+2. **Quantified feedback**:
+   - "You missed 3 words out of 50 total"
+   - "You hesitated on 2 words"
+   - "You substituted 1 word"
 
-Example feedback for 100%:
-- "Perfect! 100% accuracy. Great pronunciation, natural pacing, and confident delivery throughout."
+3. **Actionable advice**:
+   - Which specific words to practice
+   - Whether pacing was an issue
+
+If accuracy is 100%, congratulate briefly: "Perfect delivery! All words spoken correctly with natural flow."
+
+If accuracy is less than 100%, YOU MUST list the specific problem words. Generic feedback like "good effort" is NOT acceptable.
+
+EXAMPLE FEEDBACK (FOLLOW THIS FORMAT):
+- "85% accuracy. You missed: 'furthermore', 'nevertheless'. You said 'extensive' instead of 'exponentially'. Practice these 3 words before your next session."
+- "92% accuracy. You hesitated on 'consolidation' (2 second pause). All other words were correct. Work on that transition."
+- "78% accuracy. Missed 5 words: 'paradigm', 'synthesis', 'albeit', 'notwithstanding', 'henceforth'. Focus on memorizing these key transitions."
 
 Return ONLY this JSON structure with no extra text:
 {

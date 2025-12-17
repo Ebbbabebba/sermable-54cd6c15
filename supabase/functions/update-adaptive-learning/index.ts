@@ -127,22 +127,34 @@ serve(async (req) => {
     
     // Track consecutive struggles with severity weighting
     // CRITICAL: Use RAW accuracy for struggle detection - don't penalize users for high visibility
-    let consecutiveStruggles = speech.consecutive_struggles || 0;
+    const previousStruggles = speech.consecutive_struggles || 0;
+    let consecutiveStruggles = previousStruggles;
+    
+    console.log('🔍 Struggle detection - raw sessionAccuracy:', sessionAccuracy, 'previous struggles:', previousStruggles);
     
     if (sessionAccuracy >= 95) {
       // Near-perfect or perfect raw delivery - reset struggles completely
       consecutiveStruggles = 0;
+      console.log('✅ Excellent performance (>=95%) - resetting struggles to 0');
     } else if (sessionAccuracy >= 85) {
       // Good raw delivery - reduce struggles significantly
-      consecutiveStruggles = Math.max(0, consecutiveStruggles - 2);
+      consecutiveStruggles = Math.max(0, previousStruggles - 2);
+      console.log('✅ Good performance (>=85%) - reducing struggles by 2');
     } else if (sessionAccuracy >= 70) {
       // Decent raw delivery - reduce struggles
-      consecutiveStruggles = Math.max(0, consecutiveStruggles - 1);
+      consecutiveStruggles = Math.max(0, previousStruggles - 1);
+      console.log('✅ Decent performance (>=70%) - reducing struggles by 1');
     } else if (sessionAccuracy < 60) {
       // Actually struggling with words - increment
-      consecutiveStruggles += (sessionAccuracy < 40 ? 2 : 1);
+      const increment = sessionAccuracy < 40 ? 2 : 1;
+      consecutiveStruggles = previousStruggles + increment;
+      console.log('⚠️ Struggling (<60%) - incrementing struggles by', increment, '→', consecutiveStruggles);
+    } else {
+      console.log('ℹ️ Moderate performance (60-70%) - no change to struggles');
     }
     // Between 60-70%: no change to consecutive struggles
+    
+    console.log('📊 Final consecutive_struggles:', consecutiveStruggles, '(was:', previousStruggles, ')');
     
     // Calculate days until deadline
     const goalDate = new Date(speech.goal_date);

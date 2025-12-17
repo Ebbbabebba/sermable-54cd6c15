@@ -888,16 +888,9 @@ const Practice = () => {
             description: "AI is analyzing your practice session",
           });
 
-          // Use stored speech language, fallback to text detection
-          let detectedLang = speech?.speech_language || 'en';
-          if (!speech?.speech_language || speech.speech_language === 'en') {
-            const { detectTextLanguage } = await import('@/utils/languageDetection');
-            const textDetectedLang = detectTextLanguage(speech!.text_current);
-            if (textDetectedLang) {
-              detectedLang = textDetectedLang;
-            }
-          }
-          console.log('Using language for analysis:', detectedLang, '(stored:', speech?.speech_language, ')');
+          // Use stored speech language directly - no re-detection
+          const speechLanguage = speech?.speech_language || 'en';
+          console.log('Using stored speech language for analysis:', speechLanguage);
 
           // Get current session for auth
           const { data: { session } } = await supabase.auth.getSession();
@@ -912,7 +905,7 @@ const Practice = () => {
               originalText: activeSegmentText || speech!.text_original, // Analyze active segment or full speech
               speechId: speech!.id,
               userTier: subscriptionTier,
-              language: detectedLang,
+              language: speechLanguage,
               skillLevel: skillLevel,
             },
             headers: {
@@ -1215,22 +1208,44 @@ const Practice = () => {
       <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
         <LoadingOverlay isVisible={isProcessing} />
         
-        {/* Exit button */}
-        <div className="absolute top-4 left-4 z-10">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              if (isRecording) {
-                audioRecorderRef.current?.stopRecording();
-              }
-              setIsPracticing(false);
-              setIsRecording(false);
-            }}
-            className="rounded-full hover:bg-card/80 backdrop-blur-sm"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+        {/* Header with exit button and progress indicator */}
+        <div className="absolute top-0 left-0 right-0 z-10 px-4 pt-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (isRecording) {
+                  audioRecorderRef.current?.stopRecording();
+                }
+                setIsPracticing(false);
+                setIsRecording(false);
+              }}
+              className="rounded-full hover:bg-card/80 backdrop-blur-sm shrink-0"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            
+            {/* Progress indicator during recording */}
+            {isRecording && (
+              <div className="flex-1 max-w-md">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>Progress</span>
+                  <span>
+                    {expectedWordIndex} / {(activeSegmentText || speech.text_original).split(/\s+/).filter(w => w.trim()).length} words
+                  </span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ 
+                      width: `${Math.min(100, (expectedWordIndex / Math.max(1, (activeSegmentText || speech.text_original).split(/\s+/).filter(w => w.trim()).length)) * 100)}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Removed: Giant overlay popup - hints now appear inline in BracketedTextDisplay */}
