@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from "date-fns";
 
 interface LockCountdownProps {
@@ -7,6 +8,7 @@ interface LockCountdownProps {
 }
 
 const LockCountdown = ({ nextReviewDate, className = "" }: LockCountdownProps) => {
+  const { t } = useTranslation();
   const [timeRemaining, setTimeRemaining] = useState<string>("");
 
   useEffect(() => {
@@ -16,7 +18,7 @@ const LockCountdown = ({ nextReviewDate, className = "" }: LockCountdownProps) =
       const totalSeconds = differenceInSeconds(nextReviewDate, now);
 
       if (totalSeconds <= 0) {
-        setTimeRemaining("Ready now!");
+        setTimeRemaining(t('practice.countdown.readyNow'));
         return;
       }
 
@@ -25,34 +27,35 @@ const LockCountdown = ({ nextReviewDate, className = "" }: LockCountdownProps) =
       const minutes = totalMinutes % 60;
 
       if (days > 0) {
-        // More than 1 day: show days and hours
         if (hours > 0) {
-          setTimeRemaining(`in ${days}d ${hours}h`);
+          setTimeRemaining(t('practice.countdown.inDaysHours', { days, hours }));
         } else {
-          setTimeRemaining(`in ${days} day${days !== 1 ? 's' : ''}`);
+          setTimeRemaining(days === 1 
+            ? t('practice.countdown.inDays', { days }) 
+            : t('practice.countdown.inDaysPlural', { days }));
         }
       } else if (hours > 0) {
-        // Less than 1 day: show hours and minutes
         if (minutes > 0) {
-          setTimeRemaining(`in ${hours}h ${minutes}m`);
+          setTimeRemaining(t('practice.countdown.inHoursMinutes', { hours, minutes }));
         } else {
-          setTimeRemaining(`in ${hours} hour${hours !== 1 ? 's' : ''}`);
+          setTimeRemaining(hours === 1 
+            ? t('practice.countdown.inHours', { hours }) 
+            : t('practice.countdown.inHoursPlural', { hours }));
         }
       } else if (minutes > 0) {
-        // Less than 1 hour: show minutes
-        setTimeRemaining(`in ${minutes} minute${minutes !== 1 ? 's' : ''}`);
+        setTimeRemaining(minutes === 1 
+          ? t('practice.countdown.inMinutes', { minutes }) 
+          : t('practice.countdown.inMinutesPlural', { minutes }));
       } else {
-        // Less than 1 minute
-        setTimeRemaining("in less than a minute");
+        setTimeRemaining(t('practice.countdown.inLessThanMinute'));
       }
     };
 
     updateCountdown();
-    // Update every 10 seconds for more responsive countdown
     const interval = setInterval(updateCountdown, 10000);
 
     return () => clearInterval(interval);
-  }, [nextReviewDate]);
+  }, [nextReviewDate, t]);
 
   return (
     <span className={className}>
