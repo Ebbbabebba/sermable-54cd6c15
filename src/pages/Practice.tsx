@@ -1025,6 +1025,43 @@ const Practice = () => {
           )?.id;
 
           // Update segment word mastery with hidden word failure tracking
+          // Map AI's missedWords (strings) back to indices for accurate tracking
+          const originalWords = (activeSegmentOriginalText || speech!.text_original).split(/\s+/).filter((w: string) => w.trim());
+          
+          const missedWordSet = new Set(
+            (data.missedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
+          );
+          const hesitatedWordSet = new Set(
+            (data.delayedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
+          );
+          
+          // Build indices from AI's word lists
+          const missedIndicesFromAI: number[] = [];
+          const hesitatedIndicesFromAI: number[] = [];
+          
+          originalWords.forEach((word: string, idx: number) => {
+            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+            if (missedWordSet.has(cleanWord)) {
+              missedIndicesFromAI.push(idx);
+            }
+            if (hesitatedWordSet.has(cleanWord)) {
+              hesitatedIndicesFromAI.push(idx);
+            }
+          });
+          
+          // Combine real-time tracking with AI analysis for best accuracy
+          const combinedMissedIndices = [...new Set([
+            ...Array.from(missedWordsIndices),
+            ...missedIndicesFromAI
+          ])];
+          const combinedHesitatedIndices = [...new Set([
+            ...Array.from(hesitatedWordsIndices),
+            ...hesitatedIndicesFromAI
+          ])];
+          
+          console.log('📊 Missed indices - realtime:', Array.from(missedWordsIndices), 'AI:', missedIndicesFromAI, 'combined:', combinedMissedIndices);
+          console.log('📊 Hesitated indices - realtime:', Array.from(hesitatedWordsIndices), 'AI:', hesitatedIndicesFromAI, 'combined:', combinedHesitatedIndices);
+
           try {
             const { error: masteryError } = await supabase.functions.invoke('update-segment-word-mastery', {
               body: {
@@ -1032,8 +1069,8 @@ const Practice = () => {
                 segmentId: currentSegmentId,
                 missedWords: data.missedWords || [],
                 hesitatedWords: data.delayedWords || [],
-                missedIndices: Array.from(missedWordsIndices),
-                hesitatedIndices: Array.from(hesitatedWordsIndices),
+                missedIndices: combinedMissedIndices,
+                hesitatedIndices: combinedHesitatedIndices,
                 hiddenIndices: hiddenIndices
               }
             });
@@ -1041,7 +1078,7 @@ const Practice = () => {
             if (masteryError) {
               console.error('Error updating segment word mastery:', masteryError);
             } else {
-              console.log('✅ Segment word mastery updated with hidden word tracking');
+              console.log('✅ Segment word mastery updated with combined index tracking');
             }
           } catch (err) {
             console.error('Failed to update segment word mastery:', err);
