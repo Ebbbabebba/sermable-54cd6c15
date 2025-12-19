@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ interface FreestyleSegment {
 const Presentation = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   
   const [speech, setSpeech] = useState<Speech | null>(null);
@@ -106,10 +108,28 @@ const Presentation = () => {
         ...data,
         presentation_mode: (data.presentation_mode === 'freestyle' ? 'freestyle' : 'strict') as 'strict' | 'freestyle'
       });
+
+      // Switch UI language to match speech language
+      if (data.speech_language) {
+        const langMap: Record<string, string> = {
+          'sv': 'sv', 'sv-SE': 'sv',
+          'en': 'en', 'en-US': 'en', 'en-GB': 'en',
+          'de': 'de', 'de-DE': 'de',
+          'fr': 'fr', 'fr-FR': 'fr',
+          'es': 'es', 'es-ES': 'es',
+          'it': 'it', 'it-IT': 'it',
+          'pt': 'pt', 'pt-BR': 'pt', 'pt-PT': 'pt',
+        };
+        const uiLang = langMap[data.speech_language] || 'en';
+        if (i18n.language !== uiLang) {
+          i18n.changeLanguage(uiLang);
+          console.log('🌐 Switched UI language to:', uiLang, 'based on speech language:', data.speech_language);
+        }
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error loading speech",
+        title: t('common.error'),
         description: error.message,
       });
       navigate("/dashboard");

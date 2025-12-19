@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,7 @@ interface SessionResults {
 const Practice = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const { theme } = useTheme();
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -278,6 +280,24 @@ const Practice = () => {
       if (error) throw error;
       setSpeech(data);
 
+      // Switch UI language to match speech language
+      if (data.speech_language) {
+        const langMap: Record<string, string> = {
+          'sv': 'sv', 'sv-SE': 'sv',
+          'en': 'en', 'en-US': 'en', 'en-GB': 'en',
+          'de': 'de', 'de-DE': 'de',
+          'fr': 'fr', 'fr-FR': 'fr',
+          'es': 'es', 'es-ES': 'es',
+          'it': 'it', 'it-IT': 'it',
+          'pt': 'pt', 'pt-BR': 'pt', 'pt-PT': 'pt',
+        };
+        const uiLang = langMap[data.speech_language] || 'en';
+        if (i18n.language !== uiLang) {
+          i18n.changeLanguage(uiLang);
+          console.log('🌐 Switched UI language to:', uiLang, 'based on speech language:', data.speech_language);
+        }
+      }
+
       // Load segments
       const { data: segmentsData, error: segmentsError } = await supabase
         .from("speech_segments")
@@ -316,7 +336,7 @@ const Practice = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error loading speech",
+        title: t('common.error'),
         description: error.message,
       });
       navigate("/dashboard");
@@ -1335,12 +1355,12 @@ const Practice = () => {
             {isRecording ? (
               <>
                 <Square className="h-5 w-5 mr-2" />
-                Stop Recording
+                {t('practice.stopRecording')}
               </>
             ) : (
               <>
                 <Play className="h-5 w-5 mr-2" />
-                Start Recording
+                {t('practice.startRecording')}
               </>
             )}
           </Button>
@@ -1381,8 +1401,8 @@ const Practice = () => {
         {/* Centered analysis content */}
         <div className="container mx-auto px-4 py-16 max-w-4xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Practice Complete</h1>
-            <p className="text-lg text-muted-foreground">Here's how you did</p>
+            <h1 className="text-3xl font-bold mb-2">{t('practice.results.title')}</h1>
+            <p className="text-lg text-muted-foreground">{t('practice.results.feedback')}</p>
           </div>
 
           <div ref={resultsRef} className="animate-fade-in">
@@ -1455,7 +1475,7 @@ const Practice = () => {
               className="rounded-full px-8"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              {t('practice.results.dashboard')}
             </Button>
           </div>
         </div>
@@ -1477,7 +1497,7 @@ const Practice = () => {
                 onClick={() => navigate("/dashboard")}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                {t('common.back')}
               </Button>
               {speech && (
                 <>
