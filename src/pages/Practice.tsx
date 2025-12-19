@@ -331,8 +331,8 @@ const Practice = () => {
     // Check if locked
     if (isLocked && nextReviewDate) {
       toast({
-        title: "Practice Scheduled",
-        description: `The AI recommends practicing again ${nextReviewDate ? format(nextReviewDate, "'at' HH:mm") : 'soon'}. Starting anyway...`,
+        title: t('practice.practiceScheduled'),
+        description: t('practice.aiRecommendsAt', { time: format(nextReviewDate, "'at' HH:mm") }),
         duration: 3000,
       });
     }
@@ -345,18 +345,18 @@ const Practice = () => {
     // Show segment info
     if (activeSegmentIndices.length > 0) {
       const segmentInfo = activeSegmentIndices.length === 1
-        ? `Learning Segment ${activeSegmentIndices[0] + 1}`
-        : `Practicing Segments ${activeSegmentIndices[0] + 1} & ${activeSegmentIndices[1] + 1} together`;
+        ? t('practice.learningSegment', { num: activeSegmentIndices[0] + 1 })
+        : t('practice.practicingSegments', { num1: activeSegmentIndices[0] + 1, num2: activeSegmentIndices[1] + 1 });
       
       toast({
-        title: "Practice mode activated",
-        description: `${segmentInfo}. Read aloud when ready, then start recording.`,
+        title: t('practice.practiceActivated'),
+        description: t('practice.readAloudSegment', { info: segmentInfo }),
         duration: 5000,
       });
     } else {
       toast({
-        title: "Practice mode activated",
-        description: "Read your speech aloud when ready, then start recording.",
+        title: t('practice.practiceActivated'),
+        description: t('practice.readAloudGeneral'),
       });
     }
   };
@@ -811,8 +811,8 @@ const Practice = () => {
       } else {
         console.warn('⚠️ Web Speech API not supported on this device');
         toast({
-          title: "Limited Support",
-          description: "Real-time word tracking is not available on this device. Your speech will be analyzed after recording.",
+          title: t('practice.limitedSupport'),
+          description: t('practice.limitedSupportDesc'),
           duration: 5000,
         });
       }
@@ -995,8 +995,8 @@ const Practice = () => {
 
               if (shouldMerge) {
                 toast({
-                  title: "🎉 Segments Merged!",
-                  description: "Great work! Both segments are now merged into your learning flow.",
+                  title: `🎉 ${t('practice.segmentsMerged')}`,
+                  description: t('practice.segmentsMergedDesc'),
                   duration: 5000,
                 });
               }
@@ -1130,15 +1130,15 @@ const Practice = () => {
           // progressive word hiding is driven by the adaptive mastery system.
 
           toast({
-            title: "Analysis complete!",
-            description: `${data.accuracy}% accuracy.`,
+            title: t('practice.analysisComplete'),
+            description: t('practice.accuracyPercent', { percent: data.accuracy }),
           });
         } catch (innerError: any) {
           console.error('Error in analysis:', innerError);
           toast({
             variant: "destructive",
-            title: "Analysis failed",
-            description: innerError.message || "Failed to analyze your recording. Please try again.",
+            title: t('practice.analysisFailed'),
+            description: innerError.message || t('practice.analysisFailedDesc'),
           });
           setIsProcessing(false);
         }
@@ -1147,8 +1147,8 @@ const Practice = () => {
       reader.onerror = () => {
         toast({
           variant: "destructive",
-          title: "Processing failed",
-          description: "Failed to read audio file. Please try again.",
+          title: t('practice.processingFailed'),
+          description: t('practice.processingFailedDesc'),
         });
         setIsProcessing(false);
       };
@@ -1157,8 +1157,8 @@ const Practice = () => {
       console.error('Error processing recording:', error);
       toast({
         variant: "destructive",
-        title: "Processing failed",
-        description: error.message || "Failed to process your recording. Please try again.",
+        title: t('practice.processingFailed'),
+        description: error.message || t('practice.processingFailedDesc'),
       });
       setIsProcessing(false);
     }
@@ -1213,8 +1213,8 @@ const Practice = () => {
         });
       
       toast({
-        title: "Script updated",
-        description: "Your speech text has been saved.",
+        title: t('practice.scriptUpdated'),
+        description: t('practice.scriptUpdatedDesc'),
       });
       
       setIsEditingScript(false);
@@ -1225,7 +1225,7 @@ const Practice = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Failed to save",
+        title: t('practice.failedToSave'),
         description: error.message,
       });
     }
@@ -1269,9 +1269,9 @@ const Practice = () => {
             {isRecording && (
               <div className="flex-1 max-w-md">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                  <span>Progress</span>
+                  <span>{t('practice.progress')}</span>
                   <span>
-                    {expectedWordIndex} / {(activeSegmentText || speech.text_original).split(/\s+/).filter(w => w.trim()).length} words
+                    {expectedWordIndex} / {(activeSegmentText || speech.text_original).split(/\s+/).filter(w => w.trim()).length} {t('practice.words')}
                   </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -1406,7 +1406,7 @@ const Practice = () => {
                 <div className="text-center space-y-4">
                   <div className="flex items-center justify-center gap-2 text-primary">
                     <Target className="h-5 w-5" />
-                    <span className="font-semibold text-lg">Next Practice</span>
+                    <span className="font-semibold text-lg">{t('practice.nextPractice')}</span>
                   </div>
                   
                   <div className="text-3xl font-bold">
@@ -1425,21 +1425,21 @@ const Practice = () => {
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                         <Target className="h-3 w-3" />
-                        <span className="text-xs">Weighted Score</span>
+                        <span className="text-xs">{t('practice.weightedScore')}</span>
                       </div>
                       <span className="font-semibold">{Math.round(adaptiveScheduleResult.weightedAccuracy)}%</span>
                     </div>
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                         <Eye className="h-3 w-3" />
-                        <span className="text-xs">Script Visible</span>
+                        <span className="text-xs">{t('practice.scriptVisible')}</span>
                       </div>
                       <span className="font-semibold">{Math.round(speech.base_word_visibility_percent || 100)}%</span>
                     </div>
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                         <Target className="h-3 w-3" />
-                        <span className="text-xs">Stage</span>
+                        <span className="text-xs">{t('practice.stage')}</span>
                       </div>
                       <span className="font-semibold capitalize">{adaptiveScheduleResult.learningStage}</span>
                     </div>
@@ -1487,7 +1487,7 @@ const Practice = () => {
                     <h1 className="text-lg font-semibold capitalize">{speech.title}</h1>
                     {speech.goal_date && (
                       <p className="text-sm text-muted-foreground">
-                        Goal: {format(new Date(speech.goal_date), "PPP")}
+                        {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
                       </p>
                     )}
                   </div>
@@ -1501,7 +1501,7 @@ const Practice = () => {
                 onClick={handleOpenEditScript}
               >
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit Script
+                {t('practice.editScript')}
               </Button>
               <Button
                 variant="ghost"
@@ -1509,7 +1509,7 @@ const Practice = () => {
                 onClick={() => navigate(`/presentation/${id}`)}
               >
                 <Presentation className="h-4 w-4 mr-2" />
-                Presentation Mode
+                {t('practice.presentationMode')}
               </Button>
             </div>
           </div>
@@ -1529,13 +1529,13 @@ const Practice = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">
                       {activeSegmentIndices.length === 1 
-                        ? `Learning Segment ${activeSegmentIndices[0] + 1} of ${segments.length}` 
-                        : `Merging Segments ${activeSegmentIndices[0] + 1} & ${activeSegmentIndices[1] + 1}`}
+                        ? t('practice.learningSegmentOf', { num: activeSegmentIndices[0] + 1, total: segments.length })
+                        : t('practice.mergingSegments', { num1: activeSegmentIndices[0] + 1, num2: activeSegmentIndices[1] + 1 })}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {activeSegmentIndices.length === 1
-                        ? `Practicing ${Math.ceil(activeSegmentText.split(/\s+/).length)} words - Master this, then we'll merge it with the next section`
-                        : `Great progress! Combining ${Math.ceil(activeSegmentText.split(/\s+/).length)} words from mastered segments`}
+                        ? t('practice.practicingWords', { count: Math.ceil(activeSegmentText.split(/\s+/).length) })
+                        : t('practice.combiningWords', { count: Math.ceil(activeSegmentText.split(/\s+/).length) })}
                     </p>
                   </div>
                 </div>
@@ -1552,9 +1552,9 @@ const Practice = () => {
                     <span className="text-2xl">📝</span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">Practice Full Speech</h3>
+                    <h3 className="font-semibold text-lg">{t('practice.practiceFullSpeech')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {speech.text_original.split(/\s+/).length} words total
+                      {t('practice.wordsTotal', { count: speech.text_original.split(/\s+/).length })}
                     </p>
                   </div>
                 </div>
@@ -1564,13 +1564,13 @@ const Practice = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Your Progress</CardTitle>
-              <CardDescription>Track your memorization journey</CardDescription>
+              <CardTitle>{t('practice.yourProgress')}</CardTitle>
+              <CardDescription>{t('practice.trackMemorization')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Words Memorized</span>
+                  <span className="text-muted-foreground">{t('practice.wordsMemorized')}</span>
                   <span className="font-medium">{(() => {
                   const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
                   const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
@@ -1606,20 +1606,20 @@ const Practice = () => {
                       <div className="mb-4 p-6 bg-gradient-to-r from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20">
                         <div className="flex items-center justify-center gap-2 mb-3">
                           <Lock className="h-6 w-6 text-destructive" />
-                          <p className="font-semibold text-lg">Practice Locked</p>
+                          <p className="font-semibold text-lg">{t('practice.practiceLocked')}</p>
                         </div>
                         <p className="text-2xl font-bold text-destructive mb-2">
                           <LockCountdown nextReviewDate={nextReviewDate} />
                         </p>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Spaced repetition works best when you practice at the optimal time.
+                          {t('practice.spacedRepetitionInfo')}
                           <br />
-                          Practicing too early can actually hurt memorization.
+                          {t('practice.practicingTooEarly')}
                         </p>
                         <div className="pt-4 border-t border-border/50">
                           <p className="text-sm text-muted-foreground mb-3">
                             <Crown className="h-4 w-4 inline mr-1 text-amber-500" />
-                            Premium members can practice anytime
+                            {t('practice.premiumCanPractice')}
                           </p>
                           <Button 
                             variant="outline" 
@@ -1628,7 +1628,7 @@ const Practice = () => {
                             className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
                           >
                             <Crown className="h-4 w-4 mr-2" />
-                            Upgrade to Premium
+                            {t('practice.upgradeToPremium')}
                           </Button>
                         </div>
                       </div>
@@ -1638,14 +1638,14 @@ const Practice = () => {
                         <div className="flex items-center justify-center gap-2 mb-2">
                           <Clock className="h-5 w-5 text-primary" />
                           <p className="font-medium">
-                            AI-Recommended Practice Time
+                            {t('practice.aiRecommendedTime')}
                           </p>
                         </div>
                         <p className="text-lg font-semibold text-primary">
                           <LockCountdown nextReviewDate={nextReviewDate} />
                         </p>
                         <p className="text-sm text-muted-foreground mt-2">
-                          Optimal spacing strengthens memory retention
+                          {t('practice.optimalSpacing')}
                         </p>
                       </div>
                     )}
@@ -1664,7 +1664,7 @@ const Practice = () => {
                   className="rounded-full px-8"
                 >
                   <Play className="h-5 w-5 mr-2" />
-                  {isLocked ? (subscriptionTier === 'free' ? "Locked" : "Practice Anyway") : "Start Practice"}
+                  {isLocked ? (subscriptionTier === 'free' ? t('practice.locked') : t('practice.practiceAnyway')) : t('practice.startPractice')}
                 </Button>
               </div>
             </CardContent>
@@ -1678,22 +1678,21 @@ const Practice = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Practicing Early
+              {t('practice.practicingEarly')}
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
               <p>
-                The AI recommends waiting until <strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong> for optimal memory retention.
+                {t('practice.aiRecommendsWaiting', { time: '' })}<strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong>
               </p>
               <p className="text-muted-foreground">
-                Spaced repetition is most effective when you practice at the right intervals. 
-                Practicing too early may reduce long-term retention, though some practice is always better than none.
+                {t('practice.spacedRepetitionEffective')}
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Wait for Optimal Time</AlertDialogCancel>
+            <AlertDialogCancel>{t('practice.waitForOptimal')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleStartPractice}>
-              Practice Now Anyway
+              {t('practice.practiceNowAnyway')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1703,23 +1702,23 @@ const Practice = () => {
       <Dialog open={isEditingScript} onOpenChange={setIsEditingScript}>
         <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>Edit Script</DialogTitle>
+            <DialogTitle>{t('practice.editScriptTitle')}</DialogTitle>
             <DialogDescription>
-              Make changes to your speech text. This will reset your memorization progress.
+              {t('practice.editScriptDesc')}
             </DialogDescription>
           </DialogHeader>
           <Textarea
             value={editedScriptText}
             onChange={(e) => setEditedScriptText(e.target.value)}
             className="min-h-[300px] font-mono text-sm"
-            placeholder="Enter your speech text..."
+            placeholder={t('practice.enterSpeechText')}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditingScript(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleSaveScript}>
-              Save Changes
+              {t('practice.saveChanges')}
             </Button>
           </DialogFooter>
         </DialogContent>
