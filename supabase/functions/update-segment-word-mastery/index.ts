@@ -14,11 +14,21 @@ const SIMPLE_WORDS = new Set([
   'a', 'an', 'the',
   'is', 'are', 'was', 'were', 'be',
   'it', 'its',
-  // Swedish equivalents
-  'och', 'eller', 'men', 'så',
-  'i', 'på', 'av', 'för', 'till', 'med',
-  'en', 'ett', 'den', 'det',
-  'är', 'var'
+  // Swedish equivalents - conjunctions, prepositions, articles
+  'och', 'eller', 'men', 'så', 'om', 'att', 'som',
+  'i', 'på', 'av', 'för', 'till', 'med', 'hos', 'vid', 'under', 'över',
+  'en', 'ett', 'den', 'det', 'de',
+  'är', 'var', 'ha', 'har', 'hade',
+  // Swedish pronouns
+  'jag', 'du', 'vi', 'ni', 'han', 'hon', 'hen', 'dem',
+  'mig', 'dig', 'sig', 'oss', 'er',
+  'min', 'din', 'sin', 'vår',
+  'mitt', 'ditt', 'sitt', 'vårt',
+  'mina', 'dina', 'sina', 'våra',
+  // Common short Swedish words
+  'kan', 'ska', 'vill', 'måste', 'får',
+  'nu', 'här', 'där', 'ut', 'in', 'upp', 'ner',
+  'inte', 'nog', 'bara', 'också', 'ju'
 ])
 
 // Words that should NEVER be hidden - content words, unique words, hard words
@@ -312,6 +322,16 @@ Deno.serve(async (req) => {
       // Need 2 consecutive correct sessions
       if (data.isSimple && !isSentenceEnding && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 1, isSimple: true })
+        console.log(`Simple word "${word}" eligible for hiding (priority 1, ${consecutiveCorrect} consecutive correct)`)
+        return
+      }
+
+      // RULE 4.5: Medium-difficulty words (not simple, not content-heavy, not sentence-ending)
+      // These are regular words that should hide after 3 consecutive correct sessions
+      // Priority 2 - they hide AFTER simple words but BEFORE hard words
+      if (!data.isSimple && !isHardWord && !isSentenceEnding && consecutiveCorrect >= 3 && data.missedCount === 0 && data.hesitatedCount === 0) {
+        candidatesToHide.push({ index, priority: 2, isSimple: false })
+        console.log(`Medium word "${word}" eligible for hiding (priority 2, ${consecutiveCorrect} consecutive correct)`)
         return
       }
 
@@ -320,7 +340,7 @@ Deno.serve(async (req) => {
       // Need 5+ consecutive correct sessions with no errors
       if ((isSentenceEnding || isHardWord) && consecutiveCorrect >= 5 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 3, isSimple: false })
-        console.log(`Hard word "${word}" eligible for hiding (${consecutiveCorrect} consecutive correct)`)
+        console.log(`Hard word "${word}" eligible for hiding (priority 3, ${consecutiveCorrect} consecutive correct)`)
         return
       }
     })
