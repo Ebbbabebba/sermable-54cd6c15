@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +24,7 @@ interface SegmentProgressProps {
 }
 
 const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProps) => {
+  const { t } = useTranslation();
   const masteredCount = segments.filter(s => s.is_mastered).length;
   const totalSegments = segments.length;
 
@@ -31,7 +33,7 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <span className="text-2xl">🎯</span>
-          Learning Progress
+          {t('practice.segments.learningProgress')}
           <Badge variant="secondary" className="ml-auto">
             {masteredCount} / {totalSegments}
           </Badge>
@@ -68,17 +70,17 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-semibold text-sm">
-                        Segment {segment.segment_order + 1}
+                        {t('practice.segments.segment')} {segment.segment_order + 1}
                       </span>
                       {isActive && (
                         <Badge variant="default" className="text-xs">
-                          Active
+                          {t('practice.segments.active')}
                         </Badge>
                       )}
                       {isOverdue && !isActive && (
                         <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600">
                           <Clock className="w-3 h-3 mr-1" />
-                          Due
+                          {t('practice.segments.due')}
                         </Badge>
                       )}
                       {segment.merged_with_next && (
@@ -90,39 +92,37 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
                       {previewText}
                     </p>
                     
-                    {/* Visibility Progress Bar */}
                     {segment.times_practiced > 0 && (
                       <div className="mt-2 space-y-1">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Eye className="w-3 h-3" />
-                          <span>Visibility: {Math.round(visibility)}%</span>
+                          <span>{t('practice.segments.visibility')}: {Math.round(visibility)}%</span>
                           <Progress 
                             value={100 - visibility} 
                             className="h-1.5 flex-1 bg-muted"
                           />
                           <span className="text-xs font-medium text-primary">
-                            {Math.round(100 - visibility)}% hidden
+                            {Math.round(100 - visibility)}% {t('practice.segments.hidden')}
                           </span>
                         </div>
                         
-                        {/* Anchor Keywords */}
                         {anchorCount > 0 && (
                           <div className="flex items-center gap-1.5 text-xs">
                             <Key className="w-3 h-3 text-yellow-500" />
                             <span className="text-yellow-600 dark:text-yellow-400">
-                              {anchorCount} anchor keyword{anchorCount > 1 ? 's' : ''} (hard words)
+                              {anchorCount} {anchorCount > 1 ? t('practice.segments.anchorKeywordsPlural') : t('practice.segments.anchorKeywords')} {t('practice.segments.hardWords')}
                             </span>
                           </div>
                         )}
                         
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>Practiced: {segment.times_practiced}x</span>
+                          <span>{t('practice.segments.practiced')}: {segment.times_practiced}x</span>
                           {segment.average_accuracy !== null && (
-                            <span>Avg: {Math.round(segment.average_accuracy)}%</span>
+                            <span>{t('practice.segments.avg')}: {Math.round(segment.average_accuracy)}%</span>
                           )}
                           {nextReview && (
                             <span className={isOverdue ? 'text-yellow-600' : ''}>
-                              Next: {formatDistanceToNow(nextReview, { addSuffix: true })}
+                              {t('practice.segments.next')}: {formatDistanceToNow(nextReview, { addSuffix: true })}
                             </span>
                           )}
                         </div>
@@ -138,10 +138,12 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
         {masteredCount > 0 && masteredCount < totalSegments && (
           <div className="mt-4 p-3 bg-cosmic-purple/10 rounded-lg text-sm text-center">
             <p className="font-semibold text-cosmic-purple">
-              🎉 Great progress! {masteredCount} segment{masteredCount > 1 ? 's' : ''} mastered
+              🎉 {masteredCount > 1 
+                ? t('practice.segments.greatProgressPlural', { count: masteredCount })
+                : t('practice.segments.greatProgress', { count: masteredCount })}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Keep going to merge and master the full speech!
+              {t('practice.segments.keepGoing')}
             </p>
           </div>
         )}
@@ -149,7 +151,7 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
         {masteredCount === totalSegments && (
           <div className="mt-4 p-3 bg-success/10 rounded-lg text-sm text-center">
             <p className="font-semibold text-success">
-              🎊 Amazing! You've mastered the entire speech!
+              🎊 {t('practice.segments.amazingMastered')}
             </p>
           </div>
         )}

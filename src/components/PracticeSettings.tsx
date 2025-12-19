@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Settings, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -10,12 +11,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 export type AnimationStyle = 'playful' | 'minimal' | 'energetic';
 
 export interface PracticeSettingsConfig {
-  revealSpeed: number; // 1-10 scale
+  revealSpeed: number;
   showWordOnPause: boolean;
   animationStyle: AnimationStyle;
-  keywordMode: boolean; // Show only keywords, hide other words
-  hesitationThreshold: number; // seconds before marking word yellow
-  firstWordHesitationThreshold: number; // seconds for first word
+  keywordMode: boolean;
+  hesitationThreshold: number;
+  firstWordHesitationThreshold: number;
 }
 
 interface PracticeSettingsProps {
@@ -23,14 +24,15 @@ interface PracticeSettingsProps {
   onSettingsChange: (settings: PracticeSettingsConfig) => void;
 }
 
-const animationStyles = [
-  { value: 'playful' as AnimationStyle, label: 'Playful', description: 'Bouncy and fun' },
-  { value: 'minimal' as AnimationStyle, label: 'Minimal', description: 'Subtle and clean' },
-  { value: 'energetic' as AnimationStyle, label: 'Energetic', description: 'Bold and dynamic' },
-];
-
 const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+
+  const animationStyles = [
+    { value: 'playful' as AnimationStyle, label: t('practice.settings.playful'), description: t('practice.settings.playfulDesc') },
+    { value: 'minimal' as AnimationStyle, label: t('practice.settings.minimal'), description: t('practice.settings.minimalDesc') },
+    { value: 'energetic' as AnimationStyle, label: t('practice.settings.energetic'), description: t('practice.settings.energeticDesc') },
+  ];
 
   const updateSetting = <K extends keyof PracticeSettingsConfig>(
     key: K,
@@ -48,8 +50,8 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
               <div className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-primary" />
                 <div>
-                  <CardTitle className="text-lg">Practice Settings</CardTitle>
-                  <CardDescription>Customize your learning experience</CardDescription>
+                  <CardTitle className="text-lg">{t('practice.settings.title')}</CardTitle>
+                  <CardDescription>{t('practice.settings.customize')}</CardDescription>
                 </div>
               </div>
               <ChevronDown
@@ -62,10 +64,9 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-6 pt-0">
-            {/* Reveal Speed */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label htmlFor="reveal-speed">Keyword Display Speed</Label>
+                <Label htmlFor="reveal-speed">{t('practice.settings.keywordDisplaySpeed')}</Label>
                 <span className="text-sm text-muted-foreground">{settings.revealSpeed}/10</span>
               </div>
               <Slider
@@ -77,18 +78,13 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
                 onValueChange={([value]) => updateSetting('revealSpeed', value)}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">
-                Higher = faster word reveal when you pause
-              </p>
+              <p className="text-xs text-muted-foreground">{t('practice.settings.fasterReveal')}</p>
             </div>
 
-            {/* Show Word on Pause */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="show-pause">Show Word When Paused</Label>
-                <p className="text-xs text-muted-foreground">
-                  Automatically reveal the next word if you pause
-                </p>
+                <Label htmlFor="show-pause">{t('practice.settings.showWordWhenPaused')}</Label>
+                <p className="text-xs text-muted-foreground">{t('practice.settings.revealNextWord')}</p>
               </div>
               <Switch
                 id="show-pause"
@@ -97,13 +93,10 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
               />
             </div>
 
-            {/* Keyword Mode */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="keyword-mode">Keyword Mode</Label>
-                <p className="text-xs text-muted-foreground">
-                  Hide non-keywords with dots • Tap dots to reveal words
-                </p>
+                <Label htmlFor="keyword-mode">{t('practice.settings.keywordMode')}</Label>
+                <p className="text-xs text-muted-foreground">{t('practice.settings.keywordModeDesc')}</p>
               </div>
               <Switch
                 id="keyword-mode"
@@ -112,9 +105,8 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
               />
             </div>
 
-            {/* Animation Style */}
             <div className="space-y-2">
-              <Label htmlFor="animation">Animation Style</Label>
+              <Label htmlFor="animation">{t('practice.settings.animationStyle')}</Label>
               <Select
                 value={settings.animationStyle}
                 onValueChange={(value) => updateSetting('animationStyle', value as AnimationStyle)}
@@ -135,10 +127,9 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
               </Select>
             </div>
 
-            {/* Support Word Delay */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label htmlFor="hesitation">Support Word Delay</Label>
+                <Label htmlFor="hesitation">{t('practice.settings.supportWordDelay')}</Label>
                 <span className="text-sm text-muted-foreground">{settings.hesitationThreshold}s</span>
               </div>
               <Slider
@@ -150,15 +141,12 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
                 onValueChange={([value]) => updateSetting('hesitationThreshold', value)}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">
-                Time before support word appears on screen
-              </p>
+              <p className="text-xs text-muted-foreground">{t('practice.settings.supportWordDelayDesc')}</p>
             </div>
 
-            {/* First Word Hesitation */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label htmlFor="first-hesitation">Hesitation Time (first word)</Label>
+                <Label htmlFor="first-hesitation">{t('practice.settings.hesitationTime')}</Label>
                 <span className="text-sm text-muted-foreground">{settings.firstWordHesitationThreshold}s</span>
               </div>
               <Slider
@@ -170,9 +158,7 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
                 onValueChange={([value]) => updateSetting('firstWordHesitationThreshold', value)}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">
-                Mark first word yellow if you pause this long before starting
-              </p>
+              <p className="text-xs text-muted-foreground">{t('practice.settings.hesitationTimeDesc')}</p>
             </div>
           </CardContent>
         </CollapsibleContent>
