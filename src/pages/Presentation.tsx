@@ -412,10 +412,22 @@ const Presentation = () => {
   // Show mode selector
   if (stage === 'mode-select') {
     return (
-      <PresentationModeSelector 
-        onSelectMode={handleModeSelect}
-        isAnalyzing={isAnalyzingFreestyle}
-      />
+      <div className="min-h-screen bg-background">
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/dashboard')}
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Exit
+          </Button>
+        </div>
+        <PresentationModeSelector 
+          onSelectMode={handleModeSelect}
+          isAnalyzing={isAnalyzingFreestyle}
+        />
+      </div>
     );
   }
 
