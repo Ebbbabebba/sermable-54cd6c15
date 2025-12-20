@@ -15,14 +15,26 @@ export default {
     extend: {
       fontFamily: {
         sans: [
+          "Inter",
+          "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
-          "Inter",
           "SF Pro Display",
           "SF Pro Text",
-          "system-ui",
           "sans-serif",
         ],
+      },
+      fontSize: {
+        /* Caption: 13px */
+        caption: ["0.8125rem", { lineHeight: "1.5" }],
+        /* Body: 16px */
+        body: ["1rem", { lineHeight: "1.6" }],
+        /* Practice text: 18-20px */
+        practice: ["1.125rem", { lineHeight: "1.6" }],
+        "practice-lg": ["1.25rem", { lineHeight: "1.6" }],
+        /* Heading: 24-28px semibold */
+        heading: ["1.5rem", { lineHeight: "1.3", fontWeight: "600" }],
+        "heading-lg": ["1.75rem", { lineHeight: "1.3", fontWeight: "600" }],
       },
       colors: {
         border: "hsl(var(--border))",
