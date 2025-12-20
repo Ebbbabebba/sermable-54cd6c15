@@ -174,30 +174,41 @@ const Practice = () => {
 
   const determineActiveSegments = (allSegments: Segment[], speechData?: Speech | null) => {
     const currentSpeech = speechData || speech;
-    
+
+    const getTextSliceForSegments = (speechText: string, segs: Segment[]): string => {
+      if (!speechText) return "";
+      const words = speechText.split(/\s+/).filter((w) => w.trim());
+      const startIdx = Math.min(...segs.map((s) => s.start_word_index));
+      const endIdx = Math.max(...segs.map((s) => s.end_word_index));
+      return words.slice(startIdx, endIdx + 1).join(" ");
+    };
+
+    // Original text is used for analysis (no brackets)
+    const getOriginalTextForSegments = (segs: Segment[]): string => {
+      if (!currentSpeech?.text_original) return "";
+      return getTextSliceForSegments(currentSpeech.text_original, segs);
+    };
+
+    // Current text is used for display (may contain [brackets] for hidden words)
+    const getCurrentTextForSegments = (segs: Segment[]): string => {
+      const source = currentSpeech?.text_current || currentSpeech?.text_original || "";
+      return getTextSliceForSegments(source, segs);
+    };
+
     if (allSegments.length === 0) {
       setActiveSegmentIndices([]);
-      setActiveSegmentText("");
-      setActiveSegmentOriginalText("");
+      setActiveSegmentText(currentSpeech?.text_current || currentSpeech?.text_original || "");
+      setActiveSegmentOriginalText(currentSpeech?.text_original || "");
       return;
     }
 
-    // Helper to extract original text from speech using segment word indices
-    const getOriginalTextForSegments = (segs: Segment[]): string => {
-      if (!currentSpeech?.text_original) return "";
-      const originalWords = currentSpeech.text_original.split(/\s+/);
-      const startIdx = Math.min(...segs.map(s => s.start_word_index));
-      const endIdx = Math.max(...segs.map(s => s.end_word_index));
-      return originalWords.slice(startIdx, endIdx + 1).join(' ');
-    };
-
     // Find the first unmastered segment
-    const firstUnmasteredIndex = allSegments.findIndex(s => !s.is_mastered);
-    
+    const firstUnmasteredIndex = allSegments.findIndex((s) => !s.is_mastered);
+
     if (firstUnmasteredIndex === -1) {
       // All segments mastered - practice the whole speech
-      setActiveSegmentIndices(allSegments.map(s => s.segment_order));
-      setActiveSegmentText(allSegments.map(s => s.segment_text).join(' '));
+      setActiveSegmentIndices(allSegments.map((s) => s.segment_order));
+      setActiveSegmentText(currentSpeech?.text_current || currentSpeech?.text_original || "");
       setActiveSegmentOriginalText(currentSpeech?.text_original || "");
       return;
     }
@@ -205,13 +216,14 @@ const Practice = () => {
     // Check if we should merge with previous segment
     if (firstUnmasteredIndex > 0) {
       const previousSegment = allSegments[firstUnmasteredIndex - 1];
-      
+
       // If previous segment is mastered, practice both together
       if (previousSegment.is_mastered) {
         const currentSegment = allSegments[firstUnmasteredIndex];
         const activeSegs = [previousSegment, currentSegment];
+
         setActiveSegmentIndices([previousSegment.segment_order, currentSegment.segment_order]);
-        setActiveSegmentText(`${previousSegment.segment_text} ${currentSegment.segment_text}`);
+        setActiveSegmentText(getCurrentTextForSegments(activeSegs));
         setActiveSegmentOriginalText(getOriginalTextForSegments(activeSegs));
         return;
       }
@@ -220,7 +232,7 @@ const Practice = () => {
     // Practice only the current unmastered segment
     const currentSegment = allSegments[firstUnmasteredIndex];
     setActiveSegmentIndices([currentSegment.segment_order]);
-    setActiveSegmentText(currentSegment.segment_text);
+    setActiveSegmentText(getCurrentTextForSegments([currentSegment]));
     setActiveSegmentOriginalText(getOriginalTextForSegments([currentSegment]));
   };
 
@@ -1296,14 +1308,14 @@ const Practice = () => {
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                   <span>{t('practice.progress')}</span>
                   <span>
-                    {expectedWordIndex} / {(activeSegmentText || speech.text_original).split(/\s+/).filter(w => w.trim()).length} {t('practice.words')}
+                    {expectedWordIndex} / {(activeSegmentText || speech.text_current || speech.text_original).split(/\s+/).filter(w => w.trim()).length} {t('practice.words')}
                   </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-primary transition-all duration-300 ease-out"
                     style={{ 
-                      width: `${Math.min(100, (expectedWordIndex / Math.max(1, (activeSegmentText || speech.text_original).split(/\s+/).filter(w => w.trim()).length)) * 100)}%` 
+                      width: `${Math.min(100, (expectedWordIndex / Math.max(1, (activeSegmentText || speech.text_current || speech.text_original).split(/\s+/).filter(w => w.trim()).length)) * 100)}%` 
                     }}
                   />
                 </div>
@@ -1318,7 +1330,7 @@ const Practice = () => {
         <div className="flex-1 flex items-center justify-center px-8 pb-32">
           <div className="max-w-4xl w-full">
             <BracketedTextDisplay
-              text={cleanBracketNotation(activeSegmentText || speech.text_original)}
+              text={cleanBracketNotation(activeSegmentText || speech.text_current || speech.text_original)}
               hiddenWordIndices={currentHiddenIndices}
               spokenWordsIndices={spokenWordsIndices}
               hesitatedWordsIndices={hesitatedWordsIndices}
