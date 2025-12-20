@@ -89,7 +89,21 @@
     "upgradedDesc": "Du har tillgång till alla premiumfunktioner.",
     "upgradeFailed": "Uppgradering misslyckades",
     "plan": "Plan",
-    "speechesThisMonth": "tal den här månaden"
+    "speechesThisMonth": "tal den här månaden",
+    "created": "Skapad",
+    "goal": "Mål",
+    "daysLeft": "{{count}} dag kvar",
+    "daysLeftPlural": "{{count}} dagar kvar",
+    "daysOverdue": "{{count}} dag försenad",
+    "daysOverduePlural": "{{count}} dagar försenad",
+    "nextPractice": "Nästa övning",
+    "progress": "Framsteg",
+    "practice": "Öva",
+    "present": "Presentera",
+    "deleteSpeech": "Ta bort tal?",
+    "deleteSpeechDesc": "Detta tar bort \"{{title}}\" permanent och alla tillhörande övningspass. Kan inte ångras.",
+    "deleted": "Tal borttaget",
+    "deletedDesc": "Talet har tagits bort."
   },
   "onboarding": {
     "skip": "Hoppa över",

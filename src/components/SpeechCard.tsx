@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Play, Trash2, Presentation, Clock } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -36,6 +37,7 @@ interface SpeechCardProps {
 }
 
 const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
@@ -92,14 +94,14 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
       if (error) throw error;
 
       toast({
-        title: "Speech deleted",
-        description: "The speech has been removed.",
+        title: t('dashboard.deleted'),
+        description: t('dashboard.deletedDesc'),
       });
       onUpdate();
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('common.error'),
         description: error.message,
       });
     }
@@ -115,13 +117,13 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           <div className="flex-1 min-w-0">
             <CardTitle className="truncate capitalize">{speech.title}</CardTitle>
             <CardDescription className="mt-1">
-              Created {format(new Date(speech.created_at), "MMM dd, yyyy")}
+              {t('dashboard.created')} {format(new Date(speech.created_at), "MMM dd, yyyy")}
             </CardDescription>
           </div>
           <Badge variant={isOverdue ? "destructive" : "secondary"}>
             {isOverdue
-              ? `${Math.abs(daysRemaining)} days overdue`
-              : `${daysRemaining} days left`}
+              ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
+              : t(daysRemaining === 1 ? 'dashboard.daysLeft' : 'dashboard.daysLeftPlural', { count: daysRemaining })}
           </Badge>
         </div>
       </CardHeader>
@@ -129,14 +131,14 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>Goal: {format(goalDate, "MMM dd, yyyy")}</span>
+          <span>{t('dashboard.goal')}: {format(goalDate, "MMM dd, yyyy")}</span>
         </div>
 
         {isLocked && nextReviewDate && (
           <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
             <Clock className="h-4 w-4 text-primary" />
             <div className="flex-1">
-              <span className="text-sm">Next practice </span>
+              <span className="text-sm">{t('dashboard.nextPractice')} </span>
               <LockCountdown nextReviewDate={nextReviewDate} className="text-primary font-medium text-sm" />
             </div>
           </div>
@@ -144,7 +146,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
+            <span className="text-muted-foreground">{t('dashboard.progress')}</span>
             <span className="font-medium">{progress}%</span>
           </div>
           <Progress value={progress} />
@@ -162,7 +164,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           className="flex-1"
         >
           <Play className="h-4 w-4 mr-2" />
-          Practice
+          {t('dashboard.practice')}
         </Button>
 
         <Button
@@ -170,7 +172,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           onClick={() => navigate(`/presentation/${speech.id}`)}
         >
           <Presentation className="h-4 w-4 mr-2" />
-          Present
+          {t('dashboard.present')}
         </Button>
 
         <AlertDialog>
@@ -181,15 +183,14 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Speech?</AlertDialogTitle>
+              <AlertDialogTitle>{t('dashboard.deleteSpeech')}</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete "<span className="capitalize">{speech.title}</span>" and all associated practice sessions.
-                This action cannot be undone.
+                {t('dashboard.deleteSpeechDesc', { title: speech.title })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>{t('common.delete')}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
