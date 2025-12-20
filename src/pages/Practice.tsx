@@ -789,9 +789,16 @@ const Practice = () => {
               if (!matchFound) {
                 // Handle support word case - only advance if user was shown the word
                 if (wasSupportWordShowing && previousSupportWordIndex !== null) {
+                  // If user saw support word but said wrong word, mark as hesitated (yellow) not missed (red)
+                  // because they hesitated and needed help, even if they then said wrong word
                   if (currentHiddenIndices.has(previousSupportWordIndex)) {
-                    queueWordAction('missed', previousSupportWordIndex, allExpectedWords[previousSupportWordIndex]);
-                    console.log('❌ Hidden support word missed (red):', allExpectedWords[previousSupportWordIndex]);
+                    // Check if already marked as hesitated - keep it yellow, don't change to red
+                    if (!hesitatedWordsIndices.has(previousSupportWordIndex)) {
+                      queueWordAction('hesitated', previousSupportWordIndex, allExpectedWords[previousSupportWordIndex]);
+                      console.log('⚠️ Hidden support word - marking as hesitated (yellow):', allExpectedWords[previousSupportWordIndex]);
+                    } else {
+                      console.log('⚠️ Hidden support word already hesitated (yellow):', allExpectedWords[previousSupportWordIndex]);
+                    }
                   }
                   currentIdx = previousSupportWordIndex + 1;
                   if (currentIdx < allExpectedWords.length) {
