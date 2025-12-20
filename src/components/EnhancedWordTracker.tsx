@@ -49,7 +49,7 @@ const normalizeNordic = (text: string): string => {
     .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž\s]/gi, ""); // Keep spaces!
 };
 
-// Calculate word similarity score (0-1) for pronunciation matching
+// Calculate word similarity score (0-1) for pronunciation matching - STRICT to prevent premature matching
 const getWordSimilarity = (word1: string, word2: string): number => {
   const w1 = normalizeNordic(word1);
   const w2 = normalizeNordic(word2);
@@ -57,31 +57,36 @@ const getWordSimilarity = (word1: string, word2: string): number => {
   // Exact match
   if (w1 === w2) return 1.0;
 
-  // Very short words must match exactly (2 chars or less)
-  if (w1.length <= 2 || w2.length <= 2) {
+  // Very short words (3 chars or less) must match exactly
+  if (w1.length <= 3 || w2.length <= 3) {
     return w1 === w2 ? 1.0 : 0.0;
   }
 
-  // Prefix matching for truncated words - minimum 80% length match
+  // Don't match if lengths are too different (prevents partial words matching)
   const maxLen = Math.max(w1.length, w2.length);
   const minLen = Math.min(w1.length, w2.length);
-  if (minLen / maxLen >= 0.8) {
-    if (w1.startsWith(w2) || w2.startsWith(w1)) return 0.9;
+  if (minLen < maxLen * 0.75) return 0.0;
+
+  // Prefix matching only for very similar lengths (95%+ length match)
+  if (minLen / maxLen >= 0.95) {
+    if (w1.startsWith(w2) || w2.startsWith(w1)) return 0.95;
   }
 
-  // Character-by-character similarity
+  // Character-by-character similarity - stricter scoring
   let matches = 0;
   const compareLength = Math.min(w1.length, w2.length);
   for (let i = 0; i < compareLength; i++) {
     if (w1[i] === w2[i]) matches++;
   }
 
-  return matches / Math.max(w1.length, w2.length);
+  // Require at least 80% character match for any similarity score
+  const similarity = matches / Math.max(w1.length, w2.length);
+  return similarity >= 0.8 ? similarity : 0.0;
 };
 
-// Check if words are similar enough to be considered a match
+// Check if words are similar enough to be considered a match - STRICT threshold
 const isSimilarWord = (word1: string, word2: string): boolean => {
-  return getWordSimilarity(word1, word2) >= 0.5; // 50% threshold for any match
+  return getWordSimilarity(word1, word2) >= 0.75; // 75% threshold - much stricter
 };
 
 const isKeywordWord = (word: string): boolean => {
