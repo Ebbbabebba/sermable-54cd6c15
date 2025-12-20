@@ -50,22 +50,24 @@ serve(async (req) => {
     let segmentOrder = 0;
     
     // Determine segment size based on total speech length
+    // Aim for 2-4 sentences per segment (roughly 60-100 words)
     const totalWords = words.length;
     let TARGET_SEGMENT_SIZE: number;
     let MIN_SEGMENT_SIZE: number;
+    const MIN_SENTENCES_PER_SEGMENT = 2;
     
     if (totalWords <= 100) {
-      // Short speech: 1-2 segments of ~50 words
-      TARGET_SEGMENT_SIZE = 50;
-      MIN_SEGMENT_SIZE = 30;
+      // Short speech: 1-2 larger segments
+      TARGET_SEGMENT_SIZE = 80;
+      MIN_SEGMENT_SIZE = 40;
     } else if (totalWords <= 300) {
-      // Medium speech: 3-6 segments of ~50 words
-      TARGET_SEGMENT_SIZE = 50;
-      MIN_SEGMENT_SIZE = 30;
+      // Medium speech: fewer, larger segments
+      TARGET_SEGMENT_SIZE = 80;
+      MIN_SEGMENT_SIZE = 50;
     } else {
-      // Long speech: Many small segments of ~40 words
-      TARGET_SEGMENT_SIZE = 40;
-      MIN_SEGMENT_SIZE = 25;
+      // Long speech: balanced segments of ~70 words
+      TARGET_SEGMENT_SIZE = 70;
+      MIN_SEGMENT_SIZE = 45;
     }
     
     console.log(`📏 Speech length: ${totalWords} words. Target segment size: ${TARGET_SEGMENT_SIZE} words`);
@@ -106,16 +108,21 @@ serve(async (req) => {
         });
         wordIndex += paragraphWords.length;
       } else {
-        // Split larger paragraphs by sentences
-        const sentences = paragraph.split(/[.!?]+/).filter((s: string) => s.trim());
+        // Split larger paragraphs by sentences, ensuring at least 2 sentences per segment
+        const sentenceMatches = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
         let currentChunk: string[] = [];
         let chunkStartIndex = wordIndex;
+        let sentenceCount = 0;
 
-        for (const sentence of sentences) {
+        for (const sentence of sentenceMatches) {
           const sentenceWords = sentence.trim().split(/\s+/).filter((w: string) => w);
           
-          // If adding this sentence exceeds target, save current chunk
+          // Only create a new segment if:
+          // 1. We have at least MIN_SENTENCES_PER_SEGMENT sentences
+          // 2. Adding this sentence would exceed TARGET size
+          // 3. Current chunk meets MIN size
           if (currentChunk.length > 0 && 
+              sentenceCount >= MIN_SENTENCES_PER_SEGMENT &&
               currentChunk.length + sentenceWords.length > TARGET_SEGMENT_SIZE &&
               currentChunk.length >= MIN_SEGMENT_SIZE) {
             
@@ -130,10 +137,12 @@ serve(async (req) => {
             
             chunkStartIndex = wordIndex;
             currentChunk = [];
+            sentenceCount = 0;
           }
 
           currentChunk.push(...sentenceWords);
           wordIndex += sentenceWords.length;
+          sentenceCount++;
         }
 
         // Save remaining chunk
