@@ -2,82 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Apple-inspired Design System
+ * Following Apple Human Interface Guidelines
+ * Clean, calm, focused, and premium
+ * All colors in HSL format
+ */
 
 @layer base {
   :root {
-    /* Warm dark backgrounds */
-    --background: 30 15% 6%;
-    --foreground: 35 20% 92%;
+    /* Apple-inspired Dark Mode */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
 
-    /* Warm dark cards */
-    --card: 30 12% 10%;
-    --card-foreground: 35 20% 92%;
+    /* Elevated surfaces */
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 30 12% 10%;
-    --popover-foreground: 35 20% 92%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
 
-    /* Warm amber primary */
-    --primary: 35 70% 50%;
-    --primary-foreground: 30 15% 6%;
+    /* Apple Blue as primary */
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Warm brown secondary */
-    --secondary: 30 10% 14%;
-    --secondary-foreground: 35 20% 92%;
+    /* Subtle secondary */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
 
-    /* Warm muted tones */
-    --muted: 30 10% 18%;
-    --muted-foreground: 35 15% 55%;
+    /* Muted for labels */
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
 
-    /* Terracotta accent */
-    --accent: 15 55% 55%;
-    --accent-foreground: 35 20% 98%;
+    /* Accent */
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 98%;
 
-    /* Warm green success */
-    --success: 85 45% 42%;
-    --success-foreground: 30 15% 6%;
+    /* Semantic colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
-    /* Golden warning */
-    --warning: 45 75% 50%;
-    --warning-foreground: 30 15% 6%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
 
-    /* Warm coral destructive */
-    --destructive: 10 60% 50%;
-    --destructive-foreground: 35 20% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Warm borders */
-    --border: 30 10% 22%;
-    --input: 30 10% 18%;
-    --ring: 35 70% 50%;
+    /* Borders - very subtle */
+    --border: 0 0% 18%;
+    --input: 0 0% 15%;
+    --ring: 211 100% 50%;
 
-    --radius: 1rem;
+    /* Apple-style radius */
+    --radius: 1.25rem;
 
-    /* Warm color palette */
-    --success-green: 85 45% 42%;
-    --cosmic-teal: 45 50% 45%;
-    --cosmic-purple: 15 55% 55%;
-    --cosmic-pink: 5 50% 55%;
-    --cosmic-blue: 35 70% 50%;
-    --word-bg: 30 10% 18%;
-    --word-text: 35 20% 92%;
+    /* Extended palette */
+    --success-green: 142 71% 45%;
+    --cosmic-teal: 174 72% 56%;
+    --cosmic-purple: 280 87% 65%;
+    --cosmic-pink: 330 81% 60%;
+    --cosmic-blue: 211 100% 50%;
+    --word-bg: 0 0% 15%;
+    --word-text: 0 0% 98%;
 
-    /* Warm gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(35 70% 50%) 0%, hsl(15 55% 55%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(15 55% 55%) 0%, hsl(5 50% 55%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(85 45% 42%) 0%, hsl(60 50% 45%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(35 70% 50%) 0%, hsl(25 60% 52%) 50%, hsl(15 55% 55%) 100%);
-    --gradient-space: radial-gradient(ellipse at top, hsl(30 15% 12%), hsl(30 15% 6%));
+    /* Apple-style gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(280 87% 65%) 0%, hsl(330 81% 60%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 71% 35%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(280 87% 65%) 50%, hsl(330 81% 60%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(0 0% 8%), hsl(0 0% 0%));
     
-    /* Warm shadows */
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
-    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.25);
-    --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 25px rgba(200, 150, 80, 0.25);
-    --shadow-cosmic: 0 0 35px rgba(180, 120, 70, 0.2);
+    /* Apple-style shadows (for dark mode, very subtle) */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.3);
+    --shadow-cosmic: 0 0 30px rgba(0, 122, 255, 0.2);
 
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,46 +87,62 @@ All colors MUST be HSL.
   }
 
   .light {
-    /* Clean warm white theme */
-    --background: 40 30% 98%;
-    --foreground: 30 20% 15%;
+    /* Apple Light Mode - #F5F5F7 background */
+    --background: 240 5% 96%;
+    --foreground: 0 0% 11%;
 
-    --card: 40 25% 100%;
-    --card-foreground: 30 20% 15%;
+    /* Pure white cards */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 11%;
 
-    --popover: 40 25% 100%;
-    --popover-foreground: 30 20% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 11%;
 
-    --primary: 35 65% 45%;
-    --primary-foreground: 40 30% 98%;
+    /* Apple Blue */
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 35 15% 92%;
-    --secondary-foreground: 30 15% 20%;
+    /* Light gray secondary */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 0 0% 11%;
 
-    --muted: 35 15% 92%;
-    --muted-foreground: 30 10% 45%;
+    /* Muted backgrounds */
+    --muted: 240 5% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 15 50% 50%;
-    --accent-foreground: 40 30% 98%;
+    /* Subtle accent */
+    --accent: 240 5% 93%;
+    --accent-foreground: 0 0% 11%;
 
-    --success: 85 40% 38%;
-    --success-foreground: 40 30% 98%;
+    /* Semantic colors - Apple style */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --warning: 45 70% 48%;
-    --warning-foreground: 30 20% 15%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
 
-    --destructive: 10 55% 48%;
-    --destructive-foreground: 40 30% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 35 15% 85%;
-    --input: 35 15% 85%;
-    --ring: 35 65% 45%;
+    /* Very subtle borders */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 211 100% 50%;
 
-    /* Light mode warm gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(35 65% 45%) 0%, hsl(15 50% 50%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(15 50% 50%) 0%, hsl(5 45% 50%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(85 40% 38%) 0%, hsl(60 45% 42%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(35 65% 45%) 0%, hsl(25 55% 48%) 50%, hsl(15 50% 50%) 100%);
+    /* Light mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 45%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(280 87% 65%) 0%, hsl(330 81% 60%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 71% 40%) 100%);
+    --gradient-cosmic: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(280 87% 60%) 50%, hsl(330 81% 55%) 100%);
+
+    /* Apple-style shadows - subtle and elegant */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+    --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.15);
+    --shadow-cosmic: 0 0 30px rgba(0, 122, 255, 0.1);
   }
 }
 
@@ -135,9 +152,11 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv11", "ss01";
     font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -145,9 +164,34 @@ All colors MUST be HSL.
   }
 }
 
+/* Apple-style utility classes */
 @layer utilities {
+  /* Focus states - Apple style */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Apple-style card elevation */
+  .apple-card {
+    @apply bg-card rounded-2xl border-0 shadow-lg transition-all duration-300;
+  }
+
+  .apple-card-elevated {
+    @apply bg-card rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl;
+  }
+
+  /* Apple-style blur effects */
+  .apple-blur {
+    @apply backdrop-blur-xl bg-background/80;
+  }
+
+  .apple-blur-heavy {
+    @apply backdrop-blur-2xl bg-background/70;
+  }
+
+  /* Smooth animations */
   .animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
+    animation: fadeIn 0.5s ease-out;
   }
 
   .animate-fade-out {
@@ -155,7 +199,11 @@ All colors MUST be HSL.
   }
 
   .animate-slide-up {
-    animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes fadeIn {
@@ -186,6 +234,17 @@ All colors MUST be HSL.
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 
@@ -230,7 +289,7 @@ All colors MUST be HSL.
       transform: translateY(0px);
     }
     50% {
-      transform: translateY(-20px);
+      transform: translateY(-10px);
     }
   }
 
@@ -275,117 +334,117 @@ All colors MUST be HSL.
     animation: fadeInUp 0.3s ease-out forwards;
   }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-fly-away {
-  animation: flyAway 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* Liquid Column Styles */
-.liquid-column-container {
-  background: hsl(var(--primary) / 0.1);
-  border: 2px solid hsl(var(--primary) / 0.3);
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.liquid-fill {
-  background: linear-gradient(90deg,
-    hsl(var(--primary) / 0.4) 0%,
-    hsl(var(--primary) / 0.6) 50%,
-    hsl(var(--primary)) 100%
-  );
-  position: relative;
-}
-
-.liquid-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    hsl(var(--primary) / 0.2) 50%,
-    transparent 100%
-  );
-  animation: liquidWave 2s ease-in-out infinite;
-}
-
-.liquid-error {
-  background: linear-gradient(90deg,
-    hsl(var(--warning) / 0.4) 0%,
-    hsl(var(--warning) / 0.6) 50%,
-    hsl(var(--warning)) 100%
-  ) !important;
-}
-
-@keyframes liquidWave {
-  0% {
-    transform: translateX(-100%);
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  100% {
-    transform: translateX(100%);
-  }
-}
 
-/* Very slow, gentle breathing glow for current word */
-@keyframes wordBreathe {
-  0%, 100% {
-    box-shadow: 0 0 4px hsl(var(--primary) / 0.2);
-    background-color: hsl(var(--primary) / 0.1);
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
   }
-  50% {
-    box-shadow: 0 0 10px hsl(var(--primary) / 0.35);
-    background-color: hsl(var(--primary) / 0.16);
+
+  .animate-fly-away {
+    animation: flyAway 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
-}
 
-@keyframes wordBreatheSubtle {
-  0%, 100% {
-    opacity: 0.85;
+  /* Liquid Column Styles */
+  .liquid-column-container {
+    background: hsl(var(--primary) / 0.1);
+    border: 2px solid hsl(var(--primary) / 0.3);
+    border-radius: 0.75rem;
+    overflow: hidden;
   }
-  50% {
-    opacity: 1;
+
+  .liquid-fill {
+    background: linear-gradient(90deg,
+      hsl(var(--primary) / 0.4) 0%,
+      hsl(var(--primary) / 0.6) 50%,
+      hsl(var(--primary)) 100%
+    );
+    position: relative;
   }
-}
 
-/* Steady glow for current word - very slow breathing */
-@keyframes currentWordGlow {
-  0%, 100% {
-    box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
+  .liquid-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.2) 50%,
+      transparent 100%
+    );
+    animation: liquidWave 2s ease-in-out infinite;
   }
-  50% {
-    box-shadow: 0 0 14px hsl(var(--primary) / 0.45);
+
+  .liquid-error {
+    background: linear-gradient(90deg,
+      hsl(var(--warning) / 0.4) 0%,
+      hsl(var(--warning) / 0.6) 50%,
+      hsl(var(--warning)) 100%
+    ) !important;
   }
-}
 
-.word-breathe {
-  animation: wordBreathe 5s ease-in-out infinite;
-}
+  @keyframes liquidWave {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
 
-.word-breathe-subtle {
-  animation: wordBreatheSubtle 4s ease-in-out infinite;
-}
+  /* Very slow, gentle breathing glow for current word */
+  @keyframes wordBreathe {
+    0%, 100% {
+      box-shadow: 0 0 4px hsl(var(--primary) / 0.2);
+      background-color: hsl(var(--primary) / 0.1);
+    }
+    50% {
+      box-shadow: 0 0 10px hsl(var(--primary) / 0.35);
+      background-color: hsl(var(--primary) / 0.16);
+    }
+  }
 
-.word-glow-current {
-  animation: currentWordGlow 4s ease-in-out infinite;
-}
+  @keyframes wordBreatheSubtle {
+    0%, 100% {
+      opacity: 0.85;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
 
-/* Ultra-smooth word state transitions - no layout shifts */
-.word-smooth-transition {
-  transition: 
-    background-color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
-    color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 800ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 800ms cubic-bezier(0.22, 1, 0.36, 1);
-}
+  /* Steady glow for current word - very slow breathing */
+  @keyframes currentWordGlow {
+    0%, 100% {
+      box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 14px hsl(var(--primary) / 0.45);
+    }
+  }
+
+  .word-breathe {
+    animation: wordBreathe 5s ease-in-out infinite;
+  }
+
+  .word-breathe-subtle {
+    animation: wordBreatheSubtle 4s ease-in-out infinite;
+  }
+
+  .word-glow-current {
+    animation: currentWordGlow 4s ease-in-out infinite;
+  }
+
+  /* Ultra-smooth word state transitions - no layout shifts */
+  .word-smooth-transition {
+    transition: 
+      background-color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 800ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
 }
