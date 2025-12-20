@@ -50,24 +50,22 @@ serve(async (req) => {
     let segmentOrder = 0;
     
     // Determine segment size based on total speech length
-    // Aim for 2-4 sentences per segment (roughly 60-100 words)
+    // Aim for 2-3 sentences per segment
     const totalWords = words.length;
     let TARGET_SEGMENT_SIZE: number;
     let MIN_SEGMENT_SIZE: number;
     const MIN_SENTENCES_PER_SEGMENT = 2;
+    const MAX_SENTENCES_PER_SEGMENT = 3;
     
     if (totalWords <= 100) {
-      // Short speech: 1-2 larger segments
-      TARGET_SEGMENT_SIZE = 80;
-      MIN_SEGMENT_SIZE = 40;
+      TARGET_SEGMENT_SIZE = 60;
+      MIN_SEGMENT_SIZE = 30;
     } else if (totalWords <= 300) {
-      // Medium speech: fewer, larger segments
-      TARGET_SEGMENT_SIZE = 80;
-      MIN_SEGMENT_SIZE = 50;
+      TARGET_SEGMENT_SIZE = 60;
+      MIN_SEGMENT_SIZE = 35;
     } else {
-      // Long speech: balanced segments of ~70 words
-      TARGET_SEGMENT_SIZE = 70;
-      MIN_SEGMENT_SIZE = 45;
+      TARGET_SEGMENT_SIZE = 55;
+      MIN_SEGMENT_SIZE = 30;
     }
     
     console.log(`📏 Speech length: ${totalWords} words. Target segment size: ${TARGET_SEGMENT_SIZE} words`);
@@ -103,8 +101,8 @@ serve(async (req) => {
       
       if (paragraphWords.length === 0) continue;
 
-      // If paragraph has 2-3 sentences and reasonable size, keep as one segment
-      if (paragraphSentences >= 2 && paragraphSentences <= 4 && paragraphWords.length <= TARGET_SEGMENT_SIZE * 1.5) {
+      // If paragraph has 2-3 sentences, keep as one segment
+      if (paragraphSentences >= MIN_SENTENCES_PER_SEGMENT && paragraphSentences <= MAX_SENTENCES_PER_SEGMENT) {
         const segmentText = paragraphWords.join(' ');
         segments.push({
           speech_id: speechId,
@@ -151,13 +149,13 @@ serve(async (req) => {
           
           // Only create a new segment if:
           // 1. We have at least MIN_SENTENCES_PER_SEGMENT sentences
-          // 2. Adding this sentence would exceed TARGET size
-          // 3. Current chunk meets MIN size
-          if (currentChunk.length > 0 && 
+          // 2. We have reached MAX_SENTENCES_PER_SEGMENT OR adding this would exceed target size
+          const shouldSplit = currentChunk.length > 0 && 
               sentenceCount >= MIN_SENTENCES_PER_SEGMENT &&
-              currentChunk.length + sentenceWords.length > TARGET_SEGMENT_SIZE &&
-              currentChunk.length >= MIN_SEGMENT_SIZE) {
-            
+              (sentenceCount >= MAX_SENTENCES_PER_SEGMENT || 
+               (currentChunk.length + sentenceWords.length > TARGET_SEGMENT_SIZE && currentChunk.length >= MIN_SEGMENT_SIZE));
+          
+          if (shouldSplit) {
             const segmentText = currentChunk.join(' ');
             segments.push({
               speech_id: speechId,
