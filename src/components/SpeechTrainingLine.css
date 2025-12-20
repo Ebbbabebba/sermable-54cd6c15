@@ -7,10 +7,10 @@
 
 /* Individual word blocks - longer, smoother transitions */
 .word-block {
-  display: inline-block;
-  margin: 0 4px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  display: inline;
+  margin: 0 1px;
+  padding: 4px 2px;
+  border-radius: 6px;
   /* Much longer transitions for smoothness */
   transition:
     background-color 0.7s cubic-bezier(0.25, 0.1, 0.25, 1),
