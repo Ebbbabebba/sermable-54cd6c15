@@ -89,7 +89,19 @@
     "upgradedDesc": "Agora você tem acesso a todos os recursos premium.",
     "upgradeFailed": "Falha na atualização",
     "plan": "Plano",
-    "speechesThisMonth": "discursos este mês"
+    "speechesThisMonth": "discursos este mês",
+    "created": "Criado",
+    "goal": "Meta",
+    "daysLeft": "dias restantes",
+    "daysOverdue": "dias em atraso",
+    "nextPractice": "Próxima prática",
+    "progress": "Progresso",
+    "practice": "Praticar",
+    "present": "Apresentar",
+    "deleteSpeech": "Excluir este discurso?",
+    "deleteSpeechDesc": "Este discurso e todo o progresso serão excluídos. Essa ação não pode ser desfeita.",
+    "deleted": "Discurso excluído",
+    "deletedDesc": "O discurso foi excluído permanentemente."
   },
   "onboarding": {
     "skip": "Pular",

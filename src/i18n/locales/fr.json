@@ -89,7 +89,19 @@
     "upgradedDesc": "Vous avez maintenant accès à toutes les fonctionnalités premium.",
     "upgradeFailed": "Échec de la mise à niveau",
     "plan": "Plan",
-    "speechesThisMonth": "discours ce mois"
+    "speechesThisMonth": "discours ce mois",
+    "created": "Créé",
+    "goal": "Objectif",
+    "daysLeft": "jours restants",
+    "daysOverdue": "jours de retard",
+    "nextPractice": "Prochaine répétition",
+    "progress": "Progression",
+    "practice": "S'entraîner",
+    "present": "Présenter",
+    "deleteSpeech": "Supprimer ce discours ?",
+    "deleteSpeechDesc": "Ce discours et toute sa progression seront supprimés. Cette action est irréversible.",
+    "deleted": "Discours supprimé",
+    "deletedDesc": "Le discours a été définitivement supprimé."
   },
   "onboarding": {
     "skip": "Passer",
