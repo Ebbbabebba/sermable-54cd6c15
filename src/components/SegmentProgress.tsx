@@ -123,7 +123,7 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
                 {/* Segment content */}
                 <div className="px-4 py-3">
                   <p className={`
-                    text-sm leading-relaxed
+                    text-sm leading-normal
                     ${isActive ? 'text-foreground' : 'text-muted-foreground'}
                   `}>
                     {displayText}
