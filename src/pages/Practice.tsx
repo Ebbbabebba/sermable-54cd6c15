@@ -623,18 +623,32 @@ const Practice = () => {
             return matrix[b.length][a.length];
           };
           
-          // Helper: Check if words are similar enough
+          // Helper: Check if words are similar enough - STRICT matching to prevent premature filling
           const areWordsSimilar = (spoken: string, expected: string): boolean => {
+            // Exact match
             if (spoken === expected) return true;
-            if (spoken.includes(expected) || expected.includes(spoken)) return true;
-            // Fuzzy match: allow 1-2 char difference based on word length
-            const maxDist = Math.max(1, Math.floor(Math.min(spoken.length, expected.length) / 3));
-            if (levenshtein(spoken, expected) <= maxDist) return true;
-            // Prefix match for longer words
-            if (spoken.length > 2 && expected.length > 2) {
-              if (spoken.startsWith(expected.slice(0, 3)) || expected.startsWith(spoken.slice(0, 3))) return true;
+            
+            // For very short words (1-3 chars), require exact match
+            if (expected.length <= 3) {
+              return spoken === expected;
             }
-            return false;
+            
+            // For short words (4-5 chars), allow only 1 character difference
+            if (expected.length <= 5) {
+              return levenshtein(spoken, expected) <= 1;
+            }
+            
+            // For longer words, require at least 80% character match
+            // This prevents partial words from triggering a match
+            const minLength = Math.min(spoken.length, expected.length);
+            const maxLength = Math.max(spoken.length, expected.length);
+            
+            // Don't match if lengths are too different (spoken word is too short)
+            if (minLength < maxLength * 0.7) return false;
+            
+            // Allow 1 char difference for 6-8 letter words, 2 for longer
+            const maxDist = expected.length <= 8 ? 1 : 2;
+            return levenshtein(spoken, expected) <= maxDist;
           };
           
           // Only process NEW words from the transcript using refs (avoid stale closures)
