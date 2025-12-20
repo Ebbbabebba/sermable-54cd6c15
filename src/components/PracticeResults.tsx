@@ -66,7 +66,7 @@ const PracticeResults = ({
         <CardTitle className="flex items-center gap-2">
           {t('practice.results.title')}
           <Badge variant={accuracy >= 80 ? "default" : accuracy >= 60 ? "secondary" : "destructive"}>
-            {accuracy}% {t('practice.results.accuracy')}
+            {Number(accuracy.toFixed(0))}% {t('practice.results.accuracy')}
           </Badge>
         </CardTitle>
         <CardDescription>{t('practice.results.aiAnalysis')}</CardDescription>
@@ -75,7 +75,7 @@ const PracticeResults = ({
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t('practice.results.overallPerformance')}</span>
-            <span className="font-medium">{accuracy}%</span>
+            <span className="font-medium">{Number(accuracy.toFixed(0))}%</span>
           </div>
           <Progress value={accuracy} />
         </div>
