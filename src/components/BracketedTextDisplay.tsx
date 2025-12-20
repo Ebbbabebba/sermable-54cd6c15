@@ -5,6 +5,14 @@ import { Check, Circle, Eye, Sparkles } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Phrase data from speech_phrases table for chunk-based recall visualization
+export interface PhraseInfo {
+  startIndex: number;
+  endIndex: number;
+  timesMissed: number;
+  timesCorrect: number;
+}
+
 interface BracketedTextDisplayProps {
   text: string;
   hiddenWordIndices?: Set<number>; // Use this instead of visibilityPercent when provided
@@ -18,6 +26,8 @@ interface BracketedTextDisplayProps {
   onPeekWord?: (index: number) => void;
   hintingWordIndex?: number;
   hintLevel?: 0 | 1 | 2 | 3;
+  // Chunk-based recall: phrases with high times_missed are "problem phrases"
+  problemPhrases?: PhraseInfo[];
 }
 
 // Common simple words to hide first
@@ -65,13 +75,28 @@ const BracketedTextDisplay = ({
   className,
   onPeekWord,
   hintingWordIndex = -1,
-  hintLevel = 0
+  hintLevel = 0,
+  problemPhrases = []
 }: BracketedTextDisplayProps) => {
   const [peekedBrackets, setPeekedBrackets] = useState<Set<number>>(new Set());
   const [expandedBrackets, setExpandedBrackets] = useState<Set<number>>(new Set());
   
   const words = text.split(/\s+/).filter(w => w.trim());
   const totalWords = words.length;
+  
+  // Build a map of word indices to their problem phrase info (for chunk-based recall visualization)
+  const problemPhraseMap = useMemo(() => {
+    const map = new Map<number, { timesMissed: number; isInProblemPhrase: boolean }>();
+    problemPhrases.forEach(phrase => {
+      // Only highlight phrases with 2+ misses as "problem" areas
+      if (phrase.timesMissed >= 2) {
+        for (let i = phrase.startIndex; i <= phrase.endIndex; i++) {
+          map.set(i, { timesMissed: phrase.timesMissed, isInProblemPhrase: true });
+        }
+      }
+    });
+    return map;
+  }, [problemPhrases]);
   
   // Calculate which words should be visible
   // Use hiddenWordIndices if provided, otherwise fall back to visibilityPercent calculation
@@ -200,6 +225,10 @@ const BracketedTextDisplay = ({
             const isCurrent = isRecording && currentWordIndex === globalIndex;
             const isHinting = hintingWordIndex === globalIndex && hintLevel > 0;
             
+            // Check if this word is in a problem phrase (chunk-based recall)
+            const problemPhraseInfo = problemPhraseMap.get(globalIndex);
+            const isInProblemPhrase = problemPhraseInfo?.isInProblemPhrase || false;
+            
             // Check if this word is in the current phrase (for phrase-based highlighting)
             const wordPhraseIndex = naturalPhrases.findIndex(
               phrase => globalIndex >= phrase.startIndex && globalIndex <= phrase.endIndex
@@ -223,6 +252,8 @@ const BracketedTextDisplay = ({
                         "word-block relative inline-block",
                         // Smooth fade transition for all states
                         "transition-all duration-500 ease-out",
+                        // Problem phrase indicator (chunk-based recall) - subtle underline
+                        isInProblemPhrase && !isRecording && "border-b-2 border-dashed border-orange-400/60",
                         // Current word - gentle pulse, no scale change for stability
                         isCurrent && "current-word-gentle",
                         // Current phrase highlight (soft background)
@@ -259,9 +290,11 @@ const BracketedTextDisplay = ({
                       </AnimatePresence>
                     </motion.span>
                   </TooltipTrigger>
-                  {(isMissed || isHesitated) && (
+                  {(isMissed || isHesitated || isInProblemPhrase) && (
                     <TooltipContent side="top" className="text-xs">
-                      {isMissed ? "❌ Skipped or incorrect" : "⚠️ Hesitated here"}
+                      {isMissed ? "❌ Skipped or incorrect" : 
+                       isHesitated ? "⚠️ Hesitated here" :
+                       `📦 Focus area (missed ${problemPhraseInfo?.timesMissed || 0}x)`}
                     </TooltipContent>
                   )}
                 </Tooltip>
@@ -306,6 +339,15 @@ const BracketedTextDisplay = ({
           const hintingWordInBracket = segment.words.findIndex((_, idx) => hintingWordIndex === segment.startIndex + idx);
           const hasHintingWord = hintingWordInBracket !== -1 && hintLevel > 0;
 
+          // Check if this bracket contains problem phrase words (chunk-based recall)
+          const bracketProblemPhraseInfo = segment.words.reduce((acc, _, idx) => {
+            const info = problemPhraseMap.get(segment.startIndex + idx);
+            if (info && info.isInProblemPhrase) {
+              return { isInProblemPhrase: true, timesMissed: Math.max(acc.timesMissed, info.timesMissed) };
+            }
+            return acc;
+          }, { isInProblemPhrase: false, timesMissed: 0 });
+
           return (
             <motion.div
               key={segmentIndex}
@@ -313,6 +355,8 @@ const BracketedTextDisplay = ({
               onClick={() => !isRecording && handleBracketTap(segmentIndex, segment.startIndex)}
               className={cn(
                 "bracket-container px-3 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 cursor-pointer select-none relative",
+                // Problem phrase indicator for brackets (chunk-based recall)
+                bracketProblemPhraseInfo.isInProblemPhrase && !isRecording && "ring-2 ring-orange-400/50 ring-offset-1",
                 bracketState === "complete" && "bg-green-500/20 border-2 border-green-500 shadow-green-500/30 shadow-md",
                 bracketState === "error" && "bg-muted/30 border-2 border-muted-foreground/50",
                 bracketState === "filling" && "bg-primary/15 border-2 border-primary/60",
@@ -322,6 +366,7 @@ const BracketedTextDisplay = ({
                 bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5",
                 hasHintingWord && "ring-2 ring-yellow-500 ring-offset-2"
               )}
+              title={bracketProblemPhraseInfo.isInProblemPhrase ? `📦 Focus area (missed ${bracketProblemPhraseInfo.timesMissed}x)` : undefined}
             >
               {/* Hint bubble for hidden word */}
               <AnimatePresence>
