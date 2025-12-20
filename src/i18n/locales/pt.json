@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Sermable",
-    "tagline": "Domine seu discurso."
+    "tagline": "Memorize seu discurso."
   },
   "nav": {
     "home": "Início",
@@ -13,29 +13,29 @@
     "settings": "Configurações",
     "newSpeech": "Novo discurso",
     "upgrade": "Atualizar",
-    "upgradeToPremium": "Atualizar para Premium"
+    "upgradeToPremium": "Assinar Premium"
   },
   "home": {
     "getStarted": "Começar",
     "haveAccount": "Já tenho uma conta",
     "hero": {
-      "title": "Domine seu Discurso com Prática Potencializada por IA",
-      "subtitle": "Transforme suas habilidades de fala com feedback personalizado e aprendizado por repetição espaçada",
-      "cta": "Começar a Praticar"
+      "title": "Memorize seu discurso com ajuda da IA",
+      "subtitle": "Melhore suas habilidades de oratória com feedback personalizado e repetição espaçada inteligente",
+      "cta": "Começar agora"
     },
     "features": {
       "title": "Recursos",
       "aiAnalysis": {
-        "title": "Análise de Discurso com IA",
+        "title": "Análise com IA",
         "description": "Receba feedback instantâneo sobre sua apresentação"
       },
       "spacedRepetition": {
-        "title": "Repetição Espaçada",
-        "description": "Otimize o aprendizado com programação científica"
+        "title": "Repetição inteligente",
+        "description": "Otimize o aprendizado com planejamento científico"
       },
       "realTimeTracking": {
-        "title": "Acompanhamento em Tempo Real",
-        "description": "Acompanhe com destaque visual de palavras"
+        "title": "Acompanhamento em tempo real",
+        "description": "Acompanhe seu progresso com destaque visual das palavras"
       }
     }
   },
@@ -50,21 +50,21 @@
     "signUp": "Cadastrar",
     "email": "E-mail",
     "password": "Senha",
-    "confirmPassword": "Confirmar Senha",
+    "confirmPassword": "Confirmar senha",
     "forgotPassword": "Esqueceu a senha?",
     "noAccount": "Não tem conta? Cadastre-se",
     "haveAccount": "Já tem conta? Entre",
-    "loading": "Aguarde",
+    "loading": "Um momento...",
     "signInError": "Erro ao entrar",
     "signUpError": "Erro ao cadastrar",
-    "passwordMismatch": "As senhas não correspondem",
+    "passwordMismatch": "As senhas não coincidem",
     "welcomeBackToast": "Bem-vindo de volta!",
     "signInSuccess": "Você está conectado.",
     "accountCreated": "Conta criada!",
-    "welcomeToSermable": "Bem-vindo ao Sermable. Vamos começar."
+    "welcomeToSermable": "Bem-vindo ao Sermable. Vamos começar!"
   },
   "dashboard": {
-    "title": "Meus Discursos",
+    "title": "Meus discursos",
     "welcomeBack": "Bem-vindo de volta",
     "continueOrStart": "Continue praticando ou comece um novo discurso.",
     "yourSpeeches": "Seus discursos",
@@ -73,20 +73,20 @@
     "speeches": "discursos",
     "sort": "Ordenar",
     "byDeadline": "Por prazo",
-    "recentlyCreated": "Criados recentemente",
+    "recentlyCreated": "Mais recentes",
     "recentlyUpdated": "Atualizados recentemente",
-    "noSpeeches": "Ainda não há discursos",
-    "noSpeechesDesc": "Envie seu primeiro discurso para começar. Defina uma data meta e deixe a IA ajudá-lo a memorizar.",
+    "noSpeeches": "Nenhum discurso ainda",
+    "noSpeechesDesc": "Envie seu primeiro discurso para começar. Defina uma data meta e deixe a IA te ajudar a memorizar.",
     "uploadFirst": "Envie seu primeiro discurso",
-    "adSpace": "Espaço publicitário - Atualize para remover anúncios",
-    "uploadSpeech": "Enviar Discurso",
+    "adSpace": "Publicidade – Assine Premium para remover",
+    "uploadSpeech": "Enviar discurso",
     "words": "palavras",
     "dueToday": "Para hoje",
     "overdue": "Atrasado",
     "loading": "Carregando seus discursos...",
-    "errorLoading": "Erro ao carregar discursos",
-    "upgraded": "Atualizado para Premium!",
-    "upgradedDesc": "Agora você tem acesso a todos os recursos premium.",
+    "errorLoading": "Erro ao carregar os discursos",
+    "upgraded": "Agora você é Premium!",
+    "upgradedDesc": "Você agora tem acesso a todos os recursos premium.",
     "upgradeFailed": "Falha na atualização",
     "plan": "Plano",
     "speechesThisMonth": "discursos este mês",
@@ -94,12 +94,12 @@
     "goal": "Meta",
     "daysLeft": "dias restantes",
     "daysOverdue": "dias em atraso",
-    "nextPractice": "Próxima prática",
+    "nextPractice": "Próxima sessão",
     "progress": "Progresso",
     "practice": "Praticar",
     "present": "Apresentar",
     "deleteSpeech": "Excluir este discurso?",
-    "deleteSpeechDesc": "Este discurso e todo o progresso serão excluídos. Essa ação não pode ser desfeita.",
+    "deleteSpeechDesc": "O discurso e todo o progresso serão excluídos permanentemente.",
     "deleted": "Discurso excluído",
     "deletedDesc": "O discurso foi excluído permanentemente."
   },
@@ -110,37 +110,37 @@
     "steps": {
       "welcome": {
         "title": "Bem-vindo ao Sermable!",
-        "message": "Estou aqui para ajudá-lo a memorizar seus discursos e apresentações com facilidade. Deixe-me mostrar como funciona!"
+        "message": "Vou te ajudar a memorizar seus discursos e apresentações com facilidade. Deixe-me mostrar como funciona!"
       },
       "practice": {
         "title": "Prática do discurso",
-        "message": "Cole o texto do seu discurso e pratique dizendo em voz alta. Acompanharei seu progresso em tempo real e destacarei palavras que você errar ou hesitar."
+        "message": "Cole seu texto e pratique em voz alta. Acompanharei seu progresso em tempo real e destacarei as palavras que você esquecer ou hesitar."
       },
       "adaptive": {
         "title": "Palavras-chave adaptativas",
-        "message": "À medida que você melhora, esconderei gradualmente palavras para desafiar sua memória. Dificuldades? Mostrarei novamente. É como ter um telepromter inteligente!"
+        "message": "Conforme você melhora, escondo gradualmente palavras para desafiar sua memória. Dificuldades? Mostro de novo. É como um teleprompter inteligente!"
       },
       "learning": {
-        "title": "Modo de aprendizado",
-        "message": "Uso repetição espaçada - uma técnica cientificamente comprovada - para agendar suas sessões para memorização ideal. Você dominará seu discurso mais rápido!"
+        "title": "Modo aprendizado",
+        "message": "Uso a repetição espaçada – uma técnica cientificamente comprovada – para programar suas sessões. Você vai dominar seu discurso mais rápido!"
       },
       "presentation": {
         "title": "Modo apresentação",
-        "message": "Quando estiver pronto, mude para o Modo Apresentação para um ensaio completo. Receba feedback detalhado sobre precisão, tempo e áreas a melhorar."
+        "message": "Quando estiver pronto, mude para o Modo Apresentação para um ensaio completo. Receba feedback detalhado sobre precisão, tempo e áreas de melhoria."
       }
     }
   },
   "upload": {
-    "title": "Enviar Novo Discurso",
-    "speechTitle": "Título do Discurso",
-    "speechText": "Texto do Discurso",
-    "goalDate": "Data Meta",
+    "title": "Enviar novo discurso",
+    "speechTitle": "Título do discurso",
+    "speechText": "Texto do discurso",
+    "goalDate": "Data meta",
     "optional": "opcional",
     "cancel": "Cancelar",
     "upload": "Enviar",
     "uploading": "Enviando...",
     "success": "Discurso enviado com sucesso!",
-    "error": "Erro ao enviar discurso",
+    "error": "Erro ao enviar o discurso",
     "wordLimit": "Limite de palavras",
     "monthlyLimit": "Limite mensal de discursos",
     "limitReached": "Limite atingido",
@@ -148,7 +148,7 @@
     "languageDetected": "Idioma detectado e interface atualizada"
   },
   "practice": {
-    "title": "Sessão de Prática",
+    "title": "Sessão de prática",
     "startRecording": "Iniciar gravação",
     "stopRecording": "Parar gravação",
     "analyzing": "Analisando...",
@@ -157,33 +157,33 @@
     "paused": "Pausado",
     "progress": "Progresso",
     "words": "palavras",
-    "practiceScheduled": "Prática agendada",
+    "practiceScheduled": "Sessão agendada",
     "aiRecommendsAt": "A IA recomenda praticar novamente {{time}}. Iniciando mesmo assim...",
-    "practiceActivated": "Modo de prática ativado",
-    "learningSegment": "Aprendendo Segmento {{num}}",
-    "practicingSegments": "Praticando Segmentos {{num1}} e {{num2}} juntos",
-    "readAloudSegment": "{{info}}. Leia em voz alta quando estiver pronto, depois inicie a gravação.",
-    "readAloudGeneral": "Leia seu discurso em voz alta quando estiver pronto, depois inicie a gravação.",
-    "segmentsMerged": "Segmentos unidos!",
-    "segmentsMergedDesc": "Ótimo trabalho! Ambos os segmentos agora estão unidos em seu fluxo de aprendizado.",
-    "analysisComplete": "Análise completa!",
+    "practiceActivated": "Modo prática ativado",
+    "learningSegment": "Aprendendo parte {{num}}",
+    "practicingSegments": "Praticando partes {{num1}} e {{num2}} juntas",
+    "readAloudSegment": "{{info}}. Leia em voz alta quando estiver pronto e depois inicie a gravação.",
+    "readAloudGeneral": "Leia seu discurso em voz alta quando estiver pronto e depois inicie a gravação.",
+    "segmentsMerged": "Partes unidas!",
+    "segmentsMergedDesc": "Ótimo trabalho! As duas partes agora estão unidas no seu fluxo de aprendizado.",
+    "analysisComplete": "Análise concluída!",
     "accuracyPercent": "{{percent}}% de precisão.",
     "analysisFailed": "Análise falhou",
     "analysisFailedDesc": "Não foi possível analisar sua gravação. Tente novamente.",
     "processingFailed": "Processamento falhou",
     "processingFailedDesc": "Não foi possível processar sua gravação. Tente novamente.",
     "limitedSupport": "Suporte limitado",
-    "limitedSupportDesc": "O rastreamento em tempo real não está disponível neste dispositivo. Seu discurso será analisado após a gravação.",
-    "scriptUpdated": "Roteiro atualizado",
-    "scriptUpdatedDesc": "O texto do seu discurso foi salvo.",
+    "limitedSupportDesc": "O acompanhamento em tempo real não está disponível neste dispositivo. Seu discurso será analisado após a gravação.",
+    "scriptUpdated": "Texto atualizado",
+    "scriptUpdatedDesc": "Seu texto foi salvo.",
     "failedToSave": "Falha ao salvar",
-    "editScript": "Editar roteiro",
+    "editScript": "Editar texto",
     "presentationMode": "Modo apresentação",
     "goal": "Meta",
-    "learningSegmentOf": "Aprendendo Segmento {{num}} de {{total}}",
-    "mergingSegments": "Unindo Segmentos {{num1}} e {{num2}}",
-    "practicingWords": "Praticando {{count}} palavras - Domine isso, depois uniremos com a próxima seção",
-    "combiningWords": "Bom progresso! Combinando {{count}} palavras de segmentos dominados",
+    "learningSegmentOf": "Aprendendo parte {{num}} de {{total}}",
+    "mergingSegments": "Unindo partes {{num1}} e {{num2}}",
+    "practicingWords": "Praticando {{count}} palavras – Domine essas e depois uniremos com a próxima parte",
+    "combiningWords": "Bom progresso! Combinando {{count}} palavras das partes dominadas",
     "practiceFullSpeech": "Praticar discurso completo",
     "wordsTotal": "{{count}} palavras no total",
     "yourProgress": "Seu progresso",
@@ -193,42 +193,42 @@
     "spacedRepetitionInfo": "A repetição espaçada funciona melhor quando você pratica no momento ideal.",
     "practicingTooEarly": "Praticar muito cedo pode prejudicar a memorização.",
     "premiumCanPractice": "Membros Premium podem praticar a qualquer momento",
-    "upgradeToPremium": "Atualizar para Premium",
-    "aiRecommendedTime": "Tempo de prática recomendado pela IA",
-    "optimalSpacing": "O espaçamento ideal fortalece a retenção de memória",
+    "upgradeToPremium": "Assinar Premium",
+    "aiRecommendedTime": "Momento recomendado pela IA",
+    "optimalSpacing": "Intervalos ideais fortalecem a memória",
     "locked": "Bloqueado",
     "practiceAnyway": "Praticar mesmo assim",
     "startPractice": "Iniciar prática",
-    "practicingEarly": "Praticando cedo",
-    "aiRecommendsWaiting": "A IA recomenda esperar até {{time}} para retenção de memória ideal.",
-    "spacedRepetitionEffective": "A repetição espaçada é mais eficaz quando você pratica nos intervalos certos. Praticar muito cedo pode reduzir a retenção a longo prazo, embora alguma prática seja sempre melhor do que nenhuma.",
-    "waitForOptimal": "Esperar tempo ideal",
+    "practicingEarly": "Praticando antes do tempo",
+    "aiRecommendsWaiting": "A IA recomenda esperar até {{time}} para uma retenção ideal.",
+    "spacedRepetitionEffective": "A repetição espaçada é mais eficaz quando você pratica nos intervalos certos. Praticar muito cedo pode reduzir a retenção a longo prazo, embora um pouco de prática seja sempre melhor do que nada.",
+    "waitForOptimal": "Esperar o momento ideal",
     "practiceNowAnyway": "Praticar agora mesmo assim",
-    "editScriptTitle": "Editar roteiro",
-    "editScriptDesc": "Faça alterações no texto do seu discurso. Isso irá redefinir seu progresso de memorização.",
+    "editScriptTitle": "Editar texto",
+    "editScriptDesc": "Edite o texto do seu discurso. Seu progresso de memorização será zerado.",
     "enterSpeechText": "Digite o texto do seu discurso...",
     "saveChanges": "Salvar alterações",
-    "nextPractice": "Próxima prática",
+    "nextPractice": "Próxima sessão",
     "weightedScore": "Pontuação ponderada",
-    "scriptVisible": "Roteiro visível",
-    "stage": "Estágio",
+    "scriptVisible": "Texto visível",
+    "stage": "Etapa",
     "results": {
       "title": "Resultados da sessão",
       "accuracy": "Precisão",
-      "missedWords": "Palavras perdidas",
+      "missedWords": "Palavras esquecidas",
       "delayedWords": "Palavras atrasadas",
       "feedback": "Feedback da IA",
-      "cueText": "Texto de ajuda",
+      "cueText": "Texto de apoio",
       "retry": "Tentar novamente",
       "dashboard": "Voltar ao painel",
-      "aiAnalysis": "Análise de IA da sua sessão de prática",
+      "aiAnalysis": "Análise da sua sessão pela IA",
       "overallPerformance": "Desempenho geral",
       "correct": "Correto",
       "hesitated": "Hesitou",
-      "missed": "Perdido",
+      "missed": "Esqueceu",
       "wordsToPractice": "Palavras para praticar",
       "wordByWord": "Análise palavra por palavra",
-      "comparingPerformance": "Comparando seu desempenho com o roteiro original",
+      "comparingPerformance": "Comparando seu desempenho com o texto original",
       "spokenCorrectly": "Falado corretamente",
       "hiddenCue": "Dica oculta (dominada)",
       "whatYouSaid": "O que você disse:"
@@ -236,29 +236,29 @@
     "settings": {
       "title": "Configurações de prática",
       "customize": "Personalize sua experiência de aprendizado",
-      "keywordDisplaySpeed": "Velocidade de exibição de palavras-chave",
-      "fasterReveal": "Maior = revelação de palavras mais rápida ao pausar",
+      "keywordDisplaySpeed": "Velocidade das palavras-chave",
+      "fasterReveal": "Maior = revelação mais rápida ao pausar",
       "showWordWhenPaused": "Mostrar palavra ao pausar",
       "revealNextWord": "Revelar automaticamente a próxima palavra se você pausar",
       "keywordMode": "Modo palavras-chave",
-      "keywordModeDesc": "Ocultar não palavras-chave com pontos • Toque nos pontos para revelar palavras",
+      "keywordModeDesc": "Ocultar outras palavras com pontos • Toque para revelar",
       "animationStyle": "Estilo de animação",
       "playful": "Divertido",
       "playfulDesc": "Saltitante e divertido",
       "minimal": "Mínimo",
-      "minimalDesc": "Sutil e limpo",
+      "minimalDesc": "Discreto e limpo",
       "energetic": "Energético",
-      "energeticDesc": "Ousado e dinâmico",
+      "energeticDesc": "Intenso e dinâmico",
       "supportWordDelay": "Atraso da palavra de apoio",
-      "supportWordDelayDesc": "Tempo antes da palavra de apoio aparecer na tela",
+      "supportWordDelayDesc": "Tempo antes de a palavra de apoio aparecer",
       "hesitationTime": "Tempo de hesitação (primeira palavra)",
-      "hesitationTimeDesc": "Marcar a primeira palavra em amarelo se você pausar tanto antes de começar"
+      "hesitationTimeDesc": "Destacar a primeira palavra em amarelo se você hesitar muito"
     },
     "segments": {
       "learningProgress": "Progresso de aprendizado",
-      "segment": "Segmento",
+      "segment": "Parte",
       "active": "Ativo",
-      "due": "Vencido",
+      "due": "Pendente",
       "visibility": "Visibilidade",
       "hidden": "oculto",
       "anchorKeywords": "palavra-chave âncora",
@@ -267,9 +267,9 @@
       "practiced": "Praticado",
       "avg": "Média",
       "next": "Próximo",
-      "greatProgress": "Ótimo progresso! {{count}} segmento dominado",
-      "greatProgressPlural": "Ótimo progresso! {{count}} segmentos dominados",
-      "keepGoing": "Continue para unir e dominar todo o discurso!",
+      "greatProgress": "Ótimo progresso! {{count}} parte dominada",
+      "greatProgressPlural": "Ótimo progresso! {{count}} partes dominadas",
+      "keepGoing": "Continue para dominar todo o discurso!",
       "amazingMastered": "Incrível! Você dominou todo o discurso!"
     },
     "countdown": {
@@ -277,7 +277,7 @@
       "inDaysHours": "em {{days}}d {{hours}}h",
       "inDays": "em {{days}} dia",
       "inDaysPlural": "em {{days}} dias",
-      "inHoursMinutes": "em {{hours}}h {{minutes}}m",
+      "inHoursMinutes": "em {{hours}}h {{minutes}}min",
       "inHours": "em {{hours}} hora",
       "inHoursPlural": "em {{hours}} horas",
       "inMinutes": "em {{minutes}} minuto",
@@ -290,19 +290,19 @@
     "subtitle": "Personalize sua experiência no Sermable",
     "subscription": {
       "title": "Assinatura",
-      "description": "Desbloqueie recursos premium e melhore seu aprendizado",
+      "description": "Desbloqueie recursos Premium e aprenda mais rápido",
       "whyPremium": "Por que Premium?",
       "choosePlan": "Escolha seu plano",
       "overrideLock": "Ignorar bloqueio de repetição",
-      "overrideLockDesc": "Pratique a qualquer momento com o botão \"Praticar mesmo assim\"",
+      "overrideLockDesc": "Pratique quando quiser com o botão \"Praticar mesmo assim\"",
       "unlimitedSpeeches": "Discursos ilimitados",
-      "unlimitedSpeechesDesc": "Envie e pratique discursos ilimitados",
-      "advancedAnalytics": "Análises avançadas",
-      "advancedAnalyticsDesc": "Informações detalhadas de desempenho e acompanhamento de progresso",
+      "unlimitedSpeechesDesc": "Envie e pratique quantos discursos quiser",
+      "advancedAnalytics": "Estatísticas avançadas",
+      "advancedAnalyticsDesc": "Análises detalhadas do seu desempenho e progresso",
       "streakFreeze": "Congelar sequência",
       "streakFreezeDesc": "Proteja sua sequência quando a vida ficar corrida",
       "prioritySupport": "Suporte prioritário",
-      "prioritySupportDesc": "Obtenha ajuda mais rápido com suporte dedicado",
+      "prioritySupportDesc": "Receba ajuda mais rápido com suporte dedicado",
       "monthly": "Plano mensal",
       "annual": "Plano anual",
       "billedMonthly": "Cobrado mensalmente",
@@ -318,14 +318,14 @@
       "continueWith": "Continuar com",
       "plan": "Plano",
       "comingSoon": "Em breve!",
-      "comingSoonDesc": "A assinatura premium estará disponível em breve."
+      "comingSoonDesc": "A assinatura Premium estará disponível em breve."
     },
     "appearance": {
       "title": "Aparência",
-      "description": "Personalize a aparência do Sermable",
+      "description": "Personalize o visual do Sermable",
       "theme": "Tema",
       "darkTheme": "Tema espacial escuro com cores cósmicas",
-      "lightTheme": "Tema branco limpo"
+      "lightTheme": "Tema claro e limpo"
     },
     "language": {
       "title": "Idioma",
@@ -335,30 +335,30 @@
     },
     "profile": {
       "title": "Perfil e sequência",
-      "description": "Acompanhe sua consistência de prática",
+      "description": "Acompanhe a consistência da sua prática",
       "currentStreak": "Sequência atual",
       "bestStreak": "Melhor sequência",
       "days": "dias",
-      "keepStreak": "Mantenha sua sequência viva!",
-      "keepStreakDesc": "Pratique pelo menos uma vez por dia para manter sua sequência. Sua sequência é zerada se você perder um dia."
+      "keepStreak": "Mantenha sua sequência!",
+      "keepStreakDesc": "Pratique pelo menos uma vez por dia para manter sua sequência. Um dia perdido zera a contagem."
     },
     "account": {
       "title": "Conta",
       "description": "Gerencie as configurações da sua conta",
       "personalizedLearning": "Aprendizado personalizado",
-      "personalizedLearningDesc": "Seu cronograma de prática é personalizado automaticamente com base no seu desempenho e prazos."
+      "personalizedLearningDesc": "Seu cronograma de prática se adapta automaticamente ao seu desempenho e prazos."
     },
     "notifications": {
       "title": "Notificações",
-      "description": "Receba lembretes quando os discursos precisarem de revisão",
+      "description": "Receba lembretes quando for hora de revisar",
       "nativeRequired": "App nativo necessário",
-      "nativeRequiredDesc": "Notificações push na tela de bloqueio só estão disponíveis no app móvel nativo. Para receber notificações no seu iPhone ou Android, você precisa instalar o app.",
+      "nativeRequiredDesc": "Notificações push na tela de bloqueio só estão disponíveis no app nativo. Instale o app para receber notificações no seu iPhone ou Android.",
       "pushNotifications": "Notificações push",
-      "pushNotificationsDesc": "Receba lembretes na sua tela de bloqueio",
-      "enabled": "Você receberá notificações quando os discursos precisarem de revisão com base no seu progresso."
+      "pushNotificationsDesc": "Receba lembretes na tela de bloqueio",
+      "enabled": "Você receberá notificações quando for hora de revisar com base no seu progresso."
     },
     "legal": {
-      "termsTitle": "Termos e condições",
+      "termsTitle": "Informações legais",
       "termsDescription": "Leia nossos acordos legais",
       "termsOfService": "Termos de serviço",
       "privacyPolicy": "Política de privacidade"
@@ -367,7 +367,7 @@
       "title": "Suporte",
       "description": "Obtenha ajuda e envie feedback",
       "contactSupport": "Contatar suporte",
-      "contactSupportDesc": "Tem perguntas ou precisa de ajuda? Entre em contato."
+      "contactSupportDesc": "Tem perguntas ou precisa de ajuda? Fale conosco."
     },
     "signOut": "Sair"
   },
