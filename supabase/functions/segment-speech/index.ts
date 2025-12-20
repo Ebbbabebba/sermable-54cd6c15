@@ -147,15 +147,8 @@ serve(async (req) => {
         for (const sentence of sentenceMatches) {
           const sentenceWords = sentence.trim().split(/\s+/).filter((w: string) => w);
           
-          // Only create a new segment if:
-          // 1. We have at least MIN_SENTENCES_PER_SEGMENT sentences
-          // 2. We have reached MAX_SENTENCES_PER_SEGMENT OR adding this would exceed target size
-          const shouldSplit = currentChunk.length > 0 && 
-              sentenceCount >= MIN_SENTENCES_PER_SEGMENT &&
-              (sentenceCount >= MAX_SENTENCES_PER_SEGMENT || 
-               (currentChunk.length + sentenceWords.length > TARGET_SEGMENT_SIZE && currentChunk.length >= MIN_SEGMENT_SIZE));
-          
-          if (shouldSplit) {
+          // Split BEFORE adding this sentence if we already have 3 sentences
+          if (currentChunk.length > 0 && sentenceCount >= MAX_SENTENCES_PER_SEGMENT) {
             const segmentText = currentChunk.join(' ');
             segments.push({
               speech_id: speechId,
@@ -198,18 +191,60 @@ serve(async (req) => {
     }
     } // Close else block for segmentation
 
-    // Post-process: merge any segments with less than 2 sentences
+    // Post-process: split segments with more than 3 sentences, merge those with less than 2
     const finalSegments: typeof segments = [];
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
       const sentenceCount = countSentences(seg.segment_text);
       
-      if (sentenceCount < 2 && finalSegments.length > 0) {
+      if (sentenceCount > MAX_SENTENCES_PER_SEGMENT) {
+        // Split this segment - find sentence boundaries
+        const sentences = seg.segment_text.match(/[^.!?]+[.!?]+/g) || [seg.segment_text];
+        let currentText = '';
+        let currentSentences = 0;
+        let currentStartIdx = seg.start_word_index;
+        
+        for (const sentence of sentences) {
+          currentText += (currentText ? ' ' : '') + sentence.trim();
+          currentSentences++;
+          
+          if (currentSentences >= MAX_SENTENCES_PER_SEGMENT) {
+            const wordCount = currentText.split(/\s+/).length;
+            finalSegments.push({
+              speech_id: speechId,
+              segment_order: finalSegments.length,
+              start_word_index: currentStartIdx,
+              end_word_index: currentStartIdx + wordCount - 1,
+              segment_text: currentText,
+            });
+            currentStartIdx += wordCount;
+            currentText = '';
+            currentSentences = 0;
+          }
+        }
+        // Add remaining
+        if (currentText && currentSentences > 0) {
+          if (currentSentences < MIN_SENTENCES_PER_SEGMENT && finalSegments.length > 0) {
+            const prevSeg = finalSegments[finalSegments.length - 1];
+            prevSeg.segment_text = prevSeg.segment_text + ' ' + currentText;
+            prevSeg.end_word_index = seg.end_word_index;
+          } else {
+            const wordCount = currentText.split(/\s+/).length;
+            finalSegments.push({
+              speech_id: speechId,
+              segment_order: finalSegments.length,
+              start_word_index: currentStartIdx,
+              end_word_index: currentStartIdx + wordCount - 1,
+              segment_text: currentText,
+            });
+          }
+        }
+      } else if (sentenceCount < MIN_SENTENCES_PER_SEGMENT && finalSegments.length > 0) {
         // Merge with previous
         const prevSeg = finalSegments[finalSegments.length - 1];
         prevSeg.segment_text = prevSeg.segment_text + ' ' + seg.segment_text;
         prevSeg.end_word_index = seg.end_word_index;
-      } else if (sentenceCount < 2 && i < segments.length - 1) {
+      } else if (sentenceCount < MIN_SENTENCES_PER_SEGMENT && i < segments.length - 1) {
         // Merge with next
         segments[i + 1].segment_text = seg.segment_text + ' ' + segments[i + 1].segment_text;
         segments[i + 1].start_word_index = seg.start_word_index;
