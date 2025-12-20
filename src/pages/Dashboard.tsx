@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, LogOut, BookOpen, Calendar, TrendingUp, Settings, Menu, ArrowUpDown } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, LogOut, BookOpen, Settings, Menu, ArrowUpDown, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -77,13 +77,11 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if we've already shown the streak today
       const hasShownToday = sessionStorage.getItem('streak-shown-today');
       if (hasShownToday === new Date().toDateString()) {
         return;
       }
 
-      // Get all practice sessions
       const { data: sessions, error: sessionsError } = await supabase
         .from("practice_sessions")
         .select("session_date, speech_id")
@@ -91,7 +89,6 @@ const Dashboard = () => {
 
       if (sessionsError) throw sessionsError;
 
-      // Get user's speeches to verify ownership
       const { data: userSpeeches } = await supabase
         .from("speeches")
         .select("id")
@@ -102,7 +99,6 @@ const Dashboard = () => {
       const userSpeechIds = new Set(userSpeeches.map(s => s.id));
       const userSessions = sessions.filter(s => userSpeechIds.has(s.speech_id));
 
-      // Calculate streak
       let streak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -150,7 +146,6 @@ const Dashboard = () => {
       if (error) throw error;
       setSpeeches(data || []);
 
-      // Load subscription info
       const { data: profile } = await supabase
         .from("profiles")
         .select("subscription_tier, monthly_speeches_count")
@@ -210,17 +205,17 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">{t('dashboard.loading')}</p>
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground text-sm">{t('dashboard.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-background">
       {/* Streak Celebration */}
       {showStreakCelebration && (
         <StreakCelebration 
@@ -229,35 +224,36 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Header */}
-      <header className="border-b border-border/40 backdrop-blur-xl bg-card/50 sticky top-0 z-50 flex-shrink-0 shadow-lg relative">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Sermable</h1>
+      {/* Apple-style Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-foreground">Sermable</h1>
           
           {/* Desktop Navigation */}
           {!isMobile && (
-            <div className="flex items-center gap-3">
-              <Button onClick={() => setUploadDialogOpen(true)} variant="gradient">
-                <Plus className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
+                <Plus className="h-4 w-4" />
                 {t('nav.newSpeech')}
               </Button>
-              <div className="text-sm px-4 py-2 rounded-full bg-primary/10 text-primary font-medium">
-                <span className="capitalize">{subscriptionTier}</span>
+              
+              <div className="flex items-center gap-1 ml-2">
+                <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-secondary rounded-full">
+                  {subscriptionTier}
+                  {subscriptionTier === 'free' && ` · ${monthlySpeeches}/2`}
+                </span>
+                
                 {subscriptionTier === 'free' && (
-                  <span className="ml-2">
-                    {monthlySpeeches}/2
-                  </span>
+                  <Button variant="apple-ghost" size="sm" onClick={handleUpgradeToPremium}>
+                    {t('nav.upgrade')}
+                  </Button>
                 )}
               </div>
-              {subscriptionTier === 'free' && (
-                <Button variant="default" size="sm" onClick={handleUpgradeToPremium}>
-                  {t('nav.upgrade')}
-                </Button>
-              )}
-              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="rounded-full">
+              
+              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
                 <Settings className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-full">
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
@@ -267,43 +263,43 @@ const Dashboard = () => {
           {isMobile && (
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent className="bg-card border-l border-border">
                 <SheetHeader>
-                  <SheetTitle>{t('nav.menu')}</SheetTitle>
+                  <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
                 </SheetHeader>
-                <div className="flex flex-col gap-4 mt-6">
-                  <div className="text-sm pb-4 border-b">
-                    <span className="font-medium capitalize">{subscriptionTier}</span> {t('dashboard.plan')}
+                <div className="flex flex-col gap-3 mt-8">
+                  <div className="pb-4 border-b border-border">
+                    <span className="text-sm text-muted-foreground capitalize">{subscriptionTier} {t('dashboard.plan')}</span>
                     {subscriptionTier === 'free' && (
-                      <div className="text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {monthlySpeeches}/2 {t('dashboard.speechesThisMonth')}
-                      </div>
+                      </p>
                     )}
                   </div>
                   {subscriptionTier === 'free' && (
-                    <Button variant="default" onClick={() => {
+                    <Button variant="apple" onClick={() => {
                       handleUpgradeToPremium();
                       setMobileMenuOpen(false);
                     }}>
                       {t('nav.upgradeToPremium')}
                     </Button>
                   )}
-                  <Button variant="outline" onClick={() => {
+                  <Button variant="ghost" className="justify-start" onClick={() => {
                     navigate("/settings");
                     setMobileMenuOpen(false);
                   }}>
-                    <Settings className="h-4 w-4 mr-2" />
+                    <Settings className="h-4 w-4 mr-3" />
                     {t('nav.settings')}
                   </Button>
-                  <Button variant="outline" onClick={() => {
+                  <Button variant="ghost" className="justify-start text-destructive" onClick={() => {
                     handleLogout();
                     setMobileMenuOpen(false);
                   }}>
-                    <LogOut className="h-4 w-4 mr-2" />
+                    <LogOut className="h-4 w-4 mr-3" />
                     {t('nav.signOut')}
                   </Button>
                 </div>
@@ -313,24 +309,24 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 pb-24 overflow-y-auto flex-1 relative z-10">
-        <div className="space-y-8">
-          {/* Welcome Section */}
-          <div className="animate-fade-in">
-            <h2 className="text-3xl font-bold mb-2 capitalize">
-              {t('dashboard.welcomeBack')}, {user?.user_metadata?.full_name || "there"}!
+      <main className="max-w-6xl mx-auto px-6 py-8 pb-28">
+        <div className="space-y-10">
+          {/* Welcome Section - Large, clean typography */}
+          <section className="animate-fade-in">
+            <h2 className="text-3xl font-semibold text-foreground mb-1">
+              {t('dashboard.welcomeBack')}, {user?.user_metadata?.full_name?.split(' ')[0] || "there"}
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-lg">
               {t('dashboard.continueOrStart')}
             </p>
-          </div>
+          </section>
 
           {/* Review Notifications */}
           <ReviewNotifications />
 
           {/* Ad Placeholder - Free Users */}
           {subscriptionTier === 'free' && (
-            <Card className="bg-muted/30 border-dashed">
+            <Card className="bg-secondary/50 border-0">
               <CardContent className="flex items-center justify-center py-8">
                 <p className="text-sm text-muted-foreground">{t('dashboard.adSpace')}</p>
               </CardContent>
@@ -338,28 +334,28 @@ const Dashboard = () => {
           )}
 
           {/* Speeches Section */}
-          <div className="space-y-6">
+          <section className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">{t('dashboard.yourSpeeches')}</h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h3 className="text-xl font-semibold text-foreground">{t('dashboard.yourSpeeches')}</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">
                   {t('dashboard.manageSpeeches')}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {speeches.length > 0 && (
-                  <div className="text-xs px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground font-medium">
+                  <span className="text-xs text-muted-foreground bg-secondary px-3 py-1.5 rounded-full">
                     {speeches.length} {speeches.length === 1 ? t('dashboard.speech') : t('dashboard.speeches')}
-                  </div>
+                  </span>
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-2">
+                    <Button variant="ghost" size="sm" className="gap-1.5">
                       <ArrowUpDown className="w-4 h-4" />
-                      <span className="text-xs">{t('dashboard.sort')}</span>
+                      <span className="text-xs hidden sm:inline">{t('dashboard.sort')}</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="bg-card border border-border">
                     <DropdownMenuItem onClick={() => setSortBy('deadline')}>
                       {t('dashboard.byDeadline')}
                     </DropdownMenuItem>
@@ -375,25 +371,24 @@ const Dashboard = () => {
             </div>
 
             {speeches.length === 0 ? (
-              <Card className="shadow-xl border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm animate-fade-in">
+              <Card className="border-0 shadow-apple-xl animate-fade-in">
                 <CardContent className="py-16 text-center">
-                  <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-float">
-                    <BookOpen className="h-10 w-10 text-primary" />
+                  <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                    <Mic className="w-10 h-10 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{t('dashboard.noSpeeches')}</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto text-base">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('dashboard.noSpeeches')}</h3>
+                  <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
                     {t('dashboard.noSpeechesDesc')}
                   </p>
-                  <Button onClick={() => setUploadDialogOpen(true)} variant="gradient" size="lg">
-                    <Plus className="h-5 w-5 mr-2" />
+                  <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="lg">
+                    <Plus className="h-5 w-5" />
                     {t('dashboard.uploadFirst')}
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {(() => {
-                  // Sort speeches based on selected criteria
                   const sortedSpeeches = [...speeches].sort((a, b) => {
                     if (sortBy === 'deadline') {
                       if (!a.goal_date && !b.goal_date) return 0;
@@ -419,19 +414,19 @@ const Dashboard = () => {
                 })()}
               </div>
             )}
-          </div>
+          </section>
         </div>
       </main>
 
-      {/* Floating Action Button - Mobile Only */}
+      {/* Floating Action Button - Mobile */}
       {isMobile && (
         <Button
           onClick={() => setUploadDialogOpen(true)}
-          className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-2xl z-50 animate-pulse-glow"
-          variant="gradient"
+          className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-apple-xl z-50"
+          variant="apple"
           size="icon"
         >
-          <Plus className="h-7 w-7" />
+          <Plus className="h-6 w-6" />
         </Button>
       )}
 

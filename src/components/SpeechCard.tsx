@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { Calendar, Play, Trash2, Presentation, Clock } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +47,6 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
   const daysRemaining = differenceInDays(goalDate, today);
   const isOverdue = daysRemaining < 0;
 
-  // Calculate memorization progress based on how many words have been mastered
   const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
   const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
   const wordsMemorized = Math.max(0, originalWords - currentWords);
@@ -109,79 +107,86 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
 
   return (
     <Card 
-      className="hover:shadow-lg transition-shadow cursor-pointer"
+      className="group cursor-pointer hover:shadow-apple-xl transition-all duration-300 border-0"
       onClick={handleCardClick}
     >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <CardTitle className="truncate capitalize">{speech.title}</CardTitle>
-            <CardDescription className="mt-1">
-              {t('dashboard.created')} {format(new Date(speech.created_at), "MMM dd, yyyy")}
+            <CardTitle className="text-base font-semibold truncate capitalize text-foreground">
+              {speech.title}
+            </CardTitle>
+            <CardDescription className="text-xs mt-1">
+              {format(new Date(speech.created_at), "MMM dd, yyyy")}
             </CardDescription>
           </div>
-          <Badge variant={isOverdue ? "destructive" : "secondary"}>
+          <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
+            isOverdue 
+              ? "bg-destructive/10 text-destructive" 
+              : "bg-secondary text-muted-foreground"
+          }`}>
             {isOverdue
               ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
               : t(daysRemaining === 1 ? 'dashboard.daysLeft' : 'dashboard.daysLeftPlural', { count: daysRemaining })}
-          </Badge>
+          </span>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5" />
           <span>{t('dashboard.goal')}: {format(goalDate, "MMM dd, yyyy")}</span>
         </div>
 
         {isLocked && nextReviewDate && (
-          <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-xl">
             <Clock className="h-4 w-4 text-primary" />
-            <div className="flex-1">
-              <span className="text-sm">{t('dashboard.nextPractice')} </span>
-              <LockCountdown nextReviewDate={nextReviewDate} className="text-primary font-medium text-sm" />
+            <div className="flex-1 text-xs">
+              <span className="text-muted-foreground">{t('dashboard.nextPractice')} </span>
+              <LockCountdown nextReviewDate={nextReviewDate} className="text-primary font-medium" />
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">{t('dashboard.progress')}</span>
-            <span className="font-medium">{progress}%</span>
+            <span className="font-medium text-foreground">{progress}%</span>
           </div>
-          <Progress value={progress} />
+          <Progress value={progress} className="h-1.5" />
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {speech.text_original.substring(0, 150)}...
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+          {speech.text_original.substring(0, 120)}...
         </p>
       </CardContent>
 
-      <CardFooter className="gap-2" onClick={(e) => e.stopPropagation()}>
+      <CardFooter onClick={(e) => e.stopPropagation()}>
         <Button
-          variant="default"
+          variant="apple"
           onClick={handleCardClick}
           className="flex-1"
+          size="sm"
         >
-          <Play className="h-4 w-4 mr-2" />
+          <Play className="h-4 w-4" />
           {t('dashboard.practice')}
         </Button>
 
         <Button
-          variant="outline"
+          variant="ghost"
+          size="sm"
           onClick={() => navigate(`/presentation/${speech.id}`)}
         >
-          <Presentation className="h-4 w-4 mr-2" />
-          {t('dashboard.present')}
+          <Presentation className="h-4 w-4" />
         </Button>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive">
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent className="bg-card border-border">
             <AlertDialogHeader>
               <AlertDialogTitle>{t('dashboard.deleteSpeech')}</AlertDialogTitle>
               <AlertDialogDescription>
@@ -189,8 +194,10 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>{t('common.delete')}</AlertDialogAction>
+              <AlertDialogCancel className="border-border">{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {t('common.delete')}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
