@@ -21,7 +21,7 @@
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 98%;
 
-    /* Apple Blue as primary */
+    /* Apple Blue - #007AFF */
     --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
@@ -37,14 +37,16 @@
     --accent: 0 0% 20%;
     --accent-foreground: 0 0% 98%;
 
-    /* Semantic colors */
-    --success: 142 71% 45%;
+    /* Success green - #34C759 */
+    --success: 142 60% 49%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    /* Warning yellow - #FFCC00 */
+    --warning: 48 100% 50%;
+    --warning-foreground: 0 0% 7%;
 
-    --destructive: 0 84% 60%;
+    /* Error red - #FF3B30 */
+    --destructive: 4 100% 59%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders - very subtle */
@@ -56,7 +58,7 @@
     --radius: 1.25rem;
 
     /* Extended palette */
-    --success-green: 142 71% 45%;
+    --success-green: 142 60% 49%;
     --cosmic-teal: 174 72% 56%;
     --cosmic-purple: 280 87% 65%;
     --cosmic-pink: 330 81% 60%;
@@ -67,7 +69,7 @@
     /* Apple-style gradients */
     --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 40%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(280 87% 65%) 0%, hsl(330 81% 60%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 71% 35%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 60% 49%) 0%, hsl(142 60% 39%) 100%);
     --gradient-cosmic: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(280 87% 65%) 50%, hsl(330 81% 60%) 100%);
     --gradient-space: radial-gradient(ellipse at top, hsl(0 0% 8%), hsl(0 0% 0%));
     
@@ -88,51 +90,53 @@
 
   .light {
     /* Apple Light Mode - #F5F5F7 background */
-    --background: 240 5% 96%;
-    --foreground: 0 0% 11%;
+    --background: 240 9% 97%;
+    --foreground: 0 0% 7%;
 
-    /* Pure white cards */
+    /* Pure white cards - #FFFFFF */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 11%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 11%;
+    --popover-foreground: 0 0% 7%;
 
-    /* Apple Blue */
+    /* Apple Blue - #007AFF */
     --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     /* Light gray secondary */
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 0 0% 11%;
+    --secondary: 240 9% 97%;
+    --secondary-foreground: 0 0% 7%;
 
     /* Muted backgrounds */
-    --muted: 240 5% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 240 9% 97%;
+    --muted-foreground: 220 9% 46%;
 
     /* Subtle accent */
-    --accent: 240 5% 93%;
-    --accent-foreground: 0 0% 11%;
+    --accent: 240 9% 94%;
+    --accent-foreground: 0 0% 7%;
 
-    /* Semantic colors - Apple style */
-    --success: 142 71% 45%;
+    /* Success green - #34C759 */
+    --success: 142 60% 49%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    /* Warning yellow - #FFCC00 */
+    --warning: 48 100% 50%;
+    --warning-foreground: 0 0% 7%;
 
-    --destructive: 0 84% 60%;
+    /* Error red - #FF3B30 */
+    --destructive: 4 100% 59%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Very subtle borders */
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    /* Divider/border - #E5E7EB */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
     --ring: 211 100% 50%;
 
     /* Light mode gradients */
     --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 45%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(280 87% 65%) 0%, hsl(330 81% 60%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 71% 40%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 60% 49%) 0%, hsl(142 60% 44%) 100%);
     --gradient-cosmic: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(280 87% 60%) 50%, hsl(330 81% 55%) 100%);
 
     /* Apple-style shadows - subtle and elegant */
