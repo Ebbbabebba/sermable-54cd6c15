@@ -136,6 +136,13 @@ Deno.serve(async (req) => {
       .select('*')
       .eq('speech_id', speechId)
 
+    // Get existing phrases for chunk-based recall
+    const { data: existingPhrases } = await supabaseClient
+      .from('speech_phrases')
+      .select('*')
+      .eq('speech_id', speechId)
+      .order('start_word_index', { ascending: true })
+
     // Get practice session count for this speech (for progressive hiding scaling)
     const { count: sessionCount } = await supabaseClient
       .from('practice_sessions')
@@ -158,6 +165,46 @@ Deno.serve(async (req) => {
       wordIndex++
     })
     console.log(`Already hidden word indices: ${Array.from(alreadyHiddenIndices).join(', ')}`)
+
+    // CHUNK-BASED RECALL: Find phrases that contain missed words
+    // and mark entire phrase for unhiding
+    const phrasesNeedingRecovery = new Set<string>() // phrase IDs
+    const phraseRecoveryIndices = new Set<number>() // word indices to keep visible
+    
+    if (existingPhrases && existingPhrases.length > 0) {
+      missedIndices.forEach((missedIdx: number) => {
+        const phrase = existingPhrases.find((p: any) => 
+          missedIdx >= p.start_word_index && missedIdx <= p.end_word_index
+        )
+        if (phrase) {
+          phrasesNeedingRecovery.add(phrase.id)
+          // Mark ALL words in this phrase as needing visibility
+          for (let i = phrase.start_word_index; i <= phrase.end_word_index; i++) {
+            phraseRecoveryIndices.add(i)
+          }
+          console.log(`📦 Phrase "${phrase.phrase_text}" needs recovery (missed word at index ${missedIdx})`)
+        }
+      })
+      
+      // Also check hesitated words - they also trigger phrase recovery (but less aggressively)
+      hesitatedIndices.forEach((hesIdx: number) => {
+        const phrase = existingPhrases.find((p: any) => 
+          hesIdx >= p.start_word_index && hesIdx <= p.end_word_index
+        )
+        if (phrase && !phrasesNeedingRecovery.has(phrase.id)) {
+          // Only add if phrase already has high times_missed (pattern of struggle)
+          if (phrase.times_missed >= 1) {
+            phrasesNeedingRecovery.add(phrase.id)
+            for (let i = phrase.start_word_index; i <= phrase.end_word_index; i++) {
+              phraseRecoveryIndices.add(i)
+            }
+            console.log(`📦 Phrase "${phrase.phrase_text}" needs recovery (hesitation at index ${hesIdx}, already struggled)`)
+          }
+        }
+      })
+      
+      console.log(`🔄 ${phrasesNeedingRecovery.size} phrases need recovery, affecting ${phraseRecoveryIndices.size} words`)
+    }
 
     // Build word mastery map
     const wordMasteryMap = new Map<string, WordMasteryData>()
@@ -259,11 +306,18 @@ Deno.serve(async (req) => {
     const candidatesToHide: Array<{ index: number; priority: number; isSimple: boolean }> = []
 
     // FIRST: Preserve all already-hidden words (from previous sessions)
+    // BUT: Un-hide words that are in phrases needing recovery (CHUNK-BASED RECALL)
     alreadyHiddenIndices.forEach(idx => {
       const word = words[idx]
       if (!word) return
       const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
       const data = wordMasteryMap.get(cleanWord)
+      
+      // CHUNK-BASED: If this word is in a phrase that needs recovery, unhide it
+      if (phraseRecoveryIndices.has(idx)) {
+        console.log(`📦 Un-hiding word "${cleanWord}" (part of phrase needing recovery)`)
+        return // Don't add to wordsToHide - word will become visible
+      }
       
       // Only un-hide if word was missed/hesitated while hidden (needs recovery)
       if (data && (data.hiddenMissCount > 0 || data.hiddenHesitateCount > 0)) {
@@ -279,6 +333,7 @@ Deno.serve(async (req) => {
     })
     
     console.log(`Preserving ${wordsToHide.size} already-hidden words from previous sessions`)
+    console.log(`📦 Phrase recovery forced ${phraseRecoveryIndices.size} words visible`)
 
     words.forEach((word: string, index: number) => {
       const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
@@ -443,8 +498,8 @@ Deno.serve(async (req) => {
       console.log(`Segment ${segmentId} visibility: ${segmentVisibility}%, next review: ${nextReviewAt.toISOString()}`)
     }
 
-    // Generate/update phrase chunks
-    await generatePhraseChunks(supabaseClient, speechId, words, wordMasteryMap)
+    // Update phrase chunks with recovery tracking (CHUNK-BASED RECALL)
+    await updatePhraseChunks(supabaseClient, speechId, words, wordMasteryMap, existingPhrases, phrasesNeedingRecovery, missedIndices, hesitatedIndices)
 
     return new Response(
       JSON.stringify({ 
@@ -469,92 +524,137 @@ Deno.serve(async (req) => {
   }
 })
 
-// Generate phrase chunks based on natural sentence structure
-async function generatePhraseChunks(
+// Update phrase chunks with chunk-based recovery tracking
+async function updatePhraseChunks(
   supabase: any, 
   speechId: string, 
   words: string[],
-  wordMasteryMap: Map<string, WordMasteryData>
+  wordMasteryMap: Map<string, WordMasteryData>,
+  existingPhrases: any[] | null,
+  phrasesNeedingRecovery: Set<string>,
+  missedIndices: number[],
+  hesitatedIndices: number[]
 ) {
-  // Delete existing phrases for this speech
-  await supabase
-    .from('speech_phrases')
-    .delete()
-    .eq('speech_id', speechId)
+  // If no existing phrases, generate them first
+  if (!existingPhrases || existingPhrases.length === 0) {
+    console.log('📦 No existing phrases, generating initial phrase chunks...')
+    
+    const phrases: PhraseData[] = []
+    let currentPhraseStart = 0
+    let currentPhraseWords: string[] = []
 
-  const phrases: PhraseData[] = []
-  let currentPhraseStart = 0
-  let currentPhraseWords: string[] = []
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i]
+      currentPhraseWords.push(word)
 
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i]
-    currentPhraseWords.push(word)
+      const hasPunctuation = /[.!?,;:]$/.test(word)
+      const isLongEnough = currentPhraseWords.length >= 4
+      const isMaxLength = currentPhraseWords.length >= 5
 
-    // Check if this is a phrase boundary (punctuation or 4-5 words)
-    const hasPunctuation = /[.!?,;:]$/.test(word)
-    const isLongEnough = currentPhraseWords.length >= 4
-    const isMaxLength = currentPhraseWords.length >= 5
+      if (hasPunctuation || isMaxLength || (isLongEnough && i === words.length - 1)) {
+        phrases.push({
+          phraseText: currentPhraseWords.join(' '),
+          startIndex: currentPhraseStart,
+          endIndex: i,
+          timesCorrect: 0,
+          timesMissed: 0,
+          isHidden: false
+        })
 
-    if (hasPunctuation || isMaxLength || (isLongEnough && i === words.length - 1)) {
-      // Calculate phrase difficulty based on word mastery
-      let phraseTimesCorrect = 0
-      let phraseTimesMissed = 0
-      
-      currentPhraseWords.forEach((w, idx) => {
-        const cleanWord = w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
-        const data = wordMasteryMap.get(cleanWord)
-        if (data) {
-          phraseTimesCorrect += data.correctCount
-          phraseTimesMissed += data.missedCount + data.hesitatedCount
-        }
-      })
+        currentPhraseStart = i + 1
+        currentPhraseWords = []
+      }
+    }
 
-      // Phrase is hidden if average word mastery is high enough
-      const avgCorrect = phraseTimesCorrect / currentPhraseWords.length
-      const avgMissed = phraseTimesMissed / currentPhraseWords.length
-      const isHidden = avgCorrect >= 3 && avgMissed < 1
-
+    if (currentPhraseWords.length > 0) {
       phrases.push({
         phraseText: currentPhraseWords.join(' '),
         startIndex: currentPhraseStart,
-        endIndex: i,
-        timesCorrect: Math.round(avgCorrect),
-        timesMissed: Math.round(avgMissed),
-        isHidden
+        endIndex: words.length - 1,
+        timesCorrect: 0,
+        timesMissed: 0,
+        isHidden: false
       })
-
-      // Reset for next phrase
-      currentPhraseStart = i + 1
-      currentPhraseWords = []
     }
+
+    if (phrases.length > 0) {
+      await supabase
+        .from('speech_phrases')
+        .insert(phrases.map(p => ({
+          speech_id: speechId,
+          phrase_text: p.phraseText,
+          start_word_index: p.startIndex,
+          end_word_index: p.endIndex,
+          times_correct: p.timesCorrect,
+          times_missed: p.timesMissed,
+          is_hidden: p.isHidden
+        })))
+    }
+
+    console.log(`📦 Generated ${phrases.length} initial phrase chunks`)
+    return
   }
 
-  // Handle any remaining words
-  if (currentPhraseWords.length > 0) {
-    phrases.push({
-      phraseText: currentPhraseWords.join(' '),
-      startIndex: currentPhraseStart,
-      endIndex: words.length - 1,
-      timesCorrect: 0,
-      timesMissed: 0,
-      isHidden: false
-    })
-  }
+  // Update existing phrases based on session performance
+  const missedSet = new Set(missedIndices)
+  const hesitatedSet = new Set(hesitatedIndices)
 
-  // Insert all phrases
-  if (phrases.length > 0) {
+  for (const phrase of existingPhrases) {
+    let phraseHadMiss = false
+    let phraseHadHesitation = false
+    let allWordsCorrect = true
+
+    // Check each word in the phrase
+    for (let i = phrase.start_word_index; i <= phrase.end_word_index; i++) {
+      if (missedSet.has(i)) {
+        phraseHadMiss = true
+        allWordsCorrect = false
+      } else if (hesitatedSet.has(i)) {
+        phraseHadHesitation = true
+        allWordsCorrect = false
+      }
+    }
+
+    // Calculate new times_correct and times_missed
+    let newTimesCorrect = phrase.times_correct || 0
+    let newTimesMissed = phrase.times_missed || 0
+    let newIsHidden = phrase.is_hidden
+
+    if (phraseHadMiss) {
+      // Missed word in phrase - increment times_missed, unhide phrase
+      newTimesMissed++
+      newIsHidden = false
+      console.log(`📦 Phrase "${phrase.phrase_text.substring(0, 30)}..." times_missed -> ${newTimesMissed}`)
+    } else if (phraseHadHesitation) {
+      // Hesitation - lesser penalty but still counts
+      newTimesMissed += 0.5
+      // Only unhide if pattern of struggle
+      if (newTimesMissed >= 2) {
+        newIsHidden = false
+      }
+    } else if (allWordsCorrect) {
+      // All words correct - increment times_correct
+      newTimesCorrect++
+      
+      // CHUNK-BASED: Phrase can only be hidden again after 3 consecutive correct sessions
+      // AND times_missed must be "recovered" (need 3x correct to offset each miss)
+      const recoveryNeeded = Math.ceil(newTimesMissed) * 3
+      if (newTimesCorrect >= 3 && newTimesCorrect >= recoveryNeeded) {
+        newIsHidden = true
+        console.log(`📦 Phrase "${phrase.phrase_text.substring(0, 30)}..." can be hidden (${newTimesCorrect} correct, recovered from ${newTimesMissed} misses)`)
+      }
+    }
+
+    // Update the phrase in database
     await supabase
       .from('speech_phrases')
-      .insert(phrases.map(p => ({
-        speech_id: speechId,
-        phrase_text: p.phraseText,
-        start_word_index: p.startIndex,
-        end_word_index: p.endIndex,
-        times_correct: p.timesCorrect,
-        times_missed: p.timesMissed,
-        is_hidden: p.isHidden
-      })))
+      .update({
+        times_correct: Math.round(newTimesCorrect),
+        times_missed: Math.round(newTimesMissed * 10) / 10, // Keep 1 decimal for hesitations
+        is_hidden: newIsHidden
+      })
+      .eq('id', phrase.id)
   }
 
-  console.log(`Generated ${phrases.length} phrase chunks`)
+  console.log(`📦 Updated ${existingPhrases.length} phrase chunks, ${phrasesNeedingRecovery.size} flagged for recovery`)
 }
