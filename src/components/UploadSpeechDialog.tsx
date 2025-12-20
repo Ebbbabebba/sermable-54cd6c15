@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Calendar, Languages, Brain } from "lucide-react";
 import { format } from "date-fns";
-import { switchLanguageBasedOnText } from "@/utils/languageDetection";
+import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
 
 interface UploadSpeechDialogProps {
   open: boolean;
@@ -118,6 +118,10 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Detect the language of the speech text
+      const detectedLanguage = detectTextLanguage(text) || 'en';
+      console.log('🌍 Detected speech language:', detectedLanguage);
+
       const { data: newSpeech, error } = await supabase.from("speeches").insert({
         user_id: user.id,
         title,
@@ -125,6 +129,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         text_current: text,
         goal_date: goalDate,
         familiarity_level: familiarityLevel,
+        speech_language: detectedLanguage,
       }).select().single();
 
       if (error) throw error;

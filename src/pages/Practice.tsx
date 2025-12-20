@@ -550,17 +550,25 @@ const Practice = () => {
         text_preview: speech?.text_current?.substring(0, 50)
       });
       
-      // Use speech's stored language first, then detect from text as fallback
-      let speechLang = speech?.speech_language || 'en';
+      // ALWAYS detect language from the actual speech text to ensure correct recognition
+      // This prevents mismatches where stored language doesn't match actual text language
+      const { detectTextLanguage } = await import('@/utils/languageDetection');
+      let speechLang = detectTextLanguage(speech!.text_current);
       
-      // Only fallback to detection if speech_language is null/undefined (not if it's 'en')
-      // This ensures we respect explicitly set languages
-      if (!speech?.speech_language) {
-        const { detectTextLanguage } = await import('@/utils/languageDetection');
-        const detectedLang = detectTextLanguage(speech!.text_current);
-        if (detectedLang) {
-          speechLang = detectedLang;
-          console.log('🔍 Detected language from text:', detectedLang);
+      if (!speechLang) {
+        // Only use stored language as fallback if detection fails
+        speechLang = speech?.speech_language || 'en';
+        console.log('🔍 Language detection failed, using stored/default:', speechLang);
+      } else {
+        console.log('🔍 Detected language from text:', speechLang);
+        
+        // Update stored language if it differs (for future sessions)
+        if (speech?.speech_language !== speechLang) {
+          console.log('🔄 Updating stored speech_language from', speech?.speech_language, 'to', speechLang);
+          await supabase
+            .from('speeches')
+            .update({ speech_language: speechLang })
+            .eq('id', speech!.id);
         }
       }
       
