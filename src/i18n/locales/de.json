@@ -89,7 +89,19 @@
     "upgradedDesc": "Sie haben jetzt Zugang zu allen Premium-Funktionen.",
     "upgradeFailed": "Upgrade fehlgeschlagen",
     "plan": "Plan",
-    "speechesThisMonth": "Reden diesen Monat"
+    "speechesThisMonth": "Reden diesen Monat",
+    "created": "Erstellt",
+    "goal": "Ziel",
+    "daysLeft": "Tage übrig",
+    "daysOverdue": "Tage überfällig",
+    "nextPractice": "Nächste Übung",
+    "progress": "Fortschritt",
+    "practice": "Üben",
+    "present": "Präsentieren",
+    "deleteSpeech": "Rede löschen?",
+    "deleteSpeechDesc": "Diese Rede und der gesamte Fortschritt werden gelöscht. Das kann nicht rückgängig gemacht werden.",
+    "deleted": "Rede gelöscht",
+    "deletedDesc": "Die Rede wurde dauerhaft entfernt."
   },
   "onboarding": {
     "skip": "Überspringen",
