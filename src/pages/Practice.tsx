@@ -819,6 +819,17 @@ const Practice = () => {
           recognition.start();
           recognitionRef.current = recognition;
           console.log('✨ Web Speech API started for instant word tracking');
+          
+          // Start hints for the FIRST word immediately when recording begins
+          // This ensures the color system is ready from the very first word
+          setTimeout(() => {
+            if (expectedWordIndexRef.current === 0) {
+              const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
+              const firstExpectedWords = cleanedText.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
+              startProgressiveHints(0, firstExpectedWords);
+              console.log('🎯 Started progressive hints for first word immediately');
+            }
+          }, 100); // Small delay to ensure recognition is ready
         } catch (startError) {
           console.error('❌ Error starting recognition:', startError);
         }
