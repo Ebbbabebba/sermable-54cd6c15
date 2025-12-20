@@ -50,22 +50,24 @@ serve(async (req) => {
     let segmentOrder = 0;
     
     // Determine segment size based on total speech length
-    // Aim for 2-3 sentences per segment
+    // Aim for 2-4 sentences per segment (roughly 60-100 words)
     const totalWords = words.length;
     let TARGET_SEGMENT_SIZE: number;
     let MIN_SEGMENT_SIZE: number;
     const MIN_SENTENCES_PER_SEGMENT = 2;
-    const MAX_SENTENCES_PER_SEGMENT = 3;
     
     if (totalWords <= 100) {
-      TARGET_SEGMENT_SIZE = 60;
-      MIN_SEGMENT_SIZE = 30;
+      // Short speech: 1-2 larger segments
+      TARGET_SEGMENT_SIZE = 80;
+      MIN_SEGMENT_SIZE = 40;
     } else if (totalWords <= 300) {
-      TARGET_SEGMENT_SIZE = 60;
-      MIN_SEGMENT_SIZE = 35;
+      // Medium speech: fewer, larger segments
+      TARGET_SEGMENT_SIZE = 80;
+      MIN_SEGMENT_SIZE = 50;
     } else {
-      TARGET_SEGMENT_SIZE = 55;
-      MIN_SEGMENT_SIZE = 30;
+      // Long speech: balanced segments of ~70 words
+      TARGET_SEGMENT_SIZE = 70;
+      MIN_SEGMENT_SIZE = 45;
     }
     
     console.log(`📏 Speech length: ${totalWords} words. Target segment size: ${TARGET_SEGMENT_SIZE} words`);
@@ -101,8 +103,8 @@ serve(async (req) => {
       
       if (paragraphWords.length === 0) continue;
 
-      // If paragraph has 2-3 sentences, keep as one segment
-      if (paragraphSentences >= MIN_SENTENCES_PER_SEGMENT && paragraphSentences <= MAX_SENTENCES_PER_SEGMENT) {
+      // If paragraph has 2-3 sentences and reasonable size, keep as one segment
+      if (paragraphSentences >= 2 && paragraphSentences <= 4 && paragraphWords.length <= TARGET_SEGMENT_SIZE * 1.5) {
         const segmentText = paragraphWords.join(' ');
         segments.push({
           speech_id: speechId,
@@ -147,8 +149,15 @@ serve(async (req) => {
         for (const sentence of sentenceMatches) {
           const sentenceWords = sentence.trim().split(/\s+/).filter((w: string) => w);
           
-          // Split BEFORE adding this sentence if we already have 3 sentences
-          if (currentChunk.length > 0 && sentenceCount >= MAX_SENTENCES_PER_SEGMENT) {
+          // Only create a new segment if:
+          // 1. We have at least MIN_SENTENCES_PER_SEGMENT sentences
+          // 2. Adding this sentence would exceed TARGET size
+          // 3. Current chunk meets MIN size
+          if (currentChunk.length > 0 && 
+              sentenceCount >= MIN_SENTENCES_PER_SEGMENT &&
+              currentChunk.length + sentenceWords.length > TARGET_SEGMENT_SIZE &&
+              currentChunk.length >= MIN_SEGMENT_SIZE) {
+            
             const segmentText = currentChunk.join(' ');
             segments.push({
               speech_id: speechId,
@@ -191,60 +200,18 @@ serve(async (req) => {
     }
     } // Close else block for segmentation
 
-    // Post-process: split segments with more than 3 sentences, merge those with less than 2
+    // Post-process: merge any segments with less than 2 sentences
     const finalSegments: typeof segments = [];
     for (let i = 0; i < segments.length; i++) {
       const seg = segments[i];
       const sentenceCount = countSentences(seg.segment_text);
       
-      if (sentenceCount > MAX_SENTENCES_PER_SEGMENT) {
-        // Split this segment - find sentence boundaries
-        const sentences = seg.segment_text.match(/[^.!?]+[.!?]+/g) || [seg.segment_text];
-        let currentText = '';
-        let currentSentences = 0;
-        let currentStartIdx = seg.start_word_index;
-        
-        for (const sentence of sentences) {
-          currentText += (currentText ? ' ' : '') + sentence.trim();
-          currentSentences++;
-          
-          if (currentSentences >= MAX_SENTENCES_PER_SEGMENT) {
-            const wordCount = currentText.split(/\s+/).length;
-            finalSegments.push({
-              speech_id: speechId,
-              segment_order: finalSegments.length,
-              start_word_index: currentStartIdx,
-              end_word_index: currentStartIdx + wordCount - 1,
-              segment_text: currentText,
-            });
-            currentStartIdx += wordCount;
-            currentText = '';
-            currentSentences = 0;
-          }
-        }
-        // Add remaining
-        if (currentText && currentSentences > 0) {
-          if (currentSentences < MIN_SENTENCES_PER_SEGMENT && finalSegments.length > 0) {
-            const prevSeg = finalSegments[finalSegments.length - 1];
-            prevSeg.segment_text = prevSeg.segment_text + ' ' + currentText;
-            prevSeg.end_word_index = seg.end_word_index;
-          } else {
-            const wordCount = currentText.split(/\s+/).length;
-            finalSegments.push({
-              speech_id: speechId,
-              segment_order: finalSegments.length,
-              start_word_index: currentStartIdx,
-              end_word_index: currentStartIdx + wordCount - 1,
-              segment_text: currentText,
-            });
-          }
-        }
-      } else if (sentenceCount < MIN_SENTENCES_PER_SEGMENT && finalSegments.length > 0) {
+      if (sentenceCount < 2 && finalSegments.length > 0) {
         // Merge with previous
         const prevSeg = finalSegments[finalSegments.length - 1];
         prevSeg.segment_text = prevSeg.segment_text + ' ' + seg.segment_text;
         prevSeg.end_word_index = seg.end_word_index;
-      } else if (sentenceCount < MIN_SENTENCES_PER_SEGMENT && i < segments.length - 1) {
+      } else if (sentenceCount < 2 && i < segments.length - 1) {
         // Merge with next
         segments[i + 1].segment_text = seg.segment_text + ' ' + segments[i + 1].segment_text;
         segments[i + 1].start_word_index = seg.start_word_index;
