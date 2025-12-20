@@ -767,28 +767,20 @@ const Practice = () => {
               }
               
               if (!matchFound) {
-                // Handle support word case
+                // Handle support word case - only advance if user was shown the word
                 if (wasSupportWordShowing && previousSupportWordIndex !== null) {
                   if (currentHiddenIndices.has(previousSupportWordIndex)) {
                     queueWordAction('missed', previousSupportWordIndex, allExpectedWords[previousSupportWordIndex]);
                     console.log('❌ Hidden support word missed (red):', allExpectedWords[previousSupportWordIndex]);
                   }
                   currentIdx = previousSupportWordIndex + 1;
-                } else {
-                  // No match found - queue current as skipped and move on
-                  if (currentHiddenIndices.has(currentIdx)) {
-                    queueWordAction('missed', currentIdx, expectedWord);
-                    console.log('❌ Hidden word missed:', expectedWord, 'at index', currentIdx);
-                  } else {
-                    queueWordAction('spoken', currentIdx, expectedWord);
-                    console.log('⏭️ Visible word skipped (fade out):', expectedWord, 'at index', currentIdx);
+                  if (currentIdx < allExpectedWords.length) {
+                    startProgressiveHints(currentIdx, allExpectedWords);
                   }
-                  currentIdx++;
                 }
-                
-                if (currentIdx < allExpectedWords.length) {
-                  startProgressiveHints(currentIdx, allExpectedWords);
-                }
+                // IMPORTANT: Do NOT skip words when no match found!
+                // Just log and wait for the user to say the correct word
+                console.log('⏳ No match - waiting for correct word:', expectedWord, 'at index', currentIdx);
               }
             }
           }
