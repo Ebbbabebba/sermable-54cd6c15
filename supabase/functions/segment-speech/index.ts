@@ -72,9 +72,15 @@ serve(async (req) => {
     
     console.log(`📏 Speech length: ${totalWords} words. Target segment size: ${TARGET_SEGMENT_SIZE} words`);
 
-    // If speech is short enough, don't segment it
-    if (totalWords <= MIN_SEGMENT_SIZE) {
-      console.log('📝 Speech is short - no segmentation needed');
+    // Count sentences in text
+    const countSentences = (text: string): number => {
+      const matches = text.match(/[.!?]+/g);
+      return matches ? matches.length : 0;
+    };
+
+    // If speech is short enough AND has less than 4 sentences, don't segment it
+    if (totalWords <= MIN_SEGMENT_SIZE || countSentences(text) < 4) {
+      console.log('📝 Speech is short or has few sentences - no segmentation needed');
       const segmentText = text.trim();
       segments.push({
         speech_id: speechId,
@@ -85,7 +91,7 @@ serve(async (req) => {
       });
     } else {
       // Segment longer speeches
-      console.log('✂️ Segmenting speech into manageable chunks');
+      console.log('✂️ Segmenting speech into manageable chunks with at least 2 sentences each');
 
     // Split by paragraphs first
     const paragraphs = text.split(/\n\n+/);
@@ -93,11 +99,37 @@ serve(async (req) => {
 
     for (const paragraph of paragraphs) {
       const paragraphWords = paragraph.trim().split(/\s+/).filter((w: string) => w);
+      const paragraphSentences = countSentences(paragraph);
       
       if (paragraphWords.length === 0) continue;
 
-      // If paragraph is small enough, it's one segment
-      if (paragraphWords.length <= TARGET_SEGMENT_SIZE) {
+      // If paragraph has 2-3 sentences and reasonable size, keep as one segment
+      if (paragraphSentences >= 2 && paragraphSentences <= 4 && paragraphWords.length <= TARGET_SEGMENT_SIZE * 1.5) {
+        const segmentText = paragraphWords.join(' ');
+        segments.push({
+          speech_id: speechId,
+          segment_order: segmentOrder++,
+          start_word_index: wordIndex,
+          end_word_index: wordIndex + paragraphWords.length - 1,
+          segment_text: segmentText,
+        });
+        wordIndex += paragraphWords.length;
+      } else if (paragraphSentences < 2) {
+        // Paragraph has less than 2 sentences - try to merge with previous segment
+        if (segments.length > 0) {
+          const lastSegment = segments[segments.length - 1];
+          const combinedText = lastSegment.segment_text + ' ' + paragraphWords.join(' ');
+          const combinedWords = combinedText.split(/\s+/).length;
+          
+          // Merge if combined length is reasonable
+          if (combinedWords <= TARGET_SEGMENT_SIZE * 1.5) {
+            lastSegment.segment_text = combinedText;
+            lastSegment.end_word_index = wordIndex + paragraphWords.length - 1;
+            wordIndex += paragraphWords.length;
+            continue;
+          }
+        }
+        // Can't merge - add as separate segment
         const segmentText = paragraphWords.join(' ');
         segments.push({
           speech_id: speechId,
@@ -145,22 +177,50 @@ serve(async (req) => {
           sentenceCount++;
         }
 
-        // Save remaining chunk
+        // Save remaining chunk - merge with previous if too small
         if (currentChunk.length > 0) {
-          const segmentText = currentChunk.join(' ');
-          segments.push({
-            speech_id: speechId,
-            segment_order: segmentOrder++,
-            start_word_index: chunkStartIndex,
-            end_word_index: chunkStartIndex + currentChunk.length - 1,
-            segment_text: segmentText,
-          });
+          if (sentenceCount < MIN_SENTENCES_PER_SEGMENT && segments.length > 0) {
+            // Try to merge with previous segment
+            const lastSegment = segments[segments.length - 1];
+            const combinedText = lastSegment.segment_text + ' ' + currentChunk.join(' ');
+            lastSegment.segment_text = combinedText;
+            lastSegment.end_word_index = chunkStartIndex + currentChunk.length - 1;
+          } else {
+            const segmentText = currentChunk.join(' ');
+            segments.push({
+              speech_id: speechId,
+              segment_order: segmentOrder++,
+              start_word_index: chunkStartIndex,
+              end_word_index: chunkStartIndex + currentChunk.length - 1,
+              segment_text: segmentText,
+            });
+          }
         }
       }
     }
     } // Close else block for segmentation
 
-    console.log(`✅ Created ${segments.length} segments`);
+    // Post-process: merge any segments with less than 2 sentences
+    const finalSegments: typeof segments = [];
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const sentenceCount = countSentences(seg.segment_text);
+      
+      if (sentenceCount < 2 && finalSegments.length > 0) {
+        // Merge with previous
+        const prevSeg = finalSegments[finalSegments.length - 1];
+        prevSeg.segment_text = prevSeg.segment_text + ' ' + seg.segment_text;
+        prevSeg.end_word_index = seg.end_word_index;
+      } else if (sentenceCount < 2 && i < segments.length - 1) {
+        // Merge with next
+        segments[i + 1].segment_text = seg.segment_text + ' ' + segments[i + 1].segment_text;
+        segments[i + 1].start_word_index = seg.start_word_index;
+      } else {
+        finalSegments.push({ ...seg, segment_order: finalSegments.length });
+      }
+    }
+
+    console.log(`✅ Created ${finalSegments.length} segments (each with 2+ sentences)`);
 
     // Delete existing segments if any
     await supabase
@@ -171,7 +231,7 @@ serve(async (req) => {
     // Insert new segments
     const { error: insertError } = await supabase
       .from('speech_segments')
-      .insert(segments);
+      .insert(finalSegments.length > 0 ? finalSegments : segments);
 
     if (insertError) {
       throw insertError;
