@@ -254,7 +254,9 @@
       "supportWordDelay": "Fördröjning för stödord",
       "supportWordDelayDesc": "Tid innan stödord visas",
       "hesitationTime": "Tveksamhetstid (första ordet)",
-      "hesitationTimeDesc": "Markera första ordet gult om du pausar så länge innan du börjar"
+      "hesitationTimeDesc": "Markera första ordet gult om du pausar så länge innan du börjar",
+      "sentenceStartDelay": "Extra tid efter punkt",
+      "sentenceStartDelayDesc": "Extra fördröjning innan första ordet efter en punkt markeras gult"
     },
     "segments": {
       "learningProgress": "Inlärningsframsteg",
