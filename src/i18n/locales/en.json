@@ -254,7 +254,9 @@
       "supportWordDelay": "Support Word Delay",
       "supportWordDelayDesc": "Time before support word appears on screen",
       "hesitationTime": "Hesitation Time (first word)",
-      "hesitationTimeDesc": "Mark first word yellow if you pause this long before starting"
+      "hesitationTimeDesc": "Mark first word yellow if you pause this long before starting",
+      "sentenceStartDelay": "Extra Time After Period",
+      "sentenceStartDelayDesc": "Extra delay before the first word after a period is marked yellow"
     },
     "segments": {
       "learningProgress": "Learning Progress",

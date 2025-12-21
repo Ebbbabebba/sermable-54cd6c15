@@ -17,6 +17,7 @@ export interface PracticeSettingsConfig {
   keywordMode: boolean;
   hesitationThreshold: number;
   firstWordHesitationThreshold: number;
+  sentenceStartDelay: number;
 }
 
 interface PracticeSettingsProps {
@@ -159,6 +160,23 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">{t('practice.settings.hesitationTimeDesc')}</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="sentence-start-delay">{t('practice.settings.sentenceStartDelay')}</Label>
+                <span className="text-sm text-muted-foreground">{settings.sentenceStartDelay}s</span>
+              </div>
+              <Slider
+                id="sentence-start-delay"
+                min={1}
+                max={5}
+                step={0.5}
+                value={[settings.sentenceStartDelay]}
+                onValueChange={([value]) => updateSetting('sentenceStartDelay', value)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">{t('practice.settings.sentenceStartDelayDesc')}</p>
             </div>
           </CardContent>
         </CollapsibleContent>

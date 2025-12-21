@@ -103,6 +103,7 @@ const Practice = () => {
     keywordMode: false,
     hesitationThreshold: 5,
     firstWordHesitationThreshold: 6,
+    sentenceStartDelay: 2,
   });
   const [averageWordDelay, setAverageWordDelay] = useState<number>(800); // Track user's average pace - start faster
   const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
@@ -446,8 +447,26 @@ const [liveTranscription, setLiveTranscription] = useState("");
     // Give user MORE time to think before showing hints
     // First word gets extra time, subsequent words adapt to pace
     const isFirstWord = wordIndex === 0;
-    const minDelay = isFirstWord ? 3500 : 2000; // 3.5s for first word, 2s for rest
-    const maxDelay = isFirstWord ? 5000 : 3500; // Cap at 5s/3.5s
+    
+    // Check if current word is the first word after a sentence-ending punctuation
+    const isFirstWordAfterSentence = wordIndex > 0 && (() => {
+      const prevWord = expectedWords[wordIndex - 1];
+      // Check if previous word ends with sentence-ending punctuation
+      return /[.!?]$/.test(prevWord);
+    })();
+    
+    // Base delays
+    let minDelay = isFirstWord ? 3500 : 2000; // 3.5s for first word, 2s for rest
+    let maxDelay = isFirstWord ? 5000 : 3500; // Cap at 5s/3.5s
+    
+    // Add extra delay for first word after a sentence (from settings)
+    if (isFirstWordAfterSentence) {
+      const sentenceStartDelayMs = settings.sentenceStartDelay * 1000;
+      minDelay += sentenceStartDelayMs;
+      maxDelay += sentenceStartDelayMs;
+      console.log('🔤 First word after sentence - adding', settings.sentenceStartDelay, 's extra delay');
+    }
+    
     const paceMultiplier = 2.2; // Give 2.2x their average pace before hint
     
     const adaptiveDelay = Math.min(maxDelay, Math.max(minDelay, averageWordDelay * paceMultiplier));
