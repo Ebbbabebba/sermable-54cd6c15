@@ -866,30 +866,6 @@ const Practice = () => {
     setIsRecording(false);
     setIsProcessing(true);
     
-    // IMPORTANT: Capture live-tracked hesitated/missed words BEFORE resetting state
-    // These will be merged with AI analysis for accurate results
-    const liveHesitatedIndices = new Set(hesitatedWordsIndices);
-    const liveMissedIndices = new Set(missedWordsIndices);
-    const liveSpokenIndices = new Set(spokenWordsIndices);
-    
-    // Get the words corresponding to the indices for merging with AI results
-    const cleanedText = cleanBracketNotation(activeSegmentText || speech?.text_original || '');
-    const allWords = cleanedText.split(/\s+/).filter(w => w.trim());
-    
-    const liveHesitatedWords = Array.from(liveHesitatedIndices)
-      .filter(idx => idx < allWords.length)
-      .map(idx => allWords[idx]);
-    const liveMissedWords = Array.from(liveMissedIndices)
-      .filter(idx => idx < allWords.length)
-      .map(idx => allWords[idx]);
-    
-    console.log('📊 Live tracking captured before reset:', {
-      hesitatedIndices: Array.from(liveHesitatedIndices),
-      hesitatedWords: liveHesitatedWords,
-      missedIndices: Array.from(liveMissedIndices),
-      missedWords: liveMissedWords
-    });
-    
     // Stop Web Speech API
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -917,7 +893,7 @@ const Practice = () => {
     }
     lastProcessedChunkIndex.current = 0;
     
-    // Reset spoken words tracking (visual state only - data already captured above)
+    // Reset spoken words tracking
     setSpokenWordsIndices(new Set());
     setHesitatedWordsIndices(new Set());
     setMissedWordsIndices(new Set());
@@ -989,54 +965,7 @@ const Practice = () => {
             throw new Error('No response from analysis service');
           }
 
-          // MERGE live-tracked hesitated words with AI analysis
-          // This ensures words that were marked yellow during practice appear yellow in results
-          const aiDelayedWords = data.delayedWords || [];
-          const aiMissedWords = data.missedWords || [];
-          
-          // Combine and deduplicate (case-insensitive)
-          const normalizeWord = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-          
-          const aiDelayedNormalized = new Set(aiDelayedWords.map(normalizeWord));
-          const aiMissedNormalized = new Set(aiMissedWords.map(normalizeWord));
-          
-          // Add live-tracked hesitated words that AI didn't catch
-          const mergedDelayedWords = [...aiDelayedWords];
-          for (const word of liveHesitatedWords) {
-            const normalized = normalizeWord(word);
-            if (!aiDelayedNormalized.has(normalized) && !aiMissedNormalized.has(normalized)) {
-              mergedDelayedWords.push(word);
-              console.log('➕ Added live-tracked hesitated word to results:', word);
-            }
-          }
-          
-          // Add live-tracked missed words that AI didn't catch
-          const mergedMissedWords = [...aiMissedWords];
-          for (const word of liveMissedWords) {
-            const normalized = normalizeWord(word);
-            if (!aiMissedNormalized.has(normalized)) {
-              mergedMissedWords.push(word);
-              console.log('➕ Added live-tracked missed word to results:', word);
-            }
-          }
-          
-          console.log('📊 Merged results:', {
-            aiDelayed: aiDelayedWords.length,
-            liveHesitated: liveHesitatedWords.length,
-            mergedDelayed: mergedDelayedWords.length,
-            aiMissed: aiMissedWords.length,
-            liveMissed: liveMissedWords.length,
-            mergedMissed: mergedMissedWords.length
-          });
-
-          // Set results with merged word lists
-          const mergedResults = {
-            ...data,
-            delayedWords: mergedDelayedWords,
-            missedWords: mergedMissedWords
-          };
-          
-          setSessionResults(mergedResults);
+          setSessionResults(data);
           
           // Delay showing results for smooth transition
           setTimeout(() => {
@@ -1044,14 +973,14 @@ const Practice = () => {
             setShowResults(true);
           }, 500);
 
-          // Save practice session to database with merged data
+          // Save practice session to database
           const { error: sessionError } = await supabase
             .from('practice_sessions')
             .insert({
               speech_id: speech!.id,
               score: data.accuracy,
-              missed_words: mergedMissedWords,
-              delayed_words: mergedDelayedWords,
+              missed_words: data.missedWords,
+              delayed_words: data.delayedWords,
               difficulty_score: data.difficultyScore,
               connector_words: data.connectorWords,
               duration: 0,
