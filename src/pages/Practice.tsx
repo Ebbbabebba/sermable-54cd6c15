@@ -716,11 +716,11 @@ const Practice = () => {
               // 1. If any hint was showing (user needed visual help) - both visible and hidden words
               // 2. If user took too long (hesitation detected by timing)
               // 3. If hint reached level 2+ (user clearly needed substantial help)
-              const shouldMarkHesitated = 
-                wasHintShowing || // Any hint = hesitation (visible or hidden)
-                (wasHesitation && currentIdx > 0) || // Time-based hesitation (not for first word)
-                (currentHintLevel >= 2); // Substantial hint needed
-              
+               const shouldMarkHesitated = 
+                 wasHintShowing || // Any hint = hesitation (visible or hidden)
+                 wasHesitation || // Time-based hesitation (including first word)
+                 (currentHintLevel >= 2); // Substantial hint needed
+
               if (shouldMarkHesitated) {
                 queueWordAction('hesitated', currentIdx, expectedWord);
                 console.log('⏱️ Word marked hesitated:', expectedWord, 
