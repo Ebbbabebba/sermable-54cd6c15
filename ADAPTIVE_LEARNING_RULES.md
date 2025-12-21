@@ -1,7 +1,23 @@
 # Adaptive Learning System Rules
 
 ## Overview
-The system uses scientifically-based spaced repetition with weighted performance scoring to optimize speech memorization while respecting deadline constraints.
+The system uses TRUE spaced repetition with weighted performance scoring. Early intervals are measured in **minutes**, not hours/days, because memory is fragile immediately after learning.
+
+## Core Principle: Rapid Early Repetition
+**Sessions 1-3**: 1-15 minute intervals (immediate reinforcement)
+**Sessions 4-6**: 15-60 minute intervals (short-term consolidation)
+**Sessions 7-10**: 1-4 hour intervals (medium-term consolidation)
+**Sessions 10+**: Day-long intervals (only after most words are hidden)
+
+Words should start hiding DURING the first session, not after multiple days!
+
+## Word Hiding Speed (Aggressive)
+| Word Type | Hide After |
+|-----------|------------|
+| Simple (och, i, på, the, a) | 1 correct attempt |
+| Medium words | 1-2 correct attempts |
+| Hard/Content words | 2 correct attempts |
+| Words with errors | 2-3 consecutive correct |
 
 ## Core Principle: Weighted Accuracy
 Performance scores are adjusted based on script visibility to prevent artificially high scores when reading from notes:
@@ -26,23 +42,16 @@ Performance scores are adjusted based on script visibility to prevent artificial
 ### 2. High Score with Full Script
 **Condition:** Raw accuracy ≥80% AND visibility ≥70%
 **Action:**
-- ⚠️ **KEEP SHORT** interval (4-8 hours)
+- ⚠️ **KEEP SHORT** interval (minutes to hours)
 - ⚠️ Just reading well, not memorizing
 - ⚠️ Force more practice to test real memorization
 
 ### 3. Low Weighted Score
 **Condition:** Weighted accuracy <50%
 **Action:**
-- 🔄 **SHORTEN** interval (2-6 hours)
+- 🔄 **SHORTEN** interval (minutes)
 - 🔄 More frequent practice needed
 - 🔄 May increase script visibility if struggling
-
-### 4. Moderate Performance
-**Condition:** Between above thresholds
-**Action:**
-- 📊 Standard spaced repetition intervals
-- 📊 Frequency adjusted by multiplier
-- 📊 Progressive difficulty increase
 
 ## Deadline-Based Note Restrictions
 
