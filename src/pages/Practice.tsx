@@ -103,7 +103,7 @@ const Practice = () => {
     keywordMode: false,
     hesitationThreshold: 5,
     firstWordHesitationThreshold: 6,
-    sentenceStartDelay: 2,
+    sentenceStartDelay: 4,
   });
   const [averageWordDelay, setAverageWordDelay] = useState<number>(800); // Track user's average pace - start faster
   const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
