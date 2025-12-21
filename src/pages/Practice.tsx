@@ -435,15 +435,16 @@ const Practice = () => {
     
     const wordToShow = expectedWords[wordIndex];
     
-    // Adaptive timing based on user's speaking pace - more responsive
-    // Fast speakers (< 300ms avg): shorter delays (350ms min)
-    // Slow speakers (> 1200ms avg): longer delays (1500ms max)
-    const minDelay = 350;
-    const maxDelay = 1500;
-    const paceMultiplier = 1.3; // Give 1.3x their average pace before hint
+    // Adaptive timing based on user's speaking pace
+    // Give user time to think before showing hints
+    // First word gets extra time, subsequent words adapt to pace
+    const isFirstWord = wordIndex === 0;
+    const minDelay = isFirstWord ? 2500 : 1200; // 2.5s for first word, 1.2s for rest
+    const maxDelay = isFirstWord ? 4000 : 2500; // Cap at 4s/2.5s
+    const paceMultiplier = 1.8; // Give 1.8x their average pace before hint
     
     const adaptiveDelay = Math.min(maxDelay, Math.max(minDelay, averageWordDelay * paceMultiplier));
-    const stepDelay = Math.min(700, Math.max(250, averageWordDelay * 0.6)); // Faster steps
+    const stepDelay = Math.min(800, Math.max(400, averageWordDelay * 0.7)); // Steps between hint levels
     
     // Level 1: First letter hint (adaptive to user pace)
     hesitationTimerRef.current = setTimeout(() => {
