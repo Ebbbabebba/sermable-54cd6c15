@@ -5,19 +5,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// ONLY true junk/filler words that can be hidden first
+// ONLY true junk/filler words that can be hidden IMMEDIATELY
 const SIMPLE_WORDS = new Set([
   // English conjunctions and short prepositions ONLY
   'and', 'or', 'but', 'so', 'yet', 'nor',
   'in', 'on', 'at', 'to', 'of', 'by', 'for',
   'a', 'an', 'the',
   'is', 'are', 'was', 'were', 'be',
-  'it', 'its',
+  'it', 'its', 'this', 'that',
   // Swedish equivalents
-  'och', 'eller', 'men', 'så',
-  'i', 'på', 'av', 'för', 'till', 'med',
-  'en', 'ett', 'den', 'det',
-  'är', 'var'
+  'och', 'eller', 'men', 'så', 'som', 'att',
+  'i', 'på', 'av', 'för', 'till', 'med', 'om',
+  'en', 'ett', 'den', 'det', 'de',
+  'är', 'var', 'har', 'kan', 'ska', 'vill',
+  'jag', 'du', 'vi', 'ni', 'han', 'hon'
 ])
 
 // Words that should be hidden LAST - content words, unique words, hard words
@@ -39,14 +40,31 @@ const isContentWord = (word: string): boolean => {
   return false
 }
 
+// Calculate difficulty score for a word based on historical performance
+const calculateDifficultyScore = (perf: WordPerformance): number => {
+  const totalAttempts = perf.correctCount + perf.missedCount + perf.hesitatedCount
+  if (totalAttempts === 0) return 0
+  
+  // Higher score = more difficult word
+  const errorRate = (perf.missedCount * 2 + perf.hesitatedCount) / totalAttempts
+  const recentErrorBonus = perf.lastPerformance === 'missed' ? 0.5 : 
+                           perf.lastPerformance === 'hesitated' ? 0.3 : 0
+  const consecutiveErrorBonus = perf.consecutiveErrors * 0.2
+  
+  return errorRate + recentErrorBonus + consecutiveErrorBonus
+}
+
 interface WordPerformance {
   word: string;
   correctCount: number;
   missedCount: number;
   hesitatedCount: number;
+  consecutiveCorrect: number;
+  consecutiveErrors: number;
   isSimple: boolean;
   isSentenceEnding: boolean;
   lastPerformance: 'correct' | 'missed' | 'hesitated' | 'none';
+  difficultyScore: number;
 }
 
 Deno.serve(async (req) => {
@@ -101,9 +119,12 @@ Deno.serve(async (req) => {
           correctCount: mastered?.times_spoken_correctly || 0,
           missedCount: mastered?.missed_count || 0,
           hesitatedCount: mastered?.hesitated_count || 0,
+          consecutiveCorrect: mastered?.consecutive_sessions_correct || 0,
+          consecutiveErrors: 0, // Will be calculated
           isSimple: SIMPLE_WORDS.has(cleanWord) && !isContent && !endsWithPunctuation,
           isSentenceEnding: endsWithPunctuation,
-          lastPerformance: 'none'
+          lastPerformance: 'none',
+          difficultyScore: 0
         })
       }
     })
@@ -121,14 +142,23 @@ Deno.serve(async (req) => {
       if (missedSet.has(cleanWord)) {
         perf.missedCount++
         perf.lastPerformance = 'missed'
+        perf.consecutiveErrors++
+        perf.consecutiveCorrect = 0
       } else if (hesitatedSet.has(cleanWord)) {
         perf.hesitatedCount++
         perf.lastPerformance = 'hesitated'
+        perf.consecutiveErrors++
+        perf.consecutiveCorrect = 0
       } else {
         // Word was spoken correctly this session
         perf.correctCount++
         perf.lastPerformance = 'correct'
+        perf.consecutiveCorrect++
+        perf.consecutiveErrors = 0
       }
+      
+      // Calculate difficulty score for AI analysis
+      perf.difficultyScore = calculateDifficultyScore(perf)
     })
 
     // Update mastered_words table with new performance data
@@ -141,14 +171,42 @@ Deno.serve(async (req) => {
           times_spoken_correctly: perf.correctCount,
           missed_count: perf.missedCount,
           hesitated_count: perf.hesitatedCount,
+          consecutive_sessions_correct: perf.consecutiveCorrect,
           last_spoken_at: new Date().toISOString()
         }, {
           onConflict: 'speech_id,word'
         })
     }
 
+    // AI ANALYSIS: Identify difficult words based on patterns
+    const difficultWords = new Set<string>()
+    const recoveredWords = new Set<string>()
+    
+    for (const [word, perf] of wordPerformanceMap.entries()) {
+      // Word is difficult if:
+      // 1. High difficulty score (>0.5) based on error patterns
+      // 2. Has been missed/hesitated multiple times
+      // 3. Error rate > 30% of attempts
+      const totalAttempts = perf.correctCount + perf.missedCount + perf.hesitatedCount
+      const errorRate = totalAttempts > 0 ? (perf.missedCount + perf.hesitatedCount) / totalAttempts : 0
+      
+      if (perf.difficultyScore > 0.5 || errorRate > 0.3 || (perf.missedCount + perf.hesitatedCount) >= 2) {
+        difficultWords.add(word)
+        console.log(`🔴 AI identified difficult word: "${word}" (score: ${perf.difficultyScore.toFixed(2)}, errorRate: ${(errorRate * 100).toFixed(0)}%)`)
+      }
+      
+      // Word has recovered if:
+      // 1. Was previously difficult but now has 2+ consecutive correct
+      // 2. Recent correct attempts outweigh errors
+      if (perf.consecutiveCorrect >= 2 && perf.correctCount > (perf.missedCount + perf.hesitatedCount)) {
+        recoveredWords.add(word)
+        difficultWords.delete(word) // Remove from difficult if recovered
+        console.log(`🟢 AI: Word recovered: "${word}" (${perf.consecutiveCorrect} consecutive correct)`)
+      }
+    }
+
     // Determine which words should be hidden
-    // Priority: simple words first, then hard words + sentence-ending words LAST
+    // FASTER PROGRESSION: Simple words hide immediately, keywords hide after 2 correct
     const wordsToHide = new Set<number>()
     
     words.forEach((word: string, index: number) => {
@@ -157,36 +215,66 @@ Deno.serve(async (req) => {
       
       if (!perf || !cleanWord) return
 
-      // RULE 1: If word was just missed or hesitated, ALWAYS keep it visible
+      // RULE 1: If word is identified as DIFFICULT by AI, ALWAYS keep it visible
+      if (difficultWords.has(cleanWord)) {
+        console.log(`👁️ Keeping visible (AI difficult): "${cleanWord}"`)
+        return // Keep visible - this is a problem word
+      }
+
+      // RULE 2: If word was just missed or hesitated, keep it visible
       if (perf.lastPerformance === 'missed' || perf.lastPerformance === 'hesitated') {
         return // Keep visible
       }
 
-      // RULE 2: If word has recent errors in history, keep visible
-      if (perf.missedCount > 0 || perf.hesitatedCount > 0) {
-        // Only hide if they've recovered with enough correct attempts
-        const recentCorrects = perf.correctCount - (perf.missedCount + perf.hesitatedCount)
-        if (recentCorrects < 2) {
-          return // Keep visible until they prove recovery
-        }
+      // RULE 3: If word has ANY errors and hasn't recovered, keep visible
+      if ((perf.missedCount > 0 || perf.hesitatedCount > 0) && perf.consecutiveCorrect < 2) {
+        return // Keep visible until recovery proven
       }
 
       // Check if this is a hard word or sentence-ending word
       const isHardWord = isContentWord(word)
       const isSentenceEnding = /[.!?]$/.test(word.trim())
 
-      // RULE 3: Hide simple grammatical words first (after 1 correct attempt)
-      // These are words like "and", "or", "is", "a" - very easy to recall
-      if (perf.isSimple && !isSentenceEnding && perf.correctCount >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
-        wordsToHide.add(index)
-        return
+      // RULE 4: Hide SIMPLE words IMMEDIATELY (first correct attempt)
+      // These are common connector words that are easy to recall
+      if (perf.isSimple && !isSentenceEnding) {
+        // Hide immediately if spoken correctly at least once with no errors
+        if (perf.correctCount >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
+          wordsToHide.add(index)
+          return
+        }
+        // If recovered from errors, hide after 2 consecutive correct
+        if (perf.consecutiveCorrect >= 2) {
+          wordsToHide.add(index)
+          return
+        }
       }
 
-      // RULE 4: Hide hard words + sentence-ending words LAST (after 5+ correct attempts)
-      // These disappear together as the "hardest" words based on performance
-      if ((isHardWord || isSentenceEnding) && perf.correctCount >= 5 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
-        wordsToHide.add(index)
-        return
+      // RULE 5: Hide MEDIUM words (not simple, not hard) after 2 correct attempts
+      if (!perf.isSimple && !isHardWord && !isSentenceEnding) {
+        if (perf.correctCount >= 2 && perf.consecutiveCorrect >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
+          wordsToHide.add(index)
+          return
+        }
+        // If recovered from errors, need 3 consecutive correct
+        if (perf.consecutiveCorrect >= 3) {
+          wordsToHide.add(index)
+          return
+        }
+      }
+
+      // RULE 6: Hide HARD words + sentence-ending words after 3 correct (faster than before!)
+      // Previously required 5, now only 3 for faster progression
+      if ((isHardWord || isSentenceEnding)) {
+        if (perf.correctCount >= 3 && perf.consecutiveCorrect >= 2 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
+          wordsToHide.add(index)
+          return
+        }
+        // If recovered from errors, need 4 consecutive correct
+        if (perf.consecutiveCorrect >= 4) {
+          wordsToHide.add(index)
+          return
+        }
       }
     })
 
@@ -201,7 +289,9 @@ Deno.serve(async (req) => {
     const textCurrent = modifiedWords.join(' ')
     const hiddenPercentage = Math.round((wordsToHide.size / words.length) * 100)
 
-    console.log(`Hiding ${wordsToHide.size} of ${words.length} words (${hiddenPercentage}%)`)
+    console.log(`📊 Hiding ${wordsToHide.size} of ${words.length} words (${hiddenPercentage}%)`)
+    console.log(`🔴 Difficult words (kept visible): ${difficultWords.size}`)
+    console.log(`🟢 Recovered words: ${recoveredWords.size}`)
 
     // Update the speech with new text_current
     const { error: updateError } = await supabaseClient
@@ -220,7 +310,10 @@ Deno.serve(async (req) => {
         hiddenCount: wordsToHide.size,
         totalWords: words.length,
         hiddenPercentage,
-        message: `Adapted hiding: ${wordsToHide.size}/${words.length} words hidden`
+        difficultWordsCount: difficultWords.size,
+        difficultWords: Array.from(difficultWords),
+        recoveredWordsCount: recoveredWords.size,
+        message: `Adapted hiding: ${wordsToHide.size}/${words.length} words hidden, ${difficultWords.size} difficult words kept visible`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
