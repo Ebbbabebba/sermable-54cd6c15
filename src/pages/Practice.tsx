@@ -821,17 +821,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   matchFound = true;
                   console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
                   
-                  // Queue ALL words from current to matched position for staggered fade out
+                  // Queue ALL words from current to matched position
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
-                      // Skipped words - queue as spoken (fade out) if visible, or missed if hidden
-                      if (currentHiddenIndices.has(i)) {
-                        queueWordAction('missed', i, allExpectedWords[i]);
-                        console.log('❌ Hidden skipped word (red):', allExpectedWords[i], 'at index', i);
-                      } else {
-                        queueWordAction('spoken', i, allExpectedWords[i]);
-                        console.log('⏭️ Visible skipped word (fade out):', allExpectedWords[i], 'at index', i);
-                      }
+                      // Skipped words - ALWAYS mark as missed (red) since user skipped them
+                      queueWordAction('missed', i, allExpectedWords[i]);
+                      console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
                     } else {
                       // Matched word - queue as spoken
                       queueWordAction('spoken', i, allExpectedWords[i]);
