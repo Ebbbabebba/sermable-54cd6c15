@@ -750,12 +750,20 @@ const [liveTranscription, setLiveTranscription] = useState("");
               const currentTime = Date.now();
               const timeSinceLastWord = currentTime - lastWordTimeRef.current;
               
+              // Check if this word is the first word after a sentence-ending punctuation
+              const isFirstWordAfterSentence = currentIdx > 0 && (() => {
+                const prevWord = allExpectedWords[currentIdx - 1];
+                return /[.!?]$/.test(prevWord);
+              })();
+              
               // HESITATION DETECTION: Mark as hesitated if user took too long
               // Use adaptive threshold based on their pace, but with minimums
+              // Add extra time for first word after sentences
               const isFirstWordInSession = currentIdx === 0;
+              const sentenceStartExtraMs = isFirstWordAfterSentence ? settings.sentenceStartDelay * 1000 : 0;
               const hesitationThresholdMs = isFirstWordInSession 
                 ? Math.max(3000, averageWordDelay * 2.5) // First word: 3s minimum
-                : Math.max(1500, averageWordDelay * 2.0); // Other words: 1.5s minimum
+                : Math.max(1500, averageWordDelay * 2.0) + sentenceStartExtraMs; // Other words + sentence delay
               
               const wasHesitation = timeSinceLastWord > hesitationThresholdMs;
               const wasHintShowing = wasSupportWordShowing && previousSupportWordIndex === currentIdx;
@@ -763,17 +771,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
               
               // Determine if word should be marked as hesitated (yellow)
               // 1. If any hint was showing (user needed visual help) - both visible and hidden words
-              // 2. If user took too long (hesitation detected by timing)
+              // 2. If user took too long (hesitation detected by timing) - BUT NOT for sentence starts
               // 3. If hint reached level 2+ (user clearly needed substantial help)
                const shouldMarkHesitated = 
                  wasHintShowing || // Any hint = hesitation (visible or hidden)
-                 wasHesitation || // Time-based hesitation (including first word)
+                 (wasHesitation && !isFirstWordAfterSentence) || // Time-based hesitation, but not for sentence starts
                  (currentHintLevel >= 2); // Substantial hint needed
 
               if (shouldMarkHesitated) {
                 queueWordAction('hesitated', currentIdx, expectedWord);
                 console.log('⏱️ Word marked hesitated:', expectedWord, 
-                  `(delay: ${Math.round(timeSinceLastWord)}ms, threshold: ${Math.round(hesitationThresholdMs)}ms, hintLevel: ${currentHintLevel}, hintShowing: ${wasHintShowing})`);
+                  `(delay: ${Math.round(timeSinceLastWord)}ms, threshold: ${Math.round(hesitationThresholdMs)}ms, hintLevel: ${currentHintLevel}, hintShowing: ${wasHintShowing}, afterSentence: ${isFirstWordAfterSentence})`);
               } else {
                 // Normal correct word - no hesitation
                 queueWordAction('spoken', currentIdx, expectedWord);
@@ -824,9 +832,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   // Queue ALL words from current to matched position
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
-                      // Skipped words - ALWAYS mark as missed (red) since user skipped them
-                      queueWordAction('missed', i, allExpectedWords[i]);
-                      console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
+                      // Skipped words - mark as missed (red) if hidden, just fade if visible
+                      // This prevents false positives from speech recognition variations
+                      if (currentHiddenIndices.has(i)) {
+                        queueWordAction('missed', i, allExpectedWords[i]);
+                        console.log('❌ Hidden skipped word (red):', allExpectedWords[i], 'at index', i);
+                      } else {
+                        queueWordAction('spoken', i, allExpectedWords[i]);
+                        console.log('⏭️ Visible skipped word (fade):', allExpectedWords[i], 'at index', i);
+                      }
                     } else {
                       // Matched word - queue as spoken
                       queueWordAction('spoken', i, allExpectedWords[i]);
