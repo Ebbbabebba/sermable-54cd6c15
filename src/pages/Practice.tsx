@@ -506,12 +506,17 @@ const Practice = () => {
       const item = wordQueueRef.current.shift()!;
       
       // Process single word visual update
+      // IMPORTANT: Don't remove from hesitated/missed if adding to spoken
+      // Hesitated words should stay yellow even after being spoken
       if (item.action === 'spoken') {
         setSpokenWordsIndices(prev => new Set([...prev, item.index]));
+        // Only remove from missed, NOT from hesitated - hesitation should persist
         setMissedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
-        setHesitatedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
+        // Keep hesitated status - don't remove it
       } else if (item.action === 'hesitated') {
         setHesitatedWordsIndices(prev => new Set([...prev, item.index]));
+        // Also add to spoken since the word was spoken (just with hesitation)
+        setSpokenWordsIndices(prev => new Set([...prev, item.index]));
       } else if (item.action === 'missed') {
         setMissedWordsIndices(prev => new Set([...prev, item.index]));
       }
@@ -706,13 +711,13 @@ const Practice = () => {
               const currentHintLevel = hintLevel; // Capture current hint level
               
               // Determine if word should be marked as hesitated (yellow)
-              // 1. If hint was showing (any level) AND word is hidden
-              // 2. If user took too long (hesitation detected)
-              // 3. If hint reached level 2+ (user clearly needed help)
+              // 1. If any hint was showing (user needed visual help) - both visible and hidden words
+              // 2. If user took too long (hesitation detected by timing)
+              // 3. If hint reached level 2+ (user clearly needed substantial help)
               const shouldMarkHesitated = 
-                (wasHintShowing && currentHiddenIndices.has(currentIdx)) ||
-                (wasHesitation && currentIdx > 0) || // Don't penalize first word as harshly
-                (currentHintLevel >= 2);
+                wasHintShowing || // Any hint = hesitation (visible or hidden)
+                (wasHesitation && currentIdx > 0) || // Time-based hesitation (not for first word)
+                (currentHintLevel >= 2); // Substantial hint needed
               
               if (shouldMarkHesitated) {
                 queueWordAction('hesitated', currentIdx, expectedWord);
@@ -893,11 +898,17 @@ const Practice = () => {
     }
     lastProcessedChunkIndex.current = 0;
     
-    // Reset spoken words tracking
-    setSpokenWordsIndices(new Set());
-    setHesitatedWordsIndices(new Set());
-    setMissedWordsIndices(new Set());
-    setCompletedSegments(new Set());
+    // KEEP real-time tracking data for results display
+    // Store the current tracked indices before resetting later
+    const realtimeMissedIndices = new Set(missedWordsIndices);
+    const realtimeHesitatedIndices = new Set(hesitatedWordsIndices);
+    const realtimeSpokenIndices = new Set(spokenWordsIndices);
+    
+    console.log('📊 Captured real-time tracking for results:',
+      'missed:', [...realtimeMissedIndices],
+      'hesitated:', [...realtimeHesitatedIndices],
+      'spoken:', [...realtimeSpokenIndices]
+    );
     setSegmentErrors(new Map());
     setSegmentHesitations(new Map());
     setExpectedWordIndex(0);
@@ -965,7 +976,62 @@ const Practice = () => {
             throw new Error('No response from analysis service');
           }
 
-          setSessionResults(data);
+          // Combine AI analysis with real-time tracking for complete results
+          // Get original words for mapping indices to words
+          const analysisWords = cleanBracketNotation(activeSegmentText || speech!.text_original)
+            .split(/\s+/)
+            .filter((w: string) => w.trim());
+          
+          // Convert real-time tracked indices to word strings
+          const realtimeMissedWords: string[] = [];
+          const realtimeHesitatedWords: string[] = [];
+          
+          realtimeMissedIndices.forEach(idx => {
+            if (idx < analysisWords.length) {
+              realtimeMissedWords.push(analysisWords[idx]);
+            }
+          });
+          
+          realtimeHesitatedIndices.forEach(idx => {
+            if (idx < analysisWords.length) {
+              realtimeHesitatedWords.push(analysisWords[idx]);
+            }
+          });
+          
+          // Combine with AI-detected words (unique only)
+          const combinedMissedWords = [...new Set([
+            ...(data.missedWords || []),
+            ...realtimeMissedWords
+          ])];
+          
+          const combinedDelayedWords = [...new Set([
+            ...(data.delayedWords || []),
+            ...realtimeHesitatedWords
+          ])];
+          
+          // Remove any words that are in missed from hesitated (missed is more severe)
+          const missedSet = new Set(combinedMissedWords.map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')));
+          const finalDelayedWords = combinedDelayedWords.filter(w => 
+            !missedSet.has(w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
+          );
+          
+          console.log('📊 Combined results:',
+            'AI missed:', data.missedWords,
+            'Realtime missed:', realtimeMissedWords,
+            'Final missed:', combinedMissedWords,
+            'AI delayed:', data.delayedWords,
+            'Realtime delayed:', realtimeHesitatedWords,
+            'Final delayed:', finalDelayedWords
+          );
+          
+          // Create enhanced results with real-time tracking data
+          const enhancedResults = {
+            ...data,
+            missedWords: combinedMissedWords,
+            delayedWords: finalDelayedWords,
+          };
+
+          setSessionResults(enhancedResults);
           
           // Delay showing results for smooth transition
           setTimeout(() => {
@@ -973,14 +1039,14 @@ const Practice = () => {
             setShowResults(true);
           }, 500);
 
-          // Save practice session to database
+          // Save practice session to database with combined real-time + AI data
           const { error: sessionError } = await supabase
             .from('practice_sessions')
             .insert({
               speech_id: speech!.id,
               score: data.accuracy,
-              missed_words: data.missedWords,
-              delayed_words: data.delayedWords,
+              missed_words: combinedMissedWords,
+              delayed_words: finalDelayedWords,
               difficulty_score: data.difficultyScore,
               connector_words: data.connectorWords,
               duration: 0,
@@ -1093,25 +1159,26 @@ const Practice = () => {
           });
           
           // Combine real-time tracking with AI analysis for best accuracy
+          // Use realtimeMissedIndices/realtimeHesitatedIndices captured before reset
           const combinedMissedIndices = [...new Set([
-            ...Array.from(missedWordsIndices),
+            ...Array.from(realtimeMissedIndices),
             ...missedIndicesFromAI
           ])];
           const combinedHesitatedIndices = [...new Set([
-            ...Array.from(hesitatedWordsIndices),
+            ...Array.from(realtimeHesitatedIndices),
             ...hesitatedIndicesFromAI
           ])];
           
-          console.log('📊 Missed indices - realtime:', Array.from(missedWordsIndices), 'AI:', missedIndicesFromAI, 'combined:', combinedMissedIndices);
-          console.log('📊 Hesitated indices - realtime:', Array.from(hesitatedWordsIndices), 'AI:', hesitatedIndicesFromAI, 'combined:', combinedHesitatedIndices);
+          console.log('📊 Missed indices - realtime:', Array.from(realtimeMissedIndices), 'AI:', missedIndicesFromAI, 'combined:', combinedMissedIndices);
+          console.log('📊 Hesitated indices - realtime:', Array.from(realtimeHesitatedIndices), 'AI:', hesitatedIndicesFromAI, 'combined:', combinedHesitatedIndices);
 
           try {
             const { error: masteryError } = await supabase.functions.invoke('update-segment-word-mastery', {
               body: {
                 speechId: speech!.id,
                 segmentId: currentSegmentId,
-                missedWords: data.missedWords || [],
-                hesitatedWords: data.delayedWords || [],
+                missedWords: combinedMissedWords,
+                hesitatedWords: finalDelayedWords,
                 missedIndices: combinedMissedIndices,
                 hesitatedIndices: combinedHesitatedIndices,
                 hiddenIndices: hiddenIndices
@@ -1174,6 +1241,12 @@ const Practice = () => {
             title: t('practice.analysisComplete'),
             description: t('practice.accuracyPercent', { percent: data.accuracy }),
           });
+          
+          // Reset tracking state after all processing is complete
+          setSpokenWordsIndices(new Set());
+          setHesitatedWordsIndices(new Set());
+          setMissedWordsIndices(new Set());
+          setCompletedSegments(new Set());
         } catch (innerError: any) {
           console.error('Error in analysis:', innerError);
           toast({
