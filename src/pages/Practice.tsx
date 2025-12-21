@@ -1026,11 +1026,24 @@ const Practice = () => {
             'Final delayed:', finalDelayedWords
           );
           
-          // Create enhanced results with real-time tracking data
+          // Build combined indices for index-based marking in PracticeResults
+          const finalMissedIndices: number[] = [];
+          const finalHesitatedIndices: number[] = [];
+          
+          realtimeMissedIndices.forEach(idx => finalMissedIndices.push(idx));
+          realtimeHesitatedIndices.forEach(idx => {
+            if (!finalMissedIndices.includes(idx)) {
+              finalHesitatedIndices.push(idx);
+            }
+          });
+          
+          // Create enhanced results with real-time tracking data AND indices
           const enhancedResults = {
             ...data,
             missedWords: combinedMissedWords,
             delayedWords: finalDelayedWords,
+            missedIndices: finalMissedIndices,
+            hesitatedIndices: finalHesitatedIndices,
           };
 
           setSessionResults(enhancedResults);
