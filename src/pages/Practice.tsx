@@ -495,7 +495,7 @@ const Practice = () => {
     setHintLevel(0);
   };
 
-  // Staggered word queue processor for smooth word-by-word visual updates
+  // Fast word queue processor - process words immediately for responsive feedback
   const processWordQueue = useCallback(() => {
     if (wordQueueRef.current.length === 0) {
       isProcessingQueueRef.current = false;
@@ -503,31 +503,27 @@ const Practice = () => {
     }
     
     isProcessingQueueRef.current = true;
-    const item = wordQueueRef.current.shift()!;
     
-    // Process single word visual update
-    if (item.action === 'spoken') {
-      setSpokenWordsIndices(prev => new Set([...prev, item.index]));
-      setMissedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
-      setHesitatedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
-    } else if (item.action === 'hesitated') {
-      setHesitatedWordsIndices(prev => new Set([...prev, item.index]));
-    } else if (item.action === 'missed') {
-      setMissedWordsIndices(prev => new Set([...prev, item.index]));
+    // Process ALL queued words immediately for instant feedback
+    while (wordQueueRef.current.length > 0) {
+      const item = wordQueueRef.current.shift()!;
+      
+      // Process single word visual update
+      if (item.action === 'spoken') {
+        setSpokenWordsIndices(prev => new Set([...prev, item.index]));
+        setMissedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
+        setHesitatedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
+      } else if (item.action === 'hesitated') {
+        setHesitatedWordsIndices(prev => new Set([...prev, item.index]));
+      } else if (item.action === 'missed') {
+        setMissedWordsIndices(prev => new Set([...prev, item.index]));
+      }
+      
+      console.log(`🔄 Queue processed: ${item.action} "${item.word}" at ${item.index}, remaining: ${wordQueueRef.current.length}`);
     }
     
-    console.log(`🔄 Queue processed: ${item.action} "${item.word}" at ${item.index}, remaining: ${wordQueueRef.current.length}`);
-    
-    // Schedule next word with adaptive stagger delay based on speaking pace
-    // Even smoother: longer delays for phrase-like rhythm (180-350ms)
-    const staggerDelay = averageWordDelay < 400 ? 180 : averageWordDelay < 700 ? 250 : 350;
-    
-    if (wordQueueRef.current.length > 0) {
-      queueProcessorTimeoutRef.current = setTimeout(processWordQueue, staggerDelay);
-    } else {
-      isProcessingQueueRef.current = false;
-    }
-  }, [averageWordDelay]);
+    isProcessingQueueRef.current = false;
+  }, []);
 
   // Helper to queue word actions
   const queueWordAction = useCallback((action: 'spoken' | 'hesitated' | 'missed', index: number, word: string) => {
@@ -555,38 +551,11 @@ const Practice = () => {
 
   const setupSpeechRecognition = async () => {
     try {
-      // Log the current speech data to debug language issues
-      console.log('🔍 Speech data at recognition setup:', {
-        id: speech?.id,
-        speech_language: speech?.speech_language,
-        text_preview: speech?.text_current?.substring(0, 50)
-      });
+      // Use stored language initially for INSTANT start, detect in background
+      let speechLang = speech?.speech_language || 'en';
+      console.log('🌍 Quick start with language:', speechLang);
       
-      // ALWAYS detect language from the actual speech text to ensure correct recognition
-      // This prevents mismatches where stored language doesn't match actual text language
-      const { detectTextLanguage } = await import('@/utils/languageDetection');
-      let speechLang = detectTextLanguage(speech!.text_current);
-      
-      if (!speechLang) {
-        // Only use stored language as fallback if detection fails
-        speechLang = speech?.speech_language || 'en';
-        console.log('🔍 Language detection failed, using stored/default:', speechLang);
-      } else {
-        console.log('🔍 Detected language from text:', speechLang);
-        
-        // Update stored language if it differs (for future sessions)
-        if (speech?.speech_language !== speechLang) {
-          console.log('🔄 Updating stored speech_language from', speech?.speech_language, 'to', speechLang);
-          await supabase
-            .from('speeches')
-            .update({ speech_language: speechLang })
-            .eq('id', speech!.id);
-        }
-      }
-      
-      console.log('🌍 Using language for speech recognition:', speechLang, '(stored:', speech?.speech_language, ')');
-      
-      // Start Web Speech API for instant transcription
+      // Start Web Speech API IMMEDIATELY for zero delay
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
       if (SpeechRecognition) {
@@ -597,6 +566,30 @@ const Practice = () => {
         recognition.lang = getRecognitionLocale(speechLang);
         
         console.log('📝 Recognition configured with locale:', recognition.lang);
+        
+        // Start hints for the FIRST word immediately - no delay
+        const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
+        const firstExpectedWords = cleanedText.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
+        startProgressiveHints(0, firstExpectedWords);
+        console.log('🎯 Started progressive hints for first word immediately');
+        
+        // Background: detect language and update if needed (non-blocking)
+        (async () => {
+          try {
+            const { detectTextLanguage } = await import('@/utils/languageDetection');
+            const detectedLang = detectTextLanguage(speech!.text_current);
+            
+            if (detectedLang && detectedLang !== speechLang) {
+              console.log('🔄 Background: Updating stored speech_language from', speechLang, 'to', detectedLang);
+              await supabase
+                .from('speeches')
+                .update({ speech_language: detectedLang })
+                .eq('id', speech!.id);
+            }
+          } catch (e) {
+            console.log('Background language detection skipped:', e);
+          }
+        })();
         
         let finalTranscript = '';
         
@@ -838,17 +831,6 @@ const Practice = () => {
           recognition.start();
           recognitionRef.current = recognition;
           console.log('✨ Web Speech API started for instant word tracking');
-          
-          // Start hints for the FIRST word immediately when recording begins
-          // This ensures the color system is ready from the very first word
-          setTimeout(() => {
-            if (expectedWordIndexRef.current === 0) {
-              const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
-              const firstExpectedWords = cleanedText.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
-              startProgressiveHints(0, firstExpectedWords);
-              console.log('🎯 Started progressive hints for first word immediately');
-            }
-          }, 100); // Small delay to ensure recognition is ready
         } catch (startError) {
           console.error('❌ Error starting recognition:', startError);
         }
