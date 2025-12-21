@@ -119,10 +119,15 @@ const Practice = () => {
   const wordQueueRef = useRef<QueuedWord[]>([]);
   const isProcessingQueueRef = useRef(false);
   const queueProcessorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [liveTranscription, setLiveTranscription] = useState("");
+const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWordsIndices, setSpokenWordsIndices] = useState<Set<number>>(new Set());
   const [hesitatedWordsIndices, setHesitatedWordsIndices] = useState<Set<number>>(new Set());
   const [missedWordsIndices, setMissedWordsIndices] = useState<Set<number>>(new Set());
+  
+  // Refs to avoid stale closure issues in handleRecordingComplete
+  const spokenWordsIndicesRef = useRef<Set<number>>(new Set());
+  const hesitatedWordsIndicesRef = useRef<Set<number>>(new Set());
+  const missedWordsIndicesRef = useRef<Set<number>>(new Set());
   const [currentHiddenIndices, setCurrentHiddenIndices] = useState<Set<number>>(new Set()); // Track hidden word indices for context-aware coloring
   const [completedSegments, setCompletedSegments] = useState<Set<number>>(new Set());
   const [segmentErrors, setSegmentErrors] = useState<Map<number, number>>(new Map());
@@ -464,7 +469,11 @@ const Practice = () => {
         hintTimerRef.current = setTimeout(() => {
           setHintLevel(3);
           // Always mark as hesitated (yellow) when user needs full hint
-          setHesitatedWordsIndices(prev => new Set([...prev, wordIndex]));
+          setHesitatedWordsIndices(prev => {
+            const updated = new Set([...prev, wordIndex]);
+            hesitatedWordsIndicesRef.current = updated;
+            return updated;
+          });
           console.log('💡 Hint level 3 (full word - marked yellow):', wordToShow);
           
           // Track hesitation for segment
@@ -511,16 +520,37 @@ const Practice = () => {
       // IMPORTANT: Don't remove from hesitated/missed if adding to spoken
       // Hesitated words should stay yellow even after being spoken
       if (item.action === 'spoken') {
-        setSpokenWordsIndices(prev => new Set([...prev, item.index]));
+        setSpokenWordsIndices(prev => {
+          const updated = new Set([...prev, item.index]);
+          spokenWordsIndicesRef.current = updated;
+          return updated;
+        });
         // Only remove from missed, NOT from hesitated - hesitation should persist
-        setMissedWordsIndices(prev => { const u = new Set(prev); u.delete(item.index); return u; });
+        setMissedWordsIndices(prev => { 
+          const u = new Set(prev); 
+          u.delete(item.index); 
+          missedWordsIndicesRef.current = u;
+          return u; 
+        });
         // Keep hesitated status - don't remove it
       } else if (item.action === 'hesitated') {
-        setHesitatedWordsIndices(prev => new Set([...prev, item.index]));
+        setHesitatedWordsIndices(prev => {
+          const updated = new Set([...prev, item.index]);
+          hesitatedWordsIndicesRef.current = updated;
+          return updated;
+        });
         // Also add to spoken since the word was spoken (just with hesitation)
-        setSpokenWordsIndices(prev => new Set([...prev, item.index]));
+        setSpokenWordsIndices(prev => {
+          const updated = new Set([...prev, item.index]);
+          spokenWordsIndicesRef.current = updated;
+          return updated;
+        });
       } else if (item.action === 'missed') {
-        setMissedWordsIndices(prev => new Set([...prev, item.index]));
+        setMissedWordsIndices(prev => {
+          const updated = new Set([...prev, item.index]);
+          missedWordsIndicesRef.current = updated;
+          return updated;
+        });
       }
       
       console.log(`🔄 Queue processed: ${item.action} "${item.word}" at ${item.index}, remaining: ${wordQueueRef.current.length}`);
@@ -901,10 +931,10 @@ const Practice = () => {
     lastProcessedChunkIndex.current = 0;
     
     // KEEP real-time tracking data for results display
-    // Store the current tracked indices before resetting later
-    const realtimeMissedIndices = new Set(missedWordsIndices);
-    const realtimeHesitatedIndices = new Set(hesitatedWordsIndices);
-    const realtimeSpokenIndices = new Set(spokenWordsIndices);
+    // Use REFS (not state) to avoid stale closure issues
+    const realtimeMissedIndices = new Set(missedWordsIndicesRef.current);
+    const realtimeHesitatedIndices = new Set(hesitatedWordsIndicesRef.current);
+    const realtimeSpokenIndices = new Set(spokenWordsIndicesRef.current);
     
     console.log('📊 Captured real-time tracking for results:',
       'missed:', [...realtimeMissedIndices],
@@ -1257,10 +1287,13 @@ const Practice = () => {
             description: t('practice.accuracyPercent', { percent: data.accuracy }),
           });
           
-          // Reset tracking state after all processing is complete
+          // Reset tracking state and refs after all processing is complete
           setSpokenWordsIndices(new Set());
           setHesitatedWordsIndices(new Set());
           setMissedWordsIndices(new Set());
+          spokenWordsIndicesRef.current = new Set();
+          hesitatedWordsIndicesRef.current = new Set();
+          missedWordsIndicesRef.current = new Set();
           setCompletedSegments(new Set());
         } catch (innerError: any) {
           console.error('Error in analysis:', innerError);
@@ -1432,7 +1465,11 @@ const Practice = () => {
               hintingWordIndex={supportWordIndex ?? -1}
               hintLevel={hintLevel}
               onPeekWord={(index) => {
-                setHesitatedWordsIndices(prev => new Set([...prev, index]));
+                setHesitatedWordsIndices(prev => {
+                  const updated = new Set([...prev, index]);
+                  hesitatedWordsIndicesRef.current = updated;
+                  return updated;
+                });
               }}
             />
           </div>
