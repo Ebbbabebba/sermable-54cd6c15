@@ -320,11 +320,11 @@ const Dashboard = () => {
                 const name = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase() : "";
                 
                 if (hour >= 5 && hour < 11) {
-                  return `God morgon${name ? `, ${name}` : ""}`;
+                  return `God morgon${name ? `, ${name}` : ""}.`;
                 } else if (hour >= 11 && hour < 19) {
-                  return `Välkommen tillbaka${name ? `, ${name}` : ""}`;
+                  return `Välkommen tillbaka${name ? `, ${name}` : ""}.`;
                 } else {
-                  return `God kväll${name ? `, ${name}` : ""}`;
+                  return `God kväll${name ? `, ${name}` : ""}.`;
                 }
               })()}
             </h2>
