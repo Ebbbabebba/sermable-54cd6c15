@@ -436,15 +436,15 @@ const Practice = () => {
     const wordToShow = expectedWords[wordIndex];
     
     // Adaptive timing based on user's speaking pace
-    // Give user time to think before showing hints
+    // Give user MORE time to think before showing hints
     // First word gets extra time, subsequent words adapt to pace
     const isFirstWord = wordIndex === 0;
-    const minDelay = isFirstWord ? 2500 : 1200; // 2.5s for first word, 1.2s for rest
-    const maxDelay = isFirstWord ? 4000 : 2500; // Cap at 4s/2.5s
-    const paceMultiplier = 1.8; // Give 1.8x their average pace before hint
+    const minDelay = isFirstWord ? 3500 : 2000; // 3.5s for first word, 2s for rest
+    const maxDelay = isFirstWord ? 5000 : 3500; // Cap at 5s/3.5s
+    const paceMultiplier = 2.2; // Give 2.2x their average pace before hint
     
     const adaptiveDelay = Math.min(maxDelay, Math.max(minDelay, averageWordDelay * paceMultiplier));
-    const stepDelay = Math.min(800, Math.max(400, averageWordDelay * 0.7)); // Steps between hint levels
+    const stepDelay = Math.min(1200, Math.max(600, averageWordDelay * 0.9)); // Longer steps between hint levels
     
     // Level 1: First letter hint (adaptive to user pace)
     hesitationTimerRef.current = setTimeout(() => {
@@ -458,16 +458,12 @@ const Practice = () => {
         setHintLevel(2);
         console.log('💡 Hint level 2 (half word):', wordToShow.slice(0, Math.ceil(wordToShow.length / 2)) + '...', 'step:', stepDelay);
         
-        // Level 3: Full word (after another step) - mark as hesitated ONLY if hidden
+        // Level 3: Full word - ALWAYS mark as hesitated (yellow) when full hint is shown
         hintTimerRef.current = setTimeout(() => {
           setHintLevel(3);
-          // Only mark as hesitated (yellow) if the word is hidden
-          if (currentHiddenIndices.has(wordIndex)) {
-            setHesitatedWordsIndices(prev => new Set([...prev, wordIndex]));
-            console.log('💡 Hint level 3 (full word - marked yellow, hidden word):', wordToShow);
-          } else {
-            console.log('💡 Hint level 3 (full word shown, visible word - no yellow):', wordToShow);
-          }
+          // Always mark as hesitated (yellow) when user needs full hint
+          setHesitatedWordsIndices(prev => new Set([...prev, wordIndex]));
+          console.log('💡 Hint level 3 (full word - marked yellow):', wordToShow);
           
           // Track hesitation for segment
           const segmentIndex = Math.floor((wordIndex / expectedWords.length) * 10);
