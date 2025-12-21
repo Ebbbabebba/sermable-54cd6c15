@@ -67,6 +67,8 @@ interface SessionResults {
   difficultyScore: number;
   analysis: string;
   cueText: string;
+  missedIndices?: number[];
+  hesitatedIndices?: number[];
 }
 
 const Practice = () => {
@@ -1510,6 +1512,8 @@ const Practice = () => {
               transcription={sessionResults.transcription}
               originalText={activeSegmentOriginalText || speech.text_original}
               currentText={activeSegmentText || speech.text_current}
+              missedIndices={sessionResults.missedIndices}
+              hesitatedIndices={sessionResults.hesitatedIndices}
             />
           </div>
 

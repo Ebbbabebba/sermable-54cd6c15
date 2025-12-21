@@ -13,6 +13,8 @@ interface PracticeResultsProps {
   transcription: string;
   originalText: string;
   currentText: string;
+  missedIndices?: number[];
+  hesitatedIndices?: number[];
 }
 
 const PracticeResults = ({ 
@@ -22,42 +24,84 @@ const PracticeResults = ({
   analysis, 
   transcription,
   originalText,
-  currentText
+  currentText,
+  missedIndices,
+  hesitatedIndices,
 }: PracticeResultsProps) => {
   const { t } = useTranslation();
-  
-  const originalWords = originalText.split(/\s+/).filter(word => word.length > 0);
-  const currentWords = currentText.split(/\s+/).filter(word => word.length > 0);
-  
+
+  const originalWords = originalText.split(/\s+/).filter((word) => word.length > 0);
+
+  // Prefer index-based hidden detection (brackets in currentText) to avoid issues with repeated words
+  const extractHiddenIndices = (text: string): Set<number> => {
+    const hidden = new Set<number>();
+    let globalWordIndex = 0;
+    const parts = text.split(/(\[[^\]]*\])/);
+
+    for (const part of parts) {
+      if (part.startsWith('[') && part.endsWith(']')) {
+        const bracketContent = part.slice(1, -1);
+        const wordsInBracket = bracketContent.split(/\s+/).filter((w) => w.trim());
+        for (let i = 0; i < wordsInBracket.length; i++) {
+          hidden.add(globalWordIndex + i);
+        }
+        globalWordIndex += wordsInBracket.length;
+      } else {
+        const visibleWords = part.split(/\s+/).filter((w) => w.trim());
+        globalWordIndex += visibleWords.length;
+      }
+    }
+
+    return hidden;
+  };
+
+  const hiddenIndices = extractHiddenIndices(currentText || "");
+
+  const useIndexBased = (missedIndices?.length || 0) > 0 || (hesitatedIndices?.length || 0) > 0;
+  const missedIndexSet = new Set(missedIndices || []);
+  const hesitatedIndexSet = new Set(hesitatedIndices || []);
+
+  const missedTotal = useIndexBased ? missedIndexSet.size : missedWords.length;
+  const hesitatedTotal = useIndexBased ? hesitatedIndexSet.size : delayedWords.length;
+
+  // Fallback: word-count based mapping (can be inaccurate with repeated words)
   const missedWordCount = new Map<string, number>();
   const delayedWordCount = new Map<string, number>();
-  
-  missedWords.forEach(w => {
-    const normalized = w.toLowerCase().replace(/[^\w]/g, '');
-    missedWordCount.set(normalized, (missedWordCount.get(normalized) || 0) + 1);
-  });
-  
-  delayedWords.forEach(w => {
-    const normalized = w.toLowerCase().replace(/[^\w]/g, '');
-    delayedWordCount.set(normalized, (delayedWordCount.get(normalized) || 0) + 1);
-  });
-  
-  const getWordStatus = (word: string): 'correct' | 'hesitated' | 'missed' => {
-    const normalized = word.toLowerCase().replace(/[^\w]/g, '');
-    
+
+  if (!useIndexBased) {
+    missedWords.forEach((w) => {
+      const normalized = w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+      missedWordCount.set(normalized, (missedWordCount.get(normalized) || 0) + 1);
+    });
+
+    delayedWords.forEach((w) => {
+      const normalized = w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+      delayedWordCount.set(normalized, (delayedWordCount.get(normalized) || 0) + 1);
+    });
+  }
+
+  const getWordStatus = (word: string, index: number): "correct" | "hesitated" | "missed" => {
+    if (useIndexBased) {
+      if (missedIndexSet.has(index)) return "missed";
+      if (hesitatedIndexSet.has(index)) return "hesitated";
+      return "correct";
+    }
+
+    const normalized = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
     const missedCount = missedWordCount.get(normalized);
     if (missedCount && missedCount > 0) {
       missedWordCount.set(normalized, missedCount - 1);
-      return 'missed';
+      return "missed";
     }
-    
+
     const delayedCount = delayedWordCount.get(normalized);
     if (delayedCount && delayedCount > 0) {
       delayedWordCount.set(normalized, delayedCount - 1);
-      return 'hesitated';
+      return "hesitated";
     }
-    
-    return 'correct';
+
+    return "correct";
   };
 
   return (
