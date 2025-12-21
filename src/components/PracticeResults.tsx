@@ -136,7 +136,7 @@ const PracticeResults = ({
           <div className="text-center p-4 bg-muted/30 rounded-lg">
             <div className="flex items-center justify-center gap-2 mb-1">
               <Clock className="h-4 w-4 text-yellow-600" />
-              <div className="text-2xl font-bold text-yellow-600">{delayedWords.length}</div>
+              <div className="text-2xl font-bold text-yellow-600">{hesitatedTotal}</div>
             </div>
             <div className="text-sm text-muted-foreground">{t('practice.results.hesitated')}</div>
           </div>
@@ -144,7 +144,7 @@ const PracticeResults = ({
           <div className="text-center p-4 bg-muted/30 rounded-lg">
             <div className="flex items-center justify-center gap-2 mb-1">
               <AlertCircle className="h-4 w-4 text-destructive" />
-              <div className="text-2xl font-bold text-destructive">{missedWords.length}</div>
+              <div className="text-2xl font-bold text-destructive">{missedTotal}</div>
             </div>
             <div className="text-sm text-muted-foreground">{t('practice.results.missed')}</div>
           </div>
@@ -191,10 +191,8 @@ const PracticeResults = ({
           <div className="bg-muted/20 rounded-lg p-6 leading-relaxed">
             <div className="flex flex-wrap gap-2 items-center justify-center">
               {originalWords.map((word, index) => {
-                const status = getWordStatus(word);
-                const wasHiddenDuringPractice = !currentWords.some(
-                  cw => cw.toLowerCase().replace(/[^\w]/g, '') === word.toLowerCase().replace(/[^\w]/g, '')
-                );
+                const status = getWordStatus(word, index);
+                const wasHiddenDuringPractice = hiddenIndices.has(index);
                 
                 return (
                   <span
