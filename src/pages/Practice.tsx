@@ -690,27 +690,45 @@ const Practice = () => {
             
             // Check if spoken word matches expected word
             if (areWordsSimilar(cleanSpokenWord, cleanExpectedWord)) {
-              // Check if this word was shown as support word
-              if (wasSupportWordShowing && previousSupportWordIndex === currentIdx) {
-                if (currentHiddenIndices.has(currentIdx)) {
-                  queueWordAction('hesitated', currentIdx, expectedWord);
-                  console.log('✓ Hidden support word spoken correctly (yellow):', expectedWord, 'at index', currentIdx);
-                } else {
-                  queueWordAction('spoken', currentIdx, expectedWord);
-                  console.log('✓ Visible support word spoken correctly (gray):', expectedWord, 'at index', currentIdx);
-                }
+              // Track timing FIRST to detect hesitation
+              const currentTime = Date.now();
+              const timeSinceLastWord = currentTime - lastWordTimeRef.current;
+              
+              // HESITATION DETECTION: Mark as hesitated if user took too long
+              // Use adaptive threshold based on their pace, but with minimums
+              const isFirstWordInSession = currentIdx === 0;
+              const hesitationThresholdMs = isFirstWordInSession 
+                ? Math.max(3000, averageWordDelay * 2.5) // First word: 3s minimum
+                : Math.max(1500, averageWordDelay * 2.0); // Other words: 1.5s minimum
+              
+              const wasHesitation = timeSinceLastWord > hesitationThresholdMs;
+              const wasHintShowing = wasSupportWordShowing && previousSupportWordIndex === currentIdx;
+              const currentHintLevel = hintLevel; // Capture current hint level
+              
+              // Determine if word should be marked as hesitated (yellow)
+              // 1. If hint was showing (any level) AND word is hidden
+              // 2. If user took too long (hesitation detected)
+              // 3. If hint reached level 2+ (user clearly needed help)
+              const shouldMarkHesitated = 
+                (wasHintShowing && currentHiddenIndices.has(currentIdx)) ||
+                (wasHesitation && currentIdx > 0) || // Don't penalize first word as harshly
+                (currentHintLevel >= 2);
+              
+              if (shouldMarkHesitated) {
+                queueWordAction('hesitated', currentIdx, expectedWord);
+                console.log('⏱️ Word marked hesitated:', expectedWord, 
+                  `(delay: ${Math.round(timeSinceLastWord)}ms, threshold: ${Math.round(hesitationThresholdMs)}ms, hintLevel: ${currentHintLevel}, hintShowing: ${wasHintShowing})`);
               } else {
-                // Normal correct word - queue for staggered fade out
+                // Normal correct word - no hesitation
                 queueWordAction('spoken', currentIdx, expectedWord);
-                console.log('✓ Word spoken correctly:', expectedWord, 'at index', currentIdx);
+                console.log('✓ Word spoken correctly:', expectedWord, 'at index', currentIdx, 
+                  `(delay: ${Math.round(timeSinceLastWord)}ms)`);
               }
               
               clearHints();
               currentIdx++;
               
-              // Track timing with EWMA for faster adaptation
-              const currentTime = Date.now();
-              const timeSinceLastWord = currentTime - lastWordTimeRef.current;
+              // Update timing tracking
               lastWordTimeRef.current = currentTime;
               
               if (currentIdx > 1 && timeSinceLastWord < 8000) {
