@@ -422,46 +422,69 @@ serve(async (req) => {
     }
     
     // STAGE 1: EARLY LEARNING (Sessions 1-10)
-    // Force frequent practice to build foundation
+    // Force VERY frequent practice to build foundation
+    // TRUE spaced repetition: start with MINUTES, then hours, then days
     if (isEarlyStage) {
-      console.log('🎯 EARLY STAGE: Building foundation');
+      console.log('🎯 EARLY STAGE: Rapid reinforcement mode');
       
-      // Base interval scales with session count
-      const sessionProgress = sessionCount / 10; // 0 to 1
-      const baseMinutes = 60 + (sessionProgress * 300); // 1 hour to 6 hours
+      // CRITICAL: Early intervals should be in MINUTES, not hours!
+      // Sessions 1-3: 1-15 minutes (immediate reinforcement while memory is fresh)
+      // Sessions 4-6: 15-60 minutes (short-term consolidation)
+      // Sessions 7-10: 1-4 hours (medium-term consolidation)
       
-      // Adjust for performance (but keep frequent)
+      let baseMinutes: number;
+      if (sessionCount <= 2) {
+        // Sessions 1-3: Very short intervals (1-15 min)
+        baseMinutes = 1 + (sessionCount * 5); // 1, 6, 11 minutes
+        console.log('⚡ Phase 1 (sessions 1-3): Immediate reinforcement');
+      } else if (sessionCount <= 5) {
+        // Sessions 4-6: Short intervals (15-45 min)
+        baseMinutes = 15 + ((sessionCount - 3) * 10); // 15, 25, 35 minutes
+        console.log('⏱️ Phase 2 (sessions 4-6): Short-term consolidation');
+      } else {
+        // Sessions 7-10: Medium intervals (45 min - 3 hours)
+        baseMinutes = 45 + ((sessionCount - 6) * 30); // 45, 75, 105, 135 minutes
+        console.log('🕐 Phase 3 (sessions 7-10): Medium-term consolidation');
+      }
+      
+      // Performance multiplier - but keep intervals SHORT in early stage
       let performanceMultiplier = 1.0;
-      if (weightedAccuracy >= 85 && wordVisibilityPercent < 50) {
-        performanceMultiplier = 1.8; // Reward true memorization early
-      } else if (weightedAccuracy >= 75) {
-        performanceMultiplier = 1.4;
-      } else if (weightedAccuracy >= 65) {
+      if (weightedAccuracy >= 90 && wordVisibilityPercent < 40) {
+        // Excellent TRUE memorization - allow slightly longer intervals
+        performanceMultiplier = 2.0;
+      } else if (weightedAccuracy >= 80 && wordVisibilityPercent < 60) {
+        performanceMultiplier = 1.5;
+      } else if (weightedAccuracy >= 70) {
         performanceMultiplier = 1.2;
       } else if (weightedAccuracy < 50) {
-        performanceMultiplier = 0.5; // Struggling - practice sooner
+        // Struggling - practice even sooner
+        performanceMultiplier = 0.5;
       } else if (weightedAccuracy < 60) {
         performanceMultiplier = 0.7;
       }
       
-      // Adjust for memorization ease
-      const easeMultiplier = 0.7 + (memorizationEaseScore / 100) * 0.6; // 0.7 to 1.3
+      // Deadline pressure - if deadline is close, keep intervals very short
+      const pressureMultiplier = Math.max(0.3, 1 - (deadlinePressure * 0.08));
       
-      // Deadline pressure override for early stage
-      const pressureMultiplier = Math.max(0.3, 1 - (deadlinePressure * 0.07));
+      // Calculate final interval
+      adaptiveIntervalMinutes = baseMinutes * performanceMultiplier * pressureMultiplier * personalizationModifier;
       
-      // Apply personalization if available (even in early stage)
-      adaptiveIntervalMinutes = baseMinutes * performanceMultiplier * easeMultiplier * pressureMultiplier * personalizationModifier;
-      
-      // Cap early stage: 30 min to 8 hours
-      adaptiveIntervalMinutes = Math.max(30, Math.min(8 * 60, adaptiveIntervalMinutes));
+      // Cap early stage intervals based on phase
+      if (sessionCount <= 2) {
+        adaptiveIntervalMinutes = Math.max(1, Math.min(30, adaptiveIntervalMinutes)); // 1-30 min
+      } else if (sessionCount <= 5) {
+        adaptiveIntervalMinutes = Math.max(5, Math.min(90, adaptiveIntervalMinutes)); // 5-90 min
+      } else {
+        adaptiveIntervalMinutes = Math.max(15, Math.min(4 * 60, adaptiveIntervalMinutes)); // 15 min - 4 hours
+      }
       
       console.log(`Early stage interval: ${Math.round(adaptiveIntervalMinutes)} min (session ${sessionCount + 1}/10)`, {
-        base: Math.round(baseMinutes) + 'min',
+        phase: sessionCount <= 2 ? 'immediate' : sessionCount <= 5 ? 'short-term' : 'medium-term',
+        base: Math.round(baseMinutes) + ' min',
         performanceMultiplier: performanceMultiplier.toFixed(2),
-        easeMultiplier: easeMultiplier.toFixed(2),
         pressureMultiplier: pressureMultiplier.toFixed(2),
-        personalization: personalizationModifier.toFixed(2)
+        personalization: personalizationModifier.toFixed(2),
+        finalMinutes: Math.round(adaptiveIntervalMinutes)
       });
     }
     // STAGE 2: ESTABLISHED LEARNING - Full adaptive algorithm

@@ -235,43 +235,47 @@ Deno.serve(async (req) => {
       const isHardWord = isContentWord(word)
       const isSentenceEnding = /[.!?]$/.test(word.trim())
 
-      // RULE 4: Hide SIMPLE words IMMEDIATELY (first correct attempt)
+      // RULE 4: Hide SIMPLE words IMMEDIATELY after first correct
       // These are common connector words that are easy to recall
+      // TRUE SPACED REPETITION: Hide as soon as spoken correctly to free up cognitive load
       if (perf.isSimple && !isSentenceEnding) {
-        // Hide immediately if spoken correctly at least once with no errors
+        // Hide immediately on first correct - no waiting for multiple sessions!
+        if (perf.lastPerformance === 'correct') {
+          wordsToHide.add(index)
+          return
+        }
+        // Also hide if has history of correct with no recent errors
+        if (perf.correctCount >= 1 && perf.consecutiveCorrect >= 1) {
+          wordsToHide.add(index)
+          return
+        }
+      }
+
+      // RULE 5: Hide MEDIUM words (not simple, not hard) after 1-2 correct attempts
+      // FASTER: Was 2-3, now 1-2
+      if (!perf.isSimple && !isHardWord && !isSentenceEnding) {
+        // Hide after 1 correct with no errors
         if (perf.correctCount >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
           wordsToHide.add(index)
           return
         }
-        // If recovered from errors, hide after 2 consecutive correct
+        // If had errors, need 2 consecutive correct
         if (perf.consecutiveCorrect >= 2) {
           wordsToHide.add(index)
           return
         }
       }
 
-      // RULE 5: Hide MEDIUM words (not simple, not hard) after 2 correct attempts
-      if (!perf.isSimple && !isHardWord && !isSentenceEnding) {
-        if (perf.correctCount >= 2 && perf.consecutiveCorrect >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
-          wordsToHide.add(index)
-          return
-        }
-        // If recovered from errors, need 3 consecutive correct
-        if (perf.consecutiveCorrect >= 3) {
-          wordsToHide.add(index)
-          return
-        }
-      }
-
-      // RULE 6: Hide HARD words + sentence-ending words after 3 correct (faster than before!)
-      // Previously required 5, now only 3 for faster progression
+      // RULE 6: Hide HARD words + sentence-ending words after 2 correct
+      // FASTER: Was 3-4, now 2
       if ((isHardWord || isSentenceEnding)) {
-        if (perf.correctCount >= 3 && perf.consecutiveCorrect >= 2 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
+        // Hide after 2 correct with no errors
+        if (perf.correctCount >= 2 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
           wordsToHide.add(index)
           return
         }
-        // If recovered from errors, need 4 consecutive correct
-        if (perf.consecutiveCorrect >= 4) {
+        // If had errors, need 3 consecutive correct
+        if (perf.consecutiveCorrect >= 3) {
           wordsToHide.add(index)
           return
         }
