@@ -156,6 +156,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const recognitionRef = useRef<any>(null);
   const audioFormatRef = useRef<string>('audio/webm');
 
+  // Normalize words for comparison (important for Swedish å/ä/ö and punctuation)
+  const normalizeForCompare = (w: string) =>
+    w
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[^\p{L}\p{N}]/gu, '');
+
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
@@ -623,8 +631,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
         // Start hints for the FIRST word immediately - no delay
         const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
         const firstExpectedWordsRaw = cleanedText.split(/\s+/).filter(w => w.trim());
-        const firstExpectedWords = firstExpectedWordsRaw
-          .map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
+        const firstExpectedWords = firstExpectedWordsRaw.map(normalizeForCompare);
         startProgressiveHints(0, firstExpectedWords, firstExpectedWordsRaw);
         console.log('🎯 Started progressive hints for first word immediately');
         
@@ -673,8 +680,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           // Get expected words from the active segment or full speech (clean bracket notation first)
           const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
           const allExpectedWordsRaw = cleanedText.split(/\s+/).filter(w => w.trim());
-          const allExpectedWords = allExpectedWordsRaw
-            .map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
+          const allExpectedWords = allExpectedWordsRaw.map(normalizeForCompare);
           
           // Helper: Levenshtein distance for fuzzy matching
           const levenshtein = (a: string, b: string): number => {
@@ -746,23 +752,22 @@ const [liveTranscription, setLiveTranscription] = useState("");
           let currentIdx = expectedWordIndexRef.current;
           
           for (const word of newWords) {
-            const cleanSpokenWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-            
+            const cleanSpokenWord = normalizeForCompare(word);
+
             if (!cleanSpokenWord || currentIdx >= allExpectedWords.length) continue;
-            
+
             // Hide support word immediately when ANY word is spoken
             const wasSupportWordShowing = supportWord !== null;
             const previousSupportWordIndex = supportWordIndex;
             setSupportWord(null);
             setSupportWordIndex(null);
-            
+
             const expectedWord = allExpectedWords[currentIdx];
-            const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-            
-            console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', currentIdx);
+
+            console.log('🔍 Comparing:', cleanSpokenWord, 'vs', expectedWord, 'at index', currentIdx);
             
             // Check if spoken word matches expected word
-            if (areWordsSimilar(cleanSpokenWord, cleanExpectedWord)) {
+            if (areWordsSimilar(cleanSpokenWord, expectedWord)) {
               // Track timing FIRST to detect hesitation
               const currentTime = Date.now();
               const timeSinceLastWord = currentTime - lastWordTimeRef.current;
@@ -834,17 +839,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
               }
             } else {
               // Word doesn't match - look ahead to find match
-              console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
+              console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', expectedWord);
               
               let matchFound = false;
               const maxLookAhead = 5;
               
               for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
-                const cleanFutureWord = futureWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
                 
                 // Use areWordsSimilar for ALL lookahead to handle speech recognition variations
-                if (areWordsSimilar(cleanSpokenWord, cleanFutureWord)) {
+                if (areWordsSimilar(cleanSpokenWord, futureWord)) {
                   matchFound = true;
                   console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
                   
@@ -1117,9 +1121,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const finalDelayedWords = [...realtimeHesitatedWords];
           
           // Remove any words that are in missed from hesitated (missed is more severe)
-          const missedSet = new Set(combinedMissedWords.map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')));
+          const missedSet = new Set(combinedMissedWords.map(normalizeForCompare));
           const cleanedDelayedWords = finalDelayedWords.filter(w => 
-            !missedSet.has(w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
+            !missedSet.has(normalizeForCompare(w))
           );
           
           console.log('📊 Realtime-only results (AI detection ignored):',
@@ -1254,10 +1258,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const originalWords = (activeSegmentOriginalText || speech!.text_original).split(/\s+/).filter((w: string) => w.trim());
           
           const missedWordSet = new Set(
-            (data.missedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
+            (data.missedWords || []).map(normalizeForCompare)
           );
           const hesitatedWordSet = new Set(
-            (data.delayedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
+            (data.delayedWords || []).map(normalizeForCompare)
           );
           
           // Build indices from AI's word lists
@@ -1265,7 +1269,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const hesitatedIndicesFromAI: number[] = [];
           
           originalWords.forEach((word: string, idx: number) => {
-            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+            const cleanWord = normalizeForCompare(word);
             if (missedWordSet.has(cleanWord)) {
               missedIndicesFromAI.push(idx);
             }
