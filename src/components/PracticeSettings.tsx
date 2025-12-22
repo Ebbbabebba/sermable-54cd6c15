@@ -169,8 +169,8 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
               </div>
               <Slider
                 id="sentence-start-delay"
-                min={1}
-                max={5}
+                min={2}
+                max={10}
                 step={0.5}
                 value={[settings.sentenceStartDelay]}
                 onValueChange={([value]) => updateSetting('sentenceStartDelay', value)}
