@@ -838,16 +838,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   // Queue ALL words from current to matched position
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
-                      // Skipped words:
-                      // - HIDDEN words that are skipped = missed (red) - user said wrong word
-                      // - VISIBLE words that are skipped = spoken (fade) - likely speech recognition variation
-                      if (currentHiddenIndices.has(i)) {
-                        queueWordAction('missed', i, allExpectedWords[i]);
-                        console.log('❌ Skipped HIDDEN word (red):', allExpectedWords[i], 'at index', i);
-                      } else {
-                        queueWordAction('spoken', i, allExpectedWords[i]);
-                        console.log('⏭️ Skipped visible word (fade):', allExpectedWords[i], 'at index', i);
-                      }
+                      // Skipped words - ALL skipped words are missed (red)
+                      // User jumped ahead and skipped words they should have said
+                      queueWordAction('missed', i, allExpectedWords[i]);
+                      console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
                     } else {
                       // Matched word - queue as spoken
                       queueWordAction('spoken', i, allExpectedWords[i]);
