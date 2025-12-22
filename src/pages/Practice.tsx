@@ -433,7 +433,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   };
 
   // Start progressive hint timer for a word
-  const startProgressiveHints = (wordIndex: number, expectedWords: string[]) => {
+  const startProgressiveHints = (wordIndex: number, expectedWords: string[], expectedWordsRaw: string[]) => {
     // Clear existing hint timers
     if (hesitationTimerRef.current) clearTimeout(hesitationTimerRef.current);
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
@@ -449,10 +449,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
     const isFirstWord = wordIndex === 0;
     
     // Check if current word is the first word after a sentence-ending punctuation
+    // IMPORTANT: use the RAW words (with punctuation) for sentence detection
     const isFirstWordAfterSentence = wordIndex > 0 && (() => {
-      const prevWord = expectedWords[wordIndex - 1];
-      // Check if previous word ends with sentence-ending punctuation
-      return /[.!?]$/.test(prevWord);
+      const prevWordRaw = expectedWordsRaw[wordIndex - 1] ?? '';
+      return /[.!?][)"'’”]*$/.test(prevWordRaw);
     })();
     
     // Base delays
@@ -622,8 +622,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
         
         // Start hints for the FIRST word immediately - no delay
         const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
-        const firstExpectedWords = cleanedText.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
-        startProgressiveHints(0, firstExpectedWords);
+        const firstExpectedWordsRaw = cleanedText.split(/\s+/).filter(w => w.trim());
+        const firstExpectedWords = firstExpectedWordsRaw
+          .map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
+        startProgressiveHints(0, firstExpectedWords, firstExpectedWordsRaw);
         console.log('🎯 Started progressive hints for first word immediately');
         
         // Background: detect language and update if needed (non-blocking)
@@ -670,7 +672,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
           
           // Get expected words from the active segment or full speech (clean bracket notation first)
           const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
-          const allExpectedWords = cleanedText.toLowerCase().split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}]/gu, ''));
+          const allExpectedWordsRaw = cleanedText.split(/\s+/).filter(w => w.trim());
+          const allExpectedWords = allExpectedWordsRaw
+            .map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
           
           // Helper: Levenshtein distance for fuzzy matching
           const levenshtein = (a: string, b: string): number => {
@@ -751,9 +755,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
               const timeSinceLastWord = currentTime - lastWordTimeRef.current;
               
               // Check if this word is the first word after a sentence-ending punctuation
+              // IMPORTANT: use raw expected words so punctuation isn't lost.
               const isFirstWordAfterSentence = currentIdx > 0 && (() => {
-                const prevWord = allExpectedWords[currentIdx - 1];
-                return /[.!?]$/.test(prevWord);
+                const prevWordRaw = allExpectedWordsRaw[currentIdx - 1] ?? '';
+                return /[.!?][)"'’”]*$/.test(prevWordRaw);
               })();
               
               // HESITATION DETECTION: Mark as hesitated if user took too long
@@ -812,7 +817,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 console.log('🎉 Last word spoken! Auto-stopping recording...');
                 setTimeout(() => { audioRecorderRef.current?.stopRecording(); }, 500);
               } else {
-                startProgressiveHints(currentIdx, allExpectedWords);
+                startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
               }
             } else {
               // Word doesn't match - look ahead to find match
@@ -855,7 +860,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   clearHints();
                   
                   if (currentIdx < allExpectedWords.length) {
-                    startProgressiveHints(currentIdx, allExpectedWords);
+                    startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
                   }
                   break;
                 }
@@ -877,7 +882,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   }
                   currentIdx = previousSupportWordIndex + 1;
                   if (currentIdx < allExpectedWords.length) {
-                    startProgressiveHints(currentIdx, allExpectedWords);
+                    startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
                   }
                 }
                 // IMPORTANT: Do NOT skip words when no match found!
