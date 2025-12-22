@@ -572,6 +572,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
           spokenWordsIndicesRef.current = updated;
           return updated;
         });
+        // IMPORTANT: Remove from missed set - hesitated overrides missed
+        setMissedWordsIndices(prev => {
+          const u = new Set(prev);
+          u.delete(item.index);
+          missedWordsIndicesRef.current = u;
+          return u;
+        });
       } else if (item.action === 'missed') {
         setMissedWordsIndices(prev => {
           const updated = new Set([...prev, item.index]);
@@ -699,54 +706,73 @@ const [liveTranscription, setLiveTranscription] = useState("");
             return matrix[b.length][a.length];
           };
           
-          // Helper: Check if words are similar enough - VERY GENEROUS to handle speech recognition variations
+          // Calculate match score (0-1) between two words
+          const getMatchScore = (spoken: string, expected: string): number => {
+            if (spoken === expected) return 1.0;
+            if (!spoken || !expected) return 0;
+            const dist = levenshtein(spoken, expected);
+            const maxLen = Math.max(spoken.length, expected.length);
+            return 1 - (dist / maxLen);
+          };
+          
+          // Helper: Check if words are similar enough - STRICTER to avoid false positives
           const areWordsSimilar = (spoken: string, expected: string): boolean => {
             // Exact match
             if (spoken === expected) return true;
             
-            // Check if one contains the other (handles partial recognition)
-            if (spoken.includes(expected) || expected.includes(spoken)) return true;
-            
-            // For very short words (1-2 chars), allow 1 char difference
-            if (expected.length <= 2) {
-              return levenshtein(spoken, expected) <= 1;
+            // STRICT: For very short words (1-3 chars), require near-exact match
+            // This prevents "i" matching "inlärningsfasen" etc
+            if (expected.length <= 3) {
+              const dist = levenshtein(spoken, expected);
+              // Only allow 1 char difference for short words
+              return dist <= 1 && Math.abs(spoken.length - expected.length) <= 1;
             }
             
-            // For short words (3-4 chars), allow 2 char difference
-            if (expected.length <= 4) {
+            // STRICT: Don't allow short spoken words to match long expected words via substring
+            // Prevents partial interim words from matching
+            if (spoken.length <= 3 && expected.length > 5) {
+              // Only match if spoken is the START of expected (prefix recognition)
+              if (expected.startsWith(spoken)) {
+                return spoken.length >= Math.floor(expected.length * 0.5);
+              }
+              return false;
+            }
+            
+            // For medium words (4-5 chars), allow 2 char difference
+            if (expected.length <= 5) {
               return levenshtein(spoken, expected) <= 2;
             }
             
-            // Check if they start the same (first 2+ chars) - handles common recognition variations
-            const prefixLen = Math.min(2, Math.min(spoken.length, expected.length));
+            // For longer words, use match score
+            const score = getMatchScore(spoken, expected);
+            
+            // Check prefix match (first 3+ chars) - handles partial recognition
+            const prefixLen = Math.min(3, Math.min(spoken.length, expected.length));
             if (spoken.slice(0, prefixLen) === expected.slice(0, prefixLen)) {
-              const dist = levenshtein(spoken, expected);
-              const maxLen = Math.max(spoken.length, expected.length);
-              // Allow up to 50% difference if starting same
-              if (dist <= Math.ceil(maxLen * 0.5)) return true;
+              // Same prefix: be more lenient (75% match required)
+              return score >= 0.75;
             }
             
-            // Check if they end the same (last 2+ chars)
-            const suffixLen = Math.min(2, Math.min(spoken.length, expected.length));
-            if (spoken.slice(-suffixLen) === expected.slice(-suffixLen)) {
-              const dist = levenshtein(spoken, expected);
-              const maxLen = Math.max(spoken.length, expected.length);
-              if (dist <= Math.ceil(maxLen * 0.5)) return true;
-            }
-            
-            // General case: allow up to 40% difference
-            const dist = levenshtein(spoken, expected);
-            const maxLen = Math.max(spoken.length, expected.length);
-            return dist <= Math.ceil(maxLen * 0.4);
+            // General case: require 80% match
+            return score >= 0.80;
           };
           
           // Only process NEW words from the transcript using refs (avoid stale closures)
+          // IMPORTANT: Skip the last interim word - it's often incomplete/partial
+          // Only process "stable" words (all except the last one if still interim)
           const prevLength = processedTranscriptLengthRef.current;
-          const newWords = transcriptWords.slice(prevLength);
+          const isInterimResult = !event.results[event.results.length - 1]?.isFinal;
+          
+          // If interim, don't process the last word (it's still being spoken)
+          const stableEndIndex = isInterimResult && transcriptWords.length > 0 
+            ? transcriptWords.length - 1 
+            : transcriptWords.length;
+          
+          const newWords = transcriptWords.slice(prevLength, stableEndIndex);
           
           if (newWords.length === 0) return;
           
-          console.log('🆕 New words detected:', newWords, 'Previous length:', prevLength, 'Current index:', expectedWordIndexRef.current);
+          console.log('🆕 New STABLE words:', newWords, 'Previous:', prevLength, 'Stable end:', stableEndIndex, 'isInterim:', isInterimResult);
           
           // Process new words using refs for immediate updates
           let currentIdx = expectedWordIndexRef.current;
@@ -844,19 +870,31 @@ const [liveTranscription, setLiveTranscription] = useState("");
               let matchFound = false;
               const maxLookAhead = 5;
               
+              // Calculate current word match score first
+              const currentScore = getMatchScore(cleanSpokenWord, expectedWord);
+              
               for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
+                const futureScore = getMatchScore(cleanSpokenWord, futureWord);
                 
-                // Use areWordsSimilar for ALL lookahead to handle speech recognition variations
-                if (areWordsSimilar(cleanSpokenWord, futureWord)) {
+                // STRICT: Only skip ahead if:
+                // 1. Future word has HIGH match score (>= 0.85)
+                // 2. Future word matches SIGNIFICANTLY better than current (margin >= 0.15)
+                // 3. For single word skip, require even higher confidence (>= 0.90)
+                const requiredScore = lookAhead === 1 ? 0.90 : 0.85;
+                const marginRequired = 0.15;
+                
+                const shouldSkip = futureScore >= requiredScore && 
+                                   futureScore - currentScore >= marginRequired;
+                
+                if (shouldSkip || (areWordsSimilar(cleanSpokenWord, futureWord) && futureScore >= 0.85)) {
                   matchFound = true;
-                  console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
+                  console.log(`✓ Found word ahead at +${lookAhead}: ${futureWord} (score: ${futureScore.toFixed(2)} vs current: ${currentScore.toFixed(2)})`);
                   
                   // Queue ALL words from current to matched position
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
                       // Skipped words - ALL skipped words are missed (red)
-                      // User jumped ahead and skipped words they should have said
                       queueWordAction('missed', i, allExpectedWords[i]);
                       console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
                     } else {
