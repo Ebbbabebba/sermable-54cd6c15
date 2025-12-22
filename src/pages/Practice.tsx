@@ -693,7 +693,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             return matrix[b.length][a.length];
           };
           
-          // Helper: Check if words are similar enough - MORE GENEROUS to avoid false skips
+          // Helper: Check if words are similar enough - VERY GENEROUS to handle speech recognition variations
           const areWordsSimilar = (spoken: string, expected: string): boolean => {
             // Exact match
             if (spoken === expected) return true;
@@ -701,39 +701,37 @@ const [liveTranscription, setLiveTranscription] = useState("");
             // Check if one contains the other (handles partial recognition)
             if (spoken.includes(expected) || expected.includes(spoken)) return true;
             
-            // Check if they start the same (first 3+ chars) - handles truncated recognition
-            if (spoken.length >= 3 && expected.length >= 3) {
-              const prefix = Math.min(3, Math.min(spoken.length, expected.length));
-              if (spoken.slice(0, prefix) === expected.slice(0, prefix)) {
-                // Starting same, check overall similarity
-                const dist = levenshtein(spoken, expected);
-                const maxLen = Math.max(spoken.length, expected.length);
-                // Allow up to 40% difference if starting same
-                if (dist <= maxLen * 0.4) return true;
-              }
+            // For very short words (1-2 chars), allow 1 char difference
+            if (expected.length <= 2) {
+              return levenshtein(spoken, expected) <= 1;
             }
             
-            // For very short words (1-3 chars), require exact match
-            if (expected.length <= 3) {
-              return spoken === expected;
-            }
-            
-            // For short words (4-5 chars), allow 1-2 character difference
-            if (expected.length <= 5) {
+            // For short words (3-4 chars), allow 2 char difference
+            if (expected.length <= 4) {
               return levenshtein(spoken, expected) <= 2;
             }
             
-            // For longer words, be more generous
-            const minLength = Math.min(spoken.length, expected.length);
-            const maxLength = Math.max(spoken.length, expected.length);
+            // Check if they start the same (first 2+ chars) - handles common recognition variations
+            const prefixLen = Math.min(2, Math.min(spoken.length, expected.length));
+            if (spoken.slice(0, prefixLen) === expected.slice(0, prefixLen)) {
+              const dist = levenshtein(spoken, expected);
+              const maxLen = Math.max(spoken.length, expected.length);
+              // Allow up to 50% difference if starting same
+              if (dist <= Math.ceil(maxLen * 0.5)) return true;
+            }
             
-            // Allow if lengths are somewhat similar (60% min)
-            if (minLength < maxLength * 0.6) return false;
+            // Check if they end the same (last 2+ chars)
+            const suffixLen = Math.min(2, Math.min(spoken.length, expected.length));
+            if (spoken.slice(-suffixLen) === expected.slice(-suffixLen)) {
+              const dist = levenshtein(spoken, expected);
+              const maxLen = Math.max(spoken.length, expected.length);
+              if (dist <= Math.ceil(maxLen * 0.5)) return true;
+            }
             
-            // Calculate distance and allow based on word length
+            // General case: allow up to 40% difference
             const dist = levenshtein(spoken, expected);
-            // Allow up to 30% difference for longer words
-            return dist <= Math.ceil(expected.length * 0.3);
+            const maxLen = Math.max(spoken.length, expected.length);
+            return dist <= Math.ceil(maxLen * 0.4);
           };
           
           // Only process NEW words from the transcript using refs (avoid stale closures)
