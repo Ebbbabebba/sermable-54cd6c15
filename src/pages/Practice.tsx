@@ -667,8 +667,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
           }
           
           // Track spoken words for bracket visualization
+          // IMPORTANT: only commit word-matching based on FINAL transcript to avoid false "skips" from interim (unstable) recognition
           const fullTranscript = (finalTranscript + interimTranscript).trim();
-          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
+          const transcriptWords = finalTranscript.trim().toLowerCase().split(/\s+/).filter(w => w.trim());
           
           // Get expected words from the active segment or full speech (clean bracket notation first)
           const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
@@ -734,6 +735,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
             const dist = levenshtein(spoken, expected);
             // Allow up to 30% difference for longer words
             return dist <= Math.ceil(expected.length * 0.3);
+          };
+          
+          // Similarity score (0..1) used for conservative skip detection
+          const similarityScore = (a: string, b: string): number => {
+            if (!a || !b) return 0;
+            if (a === b) return 1;
+            if (a.includes(b) || b.includes(a)) return 0.9;
+            const dist = levenshtein(a, b);
+            const maxLen = Math.max(a.length, b.length);
+            if (maxLen === 0) return 0;
+            return Math.max(0, 1 - dist / maxLen);
           };
           
           // Only process NEW words from the transcript using refs (avoid stale closures)
@@ -841,13 +853,35 @@ const [liveTranscription, setLiveTranscription] = useState("");
               let matchFound = false;
               const maxLookAhead = 5;
               
+              // Conservative: only treat as a "skip" when we are clearly more confident
+              // that the spoken word matches a FUTURE word than the CURRENT expected word.
+              const expectedScore = similarityScore(cleanSpokenWord, cleanExpectedWord);
+
               for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
-                const cleanFutureWord = futureWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-                
-                // Use areWordsSimilar for ALL lookahead to handle speech recognition variations
-                if (areWordsSimilar(cleanSpokenWord, cleanFutureWord)) {
+                const cleanFutureWord = futureWord; // already cleaned
+
+                const futureScore = similarityScore(cleanSpokenWord, cleanFutureWord);
+                const isShort = cleanSpokenWord.length <= 3 || cleanFutureWord.length <= 3;
+
+                const strongFutureMatch = isShort
+                  ? cleanSpokenWord === cleanFutureWord
+                  : futureScore >= 0.88;
+
+                const shouldTreatAsSkip = strongFutureMatch 
+                  && expectedScore < 0.75
+                  && (futureScore - expectedScore) >= 0.18;
+
+                if (shouldTreatAsSkip) {
                   matchFound = true;
+                  console.log('⏭️ Skip detected (conservative):', {
+                    spoken: cleanSpokenWord,
+                    expected: cleanExpectedWord,
+                    future: cleanFutureWord,
+                    expectedScore: Number(expectedScore.toFixed(2)),
+                    futureScore: Number(futureScore.toFixed(2)),
+                    lookAhead,
+                  });
                   console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
                   
                   // Queue ALL words from current to matched position
