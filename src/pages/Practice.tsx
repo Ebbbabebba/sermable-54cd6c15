@@ -675,13 +675,20 @@ const [liveTranscription, setLiveTranscription] = useState("");
           
           // Track spoken words for bracket visualization
           const fullTranscript = (finalTranscript + interimTranscript).trim();
-          const transcriptWords = fullTranscript.toLowerCase().split(/\s+/).filter(w => w.trim());
-          
+
+          // IMPORTANT: Only advance/mark words based on FINAL recognition.
+          // Interim results are often revised and can cause false “skipped” (red) markings.
+          const transcriptWordsFinal = finalTranscript
+            .trim()
+            .toLowerCase()
+            .split(/\s+/)
+            .filter((w: string) => w.trim());
+
           // Get expected words from the active segment or full speech (clean bracket notation first)
           const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
-          const allExpectedWordsRaw = cleanedText.split(/\s+/).filter(w => w.trim());
+          const allExpectedWordsRaw = cleanedText.split(/\s+/).filter((w) => w.trim());
           const allExpectedWords = allExpectedWordsRaw.map(normalizeForCompare);
-          
+
           // Helper: Levenshtein distance for fuzzy matching
           const levenshtein = (a: string, b: string): number => {
             if (a.length === 0) return b.length;
@@ -691,41 +698,47 @@ const [liveTranscription, setLiveTranscription] = useState("");
             for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
             for (let i = 1; i <= b.length; i++) {
               for (let j = 1; j <= a.length; j++) {
-                matrix[i][j] = b[i-1] === a[j-1] 
-                  ? matrix[i-1][j-1]
-                  : Math.min(matrix[i-1][j-1] + 1, matrix[i][j-1] + 1, matrix[i-1][j] + 1);
+                matrix[i][j] =
+                  b[i - 1] === a[j - 1]
+                    ? matrix[i - 1][j - 1]
+                    : Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
+                      );
               }
             }
             return matrix[b.length][a.length];
           };
-          
-          // Helper: Check if words are similar enough - VERY GENEROUS to handle speech recognition variations
+
+          // Helper: Check if words are similar enough - tolerant, but avoid tiny substring traps (e.g. "i" matching "idag")
           const areWordsSimilar = (spoken: string, expected: string): boolean => {
             // Exact match
             if (spoken === expected) return true;
-            
-            // Check if one contains the other (handles partial recognition)
-            if (spoken.includes(expected) || expected.includes(spoken)) return true;
-            
+
+            // Only allow substring matching for longer words (prevents false matches on 1-3 char words)
+            if (Math.min(spoken.length, expected.length) >= 4) {
+              if (spoken.includes(expected) || expected.includes(spoken)) return true;
+            }
+
             // For very short words (1-2 chars), allow 1 char difference
             if (expected.length <= 2) {
               return levenshtein(spoken, expected) <= 1;
             }
-            
+
             // For short words (3-4 chars), allow 2 char difference
             if (expected.length <= 4) {
               return levenshtein(spoken, expected) <= 2;
             }
-            
-            // Check if they start the same (first 2+ chars) - handles common recognition variations
+
+            // Check if they start the same (first 2+ chars)
             const prefixLen = Math.min(2, Math.min(spoken.length, expected.length));
             if (spoken.slice(0, prefixLen) === expected.slice(0, prefixLen)) {
               const dist = levenshtein(spoken, expected);
               const maxLen = Math.max(spoken.length, expected.length);
-              // Allow up to 50% difference if starting same
               if (dist <= Math.ceil(maxLen * 0.5)) return true;
             }
-            
+
             // Check if they end the same (last 2+ chars)
             const suffixLen = Math.min(2, Math.min(spoken.length, expected.length));
             if (spoken.slice(-suffixLen) === expected.slice(-suffixLen)) {
@@ -733,181 +746,264 @@ const [liveTranscription, setLiveTranscription] = useState("");
               const maxLen = Math.max(spoken.length, expected.length);
               if (dist <= Math.ceil(maxLen * 0.5)) return true;
             }
-            
+
             // General case: allow up to 40% difference
             const dist = levenshtein(spoken, expected);
             const maxLen = Math.max(spoken.length, expected.length);
             return dist <= Math.ceil(maxLen * 0.4);
           };
-          
-          // Only process NEW words from the transcript using refs (avoid stale closures)
+
+          // Stricter match used ONLY for "look-ahead skip" detection to avoid false reds.
+          const isLookaheadMatch = (spoken: string, expected: string): boolean => {
+            if (spoken === expected) return true;
+            if (spoken.length < 3 || expected.length < 3) return false;
+
+            const dist = levenshtein(spoken, expected);
+            const maxLen = Math.max(spoken.length, expected.length);
+
+            const pLen = Math.min(3, Math.min(spoken.length, expected.length));
+            const prefixMatch = spoken.slice(0, pLen) === expected.slice(0, pLen);
+
+            const sLen = Math.min(3, Math.min(spoken.length, expected.length));
+            const suffixMatch = spoken.slice(-sLen) === expected.slice(-sLen);
+
+            if (!prefixMatch && !suffixMatch) return false;
+            return dist <= Math.ceil(maxLen * 0.25);
+          };
+
+          // Only process NEW FINAL words (avoid interim revisions causing false marking)
           const prevLength = processedTranscriptLengthRef.current;
-          const newWords = transcriptWords.slice(prevLength);
-          
+          const newWords = transcriptWordsFinal.slice(prevLength);
+
           if (newWords.length === 0) return;
-          
-          console.log('🆕 New words detected:', newWords, 'Previous length:', prevLength, 'Current index:', expectedWordIndexRef.current);
-          
+
+          console.log(
+            '🆕 New FINAL words detected:',
+            newWords,
+            'Previous final length:',
+            prevLength,
+            'Current index:',
+            expectedWordIndexRef.current,
+            'Full transcript (ui):',
+            fullTranscript
+          );
+
           // Process new words using refs for immediate updates
           let currentIdx = expectedWordIndexRef.current;
-          
-          for (const word of newWords) {
+
+          // Helper to apply the standard "matched expected word" logic (hesitation/yellow vs normal)
+          const applyMatchedExpectedWord = (idx: number, expectedNormalized: string) => {
+            // Track timing FIRST to detect hesitation
+            const currentTime = Date.now();
+            const timeSinceLastWord = currentTime - lastWordTimeRef.current;
+
+            // Check if this word is the first word after a sentence-ending punctuation
+            // IMPORTANT: use raw expected words so punctuation isn't lost.
+            const isFirstWordAfterSentence = idx > 0 && (() => {
+              const prevWordRaw = allExpectedWordsRaw[idx - 1] ?? '';
+              return /[.!?][)"'’”]*$/.test(prevWordRaw);
+            })();
+
+            const isFirstWordInSession = idx === 0;
+            const sentenceStartExtraMs = isFirstWordAfterSentence ? settings.sentenceStartDelay * 1000 : 0;
+            const hesitationThresholdMs = isFirstWordInSession
+              ? Math.max(3000, averageWordDelay * 2.5)
+              : Math.max(1500, averageWordDelay * 2.0) + sentenceStartExtraMs;
+
+            const wasHesitation = timeSinceLastWord > hesitationThresholdMs;
+
+            const wasHintShowing = supportWord !== null && supportWordIndex === idx;
+            const currentHintLevel = hintLevel;
+
+            const shouldMarkHesitated =
+              wasHintShowing ||
+              (wasHesitation && !isFirstWordAfterSentence) ||
+              currentHintLevel >= 2;
+
+            if (shouldMarkHesitated) {
+              queueWordAction('hesitated', idx, expectedNormalized);
+              console.log(
+                '⏱️ Word marked hesitated:',
+                expectedNormalized,
+                `(delay: ${Math.round(timeSinceLastWord)}ms, threshold: ${Math.round(
+                  hesitationThresholdMs
+                )}ms, hintLevel: ${currentHintLevel}, hintShowing: ${wasHintShowing}, afterSentence: ${isFirstWordAfterSentence})`
+              );
+            } else {
+              queueWordAction('spoken', idx, expectedNormalized);
+              console.log(
+                '✓ Word spoken correctly:',
+                expectedNormalized,
+                'at index',
+                idx,
+                `(delay: ${Math.round(timeSinceLastWord)}ms)`
+              );
+            }
+
+            clearHints();
+
+            // Update timing tracking
+            lastWordTimeRef.current = currentTime;
+
+            if (idx > 1 && timeSinceLastWord < 8000) {
+              const weight = wordTimingsRef.current.length < 3 ? 0.7 : 0.4;
+              const newAvg =
+                wordTimingsRef.current.length === 0
+                  ? timeSinceLastWord
+                  : averageWordDelay * (1 - weight) + timeSinceLastWord * weight;
+              setAverageWordDelay(Math.min(2000, Math.max(200, newAvg)));
+              wordTimingsRef.current.push(timeSinceLastWord);
+              if (wordTimingsRef.current.length > 8) wordTimingsRef.current.shift();
+              console.log('📊 Speaking pace:', Math.round(timeSinceLastWord), 'ms, Avg:', Math.round(newAvg), 'ms');
+            }
+          };
+
+          for (let wIdx = 0; wIdx < newWords.length; wIdx++) {
+            const word = newWords[wIdx];
             const cleanSpokenWord = normalizeForCompare(word);
 
             if (!cleanSpokenWord || currentIdx >= allExpectedWords.length) continue;
 
             // Hide support word immediately when ANY word is spoken
-            const wasSupportWordShowing = supportWord !== null;
-            const previousSupportWordIndex = supportWordIndex;
             setSupportWord(null);
             setSupportWordIndex(null);
 
             const expectedWord = allExpectedWords[currentIdx];
 
             console.log('🔍 Comparing:', cleanSpokenWord, 'vs', expectedWord, 'at index', currentIdx);
-            
-            // Check if spoken word matches expected word
-            if (areWordsSimilar(cleanSpokenWord, expectedWord)) {
-              // Track timing FIRST to detect hesitation
-              const currentTime = Date.now();
-              const timeSinceLastWord = currentTime - lastWordTimeRef.current;
-              
-              // Check if this word is the first word after a sentence-ending punctuation
-              // IMPORTANT: use raw expected words so punctuation isn't lost.
-              const isFirstWordAfterSentence = currentIdx > 0 && (() => {
-                const prevWordRaw = allExpectedWordsRaw[currentIdx - 1] ?? '';
-                return /[.!?][)"'’”]*$/.test(prevWordRaw);
-              })();
-              
-              // HESITATION DETECTION: Mark as hesitated if user took too long
-              // Use adaptive threshold based on their pace, but with minimums
-              // Add extra time for first word after sentences
-              const isFirstWordInSession = currentIdx === 0;
-              const sentenceStartExtraMs = isFirstWordAfterSentence ? settings.sentenceStartDelay * 1000 : 0;
-              const hesitationThresholdMs = isFirstWordInSession 
-                ? Math.max(3000, averageWordDelay * 2.5) // First word: 3s minimum
-                : Math.max(1500, averageWordDelay * 2.0) + sentenceStartExtraMs; // Other words + sentence delay
-              
-              const wasHesitation = timeSinceLastWord > hesitationThresholdMs;
-              const wasHintShowing = wasSupportWordShowing && previousSupportWordIndex === currentIdx;
-              const currentHintLevel = hintLevel; // Capture current hint level
-              
-              // Determine if word should be marked as hesitated (yellow)
-              // 1. If any hint was showing (user needed visual help) - both visible and hidden words
-              // 2. If user took too long (hesitation detected by timing) - BUT NOT for sentence starts
-              // 3. If hint reached level 2+ (user clearly needed substantial help)
-               const shouldMarkHesitated = 
-                 wasHintShowing || // Any hint = hesitation (visible or hidden)
-                 (wasHesitation && !isFirstWordAfterSentence) || // Time-based hesitation, but not for sentence starts
-                 (currentHintLevel >= 2); // Substantial hint needed
 
-              if (shouldMarkHesitated) {
-                queueWordAction('hesitated', currentIdx, expectedWord);
-                console.log('⏱️ Word marked hesitated:', expectedWord, 
-                  `(delay: ${Math.round(timeSinceLastWord)}ms, threshold: ${Math.round(hesitationThresholdMs)}ms, hintLevel: ${currentHintLevel}, hintShowing: ${wasHintShowing}, afterSentence: ${isFirstWordAfterSentence})`);
-              } else {
-                // Normal correct word - no hesitation
-                queueWordAction('spoken', currentIdx, expectedWord);
-                console.log('✓ Word spoken correctly:', expectedWord, 'at index', currentIdx, 
-                  `(delay: ${Math.round(timeSinceLastWord)}ms)`);
-              }
-              
-              clearHints();
+            // 1) Direct match
+            if (areWordsSimilar(cleanSpokenWord, expectedWord)) {
+              applyMatchedExpectedWord(currentIdx, expectedWord);
               currentIdx++;
-              
-              // Update timing tracking
-              lastWordTimeRef.current = currentTime;
-              
-              if (currentIdx > 1 && timeSinceLastWord < 8000) {
-                // EWMA: Weight recent words more heavily for faster adaptation
-                const weight = wordTimingsRef.current.length < 3 ? 0.7 : 0.4;
-                const newAvg = wordTimingsRef.current.length === 0 
-                  ? timeSinceLastWord 
-                  : averageWordDelay * (1 - weight) + timeSinceLastWord * weight;
-                setAverageWordDelay(Math.min(2000, Math.max(200, newAvg)));
-                wordTimingsRef.current.push(timeSinceLastWord);
-                if (wordTimingsRef.current.length > 8) wordTimingsRef.current.shift();
-                console.log('📊 Speaking pace:', Math.round(timeSinceLastWord), 'ms, Avg:', Math.round(newAvg), 'ms');
-              }
-              
-              // Check if we've reached the last word
+
               if (currentIdx >= allExpectedWords.length) {
                 console.log('🎉 Last word spoken! Auto-stopping recording...');
-                setTimeout(() => { audioRecorderRef.current?.stopRecording(); }, 500);
+                setTimeout(() => {
+                  audioRecorderRef.current?.stopRecording();
+                }, 500);
               } else {
                 startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
               }
-            } else {
-              // Word doesn't match - look ahead to find match
-              console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', expectedWord);
-              
-              let matchFound = false;
-              const maxLookAhead = 5;
-              
-              for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
-                const futureWord = allExpectedWords[currentIdx + lookAhead];
-                
-                // Use areWordsSimilar for ALL lookahead to handle speech recognition variations
-                if (areWordsSimilar(cleanSpokenWord, futureWord)) {
-                  matchFound = true;
-                  console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
-                  
-                  // Queue ALL words from current to matched position
-                  for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
-                    if (i < currentIdx + lookAhead) {
-                      // Skipped words - ALL skipped words are missed (red)
-                      // User jumped ahead and skipped words they should have said
-                      queueWordAction('missed', i, allExpectedWords[i]);
-                      console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
-                    } else {
-                      // Matched word - queue as spoken
-                      queueWordAction('spoken', i, allExpectedWords[i]);
-                      console.log('✓ Matched word spoken:', allExpectedWords[i], 'at index', i);
-                    }
-                  }
-                  
-                  currentIdx = currentIdx + lookAhead + 1;
-                  lastWordTimeRef.current = Date.now();
-                  clearHints();
-                  
-                  if (currentIdx < allExpectedWords.length) {
-                    startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
-                  }
-                  break;
+              continue;
+            }
+
+            // 2) Handle speech splitting one expected word into two spoken tokens (e.g. "i dag" vs "idag")
+            const nextSpoken = wIdx + 1 < newWords.length ? normalizeForCompare(newWords[wIdx + 1]) : '';
+            if (nextSpoken) {
+              const combinedSpoken = `${cleanSpokenWord}${nextSpoken}`;
+              if (areWordsSimilar(combinedSpoken, expectedWord)) {
+                console.log('🧩 Split-spoken match:', combinedSpoken, '≈', expectedWord);
+
+                applyMatchedExpectedWord(currentIdx, expectedWord);
+                currentIdx++;
+                wIdx++; // consume the next spoken token too
+
+                if (currentIdx < allExpectedWords.length) {
+                  startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
                 }
-              }
-              
-              if (!matchFound) {
-                // Handle support word case - only advance if user was shown the word
-                if (wasSupportWordShowing && previousSupportWordIndex !== null) {
-                  // If user saw support word but said wrong word, mark as hesitated (yellow) not missed (red)
-                  // because they hesitated and needed help, even if they then said wrong word
-                  if (currentHiddenIndices.has(previousSupportWordIndex)) {
-                    // Check if already marked as hesitated - keep it yellow, don't change to red
-                    if (!hesitatedWordsIndices.has(previousSupportWordIndex)) {
-                      queueWordAction('hesitated', previousSupportWordIndex, allExpectedWords[previousSupportWordIndex]);
-                      console.log('⚠️ Hidden support word - marking as hesitated (yellow):', allExpectedWords[previousSupportWordIndex]);
-                    } else {
-                      console.log('⚠️ Hidden support word already hesitated (yellow):', allExpectedWords[previousSupportWordIndex]);
-                    }
-                  }
-                  currentIdx = previousSupportWordIndex + 1;
-                  if (currentIdx < allExpectedWords.length) {
-                    startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
-                  }
-                }
-                // IMPORTANT: Do NOT skip words when no match found!
-                // Just log and wait for the user to say the correct word
-                console.log('⏳ No match - waiting for correct word:', expectedWord, 'at index', currentIdx);
+                continue;
               }
             }
+
+            // 3) Handle speech merging two expected words into one spoken token
+            const nextExpected = allExpectedWords[currentIdx + 1];
+            if (nextExpected) {
+              const combinedExpected = `${expectedWord}${nextExpected}`;
+              if (areWordsSimilar(cleanSpokenWord, combinedExpected)) {
+                console.log('🧩 Merged-spoken match:', cleanSpokenWord, '≈', combinedExpected);
+
+                applyMatchedExpectedWord(currentIdx, expectedWord);
+                queueWordAction('spoken', currentIdx + 1, nextExpected);
+
+                currentIdx += 2;
+
+                if (currentIdx >= allExpectedWords.length) {
+                  console.log('🎉 Last word spoken! Auto-stopping recording...');
+                  setTimeout(() => {
+                    audioRecorderRef.current?.stopRecording();
+                  }, 500);
+                } else {
+                  startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
+                }
+
+                continue;
+              }
+            }
+
+            // 4) Word doesn't match - look ahead to find match (skip detection)
+            console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', expectedWord);
+
+            let matchFound = false;
+            const maxLookAhead = 5;
+
+            for (
+              let lookAhead = 1;
+              lookAhead <= maxLookAhead && currentIdx + lookAhead < allExpectedWords.length;
+              lookAhead++
+            ) {
+              const futureWord = allExpectedWords[currentIdx + lookAhead];
+
+              // Use stricter lookahead match to avoid false "skipped" reds
+              if (isLookaheadMatch(cleanSpokenWord, futureWord)) {
+                matchFound = true;
+                console.log('✓ Found confident word ahead at +' + lookAhead + ':', futureWord);
+
+                // Queue ALL words from current to matched position
+                for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
+                  if (i < currentIdx + lookAhead) {
+                    queueWordAction('missed', i, allExpectedWords[i]);
+                    console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
+                  } else {
+                    queueWordAction('spoken', i, allExpectedWords[i]);
+                    console.log('✓ Matched word spoken:', allExpectedWords[i], 'at index', i);
+                  }
+                }
+
+                currentIdx = currentIdx + lookAhead + 1;
+                lastWordTimeRef.current = Date.now();
+                clearHints();
+
+                if (currentIdx < allExpectedWords.length) {
+                  startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
+                }
+                break;
+              }
+            }
+
+            if (!matchFound) {
+              // Handle support word case - only advance if user was shown the word
+              if (supportWord !== null && supportWordIndex !== null) {
+                if (currentHiddenIndices.has(supportWordIndex)) {
+                  if (!hesitatedWordsIndices.has(supportWordIndex)) {
+                    queueWordAction('hesitated', supportWordIndex, allExpectedWords[supportWordIndex]);
+                    console.log(
+                      '⚠️ Hidden support word - marking as hesitated (yellow):',
+                      allExpectedWords[supportWordIndex]
+                    );
+                  } else {
+                    console.log(
+                      '⚠️ Hidden support word already hesitated (yellow):',
+                      allExpectedWords[supportWordIndex]
+                    );
+                  }
+                }
+                currentIdx = supportWordIndex + 1;
+                if (currentIdx < allExpectedWords.length) {
+                  startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
+                }
+              }
+
+              // IMPORTANT: Do NOT skip words when no match found!
+              console.log('⏳ No match - waiting for correct word:', expectedWord, 'at index', currentIdx);
+            }
           }
-          
+
           // Update refs and state
           expectedWordIndexRef.current = currentIdx;
-          processedTranscriptLengthRef.current = transcriptWords.length;
+          processedTranscriptLengthRef.current = transcriptWordsFinal.length;
           setExpectedWordIndex(currentIdx);
-          setLastProcessedTranscriptLength(transcriptWords.length);
+          setLastProcessedTranscriptLength(transcriptWordsFinal.length);
         };
         
         recognition.onerror = (event: any) => {
