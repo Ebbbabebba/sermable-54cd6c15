@@ -1065,14 +1065,40 @@ const [liveTranscription, setLiveTranscription] = useState("");
             }
           });
           
-          // Combine with AI-detected words (unique only)
+          // IMPORTANT: Trust realtime tracking over AI analysis
+          // Only include AI-detected missed words if realtime also confirms they were missed
+          // This prevents false positives where AI misinterprets transcription but user actually said the word
+          
+          // If realtime tracked the word as spoken, it was NOT missed
+          const spokenWordsSet = new Set<string>();
+          realtimeSpokenIndices.forEach(idx => {
+            if (idx < analysisWords.length) {
+              spokenWordsSet.add(analysisWords[idx].toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
+            }
+          });
+          
+          // Filter AI missed words - only keep if NOT in spoken set
+          const validAIMissedWords = (data.missedWords || []).filter((word: string) => {
+            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+            return !spokenWordsSet.has(cleanWord);
+          });
+          
           const combinedMissedWords = [...new Set([
-            ...(data.missedWords || []),
+            ...validAIMissedWords,
             ...realtimeMissedWords
           ])];
           
+          // Same for delayed words - filter out words that were spoken
+          const validAIDelayedWords = (data.delayedWords || []).filter((word: string) => {
+            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+            // Only include if it was actually hesitated by realtime tracking
+            return !spokenWordsSet.has(cleanWord) || realtimeHesitatedIndices.has(
+              analysisWords.findIndex(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '') === cleanWord)
+            );
+          });
+          
           const combinedDelayedWords = [...new Set([
-            ...(data.delayedWords || []),
+            ...validAIDelayedWords,
             ...realtimeHesitatedWords
           ])];
           
