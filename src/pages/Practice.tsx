@@ -1101,56 +1101,23 @@ const [liveTranscription, setLiveTranscription] = useState("");
             }
           });
           
-          // IMPORTANT: Trust realtime tracking over AI analysis
-          // Only include AI-detected missed words if realtime also confirms they were missed
-          // This prevents false positives where AI misinterprets transcription but user actually said the word
+          // CRITICAL: ONLY use realtime tracking data for missed/hesitated words
+          // The AI analysis should NOT add its own detected missed words
+          // This ensures the results match exactly what the user saw during practice
           
-          // If realtime tracked the word as spoken, it was NOT missed
-          const spokenWordsSet = new Set<string>();
-          realtimeSpokenIndices.forEach(idx => {
-            if (idx < analysisWords.length) {
-              spokenWordsSet.add(analysisWords[idx].toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
-            }
-          });
-          
-          // Filter AI missed words - only keep if NOT in spoken set
-          const validAIMissedWords = (data.missedWords || []).filter((word: string) => {
-            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-            return !spokenWordsSet.has(cleanWord);
-          });
-          
-          const combinedMissedWords = [...new Set([
-            ...validAIMissedWords,
-            ...realtimeMissedWords
-          ])];
-          
-          // Same for delayed words - filter out words that were spoken
-          const validAIDelayedWords = (data.delayedWords || []).filter((word: string) => {
-            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-            // Only include if it was actually hesitated by realtime tracking
-            return !spokenWordsSet.has(cleanWord) || realtimeHesitatedIndices.has(
-              analysisWords.findIndex(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '') === cleanWord)
-            );
-          });
-          
-          const combinedDelayedWords = [...new Set([
-            ...validAIDelayedWords,
-            ...realtimeHesitatedWords
-          ])];
+          // Only use words that were ACTUALLY marked red/yellow in the text during practice
+          const combinedMissedWords = [...realtimeMissedWords];
+          const finalDelayedWords = [...realtimeHesitatedWords];
           
           // Remove any words that are in missed from hesitated (missed is more severe)
           const missedSet = new Set(combinedMissedWords.map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')));
-          const finalDelayedWords = combinedDelayedWords.filter(w => 
+          const cleanedDelayedWords = finalDelayedWords.filter(w => 
             !missedSet.has(w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
           );
           
-          console.log('📊 Combined results:',
-            'AI missed:', data.missedWords,
-            'Realtime missed:', realtimeMissedWords,
-            'Final missed:', combinedMissedWords,
-            'AI delayed:', data.delayedWords,
-            'Realtime delayed:', realtimeHesitatedWords,
-            'Final delayed:', finalDelayedWords
+          console.log('📊 Realtime-only results (AI detection ignored):',
+            'Missed words:', combinedMissedWords,
+            'Hesitated words:', cleanedDelayedWords
           );
           
           // Build combined indices for index-based marking in PracticeResults
@@ -1168,7 +1135,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const enhancedResults = {
             ...data,
             missedWords: combinedMissedWords,
-            delayedWords: finalDelayedWords,
+            delayedWords: cleanedDelayedWords,
             missedIndices: finalMissedIndices,
             hesitatedIndices: finalHesitatedIndices,
           };
@@ -1188,7 +1155,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               speech_id: speech!.id,
               score: data.accuracy,
               missed_words: combinedMissedWords,
-              delayed_words: finalDelayedWords,
+              delayed_words: cleanedDelayedWords,
               difficulty_score: data.difficultyScore,
               connector_words: data.connectorWords,
               duration: 0,
