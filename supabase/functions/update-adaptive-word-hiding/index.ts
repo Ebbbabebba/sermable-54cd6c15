@@ -206,18 +206,15 @@ Deno.serve(async (req) => {
     }
 
     // Determine which words should be hidden
-    // AGGRESSIVE SPACED REPETITION: Concentrate learning early, stretch out later
-    // Hide words FAST to force recall and identify true problem areas quickly
+    // ULTRA-AGGRESSIVE SPACED REPETITION: Hide words IMMEDIATELY after ANY correct attempt
+    // The goal: Force pure recall as fast as possible to strengthen memory
     const wordsToHide = new Set<number>()
     
-    // Count total sessions for this speech to determine aggression level
+    // Count total sessions for this speech
     const totalSessionsForWord = Math.max(...Array.from(wordPerformanceMap.values())
       .map(p => p.correctCount + p.missedCount + p.hesitatedCount))
     
-    // After a few sessions, be MORE aggressive with hiding
-    const isAggressivePhase = totalSessionsForWord >= 2
-    
-    console.log(`📈 Sessions detected: ${totalSessionsForWord}, Aggressive phase: ${isAggressivePhase}`)
+    console.log(`📈 Sessions detected: ${totalSessionsForWord}`)
     
     words.forEach((word: string, index: number) => {
       const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
@@ -225,82 +222,61 @@ Deno.serve(async (req) => {
       
       if (!perf || !cleanWord) return
 
-      // RULE 1: If word is identified as DIFFICULT by AI, ALWAYS keep it visible
-      if (difficultWords.has(cleanWord)) {
-        console.log(`👁️ Keeping visible (AI difficult): "${cleanWord}"`)
-        return // Keep visible - this is a problem word
-      }
-
-      // RULE 2: If word was MISSED this session, keep it visible
-      // But hesitated words can still be hidden if they have good history
-      if (perf.lastPerformance === 'missed') {
-        return // Keep visible
-      }
-
-      // RULE 3: If word has multiple misses, need recovery proof
-      if (perf.missedCount >= 2 && perf.consecutiveCorrect < 2) {
-        return // Keep visible until recovery proven
-      }
-
-      // Check if this is a hard word or sentence-ending word
-      const isHardWord = isContentWord(word)
-      const isSentenceEnding = /[.!?]$/.test(word.trim())
-
-      // === AGGRESSIVE HIDING RULES FOR SPACED REPETITION ===
+      // === KEEP VISIBLE RULES (very strict - only truly problematic words stay visible) ===
       
-      // RULE 4: Hide SIMPLE words IMMEDIATELY - even on first encounter!
-      // These should not take up cognitive load at all
-      if (perf.isSimple && !isSentenceEnding) {
-        // In aggressive phase: hide simple words even if never practiced
-        if (isAggressivePhase) {
+      // RULE 1: If word was MISSED THIS SESSION, keep visible for immediate review
+      if (perf.lastPerformance === 'missed') {
+        console.log(`👁️ Keeping visible (missed this session): "${cleanWord}"`)
+        return
+      }
+
+      // RULE 2: If word has 2+ misses AND no consecutive correct yet, keep visible
+      if (perf.missedCount >= 2 && perf.consecutiveCorrect < 1) {
+        console.log(`👁️ Keeping visible (needs recovery): "${cleanWord}"`)
+        return
+      }
+      
+      // RULE 3: If word is identified as persistently DIFFICULT (high error rate), keep visible
+      // But only if it has enough data to judge
+      const totalAttempts = perf.correctCount + perf.missedCount + perf.hesitatedCount
+      if (totalAttempts >= 3 && perf.missedCount >= 2 && perf.consecutiveCorrect < 2) {
+        console.log(`👁️ Keeping visible (persistent difficulty): "${cleanWord}"`)
+        return
+      }
+
+      // === HIDE RULES (very aggressive - hide as soon as possible) ===
+      
+      // SIMPLE WORDS: Hide IMMEDIATELY after speaking once correctly
+      // These don't need memorization focus
+      if (perf.isSimple) {
+        if (perf.lastPerformance === 'correct' || perf.correctCount >= 1) {
           wordsToHide.add(index)
           return
         }
-        // Otherwise hide after first correct
-        if (perf.correctCount >= 1 || perf.lastPerformance === 'correct') {
+        // Even hide untested simple words after first session
+        if (totalSessionsForWord >= 1) {
           wordsToHide.add(index)
           return
         }
       }
 
-      // RULE 5: Hide MEDIUM words after 1 correct (no waiting!)
-      // SPACED REPETITION: Force recall quickly to strengthen memory
-      if (!perf.isSimple && !isHardWord && !isSentenceEnding) {
-        // Perfect record: hide after just 1 correct
-        if (perf.correctCount >= 1 && perf.missedCount === 0) {
-          wordsToHide.add(index)
-          return
-        }
-        // Had hesitation but not missed: hide after 1 consecutive correct
-        if (perf.hesitatedCount > 0 && perf.missedCount === 0 && perf.consecutiveCorrect >= 1) {
-          wordsToHide.add(index)
-          return
-        }
-        // Had errors: need 2 consecutive correct
-        if (perf.missedCount > 0 && perf.consecutiveCorrect >= 2) {
-          wordsToHide.add(index)
-          return
-        }
+      // ALL OTHER WORDS: Hide immediately after 1 correct attempt
+      // This is the core of aggressive spaced repetition - test recall fast!
+      if (perf.correctCount >= 1 && perf.lastPerformance !== 'hesitated') {
+        wordsToHide.add(index)
+        return
       }
-
-      // RULE 6: Hide HARD words + sentence-ending words after 1-2 correct
-      // FASTER than before: Start testing harder words quickly!
-      if (isHardWord || isSentenceEnding) {
-        // Perfect record: hide after 1 correct (test recall early!)
-        if (perf.correctCount >= 1 && perf.missedCount === 0 && perf.hesitatedCount === 0) {
-          wordsToHide.add(index)
-          return
-        }
-        // Had hesitation only: hide after 2 correct total
-        if (perf.hesitatedCount > 0 && perf.missedCount === 0 && perf.correctCount >= 2) {
-          wordsToHide.add(index)
-          return
-        }
-        // Had misses: need 2 consecutive correct
-        if (perf.missedCount > 0 && perf.consecutiveCorrect >= 2) {
-          wordsToHide.add(index)
-          return
-        }
+      
+      // Even hesitated words: hide after correct this session
+      if (perf.lastPerformance === 'correct') {
+        wordsToHide.add(index)
+        return
+      }
+      
+      // Words that were hesitated this session but have history of being correct
+      if (perf.lastPerformance === 'hesitated' && perf.correctCount >= 2) {
+        wordsToHide.add(index)
+        return
       }
     })
 
