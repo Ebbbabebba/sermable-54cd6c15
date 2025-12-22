@@ -938,24 +938,60 @@ const [liveTranscription, setLiveTranscription] = useState("");
     setIsRecording(false);
     setIsProcessing(true);
     
-    // Stop Web Speech API
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+    // Clear hesitation timer first to prevent more yellow markings
+    if (hesitationTimerRef.current) {
+      clearTimeout(hesitationTimerRef.current);
+      hesitationTimerRef.current = null;
     }
     
-    // Clear word processing queue
+    // Clear hint timer
+    if (hintTimerRef.current) {
+      clearTimeout(hintTimerRef.current);
+      hintTimerRef.current = null;
+    }
+    
+    // IMPORTANT: Wait a moment for Web Speech API to deliver final results
+    // before stopping it - this ensures the last spoken words are captured
+    await new Promise<void>((resolve) => {
+      // Give Web Speech API 800ms to deliver any pending results
+      setTimeout(() => {
+        // Now stop Web Speech API
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.stop();
+          } catch (e) {
+            // Ignore errors if already stopped
+          }
+          recognitionRef.current = null;
+        }
+        resolve();
+      }, 800);
+    });
+    
+    // Process any remaining items in the word queue before clearing
+    // Wait for queue to finish processing
+    if (wordQueueRef.current.length > 0) {
+      console.log('⏳ Processing remaining', wordQueueRef.current.length, 'words in queue...');
+      await new Promise<void>((resolve) => {
+        const checkQueue = () => {
+          if (wordQueueRef.current.length === 0 || !isProcessingQueueRef.current) {
+            resolve();
+          } else {
+            setTimeout(checkQueue, 50);
+          }
+        };
+        // Give it max 500ms to finish
+        setTimeout(resolve, 500);
+        checkQueue();
+      });
+    }
+    
+    // NOW clear word processing queue
     wordQueueRef.current = [];
     isProcessingQueueRef.current = false;
     if (queueProcessorTimeoutRef.current) {
       clearTimeout(queueProcessorTimeoutRef.current);
       queueProcessorTimeoutRef.current = null;
-    }
-    
-    // Clear hesitation timer
-    if (hesitationTimerRef.current) {
-      clearTimeout(hesitationTimerRef.current);
-      hesitationTimerRef.current = null;
     }
     
     // Clear the transcription interval
