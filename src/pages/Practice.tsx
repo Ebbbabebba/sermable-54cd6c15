@@ -825,23 +825,24 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
                 const cleanFutureWord = futureWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
                 
-                // Avoid false "skips" (which can mark correct words as red):
-                // - For +1 lookahead require an exact normalized match
-                // - For +2..+5 allow fuzzy matching
-                const isLookAheadMatch = lookAhead === 1
-                  ? cleanSpokenWord === cleanFutureWord
-                  : areWordsSimilar(cleanSpokenWord, cleanFutureWord);
-                
-                if (isLookAheadMatch) {
+                // Use areWordsSimilar for ALL lookahead to handle speech recognition variations
+                if (areWordsSimilar(cleanSpokenWord, cleanFutureWord)) {
                   matchFound = true;
                   console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
                   
                   // Queue ALL words from current to matched position
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
-                      // Skipped words - mark as missed (red), including visible words
-                      queueWordAction('missed', i, allExpectedWords[i]);
-                      console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
+                      // Skipped words:
+                      // - HIDDEN words that are skipped = missed (red) - user said wrong word
+                      // - VISIBLE words that are skipped = spoken (fade) - likely speech recognition variation
+                      if (currentHiddenIndices.has(i)) {
+                        queueWordAction('missed', i, allExpectedWords[i]);
+                        console.log('❌ Skipped HIDDEN word (red):', allExpectedWords[i], 'at index', i);
+                      } else {
+                        queueWordAction('spoken', i, allExpectedWords[i]);
+                        console.log('⏭️ Skipped visible word (fade):', allExpectedWords[i], 'at index', i);
+                      }
                     } else {
                       // Matched word - queue as spoken
                       queueWordAction('spoken', i, allExpectedWords[i]);
