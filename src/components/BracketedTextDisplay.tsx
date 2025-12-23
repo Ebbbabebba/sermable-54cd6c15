@@ -241,7 +241,13 @@ const BracketedTextDisplay = ({
               <TooltipProvider key={globalIndex}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span
+                    <motion.span
+                      layout="position"
+                      layoutId={`word-${globalIndex}`}
+                      transition={{ 
+                        layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
+                        opacity: { duration: 0.5, ease: "easeOut" }
+                      }}
                       className={cn(
                         "word-block relative inline-block",
                         // Smooth fade transition for all states
@@ -282,7 +288,7 @@ const BracketedTextDisplay = ({
                           </motion.span>
                         )}
                       </AnimatePresence>
-                    </span>
+                    </motion.span>
                   </TooltipTrigger>
                   {(isMissed || isHesitated || isInProblemPhrase) && (
                     <TooltipContent side="top" className="text-xs">
@@ -343,8 +349,9 @@ const BracketedTextDisplay = ({
           }, { isInProblemPhrase: false, timesMissed: 0 });
 
           return (
-            <div
+            <motion.div
               key={segmentIndex}
+              layout
               onClick={() => !isRecording && handleBracketTap(segmentIndex, segment.startIndex)}
               className={cn(
                 "bracket-container px-3 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 cursor-pointer select-none relative",
@@ -355,7 +362,7 @@ const BracketedTextDisplay = ({
                 bracketState === "filling" && "bg-primary/15 border-2 border-primary/60",
                 bracketState === "peeked" && "bg-yellow-500/10 border-2 border-yellow-500/50",
                 bracketState === "expanded" && "bg-yellow-500/20 border-2 border-yellow-500",
-                bracketState === "empty" && isCurrentBracket && "bracket-active bg-primary/20 border-4 border-primary shadow-xl shadow-primary/40",
+                bracketState === "empty" && isCurrentBracket && "bracket-active bg-primary/20 border-4 border-primary shadow-xl shadow-primary/40 scale-105",
                 bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5",
                 hasHintingWord && "ring-2 ring-yellow-500 ring-offset-2"
               )}
@@ -490,7 +497,7 @@ const BracketedTextDisplay = ({
               )}>
                 ]
               </span>
-            </div>
+            </motion.div>
           );
         }
       })}

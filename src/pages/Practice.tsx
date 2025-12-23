@@ -156,14 +156,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const recognitionRef = useRef<any>(null);
   const audioFormatRef = useRef<string>('audio/webm');
 
-  // Normalize words for comparison (important for Swedish å/ä/ö and punctuation)
-  const normalizeForCompare = (w: string) =>
-    w
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .replace(/[^\p{L}\p{N}]/gu, '');
-
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
@@ -631,7 +623,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
         // Start hints for the FIRST word immediately - no delay
         const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
         const firstExpectedWordsRaw = cleanedText.split(/\s+/).filter(w => w.trim());
-        const firstExpectedWords = firstExpectedWordsRaw.map(normalizeForCompare);
+        const firstExpectedWords = firstExpectedWordsRaw
+          .map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
         startProgressiveHints(0, firstExpectedWords, firstExpectedWordsRaw);
         console.log('🎯 Started progressive hints for first word immediately');
         
@@ -680,7 +673,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
           // Get expected words from the active segment or full speech (clean bracket notation first)
           const cleanedText = cleanBracketNotation(activeSegmentText || speech!.text_original);
           const allExpectedWordsRaw = cleanedText.split(/\s+/).filter(w => w.trim());
-          const allExpectedWords = allExpectedWordsRaw.map(normalizeForCompare);
+          const allExpectedWords = allExpectedWordsRaw
+            .map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''));
           
           // Helper: Levenshtein distance for fuzzy matching
           const levenshtein = (a: string, b: string): number => {
@@ -699,45 +693,32 @@ const [liveTranscription, setLiveTranscription] = useState("");
             return matrix[b.length][a.length];
           };
           
-          // Helper: Check if words are similar enough - VERY GENEROUS to handle speech recognition variations
+          // Helper: Check if words are similar enough - STRICT matching to prevent premature filling
           const areWordsSimilar = (spoken: string, expected: string): boolean => {
             // Exact match
             if (spoken === expected) return true;
             
-            // Check if one contains the other (handles partial recognition)
-            if (spoken.includes(expected) || expected.includes(spoken)) return true;
+            // For very short words (1-3 chars), require exact match
+            if (expected.length <= 3) {
+              return spoken === expected;
+            }
             
-            // For very short words (1-2 chars), allow 1 char difference
-            if (expected.length <= 2) {
+            // For short words (4-5 chars), allow only 1 character difference
+            if (expected.length <= 5) {
               return levenshtein(spoken, expected) <= 1;
             }
             
-            // For short words (3-4 chars), allow 2 char difference
-            if (expected.length <= 4) {
-              return levenshtein(spoken, expected) <= 2;
-            }
+            // For longer words, require at least 80% character match
+            // This prevents partial words from triggering a match
+            const minLength = Math.min(spoken.length, expected.length);
+            const maxLength = Math.max(spoken.length, expected.length);
             
-            // Check if they start the same (first 2+ chars) - handles common recognition variations
-            const prefixLen = Math.min(2, Math.min(spoken.length, expected.length));
-            if (spoken.slice(0, prefixLen) === expected.slice(0, prefixLen)) {
-              const dist = levenshtein(spoken, expected);
-              const maxLen = Math.max(spoken.length, expected.length);
-              // Allow up to 50% difference if starting same
-              if (dist <= Math.ceil(maxLen * 0.5)) return true;
-            }
+            // Don't match if lengths are too different (spoken word is too short)
+            if (minLength < maxLength * 0.7) return false;
             
-            // Check if they end the same (last 2+ chars)
-            const suffixLen = Math.min(2, Math.min(spoken.length, expected.length));
-            if (spoken.slice(-suffixLen) === expected.slice(-suffixLen)) {
-              const dist = levenshtein(spoken, expected);
-              const maxLen = Math.max(spoken.length, expected.length);
-              if (dist <= Math.ceil(maxLen * 0.5)) return true;
-            }
-            
-            // General case: allow up to 40% difference
-            const dist = levenshtein(spoken, expected);
-            const maxLen = Math.max(spoken.length, expected.length);
-            return dist <= Math.ceil(maxLen * 0.4);
+            // Allow 1 char difference for 6-8 letter words, 2 for longer
+            const maxDist = expected.length <= 8 ? 1 : 2;
+            return levenshtein(spoken, expected) <= maxDist;
           };
           
           // Only process NEW words from the transcript using refs (avoid stale closures)
@@ -752,22 +733,23 @@ const [liveTranscription, setLiveTranscription] = useState("");
           let currentIdx = expectedWordIndexRef.current;
           
           for (const word of newWords) {
-            const cleanSpokenWord = normalizeForCompare(word);
-
+            const cleanSpokenWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+            
             if (!cleanSpokenWord || currentIdx >= allExpectedWords.length) continue;
-
+            
             // Hide support word immediately when ANY word is spoken
             const wasSupportWordShowing = supportWord !== null;
             const previousSupportWordIndex = supportWordIndex;
             setSupportWord(null);
             setSupportWordIndex(null);
-
+            
             const expectedWord = allExpectedWords[currentIdx];
-
-            console.log('🔍 Comparing:', cleanSpokenWord, 'vs', expectedWord, 'at index', currentIdx);
+            const cleanExpectedWord = expectedWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+            
+            console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', currentIdx);
             
             // Check if spoken word matches expected word
-            if (areWordsSimilar(cleanSpokenWord, expectedWord)) {
+            if (areWordsSimilar(cleanSpokenWord, cleanExpectedWord)) {
               // Track timing FIRST to detect hesitation
               const currentTime = Date.now();
               const timeSinceLastWord = currentTime - lastWordTimeRef.current;
@@ -839,26 +821,33 @@ const [liveTranscription, setLiveTranscription] = useState("");
               }
             } else {
               // Word doesn't match - look ahead to find match
-              console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', expectedWord);
+              console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
               
               let matchFound = false;
               const maxLookAhead = 5;
               
               for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
+                const cleanFutureWord = futureWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
                 
                 // Use areWordsSimilar for ALL lookahead to handle speech recognition variations
-                if (areWordsSimilar(cleanSpokenWord, futureWord)) {
+                if (areWordsSimilar(cleanSpokenWord, cleanFutureWord)) {
                   matchFound = true;
                   console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
                   
                   // Queue ALL words from current to matched position
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
-                      // Skipped words - ALL skipped words are missed (red)
-                      // User jumped ahead and skipped words they should have said
-                      queueWordAction('missed', i, allExpectedWords[i]);
-                      console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
+                      // Skipped words:
+                      // - HIDDEN words that are skipped = missed (red) - user said wrong word
+                      // - VISIBLE words that are skipped = spoken (fade) - likely speech recognition variation
+                      if (currentHiddenIndices.has(i)) {
+                        queueWordAction('missed', i, allExpectedWords[i]);
+                        console.log('❌ Skipped HIDDEN word (red):', allExpectedWords[i], 'at index', i);
+                      } else {
+                        queueWordAction('spoken', i, allExpectedWords[i]);
+                        console.log('⏭️ Skipped visible word (fade):', allExpectedWords[i], 'at index', i);
+                      }
                     } else {
                       // Matched word - queue as spoken
                       queueWordAction('spoken', i, allExpectedWords[i]);
@@ -1121,9 +1110,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const finalDelayedWords = [...realtimeHesitatedWords];
           
           // Remove any words that are in missed from hesitated (missed is more severe)
-          const missedSet = new Set(combinedMissedWords.map(normalizeForCompare));
+          const missedSet = new Set(combinedMissedWords.map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')));
           const cleanedDelayedWords = finalDelayedWords.filter(w => 
-            !missedSet.has(normalizeForCompare(w))
+            !missedSet.has(w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
           );
           
           console.log('📊 Realtime-only results (AI detection ignored):',
@@ -1258,10 +1247,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const originalWords = (activeSegmentOriginalText || speech!.text_original).split(/\s+/).filter((w: string) => w.trim());
           
           const missedWordSet = new Set(
-            (data.missedWords || []).map(normalizeForCompare)
+            (data.missedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
           );
           const hesitatedWordSet = new Set(
-            (data.delayedWords || []).map(normalizeForCompare)
+            (data.delayedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
           );
           
           // Build indices from AI's word lists
@@ -1269,7 +1258,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const hesitatedIndicesFromAI: number[] = [];
           
           originalWords.forEach((word: string, idx: number) => {
-            const cleanWord = normalizeForCompare(word);
+            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
             if (missedWordSet.has(cleanWord)) {
               missedIndicesFromAI.push(idx);
             }
