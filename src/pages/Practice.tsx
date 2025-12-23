@@ -155,6 +155,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const lastProcessedChunkIndex = useRef(0);
   const recognitionRef = useRef<any>(null);
   const audioFormatRef = useRef<string>('audio/webm');
+  const wrongAttemptsRef = useRef<{ index: number; count: number }>({ index: -1, count: 0 });
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -750,6 +751,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
             
             // Check if spoken word matches expected word
             if (areWordsSimilar(cleanSpokenWord, cleanExpectedWord)) {
+              // Clear wrong-attempt tracking for this word (prevents false red markings)
+              wrongAttemptsRef.current = { index: -1, count: 0 };
+
               // Track timing FIRST to detect hesitation
               const currentTime = Date.now();
               const timeSinceLastWord = currentTime - lastWordTimeRef.current;
@@ -820,74 +824,91 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
               }
             } else {
-              // Word doesn't match - look ahead to find match
+              // Word doesn't match - either user skipped ahead OR said a wrong word.
               console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
-              
+
+              const expectedDist = levenshtein(cleanSpokenWord, cleanExpectedWord);
+
               let matchFound = false;
               const maxLookAhead = 5;
-              
-              for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
+
+              for (
+                let lookAhead = 1;
+                lookAhead <= maxLookAhead && currentIdx + lookAhead < allExpectedWords.length;
+                lookAhead++
+              ) {
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
-                const cleanFutureWord = futureWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-                
-                // Use areWordsSimilar for ALL lookahead to handle speech recognition variations
-                if (areWordsSimilar(cleanSpokenWord, cleanFutureWord)) {
+                const cleanFutureWord = futureWord.toLowerCase().replace(/[^-\uFFFF\p{L}\p{N}]/g, '');
+                const cleanFutureWordUnicode = futureWord.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+                const futureDist = levenshtein(cleanSpokenWord, cleanFutureWordUnicode);
+
+                // Confident skip: spoken word matches a future word and is clearly closer than the current expected word.
+                if (areWordsSimilar(cleanSpokenWord, cleanFutureWordUnicode) && futureDist < expectedDist) {
                   matchFound = true;
-                  console.log('✓ Found word ahead at +' + lookAhead + ':', futureWord);
-                  
-                  // Queue ALL words from current to matched position
+                  console.log(
+                    '✓ Confident skip: found word ahead at +' + lookAhead + ':',
+                    futureWord,
+                    `(futureDist=${futureDist}, expectedDist=${expectedDist})`,
+                  );
+
+                  // Mark skipped words as MISSED (red) regardless of hidden/visible.
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
-                      // Skipped words:
-                      // - HIDDEN words that are skipped = missed (red) - user didn't recall
-                      // - VISIBLE words that are skipped = spoken (fade) - often speech recognition variation
-                      if (currentHiddenIndices.has(i)) {
-                        queueWordAction('missed', i, allExpectedWords[i]);
-                        console.log('❌ Skipped HIDDEN word (red):', allExpectedWords[i], 'at index', i);
-                      } else {
-                        queueWordAction('spoken', i, allExpectedWords[i]);
-                        console.log('⏭️ Skipped visible word (fade):', allExpectedWords[i], 'at index', i);
-                      }
+                      queueWordAction('missed', i, allExpectedWords[i]);
+                      console.log('❌ Skipped word (red):', allExpectedWords[i], 'at index', i);
                     } else {
                       // Matched word - queue as spoken
                       queueWordAction('spoken', i, allExpectedWords[i]);
                       console.log('✓ Matched word spoken:', allExpectedWords[i], 'at index', i);
                     }
                   }
-                  
+
+                  wrongAttemptsRef.current = { index: -1, count: 0 };
                   currentIdx = currentIdx + lookAhead + 1;
                   lastWordTimeRef.current = Date.now();
                   clearHints();
-                  
+
                   if (currentIdx < allExpectedWords.length) {
                     startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
                   }
                   break;
                 }
               }
-              
+
               if (!matchFound) {
-                // Handle support word case - only advance if user was shown the word
-                if (wasSupportWordShowing && previousSupportWordIndex !== null) {
-                  // If user saw support word but said wrong word, mark as hesitated (yellow) not missed (red)
-                  // because they hesitated and needed help, even if they then said wrong word
-                  if (currentHiddenIndices.has(previousSupportWordIndex)) {
-                    // Check if already marked as hesitated - keep it yellow, don't change to red
-                    if (!hesitatedWordsIndices.has(previousSupportWordIndex)) {
-                      queueWordAction('hesitated', previousSupportWordIndex, allExpectedWords[previousSupportWordIndex]);
-                      console.log('⚠️ Hidden support word - marking as hesitated (yellow):', allExpectedWords[previousSupportWordIndex]);
-                    } else {
-                      console.log('⚠️ Hidden support word already hesitated (yellow):', allExpectedWords[previousSupportWordIndex]);
-                    }
-                  }
-                  currentIdx = previousSupportWordIndex + 1;
+                // If we showed the support word for THIS index and user still didn't match it, treat as missed and move on.
+                if (wasSupportWordShowing && previousSupportWordIndex === currentIdx) {
+                  queueWordAction('missed', currentIdx, expectedWord);
+                  console.log(
+                    '❌ Support word was shown but not matched — marking missed:',
+                    expectedWord,
+                    'at index',
+                    currentIdx,
+                  );
+
+                  wrongAttemptsRef.current = { index: -1, count: 0 };
+                  currentIdx++;
+                  lastWordTimeRef.current = Date.now();
+                  clearHints();
+
                   if (currentIdx < allExpectedWords.length) {
                     startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
                   }
+                } else {
+                  // Wrong word said: after 2 consecutive mismatches on the same expected word, mark it as missed (red).
+                  if (wrongAttemptsRef.current.index !== currentIdx) {
+                    wrongAttemptsRef.current = { index: currentIdx, count: 0 };
+                  }
+                  wrongAttemptsRef.current.count += 1;
+
+                  if (wrongAttemptsRef.current.count >= 2) {
+                    queueWordAction('missed', currentIdx, expectedWord);
+                    console.log('❌ Repeated mismatch — marking current word missed:', expectedWord, 'at index', currentIdx);
+                  }
+
+                  // Do not advance; wait for the user to say the expected word (so red can clear if they do).
+                  console.log('⏳ No match - waiting for correct word:', expectedWord, 'at index', currentIdx);
                 }
-                // IMPORTANT: Do NOT skip words when no match found!
-                // Just log and wait for the user to say the correct word
-                console.log('⏳ No match - waiting for correct word:', expectedWord, 'at index', currentIdx);
               }
             }
           }
@@ -1079,37 +1100,34 @@ const [liveTranscription, setLiveTranscription] = useState("");
             throw new Error('No response from analysis service');
           }
 
-          // Combine AI analysis with real-time tracking for complete results
-          // NOTE: Real-time marking is best-effort; post-analysis can still find additional missed/hesitated words.
+          // Use real-time tracking as the source of truth for word-by-word marking,
+          // and mark any remaining unspoken words as missed when the user stops.
 
           // Use the same word basis as PracticeResults (original text) so indices line up.
           const originalWordsForIndexing = (activeSegmentOriginalText || speech!.text_original)
             .split(/\s+/)
             .filter((w: string) => w.trim());
 
+          const totalWords = originalWordsForIndexing.length;
+          const stopWordIndex = Math.max(0, expectedWordIndexRef.current);
+
+          const completedMissedIndexSet = new Set<number>(realtimeMissedIndices);
+          for (let idx = stopWordIndex; idx < totalWords; idx++) {
+            if (!realtimeSpokenIndices.has(idx)) {
+              completedMissedIndexSet.add(idx);
+            }
+          }
+
+          const completedHesitatedIndexSet = new Set<number>(realtimeHesitatedIndices);
+
+          // Missed overrides hesitated
+          completedMissedIndexSet.forEach((idx) => completedHesitatedIndexSet.delete(idx));
+
+          const finalMissedIndices = Array.from(completedMissedIndexSet).sort((a, b) => a - b);
+          const finalHesitatedIndices = Array.from(completedHesitatedIndexSet).sort((a, b) => a - b);
+
           const normalizeForIndexing = (w: string) =>
             w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-
-          const mapWordsToIndices = (originalWords: string[], targetWords: string[] = []): number[] => {
-            const counts = new Map<string, number>();
-            for (const w of targetWords) {
-              const key = normalizeForIndexing(w);
-              if (!key) continue;
-              counts.set(key, (counts.get(key) ?? 0) + 1);
-            }
-
-            const indices: number[] = [];
-            for (let idx = 0; idx < originalWords.length; idx++) {
-              const key = normalizeForIndexing(originalWords[idx]);
-              const remaining = counts.get(key) ?? 0;
-              if (remaining > 0) {
-                indices.push(idx);
-                counts.set(key, remaining - 1);
-              }
-            }
-
-            return indices;
-          };
 
           const indicesToUniqueWords = (indices: number[], originalWords: string[]): string[] => {
             const out: string[] = [];
@@ -1125,32 +1143,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
             return out;
           };
 
-          // Map AI word lists to indices (handles duplicates better than a Set)
-          const missedIndicesFromAIForResults = mapWordsToIndices(originalWordsForIndexing, data.missedWords || []);
-          const hesitatedIndicesFromAIForResults = mapWordsToIndices(originalWordsForIndexing, data.delayedWords || []);
-
-          // Build combined indices for index-based marking in PracticeResults
-          const combinedMissedIndexSet = new Set<number>([...Array.from(realtimeMissedIndices), ...missedIndicesFromAIForResults]);
-          const combinedHesitatedIndexSet = new Set<number>([...Array.from(realtimeHesitatedIndices), ...hesitatedIndicesFromAIForResults]);
-
-          // Missed overrides hesitated
-          combinedMissedIndexSet.forEach((idx) => combinedHesitatedIndexSet.delete(idx));
-
-          const finalMissedIndices = Array.from(combinedMissedIndexSet).sort((a, b) => a - b);
-          const finalHesitatedIndices = Array.from(combinedHesitatedIndexSet).sort((a, b) => a - b);
-
-          // Summary badges: show unique words (avoid repeating the same word 5 times)
           const combinedMissedWords = indicesToUniqueWords(finalMissedIndices, originalWordsForIndexing);
           const cleanedDelayedWords = indicesToUniqueWords(finalHesitatedIndices, originalWordsForIndexing);
 
-          console.log('📊 Combined results (realtime + AI):', {
+          console.log('📊 Final results (real-time):', {
             missedIndices: finalMissedIndices,
             hesitatedIndices: finalHesitatedIndices,
             missedWords: combinedMissedWords,
             hesitatedWords: cleanedDelayedWords,
           });
 
-          // Create enhanced results with real-time tracking data AND AI-detected indices
+          // Create enhanced results with real-time indices (stable + consistent with what you saw while practicing)
           const enhancedResults = {
             ...data,
             missedWords: combinedMissedWords,
@@ -1261,11 +1264,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
             activeSegmentIndices.includes(s.segment_order)
           )?.id;
 
-          // Update segment word mastery with combined index tracking (realtime + AI)
-          // (Indices are already aligned to the same original word list used in PracticeResults)
-
-          console.log('📊 Missed indices - realtime:', Array.from(realtimeMissedIndices), 'AI:', missedIndicesFromAIForResults, 'combined:', finalMissedIndices);
-          console.log('📊 Hesitated indices - realtime:', Array.from(realtimeHesitatedIndices), 'AI:', hesitatedIndicesFromAIForResults, 'combined:', finalHesitatedIndices);
+          // Update segment word mastery with index tracking from the live session
+          console.log('📊 Word indices (live):', {
+            missed: finalMissedIndices,
+            hesitated: finalHesitatedIndices,
+          });
 
           try {
             const { error: masteryError } = await supabase.functions.invoke('update-segment-word-mastery', {
