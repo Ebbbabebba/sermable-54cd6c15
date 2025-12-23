@@ -1080,58 +1080,77 @@ const [liveTranscription, setLiveTranscription] = useState("");
           }
 
           // Combine AI analysis with real-time tracking for complete results
-          // Get original words for mapping indices to words
-          const analysisWords = cleanBracketNotation(activeSegmentText || speech!.text_original)
+          // NOTE: Real-time marking is best-effort; post-analysis can still find additional missed/hesitated words.
+
+          // Use the same word basis as PracticeResults (original text) so indices line up.
+          const originalWordsForIndexing = (activeSegmentOriginalText || speech!.text_original)
             .split(/\s+/)
             .filter((w: string) => w.trim());
-          
-          // Convert real-time tracked indices to word strings
-          const realtimeMissedWords: string[] = [];
-          const realtimeHesitatedWords: string[] = [];
-          
-          realtimeMissedIndices.forEach(idx => {
-            if (idx < analysisWords.length) {
-              realtimeMissedWords.push(analysisWords[idx]);
+
+          const normalizeForIndexing = (w: string) =>
+            w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
+          const mapWordsToIndices = (originalWords: string[], targetWords: string[] = []): number[] => {
+            const counts = new Map<string, number>();
+            for (const w of targetWords) {
+              const key = normalizeForIndexing(w);
+              if (!key) continue;
+              counts.set(key, (counts.get(key) ?? 0) + 1);
             }
-          });
-          
-          realtimeHesitatedIndices.forEach(idx => {
-            if (idx < analysisWords.length) {
-              realtimeHesitatedWords.push(analysisWords[idx]);
+
+            const indices: number[] = [];
+            for (let idx = 0; idx < originalWords.length; idx++) {
+              const key = normalizeForIndexing(originalWords[idx]);
+              const remaining = counts.get(key) ?? 0;
+              if (remaining > 0) {
+                indices.push(idx);
+                counts.set(key, remaining - 1);
+              }
             }
-          });
-          
-          // CRITICAL: ONLY use realtime tracking data for missed/hesitated words
-          // The AI analysis should NOT add its own detected missed words
-          // This ensures the results match exactly what the user saw during practice
-          
-          // Only use words that were ACTUALLY marked red/yellow in the text during practice
-          const combinedMissedWords = [...realtimeMissedWords];
-          const finalDelayedWords = [...realtimeHesitatedWords];
-          
-          // Remove any words that are in missed from hesitated (missed is more severe)
-          const missedSet = new Set(combinedMissedWords.map(w => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')));
-          const cleanedDelayedWords = finalDelayedWords.filter(w => 
-            !missedSet.has(w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
-          );
-          
-          console.log('📊 Realtime-only results (AI detection ignored):',
-            'Missed words:', combinedMissedWords,
-            'Hesitated words:', cleanedDelayedWords
-          );
-          
+
+            return indices;
+          };
+
+          const indicesToUniqueWords = (indices: number[], originalWords: string[]): string[] => {
+            const out: string[] = [];
+            const seen = new Set<string>();
+            for (const idx of indices) {
+              const w = originalWords[idx];
+              if (!w) continue;
+              const key = normalizeForIndexing(w);
+              if (!key || seen.has(key)) continue;
+              seen.add(key);
+              out.push(w);
+            }
+            return out;
+          };
+
+          // Map AI word lists to indices (handles duplicates better than a Set)
+          const missedIndicesFromAIForResults = mapWordsToIndices(originalWordsForIndexing, data.missedWords || []);
+          const hesitatedIndicesFromAIForResults = mapWordsToIndices(originalWordsForIndexing, data.delayedWords || []);
+
           // Build combined indices for index-based marking in PracticeResults
-          const finalMissedIndices: number[] = [];
-          const finalHesitatedIndices: number[] = [];
-          
-          realtimeMissedIndices.forEach(idx => finalMissedIndices.push(idx));
-          realtimeHesitatedIndices.forEach(idx => {
-            if (!finalMissedIndices.includes(idx)) {
-              finalHesitatedIndices.push(idx);
-            }
+          const combinedMissedIndexSet = new Set<number>([...Array.from(realtimeMissedIndices), ...missedIndicesFromAIForResults]);
+          const combinedHesitatedIndexSet = new Set<number>([...Array.from(realtimeHesitatedIndices), ...hesitatedIndicesFromAIForResults]);
+
+          // Missed overrides hesitated
+          combinedMissedIndexSet.forEach((idx) => combinedHesitatedIndexSet.delete(idx));
+
+          const finalMissedIndices = Array.from(combinedMissedIndexSet).sort((a, b) => a - b);
+          const finalHesitatedIndices = Array.from(combinedHesitatedIndexSet).sort((a, b) => a - b);
+
+          // Summary badges: show unique words (avoid repeating the same word 5 times)
+          const combinedMissedWords = indicesToUniqueWords(finalMissedIndices, originalWordsForIndexing);
+          const cleanedDelayedWords = indicesToUniqueWords(finalHesitatedIndices, originalWordsForIndexing);
+
+          console.log('📊 Combined results (realtime + AI):', {
+            missedIndices: finalMissedIndices,
+            hesitatedIndices: finalHesitatedIndices,
+            missedWords: combinedMissedWords,
+            hesitatedWords: cleanedDelayedWords,
           });
-          
-          // Create enhanced results with real-time tracking data AND indices
+
+          // Create enhanced results with real-time tracking data AND AI-detected indices
           const enhancedResults = {
             ...data,
             missedWords: combinedMissedWords,
@@ -1242,44 +1261,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
             activeSegmentIndices.includes(s.segment_order)
           )?.id;
 
-          // Update segment word mastery with hidden word failure tracking
-          // Map AI's missedWords (strings) back to indices for accurate tracking
-          const originalWords = (activeSegmentOriginalText || speech!.text_original).split(/\s+/).filter((w: string) => w.trim());
-          
-          const missedWordSet = new Set(
-            (data.missedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
-          );
-          const hesitatedWordSet = new Set(
-            (data.delayedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))
-          );
-          
-          // Build indices from AI's word lists
-          const missedIndicesFromAI: number[] = [];
-          const hesitatedIndicesFromAI: number[] = [];
-          
-          originalWords.forEach((word: string, idx: number) => {
-            const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-            if (missedWordSet.has(cleanWord)) {
-              missedIndicesFromAI.push(idx);
-            }
-            if (hesitatedWordSet.has(cleanWord)) {
-              hesitatedIndicesFromAI.push(idx);
-            }
-          });
-          
-          // Combine real-time tracking with AI analysis for best accuracy
-          // Use realtimeMissedIndices/realtimeHesitatedIndices captured before reset
-          const combinedMissedIndices = [...new Set([
-            ...Array.from(realtimeMissedIndices),
-            ...missedIndicesFromAI
-          ])];
-          const combinedHesitatedIndices = [...new Set([
-            ...Array.from(realtimeHesitatedIndices),
-            ...hesitatedIndicesFromAI
-          ])];
-          
-          console.log('📊 Missed indices - realtime:', Array.from(realtimeMissedIndices), 'AI:', missedIndicesFromAI, 'combined:', combinedMissedIndices);
-          console.log('📊 Hesitated indices - realtime:', Array.from(realtimeHesitatedIndices), 'AI:', hesitatedIndicesFromAI, 'combined:', combinedHesitatedIndices);
+          // Update segment word mastery with combined index tracking (realtime + AI)
+          // (Indices are already aligned to the same original word list used in PracticeResults)
+
+          console.log('📊 Missed indices - realtime:', Array.from(realtimeMissedIndices), 'AI:', missedIndicesFromAIForResults, 'combined:', finalMissedIndices);
+          console.log('📊 Hesitated indices - realtime:', Array.from(realtimeHesitatedIndices), 'AI:', hesitatedIndicesFromAIForResults, 'combined:', finalHesitatedIndices);
 
           try {
             const { error: masteryError } = await supabase.functions.invoke('update-segment-word-mastery', {
@@ -1287,10 +1273,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 speechId: speech!.id,
                 segmentId: currentSegmentId,
                 missedWords: combinedMissedWords,
-                hesitatedWords: finalDelayedWords,
-                missedIndices: combinedMissedIndices,
-                hesitatedIndices: combinedHesitatedIndices,
-                hiddenIndices: hiddenIndices
+                hesitatedWords: cleanedDelayedWords,
+                missedIndices: finalMissedIndices,
+                hesitatedIndices: finalHesitatedIndices,
+                hiddenIndices: hiddenIndices,
               }
             });
 
