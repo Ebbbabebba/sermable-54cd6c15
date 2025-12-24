@@ -206,76 +206,101 @@ Deno.serve(async (req) => {
     }
 
     // Determine which words should be hidden
-    // ULTRA-AGGRESSIVE SPACED REPETITION: Hide words IMMEDIATELY after ANY correct attempt
-    // The goal: Force pure recall as fast as possible to strengthen memory
+    // ULTRA-AGGRESSIVE SPACED REPETITION v3: 
+    // - Hide MANY words from session 1 to force active recall
+    // - Test user on difficult words too (don't keep them visible forever)
+    // - Only keep truly problematic words (missed THIS session) visible
+    // Goal: Most words should be hidden FAST so brain works harder = faster learning
     const wordsToHide = new Set<number>()
+    const wordsToKeepVisible = new Set<number>()
     
-    // Count total sessions for this speech
-    const totalSessionsForWord = Math.max(...Array.from(wordPerformanceMap.values())
-      .map(p => p.correctCount + p.missedCount + p.hesitatedCount))
+    // Count how many sessions total for this speech
+    const sessionCounts = Array.from(wordPerformanceMap.values())
+      .map(p => p.correctCount + p.missedCount + p.hesitatedCount)
+    const maxSessionCount = Math.max(...sessionCounts, 1)
+    const isFirstSession = maxSessionCount <= 1
     
-    console.log(`📈 Sessions detected: ${totalSessionsForWord}`)
+    console.log(`📈 Session count: ${maxSessionCount}, First session: ${isFirstSession}`)
     
+    // First pass: Identify words that MUST stay visible (only words missed THIS session)
     words.forEach((word: string, index: number) => {
       const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
       const perf = wordPerformanceMap.get(cleanWord)
       
       if (!perf || !cleanWord) return
 
-      // === KEEP VISIBLE RULES (very strict - only truly problematic words stay visible) ===
-      
-      // RULE 1: If word was MISSED THIS SESSION, keep visible for immediate review
+      // ONLY keep visible if MISSED in THIS session (not hesitated, not historical)
+      // This is STRICT - we want to test the user on almost everything
       if (perf.lastPerformance === 'missed') {
-        console.log(`👁️ Keeping visible (missed this session): "${cleanWord}"`)
-        return
+        wordsToKeepVisible.add(index)
+        console.log(`👁️ Keeping visible (missed NOW): "${cleanWord}"`)
       }
-
-      // RULE 2: If word has 2+ misses AND no consecutive correct yet, keep visible
-      if (perf.missedCount >= 2 && perf.consecutiveCorrect < 1) {
-        console.log(`👁️ Keeping visible (needs recovery): "${cleanWord}"`)
-        return
-      }
+    })
+    
+    // Second pass: Everything else gets hidden (including difficult words!)
+    // Spaced repetition principle: TEST the user on hard words to analyze patterns
+    words.forEach((word: string, index: number) => {
+      const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+      const perf = wordPerformanceMap.get(cleanWord)
       
-      // RULE 3: If word is identified as persistently DIFFICULT (high error rate), keep visible
-      // But only if it has enough data to judge
-      const totalAttempts = perf.correctCount + perf.missedCount + perf.hesitatedCount
-      if (totalAttempts >= 3 && perf.missedCount >= 2 && perf.consecutiveCorrect < 2) {
-        console.log(`👁️ Keeping visible (persistent difficulty): "${cleanWord}"`)
-        return
-      }
-
-      // === HIDE RULES (very aggressive - hide as soon as possible) ===
+      if (!perf || !cleanWord) return
       
-      // SIMPLE WORDS: Hide IMMEDIATELY after speaking once correctly
-      // These don't need memorization focus
+      // If marked to keep visible, skip
+      if (wordsToKeepVisible.has(index)) return
+      
+      // === AGGRESSIVE HIDING - almost everything gets hidden ===
+      
+      // SIMPLE WORDS: Always hide after first session
       if (perf.isSimple) {
-        if (perf.lastPerformance === 'correct' || perf.correctCount >= 1) {
-          wordsToHide.add(index)
-          return
-        }
-        // Even hide untested simple words after first session
-        if (totalSessionsForWord >= 1) {
-          wordsToHide.add(index)
-          return
-        }
-      }
-
-      // ALL OTHER WORDS: Hide immediately after 1 correct attempt
-      // This is the core of aggressive spaced repetition - test recall fast!
-      if (perf.correctCount >= 1 && perf.lastPerformance !== 'hesitated') {
         wordsToHide.add(index)
         return
       }
       
-      // Even hesitated words: hide after correct this session
-      if (perf.lastPerformance === 'correct') {
-        wordsToHide.add(index)
-        return
+      // FIRST SESSION: Hide 60-70% of words proactively to force recall
+      // Include difficult words to TEST the user and see what they struggle with
+      if (isFirstSession) {
+        // Hide words that were correct OR hesitated (test recall on hesitations!)
+        if (perf.lastPerformance === 'correct' || perf.lastPerformance === 'hesitated') {
+          wordsToHide.add(index)
+          return
+        }
+        // Proactively hide some untested words too - use index pattern
+        // Hide every 2nd/3rd word that wasn't explicitly needed
+        if (index % 2 === 0) {
+          wordsToHide.add(index)
+          return
+        }
       }
       
-      // Words that were hesitated this session but have history of being correct
-      if (perf.lastPerformance === 'hesitated' && perf.correctCount >= 2) {
+      // SUBSEQUENT SESSIONS: Be even more aggressive
+      // Hide everything that wasn't missed this session
+      if (!isFirstSession) {
+        // Any word that has been attempted gets hidden
+        const totalAttempts = perf.correctCount + perf.missedCount + perf.hesitatedCount
+        if (totalAttempts >= 1) {
+          wordsToHide.add(index)
+          return
+        }
+        // Untested words: hide most of them too (proactive challenge)
+        if (index % 3 !== 0) { // Keep only every 3rd untested word
+          wordsToHide.add(index)
+          return
+        }
+      }
+      
+      // DIFFICULT WORDS: Still hide them! This is key to spaced repetition.
+      // By hiding difficult words, we TEST whether user really struggles
+      // If they fail, the word becomes visible again next session
+      if (difficultWords.has(cleanWord)) {
+        // Give difficult words ONE extra chance to stay visible
+        // But only if they were missed multiple times recently
+        if (perf.missedCount >= 3 && perf.consecutiveCorrect === 0) {
+          console.log(`⚠️ Keeping difficult word visible for recovery: "${cleanWord}"`)
+          return // Keep this one visible
+        }
+        // Otherwise, hide it to test the user!
         wordsToHide.add(index)
+        console.log(`🧪 Hiding difficult word to TEST: "${cleanWord}"`)
         return
       }
     })
