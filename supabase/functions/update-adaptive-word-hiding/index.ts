@@ -206,102 +206,166 @@ Deno.serve(async (req) => {
     }
 
     // Determine which words should be hidden
-    // ULTRA-AGGRESSIVE SPACED REPETITION v3: 
-    // - Hide MANY words from session 1 to force active recall
-    // - Test user on difficult words too (don't keep them visible forever)
-    // - Only keep truly problematic words (missed THIS session) visible
-    // Goal: Most words should be hidden FAST so brain works harder = faster learning
+    // ULTRA-AGGRESSIVE SPACED REPETITION v4:
+    // FAS 1: Dölj ALLA småord DIREKT efter första försöket (oavsett resultat)
+    // FAS 2: Efter 80%+ accuracy (småord borta), slumpmässigt dölj fler ord
+    // FAS 3: AI analyserar vilka ord som ska visas/döljas baserat på prestation
+    // Om småord missas kan de komma tillbaka, men testas snart igen
+    
     const wordsToHide = new Set<number>()
     const wordsToKeepVisible = new Set<number>()
     
-    // Count how many sessions total for this speech
-    const sessionCounts = Array.from(wordPerformanceMap.values())
-      .map(p => p.correctCount + p.missedCount + p.hesitatedCount)
-    const maxSessionCount = Math.max(...sessionCounts, 1)
-    const isFirstSession = maxSessionCount <= 1
+    // Utökad lista med småord - dessa döljs ALLTID efter första försöket
+    const allSmallWords = new Set([
+      // Svenska småord
+      'och', 'att', 'i', 'en', 'ett', 'av', 'på', 'för', 'med', 'som',
+      'är', 'var', 'den', 'det', 'de', 'om', 'till', 'från', 'har', 'vi',
+      'jag', 'du', 'han', 'hon', 'ni', 'kan', 'ska', 'vill', 'måste', 'får',
+      'men', 'eller', 'så', 'när', 'där', 'här', 'inte', 'bara', 'även', 'också',
+      'nu', 'då', 'ju', 'nog', 'väl', 'ändå', 'redan', 'sedan', 'efter', 'innan',
+      'under', 'över', 'vid', 'hos', 'mot', 'utan', 'genom', 'mellan', 'ur', 'åt',
+      'alla', 'allt', 'andra', 'denna', 'detta', 'dessa', 'vilken', 'vilket', 'vilka',
+      'min', 'din', 'sin', 'vår', 'er', 'deras', 'mitt', 'ditt', 'sitt', 'vårt', 'ert',
+      // Engelska småord
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+      'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
+      'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
+      'it', 'this', 'that', 'these', 'those', 'my', 'your', 'his', 'her', 'its',
+      'we', 'they', 'you', 'i', 'he', 'she', 'not', 'just', 'also', 'very',
+      'if', 'so', 'as', 'up', 'out', 'no', 'yes', 'all', 'any', 'some',
+      'our', 'their', 'who', 'what', 'when', 'where', 'why', 'how', 'which'
+    ])
     
-    console.log(`📈 Session count: ${maxSessionCount}, First session: ${isFirstSession}`)
+    // Beräkna accuracy på icke-småord för att avgöra fas
+    let nonSmallWordsCorrect = 0
+    let nonSmallWordsTotal = 0
     
-    // First pass: Identify words that MUST stay visible (only words missed THIS session)
+    words.forEach((word: string) => {
+      const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
+      if (!cleanWord) return
+      
+      const isSmall = allSmallWords.has(cleanWord) || cleanWord.length <= 2
+      if (!isSmall && cleanWord.length > 3) {
+        nonSmallWordsTotal++
+        if (!missedSet.has(cleanWord)) {
+          nonSmallWordsCorrect++
+        }
+      }
+    })
+    
+    const nonSmallAccuracy = nonSmallWordsTotal > 0 
+      ? (nonSmallWordsCorrect / nonSmallWordsTotal) * 100 
+      : 100
+    
+    const hasAchieved80Percent = nonSmallAccuracy >= 80
+    
+    console.log(`📈 Non-small words accuracy: ${nonSmallAccuracy.toFixed(1)}%, achieved 80%+: ${hasAchieved80Percent}`)
+    
+    // Process each word
     words.forEach((word: string, index: number) => {
       const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
       const perf = wordPerformanceMap.get(cleanWord)
       
       if (!perf || !cleanWord) return
 
-      // ONLY keep visible if MISSED in THIS session (not hesitated, not historical)
-      // This is STRICT - we want to test the user on almost everything
-      if (perf.lastPerformance === 'missed') {
-        wordsToKeepVisible.add(index)
-        console.log(`👁️ Keeping visible (missed NOW): "${cleanWord}"`)
-      }
-    })
-    
-    // Second pass: Everything else gets hidden (including difficult words!)
-    // Spaced repetition principle: TEST the user on hard words to analyze patterns
-    words.forEach((word: string, index: number) => {
-      const cleanWord = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
-      const perf = wordPerformanceMap.get(cleanWord)
+      const isSmallWord = allSmallWords.has(cleanWord) || cleanWord.length <= 2
       
-      if (!perf || !cleanWord) return
-      
-      // If marked to keep visible, skip
-      if (wordsToKeepVisible.has(index)) return
-      
-      // === AGGRESSIVE HIDING - almost everything gets hidden ===
-      
-      // SIMPLE WORDS: Always hide after first session
-      if (perf.isSimple) {
-        wordsToHide.add(index)
+      // === FAS 1: SMÅORD - Dölj ALLTID efter första försöket ===
+      if (isSmallWord) {
+        // Kolla om småordet missades i DENNA session
+        if (perf.lastPerformance === 'missed') {
+          // Småord missat: endast behåll synligt om missat 2+ gånger utan återhämtning
+          if (perf.missedCount >= 2 && perf.consecutiveCorrect === 0) {
+            wordsToKeepVisible.add(index)
+            console.log(`👁️ Keeping small word (missed ${perf.missedCount}x): "${cleanWord}"`)
+          } else {
+            // Dölj för att snart testa igen
+            wordsToHide.add(index)
+            console.log(`🔄 Hiding small word after miss (will retest): "${cleanWord}"`)
+          }
+        } else {
+          // Småord som inte missades - ALLTID dölj oavsett resultat
+          wordsToHide.add(index)
+          console.log(`🚫 Auto-hiding small word: "${cleanWord}"`)
+        }
         return
       }
       
-      // FIRST SESSION: Hide 60-70% of words proactively to force recall
-      // Include difficult words to TEST the user and see what they struggle with
-      if (isFirstSession) {
-        // Hide words that were correct OR hesitated (test recall on hesitations!)
-        if (perf.lastPerformance === 'correct' || perf.lastPerformance === 'hesitated') {
-          wordsToHide.add(index)
-          return
+      // === FAS 2: Efter 80%+ accuracy, slumpmässigt dölj fler ord ===
+      if (hasAchieved80Percent) {
+        if (perf.lastPerformance === 'missed') {
+          // Missade ord i denna session
+          if (perf.missedCount >= 3 && perf.consecutiveCorrect === 0) {
+            // Persistent problem - behåll synligt
+            wordsToKeepVisible.add(index)
+            console.log(`👁️ Keeping (persistent miss): "${cleanWord}"`)
+          } else {
+            // Slumpmässigt: 60% chans att döljas för att testa recall
+            if (Math.random() < 0.6) {
+              wordsToHide.add(index)
+              console.log(`🎲 Random hide missed word (testing): "${cleanWord}"`)
+            } else {
+              wordsToKeepVisible.add(index)
+            }
+          }
+        } else if (perf.lastPerformance === 'hesitated') {
+          // Tvekade ord - 75% chans att döljas
+          if (Math.random() < 0.75) {
+            wordsToHide.add(index)
+            console.log(`🎲 Random hide hesitated word: "${cleanWord}"`)
+          } else {
+            wordsToKeepVisible.add(index)
+          }
+        } else {
+          // Korrekta ord - 90% chans att döljas
+          if (Math.random() < 0.9) {
+            wordsToHide.add(index)
+            console.log(`🎲 Random hide correct word: "${cleanWord}"`)
+          } else {
+            wordsToKeepVisible.add(index)
+          }
         }
-        // Proactively hide some untested words too - use index pattern
-        // Hide every 2nd/3rd word that wasn't explicitly needed
+        return
+      }
+      
+      // === FAS 3: Under 80% - fortfarande aggressiv men lite försiktigare ===
+      if (perf.lastPerformance === 'missed') {
+        // Missade ord - behåll endast om persistent problem
+        if (perf.missedCount >= 2 && perf.consecutiveCorrect === 0) {
+          wordsToKeepVisible.add(index)
+          console.log(`👁️ Keeping (missed ${perf.missedCount}x): "${cleanWord}"`)
+        } else {
+          // Dölj för att tvinga recall-test
+          wordsToHide.add(index)
+          console.log(`🧪 Hiding after miss (testing recall): "${cleanWord}"`)
+        }
+      } else if (perf.lastPerformance === 'hesitated') {
+        // Tvekade ord - dölj för att tvinga recall
+        wordsToHide.add(index)
+        console.log(`🧪 Hiding hesitated word: "${cleanWord}"`)
+      } else if (perf.lastPerformance === 'correct') {
+        // Korrekta ord - dölj omedelbart
+        wordsToHide.add(index)
+        console.log(`✅ Hiding correct word: "${cleanWord}"`)
+      } else {
+        // Ej testat ord - dölj proaktivt (vartannat ord)
         if (index % 2 === 0) {
           wordsToHide.add(index)
-          return
+          console.log(`🔢 Proactive hide (pattern): "${cleanWord}"`)
         }
       }
       
-      // SUBSEQUENT SESSIONS: Be even more aggressive
-      // Hide everything that wasn't missed this session
-      if (!isFirstSession) {
-        // Any word that has been attempted gets hidden
-        const totalAttempts = perf.correctCount + perf.missedCount + perf.hesitatedCount
-        if (totalAttempts >= 1) {
-          wordsToHide.add(index)
-          return
-        }
-        // Untested words: hide most of them too (proactive challenge)
-        if (index % 3 !== 0) { // Keep only every 3rd untested word
-          wordsToHide.add(index)
-          return
-        }
-      }
-      
-      // DIFFICULT WORDS: Still hide them! This is key to spaced repetition.
-      // By hiding difficult words, we TEST whether user really struggles
-      // If they fail, the word becomes visible again next session
-      if (difficultWords.has(cleanWord)) {
-        // Give difficult words ONE extra chance to stay visible
-        // But only if they were missed multiple times recently
+      // AI: Testa även svåra ord för att analysera mönster
+      if (difficultWords.has(cleanWord) && !wordsToKeepVisible.has(index)) {
+        // Endast behåll svåra ord om de missats 3+ gånger utan återhämtning
         if (perf.missedCount >= 3 && perf.consecutiveCorrect === 0) {
-          console.log(`⚠️ Keeping difficult word visible for recovery: "${cleanWord}"`)
-          return // Keep this one visible
+          wordsToKeepVisible.add(index)
+          wordsToHide.delete(index)
+          console.log(`⚠️ Keeping difficult word (needs practice): "${cleanWord}"`)
+        } else {
+          wordsToHide.add(index)
+          console.log(`🧪 Testing difficult word: "${cleanWord}"`)
         }
-        // Otherwise, hide it to test the user!
-        wordsToHide.add(index)
-        console.log(`🧪 Hiding difficult word to TEST: "${cleanWord}"`)
-        return
       }
     })
 
