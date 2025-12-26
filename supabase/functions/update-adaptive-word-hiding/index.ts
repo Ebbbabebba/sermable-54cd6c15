@@ -270,23 +270,27 @@ Deno.serve(async (req) => {
 
       const isSmallWord = allSmallWords.has(cleanWord) || cleanWord.length <= 2
       
-      // === FAS 1: SMÅORD - Dölj ALLTID efter första försöket ===
+      // === FAS 1: SMÅORD - Dölj ALLTID DIREKT efter första övningen ===
+      // Småord döljs ALLTID oavsett resultat - detta är kärnan i spaced repetition
+      // Endast undantag: om missat 3+ gånger OCH 0 consecutive correct (persistent problem)
       if (isSmallWord) {
-        // Kolla om småordet missades i DENNA session
-        if (perf.lastPerformance === 'missed') {
-          // Småord missat: endast behåll synligt om missat 2+ gånger utan återhämtning
-          if (perf.missedCount >= 2 && perf.consecutiveCorrect === 0) {
+        const totalAttempts = perf.correctCount + perf.missedCount + perf.hesitatedCount
+        
+        // Om detta är första övningen (vi har nu minst 1 attempt) - ALLTID dölj
+        if (totalAttempts >= 1) {
+          // Enda undantaget: persistent problem (3+ miss, aldrig klarat)
+          if (perf.missedCount >= 3 && perf.consecutiveCorrect === 0) {
             wordsToKeepVisible.add(index)
-            console.log(`👁️ Keeping small word (missed ${perf.missedCount}x): "${cleanWord}"`)
+            console.log(`⚠️ Keeping persistent problem small word: "${cleanWord}" (${perf.missedCount} misses)`)
           } else {
-            // Dölj för att snart testa igen
+            // DÖLJ ALLTID småord efter första övningen
             wordsToHide.add(index)
-            console.log(`🔄 Hiding small word after miss (will retest): "${cleanWord}"`)
+            console.log(`🚫 IMMEDIATE hide small word after first practice: "${cleanWord}"`)
           }
         } else {
-          // Småord som inte missades - ALLTID dölj oavsett resultat
+          // Inte övat än - dölj ändå proaktivt för småord
           wordsToHide.add(index)
-          console.log(`🚫 Auto-hiding small word: "${cleanWord}"`)
+          console.log(`🚫 Proactive hide unpracticed small word: "${cleanWord}"`)
         }
         return
       }
