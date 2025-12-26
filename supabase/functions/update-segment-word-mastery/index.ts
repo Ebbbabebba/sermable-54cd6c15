@@ -254,7 +254,8 @@ Deno.serve(async (req) => {
         if (wasHidden) {
           data.hiddenMissCount++
           // If missed while hidden 2+ times, mark as anchor keyword
-          if (data.hiddenMissCount >= 2) {
+          // NOTE: Never mark SIMPLE words as anchor keywords (they should remain hide-first)
+          if (!data.isSimple && data.hiddenMissCount >= 2) {
             data.isAnchorKeyword = true
             console.log(`Word "${cleanWord}" marked as anchor keyword (hidden miss count: ${data.hiddenMissCount})`)
           }
