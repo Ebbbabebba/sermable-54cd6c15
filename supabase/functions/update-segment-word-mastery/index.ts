@@ -374,47 +374,55 @@ Deno.serve(async (req) => {
       const isHardWord = isContentWord(word)
       const isSentenceEnding = /[.!?]$/.test(word.trim())
 
-      // RULE 4: Simple/junk words - hide FIRST (priority 1)
-      // Need 2 consecutive correct sessions
-      if (data.isSimple && !isSentenceEnding && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
-        candidatesToHide.push({ index, priority: 1, isSimple: true })
-        console.log(`Simple word "${word}" eligible for hiding (priority 1, ${consecutiveCorrect} consecutive correct)`)
-        return
+      // RULE 4: Simple/junk words - hide IMMEDIATELY after first session
+      // Spaced repetition: remove simple words FAST to force active recall
+      // Only exception: if missed 3+ times with 0 consecutive correct (persistent problem)
+      if (data.isSimple && !isSentenceEnding) {
+        const isPersistentProblem = data.missedCount >= 3 && consecutiveCorrect === 0
+        if (!isPersistentProblem) {
+          candidatesToHide.push({ index, priority: 1, isSimple: true })
+          console.log(`Simple word "${word}" - IMMEDIATE hide (spaced repetition)`)
+          return
+        } else {
+          console.log(`Simple word "${word}" kept visible (persistent problem: ${data.missedCount} misses)`)
+          return
+        }
       }
 
       // RULE 4.5: Medium-difficulty words (not simple, not content-heavy, not sentence-ending)
-      // These are regular words that should hide after 3 consecutive correct sessions
-      // Priority 2 - they hide AFTER simple words but BEFORE hard words
-      if (!data.isSimple && !isHardWord && !isSentenceEnding && consecutiveCorrect >= 3 && data.missedCount === 0 && data.hesitatedCount === 0) {
+      // These hide after 2 consecutive correct sessions (faster than before)
+      if (!data.isSimple && !isHardWord && !isSentenceEnding && consecutiveCorrect >= 2 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 2, isSimple: false })
         console.log(`Medium word "${word}" eligible for hiding (priority 2, ${consecutiveCorrect} consecutive correct)`)
         return
       }
 
       // RULE 5: Sentence-ending words AND hard content words - hide LAST (priority 3)
-      // These are the hardest words that disappear together at the very end
-      // Need 5+ consecutive correct sessions with no errors
-      if ((isSentenceEnding || isHardWord) && consecutiveCorrect >= 5 && data.missedCount === 0 && data.hesitatedCount === 0) {
+      // Need 4+ consecutive correct sessions with no errors (slightly faster)
+      if ((isSentenceEnding || isHardWord) && consecutiveCorrect >= 4 && data.missedCount === 0 && data.hesitatedCount === 0) {
         candidatesToHide.push({ index, priority: 3, isSimple: false })
         console.log(`Hard word "${word}" eligible for hiding (priority 3, ${consecutiveCorrect} consecutive correct)`)
         return
       }
     })
 
-    // PROGRESSIVE HIDING SPEED based on session count
-    // Sessions 1-10: 1 word per session (VERY gentle start - only junk words)
-    // Sessions 11-20: 2 words per session (slightly faster)
-    // Sessions 21+: 3 words per session (but still only junk words, cap at 3% of total)
-    let maxNewWordsToHide = 1
-    if (totalSessions >= 21) {
-      maxNewWordsToHide = Math.min(3, Math.ceil(words.length * 0.03))
-    } else if (totalSessions >= 11) {
-      maxNewWordsToHide = 2
-    }
-    // Ensure we always hide at least 1 if there are candidates
-    maxNewWordsToHide = Math.max(1, maxNewWordsToHide)
+    // AGGRESSIVE SPACED REPETITION: Hide ALL simple words after first session
+    // Count how many simple word candidates we have
+    const simpleWordCandidates = candidatesToHide.filter(c => c.isSimple)
+    const nonSimpleWordCandidates = candidatesToHide.filter(c => !c.isSimple)
     
-    console.log(`Session ${totalSessions + 1}: Max new words to hide = ${maxNewWordsToHide}`)
+    // ALWAYS hide ALL simple words (no limit) - this is core spaced repetition
+    // For non-simple words, use progressive limits
+    let maxNonSimpleWordsToHide = 1
+    if (totalSessions >= 10) {
+      maxNonSimpleWordsToHide = Math.min(5, Math.ceil(words.length * 0.05))
+    } else if (totalSessions >= 5) {
+      maxNonSimpleWordsToHide = 3
+    } else if (totalSessions >= 2) {
+      maxNonSimpleWordsToHide = 2
+    }
+    
+    console.log(`Session ${totalSessions + 1}: Hiding ALL ${simpleWordCandidates.length} simple words + up to ${maxNonSimpleWordsToHide} non-simple words`)
     
     // Sort candidates: simple words first, then by index for consistency
     candidatesToHide.sort((a, b) => {
@@ -422,12 +430,14 @@ Deno.serve(async (req) => {
       return a.index - b.index
     })
 
-    // Only take the first N candidates for NEW hiding
-    const newWordsToHide = candidatesToHide.slice(0, maxNewWordsToHide)
-    newWordsToHide.forEach(candidate => wordsToHide.add(candidate.index))
+    // Hide ALL simple word candidates (no limit!) + limited non-simple words
+    simpleWordCandidates.forEach(candidate => wordsToHide.add(candidate.index))
+    const nonSimpleToHide = nonSimpleWordCandidates.slice(0, maxNonSimpleWordsToHide)
+    nonSimpleToHide.forEach(candidate => wordsToHide.add(candidate.index))
     
-    console.log(`Candidates to hide: ${candidatesToHide.length}, actually hiding ${newWordsToHide.length} NEW word(s)`)
-    console.log(`Total hidden words: ${wordsToHide.size} (${alreadyHiddenIndices.size} preserved + ${newWordsToHide.length} new)`)
+    const totalNewlyHidden = simpleWordCandidates.length + nonSimpleToHide.length
+    console.log(`✅ Hiding ${simpleWordCandidates.length} simple words + ${nonSimpleToHide.length} non-simple words = ${totalNewlyHidden} NEW`)
+    console.log(`Total hidden words: ${wordsToHide.size} (${alreadyHiddenIndices.size} preserved + ${totalNewlyHidden} new)`)
 
     // Create text_current with brackets around hidden words
     const modifiedWords = words.map((word: string, index: number) => {
