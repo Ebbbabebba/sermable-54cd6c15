@@ -430,13 +430,44 @@ Deno.serve(async (req) => {
       return a.index - b.index
     })
 
-    // Hide ALL simple word candidates (no limit!) + limited non-simple words
-    simpleWordCandidates.forEach(candidate => wordsToHide.add(candidate.index))
-    const nonSimpleToHide = nonSimpleWordCandidates.slice(0, maxNonSimpleWordsToHide)
-    nonSimpleToHide.forEach(candidate => wordsToHide.add(candidate.index))
+    // Hide words but NEVER 3 consecutive hidden words in a row
+    // This ensures visible "anchor" words are spread throughout
+    const addWithConsecutiveCheck = (index: number) => {
+      // Check if adding this would create 3 consecutive hidden words
+      const prevHidden1 = wordsToHide.has(index - 1)
+      const prevHidden2 = wordsToHide.has(index - 2)
+      const nextHidden1 = wordsToHide.has(index + 1)
+      const nextHidden2 = wordsToHide.has(index + 2)
+      
+      // Would create 3 in a row: [prev2][prev1][this] or [prev1][this][next1] or [this][next1][next2]
+      if ((prevHidden1 && prevHidden2) || (prevHidden1 && nextHidden1) || (nextHidden1 && nextHidden2)) {
+        console.log(`⏭️ Skipping word at index ${index} to avoid 3 consecutive hidden`)
+        return false
+      }
+      wordsToHide.add(index)
+      return true
+    }
     
-    const totalNewlyHidden = simpleWordCandidates.length + nonSimpleToHide.length
-    console.log(`✅ Hiding ${simpleWordCandidates.length} simple words + ${nonSimpleToHide.length} non-simple words = ${totalNewlyHidden} NEW`)
+    // First add already-hidden words (they're already in wordsToHide from preservation)
+    // Then add new candidates with consecutive check
+    let simpleHiddenCount = 0
+    let nonSimpleHiddenCount = 0
+    
+    simpleWordCandidates.forEach(candidate => {
+      if (addWithConsecutiveCheck(candidate.index)) {
+        simpleHiddenCount++
+      }
+    })
+    
+    const nonSimpleToHide = nonSimpleWordCandidates.slice(0, maxNonSimpleWordsToHide)
+    nonSimpleToHide.forEach(candidate => {
+      if (addWithConsecutiveCheck(candidate.index)) {
+        nonSimpleHiddenCount++
+      }
+    })
+    
+    const totalNewlyHidden = simpleHiddenCount + nonSimpleHiddenCount
+    console.log(`✅ Hiding ${simpleHiddenCount} simple words + ${nonSimpleHiddenCount} non-simple words = ${totalNewlyHidden} NEW (with spacing)`)
     console.log(`Total hidden words: ${wordsToHide.size} (${alreadyHiddenIndices.size} preserved + ${totalNewlyHidden} new)`)
 
     // Create text_current with brackets around hidden words
