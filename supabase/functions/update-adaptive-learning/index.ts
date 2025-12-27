@@ -584,16 +584,50 @@ serve(async (req) => {
       });
     }
     
-    // ========== AI-RECOMMENDED INTERVAL (No Hard Caps) ==========
-    // The deadline pressure is already factored into the algorithm through pressureModifier
-    // Allow the AI to fully determine optimal spacing based on performance, visibility, and learning factors
+    // ========== SPACED REPETITION VISIBILITY REQUIREMENT ==========
+    // CRITICAL: According to spaced repetition science, longer intervals should only
+    // be granted when the user has proven TRUE memorization (minimal script visibility)
+    // 
+    // RULE: At least 90% of words MUST be hidden (visibility <= 10%) before 
+    // intervals can exceed 24 hours. This ensures users don't get long breaks
+    // while still reading from a script.
+    //
+    // Visibility thresholds for max interval:
+    // - >50% visible: max 2 hours (still reading mostly)
+    // - 30-50% visible: max 6 hours (partial memorization)
+    // - 10-30% visible: max 24 hours (good progress)
+    // - <=10% visible: full algorithm (true mastery)
+    
+    let maxIntervalMinutes = 7 * 24 * 60; // Default: 7 days
+    
+    if (wordVisibilityPercent > 50) {
+      // More than half the script is visible - cap at 2 hours
+      maxIntervalMinutes = 2 * 60;
+      console.log('📖 >50% visible - max interval: 2 hours');
+    } else if (wordVisibilityPercent > 30) {
+      // 30-50% visible - cap at 6 hours
+      maxIntervalMinutes = 6 * 60;
+      console.log('📝 30-50% visible - max interval: 6 hours');
+    } else if (wordVisibilityPercent > 10) {
+      // 10-30% visible - cap at 24 hours
+      maxIntervalMinutes = 24 * 60;
+      console.log('🧠 10-30% visible - max interval: 24 hours');
+    } else {
+      // <=10% visible (90%+ hidden) - true mastery, allow full algorithm
+      console.log('🌟 ≤10% visible (90%+ hidden) - full intervals unlocked!');
+    }
+    
+    // Apply visibility cap BEFORE other bounds
+    adaptiveIntervalMinutes = Math.min(adaptiveIntervalMinutes, maxIntervalMinutes);
+    
     console.log(`🤖 AI-calculated interval: ${Math.round(adaptiveIntervalMinutes)} min (${(adaptiveIntervalMinutes / 60).toFixed(1)}h)`, {
       daysUntilDeadline,
-      deadlinePressureApplied: deadlinePressure > 0
+      deadlinePressureApplied: deadlinePressure > 0,
+      visibilityCap: `${maxIntervalMinutes / 60}h (${wordVisibilityPercent}% visible)`
     });
     
-    // Absolute bounds: 1 minute to 7 days (soft guidance, not hard caps)
-    adaptiveIntervalMinutes = Math.max(1, Math.min(7 * 24 * 60, adaptiveIntervalMinutes));
+    // Absolute bounds: 1 minute to the visibility-capped maximum
+    adaptiveIntervalMinutes = Math.max(1, adaptiveIntervalMinutes);
     const nextReviewDate = new Date(Date.now() + adaptiveIntervalMinutes * 60 * 1000);
     const adaptiveIntervalDays = adaptiveIntervalMinutes / (24 * 60);
 

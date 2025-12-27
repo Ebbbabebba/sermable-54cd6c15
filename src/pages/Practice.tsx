@@ -1281,8 +1281,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
           console.log('📊 Missed indices - realtime:', Array.from(realtimeMissedIndices), 'AI:', missedIndicesFromAI, 'combined:', combinedMissedIndices);
           console.log('📊 Hesitated indices - realtime:', Array.from(realtimeHesitatedIndices), 'AI:', hesitatedIndicesFromAI, 'combined:', combinedHesitatedIndices);
 
+          // CRITICAL FIX: Call update-segment-word-mastery FIRST to get the NEW visibility percentage
+          // Then use that updated visibility for the adaptive learning calculation
+          let updatedVisibilityPercent = speech!.base_word_visibility_percent || 100;
+          
           try {
-            const { error: masteryError } = await supabase.functions.invoke('update-segment-word-mastery', {
+            const { data: masteryData, error: masteryError } = await supabase.functions.invoke('update-segment-word-mastery', {
               body: {
                 speechId: speech!.id,
                 segmentId: currentSegmentId,
@@ -1298,12 +1302,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
               console.error('Error updating segment word mastery:', masteryError);
             } else {
               console.log('✅ Segment word mastery updated with combined index tracking');
+              // Use the NEW visibility percent returned from mastery update
+              if (masteryData && masteryData.visibilityPercent !== undefined) {
+                updatedVisibilityPercent = masteryData.visibilityPercent;
+                console.log('📊 Using updated visibility from mastery:', updatedVisibilityPercent + '%');
+              }
             }
           } catch (err) {
             console.error('Failed to update segment word mastery:', err);
           }
 
-          // AUTOMATIC SCHEDULING: Call adaptive learning - no manual rating needed
+          // AUTOMATIC SCHEDULING: Call adaptive learning with the UPDATED visibility percentage
           try {
             const { data: { session: authSession } } = await supabase.auth.getSession();
             if (authSession) {
@@ -1311,7 +1320,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 body: {
                   speechId: speech!.id,
                   sessionAccuracy: data.accuracy,
-                  wordVisibilityPercent: speech!.base_word_visibility_percent || 100
+                  wordVisibilityPercent: updatedVisibilityPercent // Use the NEW visibility, not the old one
                 },
                 headers: {
                   Authorization: `Bearer ${authSession.access_token}`
