@@ -207,7 +207,7 @@
     "waitForOptimal": "Vänta till rätt tid",
     "practiceNowAnyway": "Öva nu ändå",
     "editScriptTitle": "Redigera manus",
-    "editScriptDesc": "Ändra din taltext. Obs: detta nollställer dina framsteg.",
+    "editScriptDesc": "Ändra din taltext. Dina framsteg bevaras.",
     "enterSpeechText": "Skriv din taltext...",
     "saveChanges": "Spara ändringar",
     "nextPractice": "Nästa övning",
