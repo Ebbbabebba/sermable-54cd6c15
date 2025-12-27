@@ -207,7 +207,7 @@
     "waitForOptimal": "Wait for Optimal Time",
     "practiceNowAnyway": "Practice Now Anyway",
     "editScriptTitle": "Edit Script",
-    "editScriptDesc": "Make changes to your speech text. This will reset your memorization progress.",
+    "editScriptDesc": "Make changes to your speech text. Your progress will be preserved.",
     "enterSpeechText": "Enter your speech text...",
     "saveChanges": "Save Changes",
     "nextPractice": "Next Practice",
