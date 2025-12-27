@@ -1408,35 +1408,67 @@ const [liveTranscription, setLiveTranscription] = useState("");
     if (!speech || !editedScriptText.trim()) return;
     
     try {
-      // Update the speech text
+      // Update the speech text - keep text_current as-is to preserve bracket progress
+      // Only update text_original (the source text)
       const { error } = await supabase
         .from('speeches')
         .update({ 
           text_original: editedScriptText.trim(),
-          text_current: editedScriptText.trim()
+          // Note: We intentionally do NOT reset text_current here
+          // to preserve any bracket-based word hiding progress
         })
         .eq('id', speech.id);
       
       if (error) throw error;
       
-      // Delete existing segments so they get regenerated with new text
-      await supabase
+      // Update existing segments' text WITHOUT resetting progress
+      // Get current segments to preserve their mastery data
+      const { data: existingSegments } = await supabase
         .from('speech_segments')
-        .delete()
-        .eq('speech_id', speech.id);
+        .select('*')
+        .eq('speech_id', speech.id)
+        .order('segment_order', { ascending: true });
       
-      // Create a single new segment with the updated text
-      await supabase
-        .from('speech_segments')
-        .insert({
-          speech_id: speech.id,
-          segment_order: 0,
-          segment_text: editedScriptText.trim(),
-          start_word_index: 0,
-          end_word_index: editedScriptText.trim().split(/\s+/).length - 1,
-          is_mastered: false,
-          times_practiced: 0
-        });
+      if (existingSegments && existingSegments.length > 0) {
+        // Update segment text but KEEP progress (is_mastered, times_practiced, etc.)
+        const newWordCount = editedScriptText.trim().split(/\s+/).length;
+        
+        // If there's only one segment, update it preserving progress
+        if (existingSegments.length === 1) {
+          await supabase
+            .from('speech_segments')
+            .update({
+              segment_text: editedScriptText.trim(),
+              end_word_index: newWordCount - 1,
+              // Preserve: is_mastered, times_practiced, average_accuracy, etc.
+            })
+            .eq('id', existingSegments[0].id);
+        } else {
+          // Multiple segments - update the first one with new text
+          // This is a simplification; for complex multi-segment cases, 
+          // we'd need smarter text diffing
+          await supabase
+            .from('speech_segments')
+            .update({
+              segment_text: editedScriptText.trim(),
+              end_word_index: newWordCount - 1,
+            })
+            .eq('id', existingSegments[0].id);
+        }
+      } else {
+        // No segments exist, create one (preserves old behavior for edge case)
+        await supabase
+          .from('speech_segments')
+          .insert({
+            speech_id: speech.id,
+            segment_order: 0,
+            segment_text: editedScriptText.trim(),
+            start_word_index: 0,
+            end_word_index: editedScriptText.trim().split(/\s+/).length - 1,
+            is_mastered: false,
+            times_practiced: 0
+          });
+      }
       
       toast({
         title: t('practice.scriptUpdated'),
