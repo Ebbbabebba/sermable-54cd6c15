@@ -400,16 +400,6 @@ const BracketedTextDisplay = ({
                 <Circle className="w-3 h-3 text-primary animate-pulse" />
               )}
               
-              <span className={cn(
-                "font-mono text-sm",
-                bracketState === "complete" && "text-green-600",
-                bracketState === "error" && "text-muted-foreground/60",
-                bracketState === "filling" && "text-primary",
-                (bracketState === "peeked" || bracketState === "expanded") && "text-yellow-600",
-                bracketState === "empty" && "text-muted-foreground/60"
-              )}>
-                [
-              </span>
               
               {/* Content based on state */}
               {bracketState === "empty" && !isPeeked && !isExpanded && (
@@ -487,16 +477,6 @@ const BracketedTextDisplay = ({
                 </div>
               )}
               
-              <span className={cn(
-                "font-mono text-sm",
-                bracketState === "complete" && "text-green-600",
-                bracketState === "error" && "text-muted-foreground/60",
-                bracketState === "filling" && "text-primary",
-                (bracketState === "peeked" || bracketState === "expanded") && "text-yellow-600",
-                bracketState === "empty" && "text-muted-foreground/60"
-              )}>
-                ]
-              </span>
             </motion.div>
           );
         }
