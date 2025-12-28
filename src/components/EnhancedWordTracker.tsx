@@ -962,15 +962,15 @@ const EnhancedWordTracker = ({
       return word.text;
     }
 
-    // Hidden word - show [N] where N = remaining unspoken words in bracket
+    // Hidden word - show N (just the number, no brackets)
     if (word.hidden && !word.spoken && !word.showAsHint) {
       const bracket = findBracketGroup(index);
       
       if (bracket && bracket.unspokenCount > 0) {
-        // Only render bracket notation for the FIRST UNSPOKEN word in the group
+        // Only render number for the FIRST UNSPOKEN word in the group
         if (index === bracket.firstUnspoken) {
-          // Show count of remaining unspoken words
-          return `[${bracket.unspokenCount}]`;
+          // Show count of remaining unspoken words (no brackets)
+          return `${bracket.unspokenCount}`;
         }
         
         // For subsequent unspoken words in the same bracket, return null (skip)
@@ -986,8 +986,8 @@ const EnhancedWordTracker = ({
         return `${shownPart}${"_".repeat(remaining)}`;
       }
       
-      // Default: show [1] for single hidden word
-      return "[1]";
+      // Default: show 1 for single hidden word (no brackets)
+      return "1";
     }
 
     // In keyword mode, check if this is the start of a hidden word group
