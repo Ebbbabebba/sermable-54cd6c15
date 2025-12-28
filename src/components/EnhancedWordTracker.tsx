@@ -609,9 +609,10 @@ const EnhancedWordTracker = ({
     };
   }, [liquidColumn, isRecording]);
 
-  // Effort-based teleprompter hint system
+  // Effort-based teleprompter hint system with AUTO-ADVANCE
   // - If user is TRYING (wrong word spoken), show hint after 1s
-  // - If user is SILENT (passive waiting), show "Try..." after 1.5s, then word after 3-4s
+  // - If user is SILENT (passive waiting), show "Try..." after 1.5s, then word after 3s
+  // - AUTO-ADVANCE: After 4s of no progress, automatically move to next word
   useEffect(() => {
     if (!isRecording) {
       if (pauseDetectionTimer.current) {
@@ -623,6 +624,8 @@ const EnhancedWordTracker = ({
       return;
     }
 
+    const AUTO_ADVANCE_DELAY = 4000; // Auto-advance after 4 seconds of no progress
+
     const checkForPause = () => {
       const now = Date.now();
       const timeSinceProgress = now - lastProgressTime.current;
@@ -633,66 +636,107 @@ const EnhancedWordTracker = ({
       if (currentIdx >= 0 && currentIdx < wordStates.length) {
         const currentWord = wordStates[currentIdx];
         
-        // Only trigger for hidden words that haven't been spoken
-        if (currentWord.hidden && !currentWord.spoken) {
+        // Only trigger for words that haven't been spoken (hidden OR visible)
+        if (!currentWord.spoken) {
           // Determine timing based on EFFORT
           const isStartOfSentence = currentIdx === 0 || wordStates[currentIdx - 1]?.text.match(/[.!?]$/);
           
           // EFFORT-BASED TIMING:
           // - User actively trying (wrong word recently): 1s to show word
-          // - User thinking/pausing: 1.5s for "Try..." prompt, 3s (or 4s for sentence start) for word
+          // - User thinking/pausing: 1.5s for "Try..." prompt, 3s for word
           const isTrying = userIsTrying.current && timeSinceWrongAttempt < 2000;
           
           const tryPromptDelay = 1500; // Show "Try to say it..." after 1.5s silence
           const wordRevealDelay = isTrying 
             ? 1000 // 1s if user is trying (said wrong word)
-            : (isStartOfSentence ? 4000 : 3000); // 3-4s if passive
+            : (isStartOfSentence ? 3500 : 2500); // 2.5-3.5s if passive (faster than before)
 
-          // Phase 1: Show "Try..." prompt (only if not already trying)
-          if (!isTrying && timeSinceProgress >= tryPromptDelay && timeSinceProgress < wordRevealDelay) {
-            if (!teleprompterHint || teleprompterHint.phase !== "trying" || teleprompterHint.wordIndex !== currentIdx) {
-              console.log(`💭 Encouraging try: "${currentWord.text}"`);
-              setTeleprompterHint({
-                wordIndex: currentIdx,
-                word: currentWord.text,
-                phase: "trying"
-              });
+          // Only show teleprompter for hidden words
+          if (currentWord.hidden) {
+            // Phase 1: Show "Try..." prompt (only if not already trying)
+            if (!isTrying && timeSinceProgress >= tryPromptDelay && timeSinceProgress < wordRevealDelay) {
+              if (!teleprompterHint || teleprompterHint.phase !== "trying" || teleprompterHint.wordIndex !== currentIdx) {
+                console.log(`💭 Encouraging try: "${currentWord.text}"`);
+                setTeleprompterHint({
+                  wordIndex: currentIdx,
+                  word: currentWord.text,
+                  phase: "trying"
+                });
+              }
+            }
+            
+            // Phase 2: Show the actual word
+            if (timeSinceProgress >= wordRevealDelay && timeSinceProgress < AUTO_ADVANCE_DELAY) {
+              if (!teleprompterHint || teleprompterHint.phase !== "showing" || teleprompterHint.wordIndex !== currentIdx) {
+                console.log(`📺 Teleprompter showing: "${currentWord.text}" (${isTrying ? 'effort-based 1s' : 'passive ' + wordRevealDelay + 'ms'})`);
+                
+                // Pause liquid animation
+                liquidPausedRef.current = true;
+                
+                setTeleprompterHint({
+                  wordIndex: currentIdx,
+                  word: currentWord.text,
+                  phase: "showing"
+                });
+                
+                // Mark the word as hesitated
+                setWordStates((prevStates) => {
+                  const updated = [...prevStates];
+                  if (currentIdx < updated.length) {
+                    updated[currentIdx] = {
+                      ...updated[currentIdx],
+                      performanceStatus: "hesitated",
+                      revealed: true,
+                      showAsHint: true
+                    };
+                  }
+                  return updated;
+                });
+                
+                // Also set legacy popup for compatibility
+                setForgottenWordPopup({ wordIndex: currentIdx, isAnimating: false });
+              }
             }
           }
           
-          // Phase 2: Show the actual word
-          if (timeSinceProgress >= wordRevealDelay) {
-            if (!teleprompterHint || teleprompterHint.phase !== "showing" || teleprompterHint.wordIndex !== currentIdx) {
-              console.log(`📺 Teleprompter showing: "${currentWord.text}" (${isTrying ? 'effort-based 1s' : 'passive ' + wordRevealDelay + 'ms'})`);
-              
-              // Pause liquid animation
-              liquidPausedRef.current = true;
-              
-              setTeleprompterHint({
-                wordIndex: currentIdx,
-                word: currentWord.text,
-                phase: "showing"
-              });
-              
-              // Mark the word as hesitated
-              setWordStates((prevStates) => {
-                const updated = [...prevStates];
-                if (currentIdx < updated.length) {
-                  updated[currentIdx] = {
-                    ...updated[currentIdx],
-                    performanceStatus: "hesitated",
-                    revealed: true,
-                    showAsHint: true
-                  };
-                }
-                return updated;
-              });
-              
-              // Also set legacy popup for compatibility
-              setForgottenWordPopup({ wordIndex: currentIdx, isAnimating: false });
-            }
+          // AUTO-ADVANCE: After 4 seconds, automatically move to next word
+          if (timeSinceProgress >= AUTO_ADVANCE_DELAY) {
+            console.log(`⏭️ AUTO-ADVANCE: Skipping "${currentWord.text}" after ${AUTO_ADVANCE_DELAY}ms timeout`);
             
-            lastProgressTime.current = now; // Reset to avoid repeated triggers
+            // Mark current word as hesitated (yellow) and move forward
+            setWordStates((prevStates) => {
+              const updated = [...prevStates];
+              if (currentIdx < updated.length && !updated[currentIdx].spoken) {
+                updated[currentIdx] = {
+                  ...updated[currentIdx],
+                  spoken: true,
+                  performanceStatus: "hesitated",
+                  revealed: true,
+                  hidden: true,
+                  showAsHint: false,
+                };
+              }
+              return updated;
+            });
+            
+            // Update current word index
+            const nextIdx = currentIdx + 1;
+            setCurrentWordIndex(nextIdx);
+            currentWordIndexRef.current = nextIdx;
+            lastSpokenIndexRef.current = currentIdx;
+            
+            // Clear teleprompter and reset timers
+            setTeleprompterHint(null);
+            setForgottenWordPopup(null);
+            userIsTrying.current = false;
+            lastProgressTime.current = now;
+            lastWordIndex.current = nextIdx;
+            liquidPausedRef.current = false;
+            
+            // Check if we've reached the end
+            if (nextIdx >= wordStates.length) {
+              console.log('🎉 Auto-advanced to end of text');
+            }
           } else if (timeSinceProgress > 500) {
             // User is pausing but not yet at threshold - pause liquid
             liquidPausedRef.current = true;
@@ -701,7 +745,7 @@ const EnhancedWordTracker = ({
             liquidPausedRef.current = false;
           }
         } else {
-          // Word spoken or not hidden - dismiss teleprompter
+          // Word spoken - dismiss teleprompter
           if (teleprompterHint && teleprompterHint.wordIndex === currentIdx) {
             setTeleprompterHint(null);
           }
@@ -973,25 +1017,30 @@ const EnhancedWordTracker = ({
       {teleprompterHint && (
         <div
           className={cn(
-            "fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-out",
+            "fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
             teleprompterHint.phase === "showing" ? "translate-y-0" : "translate-y-0"
           )}
           style={{
-            height: teleprompterHint.phase === "showing" ? "15vh" : "8vh",
-            minHeight: teleprompterHint.phase === "showing" ? "100px" : "60px",
+            height: teleprompterHint.phase === "showing" ? "18vh" : "10vh",
+            minHeight: teleprompterHint.phase === "showing" ? "120px" : "70px",
           }}
         >
           {/* "Try to say it" phase */}
           {teleprompterHint.phase === "trying" && (
             <div 
-              className="h-full w-full flex items-center justify-center bg-blue-500/90 backdrop-blur-sm animate-pulse"
+              className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-t from-blue-600 to-blue-500 backdrop-blur-sm shadow-lg"
               style={{ animation: "teleprompter-slide-up 0.3s ease-out" }}
             >
               <span 
-                className="text-white font-semibold tracking-wide"
+                className="text-white font-semibold tracking-wide animate-pulse"
                 style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)" }}
               >
-                💭 Try to say it...
+                💭 Försök säga det...
+              </span>
+              <span 
+                className="text-white/60 text-sm mt-1"
+              >
+                (Auto-fortsätter om 2.5s)
               </span>
             </div>
           )}
@@ -999,7 +1048,7 @@ const EnhancedWordTracker = ({
           {/* Show the word phase */}
           {teleprompterHint.phase === "showing" && (
             <div 
-              className="h-full w-full flex items-center justify-center bg-yellow-400 shadow-2xl"
+              className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-t from-yellow-500 to-yellow-400 shadow-2xl"
               style={{ animation: "teleprompter-slide-up 0.3s ease-out" }}
             >
               <span 
@@ -1010,6 +1059,11 @@ const EnhancedWordTracker = ({
                 }}
               >
                 {teleprompterHint.word}
+              </span>
+              <span 
+                className="text-black/50 text-sm mt-1"
+              >
+                Säg ordet eller vänta för auto-fortsätt
               </span>
             </div>
           )}
