@@ -9,7 +9,9 @@ import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { FreestylePresentation } from "@/components/FreestylePresentation";
 import { FreestyleSummary } from "@/components/FreestyleSummary";
-import { StrictPresentationView } from "@/components/StrictPresentationView";
+import { CompactPresentationView } from "@/components/CompactPresentationView";
+import { ViewModeSelector } from "@/components/ViewModeSelector";
+import type { ViewMode } from "@/components/WearableHUD";
 import { cn } from "@/lib/utils";
 
 interface WordPerformance {
@@ -49,11 +51,12 @@ const Presentation = () => {
   
   // Mode selection
   const [selectedMode, setSelectedMode] = useState<'strict' | 'freestyle' | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('full');
   const [isAnalyzingFreestyle, setIsAnalyzingFreestyle] = useState(false);
   const [freestyleSegments, setFreestyleSegments] = useState<FreestyleSegment[]>([]);
   
   // Session states
-  const [stage, setStage] = useState<'mode-select' | 'prep' | 'live' | 'summary'>('mode-select');
+  const [stage, setStage] = useState<'mode-select' | 'view-mode-select' | 'prep' | 'live' | 'summary'>('mode-select');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
@@ -364,8 +367,14 @@ const Presentation = () => {
         }
       }
     } else {
-      setStage('prep');
+      // Go to view mode selection for strict mode
+      setStage('view-mode-select');
     }
+  };
+
+  const handleViewModeSelect = (mode: ViewMode) => {
+    setViewMode(mode);
+    setStage('prep');
   };
 
   const handleFreestyleComplete = async () => {
@@ -430,6 +439,17 @@ const Presentation = () => {
           isAnalyzing={isAnalyzingFreestyle}
         />
       </div>
+    );
+  }
+
+  // Show view mode selector for strict mode
+  if (stage === 'view-mode-select') {
+    return (
+      <ViewModeSelector
+        onSelectMode={handleViewModeSelect}
+        onBack={() => setStage('mode-select')}
+        speechTitle={speech.title}
+      />
     );
   }
 
@@ -622,12 +642,13 @@ const Presentation = () => {
 
   // Show strict presentation live view
   return (
-    <StrictPresentationView
+    <CompactPresentationView
       text={speech.text_original}
       speechLanguage={speech.speech_language || 'en-US'}
       isRecording={isRecording}
       isProcessing={isProcessing}
       elapsedTime={elapsedTime}
+      viewMode={viewMode}
       onStartRecording={handleRecordingStart}
       onStopRecording={handleStopRecording}
       onPerformanceData={handlePerformanceData}
