@@ -105,7 +105,7 @@ const Practice = () => {
     firstWordHesitationThreshold: 6,
     sentenceStartDelay: 5, // 5 seconds extra delay for first word of new sentence
   });
-  const [averageWordDelay, setAverageWordDelay] = useState<number>(800); // Track user's average pace - start faster
+  const [averageWordDelay, setAverageWordDelay] = useState<number>(500); // Track user's average pace - start faster
   const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
   // Use refs for real-time tracking to avoid stale closures
   const expectedWordIndexRef = useRef<number>(0);
@@ -416,7 +416,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
     setHintLevel(0);
     lastWordTimeRef.current = Date.now();
     wordTimingsRef.current = []; // Reset pace tracking
-    setAverageWordDelay(800); // Start with faster default pace
+    setAverageWordDelay(500); // Start with faster default pace
     
     // Clear any existing hesitation timer
     if (hesitationTimerRef.current) {
@@ -455,9 +455,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
       return /[.!?][)"'’”]*$/.test(prevWordRaw);
     })();
     
-    // Base delays
-    let minDelay = isFirstWord ? 3500 : 2000; // 3.5s for first word, 2s for rest
-    let maxDelay = isFirstWord ? 5000 : 3500; // Cap at 5s/3.5s
+    // Base delays - reduced for more responsive feedback
+    let minDelay = isFirstWord ? 2500 : 1500; // 2.5s for first word, 1.5s for rest
+    let maxDelay = isFirstWord ? 4000 : 2500; // Cap at 4s/2.5s
     
     // Add extra delay for first word after a sentence (from settings)
     if (isFirstWordAfterSentence) {
@@ -467,10 +467,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
       console.log('🔤 First word after sentence - adding', settings.sentenceStartDelay, 's extra delay');
     }
     
-    const paceMultiplier = 2.2; // Give 2.2x their average pace before hint
+    const paceMultiplier = 1.8; // Give 1.8x their average pace before hint (reduced from 2.2)
     
     const adaptiveDelay = Math.min(maxDelay, Math.max(minDelay, averageWordDelay * paceMultiplier));
-    const stepDelay = Math.min(1200, Math.max(600, averageWordDelay * 0.9)); // Longer steps between hint levels
+    const stepDelay = Math.min(800, Math.max(400, averageWordDelay * 0.7)); // Faster steps between hint levels
     
     // Level 1: First letter hint (adaptive to user pace)
     hesitationTimerRef.current = setTimeout(() => {
@@ -762,13 +762,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
               })();
               
               // HESITATION DETECTION: Mark as hesitated if user took too long
-              // Use adaptive threshold based on their pace, but with minimums
+              // Use adaptive threshold based on their pace, with lower minimums for responsiveness
               // Add extra time for first word after sentences
               const isFirstWordInSession = currentIdx === 0;
               const sentenceStartExtraMs = isFirstWordAfterSentence ? settings.sentenceStartDelay * 1000 : 0;
               const hesitationThresholdMs = isFirstWordInSession 
-                ? Math.max(3000, averageWordDelay * 2.5) // First word: 3s minimum
-                : Math.max(1500, averageWordDelay * 2.0) + sentenceStartExtraMs; // Other words + sentence delay
+                ? Math.max(2500, averageWordDelay * 2.2) // First word: 2.5s minimum
+                : Math.max(1000, averageWordDelay * 1.8) + sentenceStartExtraMs; // Other words: 1s minimum + sentence delay
               
               const wasHesitation = timeSinceLastWord > hesitationThresholdMs;
               const wasHintShowing = wasSupportWordShowing && previousSupportWordIndex === currentIdx;
@@ -800,15 +800,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
               // Update timing tracking
               lastWordTimeRef.current = currentTime;
               
-              if (currentIdx > 1 && timeSinceLastWord < 8000) {
-                // EWMA: Weight recent words more heavily for faster adaptation
-                const weight = wordTimingsRef.current.length < 3 ? 0.7 : 0.4;
+              if (currentIdx > 1 && timeSinceLastWord < 5000) {
+                // EWMA: Weight recent words VERY heavily for instant adaptation
+                const weight = wordTimingsRef.current.length < 2 ? 0.85 : 0.6;
                 const newAvg = wordTimingsRef.current.length === 0 
                   ? timeSinceLastWord 
                   : averageWordDelay * (1 - weight) + timeSinceLastWord * weight;
-                setAverageWordDelay(Math.min(2000, Math.max(200, newAvg)));
+                setAverageWordDelay(Math.min(1500, Math.max(150, newAvg)));
                 wordTimingsRef.current.push(timeSinceLastWord);
-                if (wordTimingsRef.current.length > 8) wordTimingsRef.current.shift();
+                if (wordTimingsRef.current.length > 5) wordTimingsRef.current.shift();
                 console.log('📊 Speaking pace:', Math.round(timeSinceLastWord), 'ms, Avg:', Math.round(newAvg), 'ms');
               }
               
