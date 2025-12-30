@@ -132,7 +132,7 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
                   {/* Stats row */}
                   {segment.times_practiced > 0 && (
                     <div className="mt-3 pt-3 border-t border-border/30 space-y-2">
-                      {/* Visibility progress */}
+                      {/* Visibility progress - show how close to 10% target */}
                       <div className="flex items-center gap-2">
                         <Eye className="w-4 h-4 text-muted-foreground" />
                         <div className="flex-1 flex items-center gap-2">
@@ -140,11 +140,31 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
                             value={100 - visibility} 
                             className="h-2 flex-1 bg-muted"
                           />
-                          <span className="text-xs font-medium text-primary min-w-[4rem] text-right">
+                          <span className={`text-xs font-medium min-w-[4rem] text-right ${
+                            visibility <= 10 ? 'text-success' : 'text-primary'
+                          }`}>
                             {Math.round(100 - visibility)}% {t('practice.segments.hidden')}
+                            {visibility > 10 && (
+                              <span className="text-muted-foreground ml-1">
+                                (→90%)
+                              </span>
+                            )}
                           </span>
                         </div>
                       </div>
+                      
+                      {/* Mastery criteria hint */}
+                      {!isMastered && (
+                        <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
+                          {visibility <= 10 ? (
+                            <span className="text-primary">✓ Low visibility achieved! Need 100% accuracy to master.</span>
+                          ) : segment.average_accuracy && segment.average_accuracy >= 98 ? (
+                            <span className="text-primary">✓ Great accuracy! Reduce visibility to ≤10% to master.</span>
+                          ) : (
+                            <span>Goal: 100% accuracy + ≤10% script visibility</span>
+                          )}
+                        </div>
+                      )}
                       
                       {/* Anchor keywords */}
                       {anchorCount > 0 && (
@@ -163,7 +183,7 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
                         </span>
                         {segment.average_accuracy !== null && (
                           <span className="flex items-center gap-1">
-                            <span className={`font-medium ${segment.average_accuracy >= 80 ? 'text-success' : segment.average_accuracy >= 60 ? 'text-yellow-600' : 'text-destructive'}`}>
+                            <span className={`font-medium ${segment.average_accuracy >= 98 ? 'text-success' : segment.average_accuracy >= 80 ? 'text-yellow-600' : 'text-destructive'}`}>
                               {Math.round(segment.average_accuracy)}%
                             </span> {t('practice.segments.avg')}
                           </span>
