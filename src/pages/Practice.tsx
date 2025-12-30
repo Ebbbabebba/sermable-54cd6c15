@@ -210,6 +210,33 @@ const [liveTranscription, setLiveTranscription] = useState("");
       return;
     }
 
+    // SEGMENT PROGRESSION LOGIC:
+    // 1. Focus on first unmastered segment ONLY
+    // 2. When mastered (100% accuracy + ≤10% visibility) → unlock next segment
+    // 3. Focus ONLY on the new segment until it's also mastered
+    // 4. When new segment is mastered → MERGE them together (via merged_with_next flag)
+    // 5. Practice merged segments together until combined mastery
+
+    // Find all merged segment groups (segments marked with merged_with_next form a chain)
+    const getMergedSegmentGroup = (startIdx: number): Segment[] => {
+      const group: Segment[] = [];
+      let idx = startIdx;
+      
+      // Go backwards to find the start of the merge chain
+      while (idx > 0 && allSegments[idx - 1]?.merged_with_next) {
+        idx--;
+      }
+      
+      // Now collect all segments in this merge chain
+      while (idx < allSegments.length) {
+        group.push(allSegments[idx]);
+        if (!allSegments[idx].merged_with_next) break;
+        idx++;
+      }
+      
+      return group;
+    };
+
     // Find the first unmastered segment
     const firstUnmasteredIndex = allSegments.findIndex((s) => !s.is_mastered);
 
@@ -221,27 +248,35 @@ const [liveTranscription, setLiveTranscription] = useState("");
       return;
     }
 
-    // Check if we should merge with previous segment
+    // Check if this segment is part of a merged group
+    const currentSegment = allSegments[firstUnmasteredIndex];
+    
+    // Check if the PREVIOUS segment has merged_with_next = true
+    // This means both segments were mastered individually and should now be practiced together
     if (firstUnmasteredIndex > 0) {
       const previousSegment = allSegments[firstUnmasteredIndex - 1];
-
-      // If previous segment is mastered, practice both together
-      if (previousSegment.is_mastered) {
-        const currentSegment = allSegments[firstUnmasteredIndex];
-        const activeSegs = [previousSegment, currentSegment];
-
-        setActiveSegmentIndices([previousSegment.segment_order, currentSegment.segment_order]);
-        setActiveSegmentText(getCurrentTextForSegments(activeSegs));
-        setActiveSegmentOriginalText(getOriginalTextForSegments(activeSegs));
+      
+      if (previousSegment.merged_with_next) {
+        // Previous segment has merged_with_next = true
+        // This means we need to practice them TOGETHER now
+        const mergedGroup = getMergedSegmentGroup(firstUnmasteredIndex - 1);
+        
+        setActiveSegmentIndices(mergedGroup.map((s) => s.segment_order));
+        setActiveSegmentText(getCurrentTextForSegments(mergedGroup));
+        setActiveSegmentOriginalText(getOriginalTextForSegments(mergedGroup));
+        
+        console.log('📚 Practicing merged segments:', mergedGroup.map(s => s.segment_order + 1).join(' + '));
         return;
       }
     }
 
-    // Practice only the current unmastered segment
-    const currentSegment = allSegments[firstUnmasteredIndex];
+    // Not part of a merged group - practice ONLY this segment
+    // (Don't merge with mastered previous segment until BOTH are individually mastered)
     setActiveSegmentIndices([currentSegment.segment_order]);
     setActiveSegmentText(getCurrentTextForSegments([currentSegment]));
     setActiveSegmentOriginalText(getOriginalTextForSegments([currentSegment]));
+    
+    console.log('📚 Focusing on segment:', currentSegment.segment_order + 1);
   };
 
   // Clean bracket notation from text (keep words, remove [ and ])
@@ -1166,58 +1201,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
           }
 
           // Update segment performance
-          if (activeSegmentIndices.length > 0) {
-            for (const segmentOrder of activeSegmentIndices) {
-              const segment = segments.find(s => s.segment_order === segmentOrder);
-              if (segment) {
-                const newTimesPracticed = segment.times_practiced + 1;
-                const oldAvg = segment.average_accuracy || 0;
-                const newAvg = oldAvg === 0 
-                  ? data.accuracy 
-                  : (oldAvg * segment.times_practiced + data.accuracy) / newTimesPracticed;
-                
-                // Mark as mastered if accuracy >= 85% and practiced at least twice
-                const isMastered = newAvg >= 85 && newTimesPracticed >= 2;
-
-                await supabase
-                  .from('speech_segments')
-                  .update({
-                    times_practiced: newTimesPracticed,
-                    average_accuracy: newAvg,
-                    last_practiced_at: new Date().toISOString(),
-                    is_mastered: isMastered,
-                  })
-                  .eq('id', segment.id);
-
-                console.log(`📊 Segment ${segmentOrder} updated: ${newTimesPracticed}x practiced, ${Math.round(newAvg)}% avg, mastered: ${isMastered}`);
-              }
-            }
-
-            // Reload segments to update active segments
-            const { data: updatedSegments } = await supabase
-              .from("speech_segments")
-              .select("*")
-              .eq("speech_id", id)
-              .order("segment_order", { ascending: true });
-
-            if (updatedSegments) {
-              setSegments(updatedSegments);
-              determineActiveSegments(updatedSegments);
-
-              // Check if we should merge segments
-              const shouldMerge = activeSegmentIndices.length === 2 &&
-                updatedSegments.filter(s => activeSegmentIndices.includes(s.segment_order))
-                  .every(s => s.is_mastered);
-
-              if (shouldMerge) {
-                toast({
-                  title: `🎉 ${t('practice.segmentsMerged')}`,
-                  description: t('practice.segmentsMergedDesc'),
-                  duration: 5000,
-                });
-              }
-            }
-          }
+          // Note: We update segment mastery AFTER getting the visibility from update-segment-word-mastery
+          // The segment mastery update happens below after calling update-segment-word-mastery
 
           // Calculate hidden indices from text_current (words in brackets are hidden)
           const extractHiddenIndices = (textCurrent: string): number[] => {
@@ -1306,6 +1291,95 @@ const [liveTranscription, setLiveTranscription] = useState("");
               if (masteryData && masteryData.visibilityPercent !== undefined) {
                 updatedVisibilityPercent = masteryData.visibilityPercent;
                 console.log('📊 Using updated visibility from mastery:', updatedVisibilityPercent + '%');
+              }
+              
+              // ===== SEGMENT MASTERY UPDATE =====
+              // Mastery criteria: 100% accuracy AND ≤10% script visibility
+              // This ensures you truly memorized the segment, not just reading from script
+              if (activeSegmentIndices.length > 0) {
+                const segmentVisibility = masteryData?.segmentVisibility ?? updatedVisibilityPercent;
+                
+                for (const segmentOrder of activeSegmentIndices) {
+                  const segment = segments.find(s => s.segment_order === segmentOrder);
+                  if (segment) {
+                    const newTimesPracticed = segment.times_practiced + 1;
+                    const oldAvg = segment.average_accuracy || 0;
+                    const newAvg = oldAvg === 0 
+                      ? data.accuracy 
+                      : (oldAvg * segment.times_practiced + data.accuracy) / newTimesPracticed;
+                    
+                    // NEW MASTERY CRITERIA:
+                    // - 100% accuracy (or 98%+ to allow tiny margin)
+                    // - Script visibility ≤10% (90%+ of words hidden)
+                    const isPerfectAccuracy = data.accuracy >= 98;
+                    const isLowVisibility = segmentVisibility <= 10;
+                    const isMastered = isPerfectAccuracy && isLowVisibility;
+                    
+                    // Determine if we should mark merged_with_next
+                    // This happens when the previous segment is mastered and this one becomes mastered too
+                    let shouldMergeWithPrevious = false;
+                    if (isMastered && segmentOrder > 0) {
+                      const previousSegment = segments.find(s => s.segment_order === segmentOrder - 1);
+                      if (previousSegment?.is_mastered) {
+                        shouldMergeWithPrevious = true;
+                      }
+                    }
+
+                    await supabase
+                      .from('speech_segments')
+                      .update({
+                        times_practiced: newTimesPracticed,
+                        average_accuracy: newAvg,
+                        last_practiced_at: new Date().toISOString(),
+                        is_mastered: isMastered,
+                        visibility_percent: segmentVisibility,
+                      })
+                      .eq('id', segment.id);
+
+                    console.log(`📊 Segment ${segmentOrder} updated: ${newTimesPracticed}x practiced, ${Math.round(newAvg)}% avg, visibility: ${segmentVisibility}%, mastered: ${isMastered}`);
+                    
+                    // If this segment just became mastered, show unlock message
+                    if (isMastered && !segment.is_mastered) {
+                      const nextSegmentExists = segments.some(s => s.segment_order === segmentOrder + 1);
+                      if (nextSegmentExists) {
+                        toast({
+                          title: `🎯 ${t('practice.segmentMastered')}`,
+                          description: t('practice.nextSegmentUnlocked'),
+                          duration: 5000,
+                        });
+                      }
+                    }
+                    
+                    // If we should merge with previous segment (both mastered now)
+                    if (shouldMergeWithPrevious) {
+                      const previousSegment = segments.find(s => s.segment_order === segmentOrder - 1);
+                      if (previousSegment) {
+                        await supabase
+                          .from('speech_segments')
+                          .update({ merged_with_next: true })
+                          .eq('id', previousSegment.id);
+                        
+                        toast({
+                          title: `🔗 ${t('practice.segmentsMerged')}`,
+                          description: t('practice.practiceTogetherNow'),
+                          duration: 5000,
+                        });
+                      }
+                    }
+                  }
+                }
+
+                // Reload segments to update active segments
+                const { data: updatedSegments } = await supabase
+                  .from("speech_segments")
+                  .select("*")
+                  .eq("speech_id", id)
+                  .order("segment_order", { ascending: true });
+
+                if (updatedSegments) {
+                  setSegments(updatedSegments);
+                  determineActiveSegments(updatedSegments);
+                }
               }
             }
           } catch (err) {
