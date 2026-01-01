@@ -319,13 +319,15 @@ const Dashboard = () => {
                 const rawName = user?.user_metadata?.full_name?.split(' ')[0] || "";
                 const name = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase() : "";
                 
+                let greeting = "";
                 if (hour >= 5 && hour < 11) {
-                  return `God morgon${name ? `, ${name}` : ""}`;
+                  greeting = t('dashboard.goodMorning');
                 } else if (hour >= 11 && hour < 19) {
-                  return `Välkommen tillbaka${name ? `, ${name}` : ""}`;
+                  greeting = t('dashboard.welcomeBack');
                 } else {
-                  return `God kväll${name ? `, ${name}` : ""}`;
+                  greeting = t('dashboard.goodEvening');
                 }
+                return name ? `${greeting}, ${name}` : greeting;
               })()}
             </h2>
             <p className="text-muted-foreground text-lg">

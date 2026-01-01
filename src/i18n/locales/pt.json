@@ -66,6 +66,8 @@
   "dashboard": {
     "title": "Meus discursos",
     "welcomeBack": "Bem-vindo de volta",
+    "goodMorning": "Bom dia",
+    "goodEvening": "Boa noite",
     "continueOrStart": "Continue praticando ou comece um novo discurso.",
     "yourSpeeches": "Seus discursos",
     "manageSpeeches": "Gerencie e pratique seus discursos",

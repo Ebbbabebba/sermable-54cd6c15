@@ -66,6 +66,8 @@
   "dashboard": {
     "title": "My Speeches",
     "welcomeBack": "Welcome back",
+    "goodMorning": "Good morning",
+    "goodEvening": "Good evening",
     "continueOrStart": "Continue practicing or start a new speech.",
     "yourSpeeches": "Your Speeches",
     "manageSpeeches": "Manage and practice your speeches",

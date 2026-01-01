@@ -66,6 +66,8 @@
   "dashboard": {
     "title": "Mina tal",
     "welcomeBack": "Välkommen tillbaka",
+    "goodMorning": "God morgon",
+    "goodEvening": "God kväll",
     "continueOrStart": "Fortsätt öva eller skapa ett nytt tal.",
     "yourSpeeches": "Dina tal",
     "manageSpeeches": "Hantera och öva dina tal",
