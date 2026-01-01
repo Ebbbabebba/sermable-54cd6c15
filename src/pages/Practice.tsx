@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAdaptiveTempo } from "@/hooks/useAdaptiveTempo";
 import { format } from "date-fns";
 import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
 import WordHighlighter from "@/components/WordHighlighter";
@@ -77,6 +78,7 @@ const Practice = () => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const { theme } = useTheme();
+  const adaptiveTempo = useAdaptiveTempo();
   const resultsRef = useRef<HTMLDivElement>(null);
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [segments, setSegments] = useState<Segment[]>([]);
@@ -452,6 +454,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
     lastWordTimeRef.current = Date.now();
     wordTimingsRef.current = []; // Reset pace tracking
     setAverageWordDelay(500); // Start with faster default pace
+    adaptiveTempo.reset(); // Reset adaptive tempo for new session
     
     // Clear any existing hesitation timer
     if (hesitationTimerRef.current) {
@@ -477,42 +480,34 @@ const [liveTranscription, setLiveTranscription] = useState("");
     setSupportWordIndex(null);
     
     const wordToShow = expectedWords[wordIndex];
+    const wordLength = wordToShow.length;
     
-    // Adaptive timing based on user's speaking pace
-    // Give user MORE time to think before showing hints
-    // First word gets extra time, subsequent words adapt to pace
+    // Check if first word or first word after sentence
     const isFirstWord = wordIndex === 0;
-    
-    // Check if current word is the first word after a sentence-ending punctuation
-    // IMPORTANT: use the RAW words (with punctuation) for sentence detection
     const isFirstWordAfterSentence = wordIndex > 0 && (() => {
       const prevWordRaw = expectedWordsRaw[wordIndex - 1] ?? '';
-      return /[.!?][)"'’”]*$/.test(prevWordRaw);
+      return /[.!?][)"''"]*$/.test(prevWordRaw);
     })();
     
-    // Base delays - reduced for more responsive feedback
-    let minDelay = isFirstWord ? 2500 : 1500; // 2.5s for first word, 1.5s for rest
-    let maxDelay = isFirstWord ? 4000 : 2500; // Cap at 4s/2.5s
+    // Extra delay for sentence starts from settings
+    const sentenceStartExtraMs = isFirstWordAfterSentence ? settings.sentenceStartDelay * 1000 : 0;
     
-    // Add extra delay for first word after a sentence (from settings)
-    if (isFirstWordAfterSentence) {
-      const sentenceStartDelayMs = settings.sentenceStartDelay * 1000;
-      minDelay += sentenceStartDelayMs;
-      maxDelay += sentenceStartDelayMs;
-      console.log('🔤 First word after sentence - adding', settings.sentenceStartDelay, 's extra delay');
-    }
+    // Get adaptive delays from tempo analysis
+    const { initialDelay, stepDelay } = adaptiveTempo.getAdaptiveHintDelays({
+      wordLength,
+      isAfterSentence: isFirstWordAfterSentence,
+      isFirstWord,
+      sentenceStartExtraMs,
+    });
     
-    const paceMultiplier = 1.8; // Give 1.8x their average pace before hint (reduced from 2.2)
-    
-    const adaptiveDelay = Math.min(maxDelay, Math.max(minDelay, averageWordDelay * paceMultiplier));
-    const stepDelay = Math.min(800, Math.max(400, averageWordDelay * 0.7)); // Faster steps between hint levels
+    console.log(`⏱️ Adaptive hint delays - initial: ${Math.round(initialDelay)}ms, step: ${Math.round(stepDelay)}ms, phase: ${adaptiveTempo.phase}, WPM: ${adaptiveTempo.tempoWPM}`);
     
     // Level 1: First letter hint (adaptive to user pace)
     hesitationTimerRef.current = setTimeout(() => {
       setSupportWord(wordToShow);
       setSupportWordIndex(wordIndex);
       setHintLevel(1);
-      console.log('💡 Hint level 1 (first letter):', wordToShow.slice(0, 1) + '___', 'delay:', adaptiveDelay);
+      console.log('💡 Hint level 1 (first letter):', wordToShow.slice(0, 1) + '___', 'delay:', initialDelay);
       
       // Level 2: More letters (adaptive step)
       hintTimerRef.current = setTimeout(() => {
@@ -539,7 +534,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           });
         }, stepDelay);
       }, stepDelay);
-    }, adaptiveDelay);
+    }, initialDelay);
   };
 
   // Clear hint when word is spoken
@@ -796,14 +791,18 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 return /[.!?][)"'’”]*$/.test(prevWordRaw);
               })();
               
-              // HESITATION DETECTION: Mark as hesitated if user took too long
-              // Use adaptive threshold based on their pace, with lower minimums for responsiveness
-              // Add extra time for first word after sentences
+              // HESITATION DETECTION: Use adaptive threshold based on tempo analysis
               const isFirstWordInSession = currentIdx === 0;
               const sentenceStartExtraMs = isFirstWordAfterSentence ? settings.sentenceStartDelay * 1000 : 0;
-              const hesitationThresholdMs = isFirstWordInSession 
-                ? Math.max(2500, averageWordDelay * 2.2) // First word: 2.5s minimum
-                : Math.max(1000, averageWordDelay * 1.8) + sentenceStartExtraMs; // Other words: 1s minimum + sentence delay
+              const wordLength = expectedWord.length;
+              
+              // Get adaptive threshold from tempo analysis
+              const hesitationThresholdMs = adaptiveTempo.getAdaptiveThreshold({
+                wordLength,
+                isAfterSentence: isFirstWordAfterSentence,
+                isFirstWord: isFirstWordInSession,
+                sentenceStartExtraMs,
+              });
               
               const wasHesitation = timeSinceLastWord > hesitationThresholdMs;
               const wasHintShowing = wasSupportWordShowing && previousSupportWordIndex === currentIdx;
@@ -832,11 +831,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
               clearHints();
               currentIdx++;
               
-              // Update timing tracking
+              // Update timing tracking - record to adaptive tempo system
               lastWordTimeRef.current = currentTime;
               
+              // Record word timing for adaptive tempo analysis
+              if (timeSinceLastWord >= 50 && timeSinceLastWord < 10000) {
+                adaptiveTempo.recordWordTiming(timeSinceLastWord, wordLength, isFirstWordAfterSentence);
+              }
+              
+              // Legacy pace tracking for backward compatibility
               if (currentIdx > 1 && timeSinceLastWord < 5000) {
-                // EWMA: Weight recent words VERY heavily for instant adaptation
                 const weight = wordTimingsRef.current.length < 2 ? 0.85 : 0.6;
                 const newAvg = wordTimingsRef.current.length === 0 
                   ? timeSinceLastWord 
@@ -844,7 +848,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 setAverageWordDelay(Math.min(1500, Math.max(150, newAvg)));
                 wordTimingsRef.current.push(timeSinceLastWord);
                 if (wordTimingsRef.current.length > 5) wordTimingsRef.current.shift();
-                console.log('📊 Speaking pace:', Math.round(timeSinceLastWord), 'ms, Avg:', Math.round(newAvg), 'ms');
               }
               
               // Check if we've reached the last word
