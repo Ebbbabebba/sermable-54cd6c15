@@ -66,6 +66,8 @@
   "dashboard": {
     "title": "I miei discorsi",
     "welcomeBack": "Bentornato",
+    "goodMorning": "Buongiorno",
+    "goodEvening": "Buonasera",
     "continueOrStart": "Continua a esercitarti o inizia un nuovo discorso.",
     "yourSpeeches": "I tuoi discorsi",
     "manageSpeeches": "Gestisci ed esercitati con i tuoi discorsi",

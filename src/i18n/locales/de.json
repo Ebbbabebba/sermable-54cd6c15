@@ -66,6 +66,8 @@
   "dashboard": {
     "title": "Meine Reden",
     "welcomeBack": "Willkommen zurück",
+    "goodMorning": "Guten Morgen",
+    "goodEvening": "Guten Abend",
     "continueOrStart": "Übe weiter oder beginne eine neue Rede.",
     "yourSpeeches": "Deine Reden",
     "manageSpeeches": "Verwalte und übe deine Reden",
