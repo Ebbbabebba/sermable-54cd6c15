@@ -1089,7 +1089,7 @@ const EnhancedWordTracker = ({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-center gap-1 leading-loose relative">
+      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 leading-loose relative">
         {wordStates.map((word, index) => {
           // Render liquid column if this is the first word in the column
           const isLiquidStart = liquidColumn && index === liquidColumn.start;
@@ -1101,7 +1101,7 @@ const EnhancedWordTracker = ({
               <span
                 key={index}
                 data-word-index={index}
-                className="inline-block px-3 py-1.5 mx-1 my-1 opacity-0"
+                className="inline-block px-3 py-1.5 opacity-0"
                 style={{
                   fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)",
                   fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -1115,14 +1115,12 @@ const EnhancedWordTracker = ({
           // Check if this word should be part of a hidden group (before performance status)
           const isPartOfHiddenGroup = keywordMode && !word.isKeyword && !word.manuallyRevealed;
 
-          // Skip rendering hidden words that are NOT the first unspoken in their bracket
-          if (word.hidden && !word.spoken && !word.showAsHint) {
-            const bracket = findBracketGroup(index);
-            // If this isn't the first unspoken word in the bracket, skip rendering
-            if (bracket && bracket.firstUnspoken !== -1 && index !== bracket.firstUnspoken) {
-              return null;
-            }
-          }
+          // For hidden bracket words - ALWAYS render each word to maintain stable layout
+          // Instead of skipping, we render invisible placeholders
+          const bracket = word.hidden && !word.spoken && !word.showAsHint ? findBracketGroup(index) : null;
+          const isFirstUnspokenInBracket = bracket && bracket.firstUnspoken === index;
+          const shouldShowBracketNumber = bracket && isFirstUnspokenInBracket;
+          const shouldBeInvisible = bracket && !isFirstUnspokenInBracket && bracket.firstUnspoken !== -1;
 
           // Skip rendering if this is a hidden word that's part of a group (not the first in the group)
           // BUT only if it doesn't have a performance status (which needs individual rendering)
@@ -1135,7 +1133,14 @@ const EnhancedWordTracker = ({
           }
 
           return (
-            <span key={index} className="relative inline-block">
+            <span 
+              key={index} 
+              className="relative inline-block"
+              style={{
+                // Keep stable width based on actual word length to prevent jumping
+                minWidth: word.hidden && !word.spoken ? undefined : undefined,
+              }}
+            >
               {/* Liquid column overlay */}
               {isLiquidStart && (
                 <div 
@@ -1165,7 +1170,9 @@ const EnhancedWordTracker = ({
                 className={cn(
                   getWordClassName(word, index),
                   isInLiquidColumn && !word.spoken && "relative z-10",
-                  !isInLiquidColumn && word.isCurrent && !word.spoken && "animate-pulse text-primary scale-110"
+                  !isInLiquidColumn && word.isCurrent && !word.spoken && "animate-pulse text-primary scale-110",
+                  // Make invisible if part of bracket but not the first unspoken
+                  shouldBeInvisible && "invisible"
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1174,9 +1181,11 @@ const EnhancedWordTracker = ({
                 style={{
                   fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)",
                   fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+                  // Maintain word's space even when invisible
+                  ...(shouldBeInvisible && { visibility: 'hidden', width: 0, padding: 0, margin: 0 }),
                 }}
               >
-                {renderWordContent(word, index)}
+                {shouldBeInvisible ? '' : renderWordContent(word, index)}
               </span>
             </span>
           );
