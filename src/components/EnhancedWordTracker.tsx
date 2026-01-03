@@ -1170,9 +1170,11 @@ const EnhancedWordTracker = ({
                 className={cn(
                   getWordClassName(word, index),
                   isInLiquidColumn && !word.spoken && "relative z-10",
-                  !isInLiquidColumn && word.isCurrent && !word.spoken && "animate-pulse text-primary scale-110",
+                  !isInLiquidColumn && word.isCurrent && !word.spoken && "text-primary",
                   // Make invisible if part of bracket but not the first unspoken
-                  shouldBeInvisible && "invisible"
+                  shouldBeInvisible && "invisible",
+                  // Add spoken class for smooth fade
+                  word.spoken && "word-spoken"
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
