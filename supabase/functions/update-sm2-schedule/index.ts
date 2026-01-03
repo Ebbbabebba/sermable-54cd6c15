@@ -233,6 +233,17 @@ serve(async (req) => {
       );
     }
 
+    // Get user's practice hours for smart scheduling
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('practice_start_hour, practice_end_hour, timezone')
+      .eq('id', user.id)
+      .single();
+
+    const practiceStartHour = profile?.practice_start_hour ?? 8;
+    const practiceEndHour = profile?.practice_end_hour ?? 22;
+    const userTimezone = profile?.timezone || 'UTC';
+
     // Calculate days until deadline
     const goalDate = new Date(speech.goal_date);
     const today = new Date();
@@ -263,7 +274,37 @@ serve(async (req) => {
       daysUntilDeadline
     );
 
-    const nextReviewDate = new Date(Date.now() + sm2Result.newInterval * 60 * 1000);
+    let nextReviewDate = new Date(Date.now() + sm2Result.newInterval * 60 * 1000);
+    
+    // Smart scheduling: adjust next review date to fall within practice hours
+    // Get the hour in user's timezone
+    let nextReviewHour: number;
+    try {
+      const nextReviewLocalTime = nextReviewDate.toLocaleString('en-US', { 
+        timeZone: userTimezone, 
+        hour: 'numeric', 
+        hour12: false 
+      });
+      nextReviewHour = parseInt(nextReviewLocalTime, 10);
+    } catch (e) {
+      nextReviewHour = nextReviewDate.getUTCHours();
+    }
+
+    // If next review is during sleep hours, push to next practice window
+    if (nextReviewHour >= practiceEndHour || nextReviewHour < practiceStartHour) {
+      // Calculate hours until next practice start
+      let hoursUntilPracticeStart: number;
+      if (nextReviewHour >= practiceEndHour) {
+        // It's after end hour, so wait until tomorrow morning
+        hoursUntilPracticeStart = (24 - nextReviewHour) + practiceStartHour;
+      } else {
+        // It's before start hour (early morning), wait until practice starts
+        hoursUntilPracticeStart = practiceStartHour - nextReviewHour;
+      }
+      nextReviewDate = new Date(nextReviewDate.getTime() + hoursUntilPracticeStart * 60 * 60 * 1000);
+      console.log(`Adjusted next review to practice hours: ${nextReviewDate.toISOString()}`);
+    }
+
     const intervalDays = sm2Result.newInterval / 1440;
 
     // Update schedule

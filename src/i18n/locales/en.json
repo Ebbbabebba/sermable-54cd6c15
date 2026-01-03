@@ -357,6 +357,17 @@
       "personalizedLearning": "Personalized Learning",
       "personalizedLearningDesc": "Your practice schedule is automatically personalized based on your performance and speech deadlines."
     },
+    "practiceHours": {
+      "title": "Practice Hours",
+      "description": "Set when you want to receive practice reminders",
+      "startTime": "Start practicing at",
+      "endTime": "Stop practicing at",
+      "preview": "You'll receive reminders between {{start}} and {{end}}",
+      "sleepProtection": "Notifications are paused during your sleep hours for better rest.",
+      "autoTimezone": "Auto-detect timezone",
+      "saved": "Practice hours saved",
+      "outsideHours": "It's rest time! Practice when you're ready."
+    },
     "notifications": {
       "title": "Notifications",
       "description": "Get reminders when speeches are due for review",

@@ -350,6 +350,17 @@
       "personalizedLearning": "Apprendimento personalizzato",
       "personalizedLearningDesc": "Il tuo programma di esercitazione si adatta automaticamente alle tue prestazioni e scadenze."
     },
+    "practiceHours": {
+      "title": "Orari di pratica",
+      "description": "Imposta quando vuoi ricevere promemoria",
+      "startTime": "Inizia alle",
+      "endTime": "Finisci alle",
+      "preview": "Riceverai promemoria tra {{start}} e {{end}}",
+      "sleepProtection": "Le notifiche sono sospese durante le ore di riposo.",
+      "autoTimezone": "Rileva automaticamente il fuso orario",
+      "saved": "Orari di pratica salvati",
+      "outsideHours": "È ora di riposare! Esercitati quando sei pronto."
+    },
     "notifications": {
       "title": "Notifiche",
       "description": "Ricevi promemoria quando è ora di ripassare",

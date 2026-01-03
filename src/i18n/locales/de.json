@@ -350,6 +350,17 @@
       "personalizedLearning": "Personalisiertes Lernen",
       "personalizedLearningDesc": "Dein Übungsplan wird automatisch an deine Leistung und Termine angepasst."
     },
+    "practiceHours": {
+      "title": "Übungszeiten",
+      "description": "Lege fest, wann du Übungserinnerungen erhalten möchtest",
+      "startTime": "Übung beginnt um",
+      "endTime": "Übung endet um",
+      "preview": "Du erhältst Erinnerungen zwischen {{start}} und {{end}}",
+      "sleepProtection": "Benachrichtigungen werden während deiner Schlafzeiten pausiert.",
+      "autoTimezone": "Zeitzone automatisch erkennen",
+      "saved": "Übungszeiten gespeichert",
+      "outsideHours": "Es ist Ruhezeit! Übe, wenn du bereit bist."
+    },
     "notifications": {
       "title": "Benachrichtigungen",
       "description": "Erhalte Erinnerungen, wenn Reden zur Wiederholung anstehen",

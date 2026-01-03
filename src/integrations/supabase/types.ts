@@ -280,11 +280,14 @@ export type Database = {
           monthly_speeches_count: number
           monthly_speeches_reset_date: string
           notifications_enabled: boolean | null
+          practice_end_hour: number | null
+          practice_start_hour: number | null
           push_platform: string | null
           push_token: string | null
           skill_level: string | null
           subscription_status: string
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
+          timezone: string | null
         }
         Insert: {
           created_at?: string
@@ -295,11 +298,14 @@ export type Database = {
           monthly_speeches_count?: number
           monthly_speeches_reset_date?: string
           notifications_enabled?: boolean | null
+          practice_end_hour?: number | null
+          practice_start_hour?: number | null
           push_platform?: string | null
           push_token?: string | null
           skill_level?: string | null
           subscription_status?: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timezone?: string | null
         }
         Update: {
           created_at?: string
@@ -310,11 +316,14 @@ export type Database = {
           monthly_speeches_count?: number
           monthly_speeches_reset_date?: string
           notifications_enabled?: boolean | null
+          practice_end_hour?: number | null
+          practice_start_hour?: number | null
           push_platform?: string | null
           push_token?: string | null
           skill_level?: string | null
           subscription_status?: string
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
+          timezone?: string | null
         }
         Relationships: []
       }

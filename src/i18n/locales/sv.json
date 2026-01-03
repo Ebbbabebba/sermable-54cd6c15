@@ -357,6 +357,17 @@
       "personalizedLearning": "Personlig inlärning",
       "personalizedLearningDesc": "Ditt övningsschema anpassas automatiskt efter hur du presterar och när du har deadline."
     },
+    "practiceHours": {
+      "title": "Övningstider",
+      "description": "Ange när du vill få övningspåminnelser",
+      "startTime": "Börja öva kl",
+      "endTime": "Sluta öva kl",
+      "preview": "Du får påminnelser mellan {{start}} och {{end}}",
+      "sleepProtection": "Notiser pausas under dina sovtider för bättre vila.",
+      "autoTimezone": "Upptäck tidszon automatiskt",
+      "saved": "Övningstider sparade",
+      "outsideHours": "Det är vilotid! Öva när du är redo."
+    },
     "notifications": {
       "title": "Notiser",
       "description": "Få påminnelser när det är dags att öva",

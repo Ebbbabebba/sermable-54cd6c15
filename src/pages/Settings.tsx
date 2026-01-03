@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, HelpCircle, ExternalLink, Mail, Moon, Sun } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, HelpCircle, ExternalLink, Mail, Moon, Sun, Clock } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,11 @@ const Settings = () => {
   const isNativePlatform = Capacitor.isNativePlatform();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | null>(null);
   const [showStudentPricing, setShowStudentPricing] = useState(false);
+  
+  // Practice hours state
+  const [practiceStartHour, setPracticeStartHour] = useState(8);
+  const [practiceEndHour, setPracticeEndHour] = useState(22);
+  const [autoDetectTimezone, setAutoDetectTimezone] = useState(true);
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -55,6 +60,28 @@ const Settings = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        // Load practice hours from profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("practice_start_hour, practice_end_hour, timezone")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          if (profile.practice_start_hour !== null) setPracticeStartHour(profile.practice_start_hour);
+          if (profile.practice_end_hour !== null) setPracticeEndHour(profile.practice_end_hour);
+        }
+
+        // Auto-detect and update timezone if enabled
+        if (autoDetectTimezone) {
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          if (!profile?.timezone || profile.timezone !== detectedTimezone) {
+            await supabase
+              .from("profiles")
+              .update({ timezone: detectedTimezone })
+              .eq("id", user.id);
+          }
+        }
 
         // Calculate streak
         const { data: sessions } = await supabase
@@ -127,7 +154,46 @@ const Settings = () => {
     };
 
     loadUserData();
-  }, [i18n.language]);
+  }, [i18n.language, autoDetectTimezone]);
+
+  // Save practice hours
+  const savePracticeHours = async (startHour: number, endHour: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from("profiles")
+        .update({
+          practice_start_hour: startHour,
+          practice_end_hour: endHour
+        })
+        .eq("id", user.id);
+
+      toast({
+        title: t('common.success'),
+        description: t('settings.practiceHours.saved'),
+      });
+    } catch (error) {
+      console.error('Error saving practice hours:', error);
+    }
+  };
+
+  const handleStartHourChange = (value: string) => {
+    const hour = parseInt(value);
+    setPracticeStartHour(hour);
+    savePracticeHours(hour, practiceEndHour);
+  };
+
+  const handleEndHourChange = (value: string) => {
+    const hour = parseInt(value);
+    setPracticeEndHour(hour);
+    savePracticeHours(practiceStartHour, hour);
+  };
+
+  const formatHour = (hour: number) => {
+    return `${hour.toString().padStart(2, '0')}:00`;
+  };
 
 
   return (
@@ -471,6 +537,78 @@ const Settings = () => {
                 <p className="text-xs text-muted-foreground">
                   {t('settings.account.personalizedLearningDesc')}
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Practice Hours */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                <CardTitle>{t('settings.practiceHours.title')}</CardTitle>
+              </div>
+              <CardDescription>
+                {t('settings.practiceHours.description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('settings.practiceHours.startTime')}</Label>
+                  <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 13 }, (_, i) => i + 5).map((hour) => (
+                        <SelectItem key={hour} value={hour.toString()}>
+                          {formatHour(hour)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('settings.practiceHours.endTime')}</Label>
+                  <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 8 }, (_, i) => i + 17).map((hour) => (
+                        <SelectItem key={hour} value={hour.toString()}>
+                          {formatHour(hour)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-primary/10 p-4 space-y-2">
+                <p className="text-sm font-medium">
+                  {t('settings.practiceHours.preview', { 
+                    start: formatHour(practiceStartHour), 
+                    end: formatHour(practiceEndHour) 
+                  })}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t('settings.practiceHours.sleepProtection')}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>{t('settings.practiceHours.autoTimezone')}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                  </p>
+                </div>
+                <Switch
+                  checked={autoDetectTimezone}
+                  onCheckedChange={setAutoDetectTimezone}
+                />
               </div>
             </CardContent>
           </Card>
