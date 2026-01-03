@@ -445,10 +445,40 @@
   /* Ultra-smooth word state transitions - no layout shifts */
   .word-smooth-transition {
     transition: 
-      background-color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
-      color 1000ms cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 800ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 800ms cubic-bezier(0.22, 1, 0.36, 1);
+      background-color 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 500ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 500ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 500ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 400ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, background-color, transform;
+  }
+
+  /* Spoken word smooth fade - gentle shrink and dim */
+  .word-spoken {
+    transform: scale(0.96);
+    filter: blur(0px);
+  }
+
+  /* Word completing animation - brief highlight then fade */
+  @keyframes wordComplete {
+    0% {
+      background-color: hsl(var(--success) / 0.25);
+      transform: scale(1.02);
+    }
+    30% {
+      background-color: hsl(var(--success) / 0.15);
+      transform: scale(1);
+    }
+    100% {
+      background-color: transparent;
+      transform: scale(0.96);
+      opacity: 0.35;
+    }
+  }
+
+  .word-complete-animation {
+    animation: wordComplete 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 }
