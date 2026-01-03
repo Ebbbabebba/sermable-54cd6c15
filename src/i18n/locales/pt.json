@@ -350,6 +350,17 @@
       "personalizedLearning": "Aprendizado personalizado",
       "personalizedLearningDesc": "Seu cronograma de prática se adapta automaticamente ao seu desempenho e prazos."
     },
+    "practiceHours": {
+      "title": "Horários de prática",
+      "description": "Defina quando quer receber lembretes de prática",
+      "startTime": "Começar às",
+      "endTime": "Terminar às",
+      "preview": "Você receberá lembretes entre {{start}} e {{end}}",
+      "sleepProtection": "As notificações são pausadas durante suas horas de descanso.",
+      "autoTimezone": "Detectar fuso horário automaticamente",
+      "saved": "Horários de prática salvos",
+      "outsideHours": "É hora de descansar! Pratique quando estiver pronto."
+    },
     "notifications": {
       "title": "Notificações",
       "description": "Receba lembretes quando for hora de revisar",

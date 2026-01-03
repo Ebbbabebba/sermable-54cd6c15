@@ -82,7 +82,10 @@ Deno.serve(async (req) => {
         profiles!inner(
           push_token,
           push_platform,
-          notifications_enabled
+          notifications_enabled,
+          practice_start_hour,
+          practice_end_hour,
+          timezone
         ),
         schedules!inner(
           next_review_date,
@@ -108,6 +111,33 @@ Deno.serve(async (req) => {
       const schedule = Array.isArray(speech.schedules) ? speech.schedules[0] : speech.schedules;
       
       if (!profile || !schedule) continue;
+
+      // Check if user is within their practice hours (sleep protection)
+      const practiceStartHour = profile.practice_start_hour ?? 8;
+      const practiceEndHour = profile.practice_end_hour ?? 22;
+      const userTimezone = profile.timezone || 'UTC';
+      
+      // Get current hour in user's timezone
+      let userLocalHour: number;
+      try {
+        const userLocalTime = new Date().toLocaleString('en-US', { 
+          timeZone: userTimezone, 
+          hour: 'numeric', 
+          hour12: false 
+        });
+        userLocalHour = parseInt(userLocalTime, 10);
+      } catch (e) {
+        // Fallback to UTC if timezone is invalid
+        userLocalHour = new Date().getUTCHours();
+        console.warn(`Invalid timezone ${userTimezone}, falling back to UTC`);
+      }
+      
+      // Skip notification if outside practice hours (sleep protection)
+      const isWithinPracticeHours = userLocalHour >= practiceStartHour && userLocalHour < practiceEndHour;
+      if (!isWithinPracticeHours) {
+        console.log(`Skipping notification for user ${speech.user_id} - outside practice hours (${userLocalHour}:00, window: ${practiceStartHour}:00-${practiceEndHour}:00)`);
+        continue;
+      }
 
       const daysUntilDeadline = Math.ceil(
         (new Date(speech.goal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)

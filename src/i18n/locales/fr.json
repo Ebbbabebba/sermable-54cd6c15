@@ -350,6 +350,17 @@
       "personalizedLearning": "Apprentissage personnalisé",
       "personalizedLearningDesc": "Votre programme d'entraînement s'adapte automatiquement à vos performances et échéances."
     },
+    "practiceHours": {
+      "title": "Heures d'entraînement",
+      "description": "Définissez quand vous souhaitez recevoir des rappels",
+      "startTime": "Commencer à",
+      "endTime": "Terminer à",
+      "preview": "Vous recevrez des rappels entre {{start}} et {{end}}",
+      "sleepProtection": "Les notifications sont suspendues pendant vos heures de sommeil.",
+      "autoTimezone": "Détecter le fuseau horaire automatiquement",
+      "saved": "Heures d'entraînement enregistrées",
+      "outsideHours": "C'est l'heure du repos ! Entraînez-vous quand vous êtes prêt."
+    },
     "notifications": {
       "title": "Notifications",
       "description": "Recevez des rappels quand il est temps de réviser",

@@ -350,6 +350,17 @@
       "personalizedLearning": "Aprendizaje personalizado",
       "personalizedLearningDesc": "Tu horario de práctica se ajusta automáticamente según tu rendimiento y fechas límite."
     },
+    "practiceHours": {
+      "title": "Horario de práctica",
+      "description": "Configura cuándo quieres recibir recordatorios",
+      "startTime": "Empezar a las",
+      "endTime": "Terminar a las",
+      "preview": "Recibirás recordatorios entre {{start}} y {{end}}",
+      "sleepProtection": "Las notificaciones se pausan durante tus horas de descanso.",
+      "autoTimezone": "Detectar zona horaria automáticamente",
+      "saved": "Horario de práctica guardado",
+      "outsideHours": "¡Es hora de descansar! Practica cuando estés listo."
+    },
     "notifications": {
       "title": "Notificaciones",
       "description": "Recibe recordatorios cuando toque repasar",
