@@ -84,9 +84,9 @@ const getWordSimilarity = (word1: string, word2: string): number => {
   return similarity >= 0.8 ? similarity : 0.0;
 };
 
-// Check if words are similar enough to be considered a match - STRICT threshold
+// Check if words are similar enough to be considered a match - VERY STRICT threshold
 const isSimilarWord = (word1: string, word2: string): boolean => {
-  return getWordSimilarity(word1, word2) >= 0.75; // 75% threshold - much stricter
+  return getWordSimilarity(word1, word2) >= 0.85; // 85% threshold - stricter to prevent premature matching
 };
 
 const isKeywordWord = (word: string): boolean => {
@@ -288,14 +288,15 @@ const EnhancedWordTracker = ({
           const targetWord = targetWords[scriptPosition];
           const currentWord = updatedStates[scriptPosition];
 
-          // Check if current words match
+          // Check if current words match - require HIGH similarity to prevent premature matching
           const similarity = getWordSimilarity(transcribedWord, targetWord);
 
           // Check for compound hyphenated words (e.g., "all-consuming" matches "all consuming")
           let wordsConsumed = 1;
-          if (similarity >= 0.5 || 
+          // STRICTER: Require 80%+ similarity for match (was 50%)
+          if (similarity >= 0.80 || 
               (newWordIdx + 1 < newWords.length && 
-               getWordSimilarity(transcribedWord + newWords[newWordIdx + 1], targetWord) >= 0.5)) {
+               getWordSimilarity(transcribedWord + newWords[newWordIdx + 1], targetWord) >= 0.80)) {
             
             // Check if this is a hyphenated word split across two spoken words
             if (newWordIdx + 1 < newWords.length) {
@@ -575,7 +576,7 @@ const EnhancedWordTracker = ({
           isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken,
         }));
       });
-    }, 50); // Process every 50ms for smoother visual updates
+    }, 150); // Process every 150ms - slower to ensure words are fully spoken before highlighting
 
     return () => clearInterval(intervalId);
   }, [isRecording, transcription, liquidColumn]);
@@ -1171,8 +1172,8 @@ const EnhancedWordTracker = ({
                   getWordClassName(word, index),
                   isInLiquidColumn && !word.spoken && "relative z-10",
                   !isInLiquidColumn && word.isCurrent && !word.spoken && "text-primary",
-                  // Make invisible if part of bracket but not the first unspoken
-                  shouldBeInvisible && "invisible",
+                  // Make invisible but KEEP LAYOUT SPACE - use opacity instead of visibility:hidden
+                  shouldBeInvisible && "opacity-0 pointer-events-none",
                   // Add spoken class for smooth fade
                   word.spoken && "word-spoken"
                 )}
@@ -1183,11 +1184,10 @@ const EnhancedWordTracker = ({
                 style={{
                   fontSize: "clamp(1.25rem, 2.5vw, 1.75rem)",
                   fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-                  // Maintain word's space even when invisible
-                  ...(shouldBeInvisible && { visibility: 'hidden', width: 0, padding: 0, margin: 0 }),
+                  // KEEP original dimensions to prevent layout jumps - no width:0 or padding:0
                 }}
               >
-                {shouldBeInvisible ? '' : renderWordContent(word, index)}
+                {shouldBeInvisible ? word.text : renderWordContent(word, index)}
               </span>
             </span>
           );
