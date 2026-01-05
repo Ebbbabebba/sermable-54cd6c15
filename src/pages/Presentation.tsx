@@ -4,15 +4,14 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { X, Mic, Square, Play } from "lucide-react";
+import { X, Play } from "lucide-react";
 import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
-import { FreestylePresentation } from "@/components/FreestylePresentation";
+import { KeywordFreestyleView } from "@/components/KeywordFreestyleView";
 import { FreestyleSummary } from "@/components/FreestyleSummary";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
 import { ViewModeSelector } from "@/components/ViewModeSelector";
 import type { ViewMode } from "@/components/WearableHUD";
-import { cn } from "@/lib/utils";
 
 interface WordPerformance {
   word: string;
@@ -32,12 +31,12 @@ interface Speech {
   presentation_mode?: 'strict' | 'freestyle';
 }
 
-interface FreestyleSegment {
+interface FreestyleKeyword {
   id: string;
-  segment_order: number;
-  content: string;
-  importance_level: 'high' | 'medium' | 'low';
-  cue_words: string[];
+  topic: string;
+  keyword: string;
+  importance: 'high' | 'medium' | 'low';
+  display_order: number;
 }
 
 const Presentation = () => {
@@ -53,7 +52,7 @@ const Presentation = () => {
   const [selectedMode, setSelectedMode] = useState<'strict' | 'freestyle' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   const [isAnalyzingFreestyle, setIsAnalyzingFreestyle] = useState(false);
-  const [freestyleSegments, setFreestyleSegments] = useState<FreestyleSegment[]>([]);
+  const [freestyleKeywords, setFreestyleKeywords] = useState<FreestyleKeyword[]>([]);
   
   // Session states
   const [stage, setStage] = useState<'mode-select' | 'view-mode-select' | 'prep' | 'live' | 'summary'>('mode-select');
@@ -67,9 +66,8 @@ const Presentation = () => {
   const [fontSize, setFontSize] = useState(40);
   
   // Freestyle tracking
-  const [coveredSegments, setCoveredSegments] = useState<number[]>([]);
-  const [mentionedCueWords, setMentionedCueWords] = useState<string[]>([]);
-  const [pauseCount, setPauseCount] = useState(0);
+  const [coveredKeywords, setCoveredKeywords] = useState<string[]>([]);
+  const [missedKeywords, setMissedKeywords] = useState<string[]>([]);
   
   // Results
   const [sessionResults, setSessionResults] = useState<any>(null);
@@ -302,9 +300,8 @@ const Presentation = () => {
     setSessionResults(null);
     setFreestyleResults(null);
     setStage('mode-select');
-    setCoveredSegments([]);
-    setMentionedCueWords([]);
-    setPauseCount(0);
+    setCoveredKeywords([]);
+    setMissedKeywords([]);
   };
 
   const handleExit = () => {
@@ -315,16 +312,16 @@ const Presentation = () => {
     setSelectedMode(mode);
     
     if (mode === 'freestyle') {
-      // Check if segments already exist
-      const { data: existingSegments } = await supabase
-        .from('freestyle_segments')
+      // Check if keywords already exist
+      const { data: existingKeywords } = await supabase
+        .from('freestyle_keywords')
         .select('*')
         .eq('speech_id', id)
-        .order('segment_order');
+        .order('display_order');
 
-      if (existingSegments && existingSegments.length > 0) {
-        setFreestyleSegments(existingSegments as FreestyleSegment[]);
-        setStage('prep');
+      if (existingKeywords && existingKeywords.length > 0) {
+        setFreestyleKeywords(existingKeywords as FreestyleKeyword[]);
+        setStage('live');
       } else {
         // Analyze speech for freestyle mode
         setIsAnalyzingFreestyle(true);
@@ -338,26 +335,26 @@ const Presentation = () => {
 
           if (error) throw error;
 
-          // Fetch the created segments
-          const { data: segments, error: segmentsError } = await supabase
-            .from('freestyle_segments')
+          // Fetch the created keywords
+          const { data: keywords, error: keywordsError } = await supabase
+            .from('freestyle_keywords')
             .select('*')
             .eq('speech_id', id)
-            .order('segment_order');
+            .order('display_order');
 
-          if (segmentsError) throw segmentsError;
+          if (keywordsError) throw keywordsError;
 
-          setFreestyleSegments(segments as FreestyleSegment[]);
-          setStage('prep');
+          setFreestyleKeywords(keywords as FreestyleKeyword[]);
+          setStage('live');
           
           toast({
-            title: "Speech analyzed!",
-            description: `Created ${segments.length} segments with key cue words`,
+            title: t('freestyle.analyzed', 'Speech analyzed!'),
+            description: t('freestyle.keywordsExtracted', '{{count}} keywords extracted', { count: keywords.length }),
           });
         } catch (error: any) {
           toast({
             variant: "destructive",
-            title: "Analysis failed",
+            title: t('freestyle.analysisFailed', 'Analysis failed'),
             description: error.message,
           });
           setStage('mode-select');
@@ -377,19 +374,18 @@ const Presentation = () => {
     setStage('prep');
   };
 
-  const handleFreestyleComplete = async () => {
+  const handleFreestyleComplete = async (covered: string[], missed: string[], duration: number) => {
     setIsProcessing(true);
-    const duration = Math.floor((Date.now() - startTime) / 1000);
+    setCoveredKeywords(covered);
+    setMissedKeywords(missed);
 
     try {
       const { data, error } = await supabase.functions.invoke('analyze-freestyle-session', {
         body: {
           speechId: speech!.id,
-          transcript: '', // Would need to capture this from speech recognition
-          durationSeconds: duration,
-          pauseCount,
-          coveredSegments,
-          mentionedCueWords
+          coveredKeywords: covered,
+          missedKeywords: missed,
+          durationSeconds: duration
         }
       });
 
@@ -400,7 +396,7 @@ const Presentation = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Analysis failed",
+        title: t('freestyle.analysisFailed', 'Analysis failed'),
         description: error.message,
       });
     } finally {
@@ -457,15 +453,16 @@ const Presentation = () => {
   if (stage === 'summary' && freestyleResults && selectedMode === 'freestyle') {
     return (
       <FreestyleSummary
-        totalSegments={freestyleResults.coverage.totalSegments}
-        coveredSegments={freestyleResults.coverage.coveredSegments}
+        totalSegments={freestyleResults.coverage.totalKeywords}
+        coveredSegments={freestyleResults.coverage.coveredKeywords}
         coveragePercent={freestyleResults.coverage.coveragePercent}
-        totalCueWords={freestyleResults.cueWords.total}
-        mentionedCueWords={freestyleResults.cueWords.mentioned}
-        missedCueWords={freestyleResults.cueWords.missed}
-        duration={Math.floor((Date.now() - startTime) / 1000)}
+        totalCueWords={freestyleResults.coverage.totalKeywords}
+        mentionedCueWords={freestyleResults.coverage.coveredKeywords}
+        missedCueWords={missedKeywords}
+        duration={elapsedTime}
         feedback={freestyleResults.feedback}
         onExit={handleExit}
+        onRetry={handleRetry}
       />
     );
   }
@@ -486,16 +483,15 @@ const Presentation = () => {
     );
   }
 
-  // Show freestyle live mode
+  // Show freestyle live mode with keywords
   if (stage === 'live' && selectedMode === 'freestyle') {
     return (
-      <FreestylePresentation
-        segments={freestyleSegments}
-        isRecording={isRecording}
-        onStartRecording={handleRecordingStart}
-        onStopRecording={handleStopRecording}
-        onComplete={handleFreestyleComplete}
+      <KeywordFreestyleView
+        keywords={freestyleKeywords}
+        speechTitle={speech.title}
         speechLanguage={speech.speech_language}
+        onComplete={handleFreestyleComplete}
+        onExit={handleExit}
       />
     );
   }

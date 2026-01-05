@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      freestyle_keywords: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          importance: string
+          keyword: string
+          speech_id: string
+          topic: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order: number
+          id?: string
+          importance?: string
+          keyword: string
+          speech_id: string
+          topic: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          importance?: string
+          keyword?: string
+          speech_id?: string
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freestyle_keywords_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       freestyle_segments: {
         Row: {
           content: string

@@ -391,6 +391,19 @@
     },
     "signOut": "Sign Out"
   },
+  "freestyle": {
+    "keywordMode": "Keyword Mode",
+    "covered": "covered",
+    "mustMention": "Must mention",
+    "shouldMention": "Should mention",
+    "niceToHave": "Nice to have",
+    "startSpeaking": "Start Speaking",
+    "stopFinish": "Stop & Finish",
+    "speakNaturally": "Speak naturally - keywords will highlight as you mention them",
+    "analyzed": "Speech analyzed!",
+    "keywordsExtracted": "{{count}} keywords extracted",
+    "analysisFailed": "Analysis failed"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
@@ -402,6 +415,7 @@
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
-    "close": "Close"
+    "close": "Close",
+    "exit": "Exit"
   }
 }
