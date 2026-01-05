@@ -13,12 +13,14 @@ interface FreestyleSummaryProps {
   duration: number;
   feedback: {
     summary: string;
-    coverage: string;
-    missedWords: string;
+    coverage?: string;
+    missedWords?: string;
     advice: string;
     nextStep: string;
+    highPriority?: string;
   };
   onExit: () => void;
+  onRetry?: () => void;
 }
 
 export const FreestyleSummary = ({
@@ -30,7 +32,8 @@ export const FreestyleSummary = ({
   missedCueWords,
   duration,
   feedback,
-  onExit
+  onExit,
+  onRetry
 }: FreestyleSummaryProps) => {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -178,13 +181,24 @@ export const FreestyleSummary = ({
         </Card>
 
         {/* Actions */}
-        <Button
-          onClick={onExit}
-          variant="outline"
-          className="w-full"
-        >
-          Back to Dashboard
-        </Button>
+        <div className="flex gap-3">
+          {onRetry && (
+            <Button
+              onClick={onRetry}
+              variant="outline"
+              className="flex-1"
+            >
+              Try Again
+            </Button>
+          )}
+          <Button
+            onClick={onExit}
+            variant={onRetry ? "default" : "outline"}
+            className="flex-1"
+          >
+            Back to Dashboard
+          </Button>
+        </div>
       </Card>
     </div>
   );

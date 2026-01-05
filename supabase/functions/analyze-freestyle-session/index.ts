@@ -14,16 +14,18 @@ Deno.serve(async (req) => {
   try {
     const { 
       speechId, 
-      transcript, 
-      durationSeconds,
-      pauseCount,
-      coveredSegments,
-      mentionedCueWords
+      coveredKeywords,
+      missedKeywords,
+      durationSeconds
     } = await req.json();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
+    console.log('Analyzing freestyle session:', speechId);
+    console.log('Covered keywords:', coveredKeywords?.length || 0);
+    console.log('Missed keywords:', missedKeywords?.length || 0);
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -46,36 +48,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get all segments for this speech
-    const { data: segments, error: segmentsError } = await supabase
-      .from('freestyle_segments')
+    // Get all keywords for this speech to calculate stats
+    const { data: allKeywords, error: keywordsError } = await supabase
+      .from('freestyle_keywords')
       .select('*')
       .eq('speech_id', speechId)
-      .order('segment_order');
+      .order('display_order');
 
-    if (segmentsError) {
-      throw segmentsError;
+    if (keywordsError) {
+      console.error('Error fetching keywords:', keywordsError);
     }
 
-    // Calculate missed cue words
-    const allCueWords = segments.flatMap((s: any) => s.cue_words);
-    const missedCueWords = allCueWords.filter((word: string) => 
-      !mentionedCueWords.some((mentioned: string) => 
-        mentioned.toLowerCase().includes(word.toLowerCase()) ||
-        word.toLowerCase().includes(mentioned.toLowerCase())
-      )
-    );
+    const totalKeywords = allKeywords?.length || (coveredKeywords?.length || 0) + (missedKeywords?.length || 0);
+    const coveredCount = coveredKeywords?.length || 0;
+    const missedCount = missedKeywords?.length || 0;
+    const coveragePercent = totalKeywords > 0 ? Math.round((coveredCount / totalKeywords) * 100) : 0;
 
-    // Use OpenAI GPT-5 to analyze improvisation and flow
+    // Calculate high-priority coverage
+    const highPriorityKeywords = allKeywords?.filter((kw: any) => kw.importance === 'high') || [];
+    const coveredHighPriority = highPriorityKeywords.filter((kw: any) => 
+      coveredKeywords?.some((covered: string) => 
+        covered.toLowerCase() === kw.keyword.toLowerCase()
+      )
+    ).length;
+    const highPriorityPercent = highPriorityKeywords.length > 0 
+      ? Math.round((coveredHighPriority / highPriorityKeywords.length) * 100) 
+      : 100;
+
+    // Generate feedback
     let feedback = {
       summary: 'Good freestyle presentation!',
-      coverage: `You covered ${coveredSegments.length} out of ${segments.length} segments.`,
-      missedWords: missedCueWords.length > 0 ? `Missed key words: ${missedCueWords.join(', ')}` : 'All key words mentioned!',
-      advice: 'Keep practicing to improve flow and coverage.',
-      nextStep: 'Try to cover all segments in your next practice.'
+      coverage: `You covered ${coveredCount} out of ${totalKeywords} keywords (${coveragePercent}%).`,
+      highPriority: highPriorityKeywords.length > 0 
+        ? `High priority: ${coveredHighPriority}/${highPriorityKeywords.length} covered`
+        : 'All key points addressed!',
+      advice: 'Keep practicing to improve keyword coverage.',
+      nextStep: missedCount > 0 
+        ? `Focus on these keywords next time: ${(missedKeywords || []).slice(0, 5).join(', ')}`
+        : 'Great job covering all keywords! Try speaking faster next time.'
     };
 
-    if (openAIApiKey) {
+    // Use OpenAI for enhanced feedback if available
+    if (openAIApiKey && (coveredKeywords?.length > 0 || missedKeywords?.length > 0)) {
       try {
         const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -84,39 +98,31 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-5-2025-08-07',
+            model: 'gpt-4o-mini',
             messages: [
               {
                 role: 'system',
-                content: 'You are a speech coach providing feedback on freestyle presentations. Be encouraging but constructive.'
+                content: 'You are a speech coach providing brief, encouraging feedback. Keep responses under 100 words total.'
               },
               {
                 role: 'user',
-                content: `Analyze this freestyle presentation:
-- Total segments: ${segments.length}
-- Covered segments: ${coveredSegments.length}
-- Mentioned cue words: ${mentionedCueWords.length} out of ${allCueWords.length}
-- Missed cue words: ${missedCueWords.join(', ')}
+                content: `Freestyle presentation results:
+- Keywords covered: ${coveredCount}/${totalKeywords} (${coveragePercent}%)
+- High priority covered: ${coveredHighPriority}/${highPriorityKeywords.length}
 - Duration: ${Math.floor(durationSeconds / 60)}m ${durationSeconds % 60}s
-- Pauses: ${pauseCount}
+- Missed keywords: ${(missedKeywords || []).slice(0, 10).join(', ')}
 
-Provide brief feedback focusing on coverage, flow, and areas for improvement.`
+Give brief encouraging feedback and one actionable tip.`
               }
-            ]
+            ],
+            max_tokens: 200
           })
         });
 
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
           const aiText = aiData.choices[0]?.message?.content || '';
-          
-          feedback = {
-            summary: aiText.slice(0, 200),
-            coverage: `Covered ${coveredSegments.length}/${segments.length} segments`,
-            missedWords: missedCueWords.length > 0 ? `Missed: ${missedCueWords.slice(0, 5).join(', ')}` : 'All key words covered!',
-            advice: 'Focus on natural flow while hitting key points',
-            nextStep: missedCueWords.length > 0 ? 'Practice the missed key words' : 'Try adding more personal anecdotes'
-          };
+          feedback.summary = aiText;
         }
       } catch (aiError) {
         console.error('AI feedback error:', aiError);
@@ -129,17 +135,17 @@ Provide brief feedback focusing on coverage, flow, and areas for improvement.`
       .insert({
         speech_id: speechId,
         user_id: user.id,
-        covered_segments: coveredSegments,
-        mentioned_cue_words: mentionedCueWords,
-        missed_cue_words: missedCueWords,
-        improvisation_count: Math.max(0, transcript.split(' ').length - segments.reduce((acc: number, s: any) => acc + s.content.split(' ').length, 0)),
-        pause_count: pauseCount,
+        covered_segments: [], // Not used in keyword mode
+        mentioned_cue_words: coveredKeywords || [],
+        missed_cue_words: missedKeywords || [],
+        improvisation_count: 0,
+        pause_count: 0,
         duration_seconds: durationSeconds,
         completed_at: new Date().toISOString()
       });
 
     if (sessionError) {
-      throw sessionError;
+      console.error('Error saving session:', sessionError);
     }
 
     return new Response(
@@ -147,14 +153,11 @@ Provide brief feedback focusing on coverage, flow, and areas for improvement.`
         success: true,
         feedback,
         coverage: {
-          totalSegments: segments.length,
-          coveredSegments: coveredSegments.length,
-          coveragePercent: Math.round((coveredSegments.length / segments.length) * 100)
-        },
-        cueWords: {
-          total: allCueWords.length,
-          mentioned: mentionedCueWords.length,
-          missed: missedCueWords
+          totalKeywords,
+          coveredKeywords: coveredCount,
+          missedKeywords: missedCount,
+          coveragePercent,
+          highPriorityPercent
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
