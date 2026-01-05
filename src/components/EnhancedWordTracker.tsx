@@ -1029,7 +1029,7 @@ const EnhancedWordTracker = ({
           {/* "Try to say it" phase */}
           {teleprompterHint.phase === "trying" && (
             <div 
-              className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-t from-blue-600 to-blue-500 backdrop-blur-sm shadow-lg"
+              className="h-full w-full flex items-center justify-center bg-gradient-to-t from-blue-600 to-blue-500 backdrop-blur-sm shadow-lg"
               style={{ animation: "teleprompter-slide-up 0.3s ease-out" }}
             >
               <span 
@@ -1038,18 +1038,13 @@ const EnhancedWordTracker = ({
               >
                 💭 Försök säga det...
               </span>
-              <span 
-                className="text-white/60 text-sm mt-1"
-              >
-                (Auto-fortsätter om 2.5s)
-              </span>
             </div>
           )}
           
           {/* Show the word phase */}
           {teleprompterHint.phase === "showing" && (
             <div 
-              className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-t from-yellow-500 to-yellow-400 shadow-2xl"
+              className="h-full w-full flex items-center justify-center bg-gradient-to-t from-yellow-500 to-yellow-400 shadow-2xl"
               style={{ animation: "teleprompter-slide-up 0.3s ease-out" }}
             >
               <span 
@@ -1060,11 +1055,6 @@ const EnhancedWordTracker = ({
                 }}
               >
                 {teleprompterHint.word}
-              </span>
-              <span 
-                className="text-black/50 text-sm mt-1"
-              >
-                Säg ordet eller vänta för auto-fortsätt
               </span>
             </div>
           )}
