@@ -34,7 +34,9 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Use OpenAI GPT-5 to analyze the speech and extract segments
+    console.log('Analyzing speech for freestyle mode:', speechId);
+
+    // Use OpenAI to analyze the speech and extract topics with keywords
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -42,65 +44,88 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: `You are an expert speech coach analyzing speeches for freestyle presentation mode. 
-Your task is to break down a speech into logical segments and identify the most important cue words in each segment.
+            content: `You are an expert speech coach helping speakers practice freestyle presentations.
+Your task is to break down a speech into clear, ordered topics with categorized keywords.
 
 Guidelines:
-- Divide the speech into 3-7 segments based on themes or ideas
-- Each segment should be 2-5 sentences long
-- Mark segments as "high", "medium", or "low" importance
-- Extract 3-5 key cue words per segment (the most important words that capture the main idea)
-- Cue words should be nouns, verbs, or key phrases that anchor the segment's meaning`
+- Divide the speech into 3-6 main topics/sections in the order they appear
+- For each topic, provide:
+  1. A clear topic name (2-4 words max)
+  2. A one-sentence hint the speaker can glance at if stuck
+  3. The original text for this section (for panic button)
+  4. 4-8 keywords categorized by type:
+     - "number": statistics, percentages, amounts, quantities
+     - "date": dates, deadlines, time periods, quarters
+     - "concept": key ideas, themes, abstract concepts
+     - "name": proper nouns, project names, people, companies
+     - "action": important verbs, calls to action
+  5. Mark each keyword as high/medium/low importance
+
+Focus on extracting the most memorable and essential words that anchor each topic.`
           },
           {
             role: 'user',
-            content: `Analyze this speech and break it into segments with cue words:\n\n${text}`
+            content: `Analyze this speech and extract topics with categorized keywords:\n\n${text}`
           }
         ],
         tools: [
           {
             type: 'function',
             function: {
-              name: 'analyze_speech_segments',
-              description: 'Return the speech broken into segments with importance levels and cue words',
+              name: 'analyze_speech_topics',
+              description: 'Return the speech broken into ordered topics with categorized keywords',
               parameters: {
                 type: 'object',
                 properties: {
-                  segments: {
+                  topics: {
                     type: 'array',
                     items: {
                       type: 'object',
                       properties: {
-                        content: { type: 'string', description: 'The text content of this segment' },
-                        importance_level: { 
-                          type: 'string', 
-                          enum: ['high', 'medium', 'low'],
-                          description: 'How important this segment is to the overall speech'
-                        },
-                        cue_words: { 
-                          type: 'array', 
-                          items: { type: 'string' },
-                          description: 'The 3-5 most important words/phrases in this segment'
+                        topic_name: { type: 'string', description: 'Short topic name (2-4 words)' },
+                        summary_hint: { type: 'string', description: 'One-sentence hint for the speaker' },
+                        original_text: { type: 'string', description: 'The original text for this section' },
+                        keywords: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              word: { type: 'string', description: 'The keyword or short phrase' },
+                              keyword_type: { 
+                                type: 'string', 
+                                enum: ['number', 'date', 'concept', 'name', 'action'],
+                                description: 'The type of keyword'
+                              },
+                              importance: { 
+                                type: 'string', 
+                                enum: ['high', 'medium', 'low'],
+                                description: 'How important this keyword is'
+                              }
+                            },
+                            required: ['word', 'keyword_type', 'importance']
+                          }
                         }
                       },
-                      required: ['content', 'importance_level', 'cue_words']
+                      required: ['topic_name', 'summary_hint', 'original_text', 'keywords']
                     }
                   }
                 },
-                required: ['segments']
+                required: ['topics']
               }
             }
           }
         ],
-        tool_choice: { type: 'function', function: { name: 'analyze_speech_segments' } }
+        tool_choice: { type: 'function', function: { name: 'analyze_speech_topics' } }
       })
     });
 
     if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI API error:', aiResponse.status, errorText);
       if (aiResponse.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
@@ -120,33 +145,68 @@ Guidelines:
     const toolCall = aiData.choices[0]?.message?.tool_calls?.[0];
     
     if (!toolCall) {
+      console.error('No tool call in AI response:', aiData);
       throw new Error('No tool call in AI response');
     }
 
     const analysisResult = JSON.parse(toolCall.function.arguments);
-    const segments = analysisResult.segments;
+    const topics = analysisResult.topics;
 
-    // Delete existing segments for this speech
+    console.log('Extracted topics:', topics.length);
+
+    // Delete existing topics and keywords for this speech
     await supabase
-      .from('freestyle_segments')
+      .from('freestyle_keywords')
+      .delete()
+      .eq('speech_id', speechId);
+    
+    await supabase
+      .from('freestyle_topics')
       .delete()
       .eq('speech_id', speechId);
 
-    // Insert new segments
-    const segmentsToInsert = segments.map((segment: any, index: number) => ({
-      speech_id: speechId,
-      segment_order: index,
-      content: segment.content,
-      importance_level: segment.importance_level,
-      cue_words: segment.cue_words
-    }));
+    // Insert topics and keywords
+    let keywordOrder = 0;
+    for (let topicIndex = 0; topicIndex < topics.length; topicIndex++) {
+      const topic = topics[topicIndex];
+      
+      // Insert topic
+      const { data: topicData, error: topicError } = await supabase
+        .from('freestyle_topics')
+        .insert({
+          speech_id: speechId,
+          topic_order: topicIndex,
+          topic_name: topic.topic_name,
+          summary_hint: topic.summary_hint,
+          original_text: topic.original_text
+        })
+        .select('id')
+        .single();
 
-    const { error: insertError } = await supabase
-      .from('freestyle_segments')
-      .insert(segmentsToInsert);
+      if (topicError) {
+        console.error('Error inserting topic:', topicError);
+        throw topicError;
+      }
 
-    if (insertError) {
-      throw insertError;
+      // Insert keywords for this topic
+      const keywordsToInsert = topic.keywords.map((keyword: any) => ({
+        speech_id: speechId,
+        topic_id: topicData.id,
+        topic: topic.topic_name,
+        keyword: keyword.word,
+        keyword_type: keyword.keyword_type,
+        importance: keyword.importance,
+        display_order: keywordOrder++
+      }));
+
+      const { error: keywordsError } = await supabase
+        .from('freestyle_keywords')
+        .insert(keywordsToInsert);
+
+      if (keywordsError) {
+        console.error('Error inserting keywords:', keywordsError);
+        throw keywordsError;
+      }
     }
 
     // Update speech mode to freestyle
@@ -155,11 +215,13 @@ Guidelines:
       .update({ presentation_mode: 'freestyle' })
       .eq('id', speechId);
 
+    console.log('Successfully analyzed speech with', topics.length, 'topics');
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        segments: segmentsToInsert.length,
-        message: 'Speech analyzed and segments created'
+        topics: topics.length,
+        message: 'Speech analyzed with topics and keywords'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
