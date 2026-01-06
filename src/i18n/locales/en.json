@@ -402,7 +402,22 @@
     "speakNaturally": "Speak naturally - keywords will highlight as you mention them",
     "analyzed": "Speech analyzed!",
     "keywordsExtracted": "{{count}} keywords extracted",
-    "analysisFailed": "Analysis failed"
+    "topicsExtracted": "{{count}} topics with keywords extracted",
+    "analysisFailed": "Analysis failed",
+    "currentTopic": "Current",
+    "nextUp": "Next up",
+    "showHint": "Hint",
+    "showFullText": "Show Text",
+    "skipTopic": "Skip",
+    "topicOf": "Topic {{current}} of {{total}}",
+    "keywords": "keywords",
+    "numbersStats": "Numbers & Stats",
+    "keyConCepts": "Key Concepts",
+    "dates": "Dates & Times",
+    "names": "Names",
+    "actions": "Actions",
+    "topicsCovered": "{{covered}} of {{total}} topics covered",
+    "finish": "Finish"
   },
   "common": {
     "loading": "Loading...",

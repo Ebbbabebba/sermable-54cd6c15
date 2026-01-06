@@ -21,8 +21,10 @@ export type Database = {
           id: string
           importance: string
           keyword: string
+          keyword_type: string | null
           speech_id: string
           topic: string
+          topic_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -30,8 +32,10 @@ export type Database = {
           id?: string
           importance?: string
           keyword: string
+          keyword_type?: string | null
           speech_id: string
           topic: string
+          topic_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -39,8 +43,10 @@ export type Database = {
           id?: string
           importance?: string
           keyword?: string
+          keyword_type?: string | null
           speech_id?: string
           topic?: string
+          topic_id?: string | null
         }
         Relationships: [
           {
@@ -48,6 +54,13 @@ export type Database = {
             columns: ["speech_id"]
             isOneToOne: false
             referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "freestyle_keywords_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "freestyle_topics"
             referencedColumns: ["id"]
           },
         ]
@@ -133,6 +146,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "freestyle_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freestyle_topics: {
+        Row: {
+          created_at: string | null
+          id: string
+          original_text: string | null
+          speech_id: string
+          summary_hint: string | null
+          topic_name: string
+          topic_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          original_text?: string | null
+          speech_id: string
+          summary_hint?: string | null
+          topic_name: string
+          topic_order: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          original_text?: string | null
+          speech_id?: string
+          summary_hint?: string | null
+          topic_name?: string
+          topic_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freestyle_topics_speech_id_fkey"
             columns: ["speech_id"]
             isOneToOne: false
             referencedRelation: "speeches"

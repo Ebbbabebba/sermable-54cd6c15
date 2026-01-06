@@ -31,10 +31,19 @@ interface Speech {
   presentation_mode?: 'strict' | 'freestyle';
 }
 
+interface FreestyleTopic {
+  id: string;
+  topic_order: number;
+  topic_name: string;
+  summary_hint: string | null;
+  original_text: string | null;
+}
+
 interface FreestyleKeyword {
   id: string;
-  topic: string;
+  topic_id: string;
   keyword: string;
+  keyword_type: 'number' | 'date' | 'concept' | 'name' | 'action';
   importance: 'high' | 'medium' | 'low';
   display_order: number;
 }
@@ -52,6 +61,7 @@ const Presentation = () => {
   const [selectedMode, setSelectedMode] = useState<'strict' | 'freestyle' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   const [isAnalyzingFreestyle, setIsAnalyzingFreestyle] = useState(false);
+  const [freestyleTopics, setFreestyleTopics] = useState<FreestyleTopic[]>([]);
   const [freestyleKeywords, setFreestyleKeywords] = useState<FreestyleKeyword[]>([]);
   
   // Session states
@@ -312,14 +322,21 @@ const Presentation = () => {
     setSelectedMode(mode);
     
     if (mode === 'freestyle') {
-      // Check if keywords already exist
+      // Check if topics and keywords already exist
+      const { data: existingTopics } = await supabase
+        .from('freestyle_topics')
+        .select('*')
+        .eq('speech_id', id)
+        .order('topic_order');
+      
       const { data: existingKeywords } = await supabase
         .from('freestyle_keywords')
         .select('*')
         .eq('speech_id', id)
         .order('display_order');
 
-      if (existingKeywords && existingKeywords.length > 0) {
+      if (existingTopics && existingTopics.length > 0 && existingKeywords && existingKeywords.length > 0) {
+        setFreestyleTopics(existingTopics as FreestyleTopic[]);
         setFreestyleKeywords(existingKeywords as FreestyleKeyword[]);
         setStage('live');
       } else {
@@ -335,7 +352,15 @@ const Presentation = () => {
 
           if (error) throw error;
 
-          // Fetch the created keywords
+          // Fetch the created topics and keywords
+          const { data: topics, error: topicsError } = await supabase
+            .from('freestyle_topics')
+            .select('*')
+            .eq('speech_id', id)
+            .order('topic_order');
+
+          if (topicsError) throw topicsError;
+
           const { data: keywords, error: keywordsError } = await supabase
             .from('freestyle_keywords')
             .select('*')
@@ -344,12 +369,13 @@ const Presentation = () => {
 
           if (keywordsError) throw keywordsError;
 
+          setFreestyleTopics(topics as FreestyleTopic[]);
           setFreestyleKeywords(keywords as FreestyleKeyword[]);
           setStage('live');
           
           toast({
             title: t('freestyle.analyzed', 'Speech analyzed!'),
-            description: t('freestyle.keywordsExtracted', '{{count}} keywords extracted', { count: keywords.length }),
+            description: t('freestyle.topicsExtracted', '{{count}} topics with keywords extracted', { count: topics.length }),
           });
         } catch (error: any) {
           toast({
@@ -374,24 +400,33 @@ const Presentation = () => {
     setStage('prep');
   };
 
-  const handleFreestyleComplete = async (covered: string[], missed: string[], duration: number) => {
+  const handleFreestyleComplete = async (data: {
+    coveredKeywords: string[];
+    missedKeywords: string[];
+    durationSeconds: number;
+    topicsCovered: number;
+    totalTopics: number;
+  }) => {
     setIsProcessing(true);
-    setCoveredKeywords(covered);
-    setMissedKeywords(missed);
+    setCoveredKeywords(data.coveredKeywords);
+    setMissedKeywords(data.missedKeywords);
+    setElapsedTime(data.durationSeconds);
 
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-freestyle-session', {
+      const { data: result, error } = await supabase.functions.invoke('analyze-freestyle-session', {
         body: {
           speechId: speech!.id,
-          coveredKeywords: covered,
-          missedKeywords: missed,
-          durationSeconds: duration
+          coveredKeywords: data.coveredKeywords,
+          missedKeywords: data.missedKeywords,
+          durationSeconds: data.durationSeconds,
+          topicsCovered: data.topicsCovered,
+          totalTopics: data.totalTopics
         }
       });
 
       if (error) throw error;
 
-      setFreestyleResults(data);
+      setFreestyleResults(result);
       setStage('summary');
     } catch (error: any) {
       toast({
@@ -483,10 +518,11 @@ const Presentation = () => {
     );
   }
 
-  // Show freestyle live mode with keywords
+  // Show freestyle live mode with topics and keywords
   if (stage === 'live' && selectedMode === 'freestyle') {
     return (
       <KeywordFreestyleView
+        topics={freestyleTopics}
         keywords={freestyleKeywords}
         speechTitle={speech.title}
         speechLanguage={speech.speech_language}
