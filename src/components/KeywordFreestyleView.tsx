@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   X, Mic, MicOff, Lightbulb, FileText, SkipForward,
   Hash, Calendar, Sparkles, User, Zap, CheckCircle2, Circle
@@ -362,116 +363,118 @@ export const KeywordFreestyleView: React.FC<KeywordFreestyleViewProps> = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Current Topic Card */}
-        <Card className="p-5 border-primary/50 bg-primary/5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-foreground">{currentTopic.topic_name}</h2>
-            <Badge variant="outline" className="text-primary border-primary">
-              {t('freestyle.currentTopic', 'Current')}
-            </Badge>
-          </div>
-
-          {/* Panic Mode Content */}
-          {panicMode === 'hint' && currentTopic.summary_hint && (
-            <div 
-              className="mb-4 p-4 bg-amber-500/20 border border-amber-500/30 rounded-lg cursor-pointer"
-              onClick={() => setPanicMode(null)}
-            >
-              <div className="flex items-start gap-2">
-                <Lightbulb className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-amber-100 text-lg">{currentTopic.summary_hint}</p>
-              </div>
-              <p className="text-xs text-amber-400/70 mt-2">Tap to hide</p>
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {/* Current Topic Card */}
+          <Card className="p-5 border-primary/50 bg-primary/5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">{currentTopic.topic_name}</h2>
+              <Badge variant="outline" className="text-primary border-primary">
+                {t('freestyle.currentTopic', 'Current')}
+              </Badge>
             </div>
-          )}
 
-          {panicMode === 'fullText' && currentTopic.original_text && (
-            <div 
-              className="mb-4 p-4 bg-muted border border-border rounded-lg max-h-48 overflow-y-auto cursor-pointer"
-              onClick={() => setPanicMode(null)}
-            >
-              <div className="flex items-start gap-2">
-                <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                <p className="text-foreground text-sm leading-relaxed">{currentTopic.original_text}</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">Tap to hide</p>
-            </div>
-          )}
-
-          {/* Keywords grouped by type */}
-          <div className="space-y-4">
-            {Object.entries(currentGroupedKeywords).map(([type, typeKeywords]) => {
-              const config = KEYWORD_TYPE_CONFIG[type];
-              const Icon = config?.icon || Sparkles;
-              return (
-                <div key={type}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon className={cn("h-4 w-4", config?.color || 'text-muted-foreground')} />
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {config?.label || type}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {typeKeywords
-                      .sort((a, b) => {
-                        const order = { high: 0, medium: 1, low: 2 };
-                        return order[a.importance] - order[b.importance];
-                      })
-                      .map(keyword => {
-                        const isCovered = coveredKeywords.has(keyword.id);
-                        return (
-                          <Badge
-                            key={keyword.id}
-                            variant="outline"
-                            className={cn(
-                              "text-base py-1.5 px-3 transition-all duration-300",
-                              getImportanceBadgeClass(keyword.importance),
-                              isCovered && "line-through opacity-50 bg-primary/20 border-primary/30"
-                            )}
-                          >
-                            {isCovered && <CheckCircle2 className="h-3 w-3 mr-1" />}
-                            {keyword.keyword}
-                          </Badge>
-                        );
-                      })}
-                  </div>
+            {/* Panic Mode Content */}
+            {panicMode === 'hint' && currentTopic.summary_hint && (
+              <div 
+                className="mb-4 p-4 bg-amber-500/20 border border-amber-500/30 rounded-lg cursor-pointer"
+                onClick={() => setPanicMode(null)}
+              >
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-amber-100 text-lg">{currentTopic.summary_hint}</p>
                 </div>
-              );
-            })}
-          </div>
-        </Card>
+                <p className="text-xs text-amber-400/70 mt-2">Tap to hide</p>
+              </div>
+            )}
 
-        {/* Next Topic Preview */}
-        {nextTopic && (
-          <Card className="p-4 border-dashed border-muted-foreground/30 bg-muted/30">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('freestyle.nextUp', 'Next up')}</span>
-              <SkipForward className="h-3 w-3 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">{nextTopic.topic_name}</h3>
-            <div className="flex flex-wrap gap-1.5">
-              {nextTopicKeywords
-                .filter(k => k.importance === 'high')
-                .slice(0, 4)
-                .map(keyword => (
-                  <Badge
-                    key={keyword.id}
-                    variant="outline"
-                    className="text-xs text-muted-foreground/70 border-muted-foreground/20"
-                  >
-                    {keyword.keyword}
-                  </Badge>
-                ))}
-              {nextTopicKeywords.filter(k => k.importance === 'high').length > 4 && (
-                <span className="text-xs text-muted-foreground/50">
-                  +{nextTopicKeywords.filter(k => k.importance === 'high').length - 4} more
-                </span>
-              )}
+            {panicMode === 'fullText' && currentTopic.original_text && (
+              <div 
+                className="mb-4 p-4 bg-muted border border-border rounded-lg max-h-48 overflow-y-auto cursor-pointer"
+                onClick={() => setPanicMode(null)}
+              >
+                <div className="flex items-start gap-2">
+                  <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <p className="text-foreground text-sm leading-relaxed">{currentTopic.original_text}</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Tap to hide</p>
+              </div>
+            )}
+
+            {/* Keywords grouped by type */}
+            <div className="space-y-4">
+              {Object.entries(currentGroupedKeywords).map(([type, typeKeywords]) => {
+                const config = KEYWORD_TYPE_CONFIG[type];
+                const Icon = config?.icon || Sparkles;
+                return (
+                  <div key={type}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon className={cn("h-4 w-4", config?.color || 'text-muted-foreground')} />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {config?.label || type}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {typeKeywords
+                        .sort((a, b) => {
+                          const order = { high: 0, medium: 1, low: 2 };
+                          return order[a.importance] - order[b.importance];
+                        })
+                        .map(keyword => {
+                          const isCovered = coveredKeywords.has(keyword.id);
+                          return (
+                            <Badge
+                              key={keyword.id}
+                              variant="outline"
+                              className={cn(
+                                "text-base py-1.5 px-3 transition-all duration-300",
+                                getImportanceBadgeClass(keyword.importance),
+                                isCovered && "line-through opacity-50 bg-primary/20 border-primary/30"
+                              )}
+                            >
+                              {isCovered && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                              {keyword.keyword}
+                            </Badge>
+                          );
+                        })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </Card>
-        )}
-      </div>
+
+          {/* Next Topic Preview */}
+          {nextTopic && (
+            <Card className="p-4 border-dashed border-muted-foreground/30 bg-muted/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider">{t('freestyle.nextUp', 'Next up')}</span>
+                <SkipForward className="h-3 w-3 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-muted-foreground mb-2">{nextTopic.topic_name}</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {nextTopicKeywords
+                  .filter(k => k.importance === 'high')
+                  .slice(0, 4)
+                  .map(keyword => (
+                    <Badge
+                      key={keyword.id}
+                      variant="outline"
+                      className="text-xs text-muted-foreground/70 border-muted-foreground/20"
+                    >
+                      {keyword.keyword}
+                    </Badge>
+                  ))}
+                {nextTopicKeywords.filter(k => k.importance === 'high').length > 4 && (
+                  <span className="text-xs text-muted-foreground/50">
+                    +{nextTopicKeywords.filter(k => k.importance === 'high').length - 4} more
+                  </span>
+                )}
+              </div>
+            </Card>
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Bottom Controls */}
       <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t border-border p-4 space-y-3">
