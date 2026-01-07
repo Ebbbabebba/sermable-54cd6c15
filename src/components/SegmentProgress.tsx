@@ -162,21 +162,21 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
         </ScrollArea>
 
         {masteredCount > 0 && masteredCount < totalSegments && (
-          <div className="mt-6 p-4 bg-gradient-to-r from-cosmic-purple/10 to-primary/10 rounded-xl text-center border border-cosmic-purple/20">
-            <p className="font-semibold text-cosmic-purple">
+          <div className="mt-4 p-3 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg text-center border border-primary/20">
+            <p className="text-sm font-medium text-primary">
               🎉 {masteredCount > 1 
                 ? t('practice.segments.greatProgressPlural', { count: masteredCount })
                 : t('practice.segments.greatProgress', { count: masteredCount })}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {t('practice.segments.keepGoing')}
             </p>
           </div>
         )}
 
         {masteredCount === totalSegments && totalSegments > 0 && (
-          <div className="mt-6 p-4 bg-gradient-to-r from-success/10 to-success/5 rounded-xl text-center border border-success/20">
-            <p className="font-semibold text-success">
+          <div className="mt-4 p-3 bg-gradient-to-r from-success/10 to-success/5 rounded-lg text-center border border-success/20">
+            <p className="text-sm font-medium text-success">
               🎊 {t('practice.segments.amazingMastered')}
             </p>
           </div>
