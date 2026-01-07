@@ -56,145 +56,101 @@ const SegmentProgress = ({ segments, activeSegmentIndices }: SegmentProgressProp
         />
       </CardHeader>
       <CardContent className="pt-0">
-        <ScrollArea className={segments.length > 3 ? "h-[400px]" : ""}>
-          <div className="space-y-4 pr-3">
-            {segments.map((segment, idx) => {
+        <ScrollArea className={segments.length > 2 ? "h-[320px]" : ""}>
+          <div className="space-y-2 pr-2">
+            {segments.map((segment) => {
               const isActive = activeSegmentIndices.includes(segment.segment_order);
               const isMastered = segment.is_mastered;
               const visibility = segment.visibility_percent ?? 100;
-              const anchorCount = segment.anchor_keywords?.length ?? 0;
               const nextReview = segment.next_review_at ? new Date(segment.next_review_at) : null;
               const isOverdue = nextReview && nextReview <= new Date();
-              const sentenceCount = countSentences(segment.segment_text);
               const wordCount = countWords(segment.segment_text);
               
               // Clean text for display (remove brackets)
               const cleanText = segment.segment_text.replace(/\[|\]/g, '');
-              const displayText = cleanText.length > 120 ? cleanText.slice(0, 120) + '...' : cleanText;
+              const displayText = cleanText.length > 80 ? cleanText.slice(0, 80) + '...' : cleanText;
 
               return (
                 <div
                   key={segment.id}
                   className={`
-                    relative rounded-xl transition-all duration-300 overflow-hidden
+                    relative rounded-lg transition-all duration-200 overflow-hidden
                     ${isActive 
-                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background shadow-xl' 
-                      : 'border border-border/50 hover:border-border'}
-                    ${isMastered ? 'bg-success/5' : 'bg-card'}
-                    ${isOverdue && !isActive ? 'border-yellow-500/50' : ''}
+                      ? 'ring-2 ring-primary ring-offset-1 ring-offset-background bg-primary/5' 
+                      : 'border border-border/40 hover:border-border/70'}
+                    ${isMastered && !isActive ? 'bg-success/5 border-success/30' : ''}
+                    ${isOverdue && !isActive && !isMastered ? 'border-amber-500/50 bg-amber-500/5' : ''}
                   `}
                 >
-                  {/* Segment header bar */}
-                  <div className={`
-                    flex items-center gap-3 px-4 py-2.5 border-b
-                    ${isActive ? 'bg-primary/10 border-primary/20' : 'bg-muted/30 border-border/30'}
-                    ${isMastered ? 'bg-success/10 border-success/20' : ''}
-                  `}>
-                    {isMastered ? (
-                      <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0" />
-                    ) : (
-                      <Circle className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-primary fill-primary/20' : 'text-muted-foreground'}`} />
-                    )}
-                    
-                    <span className="font-semibold text-sm">
-                      {t('practice.segments.segment')} {segment.segment_order + 1}
-                    </span>
-                    
-                    <div className="flex items-center gap-1.5 ml-auto">
-                      <Badge variant="outline" className="text-xs font-normal">
-                        {sentenceCount} {sentenceCount === 1 ? 'mening' : 'meningar'}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs font-normal">
-                        {wordCount} ord
-                      </Badge>
+                  <div className="flex items-start gap-3 p-3">
+                    {/* Status icon */}
+                    <div className="pt-0.5">
+                      {isMastered ? (
+                        <CheckCircle2 className="w-4 h-4 text-success" />
+                      ) : isActive ? (
+                        <Circle className="w-4 h-4 text-primary fill-primary/30" />
+                      ) : isOverdue ? (
+                        <Clock className="w-4 h-4 text-amber-500" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-muted-foreground/50" />
+                      )}
                     </div>
                     
-                    {isActive && (
-                      <Badge className="bg-primary text-primary-foreground text-xs animate-pulse">
-                        {t('practice.segments.active')}
-                      </Badge>
-                    )}
-                    {isOverdue && !isActive && (
-                      <Badge variant="outline" className="text-xs border-yellow-500 text-yellow-600 bg-yellow-500/10">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {t('practice.segments.due')}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Segment content */}
-                  <div className="px-4 py-3">
-                    <p className={`
-                      text-sm leading-relaxed
-                      ${isActive ? 'text-foreground' : 'text-muted-foreground'}
-                    `}>
-                      {displayText}
-                    </p>
-                    
-                    {/* Stats row */}
-                    {segment.times_practiced > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border/30 space-y-2">
-                        {/* Visibility progress - show how close to 10% target */}
-                        <div className="flex items-center gap-2">
-                          <Eye className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex-1 flex items-center gap-2">
-                            <Progress 
-                              value={100 - visibility} 
-                              className="h-2 flex-1 bg-muted"
-                            />
-                            <span className={`text-xs font-medium min-w-[4rem] text-right ${
-                              visibility <= 10 ? 'text-success' : 'text-primary'
-                            }`}>
-                              {Math.round(100 - visibility)}% {t('practice.segments.hidden')}
-                              {visibility > 10 && (
-                                <span className="text-muted-foreground ml-1">
-                                  (→90%)
-                                </span>
-                              )}
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-sm font-medium ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                          {t('practice.segments.segment')} {segment.segment_order + 1}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {wordCount} ord
+                        </span>
+                        {isActive && (
+                          <Badge className="bg-primary/20 text-primary text-[10px] px-1.5 py-0">
+                            {t('practice.segments.active')}
+                          </Badge>
+                        )}
+                        {isOverdue && !isActive && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-600 bg-amber-500/10">
+                            {t('practice.segments.due')}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                        {displayText}
+                      </p>
+                      
+                      {/* Compact stats */}
+                      {segment.times_practiced > 0 && (
+                        <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            <span className={visibility <= 10 ? 'text-success font-medium' : ''}>
+                              {Math.round(100 - visibility)}% dolt
                             </span>
                           </div>
-                        </div>
-                        
-                        {/* Mastery criteria hint */}
-                        {!isMastered && (
-                          <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1">
-                            {visibility <= 10 ? (
-                              <span className="text-primary">✓ Low visibility achieved! Need 100% accuracy to master.</span>
-                            ) : segment.average_accuracy && segment.average_accuracy >= 98 ? (
-                              <span className="text-primary">✓ Great accuracy! Reduce visibility to ≤10% to master.</span>
-                            ) : (
-                              <span>Goal: 100% accuracy + ≤10% script visibility</span>
-                            )}
-                          </div>
-                        )}
-                        
-                        {/* Anchor keywords */}
-                        {anchorCount > 0 && (
-                          <div className="flex items-center gap-1.5 text-xs">
-                            <Key className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="text-amber-600 dark:text-amber-400 font-medium">
-                              {anchorCount} {anchorCount > 1 ? t('practice.segments.anchorKeywordsPlural') : t('practice.segments.anchorKeywords')}
-                            </span>
-                          </div>
-                        )}
-                        
-                        {/* Practice stats */}
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <span className="font-medium">{segment.times_practiced}x</span> {t('practice.segments.practiced')}
-                          </span>
                           {segment.average_accuracy !== null && (
-                            <span className="flex items-center gap-1">
-                              <span className={`font-medium ${segment.average_accuracy >= 98 ? 'text-success' : segment.average_accuracy >= 80 ? 'text-yellow-600' : 'text-destructive'}`}>
-                                {Math.round(segment.average_accuracy)}%
-                              </span> {t('practice.segments.avg')}
+                            <span className={`font-medium ${
+                              segment.average_accuracy >= 98 ? 'text-success' : 
+                              segment.average_accuracy >= 80 ? 'text-amber-600' : 'text-muted-foreground'
+                            }`}>
+                              {Math.round(segment.average_accuracy)}% träffsäkerhet
                             </span>
                           )}
-                          {nextReview && (
-                            <span className={`ml-auto ${isOverdue ? 'text-yellow-600 font-medium' : ''}`}>
-                              {t('practice.segments.next')}: {formatDistanceToNow(nextReview, { addSuffix: true })}
-                            </span>
-                          )}
+                          <span>{segment.times_practiced}x övat</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Progress indicator */}
+                    {segment.times_practiced > 0 && (
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all ${isMastered ? 'bg-success' : 'bg-primary'}`}
+                            style={{ width: `${Math.min(100, 100 - visibility)}%` }}
+                          />
                         </div>
                       </div>
                     )}
