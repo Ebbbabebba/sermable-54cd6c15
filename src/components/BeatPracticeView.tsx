@@ -281,7 +281,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       for (let j = expected; j < foundIdx; j++) {
         computedSpoken.add(j);
         const isHidden = hiddenWordIndicesRef.current.has(j);
-        if (isHidden && j !== 0) {
+        // Only mark as missed/failed if the word is HIDDEN (not visible)
+        if (isHidden) {
           computedMissed.add(j);
           computedFailed.add(j);
         }
@@ -511,8 +512,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < words.length) {
-          // Mark current hidden word as hesitated (not first word)
-          if (hiddenWordIndicesRef.current.has(idx) && idx !== 0) {
+          // Only mark as hesitated if the word is HIDDEN
+          if (hiddenWordIndicesRef.current.has(idx)) {
             setHesitatedIndices((prev) => new Set([...prev, idx]));
           }
         }
