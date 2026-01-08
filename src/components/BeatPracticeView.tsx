@@ -217,58 +217,58 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     return false;
   };
 
-  // Process transcription
+  // Process transcription - track spoken words sequentially
   const processTranscription = useCallback((transcript: string, isFinal: boolean) => {
     transcriptRef.current = transcript;
     const spokenWords = transcript.split(/\s+/).filter(w => w.trim());
     
-    // Find matches and update indices
-    let matchedUpTo = -1;
-    const newSpoken = new Set(spokenIndices);
+    if (spokenWords.length === 0) return;
     
-    for (let i = 0; i < words.length; i++) {
-      // Check if any spoken word matches this expected word
-      for (const spoken of spokenWords) {
-        if (wordsMatch(spoken, words[i])) {
-          if (i > matchedUpTo) {
-            newSpoken.add(i);
-            matchedUpTo = i;
-            
-            // Mark any skipped words
-            for (let j = currentWordIndex; j < i; j++) {
-              if (!newSpoken.has(j)) {
-                // Only mark hidden words as missed (not first word - index 0)
-                if (hiddenWordIndices.has(j) && j !== 0) {
-                  setMissedIndices(prev => new Set([...prev, j]));
-                  setFailedWordIndices(prev => new Set([...prev, j]));
-                }
-                newSpoken.add(j);
+    const newSpoken = new Set(spokenIndices);
+    let newCurrentIndex = currentWordIndex;
+    
+    // Process each spoken word sequentially
+    for (let spokenIdx = 0; spokenIdx < spokenWords.length; spokenIdx++) {
+      const spoken = spokenWords[spokenIdx];
+      
+      // Look for a match starting from current position (with lookahead of 3 words)
+      for (let scriptIdx = newCurrentIndex; scriptIdx < Math.min(newCurrentIndex + 4, words.length); scriptIdx++) {
+        if (wordsMatch(spoken, words[scriptIdx])) {
+          // Mark any skipped words
+          for (let j = newCurrentIndex; j < scriptIdx; j++) {
+            if (!newSpoken.has(j)) {
+              newSpoken.add(j);
+              // Only mark hidden words as missed (not first word - index 0)
+              if (hiddenWordIndices.has(j) && j !== 0) {
+                setMissedIndices(prev => new Set([...prev, j]));
+                setFailedWordIndices(prev => new Set([...prev, j]));
               }
             }
-            
-            // Reset hesitation timer
-            lastWordTimeRef.current = Date.now();
-            if (hesitationTimerRef.current) {
-              clearTimeout(hesitationTimerRef.current);
-            }
-            
-            // Move to next word
-            if (i >= currentWordIndex) {
-              setCurrentWordIndex(i + 1);
-            }
-            break;
           }
+          
+          // Mark this word as spoken
+          newSpoken.add(scriptIdx);
+          newCurrentIndex = scriptIdx + 1;
+          
+          // Reset hesitation timer
+          lastWordTimeRef.current = Date.now();
+          
+          break; // Move to next spoken word
         }
       }
     }
     
+    // Update state
+    if (newCurrentIndex !== currentWordIndex) {
+      setCurrentWordIndex(newCurrentIndex);
+    }
     setSpokenIndices(newSpoken);
     
     // Check if sentence/beat complete
     if (isFinal || newSpoken.size === words.length) {
       checkCompletion(newSpoken);
     }
-  }, [words, currentWordIndex, spokenIndices, hiddenWordIndices]);
+  }, [words, currentWordIndex, spokenIndices, hiddenWordIndices, wordsMatch]);
 
   // Check if current phase is complete
   const checkCompletion = useCallback((spoken: Set<number>) => {
