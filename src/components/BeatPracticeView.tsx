@@ -61,6 +61,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const [beats, setBeats] = useState<Beat[]>([]);
   const [currentBeatIndex, setCurrentBeatIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
@@ -146,6 +147,18 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
   const loadOrCreateBeats = async () => {
     setLoading(true);
+
+    // Fetch speech language (helps speech recognition)
+    const { data: speechRow } = await supabase
+      .from('speeches')
+      .select('speech_language')
+      .eq('id', speechId)
+      .single();
+
+    if (speechRow?.speech_language) {
+      // Use BCP-47-ish tags if possible; default to browser language otherwise
+      setSpeechLang(speechRow.speech_language);
+    }
     
     // Try to load existing beats
     const { data: existingBeats, error } = await supabase
@@ -211,9 +224,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     return visibleIndices[0];
   }, [words]);
 
-  // Normalize word for comparison
+  // Normalize word for comparison (language-agnostic)
   const normalizeWord = (word: string): string => {
-    return word.toLowerCase().replace(/[^a-zåäöæøéèêëàâîïôûùç0-9]/gi, '');
+    return word
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\p{L}\p{N}]+/gu, '');
   };
 
   // Check if spoken word matches expected
@@ -436,7 +453,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = speechLang || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
       
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let fullTranscript = "";
