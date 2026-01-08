@@ -84,6 +84,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   // Transcription using Web Speech API
   const recognitionRef = useRef<any>(null);
   const transcriptRef = useRef<string>("");
+  const runningTranscriptRef = useRef<string>("");
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -91,6 +92,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const currentWordIndexRef = useRef(0);
   const isRecordingRef = useRef(false);
   const hiddenWordIndicesRef = useRef<Set<number>>(new Set());
+  const wordsLengthRef = useRef(0);
+  const showCelebrationRef = useRef(false);
+  const processTranscriptionRef = useRef<(transcript: string, isFinal: boolean) => void>(() => {});
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -124,6 +128,14 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
   const currentText = getCurrentText();
   const words = currentText.split(/\s+/).filter(w => w.trim());
+
+  useEffect(() => {
+    wordsLengthRef.current = words.length;
+  }, [words.length]);
+
+  useEffect(() => {
+    showCelebrationRef.current = showCelebration;
+  }, [showCelebration]);
 
   // Get sentence number (1, 2, or 3)
   const getCurrentSentenceNumber = () => {
@@ -296,23 +308,21 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
     // Keep progress monotonic during interim updates
     const nextIndex = Math.max(currentWordIndexRef.current, expected);
-    const mergedSpoken = new Set<number>([...spokenIndices, ...computedSpoken]);
-    const mergedMissed = new Set<number>([...missedIndices, ...computedMissed]);
-    const mergedFailed = new Set<number>([...failedWordIndices, ...computedFailed]);
 
     if (nextIndex !== currentWordIndexRef.current) {
+      currentWordIndexRef.current = nextIndex;
       setCurrentWordIndex(nextIndex);
     }
 
-    setSpokenIndices(mergedSpoken);
-    setMissedIndices(mergedMissed);
-    setFailedWordIndices(mergedFailed);
+    setSpokenIndices(computedSpoken);
+    setMissedIndices(computedMissed);
+    setFailedWordIndices(computedFailed);
 
     // Check if sentence/beat complete
-    if (isFinal || mergedSpoken.size === words.length) {
-      checkCompletion(mergedSpoken, mergedFailed);
+    if (isFinal || computedSpoken.size === words.length) {
+      checkCompletion(computedSpoken, computedFailed);
     }
-  }, [words, wordsMatch, spokenIndices, missedIndices, failedWordIndices, checkCompletion]);
+  }, [words, wordsMatch, checkCompletion]);
 
   // Check if current phase is complete
   function checkCompletion(spoken: Set<number>, failed?: Set<number>) {
@@ -376,11 +386,14 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   }
 
   const resetForNextRep = () => {
+    currentWordIndexRef.current = 0;
     setCurrentWordIndex(0);
     setSpokenIndices(new Set());
     setHesitatedIndices(new Set());
     setMissedIndices(new Set());
+    setFailedWordIndices(new Set());
     transcriptRef.current = "";
+    runningTranscriptRef.current = "";
   };
 
   const transitionToPhase = (newPhase: Phase) => {
@@ -435,8 +448,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
   // Start recording using Web Speech API
   const startRecording = async () => {
+    if (recognitionRef.current) return;
+
     resetForNextRep();
-    setFailedWordIndices(new Set());
     
     try {
       // Check for Web Speech API support
@@ -455,32 +469,33 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = speechLang || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
-      
-      // Track the last processed word count to detect when user restarts reading
-      let lastSpokenCount = 0;
+
+      runningTranscriptRef.current = "";
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let fullTranscript = "";
-        
-        for (let i = 0; i < event.results.length; i++) {
-          fullTranscript += event.results[i][0].transcript + " ";
+        if (showCelebrationRef.current) return;
+
+        let interim = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          const chunk = res?.[0]?.transcript ?? "";
+
+          if (res.isFinal) {
+            runningTranscriptRef.current += chunk + " ";
+          } else {
+            interim += chunk + " ";
+          }
         }
 
-        const spokenWords = fullTranscript.trim().split(/\s+/).filter((w) => w.trim());
-        
-        // If spoken word count dropped significantly, user restarted - full reset
-        if (spokenWords.length < lastSpokenCount - 2) {
-          setCurrentWordIndex(0);
-          currentWordIndexRef.current = 0;
-          setSpokenIndices(new Set());
-          setHesitatedIndices(new Set());
-          setMissedIndices(new Set());
-          transcriptRef.current = "";
-        }
-        lastSpokenCount = spokenWords.length;
-        
-        transcriptRef.current = fullTranscript.trim();
-        processTranscription(fullTranscript.trim(), event.results[event.results.length - 1].isFinal);
+        const combined = (runningTranscriptRef.current + interim).trim();
+        transcriptRef.current = combined;
+
+        const lastIsFinal = event.results.length
+          ? event.results[event.results.length - 1].isFinal
+          : false;
+
+        processTranscriptionRef.current(combined, lastIsFinal);
       };
       
       recognition.onerror = (event: any) => {
@@ -515,7 +530,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
-        if (elapsed > 3000 && idx < words.length) {
+        if (elapsed > 3000 && idx < wordsLengthRef.current) {
           // Only mark as hesitated if the word is HIDDEN
           if (hiddenWordIndicesRef.current.has(idx)) {
             setHesitatedIndices((prev) => new Set([...prev, idx]));
@@ -550,6 +565,16 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     // Process final state
     checkCompletion(spokenIndices, failedWordIndices);
   };
+
+  // Auto-start listening (no button press)
+  useEffect(() => {
+    if (loading) return;
+    if (!currentBeat) return;
+    if (showCelebration) return;
+    if (recognitionRef.current) return;
+
+    startRecording();
+  }, [loading, currentBeat?.id, showCelebration]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -693,43 +718,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         >
           <RotateCcw className="h-5 w-5" />
         </Button>
-        
-        <Button
-          size="lg"
-          onClick={isRecording ? stopRecording : startRecording}
-          className={cn(
-            "rounded-full px-8 py-6 text-lg",
-            isRecording && "bg-red-500 hover:bg-red-600"
-          )}
-        >
-          {isRecording ? (
-            <>
-              <Square className="h-5 w-5 mr-2 fill-current" />
-              {t('practice.stopRecording')}
-            </>
-          ) : (
-            <>
-              <Mic className="h-5 w-5 mr-2" />
-              {t('practice.startRecording')}
-            </>
-          )}
-        </Button>
-        
-        {!isRecording && phase.includes('fading') && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              // Skip to next sentence/beat
-              if (phase === 'sentence_1_fading') transitionToPhase('sentence_2_learning');
-              else if (phase === 'sentence_2_fading') transitionToPhase('sentence_3_learning');
-              else if (phase === 'sentence_3_fading') transitionToPhase('beat_combining');
-            }}
-            className="rounded-full"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        )}
       </div>
     </div>
   );
