@@ -468,10 +468,14 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
         const spokenWords = fullTranscript.trim().split(/\s+/).filter((w) => w.trim());
         
-        // If spoken word count dropped significantly, user likely restarted - reset pulse
+        // If spoken word count dropped significantly, user restarted - full reset
         if (spokenWords.length < lastSpokenCount - 2) {
           setCurrentWordIndex(0);
           currentWordIndexRef.current = 0;
+          setSpokenIndices(new Set());
+          setHesitatedIndices(new Set());
+          setMissedIndices(new Set());
+          transcriptRef.current = "";
         }
         lastSpokenCount = spokenWords.length;
         
