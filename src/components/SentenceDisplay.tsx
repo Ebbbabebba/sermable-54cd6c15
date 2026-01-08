@@ -77,8 +77,8 @@ const SentenceDisplay = ({
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-all duration-300",
             state.isCurrent && "ring-1 ring-primary/50",
-            state.isHesitated && "bg-yellow-500/30 text-yellow-300",
-            state.isMissed && "bg-red-500/30 text-red-300",
+            state.isHesitated && "bg-warning/30 text-warning",
+            state.isMissed && "bg-destructive/30 text-destructive",
             !state.isHesitated && !state.isMissed && "text-muted-foreground hover:bg-muted"
           )}
         >
@@ -99,8 +99,8 @@ const SentenceDisplay = ({
           // Spoken word fades
           state.isSpoken && "text-muted-foreground/40",
           // Hidden words that reappeared due to miss/hesitation
-          !state.isVisible && state.isSpoken && state.isHesitated && "bg-yellow-500/20 text-yellow-300",
-          !state.isVisible && state.isSpoken && state.isMissed && "bg-red-500/20 text-red-300",
+          !state.isVisible && state.isSpoken && state.isHesitated && "bg-warning/20 text-warning",
+          !state.isVisible && state.isSpoken && state.isMissed && "bg-destructive/20 text-destructive",
         )}
       >
         {state.text}
