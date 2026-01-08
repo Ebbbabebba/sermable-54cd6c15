@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, Square, RotateCcw, ChevronRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -266,8 +266,33 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   // Process transcription - align spoken words to the script in order
   const processTranscription = useCallback((transcript: string, isFinal: boolean) => {
     transcriptRef.current = transcript;
-    const spokenWords = transcript.split(/\s+/).filter((w) => w.trim());
-    if (spokenWords.length === 0) return;
+
+    const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
+    if (rawWords.length === 0) return;
+
+    // When the recognizer keeps appending across repetitions, lock onto the *latest* start-of-sentence
+    // so the blue pulse follows each repetition from word 1.
+    let spokenWords = rawWords;
+    if (words.length > 0 && currentWordIndexRef.current > 0) {
+      let lastStart = 0;
+      for (let i = rawWords.length - 1; i >= 0; i--) {
+        if (!wordsMatch(rawWords[i], words[0])) continue;
+
+        if (words.length > 1) {
+          if (!rawWords[i + 1] || !wordsMatch(rawWords[i + 1], words[1])) continue;
+        }
+
+        // Only accept if it's plausibly a new repetition window
+        if (rawWords.length - i <= words.length + 6) {
+          lastStart = i;
+          break;
+        }
+      }
+
+      if (lastStart > 0) {
+        spokenWords = rawWords.slice(lastStart);
+      }
+    }
 
     // Recompute progress from scratch each time (Web Speech API provides cumulative transcripts)
     const computedSpoken = new Set<number>();
@@ -323,6 +348,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       checkCompletion(computedSpoken, computedFailed);
     }
   }, [words, wordsMatch, checkCompletion]);
+
+  useEffect(() => {
+    processTranscriptionRef.current = processTranscription;
+  }, [processTranscription]);
 
   // Check if current phase is complete
   function checkCompletion(spoken: Set<number>, failed?: Set<number>) {
@@ -394,6 +423,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     setFailedWordIndices(new Set());
     transcriptRef.current = "";
     runningTranscriptRef.current = "";
+    lastWordTimeRef.current = Date.now();
   };
 
   const transitionToPhase = (newPhase: Phase) => {
@@ -521,9 +551,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       };
       
       recognitionRef.current = recognition;
-      recognition.start();
-      
+      isRecordingRef.current = true;
       setIsRecording(true);
+      recognition.start();
+
       lastWordTimeRef.current = Date.now();
       
       // Start hesitation checking
@@ -548,23 +579,24 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }
   };
 
-  // Stop recording
-  const stopRecording = () => {
+  const stopListening = useCallback(() => {
+    isRecordingRef.current = false;
+    setIsRecording(false);
+
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
       recognitionRef.current = null;
     }
-    
+
     if (hesitationTimerRef.current) {
       clearInterval(hesitationTimerRef.current);
       hesitationTimerRef.current = null;
     }
-    
-    setIsRecording(false);
-    
-    // Process final state
-    checkCompletion(spokenIndices, failedWordIndices);
-  };
+  }, []);
 
   // Auto-start listening (no button press)
   useEffect(() => {
@@ -579,14 +611,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      if (hesitationTimerRef.current) {
-        clearInterval(hesitationTimerRef.current);
-      }
+      stopListening();
     };
-  }, []);
+  }, [stopListening]);
 
   if (loading) {
     return (
@@ -685,7 +712,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                           stroke="currentColor"
                           strokeWidth="3"
                           strokeLinecap="round"
-                          className="text-green-500 transition-all duration-300"
+                          className="text-success transition-all duration-300"
                           strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 100.5} 100.5`}
                         />
                       </svg>
@@ -693,7 +720,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                       <CheckCircle2 
                         className={cn(
                           "absolute inset-0 m-auto w-5 h-5 transition-colors duration-300",
-                          hiddenWordIndices.size === words.length ? "text-green-500" : "text-muted-foreground/40"
+                          hiddenWordIndices.size === words.length ? "text-success" : "text-muted-foreground/40"
                         )}
                       />
                     </div>
@@ -713,7 +740,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         <Button
           variant="outline"
           size="icon"
-          onClick={onExit}
+          onClick={() => {
+            stopListening();
+            onExit?.();
+          }}
           className="rounded-full"
         >
           <RotateCcw className="h-5 w-5" />
