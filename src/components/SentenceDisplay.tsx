@@ -76,7 +76,7 @@ const SentenceDisplay = ({
           onClick={() => onWordTap?.(index)}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-all duration-300",
-            state.isCurrent && "ring-2 ring-blue-500 ring-offset-2 ring-offset-background animate-pulse",
+            state.isCurrent && "ring-1 ring-primary/50",
             state.isHesitated && "bg-yellow-500/30 text-yellow-300",
             state.isMissed && "bg-red-500/30 text-red-300",
             !state.isHesitated && !state.isMissed && "text-muted-foreground hover:bg-muted"
@@ -94,12 +94,8 @@ const SentenceDisplay = ({
         ref={state.isCurrent ? currentWordRef : undefined}
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-all duration-300",
-          // Blue pulse for current word
-          state.isCurrent && !state.isSpoken && [
-            "relative",
-            "text-blue-400 font-semibold",
-            "after:absolute after:inset-0 after:rounded after:animate-ping after:bg-blue-500/30",
-          ],
+          // Subtle underline for current word
+          state.isCurrent && !state.isSpoken && "text-primary font-medium border-b-2 border-primary/60",
           // Spoken word fades
           state.isSpoken && "text-muted-foreground/40",
           // Hidden words that reappeared due to miss/hesitation
