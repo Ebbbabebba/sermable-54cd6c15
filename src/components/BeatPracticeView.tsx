@@ -5,10 +5,34 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mic, Square, RotateCcw, ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { RealtimeTranscriber } from "@/utils/RealtimeTranscription";
+import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Web Speech API types
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
 
 interface Beat {
   id: string;
@@ -54,9 +78,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const [isRecording, setIsRecording] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
+  const { toast } = useToast();
   
-  // Transcription
-  const transcriberRef = useRef<RealtimeTranscriber | null>(null);
+  // Transcription using Web Speech API
+  const recognitionRef = useRef<any>(null);
   const transcriptRef = useRef<string>("");
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -364,19 +389,64 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }, 2500);
   };
 
-  // Start recording
+  // Start recording using Web Speech API
   const startRecording = async () => {
     resetForNextRep();
     setFailedWordIndices(new Set());
     
     try {
-      transcriberRef.current = new RealtimeTranscriber(
-        (text, isFinal) => processTranscription(text, isFinal),
-        (error) => console.error('Transcription error:', error)
-      );
+      // Check for Web Speech API support
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
-      await transcriberRef.current.connect();
-      await transcriberRef.current.startRecording();
+      if (!SpeechRecognition) {
+        toast({
+          variant: "destructive",
+          title: "Not Supported",
+          description: "Speech recognition is not supported in this browser. Try Chrome or Safari.",
+        });
+        return;
+      }
+      
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let fullTranscript = "";
+        
+        for (let i = 0; i < event.results.length; i++) {
+          fullTranscript += event.results[i][0].transcript + " ";
+        }
+        
+        transcriptRef.current = fullTranscript.trim();
+        processTranscription(fullTranscript.trim(), event.results[event.results.length - 1].isFinal);
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          toast({
+            variant: "destructive",
+            title: "Microphone Access Denied",
+            description: "Please allow microphone access to use speech recognition.",
+          });
+        }
+      };
+      
+      recognition.onend = () => {
+        // Restart if still recording
+        if (isRecording && recognitionRef.current) {
+          try {
+            recognition.start();
+          } catch (e) {
+            console.log('Recognition already started');
+          }
+        }
+      };
+      
+      recognitionRef.current = recognition;
+      recognition.start();
       
       setIsRecording(true);
       lastWordTimeRef.current = Date.now();
@@ -394,14 +464,19 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       
     } catch (error) {
       console.error('Failed to start recording:', error);
+      toast({
+        variant: "destructive",
+        title: "Recording Failed",
+        description: "Could not start speech recognition. Please try again.",
+      });
     }
   };
 
   // Stop recording
   const stopRecording = () => {
-    if (transcriberRef.current) {
-      transcriberRef.current.disconnect();
-      transcriberRef.current = null;
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
     
     if (hesitationTimerRef.current) {
@@ -418,8 +493,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (transcriberRef.current) {
-        transcriberRef.current.disconnect();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
       }
       if (hesitationTimerRef.current) {
         clearInterval(hesitationTimerRef.current);
