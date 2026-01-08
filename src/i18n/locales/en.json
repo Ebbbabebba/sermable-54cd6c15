@@ -391,6 +391,16 @@
     },
     "signOut": "Sign Out"
   },
+  "beat_practice": {
+    "beat_x_of_y": "Beat {{current}} of {{total}}",
+    "sentence_x": "Sentence {{number}}",
+    "read_x_of_3": "Read {{current}}/3",
+    "fading_x_left": "{{count}} words visible",
+    "excellent_next": "Excellent! Next sentence...",
+    "beat_complete": "Beat Complete!",
+    "combining_sentences": "Combining all sentences...",
+    "next_beat": "Next Beat"
+  },
   "freestyle": {
     "keywordMode": "Keyword Mode",
     "covered": "covered",

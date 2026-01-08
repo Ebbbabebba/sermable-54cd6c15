@@ -30,6 +30,7 @@ import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
+import BeatPracticeView from "@/components/BeatPracticeView";
 
 import SegmentProgress from "@/components/SegmentProgress";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -1594,8 +1595,30 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
   if (!speech) return null;
 
-  // Focus Mode: Full-screen minimal practice view
+  // Focus Mode: Beat-based sentence-by-sentence practice
   if (isPracticing && !showResults) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col p-4">
+        <BeatPracticeView
+          speechId={speech.id}
+          onComplete={() => {
+            setIsPracticing(false);
+            toast({
+              title: t('beat_practice.beat_complete'),
+              description: "All beats mastered!",
+            });
+          }}
+          onExit={() => {
+            setIsPracticing(false);
+            setIsRecording(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Old focus mode kept for reference - will be removed in future
+  if (false && isPracticing && !showResults) {
     return (
       <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
         <LoadingOverlay isVisible={isProcessing} />

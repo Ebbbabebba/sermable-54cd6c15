@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      beat_progress: {
+        Row: {
+          beat_id: string
+          current_phase: string | null
+          failed_word_indices: Json | null
+          id: string
+          repetition_count: number | null
+          updated_at: string | null
+          user_id: string
+          visible_word_indices: Json | null
+        }
+        Insert: {
+          beat_id: string
+          current_phase?: string | null
+          failed_word_indices?: Json | null
+          id?: string
+          repetition_count?: number | null
+          updated_at?: string | null
+          user_id: string
+          visible_word_indices?: Json | null
+        }
+        Update: {
+          beat_id?: string
+          current_phase?: string | null
+          failed_word_indices?: Json | null
+          id?: string
+          repetition_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+          visible_word_indices?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beat_progress_beat_id_fkey"
+            columns: ["beat_id"]
+            isOneToOne: false
+            referencedRelation: "practice_beats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       freestyle_keywords: {
         Row: {
           created_at: string | null
@@ -237,6 +278,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "mastered_words_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_beats: {
+        Row: {
+          beat_order: number
+          created_at: string | null
+          id: string
+          is_mastered: boolean | null
+          sentence_1_text: string
+          sentence_2_text: string
+          sentence_3_text: string
+          speech_id: string
+        }
+        Insert: {
+          beat_order: number
+          created_at?: string | null
+          id?: string
+          is_mastered?: boolean | null
+          sentence_1_text: string
+          sentence_2_text: string
+          sentence_3_text: string
+          speech_id: string
+        }
+        Update: {
+          beat_order?: number
+          created_at?: string | null
+          id?: string
+          is_mastered?: boolean | null
+          sentence_1_text?: string
+          sentence_2_text?: string
+          sentence_3_text?: string
+          speech_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_beats_speech_id_fkey"
             columns: ["speech_id"]
             isOneToOne: false
             referencedRelation: "speeches"
