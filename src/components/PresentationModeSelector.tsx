@@ -1,13 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Sparkles } from "lucide-react";
+import { BookOpen, FileText } from "lucide-react";
 
 interface PresentationModeSelectorProps {
-  onSelectMode: (mode: 'strict' | 'freestyle') => void;
-  isAnalyzing?: boolean;
+  onSelectMode: (mode: 'strict' | 'fullscript') => void;
 }
 
-export const PresentationModeSelector = ({ onSelectMode, isAnalyzing }: PresentationModeSelectorProps) => {
+export const PresentationModeSelector = ({ onSelectMode }: PresentationModeSelectorProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
       <div className="w-full max-w-4xl space-y-6">
@@ -23,7 +22,7 @@ export const PresentationModeSelector = ({ onSelectMode, isAnalyzing }: Presenta
         <div className="grid md:grid-cols-2 gap-6">
           {/* Strict Mode */}
           <Card className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group"
-                onClick={() => !isAnalyzing && onSelectMode('strict')}>
+                onClick={() => onSelectMode('strict')}>
             <div className="space-y-4">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <BookOpen className="w-8 h-8 text-primary" />
@@ -51,56 +50,50 @@ export const PresentationModeSelector = ({ onSelectMode, isAnalyzing }: Presenta
                 </li>
               </ul>
 
-              <Button className="w-full mt-6" disabled={isAnalyzing}>
+              <Button className="w-full mt-6">
                 Select Strict Mode
               </Button>
             </div>
           </Card>
 
-          {/* Freestyle Mode */}
+          {/* Full Script Mode */}
           <Card className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group relative overflow-hidden"
-                onClick={() => !isAnalyzing && onSelectMode('freestyle')}>
+                onClick={() => onSelectMode('fullscript')}>
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <div className="space-y-4 relative">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Sparkles className="w-8 h-8 text-primary" />
+                <FileText className="w-8 h-8 text-primary" />
               </div>
               
               <div>
-                <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                  Freestyle Mode
-                  <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">NEW</span>
-                </h3>
+                <h3 className="text-2xl font-bold mb-2">Full Script Mode</h3>
                 <p className="text-muted-foreground mb-4">
-                  Speak freely from the script, focusing on main themes
+                  See the entire script, words fade as you speak
                 </p>
               </div>
 
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span>Focus on key ideas, not exact words</span>
+                  <span>Full text visible at all times</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span>Visual segment tracking with cue words</span>
+                  <span>Words fade out as you speak them</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span>Perfect for natural, flowing presentations</span>
+                  <span>No color marking - focus on fluency</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span>Support prompts when you lose track</span>
+                  <span>Build confidence naturally</span>
                 </li>
               </ul>
 
-              <Button 
-                className="w-full mt-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90" 
-                disabled={isAnalyzing}
-              >
-                {isAnalyzing ? 'Analyzing Speech...' : 'Select Freestyle Mode'}
+              <Button className="w-full mt-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+                Select Full Script Mode
               </Button>
             </div>
           </Card>
