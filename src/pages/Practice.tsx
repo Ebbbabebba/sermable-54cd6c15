@@ -877,14 +877,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   for (let i = currentIdx; i <= currentIdx + lookAhead; i++) {
                     if (i < currentIdx + lookAhead) {
                       // Skipped words:
-                      // - HIDDEN words that are skipped = missed (red) - user said wrong word
-                      // - VISIBLE words that are skipped = spoken (fade) - likely speech recognition variation
+                      // ONLY hidden words can be marked as missed (red)
+                      // Visible words are NEVER color-marked - just fade them as spoken
                       if (currentHiddenIndices.has(i)) {
-                        queueWordAction('missed', i, allExpectedWords[i]);
-                        console.log('❌ Skipped HIDDEN word (red):', allExpectedWords[i], 'at index', i);
+                        // First word of speech can NEVER be marked red/yellow - protect confidence
+                        if (i === 0) {
+                          queueWordAction('spoken', i, allExpectedWords[i]);
+                          console.log('⏭️ First word skipped but not marked (protected):', allExpectedWords[i]);
+                        } else {
+                          queueWordAction('missed', i, allExpectedWords[i]);
+                          console.log('❌ Skipped HIDDEN word (red):', allExpectedWords[i], 'at index', i);
+                        }
                       } else {
+                        // Visible words are NEVER color-marked
                         queueWordAction('spoken', i, allExpectedWords[i]);
-                        console.log('⏭️ Skipped visible word (fade):', allExpectedWords[i], 'at index', i);
+                        console.log('⏭️ Skipped visible word (fade, no color):', allExpectedWords[i], 'at index', i);
                       }
                     } else {
                       // Matched word - queue as spoken
@@ -907,9 +914,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
               if (!matchFound) {
                 // Handle support word case - only advance if user was shown the word
                 if (wasSupportWordShowing && previousSupportWordIndex !== null) {
-                  // If user saw support word but said wrong word, mark as hesitated (yellow) not missed (red)
-                  // because they hesitated and needed help, even if they then said wrong word
-                  if (currentHiddenIndices.has(previousSupportWordIndex)) {
+                  // Only hidden words can be marked as hesitated (yellow)
+                  // First word of speech can NEVER be marked yellow
+                  if (currentHiddenIndices.has(previousSupportWordIndex) && previousSupportWordIndex !== 0) {
                     // Check if already marked as hesitated - keep it yellow, don't change to red
                     if (!hesitatedWordsIndices.has(previousSupportWordIndex)) {
                       queueWordAction('hesitated', previousSupportWordIndex, allExpectedWords[previousSupportWordIndex]);
@@ -917,6 +924,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     } else {
                       console.log('⚠️ Hidden support word already hesitated (yellow):', allExpectedWords[previousSupportWordIndex]);
                     }
+                  } else if (previousSupportWordIndex === 0) {
+                    console.log('⚠️ First word support - not marking (protected)');
                   }
                   currentIdx = previousSupportWordIndex + 1;
                   if (currentIdx < allExpectedWords.length) {

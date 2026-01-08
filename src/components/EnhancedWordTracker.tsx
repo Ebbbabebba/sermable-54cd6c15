@@ -401,14 +401,17 @@ const EnhancedWordTracker = ({
               console.log(`🛑 BLOCKED: Current word "${currentWord.text}" is hidden - waiting for user to say it`);
               
               // Mark THIS hidden word as hesitated when user says wrong word (junk word)
-              // The CURRENT hidden word gets the yellow mark, not previous words
-              if (!updatedStates[scriptPosition].performanceStatus) {
+              // ONLY hidden words can be marked - visible words are NEVER color-marked
+              // First word of speech (index 0) can NEVER be marked yellow
+              if (!updatedStates[scriptPosition].performanceStatus && scriptPosition !== 0) {
                 updatedStates[scriptPosition] = {
                   ...updatedStates[scriptPosition],
                   performanceStatus: "hesitated", // Mark this word as struggled
                   liquidError: liquidColumn && scriptPosition >= liquidColumn.start && scriptPosition <= liquidColumn.end,
                 };
                 console.log(`⚠️ "${currentWord.text}" marked HESITATED (user said "${transcribedWord}" instead)`);
+              } else if (scriptPosition === 0) {
+                console.log(`🛡️ First word "${currentWord.text}" protected from hesitation marking`);
               }
               
               // USER IS TRYING - mark effort for faster hint timing
@@ -448,17 +451,29 @@ const EnhancedWordTracker = ({
                     `⚠️ SKIP: User jumped from "${updatedStates[scriptPosition].text}" to "${updatedStates[scriptPosition + lookAhead].text}" (${lookAhead} word${lookAhead > 1 ? 's' : ''} skipped)`,
                   );
 
-                  for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
+                for (let skipIdx = scriptPosition; skipIdx < scriptPosition + lookAhead; skipIdx++) {
                     if (!updatedStates[skipIdx].spoken) {
-                      // Hidden words are ALWAYS marked as "hesitated" (yellow), never "missed" (red)
-                      const skipStatus = updatedStates[skipIdx].hidden ? "hesitated" : "missed";
-                      console.log(`  ${skipStatus === "missed" ? "❌" : "⚠️"} "${updatedStates[skipIdx].text}" marked as ${skipStatus.toUpperCase()}`);
-                      updatedStates[skipIdx] = {
-                        ...updatedStates[skipIdx],
-                        spoken: false,
-                        revealed: true,
-                        performanceStatus: skipStatus,
-                      };
+                      // ONLY hidden words can be color-marked
+                      // Visible words are NEVER marked as missed/hesitated
+                      // First word (index 0) can NEVER be marked yellow
+                      if (updatedStates[skipIdx].hidden) {
+                        // First word is protected from any color marking
+                        if (skipIdx === 0) {
+                          console.log(`  🛡️ First word "${updatedStates[skipIdx].text}" protected from marking`);
+                        } else {
+                          // Hidden words that are skipped = hesitated (yellow)
+                          console.log(`  ⚠️ "${updatedStates[skipIdx].text}" marked as HESITATED (hidden word skipped)`);
+                          updatedStates[skipIdx] = {
+                            ...updatedStates[skipIdx],
+                            spoken: false,
+                            revealed: true,
+                            performanceStatus: "hesitated",
+                          };
+                        }
+                      } else {
+                        // Visible words are NEVER color-marked - just log and continue
+                        console.log(`  ⏭️ "${updatedStates[skipIdx].text}" skipped but not marked (visible word)`);
+                      }
                       wordTimestamps.current.delete(skipIdx);
                     }
                   }
