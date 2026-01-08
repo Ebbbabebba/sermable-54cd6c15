@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, Square, RotateCcw, ChevronRight, Sparkles } from "lucide-react";
+import { Mic, Square, RotateCcw, ChevronRight, Sparkles, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -455,12 +455,24 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       recognition.interimResults = true;
       recognition.lang = speechLang || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
       
+      // Track the last processed word count to detect when user restarts reading
+      let lastSpokenCount = 0;
+
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let fullTranscript = "";
         
         for (let i = 0; i < event.results.length; i++) {
           fullTranscript += event.results[i][0].transcript + " ";
         }
+
+        const spokenWords = fullTranscript.trim().split(/\s+/).filter((w) => w.trim());
+        
+        // If spoken word count dropped significantly, user likely restarted - reset pulse
+        if (spokenWords.length < lastSpokenCount - 2) {
+          setCurrentWordIndex(0);
+          currentWordIndexRef.current = 0;
+        }
+        lastSpokenCount = spokenWords.length;
         
         transcriptRef.current = fullTranscript.trim();
         processTranscription(fullTranscript.trim(), event.results[event.results.length - 1].isFinal);
@@ -598,7 +610,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="w-full"
+                className="w-full flex flex-col items-center"
               >
                 <SentenceDisplay
                   text={currentText}
@@ -618,6 +630,48 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                     }
                   }}
                 />
+                
+                {/* Progress check - fills green as more words are hidden & mastered */}
+                {phase.includes('fading') || phase === 'beat_combining' ? (
+                  <div className="mt-6 flex items-center gap-3">
+                    <div className="relative w-10 h-10">
+                      {/* Background circle */}
+                      <svg className="w-10 h-10 -rotate-90">
+                        <circle
+                          cx="20"
+                          cy="20"
+                          r="16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          className="text-muted/30"
+                        />
+                        {/* Progress arc */}
+                        <circle
+                          cx="20"
+                          cy="20"
+                          r="16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          className="text-green-500 transition-all duration-300"
+                          strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 100.5} 100.5`}
+                        />
+                      </svg>
+                      {/* Center check icon */}
+                      <CheckCircle2 
+                        className={cn(
+                          "absolute inset-0 m-auto w-5 h-5 transition-colors duration-300",
+                          hiddenWordIndices.size === words.length ? "text-green-500" : "text-muted-foreground/40"
+                        )}
+                      />
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {hiddenWordIndices.size}/{words.length} words mastered
+                    </span>
+                  </div>
+                ) : null}
               </motion.div>
             )}
           </AnimatePresence>
