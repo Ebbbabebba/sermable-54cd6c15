@@ -86,6 +86,23 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Refs to avoid stale closures in timers / callbacks
+  const currentWordIndexRef = useRef(0);
+  const isRecordingRef = useRef(false);
+  const hiddenWordIndicesRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    currentWordIndexRef.current = currentWordIndex;
+  }, [currentWordIndex]);
+
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+
+  useEffect(() => {
+    hiddenWordIndicesRef.current = hiddenWordIndices;
+  }, [hiddenWordIndices]);
+
   // Get current beat
   const currentBeat = beats[currentBeatIndex];
   
@@ -217,68 +234,77 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     return false;
   };
 
-  // Process transcription - track spoken words sequentially
+  // Process transcription - align spoken words to the script in order
   const processTranscription = useCallback((transcript: string, isFinal: boolean) => {
     transcriptRef.current = transcript;
-    const spokenWords = transcript.split(/\s+/).filter(w => w.trim());
-    
+    const spokenWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (spokenWords.length === 0) return;
-    
-    const newSpoken = new Set(spokenIndices);
-    let newCurrentIndex = currentWordIndex;
-    
-    // Process each spoken word sequentially
-    for (let spokenIdx = 0; spokenIdx < spokenWords.length; spokenIdx++) {
-      const spoken = spokenWords[spokenIdx];
-      
-      // Look for a match starting from current position (with lookahead of 3 words)
-      for (let scriptIdx = newCurrentIndex; scriptIdx < Math.min(newCurrentIndex + 4, words.length); scriptIdx++) {
-        if (wordsMatch(spoken, words[scriptIdx])) {
-          // Mark any skipped words
-          for (let j = newCurrentIndex; j < scriptIdx; j++) {
-            if (!newSpoken.has(j)) {
-              newSpoken.add(j);
-              // Only mark hidden words as missed (not first word - index 0)
-              if (hiddenWordIndices.has(j) && j !== 0) {
-                setMissedIndices(prev => new Set([...prev, j]));
-                setFailedWordIndices(prev => new Set([...prev, j]));
-              }
-            }
-          }
-          
-          // Mark this word as spoken
-          newSpoken.add(scriptIdx);
-          newCurrentIndex = scriptIdx + 1;
-          
-          // Reset hesitation timer
-          lastWordTimeRef.current = Date.now();
-          
-          break; // Move to next spoken word
+
+    // Recompute progress from scratch each time (Web Speech API provides cumulative transcripts)
+    const computedSpoken = new Set<number>();
+    const computedMissed = new Set<number>();
+    const computedFailed = new Set<number>();
+
+    let expected = 0;
+
+    for (const spoken of spokenWords) {
+      if (expected >= words.length) break;
+
+      let foundIdx = -1;
+      for (let i = expected; i < Math.min(expected + 4, words.length); i++) {
+        if (wordsMatch(spoken, words[i])) {
+          foundIdx = i;
+          break;
         }
       }
+
+      if (foundIdx === -1) continue;
+
+      // Mark skipped words
+      for (let j = expected; j < foundIdx; j++) {
+        computedSpoken.add(j);
+        const isHidden = hiddenWordIndicesRef.current.has(j);
+        if (isHidden && j !== 0) {
+          computedMissed.add(j);
+          computedFailed.add(j);
+        }
+      }
+
+      // Mark matched word
+      computedSpoken.add(foundIdx);
+      expected = foundIdx + 1;
+      lastWordTimeRef.current = Date.now();
     }
-    
-    // Update state
-    if (newCurrentIndex !== currentWordIndex) {
-      setCurrentWordIndex(newCurrentIndex);
+
+    // Keep progress monotonic during interim updates
+    const nextIndex = Math.max(currentWordIndexRef.current, expected);
+    const mergedSpoken = new Set<number>([...spokenIndices, ...computedSpoken]);
+    const mergedMissed = new Set<number>([...missedIndices, ...computedMissed]);
+    const mergedFailed = new Set<number>([...failedWordIndices, ...computedFailed]);
+
+    if (nextIndex !== currentWordIndexRef.current) {
+      setCurrentWordIndex(nextIndex);
     }
-    setSpokenIndices(newSpoken);
-    
+
+    setSpokenIndices(mergedSpoken);
+    setMissedIndices(mergedMissed);
+    setFailedWordIndices(mergedFailed);
+
     // Check if sentence/beat complete
-    if (isFinal || newSpoken.size === words.length) {
-      checkCompletion(newSpoken);
+    if (isFinal || mergedSpoken.size === words.length) {
+      checkCompletion(mergedSpoken, mergedFailed);
     }
-  }, [words, currentWordIndex, spokenIndices, hiddenWordIndices, wordsMatch]);
+  }, [words, wordsMatch, spokenIndices, missedIndices, failedWordIndices, checkCompletion]);
 
   // Check if current phase is complete
-  const checkCompletion = useCallback((spoken: Set<number>) => {
+  function checkCompletion(spoken: Set<number>, failed?: Set<number>) {
     const allSpoken = words.every((_, i) => spoken.has(i));
-    
+
     if (!allSpoken) return;
-    
+
     // Check for errors (missed hidden words)
-    const hadErrors = failedWordIndices.size > 0;
-    
+    const hadErrors = (failed ?? failedWordIndices).size > 0;
+
     if (phase.includes('learning')) {
       // Learning phase: need 3 clean reads
       if (repetitionCount >= 3) {
@@ -287,14 +313,14 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         transitionToPhase(nextPhase);
       } else {
         // Next repetition
-        setRepetitionCount(prev => prev + 1);
+        setRepetitionCount((prev) => prev + 1);
         resetForNextRep();
       }
     } else if (phase.includes('fading')) {
       if (hadErrors) {
         // Restore failed words and retry
         const restored = new Set(hiddenWordIndices);
-        failedWordIndices.forEach(i => restored.delete(i));
+        (failed ?? failedWordIndices).forEach((i) => restored.delete(i));
         setHiddenWordIndices(restored);
         setFailedWordIndices(new Set());
         resetForNextRep();
@@ -302,7 +328,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         // Hide one more word
         const nextToHide = getNextWordToHide(hiddenWordIndices);
         if (nextToHide !== null) {
-          setHiddenWordIndices(prev => new Set([...prev, nextToHide]));
+          setHiddenWordIndices((prev) => new Set([...prev, nextToHide]));
         }
         resetForNextRep();
       } else {
@@ -313,7 +339,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       if (hadErrors) {
         // Restore failed words and retry
         const restored = new Set(hiddenWordIndices);
-        failedWordIndices.forEach(i => restored.delete(i));
+        (failed ?? failedWordIndices).forEach((i) => restored.delete(i));
         setHiddenWordIndices(restored);
         setFailedWordIndices(new Set());
         resetForNextRep();
@@ -321,7 +347,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         // Hide one more word
         const nextToHide = getNextWordToHide(hiddenWordIndices);
         if (nextToHide !== null) {
-          setHiddenWordIndices(prev => new Set([...prev, nextToHide]));
+          setHiddenWordIndices((prev) => new Set([...prev, nextToHide]));
         }
         resetForNextRep();
       } else {
@@ -329,7 +355,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         showBeatCelebration();
       }
     }
-  }, [phase, repetitionCount, words, hiddenWordIndices, failedWordIndices, getNextWordToHide]);
+  }
 
   const resetForNextRep = () => {
     setCurrentWordIndex(0);
@@ -436,7 +462,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       
       recognition.onend = () => {
         // Restart if still recording
-        if (isRecording && recognitionRef.current) {
+        if (isRecordingRef.current && recognitionRef.current) {
           try {
             recognition.start();
           } catch (e) {
@@ -454,10 +480,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       // Start hesitation checking
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
-        if (elapsed > 3000 && currentWordIndex < words.length) {
+        const idx = currentWordIndexRef.current;
+        if (elapsed > 3000 && idx < words.length) {
           // Mark current hidden word as hesitated (not first word)
-          if (hiddenWordIndices.has(currentWordIndex) && currentWordIndex !== 0) {
-            setHesitatedIndices(prev => new Set([...prev, currentWordIndex]));
+          if (hiddenWordIndicesRef.current.has(idx) && idx !== 0) {
+            setHesitatedIndices((prev) => new Set([...prev, idx]));
           }
         }
       }, 500);
@@ -487,7 +514,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     setIsRecording(false);
     
     // Process final state
-    checkCompletion(spokenIndices);
+    checkCompletion(spokenIndices, failedWordIndices);
   };
 
   // Cleanup on unmount

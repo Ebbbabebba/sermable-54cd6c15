@@ -94,8 +94,8 @@ const SentenceDisplay = ({
         ref={state.isCurrent ? currentWordRef : undefined}
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-all duration-300",
-          // Subtle underline for current word
-          state.isCurrent && !state.isSpoken && "text-primary font-medium border-b-2 border-primary/60",
+          // Subtle marker for current word
+          state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60 after:absolute after:-bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-primary after:animate-pulse",
           // Spoken word fades
           state.isSpoken && "text-muted-foreground/40",
           // Hidden words that reappeared due to miss/hesitation
