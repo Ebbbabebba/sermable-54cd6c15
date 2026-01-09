@@ -90,6 +90,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Prevent counting multiple completions for the same spoken repetition
+  // (Web Speech can emit multiple FINAL results very close together)
+  const completionCooldownUntilRef = useRef(0);
+
   // Refs to avoid stale closures in timers / callbacks
   const currentWordIndexRef = useRef(0);
   const isRecordingRef = useRef(false);
@@ -345,9 +349,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     setMissedIndices(computedMissed);
     setFailedWordIndices(computedFailed);
 
-    // Check if sentence/beat complete
-    if (isFinal || computedSpoken.size === words.length) {
-      checkCompletion(computedSpoken, computedFailed);
+    // Check if sentence/beat complete (only on FINAL result, and debounced)
+    if (isFinal && computedSpoken.size === words.length) {
+      const now = Date.now();
+      if (now >= completionCooldownUntilRef.current) {
+        completionCooldownUntilRef.current = now + 1200;
+        checkCompletion(computedSpoken, computedFailed);
+      }
     }
   }, [words, wordsMatch, checkCompletion]);
 
