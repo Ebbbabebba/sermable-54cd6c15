@@ -172,8 +172,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     showCelebrationRef.current = showCelebration;
   }, [showCelebration]);
 
-  // Hard-stop + delay restart to prevent Web Speech from replaying buffered results
-  // (this is what caused skipping from rep 1 -> 3 and hiding multiple words “for free”).
+  // Set ignore window to prevent Web Speech from processing stale/buffered results.
+  // We no longer abort recognition (which caused excessive errors and broken restarts).
+  // Instead, we simply ignore incoming results during the pause window.
   const pauseSpeechRecognition = (pauseMs: number) => {
     const until = Date.now() + pauseMs;
 
@@ -182,14 +183,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
     runningTranscriptRef.current = "";
     transcriptRef.current = "";
-
-    if (recognitionRef.current && typeof recognitionRef.current.abort === "function") {
-      try {
-        recognitionRef.current.abort();
-      } catch {
-        // ignore
-      }
-    }
+    
+    // Don't abort recognition - just ignore results. Aborting causes "aborted" errors
+    // and breaks recognition restart for subsequent sentences.
   };
 
   // Get sentence number (1, 2, or 3)
@@ -699,8 +695,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < wordsLengthRef.current) {
-          // Mark as hesitated if the word is HIDDEN (including index 0)
-          if (hiddenWordIndicesRef.current.has(idx)) {
+          // Mark as hesitated if the word is HIDDEN, but NEVER the first word (index 0)
+          // First word can't turn yellow - prevents false hesitation at speech start
+          if (idx > 0 && hiddenWordIndicesRef.current.has(idx)) {
             setHesitatedIndices((prev) => {
               if (prev.has(idx)) return prev;
               return new Set([...prev, idx]);
