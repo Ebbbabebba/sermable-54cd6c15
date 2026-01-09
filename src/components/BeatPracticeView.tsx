@@ -396,34 +396,14 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           transitionToPhase(nextPhase);
         }, 1500);
       } else {
-        // Show quick rep-complete feedback
+        // Show quick rep-complete feedback (brief check), then reset for next rep
         setCelebrationMessage(`${repetitionCount}/3 ✓`);
         setShowCelebration(true);
-        
-        // Stop recognition during celebration
-        if (recognitionRef.current) {
-          try {
-            recognitionRef.current.stop();
-          } catch { /* ignore */ }
-          recognitionRef.current = null;
-        }
-        
+
         setTimeout(() => {
           setShowCelebration(false);
           setRepetitionCount((prev) => prev + 1);
-          
-          // Reset state for next rep
-          repetitionIdRef.current += 1;
-          ignoreResultsUntilRef.current = Date.now() + 300;
-          currentWordIndexRef.current = 0;
-          setCurrentWordIndex(0);
-          setSpokenIndices(new Set());
-          setHesitatedIndices(new Set());
-          setMissedIndices(new Set());
-          setFailedWordIndices(new Set());
-          transcriptRef.current = "";
-          runningTranscriptRef.current = "";
-          lastWordTimeRef.current = Date.now();
+          resetForNextRep();
         }, 800);
       }
     } else if (phase.includes('fading')) {
@@ -484,21 +464,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     // Increment repetition ID so old transcription events are ignored
     repetitionIdRef.current += 1;
 
-    // Short ignore window to avoid stale Web Speech results immediately after a reset
-    ignoreResultsUntilRef.current = Date.now() + 250;
-
-    // Force Web Speech to flush any buffered results between repetitions
-    if (recognitionRef.current) {
-      try {
-        if (typeof recognitionRef.current.abort === "function") {
-          recognitionRef.current.abort();
-        } else if (typeof recognitionRef.current.stop === "function") {
-          recognitionRef.current.stop();
-        }
-      } catch {
-        // ignore
-      }
-    }
+    // Ignore speech results briefly right after a reset; Web Speech can flush stale tokens
+    ignoreResultsUntilRef.current = Date.now() + 400;
 
     currentWordIndexRef.current = 0;
     setCurrentWordIndex(0);
@@ -512,35 +479,28 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   };
 
   const transitionToPhase = (newPhase: Phase) => {
-    // Stop current recognition to prevent stale results from affecting new sentence
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // ignore
-      }
-      recognitionRef.current = null;
-    }
-
     setPhase(newPhase);
     setRepetitionCount(1);
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
     setConsecutiveNoScriptSuccess(0);
-    
-    // Reset all tracking for new sentence
-    repetitionIdRef.current += 1;
-    ignoreResultsUntilRef.current = Date.now() + 500;
+
+    // Reset completion guard for the new sentence
     lastCompletionRepIdRef.current = -1;
-    currentWordIndexRef.current = 0;
-    setCurrentWordIndex(0);
-    setSpokenIndices(new Set());
-    setHesitatedIndices(new Set());
-    setMissedIndices(new Set());
-    setFailedWordIndices(new Set());
-    transcriptRef.current = "";
-    runningTranscriptRef.current = "";
-    lastWordTimeRef.current = Date.now();
+
+    // Flush speech-recognition buffers ONCE when switching sentences to avoid carry-over
+    if (recognitionRef.current && typeof recognitionRef.current.abort === "function") {
+      try {
+        recognitionRef.current.abort();
+      } catch {
+        // ignore
+      }
+    }
+
+    resetForNextRep();
+
+    // Longer ignore window right after sentence switch (stale results are common here)
+    ignoreResultsUntilRef.current = Date.now() + 700;
   };
 
   const showSentenceCelebration = () => {
@@ -714,22 +674,15 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }
   }, []);
 
-  // Auto-start listening (no button press) - restart when phase changes or celebration ends
+  // Auto-start listening (no button press)
   useEffect(() => {
     if (loading) return;
     if (!currentBeat) return;
     if (showCelebration) return;
     if (recognitionRef.current) return;
 
-    // Small delay to ensure state is settled
-    const timer = setTimeout(() => {
-      if (!recognitionRef.current && !showCelebrationRef.current) {
-        startRecording();
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [loading, currentBeat?.id, showCelebration, phase, repetitionCount]);
+    startRecording();
+  }, [loading, currentBeat?.id, showCelebration, phase]);
 
   // Cleanup on unmount
   useEffect(() => {
