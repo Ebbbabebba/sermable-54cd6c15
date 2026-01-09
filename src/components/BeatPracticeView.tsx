@@ -303,28 +303,54 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndices);
 
-    for (const spoken of wordsToCheck) {
+    for (let wIdx = 0; wIdx < wordsToCheck.length; wIdx++) {
       if (advancedTo >= words.length) break;
 
-      // Check if this spoken word matches expected or next few words
-      let foundIdx = -1;
-      for (let i = advancedTo; i < Math.min(advancedTo + 3, words.length); i++) {
-        if (wordsMatch(spoken, words[i])) {
-          foundIdx = i;
-          break;
+      const spoken1 = wordsToCheck[wIdx];
+      const spoken2 = wordsToCheck[wIdx + 1];
+
+      // Some languages/recognizers split compound words into two tokens.
+      // Try matching both the single token and a two-token join.
+      const candidates: Array<{ text: string; consume: number }> = [
+        { text: spoken1, consume: 1 },
+      ];
+      if (spoken2) {
+        candidates.push({ text: `${spoken1} ${spoken2}`, consume: 2 });
+      }
+
+      let matched = false;
+
+      for (const candidate of candidates) {
+        // Check if this spoken word matches expected or next few words
+        let foundIdx = -1;
+        for (let i = advancedTo; i < Math.min(advancedTo + 3, words.length); i++) {
+          if (wordsMatch(candidate.text, words[i])) {
+            foundIdx = i;
+            break;
+          }
         }
+
+        if (foundIdx === -1) continue;
+
+        // Mark all words up to and including the matched word as spoken
+        // (We assume skipped words were said but not caught by recognition)
+        for (let j = advancedTo; j <= foundIdx; j++) {
+          newSpoken.add(j);
+        }
+
+        advancedTo = foundIdx + 1;
+        lastWordTimeRef.current = Date.now();
+
+        // If we matched using two spoken tokens, skip the next token in the loop.
+        if (candidate.consume === 2) {
+          wIdx += 1;
+        }
+
+        matched = true;
+        break;
       }
 
-      if (foundIdx === -1) continue;
-
-      // Mark all words up to and including the matched word as spoken
-      // (We assume skipped words were said but not caught by recognition)
-      for (let j = advancedTo; j <= foundIdx; j++) {
-        newSpoken.add(j);
-      }
-
-      advancedTo = foundIdx + 1;
-      lastWordTimeRef.current = Date.now();
+      if (!matched) continue;
     }
 
     // Update state if we advanced
@@ -339,29 +365,18 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const now = Date.now();
       if (now >= completionCooldownUntilRef.current) {
         completionCooldownUntilRef.current = now + 800;
-        
-        // IMMEDIATELY reset refs so subsequent transcription events don't re-advance
-        currentWordIndexRef.current = 0;
-        transcriptRef.current = "";
-        repetitionIdRef.current += 1;
-        
+
         // Evaluate failures ONLY at completion: hidden words that were never in the transcript
         const actualFailed = new Set<number>();
-        hiddenWordIndicesRef.current.forEach(hiddenIdx => {
-          // Check if this hidden word was ever spoken in the FULL transcript
+        hiddenWordIndicesRef.current.forEach((hiddenIdx) => {
           const hiddenWord = words[hiddenIdx];
-          const wasSpoken = rawWords.some(spokenWord => wordsMatch(spokenWord, hiddenWord));
+          const wasSpoken = rawWords.some((spokenWord) => wordsMatch(spokenWord, hiddenWord));
           if (!wasSpoken) {
             actualFailed.add(hiddenIdx);
           }
         });
-        
-        // Reset UI state immediately before calling checkCompletion
-        setCurrentWordIndex(0);
-        setSpokenIndices(new Set());
-        
+
         checkCompletion(newSpoken, actualFailed);
-        return; // Exit early - don't process any more
       }
     }
   }, [words, wordsMatch, checkCompletion, spokenIndices]);
@@ -557,7 +572,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         }
 
         const combined = (runningTranscriptRef.current + interim).trim();
-        transcriptRef.current = combined;
 
         const lastIsFinal = event.results.length
           ? event.results[event.results.length - 1].isFinal
