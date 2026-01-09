@@ -387,13 +387,23 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     if (phase.includes('learning')) {
       // Learning phase: need 3 fully-visible reads
       if (repetitionCount >= 3) {
-        // Move to fading phase
-        const nextPhase = phase.replace('learning', 'fading') as Phase;
-        transitionToPhase(nextPhase);
+        // Show brief checkmark celebration before transitioning to fading phase
+        setCelebrationMessage(t('beat_practice.great_start_fading'));
+        setShowCelebration(true);
+        setTimeout(() => {
+          setShowCelebration(false);
+          const nextPhase = phase.replace('learning', 'fading') as Phase;
+          transitionToPhase(nextPhase);
+        }, 1500);
       } else {
-        // Next repetition
-        setRepetitionCount((prev) => prev + 1);
-        resetForNextRep();
+        // Show quick rep-complete feedback
+        setCelebrationMessage(`${repetitionCount}/3 ✓`);
+        setShowCelebration(true);
+        setTimeout(() => {
+          setShowCelebration(false);
+          setRepetitionCount((prev) => prev + 1);
+          resetForNextRep();
+        }, 800);
       }
     } else if (phase.includes('fading')) {
       handleFadingCompletion(hadErrors, failedSet);
@@ -621,9 +631,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < wordsLengthRef.current) {
-          // Only mark as hesitated if the word is HIDDEN
+          // Mark as hesitated if the word is HIDDEN (including index 0)
           if (hiddenWordIndicesRef.current.has(idx)) {
-            setHesitatedIndices((prev) => new Set([...prev, idx]));
+            setHesitatedIndices((prev) => {
+              if (prev.has(idx)) return prev;
+              return new Set([...prev, idx]);
+            });
           }
         }
       }, 500);
