@@ -327,6 +327,45 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       lastWordTimeRef.current = Date.now();
     }
 
+
+    // If sentence complete, handle completion BEFORE updating cursor UI.
+    // This prevents stale Web Speech results (often emitted right after a reset)
+    // from pushing the cursor to the end and "freezing" the session.
+    if (advancedTo >= words.length) {
+      const now = Date.now();
+
+      // Ignore stale/duplicate completions during cooldown.
+      if (now < completionCooldownUntilRef.current) {
+        return;
+      }
+
+      completionCooldownUntilRef.current = now + 800;
+
+      // IMMEDIATELY reset refs so subsequent transcription events don't re-advance
+      currentWordIndexRef.current = 0;
+      transcriptRef.current = "";
+      runningTranscriptRef.current = "";
+      repetitionIdRef.current += 1;
+
+      // Evaluate failures ONLY at completion: hidden words that were never in the transcript
+      const actualFailed = new Set<number>();
+      hiddenWordIndicesRef.current.forEach((hiddenIdx) => {
+        // Check if this hidden word was ever spoken in the FULL transcript
+        const hiddenWord = words[hiddenIdx];
+        const wasSpoken = rawWords.some((spokenWord) => wordsMatch(spokenWord, hiddenWord));
+        if (!wasSpoken) {
+          actualFailed.add(hiddenIdx);
+        }
+      });
+
+      // Reset UI state immediately before calling checkCompletion
+      setCurrentWordIndex(0);
+      setSpokenIndices(new Set());
+
+      checkCompletion(newSpoken, actualFailed);
+      return; // Exit early - don't process any more
+    }
+
     // Update state if we advanced
     if (advancedTo > currentIdx) {
       currentWordIndexRef.current = advancedTo;
@@ -334,37 +373,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       setSpokenIndices(newSpoken);
     }
 
-    // Check if sentence complete - trigger immediately when last word is spoken
-    if (advancedTo >= words.length) {
-      const now = Date.now();
-      if (now >= completionCooldownUntilRef.current) {
-        completionCooldownUntilRef.current = now + 800;
-        
-        // IMMEDIATELY reset refs so subsequent transcription events don't re-advance
-        currentWordIndexRef.current = 0;
-        transcriptRef.current = "";
-        runningTranscriptRef.current = "";
-        repetitionIdRef.current += 1;
-        
-        // Evaluate failures ONLY at completion: hidden words that were never in the transcript
-        const actualFailed = new Set<number>();
-        hiddenWordIndicesRef.current.forEach(hiddenIdx => {
-          // Check if this hidden word was ever spoken in the FULL transcript
-          const hiddenWord = words[hiddenIdx];
-          const wasSpoken = rawWords.some(spokenWord => wordsMatch(spokenWord, hiddenWord));
-          if (!wasSpoken) {
-            actualFailed.add(hiddenIdx);
-          }
-        });
-        
-        // Reset UI state immediately before calling checkCompletion
-        setCurrentWordIndex(0);
-        setSpokenIndices(new Set());
-        
-        checkCompletion(newSpoken, actualFailed);
-        return; // Exit early - don't process any more
-      }
-    }
   }, [words, wordsMatch, checkCompletion, spokenIndices]);
 
   useEffect(() => {
@@ -449,6 +457,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const resetForNextRep = () => {
     // Increment repetition ID so old transcription events are ignored
     repetitionIdRef.current += 1;
+
+    // Cooldown window to ignore stale Web Speech results right after reset
+    completionCooldownUntilRef.current = Date.now() + 800;
+
     currentWordIndexRef.current = 0;
     setCurrentWordIndex(0);
     setSpokenIndices(new Set());
@@ -538,21 +550,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
       runningTranscriptRef.current = "";
 
-      // Track repId at the start of each result processing to detect resets
-      let lastSeenRepId = repetitionIdRef.current;
-
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         if (showCelebrationRef.current) return;
 
         // Capture the current repetition ID BEFORE processing
         const currentRepId = repetitionIdRef.current;
-
-        // If repId changed since last event, the sentence was completed and reset
-        // Clear our running transcript to start fresh
-        if (currentRepId !== lastSeenRepId) {
-          runningTranscriptRef.current = "";
-          lastSeenRepId = currentRepId;
-        }
 
         let interim = "";
 
