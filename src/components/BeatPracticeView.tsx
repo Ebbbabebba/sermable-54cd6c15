@@ -66,6 +66,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
   const [repetitionCount, setRepetitionCount] = useState(1);
+  const repetitionCountRef = useRef(1);
   
   // Word tracking
   const [hiddenWordIndices, setHiddenWordIndices] = useState<Set<number>>(new Set());
@@ -402,7 +403,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
     if (phase.includes('learning')) {
       // Learning phase: need 3 fully-visible reads
-      if (repetitionCount >= 3) {
+      // Use ref to prevent race conditions from duplicate calls
+      const currentRep = repetitionCountRef.current;
+
+      if (currentRep >= 3) {
         // Show brief checkmark celebration before transitioning to fading phase
         setCelebrationMessage(t('beat_practice.great_start_fading'));
         setShowCelebration(true);
@@ -412,13 +416,16 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           transitionToPhase(nextPhase);
         }, 1500);
       } else {
+        // Immediately increment ref to guard against duplicate calls
+        repetitionCountRef.current = currentRep + 1;
+
         // Show quick rep-complete feedback (brief check), then reset for next rep
-        setCelebrationMessage(`${repetitionCount}/3 ✓`);
+        setCelebrationMessage(`${currentRep}/3 ✓`);
         setShowCelebration(true);
 
         setTimeout(() => {
           setShowCelebration(false);
-          setRepetitionCount((prev) => prev + 1);
+          setRepetitionCount(repetitionCountRef.current);
           resetForNextRep();
         }, 800);
       }
@@ -503,6 +510,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const transitionToPhase = (newPhase: Phase) => {
     setPhase(newPhase);
     setRepetitionCount(1);
+    repetitionCountRef.current = 1;
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
     setConsecutiveNoScriptSuccess(0);
