@@ -92,12 +92,16 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Guards against duplicate "sentence complete" triggers for the same repetition
-  // (Web Speech can emit multiple FINAL results very close together)
-  const completionGuardUntilRef = useRef(0);
+  // (Web Speech can emit multiple FINAL result batches very close together)
   const lastCompletionRepIdRef = useRef<number>(-1);
 
-  // Ignore speech results briefly right after we reset (Web Speech often flushes stale tokens)
+  // Ignore speech results briefly right after we reset / during transitions
+  // (Web Speech often flushes stale tokens across repetitions)
   const ignoreResultsUntilRef = useRef(0);
+
+  // When we intentionally abort recognition (to flush stale results), don't restart until this time
+  const recognitionRestartAtRef = useRef(0);
+  const recognitionRestartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
@@ -167,6 +171,26 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   useEffect(() => {
     showCelebrationRef.current = showCelebration;
   }, [showCelebration]);
+
+  // Hard-stop + delay restart to prevent Web Speech from replaying buffered results
+  // (this is what caused skipping from rep 1 -> 3 and hiding multiple words “for free”).
+  const pauseSpeechRecognition = (pauseMs: number) => {
+    const until = Date.now() + pauseMs;
+
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, until);
+    recognitionRestartAtRef.current = Math.max(recognitionRestartAtRef.current, until);
+
+    runningTranscriptRef.current = "";
+    transcriptRef.current = "";
+
+    if (recognitionRef.current && typeof recognitionRef.current.abort === "function") {
+      try {
+        recognitionRef.current.abort();
+      } catch {
+        // ignore
+      }
+    }
+  };
 
   // Get sentence number (1, 2, or 3)
   const getCurrentSentenceNumber = () => {
@@ -402,10 +426,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const currentRep = repetitionCountRef.current;
 
       if (currentRep >= 3) {
-        // Pause/ignore incoming Web Speech results during the transition celebration
-        ignoreResultsUntilRef.current = Date.now() + 1700;
-        runningTranscriptRef.current = "";
-        transcriptRef.current = "";
+        // Hard-pause recognition while celebrating + switching phases so stale results can't
+        // instantly complete the next repetition.
+        pauseSpeechRecognition(1700);
 
         // Show brief checkmark celebration before transitioning to fading phase
         setCelebrationMessage(t('beat_practice.great_start_fading'));
@@ -419,10 +442,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         // Immediately increment ref to guard against duplicate calls
         repetitionCountRef.current = currentRep + 1;
 
-        // Pause/ignore incoming Web Speech results during the rep-complete check
-        ignoreResultsUntilRef.current = Date.now() + 1000;
-        runningTranscriptRef.current = "";
-        transcriptRef.current = "";
+        // Hard-pause recognition during the rep-complete moment so buffered results
+        // don't immediately complete the next rep.
+        pauseSpeechRecognition(900);
 
         // Show quick rep-complete feedback (brief check), then reset for next rep
         setCelebrationMessage(`${currentRep}/3 ✓`);
@@ -434,9 +456,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           resetForNextRep();
         }, 800);
       }
-    } else if (phase.includes('fading')) {
-      handleFadingCompletion(hadErrors, failedSet);
-    } else if (phase === 'beat_combining') {
+    } else if (phase.includes('fading') || phase === 'beat_combining') {
+      // Same protection in fading/combining: one repetition => at most one hide/unhide step.
+      pauseSpeechRecognition(750);
       handleFadingCompletion(hadErrors, failedSet);
     }
   }
@@ -523,19 +545,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     // Reset completion guard for the new sentence
     lastCompletionRepIdRef.current = -1;
 
-    // Flush speech-recognition buffers ONCE when switching sentences to avoid carry-over
-    if (recognitionRef.current && typeof recognitionRef.current.abort === "function") {
-      try {
-        recognitionRef.current.abort();
-      } catch {
-        // ignore
-      }
-    }
+    // Flush + delay restart so Web Speech can't carry over the previous sentence's final batch
+    pauseSpeechRecognition(900);
 
     resetForNextRep();
-
-    // Longer ignore window right after sentence switch (stale results are common here)
-    ignoreResultsUntilRef.current = Date.now() + 700;
   };
 
   const showSentenceCelebration = () => {
@@ -648,14 +661,30 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       };
       
       recognition.onend = () => {
-        // Restart if still recording
-        if (isRecordingRef.current && recognitionRef.current) {
+        // Restart if still recording, but respect any pause window we set via pauseSpeechRecognition().
+        if (!isRecordingRef.current) return;
+        if (!recognitionRef.current) return;
+
+        const startSafely = () => {
+          if (!isRecordingRef.current) return;
+          if (!recognitionRef.current) return;
           try {
-            recognition.start();
+            recognitionRef.current.start();
           } catch (e) {
             console.log('Recognition already started');
           }
+        };
+
+        const waitMs = recognitionRestartAtRef.current - Date.now();
+        if (waitMs > 0) {
+          if (recognitionRestartTimeoutRef.current) {
+            clearTimeout(recognitionRestartTimeoutRef.current);
+          }
+          recognitionRestartTimeoutRef.current = setTimeout(startSafely, waitMs);
+          return;
         }
+
+        startSafely();
       };
       
       recognitionRef.current = recognition;
@@ -693,6 +722,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const stopListening = useCallback(() => {
     isRecordingRef.current = false;
     setIsRecording(false);
+
+    recognitionRestartAtRef.current = 0;
+    if (recognitionRestartTimeoutRef.current) {
+      clearTimeout(recognitionRestartTimeoutRef.current);
+      recognitionRestartTimeoutRef.current = null;
+    }
 
     if (recognitionRef.current) {
       try {
