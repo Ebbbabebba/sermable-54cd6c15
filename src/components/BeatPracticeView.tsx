@@ -538,11 +538,21 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
       runningTranscriptRef.current = "";
 
+      // Track repId at the start of each result processing to detect resets
+      let lastSeenRepId = repetitionIdRef.current;
+
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         if (showCelebrationRef.current) return;
 
-        // Use the current repetition ID at the time of processing
+        // Capture the current repetition ID BEFORE processing
         const currentRepId = repetitionIdRef.current;
+
+        // If repId changed since last event, the sentence was completed and reset
+        // Clear our running transcript to start fresh
+        if (currentRepId !== lastSeenRepId) {
+          runningTranscriptRef.current = "";
+          lastSeenRepId = currentRepId;
+        }
 
         let interim = "";
 
