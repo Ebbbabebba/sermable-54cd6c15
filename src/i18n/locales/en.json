@@ -397,6 +397,7 @@
     "read_x_of_3": "Read {{current}}/3",
     "fading_x_left": "{{count}} words visible",
     "excellent_next": "Excellent! Next sentence...",
+    "great_start_fading": "Great! Now let's start fading...",
     "beat_complete": "Beat Complete!",
     "combining_sentences": "Combining all sentences...",
     "next_beat": "Next Beat"
