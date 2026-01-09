@@ -399,10 +399,31 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         // Show quick rep-complete feedback
         setCelebrationMessage(`${repetitionCount}/3 ✓`);
         setShowCelebration(true);
+        
+        // Stop recognition during celebration
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.stop();
+          } catch { /* ignore */ }
+          recognitionRef.current = null;
+        }
+        
         setTimeout(() => {
           setShowCelebration(false);
           setRepetitionCount((prev) => prev + 1);
-          resetForNextRep();
+          
+          // Reset state for next rep
+          repetitionIdRef.current += 1;
+          ignoreResultsUntilRef.current = Date.now() + 300;
+          currentWordIndexRef.current = 0;
+          setCurrentWordIndex(0);
+          setSpokenIndices(new Set());
+          setHesitatedIndices(new Set());
+          setMissedIndices(new Set());
+          setFailedWordIndices(new Set());
+          transcriptRef.current = "";
+          runningTranscriptRef.current = "";
+          lastWordTimeRef.current = Date.now();
         }, 800);
       }
     } else if (phase.includes('fading')) {
@@ -693,17 +714,22 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }
   }, []);
 
-  // Auto-start listening (no button press) - restart when phase changes
+  // Auto-start listening (no button press) - restart when phase changes or celebration ends
   useEffect(() => {
     if (loading) return;
     if (!currentBeat) return;
     if (showCelebration) return;
-
-    // If already recording with the same phase, skip
     if (recognitionRef.current) return;
 
-    startRecording();
-  }, [loading, currentBeat?.id, showCelebration, phase]);
+    // Small delay to ensure state is settled
+    const timer = setTimeout(() => {
+      if (!recognitionRef.current && !showCelebrationRef.current) {
+        startRecording();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [loading, currentBeat?.id, showCelebration, phase, repetitionCount]);
 
   // Cleanup on unmount
   useEffect(() => {
