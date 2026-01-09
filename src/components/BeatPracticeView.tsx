@@ -491,12 +491,35 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   };
 
   const transitionToPhase = (newPhase: Phase) => {
+    // Stop current recognition to prevent stale results from affecting new sentence
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      recognitionRef.current = null;
+    }
+
     setPhase(newPhase);
     setRepetitionCount(1);
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
     setConsecutiveNoScriptSuccess(0);
-    resetForNextRep();
+    
+    // Reset all tracking for new sentence
+    repetitionIdRef.current += 1;
+    ignoreResultsUntilRef.current = Date.now() + 500;
+    lastCompletionRepIdRef.current = -1;
+    currentWordIndexRef.current = 0;
+    setCurrentWordIndex(0);
+    setSpokenIndices(new Set());
+    setHesitatedIndices(new Set());
+    setMissedIndices(new Set());
+    setFailedWordIndices(new Set());
+    transcriptRef.current = "";
+    runningTranscriptRef.current = "";
+    lastWordTimeRef.current = Date.now();
   };
 
   const showSentenceCelebration = () => {
@@ -670,15 +693,17 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }
   }, []);
 
-  // Auto-start listening (no button press)
+  // Auto-start listening (no button press) - restart when phase changes
   useEffect(() => {
     if (loading) return;
     if (!currentBeat) return;
     if (showCelebration) return;
+
+    // If already recording with the same phase, skip
     if (recognitionRef.current) return;
 
     startRecording();
-  }, [loading, currentBeat?.id, showCelebration]);
+  }, [loading, currentBeat?.id, showCelebration, phase]);
 
   // Cleanup on unmount
   useEffect(() => {
