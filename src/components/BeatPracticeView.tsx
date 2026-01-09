@@ -302,8 +302,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndices);
-    const newMissed = new Set(missedIndices);
-    const newFailed = new Set(failedWordIndices);
 
     for (const spoken of wordsToCheck) {
       if (advancedTo >= words.length) break;
@@ -319,17 +317,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
       if (foundIdx === -1) continue;
 
-      // Mark skipped words as spoken (and failed if hidden)
-      for (let j = advancedTo; j < foundIdx; j++) {
+      // Mark all words up to and including the matched word as spoken
+      // (We assume skipped words were said but not caught by recognition)
+      for (let j = advancedTo; j <= foundIdx; j++) {
         newSpoken.add(j);
-        if (hiddenWordIndicesRef.current.has(j)) {
-          newMissed.add(j);
-          newFailed.add(j);
-        }
       }
 
-      // Mark matched word
-      newSpoken.add(foundIdx);
       advancedTo = foundIdx + 1;
       lastWordTimeRef.current = Date.now();
     }
@@ -339,8 +332,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       currentWordIndexRef.current = advancedTo;
       setCurrentWordIndex(advancedTo);
       setSpokenIndices(newSpoken);
-      setMissedIndices(newMissed);
-      setFailedWordIndices(newFailed);
     }
 
     // Check if sentence complete - trigger immediately when last word is spoken
@@ -348,10 +339,20 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const now = Date.now();
       if (now >= completionCooldownUntilRef.current) {
         completionCooldownUntilRef.current = now + 800;
-        checkCompletion(newSpoken, newFailed);
+        // Evaluate failures ONLY at completion: hidden words that were never in the transcript
+        const actualFailed = new Set<number>();
+        hiddenWordIndicesRef.current.forEach(hiddenIdx => {
+          // Check if this hidden word was ever spoken in the FULL transcript
+          const hiddenWord = words[hiddenIdx];
+          const wasSpoken = rawWords.some(spokenWord => wordsMatch(spokenWord, hiddenWord));
+          if (!wasSpoken) {
+            actualFailed.add(hiddenIdx);
+          }
+        });
+        checkCompletion(newSpoken, actualFailed);
       }
     }
-  }, [words, wordsMatch, checkCompletion, spokenIndices, missedIndices, failedWordIndices]);
+  }, [words, wordsMatch, checkCompletion, spokenIndices]);
 
   useEffect(() => {
     processTranscriptionRef.current = processTranscription;
