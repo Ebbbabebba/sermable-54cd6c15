@@ -339,6 +339,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const now = Date.now();
       if (now >= completionCooldownUntilRef.current) {
         completionCooldownUntilRef.current = now + 800;
+        
+        // IMMEDIATELY reset refs so subsequent transcription events don't re-advance
+        currentWordIndexRef.current = 0;
+        transcriptRef.current = "";
+        repetitionIdRef.current += 1;
+        
         // Evaluate failures ONLY at completion: hidden words that were never in the transcript
         const actualFailed = new Set<number>();
         hiddenWordIndicesRef.current.forEach(hiddenIdx => {
@@ -349,7 +355,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
             actualFailed.add(hiddenIdx);
           }
         });
+        
+        // Reset UI state immediately before calling checkCompletion
+        setCurrentWordIndex(0);
+        setSpokenIndices(new Set());
+        
         checkCompletion(newSpoken, actualFailed);
+        return; // Exit early - don't process any more
       }
     }
   }, [words, wordsMatch, checkCompletion, spokenIndices]);
