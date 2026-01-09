@@ -27,7 +27,7 @@ import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
 import EnhancedWordTracker from "@/components/EnhancedWordTracker";
 import BracketedTextDisplay from "@/components/BracketedTextDisplay";
-import PracticeSettings, { PracticeSettingsConfig } from "@/components/PracticeSettings";
+// PracticeSettings removed - not used in new beat-based system
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
@@ -99,15 +99,16 @@ const Practice = () => {
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [editedScriptText, setEditedScriptText] = useState("");
   const [showTimingWarning, setShowTimingWarning] = useState(false);
-  const [settings, setSettings] = useState<PracticeSettingsConfig>({
+  // Legacy settings for old practice mode (kept for reference, not used in beat mode)
+  const settings = {
     revealSpeed: 5,
     showWordOnPause: true,
-    animationStyle: 'playful',
+    animationStyle: 'playful' as const,
     keywordMode: false,
     hesitationThreshold: 5,
     firstWordHesitationThreshold: 6,
-    sentenceStartDelay: 5, // 5 seconds extra delay for first word of new sentence
-  });
+    sentenceStartDelay: 5,
+  };
   const [averageWordDelay, setAverageWordDelay] = useState<number>(500); // Track user's average pace - start faster
   const wordTimingsRef = useRef<number[]>([]); // Store recent word timing intervals
   // Use refs for real-time tracking to avoid stale closures

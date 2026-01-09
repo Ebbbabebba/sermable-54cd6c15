@@ -93,6 +93,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   // Prevent counting multiple completions for the same spoken repetition
   // (Web Speech can emit multiple FINAL results very close together)
   const completionCooldownUntilRef = useRef(0);
+  
+  // Track the repetition number so we can ignore old transcript data after reset
+  const repetitionIdRef = useRef(0);
 
   // Refs to avoid stale closures in timers / callbacks
   const currentWordIndexRef = useRef(0);
@@ -100,7 +103,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const hiddenWordIndicesRef = useRef<Set<number>>(new Set());
   const wordsLengthRef = useRef(0);
   const showCelebrationRef = useRef(false);
-  const processTranscriptionRef = useRef<(transcript: string, isFinal: boolean) => void>(() => {});
+  const processTranscriptionRef = useRef<(transcript: string, isFinal: boolean, repId: number) => void>(() => {});
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -270,44 +273,23 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   };
 
   // Process transcription - align spoken words to the script in order
-  const processTranscription = useCallback((transcript: string, isFinal: boolean) => {
+  const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number) => {
+    // Ignore transcription events from previous repetitions
+    if (repId !== repetitionIdRef.current) return;
+    
     transcriptRef.current = transcript;
 
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
 
-    // When the recognizer keeps appending across repetitions, lock onto the *latest* start-of-sentence
-    // so the blue pulse follows each repetition from word 1.
-    let spokenWords = rawWords;
-    if (words.length > 0 && currentWordIndexRef.current > 0) {
-      let lastStart = 0;
-      for (let i = rawWords.length - 1; i >= 0; i--) {
-        if (!wordsMatch(rawWords[i], words[0])) continue;
-
-        if (words.length > 1) {
-          if (!rawWords[i + 1] || !wordsMatch(rawWords[i + 1], words[1])) continue;
-        }
-
-        // Only accept if it's plausibly a new repetition window
-        if (rawWords.length - i <= words.length + 6) {
-          lastStart = i;
-          break;
-        }
-      }
-
-      if (lastStart > 0) {
-        spokenWords = rawWords.slice(lastStart);
-      }
-    }
-
-    // Recompute progress from scratch each time (Web Speech API provides cumulative transcripts)
+    // Recompute progress from scratch each time (fresh transcript per repetition now)
     const computedSpoken = new Set<number>();
     const computedMissed = new Set<number>();
     const computedFailed = new Set<number>();
 
     let expected = 0;
 
-    for (const spoken of spokenWords) {
+    for (const spoken of rawWords) {
       if (expected >= words.length) break;
 
       let foundIdx = -1;
@@ -337,12 +319,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       lastWordTimeRef.current = Date.now();
     }
 
-    // Keep progress monotonic during interim updates
-    const nextIndex = Math.max(currentWordIndexRef.current, expected);
-
-    if (nextIndex !== currentWordIndexRef.current) {
-      currentWordIndexRef.current = nextIndex;
-      setCurrentWordIndex(nextIndex);
+    // Update the current word index (blue pulse position)
+    if (expected !== currentWordIndexRef.current) {
+      currentWordIndexRef.current = expected;
+      setCurrentWordIndex(expected);
     }
 
     setSpokenIndices(computedSpoken);
@@ -439,6 +419,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   }
 
   const resetForNextRep = () => {
+    // Increment repetition ID so old transcription events are ignored
+    repetitionIdRef.current += 1;
     currentWordIndexRef.current = 0;
     setCurrentWordIndex(0);
     setSpokenIndices(new Set());
@@ -531,6 +513,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         if (showCelebrationRef.current) return;
 
+        // Use the current repetition ID at the time of processing
+        const currentRepId = repetitionIdRef.current;
+
         let interim = "";
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -551,7 +536,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           ? event.results[event.results.length - 1].isFinal
           : false;
 
-        processTranscriptionRef.current(combined, lastIsFinal);
+        processTranscriptionRef.current(combined, lastIsFinal, currentRepId);
       };
       
       recognition.onerror = (event: any) => {
