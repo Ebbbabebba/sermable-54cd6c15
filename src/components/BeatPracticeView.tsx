@@ -343,6 +343,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         // IMMEDIATELY reset refs so subsequent transcription events don't re-advance
         currentWordIndexRef.current = 0;
         transcriptRef.current = "";
+        runningTranscriptRef.current = "";
         repetitionIdRef.current += 1;
         
         // Evaluate failures ONLY at completion: hidden words that were never in the transcript
@@ -557,7 +558,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         }
 
         const combined = (runningTranscriptRef.current + interim).trim();
-        transcriptRef.current = combined;
 
         const lastIsFinal = event.results.length
           ? event.results[event.results.length - 1].isFinal
