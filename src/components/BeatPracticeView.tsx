@@ -69,11 +69,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   
   // Word tracking
   const [hiddenWordIndices, setHiddenWordIndices] = useState<Set<number>>(new Set());
+  const [hiddenWordOrder, setHiddenWordOrder] = useState<number[]>([]); // Track order words were hidden
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [spokenIndices, setSpokenIndices] = useState<Set<number>>(new Set());
   const [hesitatedIndices, setHesitatedIndices] = useState<Set<number>>(new Set());
   const [missedIndices, setMissedIndices] = useState<Set<number>>(new Set());
-  const [failedWordIndices, setFailedWordIndices] = useState<Set<number>>(new Set()); // Words to restore next rep
+  const [failedWordIndices, setFailedWordIndices] = useState<Set<number>>(new Set()); // Words that had errors
+  const [consecutiveNoScriptSuccess, setConsecutiveNoScriptSuccess] = useState(0); // Track 2 successful no-script reps
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -360,10 +362,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     if (!allSpoken) return;
 
     // Check for errors (missed hidden words)
-    const hadErrors = (failed ?? failedWordIndices).size > 0;
+    const failedSet = failed ?? failedWordIndices;
+    const hadErrors = failedSet.size > 0;
 
     if (phase.includes('learning')) {
-      // Learning phase: need 3 clean reads
+      // Learning phase: need 3 fully-visible reads
       if (repetitionCount >= 3) {
         // Move to fading phase
         const nextPhase = phase.replace('learning', 'fading') as Phase;
@@ -374,42 +377,55 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         resetForNextRep();
       }
     } else if (phase.includes('fading')) {
-      if (hadErrors) {
-        // Restore failed words and retry
-        const restored = new Set(hiddenWordIndices);
-        (failed ?? failedWordIndices).forEach((i) => restored.delete(i));
-        setHiddenWordIndices(restored);
-        setFailedWordIndices(new Set());
-        resetForNextRep();
-      } else if (hiddenWordIndices.size < words.length) {
-        // Hide one more word
-        const nextToHide = getNextWordToHide(hiddenWordIndices);
-        if (nextToHide !== null) {
-          setHiddenWordIndices((prev) => new Set([...prev, nextToHide]));
-        }
-        resetForNextRep();
-      } else {
-        // All words hidden and recited correctly = sentence mastered!
-        showSentenceCelebration();
-      }
+      handleFadingCompletion(hadErrors, failedSet);
     } else if (phase === 'beat_combining') {
-      if (hadErrors) {
-        // Restore failed words and retry
-        const restored = new Set(hiddenWordIndices);
-        (failed ?? failedWordIndices).forEach((i) => restored.delete(i));
-        setHiddenWordIndices(restored);
-        setFailedWordIndices(new Set());
-        resetForNextRep();
-      } else if (hiddenWordIndices.size < words.length) {
-        // Hide one more word
-        const nextToHide = getNextWordToHide(hiddenWordIndices);
-        if (nextToHide !== null) {
-          setHiddenWordIndices((prev) => new Set([...prev, nextToHide]));
+      handleFadingCompletion(hadErrors, failedSet);
+    }
+  }
+
+  // Handle fading phase completion logic
+  function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
+    const allHidden = hiddenWordIndices.size >= words.length;
+
+    if (hadErrors) {
+      // Reset consecutive success counter
+      setConsecutiveNoScriptSuccess(0);
+      
+      // Restore only the most recently hidden word (last in hiddenWordOrder)
+      if (hiddenWordOrder.length > 0) {
+        const lastHiddenIdx = hiddenWordOrder[hiddenWordOrder.length - 1];
+        setHiddenWordIndices((prev) => {
+          const next = new Set(prev);
+          next.delete(lastHiddenIdx);
+          return next;
+        });
+        setHiddenWordOrder((prev) => prev.slice(0, -1));
+      }
+      setFailedWordIndices(new Set());
+      resetForNextRep();
+    } else if (!allHidden) {
+      // Success! Hide one more word
+      const nextToHide = getNextWordToHide(hiddenWordIndices);
+      if (nextToHide !== null) {
+        setHiddenWordIndices((prev) => new Set([...prev, nextToHide]));
+        setHiddenWordOrder((prev) => [...prev, nextToHide]);
+      }
+      resetForNextRep();
+    } else {
+      // All words hidden - need 2 consecutive successful no-script reps
+      const newConsecutive = consecutiveNoScriptSuccess + 1;
+      
+      if (newConsecutive >= 2) {
+        // Sentence/beat mastered!
+        if (phase === 'beat_combining') {
+          showBeatCelebration();
+        } else {
+          showSentenceCelebration();
         }
-        resetForNextRep();
       } else {
-        // Beat complete!
-        showBeatCelebration();
+        // Need one more successful rep
+        setConsecutiveNoScriptSuccess(newConsecutive);
+        resetForNextRep();
       }
     }
   }
@@ -430,6 +446,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     setPhase(newPhase);
     setRepetitionCount(1);
     setHiddenWordIndices(new Set());
+    setHiddenWordOrder([]);
+    setConsecutiveNoScriptSuccess(0);
     resetForNextRep();
   };
 
