@@ -96,6 +96,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
+  
+  // Track how many tokens we've already processed in this repetition (for incremental tracking)
+  const processedTokenCountRef = useRef(0);
 
   // Refs to avoid stale closures in timers / callbacks
   const currentWordIndexRef = useRef(0);
@@ -272,7 +275,71 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     return false;
   };
 
-  // Process transcription - cursor-based: consume only NEW final tokens, advance one word at a time
+  // Check if multiple spoken tokens together match expected word (for compound words)
+  const compoundWordsMatch = (spokenTokens: string[], startIdx: number, expected: string): { matched: boolean; tokensConsumed: number } => {
+    const e = normalizeWord(expected);
+    
+    // Try single token first
+    if (startIdx < spokenTokens.length && wordsMatch(spokenTokens[startIdx], expected)) {
+      return { matched: true, tokensConsumed: 1 };
+    }
+    
+    // Try 2-token compound (e.g., "midnatt stimma" -> "midnattstimma")
+    if (startIdx + 1 < spokenTokens.length) {
+      const combined2 = normalizeWord(spokenTokens[startIdx]) + normalizeWord(spokenTokens[startIdx + 1]);
+      if (combined2 === e || (e.length > 4 && Math.abs(combined2.length - e.length) <= 1)) {
+        // Check if it's a close match
+        let diff = 0;
+        for (let i = 0; i < Math.max(combined2.length, e.length); i++) {
+          if (combined2[i] !== e[i]) diff++;
+        }
+        if (diff <= 2) return { matched: true, tokensConsumed: 2 };
+      }
+    }
+    
+    // Try 3-token compound (rare but possible)
+    if (startIdx + 2 < spokenTokens.length) {
+      const combined3 = normalizeWord(spokenTokens[startIdx]) + normalizeWord(spokenTokens[startIdx + 1]) + normalizeWord(spokenTokens[startIdx + 2]);
+      if (combined3 === e) {
+        return { matched: true, tokensConsumed: 3 };
+      }
+    }
+    
+    return { matched: false, tokensConsumed: 0 };
+  };
+
+  // Complete a repetition and reset for next pass
+  const completeRepetition = useCallback((rawWords: string[], newSpoken: Set<number>) => {
+    const now = Date.now();
+    if (now < completionCooldownUntilRef.current) return;
+    
+    completionCooldownUntilRef.current = now + 800;
+    
+    // IMMEDIATELY reset all refs so subsequent transcription events are ignored
+    currentWordIndexRef.current = 0;
+    transcriptRef.current = "";
+    runningTranscriptRef.current = "";
+    processedTokenCountRef.current = 0;
+    repetitionIdRef.current += 1;
+    
+    // Evaluate failures: hidden words that were never in the transcript
+    const actualFailed = new Set<number>();
+    hiddenWordIndicesRef.current.forEach(hiddenIdx => {
+      const hiddenWord = words[hiddenIdx];
+      const wasSpoken = rawWords.some(spokenWord => wordsMatch(spokenWord, hiddenWord));
+      if (!wasSpoken) {
+        actualFailed.add(hiddenIdx);
+      }
+    });
+    
+    // Reset UI state immediately
+    setCurrentWordIndex(0);
+    setSpokenIndices(new Set());
+    
+    checkCompletion(newSpoken, actualFailed);
+  }, [words, wordsMatch, checkCompletion]);
+
+  // Process transcription - cursor-based with proper incremental tracking
   const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number) => {
     // Ignore transcription events from previous repetitions
     if (repId !== repetitionIdRef.current) return;
@@ -283,48 +350,75 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     // Get current state
     const currentIdx = currentWordIndexRef.current;
     
-    // If we've already completed all words, trigger reset immediately
+    // If we've already completed all words, don't process
     if (currentIdx >= words.length) {
       return;
     }
 
-    // Look for matches starting from where we left off in the transcript
-    // Only process words we haven't seen yet
-    const prevTranscriptLength = transcriptRef.current.split(/\s+/).filter(w => w.trim()).length;
-    transcriptRef.current = transcript;
+    // Use processedTokenCountRef for accurate incremental tracking
+    const prevTokenCount = processedTokenCountRef.current;
+    const newTokens = rawWords.slice(prevTokenCount);
     
-    // Get only the NEW words since last processing
-    const newWords = rawWords.slice(prevTranscriptLength);
+    // Update processed count
+    processedTokenCountRef.current = rawWords.length;
     
-    // Also check recent words in case of speech recognition corrections
+    // Also check recent words as fallback for recognition corrections
     const recentWords = rawWords.slice(Math.max(0, rawWords.length - 6));
-    const wordsToCheck = newWords.length > 0 ? newWords : recentWords;
+    const wordsToCheck = newTokens.length > 0 ? newTokens : recentWords;
     
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndices);
+    let tokenIdx = 0;
 
-    for (const spoken of wordsToCheck) {
-      if (advancedTo >= words.length) break;
-
-      // Check if this spoken word matches expected or next few words
+    while (tokenIdx < wordsToCheck.length && advancedTo < words.length) {
+      const expectedWord = words[advancedTo];
+      
+      // Try compound matching first (handles split words like "midnatt stimma" -> "midnattstimma")
+      const compoundResult = compoundWordsMatch(wordsToCheck, tokenIdx, expectedWord);
+      if (compoundResult.matched) {
+        newSpoken.add(advancedTo);
+        advancedTo++;
+        tokenIdx += compoundResult.tokensConsumed;
+        lastWordTimeRef.current = Date.now();
+        continue;
+      }
+      
+      // Try single word match with look-ahead
       let foundIdx = -1;
       for (let i = advancedTo; i < Math.min(advancedTo + 3, words.length); i++) {
-        if (wordsMatch(spoken, words[i])) {
+        if (wordsMatch(wordsToCheck[tokenIdx], words[i])) {
           foundIdx = i;
           break;
         }
       }
 
-      if (foundIdx === -1) continue;
-
-      // Mark all words up to and including the matched word as spoken
-      // (We assume skipped words were said but not caught by recognition)
-      for (let j = advancedTo; j <= foundIdx; j++) {
-        newSpoken.add(j);
+      if (foundIdx !== -1) {
+        // Mark all words up to and including the matched word as spoken
+        for (let j = advancedTo; j <= foundIdx; j++) {
+          newSpoken.add(j);
+        }
+        advancedTo = foundIdx + 1;
+        lastWordTimeRef.current = Date.now();
       }
+      
+      tokenIdx++;
+    }
 
-      advancedTo = foundIdx + 1;
-      lastWordTimeRef.current = Date.now();
+    // LAST-WORD FAILSAFE: If we're on the last word, check if it appears anywhere in recent transcript
+    if (advancedTo === words.length - 1) {
+      const lastExpectedWord = words[words.length - 1];
+      const normalizedTranscript = rawWords.map(w => normalizeWord(w)).join('');
+      const normalizedLastWord = normalizeWord(lastExpectedWord);
+      
+      // Check if last word appears in transcript (concatenated or individual)
+      const lastWordInTranscript = normalizedTranscript.includes(normalizedLastWord) ||
+        rawWords.some(w => wordsMatch(w, lastExpectedWord));
+      
+      if (lastWordInTranscript) {
+        newSpoken.add(words.length - 1);
+        advancedTo = words.length;
+        lastWordTimeRef.current = Date.now();
+      }
     }
 
     // Update state if we advanced
@@ -336,35 +430,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
     // Check if sentence complete - trigger immediately when last word is spoken
     if (advancedTo >= words.length) {
-      const now = Date.now();
-      if (now >= completionCooldownUntilRef.current) {
-        completionCooldownUntilRef.current = now + 800;
-        
-        // IMMEDIATELY reset refs so subsequent transcription events don't re-advance
-        currentWordIndexRef.current = 0;
-        transcriptRef.current = "";
-        repetitionIdRef.current += 1;
-        
-        // Evaluate failures ONLY at completion: hidden words that were never in the transcript
-        const actualFailed = new Set<number>();
-        hiddenWordIndicesRef.current.forEach(hiddenIdx => {
-          // Check if this hidden word was ever spoken in the FULL transcript
-          const hiddenWord = words[hiddenIdx];
-          const wasSpoken = rawWords.some(spokenWord => wordsMatch(spokenWord, hiddenWord));
-          if (!wasSpoken) {
-            actualFailed.add(hiddenIdx);
-          }
-        });
-        
-        // Reset UI state immediately before calling checkCompletion
-        setCurrentWordIndex(0);
-        setSpokenIndices(new Set());
-        
-        checkCompletion(newSpoken, actualFailed);
-        return; // Exit early - don't process any more
-      }
+      completeRepetition(rawWords, newSpoken);
     }
-  }, [words, wordsMatch, checkCompletion, spokenIndices]);
+  }, [words, wordsMatch, compoundWordsMatch, normalizeWord, completeRepetition, spokenIndices]);
 
   useEffect(() => {
     processTranscriptionRef.current = processTranscription;
@@ -445,10 +513,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }
   }
 
-  const resetForNextRep = () => {
+  const resetForNextRep = useCallback(() => {
     // Increment repetition ID so old transcription events are ignored
     repetitionIdRef.current += 1;
     currentWordIndexRef.current = 0;
+    processedTokenCountRef.current = 0;
     setCurrentWordIndex(0);
     setSpokenIndices(new Set());
     setHesitatedIndices(new Set());
@@ -457,16 +526,31 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     transcriptRef.current = "";
     runningTranscriptRef.current = "";
     lastWordTimeRef.current = Date.now();
-  };
+  }, []);
 
-  const transitionToPhase = (newPhase: Phase) => {
+  // Stop and restart recognition to clear internal buffers
+  const restartRecognition = useCallback(() => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      recognitionRef.current = null;
+    }
+  }, []);
+
+  const transitionToPhase = useCallback((newPhase: Phase) => {
+    // Stop recognition to clear buffers - it will auto-restart via useEffect
+    restartRecognition();
+    
     setPhase(newPhase);
     setRepetitionCount(1);
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
     setConsecutiveNoScriptSuccess(0);
     resetForNextRep();
-  };
+  }, [resetForNextRep, restartRecognition]);
 
   const showSentenceCelebration = () => {
     setCelebrationMessage(t('beat_practice.excellent_next'));
