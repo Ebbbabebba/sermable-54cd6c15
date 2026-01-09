@@ -105,9 +105,14 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const currentWordIndexRef = useRef(0);
   const isRecordingRef = useRef(false);
   const hiddenWordIndicesRef = useRef<Set<number>>(new Set());
+  const spokenIndicesRef = useRef<Set<number>>(new Set());
+  const hesitatedIndicesRef = useRef<Set<number>>(new Set());
+  const missedIndicesRef = useRef<Set<number>>(new Set());
   const wordsLengthRef = useRef(0);
   const showCelebrationRef = useRef(false);
-  const processTranscriptionRef = useRef<(transcript: string, isFinal: boolean, repId: number) => void>(() => {});
+  const processTranscriptionRef = useRef<
+    (transcript: string, isFinal: boolean, repId: number) => void
+  >(() => {});
 
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
@@ -120,6 +125,18 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   useEffect(() => {
     hiddenWordIndicesRef.current = hiddenWordIndices;
   }, [hiddenWordIndices]);
+
+  useEffect(() => {
+    spokenIndicesRef.current = spokenIndices;
+  }, [spokenIndices]);
+
+  useEffect(() => {
+    hesitatedIndicesRef.current = hesitatedIndices;
+  }, [hesitatedIndices]);
+
+  useEffect(() => {
+    missedIndicesRef.current = missedIndices;
+  }, [missedIndices]);
 
   // Get current beat
   const currentBeat = beats[currentBeatIndex];
@@ -305,7 +322,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     const wordsToCheck = newWords.length > 0 ? newWords : recentWords;
     
     let advancedTo = currentIdx;
-    const newSpoken = new Set(spokenIndices);
+    const newSpoken = new Set(spokenIndicesRef.current);
 
     for (const spoken of wordsToCheck) {
       if (advancedTo >= words.length) break;
@@ -346,29 +363,28 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       lastCompletionRepIdRef.current = repId;
       completionGuardUntilRef.current = now + 600;
 
-      // Evaluate failures ONLY at completion: hidden words that were never in the transcript
-      const actualFailed = new Set<number>();
-      hiddenWordIndicesRef.current.forEach((hiddenIdx) => {
-        const hiddenWord = words[hiddenIdx];
-        const wasSpoken = rawWords.some((spokenWord) =>
-          wordsMatch(spokenWord, hiddenWord)
-        );
-        if (!wasSpoken) actualFailed.add(hiddenIdx);
+      // Failures are driven by *signals* (yellow hesitation / red miss) on hidden words,
+      // not by requiring perfect speech-recognition transcripts.
+      const failedFromSignals = new Set<number>();
+      hiddenWordIndicesRef.current.forEach((idx) => {
+        if (hesitatedIndicesRef.current.has(idx) || missedIndicesRef.current.has(idx)) {
+          failedFromSignals.add(idx);
+        }
       });
 
-      checkCompletion(newSpoken, actualFailed);
+      checkCompletion(newSpoken, failedFromSignals);
       return;
     }
-
-
     // Update state if we advanced
     if (advancedTo > currentIdx) {
       currentWordIndexRef.current = advancedTo;
       setCurrentWordIndex(advancedTo);
+
+      spokenIndicesRef.current = newSpoken;
       setSpokenIndices(newSpoken);
     }
 
-  }, [words, wordsMatch, checkCompletion, spokenIndices]);
+  }, [words, wordsMatch, checkCompletion]);
 
   useEffect(() => {
     processTranscriptionRef.current = processTranscription;
@@ -469,10 +485,16 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
     currentWordIndexRef.current = 0;
     setCurrentWordIndex(0);
+
+    spokenIndicesRef.current = new Set();
+    hesitatedIndicesRef.current = new Set();
+    missedIndicesRef.current = new Set();
+
     setSpokenIndices(new Set());
     setHesitatedIndices(new Set());
     setMissedIndices(new Set());
     setFailedWordIndices(new Set());
+
     transcriptRef.current = "";
     runningTranscriptRef.current = "";
     lastWordTimeRef.current = Date.now();
