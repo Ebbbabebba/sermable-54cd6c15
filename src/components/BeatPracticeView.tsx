@@ -465,8 +465,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
     setConsecutiveNoScriptSuccess(0);
-    // Also reset the running transcript so old S1/S2 words don't pollute S2/S3
-    runningTranscriptRef.current = "";
     resetForNextRep();
   };
 
