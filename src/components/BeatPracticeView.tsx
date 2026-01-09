@@ -351,18 +351,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
     // Sentence complete: trigger completion ONCE for this repetition.
     if (advancedTo >= words.length) {
-      const now = Date.now();
-
-      // Deduplicate completion signals for the same repetition
-      if (
-        lastCompletionRepIdRef.current === repId &&
-        now < completionGuardUntilRef.current
-      ) {
+      // Deduplicate completion signals for the same repetition.
+      // Web Speech can emit multiple FINAL result batches for the same spoken sentence.
+      if (lastCompletionRepIdRef.current === repId) {
         return;
       }
 
       lastCompletionRepIdRef.current = repId;
-      completionGuardUntilRef.current = now + 600;
 
       // Failures are driven by *signals* (yellow hesitation / red miss) on hidden words,
       // not by requiring perfect speech-recognition transcripts.
@@ -407,6 +402,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const currentRep = repetitionCountRef.current;
 
       if (currentRep >= 3) {
+        // Pause/ignore incoming Web Speech results during the transition celebration
+        ignoreResultsUntilRef.current = Date.now() + 1700;
+        runningTranscriptRef.current = "";
+        transcriptRef.current = "";
+
         // Show brief checkmark celebration before transitioning to fading phase
         setCelebrationMessage(t('beat_practice.great_start_fading'));
         setShowCelebration(true);
@@ -418,6 +418,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       } else {
         // Immediately increment ref to guard against duplicate calls
         repetitionCountRef.current = currentRep + 1;
+
+        // Pause/ignore incoming Web Speech results during the rep-complete check
+        ignoreResultsUntilRef.current = Date.now() + 1000;
+        runningTranscriptRef.current = "";
+        transcriptRef.current = "";
 
         // Show quick rep-complete feedback (brief check), then reset for next rep
         setCelebrationMessage(`${currentRep}/3 ✓`);
