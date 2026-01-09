@@ -272,28 +272,45 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     return false;
   };
 
-  // Process transcription - align spoken words to the script in order
+  // Process transcription - cursor-based: consume only NEW final tokens, advance one word at a time
   const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number) => {
     // Ignore transcription events from previous repetitions
     if (repId !== repetitionIdRef.current) return;
     
-    transcriptRef.current = transcript;
-
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
 
-    // Recompute progress from scratch each time (fresh transcript per repetition now)
-    const computedSpoken = new Set<number>();
-    const computedMissed = new Set<number>();
-    const computedFailed = new Set<number>();
+    // Get current state
+    const currentIdx = currentWordIndexRef.current;
+    
+    // If we've already completed all words, trigger reset immediately
+    if (currentIdx >= words.length) {
+      return;
+    }
 
-    let expected = 0;
+    // Look for matches starting from where we left off in the transcript
+    // Only process words we haven't seen yet
+    const prevTranscriptLength = transcriptRef.current.split(/\s+/).filter(w => w.trim()).length;
+    transcriptRef.current = transcript;
+    
+    // Get only the NEW words since last processing
+    const newWords = rawWords.slice(prevTranscriptLength);
+    
+    // Also check recent words in case of speech recognition corrections
+    const recentWords = rawWords.slice(Math.max(0, rawWords.length - 6));
+    const wordsToCheck = newWords.length > 0 ? newWords : recentWords;
+    
+    let advancedTo = currentIdx;
+    const newSpoken = new Set(spokenIndices);
+    const newMissed = new Set(missedIndices);
+    const newFailed = new Set(failedWordIndices);
 
-    for (const spoken of rawWords) {
-      if (expected >= words.length) break;
+    for (const spoken of wordsToCheck) {
+      if (advancedTo >= words.length) break;
 
+      // Check if this spoken word matches expected or next few words
       let foundIdx = -1;
-      for (let i = expected; i < Math.min(expected + 4, words.length); i++) {
+      for (let i = advancedTo; i < Math.min(advancedTo + 3, words.length); i++) {
         if (wordsMatch(spoken, words[i])) {
           foundIdx = i;
           break;
@@ -302,42 +319,39 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
       if (foundIdx === -1) continue;
 
-      // Mark skipped words
-      for (let j = expected; j < foundIdx; j++) {
-        computedSpoken.add(j);
-        const isHidden = hiddenWordIndicesRef.current.has(j);
-        // Only mark as missed/failed if the word is HIDDEN (not visible)
-        if (isHidden) {
-          computedMissed.add(j);
-          computedFailed.add(j);
+      // Mark skipped words as spoken (and failed if hidden)
+      for (let j = advancedTo; j < foundIdx; j++) {
+        newSpoken.add(j);
+        if (hiddenWordIndicesRef.current.has(j)) {
+          newMissed.add(j);
+          newFailed.add(j);
         }
       }
 
       // Mark matched word
-      computedSpoken.add(foundIdx);
-      expected = foundIdx + 1;
+      newSpoken.add(foundIdx);
+      advancedTo = foundIdx + 1;
       lastWordTimeRef.current = Date.now();
     }
 
-    // Update the current word index (blue pulse position)
-    if (expected !== currentWordIndexRef.current) {
-      currentWordIndexRef.current = expected;
-      setCurrentWordIndex(expected);
+    // Update state if we advanced
+    if (advancedTo > currentIdx) {
+      currentWordIndexRef.current = advancedTo;
+      setCurrentWordIndex(advancedTo);
+      setSpokenIndices(newSpoken);
+      setMissedIndices(newMissed);
+      setFailedWordIndices(newFailed);
     }
 
-    setSpokenIndices(computedSpoken);
-    setMissedIndices(computedMissed);
-    setFailedWordIndices(computedFailed);
-
-    // Check if sentence/beat complete (only on FINAL result, and debounced)
-    if (isFinal && computedSpoken.size === words.length) {
+    // Check if sentence complete - trigger immediately when last word is spoken
+    if (advancedTo >= words.length) {
       const now = Date.now();
       if (now >= completionCooldownUntilRef.current) {
-        completionCooldownUntilRef.current = now + 1200;
-        checkCompletion(computedSpoken, computedFailed);
+        completionCooldownUntilRef.current = now + 800;
+        checkCompletion(newSpoken, newFailed);
       }
     }
-  }, [words, wordsMatch, checkCompletion]);
+  }, [words, wordsMatch, checkCompletion, spokenIndices, missedIndices, failedWordIndices]);
 
   useEffect(() => {
     processTranscriptionRef.current = processTranscription;
