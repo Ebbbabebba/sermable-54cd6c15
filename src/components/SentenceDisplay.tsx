@@ -66,8 +66,8 @@ const SentenceDisplay = ({
   const renderWord = (index: number) => {
     const state = getWordState(index);
     
-    // Hidden word - show as dots
-    if (!state.isVisible && !state.isSpoken) {
+    // Hidden word - always show as dots (words should NOT reappear mid-speech)
+    if (!state.isVisible) {
       const dotCount = Math.ceil(state.text.length / 2);
       return (
         <span
@@ -82,11 +82,11 @@ const SentenceDisplay = ({
             !state.isHesitated && !state.isMissed && "text-muted-foreground hover:bg-muted"
           )}
         >
-          {'•'.repeat(dotCount)}
+          {"•".repeat(dotCount)}
         </span>
       );
     }
-    
+
     // Visible or spoken word
     return (
       <span
