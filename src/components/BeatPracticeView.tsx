@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2 } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -894,6 +894,23 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         >
           <RotateCcw className="h-5 w-5" />
         </Button>
+        
+        {/* Continue button - skip to next sentence when user feels confident */}
+        {!showCelebration && (
+          <Button
+            variant="default"
+            onClick={() => {
+              // Simulate completion of current rep/sentence
+              const allIndices = new Set(words.map((_, i) => i));
+              pauseSpeechRecognition(900);
+              checkCompletion(allIndices, failedWordIndices);
+            }}
+            className="rounded-full gap-2"
+          >
+            {t('common.continue', 'Continue')}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
