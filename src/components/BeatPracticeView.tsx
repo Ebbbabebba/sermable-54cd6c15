@@ -430,14 +430,23 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         // instantly complete the next repetition.
         pauseSpeechRecognition(1700);
 
+        // IMPORTANT UX: even on the *last* learning repetition, the cursor/pulse should
+        // jump back to the first word once the sentence is completed.
+        resetForNextRep();
+
         // Show brief checkmark celebration before transitioning to fading phase
         setCelebrationMessage(t('beat_practice.great_start_fading'));
-        setShowCelebration(true);
+
+        // Small delay so the "pulse reset" can be rendered before we swap to the celebration view.
         setTimeout(() => {
-          setShowCelebration(false);
-          const nextPhase = phase.replace('learning', 'fading') as Phase;
-          transitionToPhase(nextPhase);
-        }, 1500);
+          setShowCelebration(true);
+
+          setTimeout(() => {
+            setShowCelebration(false);
+            const nextPhase = phase.replace('learning', 'fading') as Phase;
+            transitionToPhase(nextPhase);
+          }, 1500);
+        }, 150);
       } else {
         // Immediately increment ref to guard against duplicate calls
         repetitionCountRef.current = currentRep + 1;
@@ -552,21 +561,29 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   };
 
   const showSentenceCelebration = () => {
+    // When a sentence is fully completed (especially sentence 2), snap the cursor back to
+    // the first word so the blue pulse visibly resets before moving on.
+    resetForNextRep();
+
     setCelebrationMessage(t('beat_practice.excellent_next'));
-    setShowCelebration(true);
-    
+
+    // Give React a moment to render the reset state before showing the celebration overlay.
     setTimeout(() => {
-      setShowCelebration(false);
-      
-      // Move to next sentence or combining phase
-      if (phase === 'sentence_1_fading') {
-        transitionToPhase('sentence_2_learning');
-      } else if (phase === 'sentence_2_fading') {
-        transitionToPhase('sentence_3_learning');
-      } else if (phase === 'sentence_3_fading') {
-        transitionToPhase('beat_combining');
-      }
-    }, 2000);
+      setShowCelebration(true);
+
+      setTimeout(() => {
+        setShowCelebration(false);
+
+        // Move to next sentence or combining phase
+        if (phase === 'sentence_1_fading') {
+          transitionToPhase('sentence_2_learning');
+        } else if (phase === 'sentence_2_fading') {
+          transitionToPhase('sentence_3_learning');
+        } else if (phase === 'sentence_3_fading') {
+          transitionToPhase('beat_combining');
+        }
+      }, 2000);
+    }, 150);
   };
 
   const showBeatCelebration = async () => {
