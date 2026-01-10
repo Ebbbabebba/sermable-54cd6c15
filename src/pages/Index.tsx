@@ -1,13 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import FloatingAstronaut2D from "@/components/FloatingAstronaut2D";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [flyAway, setFlyAway] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useTranslation();
 
@@ -33,21 +32,20 @@ const Index = () => {
     checkAuthAndOnboarding();
   }, [navigate]);
 
-  const handleNavigation = (path: string) => {
-    setFlyAway(true);
-    setTimeout(() => {
-      navigate(path);
-    }, 1000);
-  };
-
   if (isLoading) {
     return (
       <div 
         className="min-h-screen flex items-center justify-center"
         style={{ background: 'radial-gradient(ellipse at center, hsl(240, 20%, 12%), hsl(240, 20%, 6%))' }}
       >
-        <div className="animate-pulse">
-          <FloatingAstronaut2D />
+        <div className="flex flex-col items-center gap-4">
+          <h1 
+            className="text-4xl font-bold bg-clip-text text-transparent"
+            style={{ backgroundImage: 'linear-gradient(135deg, hsl(217, 91%, 60%), hsl(270, 100%, 70%), hsl(330, 100%, 70%))' }}
+          >
+            sermable
+          </h1>
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -56,7 +54,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, hsl(240, 20%, 12%), hsl(240, 20%, 6%))' }}>
       <div className="fixed inset-0 pointer-events-none z-0">
-        {Array.from({ length: 150 }).map((_, i) => (
+        {Array.from({ length: 100 }).map((_, i) => (
           <div
             key={i}
             className="absolute rounded-full animate-pulse"
@@ -76,8 +74,6 @@ const Index = () => {
       </div>
       <div className="relative z-10 text-center w-full h-full flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <FloatingAstronaut2D triggerFlyAway={flyAway} />
-          
           <div className="animate-fade-in mb-4">
             <h1 
               className="text-6xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent"
@@ -98,7 +94,7 @@ const Index = () => {
         <div className="px-6 pb-8 space-y-3 max-w-md w-full mx-auto animate-slide-up">
           <Button 
             size="lg" 
-            onClick={() => handleNavigation("/auth")}
+            onClick={() => navigate("/auth")}
             className="w-full text-base font-semibold py-6 uppercase tracking-wider shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-primary via-accent to-cosmic-pink text-white hover:scale-105"
             style={{ boxShadow: '0 0 20px rgba(139, 92, 246, 0.25)' }}
           >
@@ -107,7 +103,7 @@ const Index = () => {
           <Button 
             size="lg" 
             variant="outline"
-            onClick={() => handleNavigation("/auth")}
+            onClick={() => navigate("/auth")}
             className="w-full text-base font-semibold py-6 uppercase tracking-wider border-2 border-primary/40 text-foreground/90 bg-card/30 backdrop-blur-sm hover:bg-card/50 hover:border-primary/60 hover:scale-105 transition-all"
             style={{ boxShadow: '0 0 15px rgba(66, 153, 225, 0.15)' }}
           >
