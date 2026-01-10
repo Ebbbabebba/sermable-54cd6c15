@@ -427,6 +427,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     const hadErrors = failedSet.size > 0;
 
     if (phase.includes('learning')) {
+      // Capture phase immediately to avoid stale closure inside timeouts
+      const currentPhase = phase;
+
       // Learning phase: need 3 fully-visible reads
       // Use ref to prevent race conditions from duplicate calls
       const currentRep = repetitionCountRef.current;
@@ -448,13 +451,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
             setShowCelebration(false);
             // Transition learning → fading for all phase types
             let nextPhase: Phase;
-            if (phase === 'sentence_1_learning') nextPhase = 'sentence_1_fading';
-            else if (phase === 'sentence_2_learning') nextPhase = 'sentence_2_fading';
-            else if (phase === 'sentences_1_2_learning') nextPhase = 'sentences_1_2_fading';
-            else if (phase === 'sentence_3_learning') nextPhase = 'sentence_3_fading';
-            else if (phase === 'beat_learning') nextPhase = 'beat_fading';
-            else nextPhase = phase.replace('learning', 'fading') as Phase;
-            
+            if (currentPhase === 'sentence_1_learning') nextPhase = 'sentence_1_fading';
+            else if (currentPhase === 'sentence_2_learning') nextPhase = 'sentence_2_fading';
+            else if (currentPhase === 'sentences_1_2_learning') nextPhase = 'sentences_1_2_fading';
+            else if (currentPhase === 'sentence_3_learning') nextPhase = 'sentence_3_fading';
+            else if (currentPhase === 'beat_learning') nextPhase = 'beat_fading';
+            else nextPhase = currentPhase.replace('learning', 'fading') as Phase;
+
             transitionToPhase(nextPhase);
           }, 1500);
         }, 150);
