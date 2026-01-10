@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, Brain, BookOpen, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -41,6 +41,8 @@ interface Beat {
   sentence_2_text: string;
   sentence_3_text: string;
   is_mastered: boolean;
+  mastered_at: string | null;
+  last_recall_at: string | null;
 }
 
 interface BeatPracticeViewProps {
@@ -51,8 +53,14 @@ interface BeatPracticeViewProps {
 
 type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
 
+// Session modes: recall (quick review of mastered beats) or learn (learning a new beat)
+type SessionMode = 'recall' | 'learn' | 'session_complete';
+
 // Common words to fade first
 const COMMON_WORDS = new Set(['the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with', 'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can']);
+
+// Hours threshold to consider a new session (e.g., 4+ hours = new session)
+const NEW_SESSION_HOURS = 4;
 
 const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
@@ -62,6 +70,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const [currentBeatIndex, setCurrentBeatIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
+  
+  // Session mode tracking
+  const [sessionMode, setSessionMode] = useState<SessionMode>('recall');
+  const [beatsToRecall, setBeatsToRecall] = useState<Beat[]>([]);
+  const [recallIndex, setRecallIndex] = useState(0);
+  const [recallSuccessCount, setRecallSuccessCount] = useState(0);
+  const [newBeatToLearn, setNewBeatToLearn] = useState<Beat | null>(null);
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
@@ -92,11 +107,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Guards against duplicate "sentence complete" triggers for the same repetition
-  // (Web Speech can emit multiple FINAL result batches very close together)
   const lastCompletionRepIdRef = useRef<number>(-1);
 
   // Ignore speech results briefly right after we reset / during transitions
-  // (Web Speech often flushes stale tokens across repetitions)
   const ignoreResultsUntilRef = useRef(0);
 
   // When we intentionally abort recognition (to flush stale results), don't restart until this time
@@ -143,12 +156,21 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     missedIndicesRef.current = missedIndices;
   }, [missedIndices]);
 
-  // Get current beat
-  const currentBeat = beats[currentBeatIndex];
+  // Get current beat based on session mode
+  const currentBeat = sessionMode === 'recall' 
+    ? beatsToRecall[recallIndex] 
+    : sessionMode === 'learn' 
+      ? newBeatToLearn 
+      : null;
   
   // Get current sentence text based on phase
   const getCurrentText = useCallback(() => {
     if (!currentBeat) return "";
+    
+    // In recall mode, show all 3 sentences together (fully hidden for quick recall)
+    if (sessionMode === 'recall') {
+      return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text} ${currentBeat.sentence_3_text}`;
+    }
     
     if (phase === 'beat_learning' || phase === 'beat_fading') {
       return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text} ${currentBeat.sentence_3_text}`;
@@ -163,7 +185,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     if (phase.startsWith('sentence_3')) return currentBeat.sentence_3_text;
     
     return "";
-  }, [currentBeat, phase]);
+  }, [currentBeat, phase, sessionMode]);
 
   const currentText = getCurrentText();
   const words = currentText.split(/\s+/).filter(w => w.trim());
@@ -177,7 +199,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   }, [showCelebration]);
 
   // Hard-stop + delay restart to prevent Web Speech from replaying buffered results
-  // (this is what caused skipping from rep 1 -> 3 and hiding multiple words “for free”).
   const pauseSpeechRecognition = (pauseMs: number) => {
     const until = Date.now() + pauseMs;
 
@@ -198,6 +219,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
   // Get sentence number (1, 2, or 3) or combining indicator
   const getCurrentSentenceNumber = () => {
+    if (sessionMode === 'recall') return 3; // Full beat in recall
     if (phase.startsWith('sentence_1')) return 1;
     if (phase.startsWith('sentence_2')) return 2;
     if (phase.startsWith('sentences_1_2')) return 2; // Show as "after S2"
@@ -207,6 +229,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
   // Get phase type (learning, fading, combining)
   const getPhaseType = (): 'learning' | 'fading' | 'combining' => {
+    if (sessionMode === 'recall') return 'fading'; // Recall = fully hidden
     if (phase.includes('learning')) return 'learning';
     if (phase.includes('fading')) return 'fading';
     if (phase.includes('combining')) return 'combining';
@@ -221,22 +244,61 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const loadOrCreateBeats = async () => {
     setLoading(true);
 
-    // Fetch speech language (helps speech recognition)
+    // Fetch speech language and last practice time
     const { data: speechRow } = await supabase
       .from('speeches')
-      .select('speech_language')
+      .select('speech_language, last_practice_session_at')
       .eq('id', speechId)
       .single();
 
     if (speechRow?.speech_language) {
-      // Use BCP-47-ish tags if possible; default to browser language otherwise
       setSpeechLang(speechRow.speech_language);
     }
 
-    const setBeatsAndIndex = (rows: Beat[]) => {
+    // Determine if this is a new session (4+ hours since last practice)
+    const lastPractice = speechRow?.last_practice_session_at 
+      ? new Date(speechRow.last_practice_session_at) 
+      : null;
+    const hoursSinceLastPractice = lastPractice 
+      ? (Date.now() - lastPractice.getTime()) / (1000 * 60 * 60) 
+      : Infinity;
+    const isNewSession = hoursSinceLastPractice >= NEW_SESSION_HOURS;
+
+    const setBeatsAndPlan = (rows: Beat[]) => {
       setBeats(rows);
-      const firstUnmastered = rows.findIndex((b) => !b.is_mastered);
-      setCurrentBeatIndex(firstUnmastered >= 0 ? firstUnmastered : 0);
+      
+      // Find mastered beats that need recall (mastered in previous sessions)
+      // Only do recalls if this is a new session
+      const masteredBeats = rows.filter(b => b.is_mastered && b.mastered_at);
+      const beatsNeedingRecall = isNewSession 
+        ? masteredBeats.filter(b => {
+            // Need recall if: never recalled, or last recall was before last mastery update
+            if (!b.last_recall_at) return true;
+            const lastRecall = new Date(b.last_recall_at);
+            const hoursSinceRecall = (Date.now() - lastRecall.getTime()) / (1000 * 60 * 60);
+            return hoursSinceRecall >= NEW_SESSION_HOURS;
+          })
+        : [];
+      
+      // Find the first unmastered beat to learn
+      const firstUnmastered = rows.find(b => !b.is_mastered) || null;
+      
+      setBeatsToRecall(beatsNeedingRecall);
+      setNewBeatToLearn(firstUnmastered);
+      
+      // Determine starting mode
+      if (beatsNeedingRecall.length > 0) {
+        setSessionMode('recall');
+        setRecallIndex(0);
+        // For recall, start with all words hidden
+        initializeRecallMode();
+      } else if (firstUnmastered) {
+        setSessionMode('learn');
+        setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
+      } else {
+        // All beats mastered, nothing to learn
+        setSessionMode('session_complete');
+      }
     };
 
     const looksMisSegmented = (s: string) => {
@@ -244,7 +306,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       if (!text) return true;
       if (text.includes('\n')) return true;
       const wordsCount = text.split(/\s+/).filter(Boolean).length;
-      if (wordsCount > 28) return true; // heuristic: sentence field shouldn't be a paragraph
+      if (wordsCount > 28) return true;
       const punctCount = (text.match(/[.!?]/g) ?? []).length;
       if (punctCount > 1) return true;
       return false;
@@ -272,7 +334,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       );
 
     if (existingBeats && existingBeats.length > 0 && !shouldRegenerate) {
-      setBeatsAndIndex(existingBeats);
+      setBeatsAndPlan(existingBeats as Beat[]);
       setLoading(false);
       return;
     }
@@ -286,20 +348,45 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       if (fnError) throw fnError;
 
       if (data?.beats) {
-        setBeatsAndIndex(data.beats);
+        setBeatsAndPlan(data.beats as Beat[]);
       } else if (existingBeats && existingBeats.length > 0) {
-        // Fallback: keep existing beats if regeneration didn't return data
-        setBeatsAndIndex(existingBeats);
+        setBeatsAndPlan(existingBeats as Beat[]);
       }
     } catch (error) {
       console.error('Error creating beats:', error);
       if (existingBeats && existingBeats.length > 0) {
-        setBeatsAndIndex(existingBeats);
+        setBeatsAndPlan(existingBeats as Beat[]);
       }
     }
 
+    // Update last practice session time
+    await supabase
+      .from('speeches')
+      .update({ last_practice_session_at: new Date().toISOString() })
+      .eq('id', speechId);
+
     setLoading(false);
   };
+
+  // Initialize recall mode - all words hidden
+  const initializeRecallMode = () => {
+    // We'll set hidden words after the text is available
+    setPhase('beat_fading'); // Use beat_fading phase for recall
+    setRepetitionCount(1);
+    repetitionCountRef.current = 1;
+    setConsecutiveNoScriptSuccess(0);
+    setRecallSuccessCount(0);
+  };
+
+  // Effect to hide all words when entering recall mode
+  useEffect(() => {
+    if (sessionMode === 'recall' && words.length > 0) {
+      // Hide all words for recall
+      const allIndices = new Set(words.map((_, i) => i));
+      setHiddenWordIndices(allIndices);
+      setHiddenWordOrder(words.map((_, i) => i));
+    }
+  }, [sessionMode, words.length, recallIndex]);
 
   // Determine which word to hide next (priority order)
   const getNextWordToHide = useCallback((currentHidden: Set<number>): number | null => {
@@ -356,31 +443,23 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     return false;
   };
 
-  // Process transcription - cursor-based: consume only NEW final tokens, advance one word at a time
+  // Process transcription - cursor-based
   const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number) => {
-    // Ignore transcription events from previous repetitions
     if (repId !== repetitionIdRef.current) return;
     
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
 
-    // Get current state
     const currentIdx = currentWordIndexRef.current;
     
-    // If we've already completed all words, trigger reset immediately
     if (currentIdx >= words.length) {
       return;
     }
 
-    // Look for matches starting from where we left off in the transcript
-    // Only process words we haven't seen yet
     const prevTranscriptLength = transcriptRef.current.split(/\s+/).filter(w => w.trim()).length;
     transcriptRef.current = transcript;
     
-    // Get only the NEW words since last processing
     const newWords = rawWords.slice(prevTranscriptLength);
-    
-    // Also check recent words in case of speech recognition corrections
     const recentWords = rawWords.slice(Math.max(0, rawWords.length - 6));
     const wordsToCheck = newWords.length > 0 ? newWords : recentWords;
     
@@ -390,7 +469,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     for (const spoken of wordsToCheck) {
       if (advancedTo >= words.length) break;
 
-      // Check if this spoken word matches expected or next few words
       let foundIdx = -1;
       for (let i = advancedTo; i < Math.min(advancedTo + 3, words.length); i++) {
         if (wordsMatch(spoken, words[i])) {
@@ -401,8 +479,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
       if (foundIdx === -1) continue;
 
-      // Mark all words up to and including the matched word as spoken
-      // (We assume skipped words were said but not caught by recognition)
       for (let j = advancedTo; j <= foundIdx; j++) {
         newSpoken.add(j);
       }
@@ -411,18 +487,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       lastWordTimeRef.current = Date.now();
     }
 
-    // Sentence complete: trigger completion ONCE for this repetition.
     if (advancedTo >= words.length) {
-      // Deduplicate completion signals for the same repetition.
-      // Web Speech can emit multiple FINAL result batches for the same spoken sentence.
       if (lastCompletionRepIdRef.current === repId) {
         return;
       }
 
       lastCompletionRepIdRef.current = repId;
 
-      // Failures are driven by *signals* (yellow hesitation / red miss) on hidden words,
-      // not by requiring perfect speech-recognition transcripts.
       const failedFromSignals = new Set<number>();
       hiddenWordIndicesRef.current.forEach((idx) => {
         if (hesitatedIndicesRef.current.has(idx) || missedIndicesRef.current.has(idx)) {
@@ -433,7 +504,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       checkCompletion(newSpoken, failedFromSignals);
       return;
     }
-    // Update state if we advanced
+
     if (advancedTo > currentIdx) {
       currentWordIndexRef.current = advancedTo;
       setCurrentWordIndex(advancedTo);
@@ -442,7 +513,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       setSpokenIndices(newSpoken);
     }
 
-  }, [words, wordsMatch, checkCompletion]);
+  }, [words, wordsMatch]);
 
   useEffect(() => {
     processTranscriptionRef.current = processTranscription;
@@ -454,26 +525,22 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
     if (!allSpoken) return;
 
-    // Check for errors (missed hidden words)
     const failedSet = failed ?? failedWordIndices;
     const hadErrors = failedSet.size > 0;
 
-    if (phase.includes('learning')) {
-      // Capture phase immediately to avoid stale closure inside timeouts
-      const currentPhase = phase;
+    // Handle recall mode completion
+    if (sessionMode === 'recall') {
+      handleRecallCompletion(hadErrors);
+      return;
+    }
 
-      // Learning phase: need 3 fully-visible reads
-      // Use ref to prevent race conditions from duplicate calls
+    if (phase.includes('learning')) {
+      const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
 
       if (currentRep >= 3) {
-        // Hard-pause recognition while celebrating + switching phases
         pauseSpeechRecognition(1700);
-
-        // Reset cursor before celebration
         resetForNextRep();
-
-        // Show brief checkmark celebration before transitioning to fading phase
         setCelebrationMessage(t('beat_practice.great_start_fading'));
 
         setTimeout(() => {
@@ -481,7 +548,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
           setTimeout(() => {
             setShowCelebration(false);
-            // Transition learning → fading for all phase types
             let nextPhase: Phase;
             if (currentPhase === 'sentence_1_learning') nextPhase = 'sentence_1_fading';
             else if (currentPhase === 'sentence_2_learning') nextPhase = 'sentence_2_fading';
@@ -494,14 +560,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           }, 1500);
         }, 150);
       } else {
-        // Immediately increment ref to guard against duplicate calls
         repetitionCountRef.current = currentRep + 1;
-
-        // Hard-pause recognition during the rep-complete moment so buffered results
-        // don't immediately complete the next rep.
         pauseSpeechRecognition(900);
-
-        // Show quick rep-complete feedback (brief check), then reset for next rep
         setCelebrationMessage(`${currentRep}/3 ✓`);
         setShowCelebration(true);
 
@@ -512,9 +572,73 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         }, 800);
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
-      // Same protection in fading/combining: one repetition => at most one hide/unhide step.
       pauseSpeechRecognition(750);
       handleFadingCompletion(hadErrors, failedSet);
+    }
+  }
+
+  // Handle recall mode completion
+  function handleRecallCompletion(hadErrors: boolean) {
+    pauseSpeechRecognition(1200);
+
+    if (hadErrors) {
+      // Failed recall - reset and try again
+      setRecallSuccessCount(0);
+      setCelebrationMessage("🔄 Try again");
+      setShowCelebration(true);
+      
+      setTimeout(() => {
+        setShowCelebration(false);
+        resetForNextRep();
+      }, 1200);
+    } else {
+      const newCount = recallSuccessCount + 1;
+      
+      if (newCount >= 2) {
+        // Successfully recalled this beat! Update last_recall_at
+        const recalledBeat = beatsToRecall[recallIndex];
+        if (recalledBeat) {
+          supabase
+            .from('practice_beats')
+            .update({ last_recall_at: new Date().toISOString() })
+            .eq('id', recalledBeat.id)
+            .then(() => {});
+        }
+
+        setCelebrationMessage("✅ Beat recalled!");
+        setShowCelebration(true);
+
+        setTimeout(() => {
+          setShowCelebration(false);
+          
+          // Move to next beat to recall, or switch to learn mode
+          if (recallIndex < beatsToRecall.length - 1) {
+            setRecallIndex(prev => prev + 1);
+            setRecallSuccessCount(0);
+            resetForNextRep();
+          } else {
+            // Done with recalls, now learn new beat
+            if (newBeatToLearn) {
+              setSessionMode('learn');
+              setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
+              transitionToPhase('sentence_1_learning');
+            } else {
+              // No new beat to learn - session complete!
+              setSessionMode('session_complete');
+            }
+          }
+        }, 1800);
+      } else {
+        // Need one more successful recall
+        setRecallSuccessCount(newCount);
+        setCelebrationMessage(`${newCount}/2 ✓`);
+        setShowCelebration(true);
+        
+        setTimeout(() => {
+          setShowCelebration(false);
+          resetForNextRep();
+        }, 800);
+      }
     }
   }
 
@@ -523,10 +647,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     const allHidden = hiddenWordIndices.size >= words.length;
 
     if (hadErrors) {
-      // Reset consecutive success counter
       setConsecutiveNoScriptSuccess(0);
       
-      // Restore only the most recently hidden word (last in hiddenWordOrder)
       if (hiddenWordOrder.length > 0) {
         const lastHiddenIdx = hiddenWordOrder[hiddenWordOrder.length - 1];
         setHiddenWordIndices((prev) => {
@@ -539,7 +661,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       setFailedWordIndices(new Set());
       resetForNextRep();
     } else if (!allHidden) {
-      // Success! Hide one more word
       const nextToHide = getNextWordToHide(hiddenWordIndices);
       if (nextToHide !== null) {
         setHiddenWordIndices((prev) => new Set([...prev, nextToHide]));
@@ -547,18 +668,15 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       }
       resetForNextRep();
     } else {
-      // All words hidden - need 2 consecutive successful no-script reps
       const newConsecutive = consecutiveNoScriptSuccess + 1;
       
       if (newConsecutive >= 2) {
-        // Sentence/combining/beat mastered!
         if (phase === 'beat_fading') {
           showBeatCelebration();
         } else {
           showSentenceCelebration();
         }
       } else {
-        // Need one more successful rep
         setConsecutiveNoScriptSuccess(newConsecutive);
         resetForNextRep();
       }
@@ -566,10 +684,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   }
 
   const resetForNextRep = () => {
-    // Increment repetition ID so old transcription events are ignored
     repetitionIdRef.current += 1;
-
-    // Ignore speech results briefly right after a reset; Web Speech can flush stale tokens
     ignoreResultsUntilRef.current = Date.now() + 400;
 
     currentWordIndexRef.current = 0;
@@ -597,24 +712,16 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     setHiddenWordOrder([]);
     setConsecutiveNoScriptSuccess(0);
 
-    // Reset completion guard for the new sentence
     lastCompletionRepIdRef.current = -1;
-
-    // Flush + delay restart so Web Speech can't carry over the previous sentence's final batch
     pauseSpeechRecognition(900);
-
     resetForNextRep();
   };
 
   const showSentenceCelebration = () => {
-    // Capture phase immediately to avoid stale closure in setTimeout
     const currentPhase = phase;
     
-    // When a sentence is fully completed (especially sentence 2), snap the cursor back to
-    // the first word so the blue pulse visibly resets before moving on.
     resetForNextRep();
 
-    // Determine celebration message based on what's coming next
     let message = t('beat_practice.excellent_next');
     if (currentPhase === 'sentence_2_fading') {
       message = t('beat_practice.lets_combine', "🔗 Let's combine them!");
@@ -623,15 +730,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }
     setCelebrationMessage(message);
 
-    // Give React a moment to render the reset state before showing the celebration overlay.
     setTimeout(() => {
       setShowCelebration(true);
 
       setTimeout(() => {
         setShowCelebration(false);
 
-        // Move to next phase
-        // Flow: S1 → S2 → (S1+S2) → S3 → (S1+S2+S3)
         if (currentPhase === 'sentence_1_fading') {
           transitionToPhase('sentence_2_learning');
         } else if (currentPhase === 'sentence_2_fading') {
@@ -646,27 +750,26 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   };
 
   const showBeatCelebration = async () => {
-    setCelebrationMessage(t('beat_practice.beat_complete'));
-    setShowCelebration(true);
-    
-    // Mark beat as mastered
+    // Mark beat as mastered with timestamp
     if (currentBeat) {
       await supabase
         .from('practice_beats')
-        .update({ is_mastered: true })
+        .update({ 
+          is_mastered: true, 
+          mastered_at: new Date().toISOString() 
+        })
         .eq('id', currentBeat.id);
     }
+
+    // SESSION COMPLETE - Don't auto-continue to next beat!
+    // This is the key change: stop after mastering ONE beat
+    setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
+    setShowCelebration(true);
     
     setTimeout(() => {
       setShowCelebration(false);
-      
-      // Move to next beat or complete
-      if (currentBeatIndex < beats.length - 1) {
-        setCurrentBeatIndex(prev => prev + 1);
-        transitionToPhase('sentence_1_learning');
-      } else {
-        onComplete?.();
-      }
+      // End the session - don't continue to next beat
+      setSessionMode('session_complete');
     }, 2500);
   };
 
@@ -677,7 +780,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     resetForNextRep();
     
     try {
-      // Check for Web Speech API support
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
       if (!SpeechRecognition) {
@@ -700,7 +802,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         if (showCelebrationRef.current) return;
         if (Date.now() < ignoreResultsUntilRef.current) return;
 
-        // Capture the current repetition ID BEFORE processing
         const currentRepId = repetitionIdRef.current;
 
         let interim = "";
@@ -737,7 +838,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       };
       
       recognition.onend = () => {
-        // Restart if still recording, but respect any pause window we set via pauseSpeechRecognition().
         if (!isRecordingRef.current) return;
         if (!recognitionRef.current) return;
 
@@ -770,12 +870,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
       lastWordTimeRef.current = Date.now();
       
-      // Start hesitation checking
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < wordsLengthRef.current) {
-          // Mark as hesitated if the word is HIDDEN (including index 0)
           if (hiddenWordIndicesRef.current.has(idx)) {
             setHesitatedIndices((prev) => {
               if (prev.has(idx)) return prev;
@@ -826,9 +924,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     if (!currentBeat) return;
     if (showCelebration) return;
     if (recognitionRef.current) return;
+    if (sessionMode === 'session_complete') return;
 
     startRecording();
-  }, [loading, currentBeat?.id, showCelebration, phase]);
+  }, [loading, currentBeat?.id, showCelebration, phase, sessionMode, recallIndex]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -845,6 +944,42 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     );
   }
 
+  // Session complete screen
+  if (sessionMode === 'session_complete') {
+    const masteredCount = beats.filter(b => b.is_mastered).length;
+    const totalBeats = beats.length;
+    const allMastered = masteredCount === totalBeats;
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+        <Trophy className="h-20 w-20 text-primary animate-pulse" />
+        <h2 className="text-2xl font-bold">
+          {allMastered 
+            ? t('beat_practice.all_mastered', "🎉 All beats mastered!")
+            : t('beat_practice.session_complete', "Session Complete!")}
+        </h2>
+        <p className="text-muted-foreground max-w-md">
+          {allMastered 
+            ? t('beat_practice.poem_memorized', "You've memorized the entire poem! Practice again tomorrow to reinforce.")
+            : t('beat_practice.come_back', `You've mastered ${masteredCount}/${totalBeats} beats. Come back in a few hours to learn the next one!`)}
+        </p>
+        <div className="flex flex-col gap-2 mt-4">
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <Brain className="h-4 w-4" />
+            {t('beat_practice.science_tip', "Sleep strengthens memories more than repetition")}
+          </p>
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            {t('beat_practice.morning_tip', "Morning recall = memory consolidation boost")}
+          </p>
+        </div>
+        <Button onClick={onComplete || onExit} className="mt-6">
+          {t('common.done', 'Done')}
+        </Button>
+      </div>
+    );
+  }
+
   if (!currentBeat) {
     return (
       <div className="text-center p-8">
@@ -856,12 +991,34 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     );
   }
 
+  // Get progress info based on mode
+  const getProgressInfo = () => {
+    if (sessionMode === 'recall') {
+      return {
+        label: t('beat_practice.recall_mode', '🔄 Quick Recall'),
+        sublabel: `Beat ${recallIndex + 1}/${beatsToRecall.length}`,
+      };
+    }
+    return {
+      label: t('beat_practice.learn_mode', '📚 Learning New Beat'),
+      sublabel: `Beat ${currentBeatIndex + 1}/${beats.length}`,
+    };
+  };
+
+  const progressInfo = getProgressInfo();
+
   return (
     <div className="flex flex-col h-full">
+      {/* Session mode indicator */}
+      <div className="text-center py-2 px-4 bg-primary/10 rounded-lg mb-2">
+        <span className="font-medium text-primary">{progressInfo.label}</span>
+        <span className="text-muted-foreground ml-2 text-sm">{progressInfo.sublabel}</span>
+      </div>
+
       {/* Progress header */}
       <BeatProgress
-        currentBeat={currentBeatIndex}
-        totalBeats={beats.length}
+        currentBeat={sessionMode === 'recall' ? recallIndex : currentBeatIndex}
+        totalBeats={sessionMode === 'recall' ? beatsToRecall.length : beats.length}
         currentSentence={getCurrentSentenceNumber()}
         phase={getPhaseType()}
         repetitionCount={repetitionCount}
@@ -899,7 +1056,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                   hesitatedIndices={hesitatedIndices}
                   missedIndices={missedIndices}
                   onWordTap={(idx) => {
-                    // Reveal word on tap if hidden
                     if (hiddenWordIndices.has(idx)) {
                       setHiddenWordIndices(prev => {
                         const next = new Set(prev);
@@ -910,11 +1066,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                   }}
                 />
                 
-                {/* Progress check - fills green as more words are hidden & mastered */}
-                {phase.includes('fading') || phase.includes('combining') ? (
+                {/* Progress indicator */}
+                {(sessionMode === 'recall' || phase.includes('fading') || phase.includes('combining')) ? (
                   <div className="mt-6 flex items-center gap-3">
                     <div className="relative w-10 h-10">
-                      {/* Background circle */}
                       <svg className="w-10 h-10 -rotate-90">
                         <circle
                           cx="20"
@@ -925,7 +1080,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                           strokeWidth="3"
                           className="text-muted/30"
                         />
-                        {/* Progress arc */}
                         <circle
                           cx="20"
                           cy="20"
@@ -938,7 +1092,6 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                           strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 100.5} 100.5`}
                         />
                       </svg>
-                      {/* Center check icon */}
                       <CheckCircle2 
                         className={cn(
                           "absolute inset-0 m-auto w-5 h-5 transition-colors duration-300",
@@ -947,7 +1100,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                       />
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {hiddenWordIndices.size}/{words.length} words mastered
+                      {sessionMode === 'recall' 
+                        ? `${recallSuccessCount}/2 recalls`
+                        : `${hiddenWordIndices.size}/${words.length} words mastered`}
                     </span>
                   </div>
                 ) : null}
@@ -971,12 +1126,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           <RotateCcw className="h-5 w-5" />
         </Button>
         
-        {/* Continue button - skip to next sentence when user feels confident */}
         {!showCelebration && (
           <Button
             variant="default"
             onClick={() => {
-              // Simulate completion of current rep/sentence
               const allIndices = new Set(words.map((_, i) => i));
               pauseSpeechRecognition(900);
               checkCompletion(allIndices, failedWordIndices);

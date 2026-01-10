@@ -291,6 +291,8 @@ export type Database = {
           created_at: string | null
           id: string
           is_mastered: boolean | null
+          last_recall_at: string | null
+          mastered_at: string | null
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
@@ -301,6 +303,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
+          last_recall_at?: string | null
+          mastered_at?: string | null
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
@@ -311,6 +315,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
+          last_recall_at?: string | null
+          mastered_at?: string | null
           sentence_1_text?: string
           sentence_2_text?: string
           sentence_3_text?: string
@@ -693,6 +699,7 @@ export type Database = {
           goal_date: string | null
           id: string
           last_accuracy: number | null
+          last_practice_session_at: string | null
           learning_mode: string | null
           mastery_level: number | null
           next_review_date: string | null
@@ -719,6 +726,7 @@ export type Database = {
           goal_date?: string | null
           id?: string
           last_accuracy?: number | null
+          last_practice_session_at?: string | null
           learning_mode?: string | null
           mastery_level?: number | null
           next_review_date?: string | null
@@ -745,6 +753,7 @@ export type Database = {
           goal_date?: string | null
           id?: string
           last_accuracy?: number | null
+          last_practice_session_at?: string | null
           learning_mode?: string | null
           mastery_level?: number | null
           next_review_date?: string | null
