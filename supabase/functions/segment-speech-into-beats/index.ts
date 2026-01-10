@@ -15,67 +15,62 @@ interface Beat {
 
 // Split text into sentences, preserving punctuation
 function splitIntoSentences(text: string): string[] {
-  // Match sentences ending with . ! ? and keep the punctuation
-  const sentenceRegex = /[^.!?]+[.!?]+/g;
-  const matches = text.match(sentenceRegex);
-  
-  if (!matches) {
-    // If no proper sentences found, return the whole text as one sentence
-    return [text.trim()];
+  const normalized = (text ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .trim();
+
+  if (!normalized) return [];
+
+  // 1) Split by sentence-ending punctuation. Also keep any trailing text without punctuation.
+  const baseSentences = normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [normalized];
+
+  // 2) If a "sentence" spans many line breaks (common in poems/scripts),
+  // split it into smaller chunks by grouping 2 lines together.
+  const out: string[] = [];
+
+  for (const s of baseSentences) {
+    const trimmed = s.trim();
+    if (!trimmed) continue;
+
+    const lines = trimmed
+      .split(/\n+/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    if (lines.length >= 3) {
+      for (let i = 0; i < lines.length; i += 2) {
+        const group = lines.slice(i, i + 2).join(" ").trim();
+        if (group) out.push(group);
+      }
+      continue;
+    }
+
+    out.push(lines.join(" "));
   }
-  
-  return matches.map(s => s.trim()).filter(s => s.length > 0);
+
+  return out;
 }
 
 // Group sentences into beats of 3
 function createBeats(sentences: string[]): Beat[] {
   const beats: Beat[] = [];
-  
+
   for (let i = 0; i < sentences.length; i += 3) {
-    const sentence1 = sentences[i] || "";
-    const sentence2 = sentences[i + 1] || "";
-    const sentence3 = sentences[i + 2] || "";
-    
-    // Handle remainder: if we have 1-2 sentences left at the end
-    if (i + 3 >= sentences.length && sentences.length > 3) {
-      const remaining = sentences.length - i;
-      
-      if (remaining === 1 && beats.length > 0) {
-        // Merge single remaining sentence with previous beat
-        // Create a 4th "sentence" by combining with the last beat's 3rd sentence
-        const lastBeat = beats[beats.length - 1];
-        lastBeat.sentence_3_text = lastBeat.sentence_3_text + " " + sentence1;
-        continue;
-      } else if (remaining === 2 && beats.length > 0) {
-        // Merge 2 remaining sentences with previous beat's last sentence
-        const lastBeat = beats[beats.length - 1];
-        lastBeat.sentence_3_text = lastBeat.sentence_3_text + " " + sentence1 + " " + sentence2;
-        continue;
-      }
-    }
-    
-    // For short speeches (≤3 sentences), create one beat with whatever we have
-    if (sentences.length <= 3) {
-      beats.push({
-        beat_order: beats.length,
-        sentence_1_text: sentence1,
-        sentence_2_text: sentence2 || sentence1, // Repeat if not enough
-        sentence_3_text: sentence3 || sentence2 || sentence1, // Repeat if not enough
-      });
-      break;
-    }
-    
-    // Normal case: create a beat with 3 sentences
-    if (sentence1 && sentence2 && sentence3) {
-      beats.push({
-        beat_order: beats.length,
-        sentence_1_text: sentence1,
-        sentence_2_text: sentence2,
-        sentence_3_text: sentence3,
-      });
-    }
+    const sentence1 = (sentences[i] ?? "").trim();
+    if (!sentence1) continue;
+
+    const sentence2 = (sentences[i + 1] ?? sentence1).trim();
+    const sentence3 = (sentences[i + 2] ?? sentence2).trim();
+
+    beats.push({
+      beat_order: beats.length,
+      sentence_1_text: sentence1,
+      sentence_2_text: sentence2,
+      sentence_3_text: sentence3,
+    });
   }
-  
+
   return beats;
 }
 
@@ -87,8 +82,21 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const authHeader = req.headers.get('Authorization') ?? '';
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const { speechId } = await req.json();
 
@@ -110,6 +118,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Speech not found', details: speechError }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (speech.user_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
