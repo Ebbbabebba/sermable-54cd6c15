@@ -1599,21 +1599,44 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Focus Mode: Beat-based sentence-by-sentence practice
   if (isPracticing && !showResults) {
     return (
-      <div className="min-h-screen bg-background flex flex-col p-4">
-        <BeatPracticeView
-          speechId={speech.id}
-          onComplete={() => {
-            setIsPracticing(false);
-            toast({
-              title: t('beat_practice.beat_complete'),
-              description: "All beats mastered!",
-            });
-          }}
-          onExit={() => {
-            setIsPracticing(false);
-            setIsRecording(false);
-          }}
-        />
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Minimal header with exit */}
+        <header className="flex items-center justify-between p-4 border-b border-border/50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setIsPracticing(false);
+              setIsRecording(false);
+            }}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t('common.exit')}
+          </Button>
+          <h1 className="text-sm font-medium text-muted-foreground truncate max-w-[50%]">
+            {speech.title}
+          </h1>
+          <div className="w-16" /> {/* Spacer for centering */}
+        </header>
+        
+        {/* Full-height beat practice */}
+        <div className="flex-1 flex flex-col">
+          <BeatPracticeView
+            speechId={speech.id}
+            onComplete={() => {
+              setIsPracticing(false);
+              toast({
+                title: t('beat_practice.beat_complete'),
+                description: "All beats mastered!",
+              });
+            }}
+            onExit={() => {
+              setIsPracticing(false);
+              setIsRecording(false);
+            }}
+          />
+        </div>
       </div>
     );
   }
@@ -1848,7 +1871,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
     );
   }
 
-  // Pre-practice screen: Start screen with lock/unlock
+  // Pre-practice screen: Beat-focused start screen
   return (
     <div className="min-h-screen bg-background">
       <LoadingOverlay isVisible={isProcessing} />
@@ -1865,16 +1888,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 {t('common.back')}
               </Button>
               {speech && (
-                <>
-                  <div className="border-l pl-4 hidden md:block">
-                    <h1 className="text-lg font-semibold capitalize">{speech.title}</h1>
-                    {speech.goal_date && (
-                      <p className="text-sm text-muted-foreground">
-                        {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
-                      </p>
-                    )}
-                  </div>
-                </>
+                <div className="border-l pl-4 hidden md:block">
+                  <h1 className="text-lg font-semibold capitalize">{speech.title}</h1>
+                  {speech.goal_date && (
+                    <p className="text-sm text-muted-foreground">
+                      {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -1901,91 +1922,80 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Active Segment Info */}
-          {segments.length > 1 && activeSegmentIndices.length > 0 && (
-            <Card className="border-primary bg-gradient-to-r from-primary/5 to-primary/10">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary rounded-lg">
-                    <span className="text-2xl">📚</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">
-                      {activeSegmentIndices.length === 1 
-                        ? t('practice.learningSegmentOf', { num: activeSegmentIndices[0] + 1, total: segments.length })
-                        : t('practice.mergingSegments', { num1: activeSegmentIndices[0] + 1, num2: activeSegmentIndices[1] + 1 })}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {activeSegmentIndices.length === 1
-                        ? t('practice.practicingWords', { count: Math.ceil(activeSegmentText.split(/\s+/).length) })
-                        : t('practice.combiningWords', { count: Math.ceil(activeSegmentText.split(/\s+/).length) })}
-                    </p>
+          {/* Beat System Overview Card */}
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-primary/10">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-primary/20 rounded-xl">
+                  <Target className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-1">
+                    {t('beat_practice.beat_system', 'Beat Learning System')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t('beat_practice.beat_explanation', 'Learn 3 sentences at a time. Each beat is mastered before moving to the next.')}
+                  </p>
+                  
+                  {/* Beat Progress Visual */}
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: Math.max(segments.length, 1) }).map((_, idx) => {
+                      const isMastered = segments[idx]?.is_mastered;
+                      return (
+                        <div 
+                          key={idx}
+                          className={`
+                            flex items-center justify-center w-10 h-10 rounded-lg text-sm font-medium transition-all
+                            ${isMastered 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'bg-muted text-muted-foreground border border-border'}
+                          `}
+                        >
+                          {isMastered ? '✓' : idx + 1}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Single segment or full speech info */}
-          {segments.length <= 1 && (
-            <Card className="border-cosmic-teal/20 bg-gradient-to-r from-cosmic-teal/5 to-cosmic-teal/10">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-cosmic-teal rounded-lg">
-                    <span className="text-2xl">📝</span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{t('practice.practiceFullSpeech')}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t('practice.wordsTotal', { count: speech.text_original.split(/\s+/).length })}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('practice.yourProgress')}</CardTitle>
-              <CardDescription>{t('practice.trackMemorization')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{t('practice.wordsMemorized')}</span>
-                  <span className="font-medium">{(() => {
-                  const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
-                  const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
-                  const wordsMemorized = Math.max(0, originalWords - currentWords);
-                  return originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
-                })()}%</span>
-                </div>
-                <Progress value={(() => {
-                  const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
-                  const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
-                  const wordsMemorized = Math.max(0, originalWords - currentWords);
-                  return originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
-                })()} />
               </div>
             </CardContent>
           </Card>
 
-          {/* Segment Progress */}
-          {segments.length > 0 && (
-            <SegmentProgress 
-              segments={segments} 
-              activeSegmentIndices={activeSegmentIndices} 
-            />
-          )}
-
+          {/* Today's Session Card */}
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center py-12 space-y-4">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                  <Play className="h-4 w-4" />
+                  {t('beat_practice.todays_session', "Today's Session")}
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-muted-foreground">
+                    {t('beat_practice.session_includes', 'Your session will include:')}
+                  </p>
+                  <ul className="text-sm space-y-1">
+                    <li className="flex items-center justify-center gap-2">
+                      <RotateCcw className="h-4 w-4 text-primary" />
+                      {t('beat_practice.quick_recall', 'Quick recall of mastered beats')}
+                    </li>
+                    <li className="flex items-center justify-center gap-2">
+                      <Target className="h-4 w-4 text-primary" />
+                      {t('beat_practice.learn_new', 'Learn 1 new beat (3 sentences)')}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Lock/Start Section */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-6 space-y-4">
                 {isLocked && nextReviewDate && (
                   <>
                     {subscriptionTier === 'free' ? (
-                      // Free users: Hard lock
                       <div className="mb-4 p-6 bg-gradient-to-r from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20">
                         <div className="flex items-center justify-center gap-2 mb-3">
                           <Lock className="h-6 w-6 text-destructive" />
@@ -1996,8 +2006,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
                         </p>
                         <p className="text-sm text-muted-foreground mb-4">
                           {t('practice.spacedRepetitionInfo')}
-                          <br />
-                          {t('practice.practicingTooEarly')}
                         </p>
                         <div className="pt-4 border-t border-border/50">
                           <p className="text-sm text-muted-foreground mb-3">
@@ -2016,13 +2024,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
                         </div>
                       </div>
                     ) : (
-                      // Premium users: Soft warning
                       <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
                         <div className="flex items-center justify-center gap-2 mb-2">
                           <Clock className="h-5 w-5 text-primary" />
-                          <p className="font-medium">
-                            {t('practice.aiRecommendedTime')}
-                          </p>
+                          <p className="font-medium">{t('practice.aiRecommendedTime')}</p>
                         </div>
                         <p className="text-lg font-semibold text-primary">
                           <LockCountdown nextReviewDate={nextReviewDate} />
@@ -2034,6 +2039,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     )}
                   </>
                 )}
+                
                 <Button 
                   size="lg" 
                   onClick={() => {
@@ -2044,10 +2050,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     }
                   }}
                   disabled={isLocked && subscriptionTier === 'free'}
-                  className="rounded-full px-8"
+                  className="rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   <Play className="h-5 w-5 mr-2" />
-                  {isLocked ? (subscriptionTier === 'free' ? t('practice.locked') : t('practice.practiceAnyway')) : t('practice.startPractice')}
+                  {isLocked 
+                    ? (subscriptionTier === 'free' ? t('practice.locked') : t('practice.practiceAnyway')) 
+                    : t('beat_practice.start_session', 'Start Session')}
                 </Button>
               </div>
             </CardContent>

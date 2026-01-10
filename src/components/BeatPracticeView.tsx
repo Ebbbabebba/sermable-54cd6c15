@@ -1037,112 +1037,174 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const progressInfo = getProgressInfo();
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Session mode indicator */}
-      <div className="text-center py-2 px-4 bg-primary/10 rounded-lg mb-2">
-        <span className="font-medium text-primary">{progressInfo.label}</span>
-        <span className="text-muted-foreground ml-2 text-sm">{progressInfo.sublabel}</span>
+    <div className="flex flex-col h-full p-4">
+      {/* Compact session mode indicator */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className={cn(
+            "px-3 py-1.5 rounded-full text-sm font-medium",
+            sessionMode === 'recall' 
+              ? "bg-amber-500/20 text-amber-500" 
+              : "bg-primary/20 text-primary"
+          )}>
+            {sessionMode === 'recall' ? '🔄 Recall' : '📚 Learn'}
+          </div>
+          <span className="text-sm text-muted-foreground">{progressInfo.sublabel}</span>
+        </div>
+        
+        {/* Beat dots */}
+        <div className="flex gap-1.5">
+          {Array.from({ length: sessionMode === 'recall' ? beatsToRecall.length : beats.length }).map((_, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                "w-2 h-2 rounded-full transition-all",
+                idx < (sessionMode === 'recall' ? recallIndex : currentBeatIndex)
+                  ? "bg-primary"
+                  : idx === (sessionMode === 'recall' ? recallIndex : currentBeatIndex)
+                  ? "bg-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background"
+                  : "bg-muted"
+              )}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Progress header */}
-      <BeatProgress
-        currentBeat={sessionMode === 'recall' ? recallIndex : currentBeatIndex}
-        totalBeats={sessionMode === 'recall' ? beatsToRecall.length : beats.length}
-        currentSentence={getCurrentSentenceNumber()}
-        phase={getPhaseType()}
-        repetitionCount={repetitionCount}
-        wordsRemaining={words.length - hiddenWordIndices.size}
-      />
+      {/* Sentence progress pills (only in learn mode) */}
+      {sessionMode === 'learn' && !phase.includes('beat') && (
+        <div className="flex items-center justify-center gap-2 mb-4">
+          {[1, 2, 3].map((sentenceNum) => {
+            const currentSentence = getCurrentSentenceNumber();
+            const isComplete = sentenceNum < currentSentence;
+            const isCurrent = sentenceNum === currentSentence;
+            return (
+              <div
+                key={sentenceNum}
+                className={cn(
+                  "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all",
+                  isComplete && "bg-primary text-primary-foreground",
+                  isCurrent && "bg-primary/20 text-primary ring-1 ring-primary/50",
+                  !isComplete && !isCurrent && "bg-muted/50 text-muted-foreground"
+                )}
+              >
+                {isComplete && <CheckCircle2 className="h-3 w-3" />}
+                <span>S{sentenceNum}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Main content area */}
-      <Card className="flex-1 relative overflow-hidden">
-        <CardContent className="flex items-center justify-center min-h-[300px] p-4">
-          <AnimatePresence mode="wait">
-            {showCelebration ? (
-              <motion.div
-                key="celebration"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                className="flex flex-col items-center gap-4"
-              >
-                <Sparkles className="h-16 w-16 text-primary animate-pulse" />
-                <p className="text-2xl font-bold text-primary">{celebrationMessage}</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="sentence"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="w-full flex flex-col items-center"
-              >
-                <SentenceDisplay
-                  text={currentText}
-                  hiddenWordIndices={hiddenWordIndices}
-                  currentWordIndex={currentWordIndex}
-                  spokenIndices={spokenIndices}
-                  hesitatedIndices={hesitatedIndices}
-                  missedIndices={missedIndices}
-                  onWordTap={(idx) => {
-                    if (hiddenWordIndices.has(idx)) {
-                      setHiddenWordIndices(prev => {
-                        const next = new Set(prev);
-                        next.delete(idx);
-                        return next;
-                      });
-                    }
-                  }}
-                />
-                
-                {/* Progress indicator */}
-                {(sessionMode === 'recall' || phase.includes('fading') || phase.includes('combining')) ? (
-                  <div className="mt-6 flex items-center gap-3">
-                    <div className="relative w-10 h-10">
-                      <svg className="w-10 h-10 -rotate-90">
-                        <circle
-                          cx="20"
-                          cy="20"
-                          r="16"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          className="text-muted/30"
+      {/* Phase indicator */}
+      <div className="text-center mb-4">
+        <span className={cn(
+          "inline-block px-4 py-1.5 rounded-full text-sm font-medium",
+          getPhaseType() === 'learning' && "bg-blue-500/20 text-blue-400",
+          getPhaseType() === 'fading' && "bg-amber-500/20 text-amber-400",
+          getPhaseType() === 'combining' && "bg-purple-500/20 text-purple-400"
+        )}>
+          {getPhaseType() === 'learning' && `Read ${repetitionCount}/3`}
+          {getPhaseType() === 'fading' && `${words.length - hiddenWordIndices.size} words left`}
+          {getPhaseType() === 'combining' && 'Combining sentences'}
+        </span>
+      </div>
+
+      {/* Main content area - larger and centered */}
+      <div className="flex-1 flex items-center justify-center min-h-0">
+        <Card className="w-full max-w-3xl overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardContent className="flex items-center justify-center p-6 md:p-10">
+            <AnimatePresence mode="wait">
+              {showCelebration ? (
+                <motion.div
+                  key="celebration"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.5, opacity: 0 }}
+                  className="flex flex-col items-center gap-6 py-12"
+                >
+                  <Sparkles className="h-20 w-20 text-primary animate-pulse" />
+                  <p className="text-3xl font-bold text-primary text-center">{celebrationMessage}</p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="sentence"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="w-full flex flex-col items-center"
+                >
+                  <SentenceDisplay
+                    text={currentText}
+                    hiddenWordIndices={hiddenWordIndices}
+                    currentWordIndex={currentWordIndex}
+                    spokenIndices={spokenIndices}
+                    hesitatedIndices={hesitatedIndices}
+                    missedIndices={missedIndices}
+                    onWordTap={(idx) => {
+                      if (hiddenWordIndices.has(idx)) {
+                        setHiddenWordIndices(prev => {
+                          const next = new Set(prev);
+                          next.delete(idx);
+                          return next;
+                        });
+                      }
+                    }}
+                  />
+                  
+                  {/* Progress indicator for fading mode */}
+                  {(sessionMode === 'recall' || phase.includes('fading')) && (
+                    <div className="mt-8 flex items-center gap-4">
+                      <div className="relative w-12 h-12">
+                        <svg className="w-12 h-12 -rotate-90">
+                          <circle
+                            cx="24"
+                            cy="24"
+                            r="20"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            className="text-muted/20"
+                          />
+                          <circle
+                            cx="24"
+                            cy="24"
+                            r="20"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            className="text-primary transition-all duration-300"
+                            strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 125.6} 125.6`}
+                          />
+                        </svg>
+                        <CheckCircle2 
+                          className={cn(
+                            "absolute inset-0 m-auto w-6 h-6 transition-colors duration-300",
+                            hiddenWordIndices.size === words.length ? "text-primary" : "text-muted-foreground/30"
+                          )}
                         />
-                        <circle
-                          cx="20"
-                          cy="20"
-                          r="16"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          className="text-success transition-all duration-300"
-                          strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 100.5} 100.5`}
-                        />
-                      </svg>
-                      <CheckCircle2 
-                        className={cn(
-                          "absolute inset-0 m-auto w-5 h-5 transition-colors duration-300",
-                          hiddenWordIndices.size === words.length ? "text-success" : "text-muted-foreground/40"
-                        )}
-                      />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium">
+                          {sessionMode === 'recall' 
+                            ? `${recallSuccessCount}/2 recalls`
+                            : `${hiddenWordIndices.size}/${words.length} mastered`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {sessionMode === 'recall' ? 'Recall from memory' : 'Words fading away'}
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {sessionMode === 'recall' 
-                        ? `${recallSuccessCount}/2 recalls`
-                        : `${hiddenWordIndices.size}/${words.length} words mastered`}
-                    </span>
-                  </div>
-                ) : null}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </CardContent>
-      </Card>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-4 py-6">
+      {/* Bottom controls */}
+      <div className="flex items-center justify-center gap-4 pt-6">
         <Button
           variant="outline"
           size="icon"
@@ -1150,7 +1212,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
             stopListening();
             onExit?.();
           }}
-          className="rounded-full"
+          className="rounded-full h-12 w-12"
         >
           <RotateCcw className="h-5 w-5" />
         </Button>
@@ -1158,15 +1220,16 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         {!showCelebration && (
           <Button
             variant="default"
+            size="lg"
             onClick={() => {
               const allIndices = new Set(words.map((_, i) => i));
               pauseSpeechRecognition(900);
               checkCompletion(allIndices, failedWordIndices);
             }}
-            className="rounded-full gap-2"
+            className="rounded-full gap-2 px-6 h-12"
           >
             {t('common.continue', 'Continue')}
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
         )}
       </div>
