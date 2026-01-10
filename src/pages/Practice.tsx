@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, Brain, Sparkles, ChevronRight, CheckCircle2, Circle, Zap } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1872,196 +1872,278 @@ const [liveTranscription, setLiveTranscription] = useState("");
   }
 
   // Pre-practice screen: Beat-focused start screen
+  const masteredBeats = segments.filter(s => s.is_mastered).length;
+  const totalBeats = Math.max(segments.length, 1);
+  const progressPercent = (masteredBeats / totalBeats) * 100;
+  const nextBeatNumber = masteredBeats + 1;
+
   return (
     <div className="min-h-screen bg-background">
       <LoadingOverlay isVisible={isProcessing} />
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
+      
+      {/* Minimal header */}
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/dashboard")}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                {t('common.back')}
-              </Button>
-              {speech && (
-                <div className="border-l pl-4 hidden md:block">
-                  <h1 className="text-lg font-semibold capitalize">{speech.title}</h1>
-                  {speech.goal_date && (
-                    <p className="text-sm text-muted-foreground">
-                      {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/dashboard")}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('common.back')}</span>
+            </Button>
+            
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleOpenEditScript}
+                className="gap-2"
               >
-                <Pencil className="h-4 w-4 mr-2" />
-                {t('practice.editScript')}
+                <Pencil className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('practice.editScript')}</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(`/presentation/${id}`)}
+                className="gap-2"
               >
-                <Presentation className="h-4 w-4 mr-2" />
-                {t('practice.presentationMode')}
+                <Presentation className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('practice.presentationMode')}</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Beat System Overview Card */}
-          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-background to-primary/10">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-primary/20 rounded-xl">
-                  <Target className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">
-                    {t('beat_practice.beat_system', 'Beat Learning System')}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t('beat_practice.beat_explanation', 'Learn 3 sentences at a time. Each beat is mastered before moving to the next.')}
+      <main className="container mx-auto px-4 py-6 pb-24">
+        <div className="max-w-lg mx-auto space-y-6">
+          
+          {/* Speech Title & Goal */}
+          {speech && (
+            <div className="text-center space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight capitalize">{speech.title}</h1>
+              {speech.goal_date && (
+                <p className="text-sm text-muted-foreground">
+                  {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Progress Ring & Stats */}
+          <div className="relative flex flex-col items-center py-8">
+            {/* Circular progress visualization */}
+            <div className="relative w-48 h-48">
+              {/* Background ring */}
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  fill="none"
+                  stroke="hsl(var(--muted))"
+                  strokeWidth="6"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  fill="none"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={`${progressPercent * 2.64} 264`}
+                  className="transition-all duration-700 ease-out"
+                />
+              </svg>
+              
+              {/* Center content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-4xl font-bold">{masteredBeats}</span>
+                <span className="text-sm text-muted-foreground">/ {totalBeats} beats</span>
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="flex items-center justify-center gap-6 mt-6">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-primary" />
+                <span className="text-muted-foreground">{t('beat_practice.mastered', 'Mastered')}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-muted border border-border" />
+                <span className="text-muted-foreground">{t('beat_practice.remaining', 'Remaining')}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Beat Timeline */}
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                <CardTitle className="text-base">{t('beat_practice.your_progress', 'Your Progress')}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="space-y-2">
+                {segments.slice(0, 8).map((segment, idx) => (
+                  <div 
+                    key={segment.id}
+                    className={`
+                      flex items-center gap-3 p-3 rounded-xl transition-all
+                      ${segment.is_mastered 
+                        ? 'bg-primary/10' 
+                        : idx === masteredBeats 
+                          ? 'bg-accent border border-primary/30' 
+                          : 'bg-muted/30'}
+                    `}
+                  >
+                    <div className={`
+                      flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-all
+                      ${segment.is_mastered 
+                        ? 'bg-primary text-primary-foreground' 
+                        : idx === masteredBeats 
+                          ? 'bg-primary/20 text-primary border-2 border-primary' 
+                          : 'bg-muted text-muted-foreground'}
+                    `}>
+                      {segment.is_mastered ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <span className="text-sm font-semibold">{idx + 1}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${segment.is_mastered ? 'text-primary' : ''}`}>
+                        {t('beat_practice.beat_n', `Beat ${idx + 1}`)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {segment.is_mastered 
+                          ? t('beat_practice.completed', 'Completed') 
+                          : idx === masteredBeats 
+                            ? t('beat_practice.up_next', 'Up next') 
+                            : t('beat_practice.locked', 'Locked')}
+                      </p>
+                    </div>
+                    {idx === masteredBeats && !segment.is_mastered && (
+                      <Zap className="h-4 w-4 text-primary animate-pulse" />
+                    )}
+                  </div>
+                ))}
+                {segments.length > 8 && (
+                  <p className="text-xs text-center text-muted-foreground pt-2">
+                    +{segments.length - 8} {t('beat_practice.more_beats', 'more beats')}
                   </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Today's Session Info */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardContent className="pt-5 pb-5">
+              <div className="flex items-start gap-4">
+                <div className="p-2.5 bg-primary/15 rounded-xl shrink-0">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <h3 className="font-semibold">{t('beat_practice.todays_session', "Today's Session")}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {masteredBeats > 0 
+                        ? t('beat_practice.session_desc_recall', 'Recall mastered beats, then learn new ones')
+                        : t('beat_practice.session_desc_start', 'Start with your first beat')}
+                    </p>
+                  </div>
                   
-                  {/* Beat Progress Visual */}
                   <div className="flex flex-wrap gap-2">
-                    {Array.from({ length: Math.max(segments.length, 1) }).map((_, idx) => {
-                      const isMastered = segments[idx]?.is_mastered;
-                      return (
-                        <div 
-                          key={idx}
-                          className={`
-                            flex items-center justify-center w-10 h-10 rounded-lg text-sm font-medium transition-all
-                            ${isMastered 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'bg-muted text-muted-foreground border border-border'}
-                          `}
-                        >
-                          {isMastered ? '✓' : idx + 1}
-                        </div>
-                      );
-                    })}
+                    {masteredBeats > 0 && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 text-xs font-medium">
+                        <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                        {`${masteredBeats} to recall`}
+                      </div>
+                    )}
+                    {nextBeatNumber <= totalBeats && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-xs font-medium text-primary">
+                        <Target className="h-3.5 w-3.5" />
+                        {`Beat ${nextBeatNumber} to learn`}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Today's Session Card */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                  <Play className="h-4 w-4" />
-                  {t('beat_practice.todays_session', "Today's Session")}
-                </div>
-                
-                <div className="space-y-2">
-                  <p className="text-muted-foreground">
-                    {t('beat_practice.session_includes', 'Your session will include:')}
-                  </p>
-                  <ul className="text-sm space-y-1">
-                    <li className="flex items-center justify-center gap-2">
-                      <RotateCcw className="h-4 w-4 text-primary" />
-                      {t('beat_practice.quick_recall', 'Quick recall of mastered beats')}
-                    </li>
-                    <li className="flex items-center justify-center gap-2">
-                      <Target className="h-4 w-4 text-primary" />
-                      {t('beat_practice.learn_new', 'Learn 1 new beat (3 sentences)')}
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Lock/Start Section */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-6 space-y-4">
-                {isLocked && nextReviewDate && (
-                  <>
+          {/* Lock Status (if applicable) */}
+          {isLocked && nextReviewDate && (
+            <Card className={subscriptionTier === 'free' ? 'border-destructive/30 bg-destructive/5' : 'border-primary/30 bg-primary/5'}>
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-start gap-4">
+                  <div className={`p-2.5 rounded-xl shrink-0 ${subscriptionTier === 'free' ? 'bg-destructive/15' : 'bg-primary/15'}`}>
                     {subscriptionTier === 'free' ? (
-                      <div className="mb-4 p-6 bg-gradient-to-r from-destructive/10 to-destructive/5 rounded-lg border border-destructive/20">
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                          <Lock className="h-6 w-6 text-destructive" />
-                          <p className="font-semibold text-lg">{t('practice.practiceLocked')}</p>
-                        </div>
-                        <p className="text-2xl font-bold text-destructive mb-2">
-                          <LockCountdown nextReviewDate={nextReviewDate} />
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          {t('practice.spacedRepetitionInfo')}
-                        </p>
-                        <div className="pt-4 border-t border-border/50">
-                          <p className="text-sm text-muted-foreground mb-3">
-                            <Crown className="h-4 w-4 inline mr-1 text-amber-500" />
-                            {t('practice.premiumCanPractice')}
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => navigate("/settings")}
-                            className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
-                          >
-                            <Crown className="h-4 w-4 mr-2" />
-                            {t('practice.upgradeToPremium')}
-                          </Button>
-                        </div>
-                      </div>
+                      <Lock className="h-5 w-5 text-destructive" />
                     ) : (
-                      <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <Clock className="h-5 w-5 text-primary" />
-                          <p className="font-medium">{t('practice.aiRecommendedTime')}</p>
-                        </div>
-                        <p className="text-lg font-semibold text-primary">
-                          <LockCountdown nextReviewDate={nextReviewDate} />
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {t('practice.optimalSpacing')}
-                        </p>
-                      </div>
+                      <Clock className="h-5 w-5 text-primary" />
                     )}
-                  </>
-                )}
-                
-                <Button 
-                  size="lg" 
-                  onClick={() => {
-                    if (isLocked && subscriptionTier !== 'free') {
-                      setShowTimingWarning(true);
-                    } else if (!isLocked || subscriptionTier === 'free') {
-                      if (!isLocked) handleStartPractice();
-                    }
-                  }}
-                  disabled={isLocked && subscriptionTier === 'free'}
-                  className="rounded-full px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-                >
-                  <Play className="h-5 w-5 mr-2" />
-                  {isLocked 
-                    ? (subscriptionTier === 'free' ? t('practice.locked') : t('practice.practiceAnyway')) 
-                    : t('beat_practice.start_session', 'Start Session')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold">
+                      {subscriptionTier === 'free' ? t('practice.practiceLocked') : t('practice.aiRecommendedTime')}
+                    </h3>
+                    <p className="text-lg font-bold mt-1">
+                      <LockCountdown nextReviewDate={nextReviewDate} />
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {t('practice.spacedRepetitionInfo')}
+                    </p>
+                    
+                    {subscriptionTier === 'free' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate("/settings")}
+                        className="mt-3 border-amber-500/50 text-amber-600 hover:bg-amber-500/10 gap-2"
+                      >
+                        <Crown className="h-4 w-4" />
+                        {t('practice.upgradeToPremium')}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
+
+      {/* Fixed bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border/50">
+        <div className="max-w-lg mx-auto">
+          <Button 
+            size="lg" 
+            onClick={() => {
+              if (isLocked && subscriptionTier !== 'free') {
+                setShowTimingWarning(true);
+              } else if (!isLocked || subscriptionTier === 'free') {
+                if (!isLocked) handleStartPractice();
+              }
+            }}
+            disabled={isLocked && subscriptionTier === 'free'}
+            className="w-full rounded-2xl py-6 text-lg font-semibold shadow-lg gap-2"
+          >
+            <Play className="h-5 w-5" />
+            {isLocked 
+              ? (subscriptionTier === 'free' ? t('practice.locked') : t('practice.practiceAnyway')) 
+              : t('beat_practice.start_session', 'Start Session')}
+            <ChevronRight className="h-5 w-5 ml-1" />
+          </Button>
+        </div>
+      </div>
 
       {/* Premium User Timing Warning Dialog */}
       <AlertDialog open={showTimingWarning} onOpenChange={setShowTimingWarning}>
