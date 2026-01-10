@@ -49,7 +49,7 @@ interface BeatPracticeViewProps {
   onExit?: () => void;
 }
 
-type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_combining';
+type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_combining' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_combining';
 
 // Common words to fade first
 const COMMON_WORDS = new Set(['the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with', 'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can']);
@@ -154,6 +154,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text} ${currentBeat.sentence_3_text}`;
     }
     
+    if (phase === 'sentences_1_2_combining') {
+      return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text}`;
+    }
+    
     if (phase.startsWith('sentence_1')) return currentBeat.sentence_1_text;
     if (phase.startsWith('sentence_2')) return currentBeat.sentence_2_text;
     if (phase.startsWith('sentence_3')) return currentBeat.sentence_3_text;
@@ -192,18 +196,20 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     }
   };
 
-  // Get sentence number (1, 2, or 3)
+  // Get sentence number (1, 2, or 3) or combining indicator
   const getCurrentSentenceNumber = () => {
     if (phase.startsWith('sentence_1')) return 1;
     if (phase.startsWith('sentence_2')) return 2;
+    if (phase === 'sentences_1_2_combining') return 2; // Show as "after S2"
     if (phase.startsWith('sentence_3')) return 3;
-    return 1;
+    return 3; // beat_combining
   };
 
   // Get phase type (learning, fading, combining)
   const getPhaseType = (): 'learning' | 'fading' | 'combining' => {
     if (phase.includes('learning')) return 'learning';
     if (phase.includes('fading')) return 'fading';
+    if (phase.includes('combining')) return 'combining';
     return 'combining';
   };
 
@@ -465,7 +471,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           resetForNextRep();
         }, 800);
       }
-    } else if (phase.includes('fading') || phase === 'beat_combining') {
+    } else if (phase.includes('fading') || phase.includes('combining')) {
       // Same protection in fading/combining: one repetition => at most one hide/unhide step.
       pauseSpeechRecognition(750);
       handleFadingCompletion(hadErrors, failedSet);
@@ -505,9 +511,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const newConsecutive = consecutiveNoScriptSuccess + 1;
       
       if (newConsecutive >= 2) {
-        // Sentence/beat mastered!
+        // Sentence/beat/combining mastered!
         if (phase === 'beat_combining') {
           showBeatCelebration();
+        } else if (phase === 'sentences_1_2_combining') {
+          // After mastering S1+S2, move to S3
+          showSentenceCelebration();
         } else {
           showSentenceCelebration();
         }
@@ -575,9 +584,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         setShowCelebration(false);
 
         // Move to next sentence or combining phase
+        // Flow: S1 → S2 → (S1+S2) → S3 → (S1+S2+S3)
         if (phase === 'sentence_1_fading') {
           transitionToPhase('sentence_2_learning');
         } else if (phase === 'sentence_2_fading') {
+          transitionToPhase('sentences_1_2_combining');
+        } else if (phase === 'sentences_1_2_combining') {
           transitionToPhase('sentence_3_learning');
         } else if (phase === 'sentence_3_fading') {
           transitionToPhase('beat_combining');
@@ -852,7 +864,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                 />
                 
                 {/* Progress check - fills green as more words are hidden & mastered */}
-                {phase.includes('fading') || phase === 'beat_combining' ? (
+                {phase.includes('fading') || phase.includes('combining') ? (
                   <div className="mt-6 flex items-center gap-3">
                     <div className="relative w-10 h-10">
                       {/* Background circle */}
