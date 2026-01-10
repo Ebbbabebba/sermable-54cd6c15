@@ -1873,9 +1873,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
   // Pre-practice screen: Beat-focused start screen
   const masteredBeats = segments.filter(s => s.is_mastered).length;
-  const totalBeats = Math.max(segments.length, 1);
-  const progressPercent = (masteredBeats / totalBeats) * 100;
+  const totalBeats = segments.length;
+  const progressPercent = totalBeats > 0 ? (masteredBeats / totalBeats) * 100 : 0;
   const nextBeatNumber = masteredBeats + 1;
+  const hasBeats = totalBeats > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -1963,8 +1964,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
               
               {/* Center content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-bold">{masteredBeats}</span>
-                <span className="text-sm text-muted-foreground">/ {totalBeats} beats</span>
+                {hasBeats ? (
+                  <>
+                    <span className="text-4xl font-bold">{masteredBeats}</span>
+                    <span className="text-sm text-muted-foreground">/ {totalBeats} beats</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-2xl font-bold text-muted-foreground">—</span>
+                    <span className="text-xs text-muted-foreground">Loading...</span>
+                  </>
+                )}
               </div>
             </div>
 
