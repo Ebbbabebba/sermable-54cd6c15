@@ -572,15 +572,18 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   };
 
   const showSentenceCelebration = () => {
+    // Capture phase immediately to avoid stale closure in setTimeout
+    const currentPhase = phase;
+    
     // When a sentence is fully completed (especially sentence 2), snap the cursor back to
     // the first word so the blue pulse visibly resets before moving on.
     resetForNextRep();
 
     // Determine celebration message based on what's coming next
     let message = t('beat_practice.excellent_next');
-    if (phase === 'sentence_2_fading') {
+    if (currentPhase === 'sentence_2_fading') {
       message = t('beat_practice.lets_combine', "🔗 Let's combine them!");
-    } else if (phase === 'sentence_3_fading') {
+    } else if (currentPhase === 'sentence_3_fading') {
       message = t('beat_practice.final_combine', "🚀 Now all together!");
     }
     setCelebrationMessage(message);
@@ -594,13 +597,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
 
         // Move to next phase
         // Flow: S1 → S2 → (S1+S2) → S3 → (S1+S2+S3)
-        if (phase === 'sentence_1_fading') {
+        if (currentPhase === 'sentence_1_fading') {
           transitionToPhase('sentence_2_learning');
-        } else if (phase === 'sentence_2_fading') {
+        } else if (currentPhase === 'sentence_2_fading') {
           transitionToPhase('sentences_1_2_learning');
-        } else if (phase === 'sentences_1_2_fading') {
+        } else if (currentPhase === 'sentences_1_2_fading') {
           transitionToPhase('sentence_3_learning');
-        } else if (phase === 'sentence_3_fading') {
+        } else if (currentPhase === 'sentence_3_fading') {
           transitionToPhase('beat_learning');
         }
       }, 2000);
