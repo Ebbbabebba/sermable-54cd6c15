@@ -59,8 +59,20 @@ type SessionMode = 'recall' | 'learn' | 'session_complete';
 // Common words to fade first
 const COMMON_WORDS = new Set(['the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with', 'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can']);
 
-// Hours threshold to consider a new session (e.g., 4+ hours = new session)
-const NEW_SESSION_HOURS = 4;
+// Check if it's a new calendar day (for 1 beat per day logic)
+const isNewDay = (lastPractice: Date | null): boolean => {
+  if (!lastPractice) return true;
+  const today = new Date();
+  return lastPractice.toDateString() !== today.toDateString();
+};
+
+// Calculate how many beats we need per day given deadline
+const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number): number => {
+  if (daysUntilDeadline <= 0) return unmasteredCount; // Deadline passed or today - learn all
+  if (daysUntilDeadline >= unmasteredCount) return 1; // Plenty of time - 1 per day
+  // Tight deadline: distribute remaining beats across remaining days
+  return Math.ceil(unmasteredCount / daysUntilDeadline);
+};
 
 const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
@@ -244,10 +256,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const loadOrCreateBeats = async () => {
     setLoading(true);
 
-    // Fetch speech language and last practice time
+    // Fetch speech language, last practice time, and deadline
     const { data: speechRow } = await supabase
       .from('speeches')
-      .select('speech_language, last_practice_session_at')
+      .select('speech_language, last_practice_session_at, goal_date')
       .eq('id', speechId)
       .single();
 
@@ -255,33 +267,51 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       setSpeechLang(speechRow.speech_language);
     }
 
-    // Determine if this is a new session (4+ hours since last practice)
+    // Determine if this is a new day (for 1 beat per day logic)
     const lastPractice = speechRow?.last_practice_session_at 
       ? new Date(speechRow.last_practice_session_at) 
       : null;
-    const hoursSinceLastPractice = lastPractice 
-      ? (Date.now() - lastPractice.getTime()) / (1000 * 60 * 60) 
-      : Infinity;
-    const isNewSession = hoursSinceLastPractice >= NEW_SESSION_HOURS;
+    const todayIsNewDay = isNewDay(lastPractice);
+
+    // Calculate days until deadline
+    const goalDate = speechRow?.goal_date ? new Date(speechRow.goal_date) : null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysUntilDeadline = goalDate 
+      ? Math.ceil((goalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      : 30; // Default to 30 days if no deadline
 
     const setBeatsAndPlan = (rows: Beat[]) => {
       setBeats(rows);
       
-      // Find mastered beats that need recall (mastered in previous sessions)
-      // Only do recalls if this is a new session
+      // Find mastered beats that need recall (only on new days)
       const masteredBeats = rows.filter(b => b.is_mastered && b.mastered_at);
-      const beatsNeedingRecall = isNewSession 
+      const beatsNeedingRecall = todayIsNewDay 
         ? masteredBeats.filter(b => {
-            // Need recall if: never recalled, or last recall was before last mastery update
+            // Need recall if: never recalled today
             if (!b.last_recall_at) return true;
             const lastRecall = new Date(b.last_recall_at);
-            const hoursSinceRecall = (Date.now() - lastRecall.getTime()) / (1000 * 60 * 60);
-            return hoursSinceRecall >= NEW_SESSION_HOURS;
+            return lastRecall.toDateString() !== new Date().toDateString();
           })
         : [];
       
-      // Find the first unmastered beat to learn
-      const firstUnmastered = rows.find(b => !b.is_mastered) || null;
+      // Find unmastered beats
+      const unmasteredBeats = rows.filter(b => !b.is_mastered);
+      const unmasteredCount = unmasteredBeats.length;
+      
+      // Calculate how many beats we can learn today based on deadline
+      const beatsPerDay = calculateBeatsPerDay(unmasteredCount, daysUntilDeadline);
+      
+      // Count how many beats were already mastered today
+      const beatsLearnedToday = rows.filter(b => {
+        if (!b.mastered_at) return false;
+        const masteredDate = new Date(b.mastered_at);
+        return masteredDate.toDateString() === new Date().toDateString();
+      }).length;
+      
+      // Can we learn more beats today?
+      const canLearnMore = beatsLearnedToday < beatsPerDay;
+      const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
       
       setBeatsToRecall(beatsNeedingRecall);
       setNewBeatToLearn(firstUnmastered);
@@ -290,13 +320,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       if (beatsNeedingRecall.length > 0) {
         setSessionMode('recall');
         setRecallIndex(0);
-        // For recall, start with all words hidden
         initializeRecallMode();
       } else if (firstUnmastered) {
         setSessionMode('learn');
         setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
       } else {
-        // All beats mastered, nothing to learn
+        // Either all mastered, or already learned today's quota
         setSessionMode('session_complete');
       }
     };
