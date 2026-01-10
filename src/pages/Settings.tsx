@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, HelpCircle, ExternalLink, Mail, Moon, Sun, Clock } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, HelpCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -229,43 +229,93 @@ const Settings = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Premium Features */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <h3 className="font-semibold text-lg">{t('settings.subscription.whyPremium')}</h3>
-                <div className="grid gap-3">
-                  <div className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{t('settings.subscription.overrideLock')}</p>
-                      <p className="text-sm text-muted-foreground">{t('settings.subscription.overrideLockDesc')}</p>
+                
+                {/* Feature 1: Multiple Speeches */}
+                <div className="rounded-xl border bg-card p-5 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-primary/10">
+                      <FileStack className="h-5 w-5 text-primary" />
+                    </div>
+                    <h4 className="font-semibold text-base">{t('settings.subscription.multipleSpeeches')}</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.subscription.multipleSpeechesDesc')}
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
+                      <Mic className="h-3 w-3" /> {t('settings.subscription.actors')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
+                      <GraduationCap className="h-3 w-3" /> {t('settings.subscription.students')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
+                      <FileText className="h-3 w-3" /> {t('settings.subscription.pitchDecks')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
+                      <Presentation className="h-3 w-3" /> {t('settings.subscription.lecturers')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Feature 2: Presentation Mode */}
+                <div className="rounded-xl border bg-card p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-accent/50">
+                      <Presentation className="h-5 w-5 text-accent-foreground" />
+                    </div>
+                    <h4 className="font-semibold text-base">{t('settings.subscription.presentationMode')}</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.subscription.presentationModeDesc')}
+                  </p>
+                  
+                  {/* What you don't see during */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full line-through opacity-60">
+                      {t('settings.subscription.noScript')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full line-through opacity-60">
+                      {t('settings.subscription.noPulse')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full line-through opacity-60">
+                      {t('settings.subscription.noLiveFeedback')}
+                    </span>
+                  </div>
+
+                  {/* After presentation feedback */}
+                  <div className="pt-2 border-t border-border/50">
+                    <p className="text-xs font-medium text-primary mb-3 flex items-center gap-1.5">
+                      <BarChart3 className="h-3.5 w-3.5" />
+                      {t('settings.subscription.afterPresentation')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">{t('settings.subscription.missedWords')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">{t('settings.subscription.hesitations')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">{t('settings.subscription.tempoAnalysis')}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">{t('settings.subscription.flowBreaks')}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{t('settings.subscription.unlimitedSpeeches')}</p>
-                      <p className="text-sm text-muted-foreground">{t('settings.subscription.unlimitedSpeechesDesc')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{t('settings.subscription.advancedAnalytics')}</p>
-                      <p className="text-sm text-muted-foreground">{t('settings.subscription.advancedAnalyticsDesc')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{t('settings.subscription.streakFreeze')}</p>
-                      <p className="text-sm text-muted-foreground">{t('settings.subscription.streakFreezeDesc')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{t('settings.subscription.prioritySupport')}</p>
-                      <p className="text-sm text-muted-foreground">{t('settings.subscription.prioritySupportDesc')}</p>
-                    </div>
+
+                  {/* Important note */}
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      {t('settings.subscription.aiFeedbackNote')}
+                    </p>
                   </div>
                 </div>
               </div>
