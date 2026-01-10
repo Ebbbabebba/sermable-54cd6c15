@@ -49,7 +49,7 @@ interface BeatPracticeViewProps {
   onExit?: () => void;
 }
 
-type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_combining' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_combining';
+type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
 
 // Common words to fade first
 const COMMON_WORDS = new Set(['the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with', 'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can']);
@@ -150,11 +150,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const getCurrentText = useCallback(() => {
     if (!currentBeat) return "";
     
-    if (phase === 'beat_combining') {
+    if (phase === 'beat_learning' || phase === 'beat_fading') {
       return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text} ${currentBeat.sentence_3_text}`;
     }
     
-    if (phase === 'sentences_1_2_combining') {
+    if (phase === 'sentences_1_2_learning' || phase === 'sentences_1_2_fading') {
       return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text}`;
     }
     
@@ -200,9 +200,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const getCurrentSentenceNumber = () => {
     if (phase.startsWith('sentence_1')) return 1;
     if (phase.startsWith('sentence_2')) return 2;
-    if (phase === 'sentences_1_2_combining') return 2; // Show as "after S2"
+    if (phase.startsWith('sentences_1_2')) return 2; // Show as "after S2"
     if (phase.startsWith('sentence_3')) return 3;
-    return 3; // beat_combining
+    return 3; // beat_learning/fading
   };
 
   // Get phase type (learning, fading, combining)
@@ -432,24 +432,29 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const currentRep = repetitionCountRef.current;
 
       if (currentRep >= 3) {
-        // Hard-pause recognition while celebrating + switching phases so stale results can't
-        // instantly complete the next repetition.
+        // Hard-pause recognition while celebrating + switching phases
         pauseSpeechRecognition(1700);
 
-        // IMPORTANT UX: even on the *last* learning repetition, the cursor/pulse should
-        // jump back to the first word once the sentence is completed.
+        // Reset cursor before celebration
         resetForNextRep();
 
         // Show brief checkmark celebration before transitioning to fading phase
         setCelebrationMessage(t('beat_practice.great_start_fading'));
 
-        // Small delay so the "pulse reset" can be rendered before we swap to the celebration view.
         setTimeout(() => {
           setShowCelebration(true);
 
           setTimeout(() => {
             setShowCelebration(false);
-            const nextPhase = phase.replace('learning', 'fading') as Phase;
+            // Transition learning → fading for all phase types
+            let nextPhase: Phase;
+            if (phase === 'sentence_1_learning') nextPhase = 'sentence_1_fading';
+            else if (phase === 'sentence_2_learning') nextPhase = 'sentence_2_fading';
+            else if (phase === 'sentences_1_2_learning') nextPhase = 'sentences_1_2_fading';
+            else if (phase === 'sentence_3_learning') nextPhase = 'sentence_3_fading';
+            else if (phase === 'beat_learning') nextPhase = 'beat_fading';
+            else nextPhase = phase.replace('learning', 'fading') as Phase;
+            
             transitionToPhase(nextPhase);
           }, 1500);
         }, 150);
@@ -511,12 +516,9 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const newConsecutive = consecutiveNoScriptSuccess + 1;
       
       if (newConsecutive >= 2) {
-        // Sentence/beat/combining mastered!
-        if (phase === 'beat_combining') {
+        // Sentence/combining/beat mastered!
+        if (phase === 'beat_fading') {
           showBeatCelebration();
-        } else if (phase === 'sentences_1_2_combining') {
-          // After mastering S1+S2, move to S3
-          showSentenceCelebration();
         } else {
           showSentenceCelebration();
         }
@@ -583,16 +585,16 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       setTimeout(() => {
         setShowCelebration(false);
 
-        // Move to next sentence or combining phase
+        // Move to next phase
         // Flow: S1 → S2 → (S1+S2) → S3 → (S1+S2+S3)
         if (phase === 'sentence_1_fading') {
           transitionToPhase('sentence_2_learning');
         } else if (phase === 'sentence_2_fading') {
-          transitionToPhase('sentences_1_2_combining');
-        } else if (phase === 'sentences_1_2_combining') {
+          transitionToPhase('sentences_1_2_learning');
+        } else if (phase === 'sentences_1_2_fading') {
           transitionToPhase('sentence_3_learning');
         } else if (phase === 'sentence_3_fading') {
-          transitionToPhase('beat_combining');
+          transitionToPhase('beat_learning');
         }
       }, 2000);
     }, 150);
