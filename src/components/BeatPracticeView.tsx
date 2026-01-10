@@ -232,40 +232,72 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       // Use BCP-47-ish tags if possible; default to browser language otherwise
       setSpeechLang(speechRow.speech_language);
     }
-    
+
+    const setBeatsAndIndex = (rows: Beat[]) => {
+      setBeats(rows);
+      const firstUnmastered = rows.findIndex((b) => !b.is_mastered);
+      setCurrentBeatIndex(firstUnmastered >= 0 ? firstUnmastered : 0);
+    };
+
+    const looksMisSegmented = (s: string) => {
+      const text = (s ?? '').trim();
+      if (!text) return true;
+      if (text.includes('\n')) return true;
+      const wordsCount = text.split(/\s+/).filter(Boolean).length;
+      if (wordsCount > 28) return true; // heuristic: sentence field shouldn't be a paragraph
+      const punctCount = (text.match(/[.!?]/g) ?? []).length;
+      if (punctCount > 1) return true;
+      return false;
+    };
+
     // Try to load existing beats
     const { data: existingBeats, error } = await supabase
       .from('practice_beats')
       .select('*')
       .eq('speech_id', speechId)
       .order('beat_order', { ascending: true });
-    
+
     if (error) {
       console.error('Error loading beats:', error);
     }
-    
-    if (existingBeats && existingBeats.length > 0) {
-      setBeats(existingBeats);
-      // Find first non-mastered beat
-      const firstUnmastered = existingBeats.findIndex(b => !b.is_mastered);
-      setCurrentBeatIndex(firstUnmastered >= 0 ? firstUnmastered : 0);
-    } else {
-      // Create beats using edge function
-      try {
-        const { data, error: fnError } = await supabase.functions.invoke('segment-speech-into-beats', {
-          body: { speechId },
-        });
-        
-        if (fnError) throw fnError;
-        
-        if (data?.beats) {
-          setBeats(data.beats);
-        }
-      } catch (error) {
-        console.error('Error creating beats:', error);
+
+    const shouldRegenerate =
+      !!existingBeats &&
+      existingBeats.length > 0 &&
+      existingBeats.some(
+        (b) =>
+          looksMisSegmented(b.sentence_1_text) ||
+          looksMisSegmented(b.sentence_2_text) ||
+          looksMisSegmented(b.sentence_3_text)
+      );
+
+    if (existingBeats && existingBeats.length > 0 && !shouldRegenerate) {
+      setBeatsAndIndex(existingBeats);
+      setLoading(false);
+      return;
+    }
+
+    // Create/regenerate beats using backend function
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('segment-speech-into-beats', {
+        body: { speechId },
+      });
+
+      if (fnError) throw fnError;
+
+      if (data?.beats) {
+        setBeatsAndIndex(data.beats);
+      } else if (existingBeats && existingBeats.length > 0) {
+        // Fallback: keep existing beats if regeneration didn't return data
+        setBeatsAndIndex(existingBeats);
+      }
+    } catch (error) {
+      console.error('Error creating beats:', error);
+      if (existingBeats && existingBeats.length > 0) {
+        setBeatsAndIndex(existingBeats);
       }
     }
-    
+
     setLoading(false);
   };
 
