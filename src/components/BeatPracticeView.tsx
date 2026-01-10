@@ -576,7 +576,14 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     // the first word so the blue pulse visibly resets before moving on.
     resetForNextRep();
 
-    setCelebrationMessage(t('beat_practice.excellent_next'));
+    // Determine celebration message based on what's coming next
+    let message = t('beat_practice.excellent_next');
+    if (phase === 'sentence_2_fading') {
+      message = t('beat_practice.lets_combine', "🔗 Let's combine them!");
+    } else if (phase === 'sentence_3_fading') {
+      message = t('beat_practice.final_combine', "🚀 Now all together!");
+    }
+    setCelebrationMessage(message);
 
     // Give React a moment to render the reset state before showing the celebration overlay.
     setTimeout(() => {
