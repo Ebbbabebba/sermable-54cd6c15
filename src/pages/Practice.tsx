@@ -2122,27 +2122,42 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Lock info */}
           {isLocked && nextReviewDate && (
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
-              <Clock className="h-5 w-5 text-amber-500 shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm">
-                  {t('practice.aiRecommendsWaiting')}
-                  <span className="font-semibold">
-                    <LockCountdown nextReviewDate={nextReviewDate} />
-                  </span>
-                </p>
-                {subscriptionTier === 'free' && (
-                  <Button 
-                    variant="link" 
-                    size="sm"
-                    onClick={() => navigate("/settings")}
-                    className="text-amber-600 p-0 h-auto mt-1"
-                  >
-                    <Crown className="h-3.5 w-3.5 mr-1" />
-                    {t('practice.upgradeToPremium')}
-                  </Button>
-                )}
+            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-amber-500 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm">
+                    {t('practice.aiRecommendsWaiting')}
+                    <span className="font-semibold">
+                      <LockCountdown nextReviewDate={nextReviewDate} />
+                    </span>
+                  </p>
+                  {subscriptionTier === 'free' && (
+                    <Button 
+                      variant="link" 
+                      size="sm"
+                      onClick={() => navigate("/settings")}
+                      className="text-amber-600 p-0 h-auto mt-1"
+                    >
+                      <Crown className="h-3.5 w-3.5 mr-1" />
+                      {t('practice.upgradeToPremium')}
+                    </Button>
+                  )}
+                </div>
               </div>
+              
+              {/* Premium Practice Anyway button */}
+              {subscriptionTier !== 'free' && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTimingWarning(true)}
+                  className="w-full border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
+                >
+                  <Crown className="h-3.5 w-3.5 mr-1.5" />
+                  {t('practice.practiceAnyway')}
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -2153,19 +2168,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
         <div className="max-w-md mx-auto">
           <Button 
             size="lg" 
-            onClick={() => {
-              if (isLocked && subscriptionTier !== 'free') {
-                setShowTimingWarning(true);
-              } else if (!isLocked || subscriptionTier === 'free') {
-                if (!isLocked) handleStartPractice();
-              }
-            }}
-            disabled={isLocked && subscriptionTier === 'free'}
+            onClick={handleStartPractice}
+            disabled={isLocked}
             className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
           >
             <Play className="h-5 w-5 mr-2" />
             {isLocked 
-              ? (subscriptionTier === 'free' ? t('practice.locked') : t('practice.practiceAnyway')) 
+              ? t('practice.locked') 
               : t('beat_practice.start_session', 'Start Session')}
           </Button>
         </div>
@@ -2179,13 +2188,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <AlertTriangle className="h-5 w-5 text-amber-500" />
               {t('practice.practicingEarly')}
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
-              <p>
-                {t('practice.aiRecommendsWaiting')}<strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong>
-              </p>
-              <p className="text-muted-foreground">
-                {t('practice.spacedRepetitionEffective')}
-              </p>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  {t('practice.aiRecommendsWaiting')}<strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong>
+                </p>
+                <p className="text-muted-foreground">
+                  {t('practice.spacedRepetitionEffective')}
+                </p>
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-4">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    {t('practice.practiceAnywayWarning', 'Practicing early may reduce long-term retention. Use this sparingly for best results.')}
+                  </p>
+                </div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -210,6 +210,7 @@
     "practicingEarly": "Practicing Early",
     "aiRecommendsWaiting": "This beat will be more effective if you return in ",
     "spacedRepetitionEffective": "Spaced repetition is most effective when you practice at the right intervals. Practicing too early may reduce long-term retention, though some practice is always better than none.",
+    "practiceAnywayWarning": "Practicing early may reduce long-term retention. Use this sparingly for best results.",
     "waitForOptimal": "Wait for Optimal Time",
     "practiceNowAnyway": "Practice Now Anyway",
     "editScriptTitle": "Edit Script",
