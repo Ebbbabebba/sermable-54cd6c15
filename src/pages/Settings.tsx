@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, HelpCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4, CreditCard, Receipt, XCircle } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, HelpCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4, CreditCard, Receipt, XCircle, ChevronRight } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,8 +29,7 @@ const Settings = () => {
   const [bestStreak, setBestStreak] = useState(0);
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | null>(null);
-  const [showStudentPricing, setShowStudentPricing] = useState(false);
+  // Removed selectedPlan and showStudentPricing - moved to PaymentSettings
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   
   // Practice hours state
@@ -223,287 +222,34 @@ const Settings = () => {
             </p>
           </div>
 
-          {/* Subscription Section */}
-          <Card className="border-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden relative">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/10 rounded-full blur-2xl" />
-            
-            <CardHeader className="relative pb-2">
+          {/* Payment & Subscription - Navigates to dedicated page */}
+          <Card 
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => navigate("/settings/payment")}
+          >
+            <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
-                    <Crown className="h-5 w-5 text-primary-foreground" />
+                    <CreditCard className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl">{t('settings.subscription.title')}</CardTitle>
-                    <CardDescription className="text-xs">
-                      {isPremium ? t('settings.subscription.manageSub') : t('settings.subscription.description')}
+                    <CardTitle>{t('settings.payment.title')}</CardTitle>
+                    <CardDescription>
+                      {isPremium ? t('settings.payment.managePlan') : t('settings.payment.viewPlans')}
                     </CardDescription>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  {isPremium && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium">
+                      Premium
+                    </span>
+                  )}
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
               </div>
             </CardHeader>
-            
-            <CardContent className="space-y-5 relative">
-              {isPremium ? (
-                /* Premium User View */
-                <>
-                  {/* Premium Status Badge */}
-                  <div className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
-                      <Crown className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-amber-600 dark:text-amber-400">{t('settings.subscription.youArePremium')}</p>
-                      <p className="text-xs text-muted-foreground">{t('settings.subscription.premiumDesc')}</p>
-                    </div>
-                  </div>
-
-                  {/* Payment History */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Receipt className="h-4 w-4 text-muted-foreground" />
-                      <p className="text-sm font-medium">{t('settings.subscription.paymentHistory')}</p>
-                    </div>
-                    <div className="rounded-xl bg-card/80 border p-4 space-y-3">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{t('settings.subscription.lastPayment')}</span>
-                        <span className="font-medium">€7.90 - 11 jan 2026</span>
-                      </div>
-                      <Separator />
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{t('settings.subscription.nextPayment')}</span>
-                        <span className="font-medium">€7.90 - 11 feb 2026</span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full mt-2"
-                        onClick={() => {
-                          toast({
-                            title: t('settings.subscription.comingSoon'),
-                            description: t('settings.subscription.viewAllPaymentsDesc'),
-                          });
-                        }}
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        {t('settings.subscription.viewAllPayments')}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Cancel Subscription */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-4 w-4 text-muted-foreground" />
-                      <p className="text-sm font-medium">{t('settings.subscription.manageSubscription')}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
-                      onClick={() => {
-                        toast({
-                          title: t('settings.subscription.comingSoon'),
-                          description: t('settings.subscription.cancelDesc'),
-                        });
-                      }}
-                    >
-                      {t('settings.subscription.cancelSubscription')}
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center">
-                      {t('settings.subscription.cancelNote')}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                /* Free User View - Upgrade Prompt */
-                <>
-                  {/* Key benefits - compact grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                        <FileStack className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.unlimitedSpeeches')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.noLimits')}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
-                        <Presentation className="h-4 w-4 text-accent-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.presentationMode')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.fullRunthrough')}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                        <Zap className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.overrideLock')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.practiceAnytime')}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
-                        <BarChart3 className="h-4 w-4 text-accent-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.advancedAnalytics')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.deepInsights')}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pricing Cards */}
-                  <div className="space-y-3 pt-2">
-                    {showStudentPricing ? (
-                      <>
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                          <GraduationCap className="h-4 w-4 text-primary" />
-                          <p className="text-sm font-medium text-primary">{t('settings.subscription.studentPricing')}</p>
-                        </div>
-                        
-                        <button
-                          onClick={() => setSelectedPlan('annual')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
-                            selectedPlan === 'annual'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
-                            selectedPlan === 'annual' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
-                          }`}>
-                            {t('settings.subscription.bestValue')}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.studentAnnual')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€3.33</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                            <p className="text-xs opacity-60 mt-1">€39.90 {t('settings.subscription.billedYearly')}</p>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => setSelectedPlan('monthly')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left ${
-                            selectedPlan === 'monthly'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.studentMonthly')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€3.90</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                          </div>
-                        </button>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowStudentPricing(false)}
-                          className="w-full text-muted-foreground"
-                        >
-                          {t('settings.subscription.backToRegular')}
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setSelectedPlan('annual')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
-                            selectedPlan === 'annual'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
-                            selectedPlan === 'annual' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
-                          }`}>
-                            {t('settings.subscription.mostPopular')}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.annual')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€6.66</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                            <p className="text-xs opacity-60 mt-1">€79.90 {t('settings.subscription.billedYearly')} · {t('settings.subscription.save')} 33%</p>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => setSelectedPlan('monthly')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left ${
-                            selectedPlan === 'monthly'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.monthly')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€7.90</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                          </div>
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  {/* CTA Button */}
-                  <Button
-                    className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20"
-                    size="lg"
-                    disabled={!selectedPlan}
-                    onClick={() => {
-                      toast({
-                        title: t('settings.subscription.comingSoon'),
-                        description: t('settings.subscription.comingSoonDesc'),
-                      });
-                    }}
-                  >
-                    <Zap className="h-4 w-4 mr-2" />
-                    {t('settings.subscription.upgradeCta')}
-                  </Button>
-
-                  {/* Student link */}
-                  {!showStudentPricing && (
-                    <button
-                      onClick={() => setShowStudentPricing(true)}
-                      className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <GraduationCap className="h-3.5 w-3.5" />
-                      {t('settings.subscription.studentButton')}
-                    </button>
-                  )}
-
-                  {/* Trust badges */}
-                  <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Check className="h-3 w-3" /> {t('settings.subscription.cancelAnytime')}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Check className="h-3 w-3" /> {t('settings.subscription.securePayment')}
-                    </span>
-                  </div>
-                </>
-              )}
-            </CardContent>
           </Card>
 
           {/* Appearance Settings */}

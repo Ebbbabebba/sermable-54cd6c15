@@ -383,7 +383,21 @@
       "continueWith": "Fortsätt med",
       "plan": "Plan",
       "comingSoon": "Kommer snart!",
-      "comingSoonDesc": "Premium lanseras snart."
+      "comingSoonDesc": "Premium lanseras snart.",
+      "upgradeToPremium": "Uppgradera till Premium"
+    },
+    "payment": {
+      "title": "Betalning",
+      "subtitle": "Hantera din prenumeration och fakturering",
+      "managePlan": "Hantera din plan och fakturering",
+      "viewPlans": "Visa prisplaner",
+      "viewPayments": "Se din betalningshistorik och kommande avgifter",
+      "paymentMethod": "Betalningsmetod",
+      "expires": "Går ut",
+      "update": "Uppdatera",
+      "updateCardDesc": "Kortuppdatering kommer snart",
+      "moreOptions": "Fler alternativ",
+      "cancelInfo": "Om du vill avsluta din prenumeration kan du göra det nedan. Din åtkomst fortsätter till slutet av din nuvarande betalningsperiod."
     },
     "appearance": {
       "title": "Utseende",
