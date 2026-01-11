@@ -907,17 +907,29 @@ export type Database = {
             }
             Returns: number
           }
-      calculate_next_review: {
-        Args: {
-          current_ease: number
-          current_interval: number
-          performance_quality: number
-        }
-        Returns: {
-          new_ease: number
-          new_interval: number
-        }[]
-      }
+      calculate_next_review:
+        | {
+            Args: {
+              current_ease: number
+              current_interval: number
+              performance_quality: number
+            }
+            Returns: {
+              new_ease: number
+              new_interval: number
+            }[]
+          }
+        | {
+            Args: {
+              current_ease: number
+              current_interval: number
+              performance_quality: number
+            }
+            Returns: {
+              new_ease: number
+              new_interval: number
+            }[]
+          }
       calculate_personalized_interval: {
         Args: {
           p_accuracy: number
@@ -959,40 +971,107 @@ export type Database = {
             }
             Returns: number
           }
-      calculate_segment_length: {
-        Args: {
-          p_consecutive_struggles: number
-          p_current_segment_length: number
-          p_days_until_deadline: number
-          p_weighted_accuracy: number
-        }
-        Returns: number
-      }
-      calculate_sm2_interval: {
-        Args: {
-          p_card_state: string
-          p_current_interval: number
-          p_ease_factor: number
-          p_learning_step: number
-          p_user_rating: string
-        }
-        Returns: {
-          new_card_state: string
-          new_ease_factor: number
-          new_interval: number
-          new_learning_step: number
-        }[]
-      }
-      calculate_word_visibility: {
-        Args: {
-          p_consecutive_struggles: number
-          p_goal_date: string
-          p_performance_trend: number
-          p_speech_id: string
-          p_weighted_accuracy?: number
-        }
-        Returns: number
-      }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_days_until_deadline: number
+              p_last_accuracy: number
+              p_performance_trend: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_days_until_deadline: number
+              p_last_accuracy: number
+              p_performance_trend: number
+              p_word_count?: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_days_until_deadline: number
+              p_last_accuracy: number
+              p_performance_trend: number
+              p_word_count?: number
+              p_word_visibility?: number
+            }
+            Returns: number
+          }
+      calculate_segment_length:
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_current_segment_length: number
+              p_days_until_deadline: number
+              p_weighted_accuracy: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_current_segment_length: number
+              p_days_until_deadline: number
+              p_weighted_accuracy: number
+            }
+            Returns: number
+          }
+      calculate_sm2_interval:
+        | {
+            Args: {
+              p_card_state: string
+              p_current_interval: number
+              p_ease_factor: number
+              p_learning_step: number
+              p_user_rating: string
+            }
+            Returns: {
+              new_card_state: string
+              new_ease_factor: number
+              new_interval: number
+              new_learning_step: number
+            }[]
+          }
+        | {
+            Args: {
+              p_card_state: string
+              p_current_interval: number
+              p_ease_factor: number
+              p_learning_step: number
+              p_user_rating: string
+            }
+            Returns: {
+              new_card_state: string
+              new_ease_factor: number
+              new_interval: number
+              new_learning_step: number
+            }[]
+          }
+      calculate_word_visibility:
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_goal_date: string
+              p_performance_trend: number
+              p_speech_id: string
+              p_weighted_accuracy?: number
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_consecutive_struggles: number
+              p_goal_date: string
+              p_performance_trend: number
+              p_speech_id: string
+              p_weighted_accuracy?: number
+            }
+            Returns: number
+          }
       can_create_speech: { Args: { p_user_id: string }; Returns: boolean }
       get_speeches_due_for_review: {
         Args: { p_user_id: string }
