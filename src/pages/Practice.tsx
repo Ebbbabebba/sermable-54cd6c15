@@ -103,6 +103,8 @@ const Practice = () => {
   const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
+  const [showSessionComplete, setShowSessionComplete] = useState(false);
+  const [todaySessionDone, setTodaySessionDone] = useState(false);
   // Legacy settings for old practice mode (kept for reference, not used in beat mode)
   const settings = {
     revealSpeed: 5,
@@ -378,6 +380,25 @@ const [liveTranscription, setLiveTranscription] = useState("");
           setIsLocked(false);
         }
       }
+      
+      // Check if today's session is complete (beat mastered today or all beats mastered)
+      const { data: beatsData } = await supabase
+        .from('practice_beats')
+        .select('is_mastered, mastered_at')
+        .eq('speech_id', id);
+      
+      if (beatsData) {
+        const today = new Date().toDateString();
+        const allMastered = beatsData.every(b => b.is_mastered);
+        const masteredToday = beatsData.some(b => {
+          if (!b.mastered_at) return false;
+          return new Date(b.mastered_at).toDateString() === today;
+        });
+        
+        if (allMastered || masteredToday) {
+          setTodaySessionDone(true);
+        }
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -390,7 +411,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
-  const handleStartPractice = (bypassLock = false, bypassWarning = false) => {
+  const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false) => {
+    // Check if today's session is already complete
+    if (!bypassSessionCheck && todaySessionDone) {
+      setShowSessionComplete(true);
+      return;
+    }
+    
     // Show spaced repetition info warning first (if not bypassing)
     if (!bypassWarning && !bypassLock) {
       setShowSpacedRepetitionInfo(true);
@@ -433,8 +460,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
   
   const handleSpacedRepetitionContinue = () => {
     setShowSpacedRepetitionInfo(false);
-    // Now actually start practice (bypass warning since user confirmed)
-    handleStartPractice(false, true);
+    // Check session completion, then start practice
+    if (todaySessionDone) {
+      setShowSessionComplete(true);
+    } else {
+      handleStartPractice(false, true, true);
+    }
   };
   
   const handleSpacedRepetitionPracticeAnyway = () => {
@@ -443,7 +474,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
     if (subscriptionTier === 'free') {
       setShowPremiumUpsell(true);
     } else {
-      handleStartPractice(true, true);
+      handleStartPractice(true, true, true);
     }
   };
   
@@ -2368,6 +2399,45 @@ const [liveTranscription, setLiveTranscription] = useState("");
               className="w-full text-muted-foreground"
             >
               {t('common.close', 'Close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Session Complete Dialog */}
+      <Dialog open={showSessionComplete} onOpenChange={setShowSessionComplete}>
+        <DialogContent className="max-w-sm text-center">
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+              <CheckCircle2 className="h-10 w-10 text-primary" />
+            </div>
+            
+            <DialogHeader className="text-center">
+              <DialogTitle className="text-center">
+                {t('practice.sessionCompleteTitle', "Today's Session Complete!")}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <p className="text-sm text-muted-foreground">
+              {t('practice.sessionCompleteDesc', "Great work! Your brain needs time to consolidate what you've learned. Come back later for better retention.")}
+            </p>
+            
+            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+              <Brain className="h-4 w-4 text-primary" />
+              <span>{t('practice.restHelpsMemory', 'Rest helps memory consolidation')}</span>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setShowSessionComplete(false);
+                navigate("/dashboard");
+              }}
+              className="w-full"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              {t('common.done', 'Done')}
             </Button>
           </DialogFooter>
         </DialogContent>
