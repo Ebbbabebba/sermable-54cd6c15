@@ -13,26 +13,54 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const authHeader = req.headers.get('Authorization') ?? '';
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    // Verify user authentication
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const { speechId } = await req.json();
 
     if (!speechId) {
-      throw new Error('Speech ID is required');
+      return new Response(
+        JSON.stringify({ error: 'Speech ID is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('📝 Segmenting speech:', speechId);
 
-    // Get the speech
+    // Get the speech and verify ownership
     const { data: speech, error: speechError } = await supabase
       .from('speeches')
-      .select('text_original')
+      .select('text_original, user_id')
       .eq('id', speechId)
       .single();
 
     if (speechError || !speech) {
-      throw new Error('Speech not found');
+      return new Response(
+        JSON.stringify({ error: 'Speech not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify speech ownership
+    if (speech.user_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const text = speech.text_original;
@@ -46,7 +74,6 @@ serve(async (req) => {
     }> = [];
 
     // Segment based on natural boundaries
-    let currentSegmentStart = 0;
     let segmentOrder = 0;
     
     // Determine segment size based on total speech length
@@ -93,112 +120,112 @@ serve(async (req) => {
       // Segment longer speeches
       console.log('✂️ Segmenting speech into manageable chunks with at least 2 sentences each');
 
-    // Split by paragraphs first
-    const paragraphs = text.split(/\n\n+/);
-    let wordIndex = 0;
+      // Split by paragraphs first
+      const paragraphs = text.split(/\n\n+/);
+      let wordIndex = 0;
 
-    for (const paragraph of paragraphs) {
-      const paragraphWords = paragraph.trim().split(/\s+/).filter((w: string) => w);
-      const paragraphSentences = countSentences(paragraph);
-      
-      if (paragraphWords.length === 0) continue;
+      for (const paragraph of paragraphs) {
+        const paragraphWords = paragraph.trim().split(/\s+/).filter((w: string) => w);
+        const paragraphSentences = countSentences(paragraph);
+        
+        if (paragraphWords.length === 0) continue;
 
-      // If paragraph has 2-3 sentences and reasonable size, keep as one segment
-      if (paragraphSentences >= 2 && paragraphSentences <= 4 && paragraphWords.length <= TARGET_SEGMENT_SIZE * 1.5) {
-        const segmentText = paragraphWords.join(' ');
-        segments.push({
-          speech_id: speechId,
-          segment_order: segmentOrder++,
-          start_word_index: wordIndex,
-          end_word_index: wordIndex + paragraphWords.length - 1,
-          segment_text: segmentText,
-        });
-        wordIndex += paragraphWords.length;
-      } else if (paragraphSentences < 2) {
-        // Paragraph has less than 2 sentences - try to merge with previous segment
-        if (segments.length > 0) {
-          const lastSegment = segments[segments.length - 1];
-          const combinedText = lastSegment.segment_text + ' ' + paragraphWords.join(' ');
-          const combinedWords = combinedText.split(/\s+/).length;
-          
-          // Merge if combined length is reasonable
-          if (combinedWords <= TARGET_SEGMENT_SIZE * 1.5) {
-            lastSegment.segment_text = combinedText;
-            lastSegment.end_word_index = wordIndex + paragraphWords.length - 1;
-            wordIndex += paragraphWords.length;
-            continue;
-          }
-        }
-        // Can't merge - add as separate segment
-        const segmentText = paragraphWords.join(' ');
-        segments.push({
-          speech_id: speechId,
-          segment_order: segmentOrder++,
-          start_word_index: wordIndex,
-          end_word_index: wordIndex + paragraphWords.length - 1,
-          segment_text: segmentText,
-        });
-        wordIndex += paragraphWords.length;
-      } else {
-        // Split larger paragraphs by sentences, ensuring at least 2 sentences per segment
-        const sentenceMatches = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
-        let currentChunk: string[] = [];
-        let chunkStartIndex = wordIndex;
-        let sentenceCount = 0;
-
-        for (const sentence of sentenceMatches) {
-          const sentenceWords = sentence.trim().split(/\s+/).filter((w: string) => w);
-          
-          // Only create a new segment if:
-          // 1. We have at least MIN_SENTENCES_PER_SEGMENT sentences
-          // 2. Adding this sentence would exceed TARGET size
-          // 3. Current chunk meets MIN size
-          if (currentChunk.length > 0 && 
-              sentenceCount >= MIN_SENTENCES_PER_SEGMENT &&
-              currentChunk.length + sentenceWords.length > TARGET_SEGMENT_SIZE &&
-              currentChunk.length >= MIN_SEGMENT_SIZE) {
-            
-            const segmentText = currentChunk.join(' ');
-            segments.push({
-              speech_id: speechId,
-              segment_order: segmentOrder++,
-              start_word_index: chunkStartIndex,
-              end_word_index: chunkStartIndex + currentChunk.length - 1,
-              segment_text: segmentText,
-            });
-            
-            chunkStartIndex = wordIndex;
-            currentChunk = [];
-            sentenceCount = 0;
-          }
-
-          currentChunk.push(...sentenceWords);
-          wordIndex += sentenceWords.length;
-          sentenceCount++;
-        }
-
-        // Save remaining chunk - merge with previous if too small
-        if (currentChunk.length > 0) {
-          if (sentenceCount < MIN_SENTENCES_PER_SEGMENT && segments.length > 0) {
-            // Try to merge with previous segment
+        // If paragraph has 2-3 sentences and reasonable size, keep as one segment
+        if (paragraphSentences >= 2 && paragraphSentences <= 4 && paragraphWords.length <= TARGET_SEGMENT_SIZE * 1.5) {
+          const segmentText = paragraphWords.join(' ');
+          segments.push({
+            speech_id: speechId,
+            segment_order: segmentOrder++,
+            start_word_index: wordIndex,
+            end_word_index: wordIndex + paragraphWords.length - 1,
+            segment_text: segmentText,
+          });
+          wordIndex += paragraphWords.length;
+        } else if (paragraphSentences < 2) {
+          // Paragraph has less than 2 sentences - try to merge with previous segment
+          if (segments.length > 0) {
             const lastSegment = segments[segments.length - 1];
-            const combinedText = lastSegment.segment_text + ' ' + currentChunk.join(' ');
-            lastSegment.segment_text = combinedText;
-            lastSegment.end_word_index = chunkStartIndex + currentChunk.length - 1;
-          } else {
-            const segmentText = currentChunk.join(' ');
-            segments.push({
-              speech_id: speechId,
-              segment_order: segmentOrder++,
-              start_word_index: chunkStartIndex,
-              end_word_index: chunkStartIndex + currentChunk.length - 1,
-              segment_text: segmentText,
-            });
+            const combinedText = lastSegment.segment_text + ' ' + paragraphWords.join(' ');
+            const combinedWords = combinedText.split(/\s+/).length;
+            
+            // Merge if combined length is reasonable
+            if (combinedWords <= TARGET_SEGMENT_SIZE * 1.5) {
+              lastSegment.segment_text = combinedText;
+              lastSegment.end_word_index = wordIndex + paragraphWords.length - 1;
+              wordIndex += paragraphWords.length;
+              continue;
+            }
+          }
+          // Can't merge - add as separate segment
+          const segmentText = paragraphWords.join(' ');
+          segments.push({
+            speech_id: speechId,
+            segment_order: segmentOrder++,
+            start_word_index: wordIndex,
+            end_word_index: wordIndex + paragraphWords.length - 1,
+            segment_text: segmentText,
+          });
+          wordIndex += paragraphWords.length;
+        } else {
+          // Split larger paragraphs by sentences, ensuring at least 2 sentences per segment
+          const sentenceMatches = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
+          let currentChunk: string[] = [];
+          let chunkStartIndex = wordIndex;
+          let sentenceCount = 0;
+
+          for (const sentence of sentenceMatches) {
+            const sentenceWords = sentence.trim().split(/\s+/).filter((w: string) => w);
+            
+            // Only create a new segment if:
+            // 1. We have at least MIN_SENTENCES_PER_SEGMENT sentences
+            // 2. Adding this sentence would exceed TARGET size
+            // 3. Current chunk meets MIN size
+            if (currentChunk.length > 0 && 
+                sentenceCount >= MIN_SENTENCES_PER_SEGMENT &&
+                currentChunk.length + sentenceWords.length > TARGET_SEGMENT_SIZE &&
+                currentChunk.length >= MIN_SEGMENT_SIZE) {
+              
+              const segmentText = currentChunk.join(' ');
+              segments.push({
+                speech_id: speechId,
+                segment_order: segmentOrder++,
+                start_word_index: chunkStartIndex,
+                end_word_index: chunkStartIndex + currentChunk.length - 1,
+                segment_text: segmentText,
+              });
+              
+              chunkStartIndex = wordIndex;
+              currentChunk = [];
+              sentenceCount = 0;
+            }
+
+            currentChunk.push(...sentenceWords);
+            wordIndex += sentenceWords.length;
+            sentenceCount++;
+          }
+
+          // Save remaining chunk - merge with previous if too small
+          if (currentChunk.length > 0) {
+            if (sentenceCount < MIN_SENTENCES_PER_SEGMENT && segments.length > 0) {
+              // Try to merge with previous segment
+              const lastSegment = segments[segments.length - 1];
+              const combinedText = lastSegment.segment_text + ' ' + currentChunk.join(' ');
+              lastSegment.segment_text = combinedText;
+              lastSegment.end_word_index = chunkStartIndex + currentChunk.length - 1;
+            } else {
+              const segmentText = currentChunk.join(' ');
+              segments.push({
+                speech_id: speechId,
+                segment_order: segmentOrder++,
+                start_word_index: chunkStartIndex,
+                end_word_index: chunkStartIndex + currentChunk.length - 1,
+                segment_text: segmentText,
+              });
+            }
           }
         }
       }
     }
-    } // Close else block for segmentation
 
     // Post-process: merge any segments with less than 2 sentences
     const finalSegments: typeof segments = [];
@@ -246,10 +273,11 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error segmenting speech:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Internal server error', details: message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
