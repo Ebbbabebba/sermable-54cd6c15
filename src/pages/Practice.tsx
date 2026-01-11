@@ -412,9 +412,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
   };
 
   const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false) => {
-    // Check if today's session is already complete
-    if (!bypassSessionCheck && todaySessionDone) {
-      setShowSessionComplete(true);
+    // For free users with session done, show premium upsell
+    // For premium users, always allow practice
+    if (!bypassSessionCheck && todaySessionDone && subscriptionTier === 'free') {
+      setShowPremiumUpsell(true);
       return;
     }
     
@@ -460,9 +461,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
   
   const handleSpacedRepetitionContinue = () => {
     setShowSpacedRepetitionInfo(false);
-    // Check session completion, then start practice
-    if (todaySessionDone) {
-      setShowSessionComplete(true);
+    // For free users with session done, show premium upsell
+    // For premium users, just start practice
+    if (todaySessionDone && subscriptionTier === 'free') {
+      setShowPremiumUpsell(true);
     } else {
       handleStartPractice(false, true, true);
     }
@@ -1724,6 +1726,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
         <div className="flex-1 flex flex-col">
           <BeatPracticeView
             speechId={speech.id}
+            subscriptionTier={subscriptionTier}
             onComplete={() => {
               setIsPracticing(false);
               toast({
@@ -1734,6 +1737,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
             onExit={() => {
               setIsPracticing(false);
               setIsRecording(false);
+            }}
+            onSessionLimitReached={() => {
+              // Free user hit daily beat limit - show premium upsell
+              setIsPracticing(false);
+              setShowPremiumUpsell(true);
             }}
           />
         </div>
