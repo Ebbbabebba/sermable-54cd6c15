@@ -453,6 +453,23 @@
     "topicsCovered": "{{covered}} of {{total}} topics covered",
     "finish": "Finish"
   },
+  "progressive": {
+    "beat_mastered": "Beat mastered!",
+    "all_complete": "🎉 Speech memorized!",
+    "session_done": "Session Complete!",
+    "come_back_tomorrow": "Come back tomorrow to reinforce your memory!",
+    "progress": "{{mastered}}/{{total}} beats mastered. Rest and return later!",
+    "sleep_tip": "Sleep consolidates memories better than repetition",
+    "no_beats": "No beats found",
+    "try_again": "Try again",
+    "hesitation_detected": "Keep practicing!",
+    "recite_from_memory": "Recite from memory. Tap if stuck.",
+    "perfect_needed": "Need 2 perfect recalls",
+    "day1_desc": "Learning sentences",
+    "day2_desc": "Beat-level practice",
+    "day3_desc": "Full speech practice",
+    "day4_desc": "Memory recall"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",
@@ -465,6 +482,10 @@
     "next": "Next",
     "previous": "Previous",
     "close": "Close",
-    "exit": "Exit"
+    "exit": "Exit",
+    "restart": "Restart",
+    "done": "Done",
+    "not_supported": "Not Supported",
+    "use_chrome": "Speech recognition requires Chrome or Safari."
   }
 }

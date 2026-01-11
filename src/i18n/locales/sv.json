@@ -427,6 +427,23 @@
     "stable_desc": "Du klarade hela talet utan att behöva några nyckelord. Ditt minne är konsoliderat!",
     "attempts": "Klart på {{count}} försök"
   },
+  "progressive": {
+    "beat_mastered": "Beat inlärt!",
+    "all_complete": "🎉 Talet memorerat!",
+    "session_done": "Session klar!",
+    "come_back_tomorrow": "Kom tillbaka imorgon för att förstärka minnet!",
+    "progress": "{{mastered}}/{{total}} beats inlärda. Vila och återvänd senare!",
+    "sleep_tip": "Sömn konsoliderar minnen bättre än upprepning",
+    "no_beats": "Inga beats hittades",
+    "try_again": "Försök igen",
+    "hesitation_detected": "Fortsätt öva!",
+    "recite_from_memory": "Recitera ur minnet. Tryck om du fastnar.",
+    "perfect_needed": "Behöver 2 perfekta genomgångar",
+    "day1_desc": "Lär dig meningar",
+    "day2_desc": "Beat-nivå övning",
+    "day3_desc": "Hela talet övning",
+    "day4_desc": "Minnesåterkallelse"
+  },
   "common": {
     "loading": "Laddar...",
     "error": "Fel",
@@ -438,6 +455,10 @@
     "back": "Tillbaka",
     "next": "Nästa",
     "previous": "Föregående",
-    "close": "Stäng"
+    "close": "Stäng",
+    "restart": "Börja om",
+    "done": "Klar",
+    "not_supported": "Stöds inte",
+    "use_chrome": "Taligenkänning kräver Chrome eller Safari."
   }
 }

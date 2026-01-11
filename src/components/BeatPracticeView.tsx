@@ -805,13 +805,18 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   };
 
   const showBeatCelebration = async () => {
-    // Mark beat as mastered with timestamp
+    // Mark beat as mastered with timestamp and advance to next practice stage
     if (currentBeat) {
       await supabase
         .from('practice_beats')
         .update({ 
           is_mastered: true, 
-          mastered_at: new Date().toISOString() 
+          mastered_at: new Date().toISOString(),
+          // Advance stage: day1_sentences → day2_beats (for next day's practice)
+          practice_stage: 'day2_beats',
+          words_hidden_per_round: 2,
+          stage_started_at: new Date().toISOString(),
+          consecutive_perfect_recalls: 0,
         })
         .eq('id', currentBeat.id);
       

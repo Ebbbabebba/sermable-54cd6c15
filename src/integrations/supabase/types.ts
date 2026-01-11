@@ -288,39 +288,51 @@ export type Database = {
       practice_beats: {
         Row: {
           beat_order: number
+          consecutive_perfect_recalls: number | null
           created_at: string | null
           id: string
           is_mastered: boolean | null
           last_recall_at: string | null
           mastered_at: string | null
+          practice_stage: string | null
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
           speech_id: string
+          stage_started_at: string | null
+          words_hidden_per_round: number | null
         }
         Insert: {
           beat_order: number
+          consecutive_perfect_recalls?: number | null
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
           last_recall_at?: string | null
           mastered_at?: string | null
+          practice_stage?: string | null
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
           speech_id: string
+          stage_started_at?: string | null
+          words_hidden_per_round?: number | null
         }
         Update: {
           beat_order?: number
+          consecutive_perfect_recalls?: number | null
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
           last_recall_at?: string | null
           mastered_at?: string | null
+          practice_stage?: string | null
           sentence_1_text?: string
           sentence_2_text?: string
           sentence_3_text?: string
           speech_id?: string
+          stage_started_at?: string | null
+          words_hidden_per_round?: number | null
         }
         Relationships: [
           {
