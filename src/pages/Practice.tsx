@@ -362,25 +362,32 @@ const [liveTranscription, setLiveTranscription] = useState("");
       }
       
       // Check lock status based on AI-recommended next review time
+      // First try schedule table, then fallback to speech's next_review_date
       const { data: schedule } = await supabase
         .from("schedules")
         .select("next_review_date")
         .eq("speech_id", id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
-        
-      if (schedule?.next_review_date) {
-        const reviewDate = new Date(schedule.next_review_date);
+        .maybeSingle();
+      
+      // Use schedule's next_review_date, or fallback to speech's next_review_date
+      const nextReview = schedule?.next_review_date || data?.next_review_date;
+      
+      if (nextReview) {
+        const reviewDate = new Date(nextReview);
         setNextReviewDate(reviewDate);
+        console.log('📅 Next review date set:', reviewDate);
         
         // Lock if review date is in future
         if (reviewDate > new Date()) {
           setIsLocked(true);
-          console.log('🔒 Speech locked until AI-recommended time:', reviewDate);
+          console.log('🔒 Speech locked until:', reviewDate);
         } else {
           setIsLocked(false);
         }
+      } else {
+        console.log('ℹ️ No next review date found');
       }
       
       // Check if today's session is complete (beat mastered today or all beats mastered)
