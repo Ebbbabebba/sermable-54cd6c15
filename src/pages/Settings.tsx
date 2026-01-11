@@ -216,150 +216,127 @@ const Settings = () => {
             </p>
           </div>
 
-          {/* Subscription Section */}
-          <Card className="border-primary/50">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.subscription.title')}</CardTitle>
+          {/* Subscription Section - Premium Upgrade */}
+          <Card className="border-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden relative">
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/10 rounded-full blur-2xl" />
+            
+            <CardHeader className="relative pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
+                    <Crown className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">{t('settings.subscription.title')}</CardTitle>
+                    <CardDescription className="text-xs">
+                      {t('settings.subscription.description')}
+                    </CardDescription>
+                  </div>
+                </div>
               </div>
-              <CardDescription>
-                {t('settings.subscription.description')}
-              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Premium Features */}
-              <div className="space-y-6">
-                <h3 className="font-semibold text-lg">{t('settings.subscription.whyPremium')}</h3>
-                
-                {/* Feature 1: Multiple Speeches */}
-                <div className="rounded-xl border bg-card p-5 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-primary/10">
-                      <FileStack className="h-5 w-5 text-primary" />
-                    </div>
-                    <h4 className="font-semibold text-base">{t('settings.subscription.multipleSpeeches')}</h4>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.subscription.multipleSpeechesDesc')}
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
-                      <Mic className="h-3 w-3" /> {t('settings.subscription.actors')}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
-                      <GraduationCap className="h-3 w-3" /> {t('settings.subscription.students')}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
-                      <FileText className="h-3 w-3" /> {t('settings.subscription.pitchDecks')}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-secondary px-2.5 py-1 rounded-full">
-                      <Presentation className="h-3 w-3" /> {t('settings.subscription.lecturers')}
-                    </span>
-                  </div>
-                </div>
+            
+            <CardContent className="space-y-5 relative">
+              {/* Hero testimonial */}
+              <div className="text-center py-4">
+                <p className="text-lg font-medium text-foreground leading-relaxed">
+                  "{t('settings.subscription.testimonialQuote')}"
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  — {t('settings.subscription.testimonialAuthor')}
+                </p>
+              </div>
 
-                {/* Feature 2: Presentation Mode */}
-                <div className="rounded-xl border bg-card p-5 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-accent/50">
-                      <Presentation className="h-5 w-5 text-accent-foreground" />
-                    </div>
-                    <h4 className="font-semibold text-base">{t('settings.subscription.presentationMode')}</h4>
+              {/* Key benefits - compact grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                  <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                    <FileStack className="h-4 w-4 text-primary" />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.subscription.presentationModeDesc')}
-                  </p>
-                  
-                  {/* After presentation feedback */}
-                  <div className="pt-2">
-                    <p className="text-xs font-medium text-primary mb-3 flex items-center gap-1.5">
-                      <BarChart3 className="h-3.5 w-3.5" />
-                      {t('settings.subscription.afterPresentation')}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{t('settings.subscription.missedWords')}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{t('settings.subscription.hesitations')}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{t('settings.subscription.tempoAnalysis')}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                        <span className="text-muted-foreground">{t('settings.subscription.flowBreaks')}</span>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium">{t('settings.subscription.unlimitedSpeeches')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.subscription.noLimits')}</p>
                   </div>
                 </div>
                 
-                {/* Testimonial Quote */}
-                <div className="rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 p-5 border border-primary/20">
-                  <p className="text-sm italic text-foreground/80 mb-3">
-                    "{t('settings.subscription.testimonialQuote')}"
-                  </p>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    — {t('settings.subscription.testimonialAuthor')}
-                  </p>
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                  <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
+                    <Presentation className="h-4 w-4 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{t('settings.subscription.presentationMode')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.subscription.fullRunthrough')}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                  <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{t('settings.subscription.overrideLock')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.subscription.practiceAnytime')}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                  <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
+                    <BarChart3 className="h-4 w-4 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{t('settings.subscription.advancedAnalytics')}</p>
+                    <p className="text-xs text-muted-foreground">{t('settings.subscription.deepInsights')}</p>
+                  </div>
                 </div>
               </div>
 
-              <Separator />
-
-              {/* Pricing Options */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">{t('settings.subscription.choosePlan')}</h3>
-                
+              {/* Pricing Cards */}
+              <div className="space-y-3 pt-2">
                 {showStudentPricing ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 mb-4">
-                      <GraduationCap className="h-5 w-5 text-primary" />
-                      <p className="text-sm font-medium">{t('settings.subscription.studentPricing')}</p>
+                  <>
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                      <p className="text-sm font-medium text-primary">{t('settings.subscription.studentPricing')}</p>
                     </div>
                     
                     <button
-                      onClick={() => setSelectedPlan('monthly')}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                        selectedPlan === 'monthly'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
+                      onClick={() => setSelectedPlan('annual')}
+                      className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
+                        selectedPlan === 'annual'
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                          : 'bg-card border-2 border-border hover:border-primary/50'
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{t('settings.subscription.studentMonthly')}</p>
-                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedMonthly')}</p>
+                      <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
+                        selectedPlan === 'annual' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
+                      }`}>
+                        {t('settings.subscription.bestValue')}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium opacity-80">{t('settings.subscription.studentAnnual')}</p>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <p className="text-3xl font-bold">€3.33</p>
+                          <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">€3.90</p>
-                          <p className="text-xs text-muted-foreground line-through">€7.90</p>
-                          <p className="text-xs text-primary">{t('settings.subscription.studentDiscount')}</p>
-                        </div>
+                        <p className="text-xs opacity-60 mt-1">€39.90 {t('settings.subscription.billedYearly')}</p>
                       </div>
                     </button>
 
                     <button
-                      onClick={() => setSelectedPlan('annual')}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                        selectedPlan === 'annual'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
+                      onClick={() => setSelectedPlan('monthly')}
+                      className={`w-full p-4 rounded-2xl transition-all text-left ${
+                        selectedPlan === 'monthly'
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                          : 'bg-card border-2 border-border hover:border-primary/50'
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{t('settings.subscription.studentAnnual')}</p>
-                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedYearly')} • {t('settings.subscription.save')} 33%</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">€39.90</p>
-                          <p className="text-xs text-muted-foreground line-through">€79.90</p>
-                          <p className="text-xs text-primary">{t('settings.subscription.studentDiscount')}</p>
+                      <div>
+                        <p className="text-sm font-medium opacity-80">{t('settings.subscription.studentMonthly')}</p>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <p className="text-3xl font-bold">€3.90</p>
+                          <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
                         </div>
                       </div>
                     </button>
@@ -368,74 +345,59 @@ const Settings = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowStudentPricing(false)}
-                      className="w-full"
+                      className="w-full text-muted-foreground"
                     >
                       {t('settings.subscription.backToRegular')}
                     </Button>
-                  </div>
+                  </>
                 ) : (
-                  <div className="space-y-3">
+                  <>
                     <button
-                      onClick={() => setSelectedPlan('monthly')}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                        selectedPlan === 'monthly'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
+                      onClick={() => setSelectedPlan('annual')}
+                      className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
+                        selectedPlan === 'annual'
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                          : 'bg-card border-2 border-border hover:border-primary/50'
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{t('settings.subscription.monthly')}</p>
-                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedMonthly')}</p>
+                      <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
+                        selectedPlan === 'annual' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
+                      }`}>
+                        {t('settings.subscription.mostPopular')}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium opacity-80">{t('settings.subscription.annual')}</p>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <p className="text-3xl font-bold">€6.66</p>
+                          <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">€7.90</p>
-                          <p className="text-xs text-muted-foreground">{t('settings.subscription.perMonth')}</p>
-                        </div>
+                        <p className="text-xs opacity-60 mt-1">€79.90 {t('settings.subscription.billedYearly')} · {t('settings.subscription.save')} 33%</p>
                       </div>
                     </button>
 
                     <button
-                      onClick={() => setSelectedPlan('annual')}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left relative overflow-hidden ${
-                        selectedPlan === 'annual'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
+                      onClick={() => setSelectedPlan('monthly')}
+                      className={`w-full p-4 rounded-2xl transition-all text-left ${
+                        selectedPlan === 'monthly'
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                          : 'bg-card border-2 border-border hover:border-primary/50'
                       }`}
                     >
-                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-md font-medium">
-                        {t('settings.subscription.save')} 33%
-                      </div>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{t('settings.subscription.annual')}</p>
-                          <p className="text-sm text-muted-foreground">{t('settings.subscription.billedYearly')}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">€79.90</p>
-                          <p className="text-xs text-muted-foreground">€6.66/{t('settings.subscription.perMonth').split(' ')[0]}</p>
+                      <div>
+                        <p className="text-sm font-medium opacity-80">{t('settings.subscription.monthly')}</p>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <p className="text-3xl font-bold">€7.90</p>
+                          <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
                         </div>
                       </div>
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
 
-              {/* Student Button */}
-              {!showStudentPricing && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowStudentPricing(true)}
-                >
-                  <GraduationCap className="h-4 w-4 mr-2" />
-                  {t('settings.subscription.studentButton')}
-                </Button>
-              )}
-
-              {/* Continue Button */}
+              {/* CTA Button */}
               <Button
-                className="w-full"
+                className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20"
                 size="lg"
                 disabled={!selectedPlan}
                 onClick={() => {
@@ -445,8 +407,30 @@ const Settings = () => {
                   });
                 }}
               >
-                {t('settings.subscription.continueWith')} {selectedPlan === 'monthly' ? t('settings.subscription.monthly') : selectedPlan === 'annual' ? t('settings.subscription.annual') : ''} 
+                <Zap className="h-4 w-4 mr-2" />
+                {t('settings.subscription.upgradeCta')}
               </Button>
+
+              {/* Student link */}
+              {!showStudentPricing && (
+                <button
+                  onClick={() => setShowStudentPricing(true)}
+                  className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  {t('settings.subscription.studentButton')}
+                </button>
+              )}
+
+              {/* Trust badges */}
+              <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Check className="h-3 w-3" /> {t('settings.subscription.cancelAnytime')}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Check className="h-3 w-3" /> {t('settings.subscription.securePayment')}
+                </span>
+              </div>
             </CardContent>
           </Card>
 
