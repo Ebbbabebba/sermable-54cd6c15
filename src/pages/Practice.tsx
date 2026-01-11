@@ -2365,7 +2365,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               {t('practice.practiceAnyway', 'Practice Anyway')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleSpacedRepetitionContinue}>
-              {t('practice.iUnderstandContinue', 'I Understand, Continue')}
+              {t('common.okay', 'Okay')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
