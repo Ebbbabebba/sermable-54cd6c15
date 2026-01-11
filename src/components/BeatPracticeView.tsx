@@ -814,6 +814,13 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
           mastered_at: new Date().toISOString() 
         })
         .eq('id', currentBeat.id);
+      
+      // Update local state so the completion screen shows correct count
+      setBeats(prev => prev.map(b => 
+        b.id === currentBeat.id 
+          ? { ...b, is_mastered: true, mastered_at: new Date().toISOString() }
+          : b
+      ));
     }
 
     // SESSION COMPLETE - Don't auto-continue to next beat!
