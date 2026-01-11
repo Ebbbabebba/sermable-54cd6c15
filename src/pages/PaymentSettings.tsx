@@ -8,6 +8,17 @@ import { ArrowLeft, Crown, CreditCard, Receipt, Check, GraduationCap, Zap, FileS
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
@@ -180,19 +191,39 @@ const PaymentSettings = () => {
                         <p className="text-sm text-muted-foreground">
                           {t('settings.payment.cancelInfo')}
                         </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => {
-                            toast({
-                              title: t('settings.subscription.comingSoon'),
-                              description: t('settings.subscription.cancelDesc'),
-                            });
-                          }}
-                        >
-                          {t('settings.subscription.cancelSubscription')}
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                            >
+                              {t('settings.subscription.cancelSubscription')}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{t('settings.subscription.cancelConfirmTitle')}</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t('settings.subscription.cancelConfirmDesc')}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                              <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={() => {
+                                  toast({
+                                    title: t('settings.subscription.comingSoon'),
+                                    description: t('settings.subscription.cancelDesc'),
+                                  });
+                                }}
+                              >
+                                {t('settings.subscription.confirmCancel')}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                         <p className="text-xs text-muted-foreground">
                           {t('settings.subscription.cancelNote')}
                         </p>
