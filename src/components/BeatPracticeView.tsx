@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, Brain, BookOpen, Trophy } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, Brain, BookOpen, Trophy, X, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -1063,82 +1063,108 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const progressInfo = getProgressInfo();
 
   return (
-    <div className="flex flex-col h-full p-4">
-      {/* Compact session mode indicator */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col h-full bg-background">
+      {/* Duolingo-style header with progress */}
+      <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30">
+        <div className="flex items-center gap-4 max-w-2xl mx-auto">
+          {/* Exit button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              stopListening();
+              onExit?.();
+            }}
+            className="shrink-0 rounded-full hover:bg-muted"
+          >
+            <X className="h-5 w-5 text-muted-foreground" />
+          </Button>
+          
+          {/* Progress bar */}
+          <div className="flex-1">
+            <div className="h-3 bg-muted rounded-full overflow-hidden">
+              <div 
+                className={cn(
+                  "h-full rounded-full transition-all duration-500",
+                  sessionMode === 'recall' ? "bg-amber-500" : "bg-primary"
+                )}
+                style={{ 
+                  width: `${sessionMode === 'recall' 
+                    ? ((recallIndex + 1) / Math.max(beatsToRecall.length, 1)) * 100 
+                    : phase.includes('beat') 
+                      ? 100 
+                      : (getCurrentSentenceNumber() / 3) * 100}%` 
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Session badge */}
           <div className={cn(
-            "px-3 py-1.5 rounded-full text-sm font-medium",
+            "shrink-0 px-3 py-1 rounded-full text-xs font-semibold",
             sessionMode === 'recall' 
               ? "bg-amber-500/20 text-amber-500" 
               : "bg-primary/20 text-primary"
           )}>
-            {sessionMode === 'recall' ? '🔄 Recall' : '📚 Learn'}
+            {sessionMode === 'recall' ? '🔄' : '📚'} {progressInfo.sublabel}
           </div>
-          <span className="text-sm text-muted-foreground">{progressInfo.sublabel}</span>
         </div>
-        
-        {/* Beat dots */}
-        <div className="flex gap-1.5">
-          {Array.from({ length: sessionMode === 'recall' ? beatsToRecall.length : beats.length }).map((_, idx) => (
-            <div
-              key={idx}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all",
-                idx < (sessionMode === 'recall' ? recallIndex : currentBeatIndex)
-                  ? "bg-primary"
-                  : idx === (sessionMode === 'recall' ? recallIndex : currentBeatIndex)
-                  ? "bg-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background"
-                  : "bg-muted"
+      </div>
+
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
+        <div className="w-full max-w-2xl space-y-6">
+          
+          {/* Sentence dots (only in learn mode) */}
+          {sessionMode === 'learn' && !phase.includes('beat') && (
+            <div className="flex items-center justify-center gap-3">
+              {[1, 2, 3].map((sentenceNum) => {
+                const currentSentence = getCurrentSentenceNumber();
+                const isComplete = sentenceNum < currentSentence;
+                const isCurrent = sentenceNum === currentSentence;
+                return (
+                  <div
+                    key={sentenceNum}
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
+                      isComplete && "bg-primary text-primary-foreground",
+                      isCurrent && "bg-primary/20 text-primary ring-2 ring-primary",
+                      !isComplete && !isCurrent && "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {isComplete ? <CheckCircle2 className="h-5 w-5" /> : sentenceNum}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Phase pill */}
+          <div className="flex justify-center">
+            <span className={cn(
+              "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
+              getPhaseType() === 'learning' && "bg-blue-500/10 text-blue-500",
+              getPhaseType() === 'fading' && "bg-amber-500/10 text-amber-500",
+              getPhaseType() === 'combining' && "bg-purple-500/10 text-purple-500"
+            )}>
+              {getPhaseType() === 'learning' && (
+                <>
+                  <Circle className="h-3 w-3 fill-current" />
+                  Read aloud {repetitionCount}/{requiredLearningReps}
+                </>
               )}
-            />
-          ))}
-        </div>
-      </div>
+              {getPhaseType() === 'fading' && (
+                <>
+                  <Brain className="h-4 w-4" />
+                  {words.length - hiddenWordIndices.size} words visible
+                </>
+              )}
+              {getPhaseType() === 'combining' && 'Combining sentences'}
+            </span>
+          </div>
 
-      {/* Sentence progress pills (only in learn mode) */}
-      {sessionMode === 'learn' && !phase.includes('beat') && (
-        <div className="flex items-center justify-center gap-2 mb-4">
-          {[1, 2, 3].map((sentenceNum) => {
-            const currentSentence = getCurrentSentenceNumber();
-            const isComplete = sentenceNum < currentSentence;
-            const isCurrent = sentenceNum === currentSentence;
-            return (
-              <div
-                key={sentenceNum}
-                className={cn(
-                  "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all",
-                  isComplete && "bg-primary text-primary-foreground",
-                  isCurrent && "bg-primary/20 text-primary ring-1 ring-primary/50",
-                  !isComplete && !isCurrent && "bg-muted/50 text-muted-foreground"
-                )}
-              >
-                {isComplete && <CheckCircle2 className="h-3 w-3" />}
-                <span>S{sentenceNum}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Phase indicator */}
-      <div className="text-center mb-4">
-        <span className={cn(
-          "inline-block px-4 py-1.5 rounded-full text-sm font-medium",
-          getPhaseType() === 'learning' && "bg-blue-500/20 text-blue-400",
-          getPhaseType() === 'fading' && "bg-amber-500/20 text-amber-400",
-          getPhaseType() === 'combining' && "bg-purple-500/20 text-purple-400"
-        )}>
-          {getPhaseType() === 'learning' && `Read ${repetitionCount}/3`}
-          {getPhaseType() === 'fading' && `${words.length - hiddenWordIndices.size} words left`}
-          {getPhaseType() === 'combining' && 'Combining sentences'}
-        </span>
-      </div>
-
-      {/* Main content area - larger and centered */}
-      <div className="flex-1 flex items-center justify-center min-h-0">
-        <Card className="w-full max-w-3xl overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="flex items-center justify-center p-6 md:p-10">
+          {/* Main sentence card - clean and centered */}
+          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10">
             <AnimatePresence mode="wait">
               {showCelebration ? (
                 <motion.div
@@ -1146,10 +1172,10 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.5, opacity: 0 }}
-                  className="flex flex-col items-center gap-6 py-12"
+                  className="flex flex-col items-center gap-6 py-8"
                 >
-                  <Sparkles className="h-20 w-20 text-primary animate-pulse" />
-                  <p className="text-3xl font-bold text-primary text-center">{celebrationMessage}</p>
+                  <Sparkles className="h-16 w-16 text-primary animate-pulse" />
+                  <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
                 </motion.div>
               ) : (
                 <motion.div
@@ -1180,27 +1206,22 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                   {/* Progress indicator for fading mode */}
                   {(sessionMode === 'recall' || phase.includes('fading')) && (
                     <div className="mt-8 flex items-center gap-4">
-                      <div className="relative w-12 h-12">
-                        <svg className="w-12 h-12 -rotate-90">
+                      <div className="relative w-14 h-14">
+                        <svg className="w-14 h-14 -rotate-90">
                           <circle
-                            cx="24"
-                            cy="24"
-                            r="20"
+                            cx="28" cy="28" r="24"
                             fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            className="text-muted/20"
+                            stroke="hsl(var(--muted))"
+                            strokeWidth="4"
                           />
                           <circle
-                            cx="24"
-                            cy="24"
-                            r="20"
+                            cx="28" cy="28" r="24"
                             fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth="4"
                             strokeLinecap="round"
-                            className="text-primary transition-all duration-300"
-                            strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 125.6} 125.6`}
+                            strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 151} 151`}
+                            className="transition-all duration-300"
                           />
                         </svg>
                         <CheckCircle2 
@@ -1211,7 +1232,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                         />
                       </div>
                       <div className="text-left">
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-semibold">
                           {sessionMode === 'recall' 
                             ? `${recallSuccessCount}/2 recalls`
                             : `${hiddenWordIndices.size}/${words.length} mastered`}
@@ -1225,39 +1246,29 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
                 </motion.div>
               )}
             </AnimatePresence>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Bottom controls */}
-      <div className="flex items-center justify-center gap-4 pt-6">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => {
-            stopListening();
-            onExit?.();
-          }}
-          className="rounded-full h-12 w-12"
-        >
-          <RotateCcw className="h-5 w-5" />
-        </Button>
-        
-        {!showCelebration && (
-          <Button
-            variant="default"
-            size="lg"
-            onClick={() => {
-              const allIndices = new Set(words.map((_, i) => i));
-              pauseSpeechRecognition(900);
-              checkCompletion(allIndices, failedWordIndices);
-            }}
-            className="rounded-full gap-2 px-6 h-12"
-          >
-            {t('common.continue', 'Continue')}
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        )}
+      {/* Fixed bottom controls - Duolingo style */}
+      <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent p-4 pb-6">
+        <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
+          {!showCelebration && (
+            <Button
+              variant="default"
+              size="lg"
+              onClick={() => {
+                const allIndices = new Set(words.map((_, i) => i));
+                pauseSpeechRecognition(900);
+                checkCompletion(allIndices, failedWordIndices);
+              }}
+              className="flex-1 h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25"
+            >
+              {t('common.continue', 'Continue')}
+              <ChevronRight className="h-5 w-5 ml-2" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
