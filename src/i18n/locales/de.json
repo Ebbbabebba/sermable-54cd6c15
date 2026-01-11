@@ -384,7 +384,7 @@
     },
     "signOut": "Abmelden"
   },
-  "common": {
+"common": {
     "loading": "Wird geladen...",
     "error": "Fehler",
     "success": "Erfolg",
@@ -395,6 +395,40 @@
     "back": "Zurück",
     "next": "Weiter",
     "previous": "Zurück",
-    "close": "Schließen"
+    "close": "Schließen",
+    "restart": "Neu starten",
+    "done": "Fertig",
+    "not_supported": "Nicht unterstützt",
+    "use_chrome": "Spracherkennung erfordert Chrome oder Safari."
+  },
+  "beat_practice": {
+    "learned": "Gelernt",
+    "remaining": "Übrig",
+    "session_complete": "Sitzung abgeschlossen!",
+    "todays_session": "Heutige Sitzung",
+    "active_session": "Aktive Sitzung",
+    "come_back_later": "Komm später für den nächsten Beat zurück",
+    "session_desc_recall": "Erinnern + neu lernen",
+    "session_desc_start": "Beginne mit deinem ersten Beat",
+    "to_recall": "zu erinnern",
+    "to_learn": "zu lernen",
+    "beat_to_learn": "Beat {{num}} zu lernen",
+    "your_progress": "Dein Fortschritt",
+    "start_next_session": "Nächste Sitzung starten"
+  },
+  "presentation": {
+    "settings": "Präsentationseinstellungen",
+    "customizeExperience": "Passe dein Präsentationserlebnis an",
+    "pauseDetection": "Pausenerkennung",
+    "howLongToWait": "Wie lange warten, bevor das nächste Wort angezeigt wird",
+    "autoReveal": "Automatisch anzeigen",
+    "autoRevealDesc": "Nächstes Wort automatisch nach Pause anzeigen",
+    "textSize": "Textgröße",
+    "quickTips": "Schnelltipps",
+    "tip1": "Live-Modus umschalten, um Sprachverfolgung zu starten",
+    "tip2": "Überall klicken, um Steuerungen ein-/auszublenden",
+    "tip3": "ESC drücken, um die Präsentation zu beenden",
+    "tip4": "Gelbe Markierung = Pause erkannt",
+    "tip5": "Blaue Markierung = spricht gerade"
   }
 }

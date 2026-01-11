@@ -384,7 +384,7 @@
     },
     "signOut": "Cerrar sesión"
   },
-  "common": {
+"common": {
     "loading": "Cargando...",
     "error": "Error",
     "success": "Éxito",
@@ -395,6 +395,40 @@
     "back": "Atrás",
     "next": "Siguiente",
     "previous": "Anterior",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "restart": "Reiniciar",
+    "done": "Hecho",
+    "not_supported": "No soportado",
+    "use_chrome": "El reconocimiento de voz requiere Chrome o Safari."
+  },
+  "beat_practice": {
+    "learned": "Aprendidos",
+    "remaining": "Restantes",
+    "session_complete": "¡Sesión completada!",
+    "todays_session": "Sesión de hoy",
+    "active_session": "Sesión activa",
+    "come_back_later": "Vuelve más tarde para el siguiente beat",
+    "session_desc_recall": "Recordar + aprender nuevo",
+    "session_desc_start": "Comienza con tu primer beat",
+    "to_recall": "para recordar",
+    "to_learn": "para aprender",
+    "beat_to_learn": "Beat {{num}} para aprender",
+    "your_progress": "Tu progreso",
+    "start_next_session": "Iniciar siguiente sesión"
+  },
+  "presentation": {
+    "settings": "Configuración de presentación",
+    "customizeExperience": "Personaliza tu experiencia de presentación",
+    "pauseDetection": "Detección de pausa",
+    "howLongToWait": "Cuánto esperar antes de mostrar la siguiente palabra",
+    "autoReveal": "Revelado automático",
+    "autoRevealDesc": "Mostrar automáticamente la siguiente palabra después de una pausa",
+    "textSize": "Tamaño del texto",
+    "quickTips": "Consejos rápidos",
+    "tip1": "Activa el modo en vivo para iniciar el seguimiento del habla",
+    "tip2": "Haz clic en cualquier lugar para mostrar/ocultar controles",
+    "tip3": "Presiona ESC para salir de la presentación",
+    "tip4": "Resaltado amarillo = pausa detectada",
+    "tip5": "Resaltado azul = hablando actualmente"
   }
 }

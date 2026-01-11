@@ -384,7 +384,7 @@
     },
     "signOut": "Se déconnecter"
   },
-  "common": {
+"common": {
     "loading": "Chargement...",
     "error": "Erreur",
     "success": "Succès",
@@ -395,6 +395,40 @@
     "back": "Retour",
     "next": "Suivant",
     "previous": "Précédent",
-    "close": "Fermer"
+    "close": "Fermer",
+    "restart": "Redémarrer",
+    "done": "Terminé",
+    "not_supported": "Non pris en charge",
+    "use_chrome": "La reconnaissance vocale nécessite Chrome ou Safari."
+  },
+  "beat_practice": {
+    "learned": "Appris",
+    "remaining": "Restant",
+    "session_complete": "Session terminée !",
+    "todays_session": "Session du jour",
+    "active_session": "Session active",
+    "come_back_later": "Revenez plus tard pour le prochain beat",
+    "session_desc_recall": "Rappel + apprendre nouveau",
+    "session_desc_start": "Commencez avec votre premier beat",
+    "to_recall": "à rappeler",
+    "to_learn": "à apprendre",
+    "beat_to_learn": "Beat {{num}} à apprendre",
+    "your_progress": "Votre progression",
+    "start_next_session": "Démarrer la session suivante"
+  },
+  "presentation": {
+    "settings": "Paramètres de présentation",
+    "customizeExperience": "Personnalisez votre expérience de présentation",
+    "pauseDetection": "Détection de pause",
+    "howLongToWait": "Combien de temps attendre avant d'afficher le mot suivant",
+    "autoReveal": "Révélation automatique",
+    "autoRevealDesc": "Afficher automatiquement le mot suivant après une pause",
+    "textSize": "Taille du texte",
+    "quickTips": "Conseils rapides",
+    "tip1": "Activez le mode live pour démarrer le suivi vocal",
+    "tip2": "Cliquez n'importe où pour afficher/masquer les contrôles",
+    "tip3": "Appuyez sur ESC pour quitter la présentation",
+    "tip4": "Surbrillance jaune = pause détectée",
+    "tip5": "Surbrillance bleue = en train de parler"
   }
 }

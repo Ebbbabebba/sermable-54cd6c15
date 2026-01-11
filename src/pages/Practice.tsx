@@ -2092,14 +2092,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   <span className="text-lg font-bold">{masteredBeats}</span>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.learned', 'Learned')}</span>
+              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.learned')}</span>
             </div>
             
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                 <span className="text-lg font-bold text-muted-foreground">{totalBeats - masteredBeats}</span>
               </div>
-              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.remaining', 'Remaining')}</span>
+              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.remaining')}</span>
             </div>
           </div>
 
@@ -2116,17 +2116,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <div>
                 <h3 className="font-semibold">
                   {todaySessionDone
-                    ? t('beat_practice.session_complete', 'Session Complete!')
+                    ? t('beat_practice.session_complete')
                     : masteredBeats === 0 
-                      ? t('beat_practice.todays_session', "Today's Session")
-                      : t('beat_practice.active_session', 'Active Session')}
+                      ? t('beat_practice.todays_session')
+                      : t('beat_practice.active_session')}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {todaySessionDone
-                    ? t('beat_practice.come_back_later', 'Come back later for the next beat')
+                    ? t('beat_practice.come_back_later')
                     : masteredBeats > 0 
-                      ? t('beat_practice.session_desc_recall', 'Recall + learn new beats')
-                      : t('beat_practice.session_desc_start', 'Start with your first beat')}
+                      ? t('beat_practice.session_desc_recall')
+                      : t('beat_practice.session_desc_start')}
                 </p>
               </div>
             </div>
@@ -2136,13 +2136,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
               {masteredBeats > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
                   <RotateCcw className="h-3.5 w-3.5" />
-                  {masteredBeats} to recall
+                  {masteredBeats} {t('beat_practice.to_recall')}
                 </span>
               )}
               {nextBeatNumber <= totalBeats && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
                   <Zap className="h-3.5 w-3.5" />
-                  Beat {nextBeatNumber} to learn
+                  {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
                 </span>
               )}
             </div>
@@ -2151,7 +2151,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           {/* Beat Timeline - Compact horizontal dots */}
           {hasBeats && (
             <div className="flex flex-col items-center gap-3">
-              <p className="text-sm text-muted-foreground">{t('beat_practice.your_progress', 'Your Progress')}</p>
+              <p className="text-sm text-muted-foreground">{t('beat_practice.your_progress')}</p>
               <div className="flex items-center gap-2 flex-wrap justify-center">
                 {segments.map((segment, idx) => (
                   <div
@@ -2232,7 +2232,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Play className="h-5 w-5 mr-2" />
             {isLocked 
               ? t('practice.locked') 
-              : t('beat_practice.start_next_session', 'Start Next Session')}
+              : t('beat_practice.start_next_session')}
           </Button>
         </div>
       </div>
