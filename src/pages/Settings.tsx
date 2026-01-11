@@ -271,21 +271,8 @@ const Settings = () => {
                     {t('settings.subscription.presentationModeDesc')}
                   </p>
                   
-                  {/* What you don't see during */}
-                  <div className="flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full line-through opacity-60">
-                      {t('settings.subscription.noScript')}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full line-through opacity-60">
-                      {t('settings.subscription.noPulse')}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full line-through opacity-60">
-                      {t('settings.subscription.noLiveFeedback')}
-                    </span>
-                  </div>
-
                   {/* After presentation feedback */}
-                  <div className="pt-2 border-t border-border/50">
+                  <div className="pt-2">
                     <p className="text-xs font-medium text-primary mb-3 flex items-center gap-1.5">
                       <BarChart3 className="h-3.5 w-3.5" />
                       {t('settings.subscription.afterPresentation')}
@@ -309,14 +296,16 @@ const Settings = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Important note */}
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-amber-700 dark:text-amber-400">
-                      {t('settings.subscription.aiFeedbackNote')}
-                    </p>
-                  </div>
+                </div>
+                
+                {/* Testimonial Quote */}
+                <div className="rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 p-5 border border-primary/20">
+                  <p className="text-sm italic text-foreground/80 mb-3">
+                    "{t('settings.subscription.testimonialQuote')}"
+                  </p>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    — {t('settings.subscription.testimonialAuthor')}
+                  </p>
                 </div>
               </div>
 
