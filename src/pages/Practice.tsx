@@ -105,6 +105,7 @@ const Practice = () => {
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [todaySessionDone, setTodaySessionDone] = useState(false);
+  const [practiceBeats, setPracticeBeats] = useState<{ id: string; is_mastered: boolean; mastered_at: string | null }[]>([]);
   // Legacy settings for old practice mode (kept for reference, not used in beat mode)
   const settings = {
     revealSpeed: 5,
@@ -384,10 +385,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
       // Check if today's session is complete (beat mastered today or all beats mastered)
       const { data: beatsData } = await supabase
         .from('practice_beats')
-        .select('is_mastered, mastered_at')
-        .eq('speech_id', id);
+        .select('id, is_mastered, mastered_at')
+        .eq('speech_id', id)
+        .order('beat_order', { ascending: true });
       
       if (beatsData) {
+        setPracticeBeats(beatsData);
         const today = new Date().toDateString();
         const allMastered = beatsData.every(b => b.is_mastered);
         const masteredToday = beatsData.some(b => {
@@ -1980,8 +1983,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
   }
 
   // Pre-practice screen: Beat-focused start screen
-  const masteredBeats = segments.filter(s => s.is_mastered).length;
-  const totalBeats = segments.length;
+  // Use practiceBeats for accurate counts, fall back to segments if no practice_beats exist
+  const masteredBeats = practiceBeats.length > 0 
+    ? practiceBeats.filter(b => b.is_mastered).length 
+    : segments.filter(s => s.is_mastered).length;
+  const totalBeats = practiceBeats.length > 0 ? practiceBeats.length : segments.length;
   const progressPercent = totalBeats > 0 ? (masteredBeats / totalBeats) * 100 : 0;
   const nextBeatNumber = masteredBeats + 1;
   const hasBeats = totalBeats > 0;
