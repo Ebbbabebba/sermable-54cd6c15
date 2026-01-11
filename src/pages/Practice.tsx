@@ -388,14 +388,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
-  const handleStartPractice = () => {
-    // Check if locked
-    if (isLocked && nextReviewDate) {
+  const handleStartPractice = (bypassLock = false) => {
+    // Check if locked (skip this check if bypassing)
+    if (!bypassLock && isLocked && nextReviewDate) {
       toast({
         title: t('practice.practiceScheduled'),
         description: t('practice.aiRecommendsAt', { time: format(nextReviewDate, "'at' HH:mm") }),
         duration: 3000,
       });
+      return; // Don't start if locked
     }
     
     console.log('✅ Starting practice session');
@@ -2168,7 +2169,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
         <div className="max-w-md mx-auto">
           <Button 
             size="lg" 
-            onClick={handleStartPractice}
+            onClick={() => handleStartPractice()}
             disabled={isLocked}
             className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
           >
@@ -2207,7 +2208,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('practice.waitForOptimal')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleStartPractice}>
+            <AlertDialogAction onClick={() => handleStartPractice(true)}>
               {t('practice.practiceNowAnyway')}
             </AlertDialogAction>
           </AlertDialogFooter>
