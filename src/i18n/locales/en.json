@@ -432,6 +432,7 @@
     "your_progress": "Your Progress",
     "start_session": "Start Session",
     "session_complete": "Session Complete!",
+    "come_back_later": "Come back later for the next beat",
     "all_mastered": "🎉 All beats mastered!",
     "poem_memorized": "You've memorized the entire speech! Practice again tomorrow to reinforce.",
     "come_back": "You've mastered {{current}}/{{total}} beats. Come back later to learn the next one!",
