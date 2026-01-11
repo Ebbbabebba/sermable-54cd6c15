@@ -2457,25 +2457,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               className="w-full"
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
-              {t('common.done', 'Done')}
-            </Button>
-            <Button 
-              variant="ghost"
-              onClick={() => {
-                setShowSessionComplete(false);
-                // Small delay to allow dialog to close before showing next one
-                setTimeout(() => {
-                  if (subscriptionTier === 'free') {
-                    setShowPremiumUpsell(true);
-                  } else {
-                    handleStartPractice(true, true, true);
-                  }
-                }, 150);
-              }}
-              className="w-full text-muted-foreground"
-            >
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              {t('practice.practiceAnyway', 'Practice Anyway')}
+              {t('common.okay', 'Okay')}
             </Button>
           </DialogFooter>
         </DialogContent>
