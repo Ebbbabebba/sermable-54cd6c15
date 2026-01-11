@@ -314,9 +314,21 @@
   "settings": {
     "title": "Inställningar",
     "subtitle": "Anpassa din upplevelse",
-"subscription": {
+    "subscription": {
       "title": "Prenumeration",
       "description": "Lås upp fler funktioner och förbättra din inlärning",
+      "manageSub": "Hantera din prenumeration och betalningar",
+      "youArePremium": "Du är Premium!",
+      "premiumDesc": "Du har tillgång till alla premiumfunktioner",
+      "paymentHistory": "Betalningshistorik",
+      "lastPayment": "Senaste betalning",
+      "nextPayment": "Nästa betalning",
+      "viewAllPayments": "Visa alla betalningar",
+      "viewAllPaymentsDesc": "Betalningshistorik kommer snart",
+      "manageSubscription": "Hantera prenumeration",
+      "cancelSubscription": "Avsluta prenumeration",
+      "cancelDesc": "Avslutningsfunktion kommer snart",
+      "cancelNote": "Du kan avsluta när som helst. Åtkomsten fortsätter till slutet av betalningsperioden.",
       "whyPremium": "Premium låser upp",
       "choosePlan": "Välj plan",
       "overrideLock": "Hoppa över låsning",
@@ -422,16 +434,20 @@
       "enabled": "Du får notiser när det är dags att repetera, baserat på dina framsteg."
     },
     "legal": {
-      "termsTitle": "Juridiskt",
-      "termsDescription": "Läs våra villkor",
+      "termsTitle": "Villkor",
+      "termsDescription": "Läs våra villkor och policyer",
       "termsOfService": "Användarvillkor",
-      "privacyPolicy": "Integritetspolicy"
+      "privacyPolicy": "Integritetspolicy",
+      "cookiePolicy": "Cookiepolicy"
     },
     "support": {
       "title": "Support",
-      "description": "Få hjälp eller lämna feedback",
-      "contactSupport": "Kontakta oss",
-      "contactSupportDesc": "Har du frågor? Hör av dig så hjälper vi dig."
+      "description": "Få hjälp och kontakta oss",
+      "helpCenter": "Hjälpcenter",
+      "joinCommunity": "Gå med i communityn",
+      "emailSupport": "Mejla support",
+      "needHelp": "Behöver du hjälp?",
+      "needHelpDesc": "Vårt supportteam svarar vanligtvis inom 24 timmar. Vid brådskande ärenden, mejla oss direkt på support@sermable.com"
     },
     "signOut": "Logga ut"
   },

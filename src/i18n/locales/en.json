@@ -315,8 +315,20 @@
     "title": "Settings",
     "subtitle": "Customize your Sermable experience",
     "subscription": {
-      "title": "Go Premium",
+      "title": "Subscription",
       "description": "Unlock your full potential",
+      "manageSub": "Manage your subscription and payments",
+      "youArePremium": "You're Premium!",
+      "premiumDesc": "You have access to all premium features",
+      "paymentHistory": "Payment History",
+      "lastPayment": "Last payment",
+      "nextPayment": "Next payment",
+      "viewAllPayments": "View All Payments",
+      "viewAllPaymentsDesc": "Payment history coming soon",
+      "manageSubscription": "Manage Subscription",
+      "cancelSubscription": "Cancel Subscription",
+      "cancelDesc": "Cancellation feature coming soon",
+      "cancelNote": "You can cancel anytime. Access continues until end of billing period.",
       "whyPremium": "Premium unlocks",
       "choosePlan": "Choose Your Plan",
       "unlimitedSpeeches": "Unlimited Speeches",
@@ -327,8 +339,6 @@
       "practiceAnytime": "Skip the wait",
       "advancedAnalytics": "Deep Analytics",
       "deepInsights": "Track every detail",
-      "testimonialQuote": "I memorized my entire wedding speech in just 3 days. The progressive hiding technique really works!",
-      "testimonialAuthor": "Sarah M., Wedding Speaker",
       "monthly": "Monthly",
       "annual": "Annual",
       "month": "month",
@@ -400,15 +410,19 @@
     },
     "legal": {
       "termsTitle": "Terms & Conditions",
-      "termsDescription": "Read our legal agreements",
+      "termsDescription": "Review our policies and legal information",
       "termsOfService": "Terms of Service",
-      "privacyPolicy": "Privacy Policy"
+      "privacyPolicy": "Privacy Policy",
+      "cookiePolicy": "Cookie Policy"
     },
     "support": {
-      "title": "Support",
-      "description": "Get help and send feedback",
-      "contactSupport": "Contact Support",
-      "contactSupportDesc": "Have questions or need help? Reach out to us."
+      "title": "Contact Support",
+      "description": "Get help and access our support resources",
+      "helpCenter": "Help Center",
+      "joinCommunity": "Join Community",
+      "emailSupport": "Email Support",
+      "needHelp": "Need Help?",
+      "needHelpDesc": "Our support team typically responds within 24 hours. For urgent issues, please email us directly at support@sermable.com"
     },
     "signOut": "Sign Out"
   },
