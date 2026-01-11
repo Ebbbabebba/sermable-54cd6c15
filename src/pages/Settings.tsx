@@ -239,15 +239,6 @@ const Settings = () => {
             </CardHeader>
             
             <CardContent className="space-y-5 relative">
-              {/* Hero testimonial */}
-              <div className="text-center py-4">
-                <p className="text-lg font-medium text-foreground leading-relaxed">
-                  "{t('settings.subscription.testimonialQuote')}"
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  — {t('settings.subscription.testimonialAuthor')}
-                </p>
-              </div>
 
               {/* Key benefits - compact grid */}
               <div className="grid grid-cols-2 gap-3">
