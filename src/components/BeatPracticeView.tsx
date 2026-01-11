@@ -82,6 +82,12 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const [currentBeatIndex, setCurrentBeatIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
+  const [familiarityLevel, setFamiliarityLevel] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
+  
+  // Calculate words to hide per successful repetition based on familiarity
+  const wordsToHidePerSuccess = familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1;
+  // Calculate required learning repetitions based on familiarity
+  const requiredLearningReps = familiarityLevel === 'confident' ? 2 : 3;
   
   // Session mode tracking
   const [sessionMode, setSessionMode] = useState<SessionMode>('recall');
@@ -256,15 +262,20 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
   const loadOrCreateBeats = async () => {
     setLoading(true);
 
-    // Fetch speech language, last practice time, and deadline
+    // Fetch speech language, last practice time, deadline, and familiarity level
     const { data: speechRow } = await supabase
       .from('speeches')
-      .select('speech_language, last_practice_session_at, goal_date')
+      .select('speech_language, last_practice_session_at, goal_date, familiarity_level')
       .eq('id', speechId)
       .single();
 
     if (speechRow?.speech_language) {
       setSpeechLang(speechRow.speech_language);
+    }
+    
+    // Set familiarity level for adaptive word hiding
+    if (speechRow?.familiarity_level) {
+      setFamiliarityLevel(speechRow.familiarity_level as 'beginner' | 'intermediate' | 'confident');
     }
 
     // Determine if this is a new day (for 1 beat per day logic)
@@ -567,7 +578,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
 
-      if (currentRep >= 3) {
+      // Use familiarity-based required reps (2 for confident, 3 for others)
+      if (currentRep >= requiredLearningReps) {
         pauseSpeechRecognition(1700);
         resetForNextRep();
         setCelebrationMessage(t('beat_practice.great_start_fading'));
@@ -591,7 +603,7 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
       } else {
         repetitionCountRef.current = currentRep + 1;
         pauseSpeechRecognition(900);
-        setCelebrationMessage(`${currentRep}/3 ✓`);
+        setCelebrationMessage(`${currentRep}/${requiredLearningReps} ✓`);
         setShowCelebration(true);
 
         setTimeout(() => {
@@ -678,23 +690,37 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
     if (hadErrors) {
       setConsecutiveNoScriptSuccess(0);
       
+      // Reveal words proportional to familiarity (reveal as many as we hide per success)
       if (hiddenWordOrder.length > 0) {
-        const lastHiddenIdx = hiddenWordOrder[hiddenWordOrder.length - 1];
+        const wordsToReveal = Math.min(wordsToHidePerSuccess, hiddenWordOrder.length);
+        const indicesToReveal = hiddenWordOrder.slice(-wordsToReveal);
+        
         setHiddenWordIndices((prev) => {
           const next = new Set(prev);
-          next.delete(lastHiddenIdx);
+          indicesToReveal.forEach(idx => next.delete(idx));
           return next;
         });
-        setHiddenWordOrder((prev) => prev.slice(0, -1));
+        setHiddenWordOrder((prev) => prev.slice(0, -wordsToReveal));
       }
       setFailedWordIndices(new Set());
       resetForNextRep();
     } else if (!allHidden) {
-      const nextToHide = getNextWordToHide(hiddenWordIndices);
-      if (nextToHide !== null) {
-        setHiddenWordIndices((prev) => new Set([...prev, nextToHide]));
-        setHiddenWordOrder((prev) => [...prev, nextToHide]);
+      // Hide multiple words based on familiarity level
+      let newHidden = new Set(hiddenWordIndices);
+      let newOrder = [...hiddenWordOrder];
+      
+      for (let i = 0; i < wordsToHidePerSuccess; i++) {
+        const nextToHide = getNextWordToHide(newHidden);
+        if (nextToHide !== null) {
+          newHidden.add(nextToHide);
+          newOrder.push(nextToHide);
+        } else {
+          break; // No more words to hide
+        }
       }
+      
+      setHiddenWordIndices(newHidden);
+      setHiddenWordOrder(newOrder);
       resetForNextRep();
     } else {
       const newConsecutive = consecutiveNoScriptSuccess + 1;
