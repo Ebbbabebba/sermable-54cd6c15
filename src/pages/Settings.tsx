@@ -732,11 +732,64 @@ const Settings = () => {
                   </div>
                   
                   {notificationsEnabled && (
-                    <div className="rounded-lg bg-primary/10 p-3">
-                      <p className="text-xs text-muted-foreground">
-                        ✓ {t('settings.notifications.enabled')}
-                      </p>
-                    </div>
+                    <>
+                      <Separator />
+                      
+                      {/* Notification Time Window */}
+                      <div className="space-y-3">
+                        <Label className="flex items-center gap-2">
+                          <Clock4 className="h-4 w-4" />
+                          {t('settings.notifications.notificationWindow')}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          {t('settings.notifications.notificationWindowDesc')}
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs">{t('settings.notifications.from')}</Label>
+                            <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
+                              <SelectTrigger className="h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                                  <SelectItem key={hour} value={hour.toString()}>
+                                    {formatHour(hour)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">{t('settings.notifications.to')}</Label>
+                            <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
+                              <SelectTrigger className="h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                                  <SelectItem key={hour} value={hour.toString()}>
+                                    {formatHour(hour)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="rounded-lg bg-primary/10 p-3 space-y-1">
+                        <p className="text-sm font-medium">
+                          ✓ {t('settings.notifications.enabled')}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t('settings.notifications.windowPreview', {
+                            start: formatHour(practiceStartHour),
+                            end: formatHour(practiceEndHour)
+                          })}
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
               )}

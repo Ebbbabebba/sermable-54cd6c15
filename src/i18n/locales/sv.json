@@ -431,7 +431,12 @@
       "nativeRequiredDesc": "Push-notiser fungerar bara i mobilappen. Installera appen för att få påminnelser på din telefon.",
       "pushNotifications": "Push-notiser",
       "pushNotificationsDesc": "Få påminnelser på låsskärmen",
-      "enabled": "Du får notiser när det är dags att repetera, baserat på dina framsteg."
+      "enabled": "Notiser aktiverade",
+      "notificationWindow": "Tidsintervall för notiser",
+      "notificationWindowDesc": "Du får bara notiser mellan dessa tider",
+      "from": "Från",
+      "to": "Till",
+      "windowPreview": "Notiser skickas mellan {{start}} och {{end}}"
     },
     "legal": {
       "termsTitle": "Villkor",
