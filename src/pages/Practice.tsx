@@ -2177,34 +2177,37 @@ const [liveTranscription, setLiveTranscription] = useState("");
           )}
 
 
-          {/* Lock info */}
-          {isLocked && nextReviewDate && (
-            <div className="flex flex-col gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+          {/* Next session info - always show if there's a next review date */}
+          {nextReviewDate && (
+            <div className={`flex flex-col gap-3 p-4 rounded-2xl ${isLocked ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-primary/5 border border-primary/20'}`}>
               <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-amber-500 shrink-0" />
+                <Clock className={`h-5 w-5 shrink-0 ${isLocked ? 'text-amber-500' : 'text-primary'}`} />
                 <div className="flex-1">
-                  <p className="text-sm">
-                    {t('practice.aiRecommendsWaiting')}
-                    <span className="font-semibold">
-                      <LockCountdown nextReviewDate={nextReviewDate} />
-                    </span>
+                  <p className="text-sm font-medium mb-1">
+                    {isLocked 
+                      ? t('practice.aiRecommendsWaiting')
+                      : t('dashboard.nextPractice')}
                   </p>
-                  {subscriptionTier === 'free' && (
-                    <Button 
-                      variant="link" 
-                      size="sm"
-                      onClick={() => navigate("/settings")}
-                      className="text-amber-600 p-0 h-auto mt-1"
-                    >
-                      <Crown className="h-3.5 w-3.5 mr-1" />
-                      {t('practice.upgradeToPremium')}
-                    </Button>
-                  )}
+                  <p className={`text-lg font-bold ${isLocked ? 'text-amber-600 dark:text-amber-400' : 'text-primary'}`}>
+                    <LockCountdown nextReviewDate={nextReviewDate} />
+                  </p>
                 </div>
               </div>
               
+              {isLocked && subscriptionTier === 'free' && (
+                <Button 
+                  variant="link" 
+                  size="sm"
+                  onClick={() => navigate("/settings")}
+                  className="text-amber-600 p-0 h-auto justify-start"
+                >
+                  <Crown className="h-3.5 w-3.5 mr-1" />
+                  {t('practice.upgradeToPremium')}
+                </Button>
+              )}
+              
               {/* Premium Practice Anyway button */}
-              {subscriptionTier !== 'free' && (
+              {isLocked && subscriptionTier !== 'free' && (
                 <Button 
                   variant="outline"
                   size="sm"
