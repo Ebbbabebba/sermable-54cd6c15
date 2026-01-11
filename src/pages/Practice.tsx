@@ -2428,7 +2428,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2">
             <Button 
               onClick={() => {
                 setShowSessionComplete(false);
@@ -2438,6 +2438,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               {t('common.done', 'Done')}
+            </Button>
+            <Button 
+              variant="ghost"
+              onClick={() => {
+                setShowSessionComplete(false);
+                if (subscriptionTier === 'free') {
+                  setShowPremiumUpsell(true);
+                } else {
+                  handleStartPractice(true, true, true);
+                }
+              }}
+              className="w-full text-muted-foreground"
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              {t('practice.practiceAnyway', 'Practice Anyway')}
             </Button>
           </DialogFooter>
         </DialogContent>
