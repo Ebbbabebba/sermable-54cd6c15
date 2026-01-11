@@ -485,7 +485,9 @@ const Settings = () => {
                   onValueChange={handleLanguageChange}
                 >
                   <SelectTrigger id="app-language" className="w-full">
-                    <SelectValue />
+                    <SelectValue>
+                      {languages.find(l => l.code === currentLanguage)?.flag} {languages.find(l => l.code === currentLanguage)?.name}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {languages.map((lang) => (
