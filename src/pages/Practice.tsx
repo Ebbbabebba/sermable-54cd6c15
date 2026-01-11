@@ -2102,14 +2102,18 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
           </div>
 
-          {/* Today's Focus Card - Clean and simple */}
+          {/* Session Card - Clean and simple */}
           <div className="bg-card rounded-3xl border border-border/50 p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Target className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">{t('beat_practice.todays_session', "Today's Session")}</h3>
+                <h3 className="font-semibold">
+                  {masteredBeats === 0 
+                    ? t('beat_practice.todays_session', "Today's Session")
+                    : t('beat_practice.active_session', 'Active Session')}
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   {masteredBeats > 0 
                     ? t('beat_practice.session_desc_recall', 'Recall + learn new beats')
