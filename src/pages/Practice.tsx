@@ -2091,39 +2091,43 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </CardContent>
           </Card>
 
-          {/* Lock Status (if applicable) */}
+          {/* Spaced Repetition Notice */}
           {isLocked && nextReviewDate && (
-            <Card className={subscriptionTier === 'free' ? 'border-destructive/30 bg-destructive/5' : 'border-primary/30 bg-primary/5'}>
+            <Card className={subscriptionTier === 'free' ? 'border-amber-500/40 bg-amber-500/5' : 'border-primary/30 bg-primary/5'}>
               <CardContent className="pt-5 pb-5">
                 <div className="flex items-start gap-4">
-                  <div className={`p-2.5 rounded-xl shrink-0 ${subscriptionTier === 'free' ? 'bg-destructive/15' : 'bg-primary/15'}`}>
-                    {subscriptionTier === 'free' ? (
-                      <Lock className="h-5 w-5 text-destructive" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-primary" />
-                    )}
+                  <div className={`p-2.5 rounded-xl shrink-0 ${subscriptionTier === 'free' ? 'bg-amber-500/15' : 'bg-primary/15'}`}>
+                    <Clock className="h-5 w-5 text-amber-500" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold">
-                      {subscriptionTier === 'free' ? t('practice.practiceLocked') : t('practice.aiRecommendedTime')}
-                    </h3>
-                    <p className="text-lg font-bold mt-1">
-                      <LockCountdown nextReviewDate={nextReviewDate} />
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {t('practice.spacedRepetitionInfo')}
+                  <div className="flex-1 space-y-2">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {t('practice.aiRecommendsWaiting')}
+                        <span className="font-semibold text-foreground">
+                          <LockCountdown nextReviewDate={nextReviewDate} />
+                        </span>
+                      </p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('practice.spacedRepetitionInfoShort')}
                     </p>
                     
                     {subscriptionTier === 'free' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => navigate("/settings")}
-                        className="mt-3 border-amber-500/50 text-amber-600 hover:bg-amber-500/10 gap-2"
-                      >
-                        <Crown className="h-4 w-4" />
-                        {t('practice.upgradeToPremium')}
-                      </Button>
+                      <div className="pt-2 space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Lock className="h-3.5 w-3.5" />
+                          <span>{t('practice.premiumCanPractice')}</span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate("/settings")}
+                          className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10 gap-2"
+                        >
+                          <Crown className="h-4 w-4" />
+                          {t('practice.upgradeToPremium')}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -2167,7 +2171,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
               <p>
-                {t('practice.aiRecommendsWaiting', { time: '' })}<strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong>
+                {t('practice.aiRecommendsWaiting')}<strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong>
               </p>
               <p className="text-muted-foreground">
                 {t('practice.spacedRepetitionEffective')}
