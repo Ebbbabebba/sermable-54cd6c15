@@ -1897,15 +1897,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </Button>
             
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleOpenEditScript}
-                className="gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                <span className="hidden sm:inline">{t('practice.editScript')}</span>
-              </Button>
+              {subscriptionTier !== 'free' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleOpenEditScript}
+                  className="gap-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('practice.editScript')}</span>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
