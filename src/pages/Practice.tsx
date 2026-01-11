@@ -2443,11 +2443,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
               variant="ghost"
               onClick={() => {
                 setShowSessionComplete(false);
-                if (subscriptionTier === 'free') {
-                  setShowPremiumUpsell(true);
-                } else {
-                  handleStartPractice(true, true, true);
-                }
+                // Small delay to allow dialog to close before showing next one
+                setTimeout(() => {
+                  if (subscriptionTier === 'free') {
+                    setShowPremiumUpsell(true);
+                  } else {
+                    handleStartPractice(true, true, true);
+                  }
+                }, 150);
               }}
               className="w-full text-muted-foreground"
             >
