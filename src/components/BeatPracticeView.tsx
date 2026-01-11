@@ -47,8 +47,10 @@ interface Beat {
 
 interface BeatPracticeViewProps {
   speechId: string;
+  subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
   onComplete?: () => void;
   onExit?: () => void;
+  onSessionLimitReached?: () => void; // Called when free user hits daily limit
 }
 
 type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
@@ -74,8 +76,9 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onExit, onSessionLimitReached }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
+  const isPremium = subscriptionTier !== 'free';
   
   // Beats data
   const [beats, setBeats] = useState<Beat[]>([]);
@@ -320,8 +323,8 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         return masteredDate.toDateString() === new Date().toDateString();
       }).length;
       
-      // Can we learn more beats today?
-      const canLearnMore = beatsLearnedToday < beatsPerDay;
+      // Premium users can learn unlimited beats; free users are limited
+      const canLearnMore = isPremium || beatsLearnedToday < beatsPerDay;
       const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
       
       setBeatsToRecall(beatsNeedingRecall);
@@ -336,7 +339,11 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         setSessionMode('learn');
         setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
       } else {
-        // Either all mastered, or already learned today's quota
+        // Either all mastered, or already learned today's quota (free user)
+        // For free users hitting limit, notify parent to show upsell
+        if (!isPremium && unmasteredCount > 0) {
+          onSessionLimitReached?.();
+        }
         setSessionMode('session_complete');
       }
     };
@@ -821,23 +828,44 @@ const BeatPracticeView = ({ speechId, onComplete, onExit }: BeatPracticeViewProp
         .eq('id', currentBeat.id);
       
       // Update local state so the completion screen shows correct count
-      setBeats(prev => prev.map(b => 
+      const updatedBeats = beats.map(b => 
         b.id === currentBeat.id 
           ? { ...b, is_mastered: true, mastered_at: new Date().toISOString() }
           : b
-      ));
+      );
+      setBeats(updatedBeats);
+      
+      // Find next unmastered beat for premium users
+      const nextUnmastered = updatedBeats.find(b => !b.is_mastered);
+      
+      if (isPremium && nextUnmastered) {
+        // Premium: Continue to next beat automatically
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_next', "Beat mastered! Loading next..."));
+        setShowCelebration(true);
+        
+        setTimeout(() => {
+          setShowCelebration(false);
+          // Set up next beat
+          setNewBeatToLearn(nextUnmastered);
+          setCurrentBeatIndex(updatedBeats.findIndex(b => b.id === nextUnmastered.id));
+          setSessionMode('learn');
+          transitionToPhase('sentence_1_learning');
+        }, 2000);
+      } else {
+        // Free user or all beats mastered: Session complete
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
+        setShowCelebration(true);
+        
+        setTimeout(() => {
+          setShowCelebration(false);
+          // Check if free user has more beats to learn (trigger upsell)
+          if (!isPremium && nextUnmastered) {
+            onSessionLimitReached?.();
+          }
+          setSessionMode('session_complete');
+        }, 2500);
+      }
     }
-
-    // SESSION COMPLETE - Don't auto-continue to next beat!
-    // This is the key change: stop after mastering ONE beat
-    setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
-    setShowCelebration(true);
-    
-    setTimeout(() => {
-      setShowCelebration(false);
-      // End the session - don't continue to next beat
-      setSessionMode('session_complete');
-    }, 2500);
   };
 
   // Start recording using Web Speech API
