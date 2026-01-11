@@ -314,7 +314,7 @@
   "settings": {
     "title": "Inställningar",
     "subtitle": "Anpassa din upplevelse",
-    "subscription": {
+"subscription": {
       "title": "Prenumeration",
       "description": "Lås upp fler funktioner och förbättra din inlärning",
       "whyPremium": "Premium låser upp",
@@ -323,6 +323,10 @@
       "overrideLockDesc": "Öva när du vill med \"Öva ändå\"-knappen",
       "unlimitedSpeeches": "Obegränsat antal tal",
       "unlimitedSpeechesDesc": "Ladda upp och öva hur många tal du vill",
+      "noLimits": "Inga begränsningar",
+      "fullRunthrough": "Komplett genomkörning",
+      "practiceAnytime": "Öva när du vill",
+      "deepInsights": "Djupgående insikter",
       "advancedAnalytics": "Avancerad statistik",
       "advancedAnalyticsDesc": "Detaljerade insikter och framstegsspårning",
       "streakFreeze": "Frys din streak",
@@ -352,6 +356,12 @@
       "billedYearly": "Faktureras en gång per år",
       "perMonth": "per månad",
       "save": "Spara",
+      "month": "månad",
+      "bestValue": "Bäst värde",
+      "mostPopular": "Populärast",
+      "upgradeCta": "Uppgradera till Premium",
+      "cancelAnytime": "Avbryt när som helst",
+      "securePayment": "Säker betalning",
       "studentPricing": "Studentpris",
       "studentMonthly": "Student – månadsvis",
       "studentAnnual": "Student – årsvis",
@@ -459,7 +469,7 @@
     "day3_desc": "Hela talet övning",
     "day4_desc": "Minnesåterkallelse"
   },
-  "common": {
+"common": {
     "loading": "Laddar...",
     "error": "Fel",
     "success": "Klart",
@@ -475,5 +485,35 @@
     "done": "Klar",
     "not_supported": "Stöds inte",
     "use_chrome": "Taligenkänning kräver Chrome eller Safari."
+  },
+  "beat_practice": {
+    "learned": "Inlärda",
+    "remaining": "Kvar",
+    "session_complete": "Session klar!",
+    "todays_session": "Dagens session",
+    "active_session": "Aktiv session",
+    "come_back_later": "Kom tillbaka senare för nästa beat",
+    "session_desc_recall": "Återkalla + lär nytt",
+    "session_desc_start": "Börja med din första beat",
+    "to_recall": "att återkalla",
+    "to_learn": "att lära",
+    "beat_to_learn": "Beat {{num}} att lära",
+    "your_progress": "Din framgång",
+    "start_next_session": "Starta nästa session"
+  },
+  "presentation": {
+    "settings": "Presentationsinställningar",
+    "customizeExperience": "Anpassa din presentation",
+    "pauseDetection": "Pausdetektering",
+    "howLongToWait": "Hur länge att vänta innan nästa ord visas",
+    "autoReveal": "Visa automatiskt",
+    "autoRevealDesc": "Visa nästa ord automatiskt vid paus",
+    "textSize": "Textstorlek",
+    "quickTips": "Snabbtips",
+    "tip1": "Aktivera Live-läge för att börja spåra tal",
+    "tip2": "Klicka var som helst för att visa/dölja kontroller",
+    "tip3": "Tryck ESC för att avsluta presentationen",
+    "tip4": "Gul markering = paus upptäckt",
+    "tip5": "Blå markering = talar just nu"
   }
 }

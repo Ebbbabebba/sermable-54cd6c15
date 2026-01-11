@@ -501,7 +501,7 @@
     "day3_desc": "Full speech practice",
     "day4_desc": "Memory recall"
   },
-  "common": {
+"common": {
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
@@ -518,5 +518,35 @@
     "done": "Done",
     "not_supported": "Not Supported",
     "use_chrome": "Speech recognition requires Chrome or Safari."
+  },
+  "beat_practice": {
+    "learned": "Learned",
+    "remaining": "Remaining",
+    "session_complete": "Session Complete!",
+    "todays_session": "Today's Session",
+    "active_session": "Active Session",
+    "come_back_later": "Come back later for the next beat",
+    "session_desc_recall": "Recall + learn new beats",
+    "session_desc_start": "Start with your first beat",
+    "to_recall": "to recall",
+    "to_learn": "to learn",
+    "beat_to_learn": "Beat {{num}} to learn",
+    "your_progress": "Your Progress",
+    "start_next_session": "Start Next Session"
+  },
+  "presentation": {
+    "settings": "Presentation Settings",
+    "customizeExperience": "Customize your presentation experience",
+    "pauseDetection": "Pause Detection",
+    "howLongToWait": "How long to wait before showing next word",
+    "autoReveal": "Auto Reveal",
+    "autoRevealDesc": "Automatically show next word after pause",
+    "textSize": "Text Size",
+    "quickTips": "Quick Tips",
+    "tip1": "Toggle Live Mode to start speech tracking",
+    "tip2": "Click anywhere to show/hide controls",
+    "tip3": "Press ESC to exit presentation",
+    "tip4": "Yellow highlight = pause detected",
+    "tip5": "Blue highlight = currently speaking"
   }
 }

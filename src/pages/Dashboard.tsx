@@ -159,7 +159,7 @@ const Dashboard = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error loading speeches",
+        title: t('dashboard.errorLoading'),
         description: error.message,
       });
     } finally {
