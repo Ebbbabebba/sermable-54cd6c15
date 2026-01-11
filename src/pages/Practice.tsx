@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, Brain, Sparkles, ChevronRight, CheckCircle2, Circle, Zap } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, Brain, Sparkles, ChevronRight, CheckCircle2, Circle, Zap, Sunrise } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +31,7 @@ import BracketedTextDisplay from "@/components/BracketedTextDisplay";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
+import DayAfterRecallView from "@/components/DayAfterRecallView";
 
 import SegmentProgress from "@/components/SegmentProgress";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -88,6 +89,7 @@ const Practice = () => {
   const [activeSegmentOriginalText, setActiveSegmentOriginalText] = useState<string>(""); // Original text for active segment (for analysis)
   const [loading, setLoading] = useState(true);
   const [isPracticing, setIsPracticing] = useState(false);
+  const [isDayAfterRecall, setIsDayAfterRecall] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
@@ -1596,6 +1598,48 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
   if (!speech) return null;
 
+  // Day-After Recall Mode
+  if (isDayAfterRecall && !showResults) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Minimal header with exit */}
+        <header className="flex items-center justify-between p-4 border-b border-border/50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setIsDayAfterRecall(false);
+            }}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t('common.exit')}
+          </Button>
+          <h1 className="text-sm font-medium text-muted-foreground truncate max-w-[50%]">
+            {speech.title}
+          </h1>
+          <div className="w-16" />
+        </header>
+        
+        <div className="flex-1 flex flex-col">
+          <DayAfterRecallView
+            speechId={speech.id}
+            onComplete={() => {
+              setIsDayAfterRecall(false);
+              toast({
+                title: t('day_after_recall.stable'),
+                description: t('day_after_recall.stable_desc'),
+              });
+            }}
+            onExit={() => {
+              setIsDayAfterRecall(false);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // Focus Mode: Beat-based sentence-by-sentence practice
   if (isPracticing && !showResults) {
     return (
@@ -2091,7 +2135,37 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </CardContent>
           </Card>
 
-          {/* Spaced Repetition Notice */}
+          {/* Day-After Recall Option - only if there are mastered beats */}
+          {masteredBeats > 0 && (
+            <Card 
+              className="border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-transparent cursor-pointer hover:border-blue-500/50 transition-all"
+              onClick={() => setIsDayAfterRecall(true)}
+            >
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-start gap-4">
+                  <div className="p-2.5 bg-blue-500/15 rounded-xl shrink-0">
+                    <Sunrise className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div>
+                      <h3 className="font-semibold text-blue-600 dark:text-blue-400">
+                        {t('day_after_recall.title', '🌅 Day-After Recall')}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t('day_after_recall.card_desc', 'Test your memory with no script. Get keyword hints only when needed.')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>✓ {t('day_after_recall.no_script', 'No visible script')}</span>
+                      <span>✓ {t('day_after_recall.pacing_pulse', 'Blue pacing pulse')}</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {isLocked && nextReviewDate && (
             <Card className={subscriptionTier === 'free' ? 'border-amber-500/40 bg-amber-500/5' : 'border-primary/30 bg-primary/5'}>
               <CardContent className="pt-5 pb-5">

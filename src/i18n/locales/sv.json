@@ -409,6 +409,23 @@
     },
     "signOut": "Logga ut"
   },
+  "day_after_recall": {
+    "title": "🌅 Morgonåterkallelse",
+    "card_desc": "Testa ditt minne utan manus. Få nyckelordstips bara vid behov.",
+    "no_script": "Inget synligt manus",
+    "pacing_pulse": "Blå puls för tempo",
+    "no_mastered_beats": "Inga inlärda beats",
+    "learn_first": "Lär dig några beats först innan du använder Morgonåterkallelse.",
+    "attempt": "Försök",
+    "keywords_shown": "Nyckelord visade",
+    "words": "ord",
+    "tap_hint": "Tryck var som helst för nyckelordstips",
+    "attempt_complete": "Bra! Låt oss försöka igen",
+    "fewer_stops": "Du behövde {{count}} nyckelord. Försök behöva färre den här gången.",
+    "stable": "🎉 Talet är stabilt!",
+    "stable_desc": "Du klarade hela talet utan att behöva några nyckelord. Ditt minne är konsoliderat!",
+    "attempts": "Klart på {{count}} försök"
+  },
   "common": {
     "loading": "Laddar...",
     "error": "Fel",
