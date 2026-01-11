@@ -464,13 +464,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
   
   const handleSpacedRepetitionContinue = () => {
     setShowSpacedRepetitionInfo(false);
-    // For free users with session done, show premium upsell
-    // For premium users, just start practice
-    if (todaySessionDone && subscriptionTier === 'free') {
-      setShowPremiumUpsell(true);
-    } else {
-      handleStartPractice(false, true, true);
-    }
+    // Okay button goes back to dashboard
+    navigate("/dashboard");
   };
   
   const handleSpacedRepetitionPracticeAnyway = () => {
