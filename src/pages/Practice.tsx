@@ -2097,7 +2097,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   <span className="text-lg font-bold">{masteredBeats}</span>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.mastered', 'Mastered')}</span>
+              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.learned', 'Learned')}</span>
             </div>
             
             <div className="flex flex-col items-center">
@@ -2181,26 +2181,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
           )}
 
-          {/* Day-After Recall - Subtle option */}
-          {masteredBeats > 0 && (
-            <button
-              onClick={() => setIsDayAfterRecall(true)}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 hover:border-blue-500/40 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <Sunrise className="h-5 w-5 text-blue-500" />
-                <div className="text-left">
-                  <p className="font-medium text-blue-600 dark:text-blue-400">
-                    {t('day_after_recall.title', '🌅 Day-After Recall')}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('day_after_recall.card_desc', 'No script, memory test only')}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-blue-500 group-hover:translate-x-1 transition-transform" />
-            </button>
-          )}
 
           {/* Lock info */}
           {isLocked && nextReviewDate && (
@@ -2257,7 +2237,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Play className="h-5 w-5 mr-2" />
             {isLocked 
               ? t('practice.locked') 
-              : t('beat_practice.start_session', 'Start Session')}
+              : t('beat_practice.start_next_session', 'Start Next Session')}
           </Button>
         </div>
       </div>
