@@ -233,6 +233,9 @@
     "premiumFeature1": "Practice anytime you want",
     "premiumFeature2": "AI-optimized scheduling",
     "premiumFeature3": "Unlimited speeches",
+    "sessionCompleteTitle": "Today's Session Complete!",
+    "sessionCompleteDesc": "Great work! Your brain needs time to consolidate what you've learned. Come back later for better retention.",
+    "restHelpsMemory": "Rest helps memory consolidation",
     "results": {
       "title": "Session Results",
       "accuracy": "Accuracy",

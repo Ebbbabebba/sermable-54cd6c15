@@ -233,6 +233,9 @@
     "premiumFeature1": "Öva när du vill",
     "premiumFeature2": "AI-optimerad schemaläggning",
     "premiumFeature3": "Obegränsade tal",
+    "sessionCompleteTitle": "Dagens session klar!",
+    "sessionCompleteDesc": "Bra jobbat! Din hjärna behöver tid för att bearbeta det du lärt dig. Kom tillbaka senare för bättre resultat.",
+    "restHelpsMemory": "Vila hjälper minneskonsolidering",
     "results": {
       "title": "Resultat",
       "accuracy": "Träffsäkerhet",
