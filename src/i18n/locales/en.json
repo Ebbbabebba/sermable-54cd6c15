@@ -358,7 +358,21 @@
       "cancelAnytime": "Cancel anytime",
       "securePayment": "Secure payment",
       "comingSoon": "Coming soon!",
-      "comingSoonDesc": "Premium subscription will be available soon."
+      "comingSoonDesc": "Premium subscription will be available soon.",
+      "upgradeToPremium": "Upgrade to Premium"
+    },
+    "payment": {
+      "title": "Payment",
+      "subtitle": "Manage your subscription and billing",
+      "managePlan": "Manage your plan and billing",
+      "viewPlans": "View pricing plans",
+      "viewPayments": "View your payment history and upcoming charges",
+      "paymentMethod": "Payment Method",
+      "expires": "Expires",
+      "update": "Update",
+      "updateCardDesc": "Card update coming soon",
+      "moreOptions": "More options",
+      "cancelInfo": "If you'd like to end your subscription, you can do so below. Your access will continue until the end of your current billing period."
     },
     "appearance": {
       "title": "Appearance",
