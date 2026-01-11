@@ -101,6 +101,8 @@ const Practice = () => {
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [editedScriptText, setEditedScriptText] = useState("");
   const [showTimingWarning, setShowTimingWarning] = useState(false);
+  const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
+  const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   // Legacy settings for old practice mode (kept for reference, not used in beat mode)
   const settings = {
     revealSpeed: 5,
@@ -388,7 +390,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
-  const handleStartPractice = (bypassLock = false) => {
+  const handleStartPractice = (bypassLock = false, bypassWarning = false) => {
+    // Show spaced repetition info warning first (if not bypassing)
+    if (!bypassWarning && !bypassLock) {
+      setShowSpacedRepetitionInfo(true);
+      return;
+    }
+    
     // Check if locked (skip this check if bypassing)
     if (!bypassLock && isLocked && nextReviewDate) {
       toast({
@@ -420,6 +428,22 @@ const [liveTranscription, setLiveTranscription] = useState("");
         title: t('practice.practiceActivated'),
         description: t('practice.readAloudGeneral'),
       });
+    }
+  };
+  
+  const handleSpacedRepetitionContinue = () => {
+    setShowSpacedRepetitionInfo(false);
+    // Now actually start practice (bypass warning since user confirmed)
+    handleStartPractice(false, true);
+  };
+  
+  const handleSpacedRepetitionPracticeAnyway = () => {
+    setShowSpacedRepetitionInfo(false);
+    // Show premium upsell for free users, or start practice for premium
+    if (subscriptionTier === 'free') {
+      setShowPremiumUpsell(true);
+    } else {
+      handleStartPractice(true, true);
     }
   };
   
@@ -2236,6 +2260,114 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </Button>
             <Button onClick={handleSaveScript}>
               {t('practice.saveChanges')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Spaced Repetition Info Dialog */}
+      <AlertDialog open={showSpacedRepetitionInfo} onOpenChange={setShowSpacedRepetitionInfo}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-primary" />
+              {t('practice.spacedRepetitionTitle', 'Spaced Repetition Learning')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p className="text-foreground">
+                  {t('practice.spacedRepetitionExplain', 'This app uses spaced repetition - a scientifically proven method that optimizes your memory retention.')}
+                </p>
+                
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
+                      {t('practice.spacedBenefit1', 'Reviews are scheduled at optimal intervals for long-term memory')}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
+                      {t('practice.spacedBenefit2', 'Practicing too early can reduce retention effectiveness')}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-sm text-muted-foreground">
+                      {t('practice.spacedBenefit3', 'Trust the AI scheduling for best results')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    {t('practice.spacedWarning', 'Recalling too early disrupts the memory consolidation process and may weaken long-term retention.')}
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={handleSpacedRepetitionPracticeAnyway} className="border-muted-foreground/20">
+              {t('practice.practiceAnyway', 'Practice Anyway')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSpacedRepetitionContinue}>
+              {t('practice.iUnderstandContinue', 'I Understand, Continue')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Premium Upsell Dialog (compact) */}
+      <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-center justify-center">
+              <Crown className="h-5 w-5 text-amber-500" />
+              {t('practice.unlockFlexibility', 'Unlock Flexibility')}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground text-center">
+              {t('practice.premiumBypassDesc', 'Premium members can bypass spaced repetition timing when needed.')}
+            </p>
+            
+            <div className="space-y-2 bg-muted/50 rounded-xl p-4">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.premiumFeature1', 'Practice anytime you want')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.premiumFeature2', 'AI-optimized scheduling')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.premiumFeature3', 'Unlimited speeches')}</span>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex-col gap-2">
+            <Button 
+              onClick={() => {
+                setShowPremiumUpsell(false);
+                navigate("/settings");
+              }}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              {t('nav.upgradeToPremium', 'Upgrade to Premium')}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowPremiumUpsell(false)}
+              className="w-full text-muted-foreground"
+            >
+              {t('common.close', 'Close')}
             </Button>
           </DialogFooter>
         </DialogContent>
