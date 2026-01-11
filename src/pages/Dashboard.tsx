@@ -238,8 +238,12 @@ const Dashboard = () => {
               </Button>
               
               <div className="flex items-center gap-1 ml-2">
-                <span className="text-xs text-muted-foreground capitalize px-2 py-1 bg-secondary rounded-full">
-                  {subscriptionTier}
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
+                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 font-medium'
+                    : 'text-muted-foreground bg-secondary'
+                }`}>
+                  {subscriptionTier === 'regular' ? 'Premium' : subscriptionTier === 'enterprise' ? 'Enterprise' : subscriptionTier === 'student' ? 'Student' : 'Free'}
                   {subscriptionTier === 'free' && ` · ${monthlySpeeches}/2`}
                 </span>
                 
@@ -273,7 +277,13 @@ const Dashboard = () => {
                 </SheetHeader>
                 <div className="flex flex-col gap-3 mt-8">
                   <div className="pb-4 border-b border-border">
-                    <span className="text-sm text-muted-foreground capitalize">{subscriptionTier} {t('dashboard.plan')}</span>
+                    <span className={`text-sm ${
+                      subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
+                        ? 'text-amber-600 dark:text-amber-400 font-medium'
+                        : 'text-muted-foreground'
+                    }`}>
+                      {subscriptionTier === 'regular' ? 'Premium' : subscriptionTier === 'enterprise' ? 'Enterprise' : subscriptionTier === 'student' ? 'Student' : 'Free'} {t('dashboard.plan')}
+                    </span>
                     {subscriptionTier === 'free' && (
                       <p className="text-xs text-muted-foreground mt-1">
                         {monthlySpeeches}/2 {t('dashboard.speechesThisMonth')}
