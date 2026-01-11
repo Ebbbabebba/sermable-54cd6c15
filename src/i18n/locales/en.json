@@ -420,6 +420,23 @@
     "combining_sentences": "Combining all sentences...",
     "next_beat": "Next Beat"
   },
+  "day_after_recall": {
+    "title": "🌅 Day-After Recall",
+    "card_desc": "Test your memory with no script. Get keyword hints only when needed.",
+    "no_script": "No visible script",
+    "pacing_pulse": "Blue pacing pulse",
+    "no_mastered_beats": "No mastered beats",
+    "learn_first": "First master some beats before using Day-After Recall.",
+    "attempt": "Attempt",
+    "keywords_shown": "Keywords shown",
+    "words": "words",
+    "tap_hint": "Tap anywhere for keyword hint",
+    "attempt_complete": "Good! Let's try again",
+    "fewer_stops": "You needed {{count}} keyword(s). Try to need fewer this time.",
+    "stable": "🎉 Speech is stable!",
+    "stable_desc": "You completed the entire speech without needing any keyword support. Your memory is consolidated!",
+    "attempts": "Completed in {{count}} attempt(s)"
+  },
   "freestyle": {
     "keywordMode": "Keyword Mode",
     "covered": "covered",
