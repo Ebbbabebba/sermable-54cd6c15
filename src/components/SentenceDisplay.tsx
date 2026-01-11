@@ -66,7 +66,41 @@ const SentenceDisplay = ({
   const renderWord = (index: number) => {
     const state = getWordState(index);
     
-    // Hidden word - always show as dots (words should NOT reappear mid-speech)
+    // Hidden word that was MISSED - reveal it in red so user can see what they got wrong
+    if (!state.isVisible && state.isMissed) {
+      return (
+        <span
+          key={index}
+          ref={state.isCurrent ? currentWordRef : undefined}
+          onClick={() => onWordTap?.(index)}
+          className={cn(
+            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-all duration-300",
+            "bg-destructive/20 text-destructive font-medium ring-1 ring-destructive/40"
+          )}
+        >
+          {state.text}
+        </span>
+      );
+    }
+    
+    // Hidden word that was HESITATED - reveal it in yellow/warning
+    if (!state.isVisible && state.isHesitated) {
+      return (
+        <span
+          key={index}
+          ref={state.isCurrent ? currentWordRef : undefined}
+          onClick={() => onWordTap?.(index)}
+          className={cn(
+            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-all duration-300",
+            "bg-warning/20 text-warning font-medium ring-1 ring-warning/40"
+          )}
+        >
+          {state.text}
+        </span>
+      );
+    }
+    
+    // Hidden word - show as dots (not yet spoken)
     if (!state.isVisible) {
       const dotCount = Math.ceil(state.text.length / 2);
       return (
@@ -76,10 +110,8 @@ const SentenceDisplay = ({
           onClick={() => onWordTap?.(index)}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-all duration-300",
-            state.isCurrent && "ring-1 ring-primary/50",
-            state.isHesitated && "bg-warning/30 text-warning",
-            state.isMissed && "bg-destructive/30 text-destructive",
-            !state.isHesitated && !state.isMissed && "text-muted-foreground hover:bg-muted"
+            state.isCurrent && "ring-1 ring-primary/50 bg-primary/10",
+            !state.isCurrent && "text-muted-foreground hover:bg-muted"
           )}
         >
           {"•".repeat(dotCount)}
@@ -98,9 +130,10 @@ const SentenceDisplay = ({
           state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60 after:absolute after:-bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-primary after:animate-pulse",
           // Spoken word fades
           state.isSpoken && "text-muted-foreground/40",
-          // Hidden words that reappeared due to miss/hesitation
-          !state.isVisible && state.isSpoken && state.isHesitated && "bg-warning/20 text-warning",
-          !state.isVisible && state.isSpoken && state.isMissed && "bg-destructive/20 text-destructive",
+          // Missed visible word (not hidden)
+          state.isMissed && "bg-destructive/20 text-destructive",
+          // Hesitated visible word (not hidden)
+          state.isHesitated && !state.isMissed && "bg-warning/20 text-warning",
         )}
       >
         {state.text}
