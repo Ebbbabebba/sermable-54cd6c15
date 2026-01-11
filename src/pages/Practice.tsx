@@ -44,6 +44,7 @@ interface Speech {
   goal_date: string;
   base_word_visibility_percent: number | null;
   speech_language: string | null;
+  next_review_date?: string | null;
 }
 
 interface Segment {
