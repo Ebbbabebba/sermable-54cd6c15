@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Play, Trash2, Theater, Clock } from "lucide-react";
+import { Calendar, Play, Trash2, Presentation, Clock } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -177,7 +177,7 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           size="sm"
           onClick={() => navigate(`/presentation/${speech.id}`)}
         >
-          <Theater className="h-4 w-4" />
+          <Presentation className="h-4 w-4" />
         </Button>
 
         <AlertDialog>
