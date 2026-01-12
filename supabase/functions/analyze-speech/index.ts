@@ -608,13 +608,10 @@ Return ONLY the simplified text.`;
       }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in analyze-speech:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        details: error.toString() 
-      }),
+      JSON.stringify({ error: 'An error occurred processing your request', code: 'PROCESSING_ERROR' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

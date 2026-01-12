@@ -181,9 +181,8 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     console.error('Error in segment-speech-into-beats:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: message }),
+      JSON.stringify({ error: 'An error occurred processing your request', code: 'PROCESSING_ERROR' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
