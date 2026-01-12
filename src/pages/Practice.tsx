@@ -430,14 +430,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
       return;
     }
     
-    // Show spaced repetition info warning first (if not bypassing)
-    if (!bypassWarning && !bypassLock) {
+    // Only show spaced repetition warning if actually locked (next review is in future)
+    // Skip warning if there's no lock or next review date is past/now
+    const isActuallyLocked = isLocked && nextReviewDate && nextReviewDate > new Date();
+    
+    if (!bypassWarning && !bypassLock && isActuallyLocked) {
       setShowSpacedRepetitionInfo(true);
       return;
     }
     
     // Check if locked (skip this check if bypassing)
-    if (!bypassLock && isLocked && nextReviewDate) {
+    if (!bypassLock && isActuallyLocked) {
       toast({
         title: t('practice.practiceScheduled'),
         description: t('practice.aiRecommendsAt', { time: format(nextReviewDate, "'at' HH:mm") }),
