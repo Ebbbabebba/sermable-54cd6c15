@@ -6,10 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { X, Play } from "lucide-react";
 import PresentationSummary from "@/components/PresentationSummary";
-import { PresentationModeSelector, type StrictSubMode } from "@/components/PresentationModeSelector";
+import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
-import { TestPresentationView } from "@/components/TestPresentationView";
 import { ViewModeSelector } from "@/components/ViewModeSelector";
 import type { ViewMode } from "@/components/WearableHUD";
 
@@ -42,7 +41,6 @@ const Presentation = () => {
   
   // Mode selection
   const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | null>(null);
-  const [strictSubMode, setStrictSubMode] = useState<StrictSubMode>('practice');
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   
   // Session states
@@ -291,23 +289,15 @@ const Presentation = () => {
     navigate('/dashboard');
   };
 
-  const handleModeSelect = (mode: 'strict' | 'fullscript', subMode?: StrictSubMode) => {
+  const handleModeSelect = (mode: 'strict' | 'fullscript') => {
     setSelectedMode(mode);
     
     if (mode === 'fullscript') {
       // Go straight to live for full script mode
       setStage('live');
     } else {
-      // Set sub-mode for strict mode
-      setStrictSubMode(subMode || 'practice');
-      
-      if (subMode === 'test') {
-        // Test mode goes straight to live (no view mode selection needed)
-        setStage('live');
-      } else {
-        // Practice mode goes to view mode selection
-        setStage('view-mode-select');
-      }
+      // Strict mode goes to view mode selection
+      setStage('view-mode-select');
     }
   };
 
@@ -544,24 +534,6 @@ const Presentation = () => {
   };
 
   // Show strict presentation live view
-  // Test mode - no hints, pure test
-  if (selectedMode === 'strict' && strictSubMode === 'test') {
-    return (
-      <TestPresentationView
-        text={speech.text_original}
-        speechLanguage={speech.speech_language || 'en-US'}
-        isRecording={isRecording}
-        isProcessing={isProcessing}
-        elapsedTime={elapsedTime}
-        onStartRecording={handleRecordingStart}
-        onStopRecording={handleStopRecording}
-        onPerformanceData={handlePerformanceData}
-        onExit={handleExit}
-      />
-    );
-  }
-
-  // Practice mode - with hints
   return (
     <CompactPresentationView
       text={speech.text_original}

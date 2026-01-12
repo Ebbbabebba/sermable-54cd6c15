@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
+import FullSpeechRecallCelebration from "./FullSpeechRecallCelebration";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -94,6 +95,8 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
   const [isRecording, setIsRecording] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
+  const [showFullRecallIntro, setShowFullRecallIntro] = useState(false);
+  const [fullRecallWordCount, setFullRecallWordCount] = useState(0);
   
   // Refs
   const recognitionRef = useRef<any>(null);
@@ -208,7 +211,7 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
   };
   
   // Initialize stage with correct text and hidden words
-  const initializeStage = useCallback((beat: Beat) => {
+  const initializeStage = useCallback((beat: Beat, showIntro = true) => {
     const stage = beat.practice_stage;
     const config = STAGE_CONFIG[stage];
     
@@ -232,6 +235,14 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
     
     // Initialize hidden words based on stage
     const wordsList = text.split(/\s+/).filter(w => w.trim());
+    
+    // Show special celebration for day4_adaptive (full recall mode)
+    if (stage === 'day4_adaptive' && showIntro) {
+      setFullRecallWordCount(wordsList.length);
+      setShowFullRecallIntro(true);
+      // Don't start recording yet - wait for user to click start
+      return;
+    }
     
     if (config.startHidden) {
       // Day 4: Start fully hidden
@@ -597,22 +608,43 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
   
   // Auto-start recording
   useEffect(() => {
-    if (loading || !currentBeat || showCelebration || sessionComplete) return;
+    if (loading || !currentBeat || showCelebration || sessionComplete || showFullRecallIntro) return;
     if (recognitionRef.current) return;
     
     startRecording();
-  }, [loading, currentBeat?.id, showCelebration, sessionComplete]);
+  }, [loading, currentBeat?.id, showCelebration, sessionComplete, showFullRecallIntro]);
   
   // Cleanup
   useEffect(() => {
     return () => stopRecording();
   }, [stopRecording]);
   
+  // Handler for starting full recall after celebration
+  const handleStartFullRecall = () => {
+    setShowFullRecallIntro(false);
+    
+    // Now initialize the hidden words for day4_adaptive
+    const wordsList = practiceText.split(/\s+/).filter(w => w.trim());
+    setHiddenWordIndices(new Set(wordsList.map((_, i) => i)));
+    setHiddenWordOrder(wordsList.map((_, i) => i));
+    resetWordTracking();
+  };
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
+    );
+  }
+  
+  // Show full recall celebration intro
+  if (showFullRecallIntro) {
+    return (
+      <FullSpeechRecallCelebration
+        onStart={handleStartFullRecall}
+        totalWords={fullRecallWordCount}
+      />
     );
   }
   

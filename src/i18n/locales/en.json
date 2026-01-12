@@ -490,7 +490,11 @@
     "morning_tip": "Morning recall = memory consolidation boost",
     "to_recall": "to recall",
     "to_learn": "to learn",
-    "beat_to_learn": "Beat {{num}} to learn"
+    "beat_to_learn": "Beat {{num}} to learn",
+    "full_recall_subtitle": "No script. Pure memory.",
+    "full_recall_desc": "You've mastered all beats! Now recall the entire speech from memory.",
+    "begin_recall": "Begin Full Recall",
+    "hint_available": "Hints will appear if you pause for 3+ seconds"
   },
   "day_after_recall": {
     "title": "🌅 Day-After Recall",
