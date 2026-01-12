@@ -149,7 +149,18 @@
     "monthlyLimit": "Monthly speech limit",
     "limitReached": "Limit reached",
     "pasteText": "Paste your speech text here...",
-    "languageDetected": "Language detected and UI updated"
+    "languageDetected": "Language detected and UI updated",
+    "scanDocument": "Scan",
+    "uploadImage": "Photo",
+    "retake": "Retake",
+    "extractText": "Extract Text",
+    "extracting": "Extracting...",
+    "scanSuccess": "Text Extracted",
+    "scanSuccessDesc": "The text has been added to your speech.",
+    "scanError": "Scan Failed",
+    "scanErrorDesc": "Could not extract text from the image. Try again with a clearer photo.",
+    "cameraError": "Camera Error",
+    "cameraErrorDesc": "Could not access the camera. Please check permissions."
   },
   "practice": {
     "title": "Practice Session",

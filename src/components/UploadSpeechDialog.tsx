@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calendar, Languages, Brain } from "lucide-react";
+import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
 
@@ -28,7 +28,111 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [userTier, setUserTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [wordLimit, setWordLimit] = useState(500);
   const [canCreateSpeech, setCanCreateSpeech] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Cleanup camera stream when dialog closes
+  useEffect(() => {
+    if (!open) {
+      stopCamera();
+      setCapturedImage(null);
+    }
+  }, [open]);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setShowCamera(true);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast({
+        variant: "destructive",
+        title: t('upload.cameraError'),
+        description: t('upload.cameraErrorDesc'),
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        setCapturedImage(imageData);
+        stopCamera();
+      }
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageData = event.target?.result as string;
+        setCapturedImage(imageData);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const processScannedImage = async () => {
+    if (!capturedImage) return;
+
+    setIsScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scan-document', {
+        body: { image: capturedImage }
+      });
+
+      if (error) throw error;
+
+      if (data?.text) {
+        handleTextChange(text ? `${text}\n\n${data.text}` : data.text);
+        setCapturedImage(null);
+        toast({
+          title: t('upload.scanSuccess'),
+          description: t('upload.scanSuccessDesc'),
+        });
+      } else {
+        throw new Error('No text extracted');
+      }
+    } catch (error: any) {
+      console.error('Scan error:', error);
+      toast({
+        variant: "destructive",
+        title: t('upload.scanError'),
+        description: t('upload.scanErrorDesc'),
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   useEffect(() => {
     const loadUserLimits = async () => {
@@ -269,13 +373,112 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="text">{t('upload.speechText')}</Label>
-              <Languages className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">
-                Auto-detects language
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="text">{t('upload.speechText')}</Label>
+                <Languages className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  Auto-detects language
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={startCamera}
+                  disabled={loading || isScanning}
+                  className="gap-1.5"
+                >
+                  <Camera className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('upload.scanDocument')}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading || isScanning}
+                  className="gap-1.5"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('upload.uploadImage')}</span>
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </div>
             </div>
+
+            {/* Camera View */}
+            {showCamera && (
+              <div className="relative rounded-lg overflow-hidden bg-black">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full"
+                />
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    onClick={stopCamera}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={capturePhoto}
+                    className="rounded-full w-14 h-14"
+                  >
+                    <Camera className="h-6 w-6" />
+                  </Button>
+                </div>
+                <canvas ref={canvasRef} className="hidden" />
+              </div>
+            )}
+
+            {/* Captured Image Preview */}
+            {capturedImage && !showCamera && (
+              <div className="relative rounded-lg overflow-hidden border">
+                <img src={capturedImage} alt="Captured document" className="w-full" />
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setCapturedImage(null)}
+                    disabled={isScanning}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    {t('upload.retake')}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={processScannedImage}
+                    disabled={isScanning}
+                  >
+                    {isScanning ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {t('upload.extracting')}
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        {t('upload.extractText')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <Textarea
               id="text"
               placeholder={t('upload.pasteText')}
