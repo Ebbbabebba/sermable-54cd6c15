@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, HelpCircle, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -1264,7 +1264,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
                   exit={{ scale: 0.5, opacity: 0 }}
                   className="flex flex-col items-center gap-6 py-8"
                 >
-                  <HelpCircle className="h-16 w-16 text-primary animate-pulse" />
+                  <Sparkles className="h-16 w-16 text-primary animate-pulse" />
                   <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
                 </motion.div>
               ) : (
