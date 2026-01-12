@@ -2,85 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple-inspired Design System
- * Following Apple Human Interface Guidelines
- * Clean, calm, focused, and premium
+/* Sermable Design System
+ * Unique teal-indigo palette
+ * Clean, focused, and distinctive
  * All colors in HSL format
  */
 
 @layer base {
   :root {
-    /* Apple-inspired Dark Mode */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 98%;
+    /* Dark Mode - Deep slate with teal tints */
+    --background: 220 20% 4%;
+    --foreground: 210 40% 96%;
 
-    /* Elevated surfaces */
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
+    /* Elevated surfaces - subtle teal undertone */
+    --card: 215 25% 9%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 215 25% 11%;
+    --popover-foreground: 210 40% 96%;
 
-    /* Apple Blue - #007AFF */
-    --primary: 211 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    /* Sermable Teal - distinctive primary */
+    --primary: 186 72% 46%;
+    --primary-foreground: 220 20% 4%;
 
-    /* Subtle secondary */
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
+    /* Indigo accent for depth */
+    --secondary: 220 25% 14%;
+    --secondary-foreground: 210 40% 96%;
 
-    /* Muted for labels */
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 60%;
+    /* Muted with slight warmth */
+    --muted: 215 20% 16%;
+    --muted-foreground: 215 20% 55%;
 
-    /* Accent */
-    --accent: 0 0% 20%;
-    --accent-foreground: 0 0% 98%;
+    /* Accent - teal tinted */
+    --accent: 186 30% 18%;
+    --accent-foreground: 210 40% 96%;
 
-    /* Success green - #34C759 */
-    --success: 142 60% 49%;
-    --success-foreground: 0 0% 100%;
+    /* Success - vibrant emerald */
+    --success: 160 65% 45%;
+    --success-foreground: 220 20% 4%;
 
-    /* Warning yellow - #FFCC00 */
-    --warning: 48 100% 50%;
-    --warning-foreground: 0 0% 7%;
+    /* Warning - warm amber */
+    --warning: 38 92% 55%;
+    --warning-foreground: 220 20% 4%;
 
-    /* Error red - #FF3B30 */
-    --destructive: 4 100% 59%;
+    /* Error - coral red */
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders - very subtle */
-    --border: 0 0% 18%;
-    --input: 0 0% 15%;
-    --ring: 211 100% 50%;
+    /* Borders - subtle with teal hint */
+    --border: 215 20% 18%;
+    --input: 215 25% 14%;
+    --ring: 186 72% 46%;
 
-    /* Apple-style radius */
-    --radius: 1.25rem;
+    /* Radius - softer curves */
+    --radius: 1rem;
 
     /* Extended palette */
-    --success-green: 142 60% 49%;
-    --cosmic-teal: 174 72% 56%;
-    --cosmic-purple: 280 87% 65%;
-    --cosmic-pink: 330 81% 60%;
-    --cosmic-blue: 211 100% 50%;
-    --word-bg: 0 0% 15%;
-    --word-text: 0 0% 98%;
+    --success-green: 160 65% 45%;
+    --sermable-teal: 186 72% 46%;
+    --sermable-indigo: 235 65% 60%;
+    --sermable-cyan: 192 85% 55%;
+    --sermable-mint: 168 60% 50%;
+    --word-bg: 215 25% 14%;
+    --word-text: 210 40% 96%;
 
-    /* Apple-style gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 40%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(280 87% 65%) 0%, hsl(330 81% 60%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 60% 49%) 0%, hsl(142 60% 39%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(280 87% 65%) 50%, hsl(330 81% 60%) 100%);
-    --gradient-space: radial-gradient(ellipse at top, hsl(0 0% 8%), hsl(0 0% 0%));
+    /* Sermable gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(186 72% 46%) 0%, hsl(192 85% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(186 72% 46%) 0%, hsl(235 65% 55%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 65% 45%) 0%, hsl(168 60% 40%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(186 72% 46%) 0%, hsl(192 85% 50%) 40%, hsl(235 65% 55%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(220 25% 10%), hsl(220 20% 4%));
     
-    /* Apple-style shadows (for dark mode, very subtle) */
+    /* Background glow effect */
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(186 72% 46% / 0.08), transparent);
+    
+    /* Shadows for dark mode */
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.3);
-    --shadow-cosmic: 0 0 30px rgba(0, 122, 255, 0.2);
+    --shadow-glow: 0 0 20px hsl(186 72% 46% / 0.3);
+    --shadow-teal: 0 0 30px hsl(186 72% 46% / 0.2);
 
     /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -89,64 +92,67 @@
   }
 
   .light {
-    /* Apple Light Mode - #F5F5F7 background */
-    --background: 240 9% 97%;
-    --foreground: 0 0% 7%;
+    /* Light Mode - Warm cream with teal accents */
+    --background: 180 15% 97%;
+    --foreground: 220 25% 12%;
 
-    /* Pure white cards - #FFFFFF */
+    /* Pure white cards with subtle warmth */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
+    --card-foreground: 220 25% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
+    --popover-foreground: 220 25% 12%;
 
-    /* Apple Blue - #007AFF */
-    --primary: 211 100% 50%;
+    /* Sermable Teal - slightly deeper for light mode contrast */
+    --primary: 186 72% 38%;
     --primary-foreground: 0 0% 100%;
 
-    /* Light gray secondary */
-    --secondary: 240 9% 97%;
-    --secondary-foreground: 0 0% 7%;
+    /* Light cream secondary */
+    --secondary: 180 15% 95%;
+    --secondary-foreground: 220 25% 12%;
 
-    /* Muted backgrounds */
-    --muted: 240 9% 97%;
-    --muted-foreground: 220 9% 46%;
+    /* Muted with warmth */
+    --muted: 180 12% 94%;
+    --muted-foreground: 220 15% 45%;
 
-    /* Subtle accent */
-    --accent: 240 9% 94%;
-    --accent-foreground: 0 0% 7%;
+    /* Subtle teal accent */
+    --accent: 186 40% 92%;
+    --accent-foreground: 220 25% 12%;
 
-    /* Success green - #34C759 */
-    --success: 142 60% 49%;
+    /* Success - emerald */
+    --success: 160 65% 40%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning yellow - #FFCC00 */
-    --warning: 48 100% 50%;
-    --warning-foreground: 0 0% 7%;
+    /* Warning - amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 25% 12%;
 
-    /* Error red - #FF3B30 */
-    --destructive: 4 100% 59%;
+    /* Error - coral */
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Divider/border - #E5E7EB */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 211 100% 50%;
+    /* Borders - soft gray-teal */
+    --border: 180 12% 88%;
+    --input: 180 12% 88%;
+    --ring: 186 72% 38%;
 
     /* Light mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(211 100% 45%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(280 87% 65%) 0%, hsl(330 81% 60%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 60% 49%) 0%, hsl(142 60% 44%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(211 100% 50%) 0%, hsl(280 87% 60%) 50%, hsl(330 81% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(186 72% 38%) 0%, hsl(192 85% 35%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(186 72% 38%) 0%, hsl(235 65% 50%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 65% 40%) 0%, hsl(168 60% 35%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(186 72% 38%) 0%, hsl(192 85% 45%) 40%, hsl(235 65% 50%) 100%);
 
-    /* Apple-style shadows - subtle and elegant */
+    /* Background glow for light mode */
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(186 72% 46% / 0.06), transparent);
+
+    /* Shadows - subtle and elegant */
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-    --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.15);
-    --shadow-cosmic: 0 0 30px rgba(0, 122, 255, 0.1);
+    --shadow-glow: 0 0 20px hsl(186 72% 46% / 0.12);
+    --shadow-teal: 0 0 30px hsl(186 72% 46% / 0.08);
   }
 }
 
@@ -161,6 +167,9 @@
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Subtle teal glow at top of page */
+    background-image: var(--bg-glow);
+    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -168,29 +177,34 @@
   }
 }
 
-/* Apple-style utility classes */
+/* Sermable utility classes */
 @layer utilities {
-  /* Focus states - Apple style */
+  /* Focus states */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
-  /* Apple-style card elevation */
-  .apple-card {
+  /* Card styles */
+  .sermable-card {
     @apply bg-card rounded-2xl border-0 shadow-lg transition-all duration-300;
   }
 
-  .apple-card-elevated {
+  .sermable-card-elevated {
     @apply bg-card rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl;
   }
 
-  /* Apple-style blur effects */
-  .apple-blur {
+  /* Glass/blur effects */
+  .glass {
     @apply backdrop-blur-xl bg-background/80;
   }
 
-  .apple-blur-heavy {
+  .glass-heavy {
     @apply backdrop-blur-2xl bg-background/70;
+  }
+
+  /* Teal glow effect */
+  .teal-glow {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.15);
   }
 
   /* Smooth animations */

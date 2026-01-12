@@ -15,12 +15,16 @@ export default {
     extend: {
       fontFamily: {
         sans: [
+          "DM Sans",
           "Inter",
           "system-ui",
           "-apple-system",
           "BlinkMacSystemFont",
-          "SF Pro Display",
-          "SF Pro Text",
+          "sans-serif",
+        ],
+        display: [
+          "Space Grotesk",
+          "DM Sans",
           "sans-serif",
         ],
       },
@@ -70,11 +74,11 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        cosmic: {
-          teal: "hsl(var(--cosmic-teal))",
-          purple: "hsl(var(--cosmic-purple))",
-          pink: "hsl(var(--cosmic-pink))",
-          blue: "hsl(var(--cosmic-blue))",
+        sermable: {
+          teal: "hsl(var(--sermable-teal))",
+          indigo: "hsl(var(--sermable-indigo))",
+          cyan: "hsl(var(--sermable-cyan))",
+          mint: "hsl(var(--sermable-mint))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -157,11 +161,15 @@ export default {
         "subtle-bounce": "subtle-bounce 2s ease-in-out infinite",
       },
       boxShadow: {
-        "apple-sm": "0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03)",
-        "apple-md": "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03)",
-        "apple-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03)",
-        "apple-xl": "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03)",
-        "apple-glow": "0 0 20px hsl(var(--primary) / 0.15)",
+        "sermable-sm": "0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03)",
+        "sermable-md": "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03)",
+        "sermable-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03)",
+        "sermable-xl": "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03)",
+        "sermable-glow": "0 0 20px hsl(var(--primary) / 0.15)",
+        "teal-glow": "0 0 30px hsl(var(--primary) / 0.2)",
+      },
+      backgroundImage: {
+        "glow-top": "var(--bg-glow)",
       },
     },
   },
