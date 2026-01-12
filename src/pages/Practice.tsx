@@ -2146,8 +2146,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
           )}
 
 
-          {/* Next session info - always show if there's a next review date */}
-          {nextReviewDate && (
+          {/* Next session info - only show if there's a next review date AND practice history */}
+          {nextReviewDate && practiceBeats.length > 0 && (
             <div className={`flex flex-col gap-3 p-4 rounded-2xl ${isLocked ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-primary/5 border border-primary/20'}`}>
               <div className="flex items-center gap-3">
                 <Clock className={`h-5 w-5 shrink-0 ${isLocked ? 'text-amber-500' : 'text-primary'}`} />
@@ -2204,7 +2204,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Play className="h-5 w-5 mr-2" />
             {isLocked 
               ? t('practice.locked') 
-              : t('beat_practice.start_next_session')}
+              : masteredBeats === 0
+                ? t('beat_practice.start_session', 'Start Session')
+                : t('beat_practice.start_next_session')}
           </Button>
         </div>
       </div>
