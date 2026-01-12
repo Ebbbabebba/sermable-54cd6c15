@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Mic, Square } from "lucide-react";
+import { X, Circle, Square } from "lucide-react";
 
 interface FullScriptViewProps {
   text: string;
@@ -266,7 +266,7 @@ export const FullScriptView = ({
               onClick={startRecording}
               className="gap-2 px-8"
             >
-              <Mic className="h-5 w-5" />
+              <Circle className="h-5 w-5 fill-current" />
               Start Speaking
             </Button>
           ) : (

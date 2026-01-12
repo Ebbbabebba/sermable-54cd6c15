@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award, Layers, RotateCcw, CheckCircle2 } from "lucide-react";
+import { Medal, GraduationCap, RotateCcw, CheckCircle2 } from "lucide-react";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -407,7 +407,7 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
         >
-          <Award className="h-20 w-20 text-primary" />
+          <Medal className="h-20 w-20 text-primary" />
         </motion.div>
         
         <h2 className="text-2xl font-bold">
@@ -419,7 +419,7 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
         </p>
         
         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-          <Layers className="h-4 w-4" />
+          <GraduationCap className="h-4 w-4" />
           <span>{t('day_after_recall.attempts', `Completed in ${attemptNumber} attempt(s)`)}</span>
         </div>
         

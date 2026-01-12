@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Mic, Brain, TrendingUp, Presentation, Sparkles } from "lucide-react";
+import { ChevronRight, MessageCircle, GraduationCap, TrendingUp, Theater, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ONBOARDING_STEPS = [
-  { key: 'welcome', icon: Sparkles },
-  { key: 'practice', icon: Mic },
-  { key: 'adaptive', icon: Brain },
+  { key: 'welcome', icon: Star },
+  { key: 'practice', icon: MessageCircle },
+  { key: 'adaptive', icon: GraduationCap },
   { key: 'learning', icon: TrendingUp },
-  { key: 'presentation', icon: Presentation },
+  { key: 'presentation', icon: Theater },
 ];
 
 const Onboarding = () => {

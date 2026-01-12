@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, Layers, Lightbulb, ChevronRight, CheckCircle2, Circle, Zap, Sunrise } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Theater, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, HelpCircle, ChevronRight, CheckCircle2, Circle, Flame, Sunrise } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2044,7 +2044,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 onClick={() => navigate(`/presentation/${id}`)}
                 className="rounded-full"
               >
-                <Presentation className="h-4 w-4" />
+                <Theater className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -2059,10 +2059,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <Layers className="h-12 w-12 text-primary" />
+                <GraduationCap className="h-12 w-12 text-primary" />
               </div>
               {/* Sparkle decoration */}
-              <Lightbulb className="absolute -top-1 -right-1 h-6 w-6 text-amber-400 animate-pulse" />
+              <HelpCircle className="absolute -top-1 -right-1 h-6 w-6 text-amber-400 animate-pulse" />
             </div>
             
             {/* Title */}
@@ -2152,7 +2152,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               )}
               {nextBeatNumber <= totalBeats && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                  <Zap className="h-3.5 w-3.5" />
+                  <Flame className="h-3.5 w-3.5" />
                   {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
                 </span>
               )}
@@ -2374,7 +2374,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
+              <GraduationCap className="h-5 w-5 text-primary" />
               {t('practice.spacedRepetitionTitle', 'Spaced Repetition Learning')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -2441,15 +2441,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
             
             <div className="space-y-2 bg-muted/50 rounded-xl p-4">
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-primary" />
+                <Flame className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.premiumFeature1', 'Practice anytime you want')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-primary" />
+                <GraduationCap className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.premiumFeature2', 'AI-optimized scheduling')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-primary" />
+                <HelpCircle className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.premiumFeature3', 'Unlimited speeches')}</span>
               </div>
             </div>
@@ -2496,7 +2496,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </p>
             
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-              <Layers className="h-4 w-4 text-primary" />
+              <GraduationCap className="h-4 w-4 text-primary" />
               <span>{t('practice.restHelpsMemory', 'Rest helps memory consolidation')}</span>
             </div>
           </div>
