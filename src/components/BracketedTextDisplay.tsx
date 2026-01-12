@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import "./SpeechTrainingLine.css";
-import { Check, Circle, Eye, HelpCircle } from "lucide-react";
+import { Check, Circle, Eye, Lightbulb } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -283,7 +283,7 @@ const BracketedTextDisplay = ({
                               hintLevel >= 3 && "bg-yellow-500 text-yellow-900 border-2 border-yellow-600 shadow-lg"
                             )}
                           >
-                            <HelpCircle className="inline w-3 h-3 mr-1" />
+                            <Lightbulb className="inline w-3 h-3 mr-1" />
                             {getWordHint(word, hintLevel)}
                           </motion.span>
                         )}
@@ -382,7 +382,7 @@ const BracketedTextDisplay = ({
                       hintLevel >= 3 && "bg-yellow-500 text-yellow-900 text-lg shadow-xl border-2 border-yellow-600"
                     )}
                   >
-                    <HelpCircle className="inline w-4 h-4 mr-1.5" />
+                    <Lightbulb className="inline w-4 h-4 mr-1.5" />
                     {getWordHint(segment.words[hintingWordInBracket], hintLevel)}
                   </motion.div>
                 )}

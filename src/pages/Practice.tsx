@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, HelpCircle, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Sparkles, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -373,9 +373,19 @@ const [liveTranscription, setLiveTranscription] = useState("");
         .maybeSingle();
       
       // Use schedule's next_review_date, or fallback to speech's next_review_date
+      // But only if beats exist (i.e., speech has been practiced at least once)
       const nextReview = schedule?.next_review_date || data?.next_review_date;
       
-      if (nextReview) {
+      // Check if beats exist first - if no beats, this is a new speech that shouldn't be locked
+      const { data: beatsExist } = await supabase
+        .from('practice_beats')
+        .select('id')
+        .eq('speech_id', id)
+        .limit(1);
+      
+      const hasPracticeHistory = beatsExist && beatsExist.length > 0;
+      
+      if (nextReview && hasPracticeHistory) {
         const reviewDate = new Date(nextReview);
         setNextReviewDate(reviewDate);
         console.log('📅 Next review date set:', reviewDate);
@@ -388,7 +398,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
           setIsLocked(false);
         }
       } else {
-        console.log('ℹ️ No next review date found');
+        console.log('ℹ️ No next review date found or speech never practiced');
+        setIsLocked(false);
+        setNextReviewDate(null);
       }
       
       // Check if today's session is complete (beat mastered today or all beats mastered)
@@ -2337,7 +2349,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 <span className="text-sm">{t('practice.premiumFeature2', 'AI-optimized scheduling')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-primary" />
+                <Sparkles className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.premiumFeature3', 'Unlimited speeches')}</span>
               </div>
             </div>
