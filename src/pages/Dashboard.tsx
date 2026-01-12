@@ -191,30 +191,8 @@ const Dashboard = () => {
     loadSpeeches();
   };
 
-  const handleUpgradeToPremium = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ subscription_tier: 'regular' })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setSubscriptionTier('regular');
-      toast({
-        title: t('dashboard.upgraded'),
-        description: t('dashboard.upgradedDesc'),
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: t('dashboard.upgradeFailed'),
-        description: error.message,
-      });
-    }
+  const handleUpgradeToPremium = () => {
+    navigate("/payment-settings");
   };
 
   if (loading) {
@@ -258,7 +236,6 @@ const Dashboard = () => {
                     : 'text-muted-foreground bg-secondary'
                 }`}>
                   {subscriptionTier === 'regular' ? 'Premium' : subscriptionTier === 'enterprise' ? 'Enterprise' : subscriptionTier === 'student' ? 'Student' : 'Free'}
-                  {subscriptionTier === 'free' && ` · ${monthlySpeeches}/2`}
                 </span>
                 
                 {subscriptionTier === 'free' && (
@@ -298,11 +275,6 @@ const Dashboard = () => {
                     }`}>
                       {subscriptionTier === 'regular' ? 'Premium' : subscriptionTier === 'enterprise' ? 'Enterprise' : subscriptionTier === 'student' ? 'Student' : 'Free'} {t('dashboard.plan')}
                     </span>
-                    {subscriptionTier === 'free' && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {monthlySpeeches}/2 {t('dashboard.speechesThisMonth')}
-                      </p>
-                    )}
                   </div>
                   {subscriptionTier === 'free' && (
                     <Button variant="apple" onClick={() => {
