@@ -545,6 +545,7 @@ const Presentation = () => {
       onStartRecording={handleRecordingStart}
       onStopRecording={handleStopRecording}
       onPerformanceData={handlePerformanceData}
+      onExit={handleExit}
     />
   );
 };

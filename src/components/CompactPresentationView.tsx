@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Volume2 } from "lucide-react";
+import { Mic, Square, Volume2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WearableHUD, type ViewMode } from "./WearableHUD";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
@@ -24,6 +24,7 @@ interface CompactPresentationViewProps {
   onStartRecording: () => void;
   onStopRecording: () => void;
   onPerformanceData: (data: WordPerformance[]) => void;
+  onExit?: () => void;
 }
 
 // Map short language codes to full locale codes for Web Speech API
@@ -93,6 +94,7 @@ export const CompactPresentationView = ({
   onStartRecording,
   onStopRecording,
   onPerformanceData,
+  onExit,
 }: CompactPresentationViewProps) => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showHint, setShowHint] = useState<{ word: string; phase: "trying" | "showing" } | null>(null);
@@ -419,6 +421,19 @@ export const CompactPresentationView = ({
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Exit Button */}
+      {onExit && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onExit}
+          className="fixed top-4 left-4 z-50 gap-2"
+        >
+          <X className="h-4 w-4" />
+          Exit
+        </Button>
+      )}
+
       {/* Status Bar */}
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-background/95 backdrop-blur-sm px-6 py-3 rounded-full border border-border shadow-lg">
         <div className="flex items-center gap-2">
