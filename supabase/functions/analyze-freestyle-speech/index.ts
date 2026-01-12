@@ -229,7 +229,7 @@ Focus on extracting the most memorable and essential words that anchor each topi
   } catch (error) {
     console.error('Error analyzing freestyle speech:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
+      JSON.stringify({ error: 'An error occurred processing your request', code: 'PROCESSING_ERROR' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
