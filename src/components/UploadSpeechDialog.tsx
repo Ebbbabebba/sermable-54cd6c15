@@ -211,7 +211,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       toast({
         variant: "destructive",
         title: t('upload.limitReached'),
-        description: "You've reached your monthly speech limit. Free users can create 2 speeches per month. Upgrade to premium for unlimited speeches.",
+        description: "You've reached your monthly speech limit. Free users can create 1 speech per month. Upgrade to premium for unlimited speeches.",
       });
       return;
     }
