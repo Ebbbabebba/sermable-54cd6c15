@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, Brain, Sparkles, ChevronRight, CheckCircle2, Circle, Zap, Sunrise } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, Layers, Lightbulb, ChevronRight, CheckCircle2, Circle, Zap, Sunrise } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2059,10 +2059,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <Brain className="h-12 w-12 text-primary" />
+                <Layers className="h-12 w-12 text-primary" />
               </div>
               {/* Sparkle decoration */}
-              <Sparkles className="absolute -top-1 -right-1 h-6 w-6 text-amber-400 animate-pulse" />
+              <Lightbulb className="absolute -top-1 -right-1 h-6 w-6 text-amber-400 animate-pulse" />
             </div>
             
             {/* Title */}
@@ -2374,7 +2374,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-primary" />
+              <Layers className="h-5 w-5 text-primary" />
               {t('practice.spacedRepetitionTitle', 'Spaced Repetition Learning')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -2445,11 +2445,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 <span className="text-sm">{t('practice.premiumFeature1', 'Practice anytime you want')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Brain className="h-4 w-4 text-primary" />
+                <Layers className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.premiumFeature2', 'AI-optimized scheduling')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Lightbulb className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.premiumFeature3', 'Unlimited speeches')}</span>
               </div>
             </div>
@@ -2496,7 +2496,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </p>
             
             <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-              <Brain className="h-4 w-4 text-primary" />
+              <Layers className="h-4 w-4 text-primary" />
               <span>{t('practice.restHelpsMemory', 'Rest helps memory consolidation')}</span>
             </div>
           </div>

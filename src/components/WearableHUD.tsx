@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { CircularProgress } from "./CircularProgress";
-import { Volume2, Mic, Square, Check, AlertCircle } from "lucide-react";
+import { Volume2, Radio, Square, Check, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export type ViewMode = 'full' | 'compact' | 'wearable';
@@ -126,7 +126,7 @@ export const WearableHUD = ({
           {isRecording ? (
             <Square className="w-8 h-8" />
           ) : (
-            <Mic className="w-8 h-8" />
+            <Radio className="w-8 h-8" />
           )}
         </button>
       </div>
@@ -197,7 +197,7 @@ export const WearableHUD = ({
               <Check className={cn("w-8 h-8", statusColors[status])} />
             )}
             {(status === 'idle' || status === 'error') && (
-              <Mic className={cn("w-8 h-8", statusColors[status])} />
+              <Radio className={cn("w-8 h-8", statusColors[status])} />
             )}
           </div>
 
@@ -235,7 +235,7 @@ export const WearableHUD = ({
             {isRecording ? (
               <Square className="w-6 h-6" />
             ) : (
-              <Mic className="w-6 h-6" />
+              <Radio className="w-6 h-6" />
             )}
           </button>
         </div>

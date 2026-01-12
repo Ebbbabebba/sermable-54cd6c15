@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, Brain, BookOpen, Trophy, X, Circle } from "lucide-react";
+import { RotateCcw, Lightbulb, CheckCircle2, ChevronRight, Layers, ScrollText, Award, X, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -1097,7 +1097,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
 
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
-        <Trophy className="h-20 w-20 text-primary animate-pulse" />
+        <Award className="h-20 w-20 text-primary animate-pulse" />
         <h2 className="text-2xl font-bold">
           {allMastered 
             ? t('beat_practice.all_mastered', "🎉 All beats mastered!")
@@ -1110,11 +1110,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
         </p>
         <div className="flex flex-col gap-2 mt-4">
           <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <Brain className="h-4 w-4" />
+            <Layers className="h-4 w-4" />
             {t('beat_practice.science_tip', "Sleep strengthens memories more than repetition")}
           </p>
           <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
+            <ScrollText className="h-4 w-4" />
             {t('beat_practice.morning_tip', "Morning recall = memory consolidation boost")}
           </p>
         </div>
@@ -1245,7 +1245,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
               )}
               {getPhaseType() === 'fading' && (
                 <>
-                  <Brain className="h-4 w-4" />
+                  <Layers className="h-4 w-4" />
                   {words.length - hiddenWordIndices.size} words visible
                 </>
               )}
@@ -1264,7 +1264,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
                   exit={{ scale: 0.5, opacity: 0 }}
                   className="flex flex-col items-center gap-6 py-8"
                 >
-                  <Sparkles className="h-16 w-16 text-primary animate-pulse" />
+                  <Lightbulb className="h-16 w-16 text-primary animate-pulse" />
                   <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
                 </motion.div>
               ) : (
