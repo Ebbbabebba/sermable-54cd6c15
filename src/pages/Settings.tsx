@@ -89,59 +89,78 @@ const Settings = () => {
           }
         }
 
-        // Calculate streak
-        const { data: sessions } = await supabase
-          .from("practice_sessions")
-          .select("session_date, speech_id")
-          .order("session_date", { ascending: false });
-
+        // Calculate streak (count both practice + full presentations)
         const { data: userSpeeches } = await supabase
           .from("speeches")
           .select("id")
           .eq("user_id", user.id);
 
-        if (!userSpeeches || !sessions) return;
+        if (!userSpeeches || userSpeeches.length === 0) {
+          setCurrentStreak(0);
+          setBestStreak(0);
+          return;
+        }
 
-        const userSpeechIds = new Set(userSpeeches.map(s => s.id));
-        const userSessions = sessions.filter(s => userSpeechIds.has(s.speech_id));
+        const userSpeechIds = userSpeeches.map((s) => s.id);
 
-        // Calculate current streak
+        const [practiceResult, presentationResult] = await Promise.all([
+          supabase
+            .from("practice_sessions")
+            .select("session_date, speech_id")
+            .in("speech_id", userSpeechIds)
+            .order("session_date", { ascending: false }),
+          supabase
+            .from("presentation_sessions")
+            .select("created_at, speech_id")
+            .in("speech_id", userSpeechIds)
+            .order("created_at", { ascending: false }),
+        ]);
+
+        const allSessions = [
+          ...(practiceResult.data || []).map((s) => ({ date: s.session_date })),
+          ...(presentationResult.data || []).map((s) => ({ date: s.created_at })),
+        ];
+
+        const DAY_MS = 1000 * 60 * 60 * 24;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const uniqueDays = new Set(
-          userSessions.map(s => {
-            const date = new Date(s.session_date);
-            date.setHours(0, 0, 0, 0);
-            return date.getTime();
-          })
-        );
+        const uniqueDays = new Set<number>();
+        for (const s of allSessions) {
+          if (!s.date) continue;
+          const d = new Date(s.date);
+          d.setHours(0, 0, 0, 0);
+          uniqueDays.add(d.getTime());
+        }
 
         const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
 
+        // Current streak: count consecutive days ending today OR yesterday
         let streak = 0;
-        for (let i = 0; i < sortedDays.length; i++) {
-          const daysDiff = Math.floor((today.getTime() - sortedDays[i]) / (1000 * 60 * 60 * 24));
-          
-          if (daysDiff === i) {
-            streak++;
-          } else {
-            break;
+        if (sortedDays.length > 0) {
+          const firstDiff = Math.floor((today.getTime() - sortedDays[0]) / DAY_MS);
+          if (firstDiff === 0 || firstDiff === 1) {
+            streak = 1;
+            for (let i = 1; i < sortedDays.length; i++) {
+              const gap = Math.floor((sortedDays[i - 1] - sortedDays[i]) / DAY_MS);
+              if (gap === 1) streak++;
+              else break;
+            }
           }
         }
 
         setCurrentStreak(streak);
 
-        // Calculate best streak
+        // Best streak: longest consecutive-day run
         let maxStreak = 0;
         let tempStreak = 0;
-        let prevDay = null;
+        let prevDay: number | null = null;
 
         for (const day of sortedDays) {
           if (prevDay === null) {
             tempStreak = 1;
           } else {
-            const diff = Math.floor((prevDay - day) / (1000 * 60 * 60 * 24));
+            const diff = Math.floor((prevDay - day) / DAY_MS);
             if (diff === 1) {
               tempStreak++;
             } else {
