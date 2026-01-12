@@ -463,6 +463,7 @@
     "beat_x_of_y": "Beat {{current}} of {{total}}",
     "sentence_x": "Sentence {{number}}",
     "read_x_of_3": "Read {{current}}/3",
+    "read_aloud_x_of_3": "Read aloud {{current}}/3",
     "fading_x_left": "{{count}} words visible",
     "excellent_next": "Excellent! Next sentence...",
     "great_start_fading": "Great! Now let's start fading...",
@@ -475,16 +476,21 @@
     "session_desc_recall": "Recall + learn new beats",
     "session_desc_start": "Start with your first beat",
     "mastered": "Mastered",
+    "learned": "Learned",
     "remaining": "Remaining",
     "your_progress": "Your Progress",
     "start_session": "Start Session",
+    "start_next_session": "Start Next Session",
     "session_complete": "Session Complete!",
     "come_back_later": "Come back later for the next beat",
     "all_mastered": "🎉 All beats mastered!",
     "poem_memorized": "You've memorized the entire speech! Practice again tomorrow to reinforce.",
     "come_back": "You've mastered {{current}}/{{total}} beats. Come back later to learn the next one!",
     "science_tip": "Sleep strengthens memories more than repetition",
-    "morning_tip": "Morning recall = memory consolidation boost"
+    "morning_tip": "Morning recall = memory consolidation boost",
+    "to_recall": "to recall",
+    "to_learn": "to learn",
+    "beat_to_learn": "Beat {{num}} to learn"
   },
   "day_after_recall": {
     "title": "🌅 Day-After Recall",
@@ -565,21 +571,6 @@
     "done": "Done",
     "not_supported": "Not Supported",
     "use_chrome": "Speech recognition requires Chrome or Safari."
-  },
-  "beat_practice": {
-    "learned": "Learned",
-    "remaining": "Remaining",
-    "session_complete": "Session Complete!",
-    "todays_session": "Today's Session",
-    "active_session": "Active Session",
-    "come_back_later": "Come back later for the next beat",
-    "session_desc_recall": "Recall + learn new beats",
-    "session_desc_start": "Start with your first beat",
-    "to_recall": "to recall",
-    "to_learn": "to learn",
-    "beat_to_learn": "Beat {{num}} to learn",
-    "your_progress": "Your Progress",
-    "start_next_session": "Start Next Session"
   },
   "presentation": {
     "settings": "Presentation Settings",
