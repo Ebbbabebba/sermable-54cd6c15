@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Monitor, Smartphone, Watch, Glasses, ChevronLeft } from "lucide-react";
+import { Monitor, Smartphone, Watch, Eye, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ViewMode } from "./WearableHUD";
 
@@ -107,7 +107,7 @@ export const ViewModeSelector = ({
             <span className="text-xs">Wear OS</span>
           </div>
           <div className="flex items-center gap-2">
-            <Glasses className="w-4 h-4" />
+            <Eye className="w-4 h-4" />
             <span className="text-xs">AI Glasses</span>
           </div>
           <div className="flex items-center gap-2">

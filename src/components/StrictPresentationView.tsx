@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Volume2 } from "lucide-react";
+import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface WordPerformance {
@@ -517,7 +517,7 @@ export const StrictPresentationView = ({
           disabled={isProcessing}
           className="rounded-full h-16 w-16 p-0 shadow-lg"
         >
-          {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+          {isRecording ? <Square className="h-6 w-6" /> : <Circle className="h-6 w-6 fill-current" />}
         </Button>
       </div>
 

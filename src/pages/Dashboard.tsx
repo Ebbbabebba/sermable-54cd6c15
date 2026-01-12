@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, LogOut, ScrollText, Settings, Menu, ArrowUpDown, Radio } from "lucide-react";
+import { Plus, LogOut, FileText, Settings, Menu, ArrowUpDown, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -398,7 +398,7 @@ const Dashboard = () => {
               <Card className="border-0 shadow-apple-xl animate-fade-in">
                 <CardContent className="py-16 text-center">
                   <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                    <Radio className="w-10 h-10 text-primary" />
+                    <MessageCircle className="w-10 h-10 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">{t('dashboard.noSpeeches')}</h3>
                   <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
