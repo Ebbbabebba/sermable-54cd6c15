@@ -2061,8 +2061,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                 <GraduationCap className="h-12 w-12 text-primary" />
               </div>
-              {/* Sparkle decoration */}
-              <HelpCircle className="absolute -top-1 -right-1 h-6 w-6 text-amber-400 animate-pulse" />
             </div>
             
             {/* Title */}
