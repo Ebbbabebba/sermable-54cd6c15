@@ -2218,7 +2218,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
           {/* Beat Timeline - Compact horizontal dots */}
           {hasBeats && (
             <div className="flex flex-col items-center gap-3">
-              <p className="text-sm text-muted-foreground">{t('beat_practice.your_progress')}</p>
               <div className="flex items-center gap-2 flex-wrap justify-center">
                 {segments.map((segment, idx) => (
                   <div
