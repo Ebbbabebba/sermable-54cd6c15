@@ -415,25 +415,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     setLoading(false);
   };
 
-  // Initialize recall mode - all words hidden
+  // Initialize recall mode - start fully visible, then fade 2-3 words per successful rep
   const initializeRecallMode = () => {
-    // We'll set hidden words after the text is available
+    // Start fully visible for recall (words fade as user succeeds)
     setPhase('beat_fading'); // Use beat_fading phase for recall
     setRepetitionCount(1);
     repetitionCountRef.current = 1;
     setConsecutiveNoScriptSuccess(0);
     setRecallSuccessCount(0);
+    // Start with all words VISIBLE (empty hidden set)
+    setHiddenWordIndices(new Set());
+    setHiddenWordOrder([]);
   };
 
-  // Effect to hide all words when entering recall mode
+  // Words to hide per successful recall repetition (2-3 words)
+  const recallWordsToHidePerSuccess = 2;
+
+  // Effect to reset hidden words when changing recall beat
   useEffect(() => {
     if (sessionMode === 'recall' && words.length > 0) {
-      // Hide all words for recall
-      const allIndices = new Set(words.map((_, i) => i));
-      setHiddenWordIndices(allIndices);
-      setHiddenWordOrder(words.map((_, i) => i));
+      // Start fully visible for each recall beat
+      setHiddenWordIndices(new Set());
+      setHiddenWordOrder([]);
     }
-  }, [sessionMode, words.length, recallIndex]);
+  }, [sessionMode, recallIndex]);
 
   // Determine which word to hide next (priority order)
   const getNextWordToHide = useCallback((currentHidden: Set<number>): number | null => {
@@ -625,13 +630,29 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     }
   }
 
-  // Handle recall mode completion
+  // Handle recall mode completion - progressive fading approach
   function handleRecallCompletion(hadErrors: boolean) {
     pauseSpeechRecognition(1200);
 
+    const allHidden = hiddenWordIndices.size >= words.length;
+
     if (hadErrors) {
-      // Failed recall - reset and try again
+      // Failed recall - reveal some words and try again
       setRecallSuccessCount(0);
+      
+      if (hiddenWordOrder.length > 0) {
+        // Reveal 2-3 words on failure
+        const wordsToReveal = Math.min(recallWordsToHidePerSuccess, hiddenWordOrder.length);
+        const indicesToReveal = hiddenWordOrder.slice(-wordsToReveal);
+        
+        setHiddenWordIndices((prev) => {
+          const next = new Set(prev);
+          indicesToReveal.forEach(idx => next.delete(idx));
+          return next;
+        });
+        setHiddenWordOrder((prev) => prev.slice(0, -wordsToReveal));
+      }
+      
       setCelebrationMessage("🔄 Try again");
       setShowCelebration(true);
       
@@ -639,11 +660,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
         setShowCelebration(false);
         resetForNextRep();
       }, 1200);
+    } else if (!allHidden) {
+      // Success but not all hidden yet - hide 2-3 more words
+      let newHidden = new Set(hiddenWordIndices);
+      let newOrder = [...hiddenWordOrder];
+      
+      for (let i = 0; i < recallWordsToHidePerSuccess; i++) {
+        const nextToHide = getNextWordToHide(newHidden);
+        if (nextToHide !== null) {
+          newHidden.add(nextToHide);
+          newOrder.push(nextToHide);
+        } else {
+          break;
+        }
+      }
+      
+      const visibleCount = words.length - newHidden.size;
+      setCelebrationMessage(`✓ ${visibleCount} words left`);
+      setShowCelebration(true);
+      
+      setTimeout(() => {
+        setShowCelebration(false);
+        setHiddenWordIndices(newHidden);
+        setHiddenWordOrder(newOrder);
+        resetForNextRep();
+      }, 800);
     } else {
+      // All hidden and success! Count towards 2 perfect recalls
       const newCount = recallSuccessCount + 1;
       
       if (newCount >= 2) {
-        // Successfully recalled this beat! Update last_recall_at
+        // Successfully recalled this beat twice with all hidden! Update last_recall_at
         const recalledBeat = beatsToRecall[recallIndex];
         if (recalledBeat) {
           supabase
@@ -663,6 +710,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           if (recallIndex < beatsToRecall.length - 1) {
             setRecallIndex(prev => prev + 1);
             setRecallSuccessCount(0);
+            // Next recall beat also starts fully visible
+            setHiddenWordIndices(new Set());
+            setHiddenWordOrder([]);
             resetForNextRep();
           } else {
             // Done with recalls, now learn new beat
@@ -677,9 +727,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           }
         }, 1800);
       } else {
-        // Need one more successful recall
+        // Need one more successful recall with all hidden
         setRecallSuccessCount(newCount);
-        setCelebrationMessage(`${newCount}/2 ✓`);
+        setCelebrationMessage(`${newCount}/2 perfect recalls ✓`);
         setShowCelebration(true);
         
         setTimeout(() => {
@@ -1204,7 +1254,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           </div>
 
           {/* Main sentence card - clean and centered */}
-          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10">
+          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10 relative z-10">
             <AnimatePresence mode="wait">
               {showCelebration ? (
                 <motion.div
@@ -1287,6 +1337,76 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
               )}
             </AnimatePresence>
           </div>
+
+          {/* Upcoming beats preview - stacked and faded below current beat */}
+          {(() => {
+            // Get upcoming beats to show
+            const upcomingBeats: Beat[] = [];
+            
+            if (sessionMode === 'recall') {
+              // Show remaining recall beats
+              for (let i = recallIndex + 1; i < Math.min(recallIndex + 3, beatsToRecall.length); i++) {
+                upcomingBeats.push(beatsToRecall[i]);
+              }
+              // If we have a new beat to learn after recalls, show it too
+              if (newBeatToLearn && upcomingBeats.length < 2) {
+                upcomingBeats.push(newBeatToLearn);
+              }
+            } else if (sessionMode === 'learn') {
+              // Show next unmastered beats
+              const currentBeatId = currentBeat?.id;
+              const unmasteredAfterCurrent = beats.filter(b => 
+                !b.is_mastered && b.id !== currentBeatId
+              ).slice(0, 2);
+              upcomingBeats.push(...unmasteredAfterCurrent);
+            }
+            
+            if (upcomingBeats.length === 0) return null;
+            
+            return (
+              <div className="relative mt-4">
+                {/* Gradient overlay to fade upcoming beats */}
+                <div className="absolute inset-0 bg-gradient-to-b from-background/80 to-transparent z-10 pointer-events-none rounded-2xl" />
+                
+                {/* Stacked upcoming beat cards */}
+                <div className="space-y-2">
+                  {upcomingBeats.map((beat, index) => {
+                    const beatText = `${beat.sentence_1_text} ${beat.sentence_2_text} ${beat.sentence_3_text}`;
+                    const previewWords = beatText.split(/\s+/).slice(0, 8).join(' ');
+                    const isRecallBeat = beatsToRecall.some(b => b.id === beat.id);
+                    
+                    return (
+                      <motion.div
+                        key={beat.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ 
+                          opacity: 0.4 - (index * 0.15), 
+                          y: 0,
+                          scale: 0.95 - (index * 0.02)
+                        }}
+                        className={cn(
+                          "bg-card/50 rounded-2xl border border-border/30 p-4 text-center",
+                          "backdrop-blur-sm"
+                        )}
+                      >
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <span className={cn(
+                            "text-xs px-2 py-0.5 rounded-full",
+                            isRecallBeat ? "bg-amber-500/20 text-amber-500" : "bg-primary/20 text-primary"
+                          )}>
+                            {isRecallBeat ? '🔄 Recall' : '📚 Learn'} Beat {beat.beat_order + 1}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground/70 line-clamp-1">
+                          {previewWords}...
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
