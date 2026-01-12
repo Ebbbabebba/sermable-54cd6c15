@@ -82,34 +82,48 @@ const Dashboard = () => {
         return;
       }
 
-      const { data: sessions, error: sessionsError } = await supabase
-        .from("practice_sessions")
-        .select("session_date, speech_id")
-        .order("session_date", { ascending: false });
-
-      if (sessionsError) throw sessionsError;
-
+      // Get user's speeches first
       const { data: userSpeeches } = await supabase
         .from("speeches")
         .select("id")
         .eq("user_id", user.id);
 
-      if (!userSpeeches || !sessions) return;
+      if (!userSpeeches || userSpeeches.length === 0) return;
 
-      const userSpeechIds = new Set(userSpeeches.map(s => s.id));
-      const userSessions = sessions.filter(s => userSpeechIds.has(s.speech_id));
+      const userSpeechIds = userSpeeches.map(s => s.id);
+
+      // Check both practice_sessions and presentation_sessions
+      const [practiceResult, presentationResult] = await Promise.all([
+        supabase
+          .from("practice_sessions")
+          .select("session_date, speech_id")
+          .in("speech_id", userSpeechIds)
+          .order("session_date", { ascending: false }),
+        supabase
+          .from("presentation_sessions")
+          .select("created_at, speech_id")
+          .in("speech_id", userSpeechIds)
+          .order("created_at", { ascending: false })
+      ]);
+
+      // Combine all sessions
+      const allSessions = [
+        ...(practiceResult.data || []).map(s => ({ date: s.session_date })),
+        ...(presentationResult.data || []).map(s => ({ date: s.created_at }))
+      ];
+
+      if (allSessions.length === 0) return;
 
       let streak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const uniqueDays = new Set(
-        userSessions.map(s => {
-          const date = new Date(s.session_date);
-          date.setHours(0, 0, 0, 0);
-          return date.getTime();
-        })
-      );
+      const uniqueDays = new Set<number>();
+      allSessions.forEach(s => {
+        const date = new Date(s.date);
+        date.setHours(0, 0, 0, 0);
+        uniqueDays.add(date.getTime());
+      });
 
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
 
