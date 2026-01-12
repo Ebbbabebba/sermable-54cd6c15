@@ -149,7 +149,18 @@
     "monthlyLimit": "Max tal per månad",
     "limitReached": "Gränsen nådd",
     "pasteText": "Klistra in din taltext här...",
-    "languageDetected": "Språk upptäckt – gränssnittet uppdaterat"
+    "languageDetected": "Språk upptäckt – gränssnittet uppdaterat",
+    "scanDocument": "Skanna",
+    "uploadImage": "Foto",
+    "retake": "Ta om",
+    "extractText": "Extrahera text",
+    "extracting": "Extraherar...",
+    "scanSuccess": "Text extraherad",
+    "scanSuccessDesc": "Texten har lagts till i ditt tal.",
+    "scanError": "Skanning misslyckades",
+    "scanErrorDesc": "Kunde inte extrahera text från bilden. Försök igen med en tydligare bild.",
+    "cameraError": "Kamerafel",
+    "cameraErrorDesc": "Kunde inte komma åt kameran. Kontrollera behörigheter."
   },
   "practice": {
     "title": "Övningspass",
