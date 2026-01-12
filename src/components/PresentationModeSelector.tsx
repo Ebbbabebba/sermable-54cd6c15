@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, FileText } from "lucide-react";
+import { Brain, ScrollText } from "lucide-react";
 
 interface PresentationModeSelectorProps {
   onSelectMode: (mode: 'strict' | 'fullscript') => void;
@@ -25,7 +25,7 @@ export const PresentationModeSelector = ({ onSelectMode }: PresentationModeSelec
                 onClick={() => onSelectMode('strict')}>
             <div className="space-y-4">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <BookOpen className="w-8 h-8 text-primary" />
+                <Brain className="w-8 h-8 text-primary" />
               </div>
               
               <div>
@@ -63,7 +63,7 @@ export const PresentationModeSelector = ({ onSelectMode }: PresentationModeSelec
             
             <div className="space-y-4 relative">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <FileText className="w-8 h-8 text-primary" />
+                <ScrollText className="w-8 h-8 text-primary" />
               </div>
               
               <div>
