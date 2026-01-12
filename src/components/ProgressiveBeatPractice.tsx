@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Sparkles, CheckCircle2, Brain, BookOpen, Trophy, X, Circle, Eye, EyeOff } from "lucide-react";
+import { RotateCcw, Lightbulb, CheckCircle2, Layers, ScrollText, Award, X, Circle, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import SentenceDisplay from "./SentenceDisplay";
@@ -623,7 +623,7 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
     
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
-        <Trophy className="h-20 w-20 text-primary animate-pulse" />
+        <Award className="h-20 w-20 text-primary animate-pulse" />
         <h2 className="text-2xl font-bold">
           {masteredCount === totalBeats 
             ? t('progressive.all_complete', '🎉 Speech memorized!')
@@ -635,7 +635,7 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
             : t('progressive.progress', `${masteredCount}/${totalBeats} beats mastered. Rest and return later!`)}
         </p>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Brain className="h-4 w-4" />
+          <Layers className="h-4 w-4" />
           <span>{t('progressive.sleep_tip', 'Sleep consolidates memories better than repetition')}</span>
         </div>
         <Button onClick={onComplete || onExit} className="mt-6">
@@ -694,7 +694,7 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
               currentStage === 'day4_adaptive' && "bg-purple-500/10 text-purple-500",
               currentStage !== 'day4_adaptive' && "bg-primary/10 text-primary"
             )}>
-              <Brain className="h-4 w-4" />
+              <Layers className="h-4 w-4" />
               {words.length - hiddenWordIndices.size} / {words.length} visible
             </span>
           </div>
@@ -710,7 +710,7 @@ const ProgressiveBeatPractice = ({ speechId, onComplete, onExit }: ProgressiveBe
                   exit={{ scale: 0.5, opacity: 0 }}
                   className="flex flex-col items-center gap-6 py-8"
                 >
-                  <Sparkles className="h-16 w-16 text-primary animate-pulse" />
+                  <Lightbulb className="h-16 w-16 text-primary animate-pulse" />
                   <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
                 </motion.div>
               ) : (

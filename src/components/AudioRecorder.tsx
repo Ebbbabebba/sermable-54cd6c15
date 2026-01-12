@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Radio, CircleSlash, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export interface AudioRecorderHandle {
@@ -218,12 +218,12 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
             </>
           ) : isRecording ? (
             <>
-              <MicOff className="h-5 w-5 mr-2" />
+              <CircleSlash className="h-5 w-5 mr-2" />
               Stop Recording
             </>
           ) : (
             <>
-              <Mic className="h-5 w-5 mr-2" />
+              <Radio className="h-5 w-5 mr-2" />
               Start Recording
             </>
           )}
