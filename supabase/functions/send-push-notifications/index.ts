@@ -74,6 +74,19 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Scheduler secret validation for scheduled jobs
+    // This function should only be called by scheduled jobs or admin with secret
+    const schedulerSecret = Deno.env.get('SCHEDULER_SECRET');
+    const providedSecret = req.headers.get('x-scheduler-secret');
+    
+    if (schedulerSecret && providedSecret !== schedulerSecret) {
+      console.error('Unauthorized scheduler access attempt');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
