@@ -443,9 +443,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
       return;
     }
     
-    // Only show spaced repetition warning if actually locked (next review is in future)
-    // Skip warning if there's no lock or next review date is past/now
-    const isActuallyLocked = isLocked && nextReviewDate && nextReviewDate > new Date();
+    // Only show spaced repetition warning if actually locked AND has practice history
+    // Skip warning if there's no lock, no practice history, or next review date is past/now
+    const hasPracticeHistory = practiceBeats.length > 0;
+    const isActuallyLocked = isLocked && nextReviewDate && nextReviewDate > new Date() && hasPracticeHistory;
+    
+    console.log('🔍 Start practice check:', { isLocked, nextReviewDate, hasPracticeHistory, isActuallyLocked, bypassWarning, bypassLock });
     
     if (!bypassWarning && !bypassLock && isActuallyLocked) {
       setShowSpacedRepetitionInfo(true);
