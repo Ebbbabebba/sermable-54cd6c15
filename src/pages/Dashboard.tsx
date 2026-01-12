@@ -19,6 +19,7 @@ import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
+import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
@@ -43,6 +44,7 @@ const Dashboard = () => {
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
+  const [showPremiumDialog, setShowPremiumDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -192,7 +194,7 @@ const Dashboard = () => {
   };
 
   const handleUpgradeToPremium = () => {
-    navigate("/payment-settings");
+    setShowPremiumDialog(true);
   };
 
   if (loading) {
@@ -216,7 +218,12 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Apple-style Header */}
+      {/* Premium Upgrade Dialog */}
+      <PremiumUpgradeDialog 
+        open={showPremiumDialog} 
+        onOpenChange={setShowPremiumDialog} 
+      />
+
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <h1 className="text-lg font-semibold text-foreground">Sermable</h1>
