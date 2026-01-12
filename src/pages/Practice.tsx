@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Theater, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, HelpCircle, ChevronRight, CheckCircle2, Circle, Flame, Sunrise } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, HelpCircle, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,6 +104,7 @@ const Practice = () => {
   const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
+  const [showPresentationPremium, setShowPresentationPremium] = useState(false);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [todaySessionDone, setTodaySessionDone] = useState(false);
   const [practiceBeats, setPracticeBeats] = useState<{ id: string; beat_order: number; is_mastered: boolean; mastered_at: string | null; last_recall_at: string | null; sentence_1_text: string; sentence_2_text: string; sentence_3_text: string }[]>([]);
@@ -2041,10 +2042,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(`/presentation/${id}`)}
+                onClick={() => {
+                  if (subscriptionTier === 'free') {
+                    setShowPresentationPremium(true);
+                  } else {
+                    navigate(`/presentation/${id}`);
+                  }
+                }}
                 className="rounded-full"
               >
-                <Theater className="h-4 w-4" />
+                <Presentation className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -2466,6 +2473,59 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Button 
               variant="ghost" 
               onClick={() => setShowPremiumUpsell(false)}
+              className="w-full text-muted-foreground"
+            >
+              {t('common.close', 'Close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Presentation Mode Premium Dialog */}
+      <Dialog open={showPresentationPremium} onOpenChange={setShowPresentationPremium}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-center justify-center">
+              <Presentation className="h-5 w-5 text-primary" />
+              {t('settings.subscription.presentationMode', 'Presentation Mode')}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground text-center">
+              {t('practice.presentationPremiumDesc', 'Test your memory with a full run-through. Premium feature.')}
+            </p>
+            
+            <div className="space-y-2 bg-muted/50 rounded-xl p-4">
+              <div className="flex items-center gap-2">
+                <Mic className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.presentationFeature1', 'Real-time speech tracking')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.presentationFeature2', 'Teleprompter hints when stuck')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.presentationFeature3', 'Detailed accuracy analysis')}</span>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex-col gap-2">
+            <Button 
+              onClick={() => {
+                setShowPresentationPremium(false);
+                navigate("/settings");
+              }}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              {t('nav.upgradeToPremium', 'Upgrade to Premium')}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowPresentationPremium(false)}
               className="w-full text-muted-foreground"
             >
               {t('common.close', 'Close')}
