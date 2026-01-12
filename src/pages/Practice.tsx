@@ -1996,49 +1996,57 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </div>
 
           {/* Session Card - Clean and simple */}
-          <div className="bg-card rounded-3xl border border-border/50 p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${todaySessionDone ? 'bg-green-500/10' : 'bg-primary/10'}`}>
-                {todaySessionDone ? (
-                  <CheckCircle2 className="h-6 w-6 text-green-500" />
-                ) : (
-                  <Target className="h-6 w-6 text-primary" />
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold">
-                  {todaySessionDone
-                    ? t('beat_practice.session_complete')
-                    : masteredBeats === 0 
-                      ? t('beat_practice.todays_session')
-                      : t('beat_practice.active_session')}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {todaySessionDone
-                    ? t('beat_practice.come_back_later')
-                    : masteredBeats > 0 
-                      ? t('beat_practice.session_desc_recall')
-                      : t('beat_practice.session_desc_start')}
-                </p>
-              </div>
-            </div>
+          {/* Only show "Session Complete" if session is done AND next review is still in future */}
+          {(() => {
+            const isReadyNow = nextReviewDate ? nextReviewDate <= new Date() : true;
+            const showSessionComplete = todaySessionDone && !isReadyNow;
             
-            {/* Beat pills */}
-            <div className="flex flex-wrap gap-2">
-              {masteredBeats > 0 && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  {masteredBeats} {t('beat_practice.to_recall')}
-                </span>
-              )}
-              {nextBeatNumber <= totalBeats && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                  <Flame className="h-3.5 w-3.5" />
-                  {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
-                </span>
-              )}
-            </div>
-          </div>
+            return (
+              <div className="bg-card rounded-3xl border border-border/50 p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${showSessionComplete ? 'bg-green-500/10' : 'bg-primary/10'}`}>
+                    {showSessionComplete ? (
+                      <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    ) : (
+                      <Target className="h-6 w-6 text-primary" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">
+                      {showSessionComplete
+                        ? t('beat_practice.session_complete')
+                        : masteredBeats === 0 
+                          ? t('beat_practice.todays_session')
+                          : t('beat_practice.active_session')}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {showSessionComplete
+                        ? t('beat_practice.come_back_later')
+                        : masteredBeats > 0 
+                          ? t('beat_practice.session_desc_recall')
+                          : t('beat_practice.session_desc_start')}
+                    </p>
+                  </div>
+                </div>
+            
+                {/* Beat pills */}
+                <div className="flex flex-wrap gap-2">
+                  {masteredBeats > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      {masteredBeats} {t('beat_practice.to_recall')}
+                    </span>
+                  )}
+                  {nextBeatNumber <= totalBeats && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                      <Flame className="h-3.5 w-3.5" />
+                      {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Upcoming beats preview - stacked and faded */}
           {(() => {
