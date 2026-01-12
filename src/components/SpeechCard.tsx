@@ -33,14 +33,19 @@ interface Speech {
 interface SpeechCardProps {
   speech: Speech;
   onUpdate: () => void;
+  subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
+  totalSpeeches?: number;
 }
 
-const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
+const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches = 1 }: SpeechCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  
+  // Check if this is the only speech for a free user
+  const isOnlyFreeSpeech = subscriptionTier === 'free' && totalSpeeches === 1;
   
   const goalDate = new Date(speech.goal_date);
   const today = new Date();
@@ -189,8 +194,17 @@ const SpeechCard = ({ speech, onUpdate }: SpeechCardProps) => {
           <AlertDialogContent className="bg-card border-border">
             <AlertDialogHeader>
               <AlertDialogTitle>{t('dashboard.deleteSpeech')}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {t('dashboard.deleteSpeechDesc', { title: speech.title })}
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p>{t('dashboard.deleteSpeechDesc', { title: speech.title })}</p>
+                  {isOnlyFreeSpeech && (
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
+                      <p className="text-sm font-medium">
+                        ⚠️ {t('dashboard.deleteOnlyFreeSpeechWarning', "This is your only free speech this month. Free users can only create 1 speech per month. If you delete it, you won't be able to create a new one until next month.")}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

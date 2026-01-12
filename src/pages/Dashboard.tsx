@@ -425,7 +425,12 @@ const Dashboard = () => {
                       className="animate-scale-in"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      <SpeechCard speech={speech} onUpdate={loadSpeeches} />
+                      <SpeechCard 
+                        speech={speech} 
+                        onUpdate={loadSpeeches} 
+                        subscriptionTier={subscriptionTier}
+                        totalSpeeches={speeches.length}
+                      />
                     </div>
                   ));
                 })()}
