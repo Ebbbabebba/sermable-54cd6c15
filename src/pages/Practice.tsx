@@ -106,7 +106,7 @@ const Practice = () => {
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [todaySessionDone, setTodaySessionDone] = useState(false);
-  const [practiceBeats, setPracticeBeats] = useState<{ id: string; is_mastered: boolean; mastered_at: string | null }[]>([]);
+  const [practiceBeats, setPracticeBeats] = useState<{ id: string; beat_order: number; is_mastered: boolean; mastered_at: string | null; last_recall_at: string | null; sentence_1_text: string; sentence_2_text: string; sentence_3_text: string }[]>([]);
   // Legacy settings for old practice mode (kept for reference, not used in beat mode)
   const settings = {
     revealSpeed: 5,
@@ -393,7 +393,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
       // Check if today's session is complete (beat mastered today or all beats mastered)
       const { data: beatsData } = await supabase
         .from('practice_beats')
-        .select('id, is_mastered, mastered_at')
+        .select('id, beat_order, is_mastered, mastered_at, last_recall_at, sentence_1_text, sentence_2_text, sentence_3_text')
         .eq('speech_id', id)
         .order('beat_order', { ascending: true });
       
@@ -2158,6 +2158,64 @@ const [liveTranscription, setLiveTranscription] = useState("");
               )}
             </div>
           </div>
+
+          {/* Upcoming beats preview - stacked and faded */}
+          {(() => {
+            const today = new Date().toDateString();
+            
+            // Get beats needing recall (mastered but not recalled today)
+            const beatsNeedingRecall = practiceBeats.filter(b => {
+              if (!b.is_mastered) return false;
+              if (!b.last_recall_at) return true;
+              return new Date(b.last_recall_at).toDateString() !== today;
+            });
+            
+            // Get next unmastered beat to learn
+            const nextToLearn = practiceBeats.find(b => !b.is_mastered);
+            
+            // Build preview list: recalls first, then new beat
+            const upcomingBeats = [
+              ...beatsNeedingRecall.slice(0, 2),
+              ...(nextToLearn && beatsNeedingRecall.length < 2 ? [nextToLearn] : [])
+            ].slice(0, 3);
+            
+            if (upcomingBeats.length === 0) return null;
+            
+            return (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground text-center">{t('beat_practice.coming_up', 'Coming up')}</p>
+                <div className="relative">
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 z-10 pointer-events-none rounded-2xl" />
+                  
+                  <div className="space-y-2">
+                    {upcomingBeats.map((beat, index) => {
+                      const beatText = `${beat.sentence_1_text} ${beat.sentence_2_text} ${beat.sentence_3_text}`;
+                      const previewWords = beatText.split(/\s+/).slice(0, 8).join(' ');
+                      const isRecallBeat = beat.is_mastered;
+                      
+                      return (
+                        <div
+                          key={beat.id}
+                          style={{ opacity: 0.6 - (index * 0.15) }}
+                          className="bg-card/50 rounded-2xl border border-border/30 p-4 text-center backdrop-blur-sm"
+                        >
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${isRecallBeat ? 'bg-amber-500/20 text-amber-500' : 'bg-primary/20 text-primary'}`}>
+                              {isRecallBeat ? '🔄 Recall' : '📚 Learn'} Beat {beat.beat_order + 1}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground/70 line-clamp-1">
+                            {previewWords}...
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Beat Timeline - Compact horizontal dots */}
           {hasBeats && (
