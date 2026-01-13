@@ -2096,7 +2096,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   
                   <div className="space-y-2">
                     {upcomingBeats.map((beat, index) => {
-                      const beatText = `${beat.sentence_1_text} ${beat.sentence_2_text} ${beat.sentence_3_text}`;
+                      // Get unique sentences (for short speeches, sentences may be duplicated)
+                      const uniqueSentences = [...new Set([beat.sentence_1_text, beat.sentence_2_text, beat.sentence_3_text].filter(Boolean))];
+                      const beatText = uniqueSentences.join(' ');
                       const previewWords = beatText.split(/\s+/).slice(0, 8).join(' ');
                       const isRecallBeat = beat.is_mastered;
                       
