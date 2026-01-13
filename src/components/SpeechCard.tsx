@@ -260,7 +260,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             <Button 
               onClick={() => {
                 setShowPresentationPremium(false);
-                navigate("/settings");
+                navigate("/settings/payment");
               }}
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
             >
