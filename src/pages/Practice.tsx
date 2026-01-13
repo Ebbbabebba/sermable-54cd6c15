@@ -2368,7 +2368,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Button 
               onClick={() => {
                 setShowPremiumUpsell(false);
-                navigate("/settings");
+                navigate("/settings/payment");
               }}
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
             >
@@ -2421,7 +2421,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Button 
               onClick={() => {
                 setShowPresentationPremium(false);
-                navigate("/settings");
+                navigate("/settings/payment");
               }}
               className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
             >
@@ -2430,7 +2430,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </Button>
             <Button 
               variant="ghost" 
-              onClick={() => setShowPresentationPremium(false)}
+              onClick={() => {
+                setShowPresentationPremium(false);
+                navigate("/dashboard");
+              }}
               className="w-full text-muted-foreground"
             >
               {t('common.close', 'Close')}

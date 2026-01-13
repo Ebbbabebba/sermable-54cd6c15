@@ -182,7 +182,9 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (subscriptionTier === 'free') {
               setShowPresentationPremium(true);
             } else {
