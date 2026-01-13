@@ -339,6 +339,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
   const currentText = getCurrentText();
   const words = currentText.split(/\s+/).filter(w => w.trim());
 
+  // Identify which word indices are "first word of a sentence"
+  // These should never turn yellow (hesitated) due to natural pause between sentences
+  const sentenceStartIndices = new Set<number>();
+  sentenceStartIndices.add(0); // First word of entire text is always a sentence start
+  for (let i = 0; i < words.length - 1; i++) {
+    // If current word ends with sentence-ending punctuation, next word is sentence start
+    if (/[.!?]$/.test(words[i])) {
+      sentenceStartIndices.add(i + 1);
+    }
+  }
+  const sentenceStartIndicesRef = useRef<Set<number>>(new Set());
+  
+  useEffect(() => {
+    sentenceStartIndicesRef.current = sentenceStartIndices;
+  }, [currentText]);
+
   useEffect(() => {
     wordsLengthRef.current = words.length;
   }, [words.length]);
@@ -1221,6 +1237,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < wordsLengthRef.current) {
+          // Skip hesitation marking for first word of any sentence (natural pause between sentences)
+          if (sentenceStartIndicesRef.current.has(idx)) {
+            return;
+          }
           if (hiddenWordIndicesRef.current.has(idx)) {
             setHesitatedIndices((prev) => {
               if (prev.has(idx)) return prev;
