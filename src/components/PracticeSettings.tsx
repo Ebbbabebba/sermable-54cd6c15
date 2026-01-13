@@ -46,17 +46,14 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors py-3 px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle className="text-lg">{t('practice.settings.title')}</CardTitle>
-                  <CardDescription>{t('practice.settings.customize')}</CardDescription>
-                </div>
+                <Settings className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-medium">{t('practice.settings.title')}</CardTitle>
               </div>
               <ChevronDown
-                className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${
+                className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
                   isOpen ? 'rotate-180' : ''
                 }`}
               />
@@ -64,119 +61,100 @@ const PracticeSettings = ({ settings, onSettingsChange }: PracticeSettingsProps)
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="space-y-6 pt-0">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="reveal-speed">{t('practice.settings.keywordDisplaySpeed')}</Label>
-                <span className="text-sm text-muted-foreground">{settings.revealSpeed}/10</span>
+          <CardContent className="space-y-4 pt-0 px-4 pb-4">
+            {/* Row 1: Sliders */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs">{t('practice.settings.keywordDisplaySpeed')}</Label>
+                  <span className="text-xs text-muted-foreground">{settings.revealSpeed}/10</span>
+                </div>
+                <Slider
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={[settings.revealSpeed]}
+                  onValueChange={([value]) => updateSetting('revealSpeed', value)}
+                />
               </div>
-              <Slider
-                id="reveal-speed"
-                min={1}
-                max={10}
-                step={1}
-                value={[settings.revealSpeed]}
-                onValueChange={([value]) => updateSetting('revealSpeed', value)}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">{t('practice.settings.fasterReveal')}</p>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs">{t('practice.settings.supportWordDelay')}</Label>
+                  <span className="text-xs text-muted-foreground">{settings.hesitationThreshold}s</span>
+                </div>
+                <Slider
+                  min={1}
+                  max={5}
+                  step={0.5}
+                  value={[settings.hesitationThreshold]}
+                  onValueChange={([value]) => updateSetting('hesitationThreshold', value)}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="show-pause">{t('practice.settings.showWordWhenPaused')}</Label>
-                <p className="text-xs text-muted-foreground">{t('practice.settings.revealNextWord')}</p>
+            {/* Row 2: More sliders */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs">{t('practice.settings.hesitationTime')}</Label>
+                  <span className="text-xs text-muted-foreground">{settings.firstWordHesitationThreshold}s</span>
+                </div>
+                <Slider
+                  min={2}
+                  max={8}
+                  step={0.5}
+                  value={[settings.firstWordHesitationThreshold]}
+                  onValueChange={([value]) => updateSetting('firstWordHesitationThreshold', value)}
+                />
               </div>
-              <Switch
-                id="show-pause"
-                checked={settings.showWordOnPause}
-                onCheckedChange={(checked) => updateSetting('showWordOnPause', checked)}
-              />
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs">{t('practice.settings.sentenceStartDelay')}</Label>
+                  <span className="text-xs text-muted-foreground">{settings.sentenceStartDelay}s</span>
+                </div>
+                <Slider
+                  min={2}
+                  max={10}
+                  step={0.5}
+                  value={[settings.sentenceStartDelay]}
+                  onValueChange={([value]) => updateSetting('sentenceStartDelay', value)}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="keyword-mode">{t('practice.settings.keywordMode')}</Label>
-                <p className="text-xs text-muted-foreground">{t('practice.settings.keywordModeDesc')}</p>
+            {/* Row 3: Toggles and select */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="show-pause"
+                  checked={settings.showWordOnPause}
+                  onCheckedChange={(checked) => updateSetting('showWordOnPause', checked)}
+                />
+                <Label htmlFor="show-pause" className="text-xs">{t('practice.settings.showWordWhenPaused')}</Label>
               </div>
-              <Switch
-                id="keyword-mode"
-                checked={settings.keywordMode}
-                onCheckedChange={(checked) => updateSetting('keywordMode', checked)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="animation">{t('practice.settings.animationStyle')}</Label>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="keyword-mode"
+                  checked={settings.keywordMode}
+                  onCheckedChange={(checked) => updateSetting('keywordMode', checked)}
+                />
+                <Label htmlFor="keyword-mode" className="text-xs">{t('practice.settings.keywordMode')}</Label>
+              </div>
               <Select
                 value={settings.animationStyle}
                 onValueChange={(value) => updateSetting('animationStyle', value as AnimationStyle)}
               >
-                <SelectTrigger id="animation">
+                <SelectTrigger className="h-8 w-32 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {animationStyles.map((style) => (
-                    <SelectItem key={style.value} value={style.value}>
-                      <div className="flex flex-col">
-                        <span>{style.label}</span>
-                        <span className="text-xs text-muted-foreground">{style.description}</span>
-                      </div>
+                    <SelectItem key={style.value} value={style.value} className="text-xs">
+                      {style.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="hesitation">{t('practice.settings.supportWordDelay')}</Label>
-                <span className="text-sm text-muted-foreground">{settings.hesitationThreshold}s</span>
-              </div>
-              <Slider
-                id="hesitation"
-                min={1}
-                max={5}
-                step={0.5}
-                value={[settings.hesitationThreshold]}
-                onValueChange={([value]) => updateSetting('hesitationThreshold', value)}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">{t('practice.settings.supportWordDelayDesc')}</p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="first-hesitation">{t('practice.settings.hesitationTime')}</Label>
-                <span className="text-sm text-muted-foreground">{settings.firstWordHesitationThreshold}s</span>
-              </div>
-              <Slider
-                id="first-hesitation"
-                min={2}
-                max={8}
-                step={0.5}
-                value={[settings.firstWordHesitationThreshold]}
-                onValueChange={([value]) => updateSetting('firstWordHesitationThreshold', value)}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">{t('practice.settings.hesitationTimeDesc')}</p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="sentence-start-delay">{t('practice.settings.sentenceStartDelay')}</Label>
-                <span className="text-sm text-muted-foreground">{settings.sentenceStartDelay}s</span>
-              </div>
-              <Slider
-                id="sentence-start-delay"
-                min={2}
-                max={10}
-                step={0.5}
-                value={[settings.sentenceStartDelay]}
-                onValueChange={([value]) => updateSetting('sentenceStartDelay', value)}
-                className="w-full"
-              />
-              <p className="text-xs text-muted-foreground">{t('practice.settings.sentenceStartDelayDesc')}</p>
             </div>
           </CardContent>
         </CollapsibleContent>
