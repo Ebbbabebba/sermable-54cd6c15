@@ -63,7 +63,7 @@ const Index = () => {
         <div className="px-6 pb-8 space-y-3 max-w-md w-full mx-auto animate-fade-in">
           <Button 
             size="lg" 
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate("/auth?mode=signup")}
             className="w-full text-base font-semibold py-6"
           >
             {t('home.getStarted')}
