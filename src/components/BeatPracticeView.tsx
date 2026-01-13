@@ -645,10 +645,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
+    const newMissed = new Set(missedIndicesRef.current);
 
     for (const spoken of wordsToCheck) {
       if (advancedTo >= words.length) break;
 
+      // Check if the spoken word matches any word in the lookahead window
       let foundIdx = -1;
       for (let i = advancedTo; i < Math.min(advancedTo + 3, words.length); i++) {
         if (wordsMatch(spoken, words[i])) {
@@ -657,7 +659,36 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
         }
       }
 
-      if (foundIdx === -1) continue;
+      if (foundIdx === -1) {
+        // Word was spoken but doesn't match - check if the current expected word is hidden
+        // If user says a wrong word when the expected word is hidden, mark it as missed (red)
+        const expectedIdx = advancedTo;
+        if (expectedIdx < words.length && hiddenWordIndicesRef.current.has(expectedIdx)) {
+          // User said something, but it wasn't the expected hidden word
+          // Only mark as missed if the spoken word has some content (not just noise)
+          const normalizedSpoken = normalizeWord(spoken);
+          const normalizedExpected = normalizeWord(words[expectedIdx]);
+          
+          // If the spoken word is substantially different (not a minor pronunciation variance)
+          if (normalizedSpoken.length > 0 && normalizedSpoken !== normalizedExpected) {
+            // Check if it's clearly a different word (not just missing a character)
+            const lengthDiff = Math.abs(normalizedSpoken.length - normalizedExpected.length);
+            let charDiff = 0;
+            const maxLen = Math.max(normalizedSpoken.length, normalizedExpected.length);
+            for (let i = 0; i < maxLen; i++) {
+              if (normalizedSpoken[i] !== normalizedExpected[i]) charDiff++;
+            }
+            
+            // If more than half the characters are different, it's clearly a wrong word
+            if (charDiff > Math.max(2, normalizedExpected.length / 2)) {
+              newMissed.add(expectedIdx);
+              missedIndicesRef.current = newMissed;
+              setMissedIndices(newMissed);
+            }
+          }
+        }
+        continue;
+      }
 
       for (let j = advancedTo; j <= foundIdx; j++) {
         newSpoken.add(j);
@@ -693,7 +724,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       setSpokenIndices(newSpoken);
     }
 
-  }, [words, wordsMatch]);
+  }, [words, wordsMatch, normalizeWord]);
 
   useEffect(() => {
     processTranscriptionRef.current = processTranscription;
