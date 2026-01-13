@@ -1531,13 +1531,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
                    ((sessionMode === 'recall' && recallSuccessCount === 1) || 
                     (sessionMode !== 'recall' && consecutiveNoScriptSuccess === 1)) && (
                     <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
                       className="mt-4 flex items-center justify-center"
                     >
-                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-sm font-semibold animate-pulse">
-                        <RotateCcw className="h-4 w-4" />
-                        {t('beat_practice.one_more_time', 'One more time!')}
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
+                        <Sparkles className="h-4 w-4" />
+                        {t('beat_practice.one_more_time', 'Great! One more to lock it in ✨')}
                       </span>
                     </motion.div>
                   )}
