@@ -1,13 +1,14 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Play, Trash2, Presentation, Clock } from "lucide-react";
+import { Calendar, Play, Trash2, Presentation, Clock, Crown, Mic, Eye, Target } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +44,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const { toast } = useToast();
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [showPresentationPremium, setShowPresentationPremium] = useState(false);
   
   // Check if this is the only speech for a free user
   const isOnlyFreeSpeech = subscriptionTier === 'free' && totalSpeeches === 1;
@@ -180,7 +182,13 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(`/presentation/${speech.id}`)}
+          onClick={() => {
+            if (subscriptionTier === 'free') {
+              setShowPresentationPremium(true);
+            } else {
+              navigate(`/presentation/${speech.id}`);
+            }
+          }}
         >
           <Presentation className="h-4 w-4" />
         </Button>
@@ -216,6 +224,59 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           </AlertDialogContent>
         </AlertDialog>
       </CardFooter>
+
+      {/* Presentation Mode Premium Dialog */}
+      <Dialog open={showPresentationPremium} onOpenChange={setShowPresentationPremium}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-center justify-center">
+              <Presentation className="h-5 w-5 text-primary" />
+              {t('settings.subscription.presentationMode', 'Presentation Mode')}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground text-center">
+              {t('practice.presentationPremiumDesc', 'Test your memory with a full run-through. Premium feature.')}
+            </p>
+            
+            <div className="space-y-2 bg-muted/50 rounded-xl p-4">
+              <div className="flex items-center gap-2">
+                <Mic className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.presentationFeature1', 'Real-time speech tracking')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.presentationFeature2', 'Teleprompter hints when stuck')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                <span className="text-sm">{t('practice.presentationFeature3', 'Detailed accuracy analysis')}</span>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex-col gap-2">
+            <Button 
+              onClick={() => {
+                setShowPresentationPremium(false);
+                navigate("/settings");
+              }}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              {t('nav.upgradeToPremium', 'Upgrade to Premium')}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowPresentationPremium(false)}
+              className="w-full text-muted-foreground"
+            >
+              {t('common.close', 'Close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
