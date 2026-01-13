@@ -19,7 +19,6 @@ import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
-import { WeeklyAnalytics } from "@/components/WeeklyAnalytics";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -352,9 +351,6 @@ const Dashboard = () => {
               {t('dashboard.continueOrStart')}
             </p>
           </section>
-
-          {/* Weekly Analytics */}
-          <WeeklyAnalytics />
 
           {/* Review Notifications */}
           <ReviewNotifications />
