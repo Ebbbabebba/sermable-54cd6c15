@@ -438,8 +438,12 @@
     "account": {
       "title": "Konto",
       "description": "Hantera dina kontoinställningar",
+      "manageAccount": "Hantera konto",
       "personalizedLearning": "Personlig inlärning",
       "personalizedLearningDesc": "Ditt övningsschema anpassas automatiskt efter hur du presterar och när du har deadline.",
+      "dataPrivacy": "Data & integritet",
+      "dataPrivacyDesc": "Din data lagras säkert och delas aldrig med tredje part",
+      "dataInfo": "Alla dina tal, övningspass och framsteg är krypterade och lagras säkert. Du kan ta bort ditt konto när som helst för att radera all data.",
       "dangerZone": "Farozon",
       "dangerZoneDesc": "Permanenta och oåterkalleliga åtgärder",
       "deleteAccount": "Ta bort konto",
