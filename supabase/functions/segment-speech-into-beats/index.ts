@@ -52,16 +52,39 @@ function splitIntoSentences(text: string): string[] {
   return out;
 }
 
-// Group sentences into beats of 3
+// Count total words in the speech
+function countWords(sentences: string[]): number {
+  return sentences.reduce((total, s) => total + s.split(/\s+/).filter(Boolean).length, 0);
+}
+
+// Determine sentences per beat based on total word count
+function getSentencesPerBeat(totalWords: number): number {
+  if (totalWords <= 3) return 1;
+  if (totalWords <= 6) return 2;
+  return 3;
+}
+
+// Group sentences into beats based on speech length
 function createBeats(sentences: string[]): Beat[] {
   const beats: Beat[] = [];
+  const totalWords = countWords(sentences);
+  const sentencesPerBeat = getSentencesPerBeat(totalWords);
 
-  for (let i = 0; i < sentences.length; i += 3) {
+  console.log(`Total words: ${totalWords}, sentences per beat: ${sentencesPerBeat}`);
+
+  for (let i = 0; i < sentences.length; i += sentencesPerBeat) {
     const sentence1 = (sentences[i] ?? "").trim();
     if (!sentence1) continue;
 
-    const sentence2 = (sentences[i + 1] ?? sentence1).trim();
-    const sentence3 = (sentences[i + 2] ?? sentence2).trim();
+    // For 1-sentence beats, duplicate sentence1 for all three fields
+    // For 2-sentence beats, duplicate sentence2 for sentence3
+    // For 3-sentence beats, use all three (or duplicate as fallback)
+    const sentence2 = sentencesPerBeat >= 2 
+      ? (sentences[i + 1] ?? sentence1).trim() 
+      : sentence1;
+    const sentence3 = sentencesPerBeat >= 3 
+      ? (sentences[i + 2] ?? sentence2).trim() 
+      : sentence2;
 
     beats.push({
       beat_order: beats.length,
