@@ -414,7 +414,17 @@
       "title": "Account",
       "description": "Manage your account settings",
       "personalizedLearning": "Personalized Learning",
-      "personalizedLearningDesc": "Your practice schedule is automatically personalized based on your performance and speech deadlines."
+      "personalizedLearningDesc": "Your practice schedule is automatically personalized based on your performance and speech deadlines.",
+      "dangerZone": "Danger Zone",
+      "dangerZoneDesc": "Permanent and irreversible actions",
+      "deleteAccount": "Delete Account",
+      "deleteConfirmTitle": "Delete your account?",
+      "deleteConfirmDesc": "This will permanently delete your account and all data including speeches, practice history, and progress. This action cannot be undone.",
+      "confirmDelete": "Yes, delete my account",
+      "deleted": "Account deleted",
+      "deletedDesc": "Your account has been permanently deleted.",
+      "deleteFailed": "Failed to delete account. Please try again.",
+      "notLoggedIn": "You must be logged in to delete your account."
     },
     "practiceHours": {
       "title": "Practice Hours",
@@ -458,6 +468,108 @@
       "needHelpDesc": "Our support team typically responds within 24 hours. For urgent issues, please email us directly at support@sermable.com"
     },
     "signOut": "Sign Out"
+  },
+  "help": {
+    "title": "Help Center",
+    "subtitle": "FAQ & Troubleshooting",
+    "needMoreHelp": "Need more help?",
+    "contactDescription": "Our team is here to help you succeed",
+    "emailSupport": "Email Support",
+    "joinDiscord": "Join Discord",
+    "frequentlyAsked": "Frequently Asked Questions",
+    "troubleshootingTitle": "Troubleshooting",
+    "madeWithLove": "Made with ❤️ for speakers everywhere",
+    "categories": {
+      "gettingStarted": "Getting Started",
+      "practice": "Practice Mode",
+      "spacedRepetition": "Spaced Repetition",
+      "presentation": "Presentation Mode",
+      "streaks": "Streaks & Progress",
+      "account": "Account & Settings"
+    },
+    "faq": {
+      "howToAddSpeech": {
+        "question": "How do I add a new speech?",
+        "answer": "Tap the + button on your dashboard, paste your speech text, give it a title, and optionally set a goal date. The AI will automatically break it into learnable segments."
+      },
+      "whatIsBeat": {
+        "question": "What is a 'beat'?",
+        "answer": "A beat is a small section of your speech (usually 2-4 sentences) that the app helps you memorize one at a time. Once you master a beat, you'll combine it with others."
+      },
+      "howManySpeeches": {
+        "question": "How many speeches can I have?",
+        "answer": "Free users can have 1 active speech per month. Premium users have unlimited speeches."
+      },
+      "howPracticeWorks": {
+        "question": "How does practice mode work?",
+        "answer": "Practice mode shows your speech text with some words visible as cues. Speak your speech aloud - the app tracks your words in real-time and highlights your progress. Words you know well gradually fade out."
+      },
+      "whyWordsHidden": {
+        "question": "Why are some words hidden?",
+        "answer": "The app uses adaptive learning to hide words you've mastered. This challenges your memory and helps you truly memorize rather than just read. Tap hidden words if you need a hint."
+      },
+      "micNotWorking": {
+        "question": "My microphone isn't working",
+        "answer": "Make sure you've granted microphone permissions in your browser/device settings. Try using Chrome or Safari for best compatibility. If issues persist, try refreshing the page."
+      },
+      "whatIsSpacedRepetition": {
+        "question": "What is spaced repetition?",
+        "answer": "Spaced repetition is a scientifically-proven learning technique. Instead of cramming, you review material at optimal intervals - just as you're about to forget. This builds stronger, longer-lasting memories."
+      },
+      "whyWait": {
+        "question": "Why do I have to wait to practice?",
+        "answer": "Waiting is part of the learning process! Your brain consolidates memories during rest. Practicing too early can actually interfere with this process. Trust the AI scheduling for best results."
+      },
+      "canPracticeEarly": {
+        "question": "Can I practice early if I want?",
+        "answer": "Premium users can bypass the waiting period with the 'Practice Anyway' button. However, for optimal memorization, we recommend following the scheduled times."
+      },
+      "whatIsPresentation": {
+        "question": "What is presentation mode?",
+        "answer": "Presentation mode is a full run-through of your speech without any visible script. It simulates the real experience. After you finish, you get detailed AI feedback on accuracy, missed words, and areas to improve."
+      },
+      "whenUsePresentation": {
+        "question": "When should I use presentation mode?",
+        "answer": "Use it when you feel confident with your speech and want to test yourself. It's great for final preparation before the real thing!"
+      },
+      "howStreaksWork": {
+        "question": "How do streaks work?",
+        "answer": "Practice at least once per day to maintain your streak. The streak counter shows how many consecutive days you've practiced. It resets if you miss a day."
+      },
+      "streakReset": {
+        "question": "What happens if my streak resets?",
+        "answer": "Don't worry! Your progress isn't lost, just the streak counter. Keep practicing and build it back up. Consistency is more important than any single number."
+      },
+      "howDeleteAccount": {
+        "question": "How do I delete my account?",
+        "answer": "Go to Settings → scroll to the bottom → tap 'Delete Account'. This permanently removes all your data including speeches, progress, and account information."
+      },
+      "changeLanguage": {
+        "question": "How do I change the app language?",
+        "answer": "Go to Settings → Language → select your preferred language. The app supports English, Swedish, Spanish, French, German, Italian, and Portuguese."
+      }
+    },
+    "troubleshooting": {
+      "micIssues": {
+        "title": "Microphone Not Working",
+        "step1": "Check browser permissions - look for a microphone icon in the address bar",
+        "step2": "Try using Chrome or Safari for best compatibility",
+        "step3": "Make sure no other app is using the microphone",
+        "step4": "Refresh the page and try again"
+      },
+      "slowPerformance": {
+        "title": "App Running Slowly",
+        "step1": "Close other browser tabs and apps",
+        "step2": "Clear your browser cache",
+        "step3": "Try using the native mobile app for better performance"
+      },
+      "appNotLoading": {
+        "title": "App Not Loading",
+        "step1": "Check your internet connection",
+        "step2": "Try refreshing the page",
+        "step3": "Clear browser cache and cookies"
+      }
+    }
   },
   "beat_practice": {
     "beat_x_of_y": "Beat {{current}} of {{total}}",

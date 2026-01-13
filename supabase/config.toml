@@ -47,3 +47,6 @@ verify_jwt = true
 
 [functions.segment-speech-into-beats]
 verify_jwt = false
+
+[functions.delete-user-account]
+verify_jwt = true
