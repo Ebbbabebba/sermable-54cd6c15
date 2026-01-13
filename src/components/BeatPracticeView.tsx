@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -55,8 +55,86 @@ interface BeatPracticeViewProps {
 
 type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
 
-// Session modes: recall (quick review of mastered beats) or learn (learning a new beat)
-type SessionMode = 'recall' | 'learn' | 'session_complete';
+// Session modes: recall (quick review of mastered beats), learn (learning a new beat), beat_rest (pause between beats)
+type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'session_complete';
+
+// Calculate rest minutes based on deadline urgency
+const calculateRestMinutes = (daysUntilDeadline: number): number => {
+  if (daysUntilDeadline <= 1) return 5;    // Very tight: 5 min
+  if (daysUntilDeadline <= 3) return 10;   // Tight: 10 min
+  return 15;                                // Normal: 15 min
+};
+
+// Countdown timer component for rest screen
+const RestCountdown = ({ 
+  targetTime, 
+  onComplete, 
+  restMinutes 
+}: { 
+  targetTime: Date; 
+  onComplete: () => void; 
+  restMinutes: number;
+}) => {
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const diff = targetTime.getTime() - Date.now();
+    return Math.max(0, Math.ceil(diff / 1000));
+  });
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const diff = targetTime.getTime() - Date.now();
+      const newTimeLeft = Math.max(0, Math.ceil(diff / 1000));
+      setTimeLeft(newTimeLeft);
+      
+      if (newTimeLeft <= 0) {
+        clearInterval(interval);
+        onComplete();
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [targetTime, onComplete]);
+  
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const progress = 1 - (timeLeft / (restMinutes * 60));
+  
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative w-32 h-32">
+        {/* Background circle */}
+        <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="8"
+            className="text-muted/20"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="8"
+            strokeDasharray={`${progress * 283} 283`}
+            className="text-amber-500 transition-all duration-1000"
+            strokeLinecap="round"
+          />
+        </svg>
+        {/* Time display */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-3xl font-bold tabular-nums">
+            {minutes}:{seconds.toString().padStart(2, '0')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Common words to fade first
 const COMMON_WORDS = new Set(['the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with', 'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can']);
@@ -98,6 +176,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
   const [recallIndex, setRecallIndex] = useState(0);
   const [recallSuccessCount, setRecallSuccessCount] = useState(0);
   const [newBeatToLearn, setNewBeatToLearn] = useState<Beat | null>(null);
+  const [daysUntilDeadline, setDaysUntilDeadline] = useState(30);
+  const [beatsPerDay, setBeatsPerDay] = useState(1);
+  
+  // Rest between beats state
+  const [restUntilTime, setRestUntilTime] = useState<Date | null>(null);
+  const [restMinutes, setRestMinutes] = useState(0);
+  const [nextBeatQueued, setNextBeatQueued] = useState<Beat | null>(null);
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
@@ -330,9 +415,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     const goalDate = speechRow?.goal_date ? new Date(speechRow.goal_date) : null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const daysUntilDeadline = goalDate 
+    const computedDaysUntilDeadline = goalDate 
       ? Math.ceil((goalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
       : 30; // Default to 30 days if no deadline
+    
+    // Store for later use in rest calculations
+    setDaysUntilDeadline(computedDaysUntilDeadline);
 
     const setBeatsAndPlan = (rows: Beat[]) => {
       setBeats(rows);
@@ -353,7 +441,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       const unmasteredCount = unmasteredBeats.length;
       
       // Calculate how many beats we can learn today based on deadline
-      const beatsPerDay = calculateBeatsPerDay(unmasteredCount, daysUntilDeadline);
+      const computedBeatsPerDay = calculateBeatsPerDay(unmasteredCount, computedDaysUntilDeadline);
+      setBeatsPerDay(computedBeatsPerDay);
       
       // Count how many beats were already mastered today
       const beatsLearnedToday = rows.filter(b => {
@@ -363,7 +452,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       }).length;
       
       // Premium users can learn unlimited beats; free users are limited
-      const canLearnMore = isPremium || beatsLearnedToday < beatsPerDay;
+      const canLearnMore = isPremium || beatsLearnedToday < computedBeatsPerDay;
       const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
       
       setBeatsToRecall(beatsNeedingRecall);
@@ -942,19 +1031,39 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       // Find next unmastered beat for premium users
       const nextUnmastered = updatedBeats.find(b => !b.is_mastered);
       
-      if (isPremium && nextUnmastered) {
-        // Premium: Continue to next beat automatically
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_next', "Beat mastered! Loading next..."));
+      // Count how many beats were mastered today (including the one just mastered)
+      const beatsLearnedToday = updatedBeats.filter(b => {
+        if (!b.mastered_at) return false;
+        const masteredDate = new Date(b.mastered_at);
+        return masteredDate.toDateString() === new Date().toDateString();
+      }).length;
+      
+      // Check if we need to learn more beats today (intensive mode)
+      const shouldContinueToday = isPremium && nextUnmastered && beatsPerDay > 1 && beatsLearnedToday < beatsPerDay;
+      
+      if (shouldContinueToday && nextUnmastered) {
+        // Premium with intensive mode: Show rest screen before next beat
+        const restMins = calculateRestMinutes(daysUntilDeadline);
+        setRestMinutes(restMins);
+        setRestUntilTime(new Date(Date.now() + restMins * 60 * 1000));
+        setNextBeatQueued(nextUnmastered);
+        
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_rest', "Beat mastered! Take a short break."));
         setShowCelebration(true);
         
         setTimeout(() => {
           setShowCelebration(false);
-          // Set up next beat
-          setNewBeatToLearn(nextUnmastered);
-          setCurrentBeatIndex(updatedBeats.findIndex(b => b.id === nextUnmastered.id));
-          setSessionMode('learn');
-          transitionToPhase('sentence_1_learning');
+          setSessionMode('beat_rest');
         }, 2000);
+      } else if (isPremium && nextUnmastered && beatsPerDay === 1) {
+        // Premium with 1 beat/day: Session complete (come back tomorrow)
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
+        setShowCelebration(true);
+        
+        setTimeout(() => {
+          setShowCelebration(false);
+          setSessionMode('session_complete');
+        }, 2500);
       } else {
         // Free user or all beats mastered: Session complete
         setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
@@ -969,6 +1078,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           setSessionMode('session_complete');
         }, 2500);
       }
+    }
+  };
+  
+  // Start next beat after rest period
+  const startNextBeat = () => {
+    if (nextBeatQueued) {
+      setNewBeatToLearn(nextBeatQueued);
+      setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
+      setNextBeatQueued(null);
+      setRestUntilTime(null);
+      setRestMinutes(0);
+      setSessionMode('learn');
+      transitionToPhase('sentence_1_learning');
     }
   };
 
@@ -1124,6 +1246,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     if (showCelebration) return;
     if (recognitionRef.current) return;
     if (sessionMode === 'session_complete') return;
+    if (sessionMode === 'beat_rest') return;
 
     startRecording();
   }, [loading, currentBeat?.id, showCelebration, phase, sessionMode, recallIndex]);
@@ -1139,6 +1262,55 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  // Rest screen between beats (for intensive mode)
+  if (sessionMode === 'beat_rest' && restUntilTime) {
+    const masteredCount = beats.filter(b => b.is_mastered).length;
+    const totalBeats = beats.length;
+    const beatsRemaining = totalBeats - masteredCount;
+    
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Coffee className="h-20 w-20 text-amber-500" />
+        </motion.div>
+        
+        <h2 className="text-2xl font-bold">
+          {t('beat_practice.rest_title', "Take a short break!")}
+        </h2>
+        
+        <p className="text-muted-foreground max-w-md">
+          {t('beat_practice.rest_reason', "Your brain needs a few minutes to consolidate what you just learned.")}
+        </p>
+        
+        {/* Countdown timer */}
+        <RestCountdown 
+          targetTime={restUntilTime} 
+          onComplete={startNextBeat}
+          restMinutes={restMinutes}
+        />
+        
+        <div className="flex flex-col gap-2 mt-4">
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            {t('beat_practice.rest_tip', "Tip: Take a short walk or grab a coffee!")}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t('beat_practice.beats_remaining', `${beatsRemaining} beat${beatsRemaining !== 1 ? 's' : ''} remaining today`)}
+          </p>
+        </div>
+        
+        <Button variant="ghost" onClick={startNextBeat} className="mt-4">
+          <Play className="h-4 w-4 mr-2" />
+          {t('beat_practice.skip_rest', "Start now anyway")}
+        </Button>
       </div>
     );
   }
