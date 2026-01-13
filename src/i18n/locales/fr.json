@@ -415,7 +415,14 @@
     "beat_to_learn": "Beat {{num}} à apprendre",
     "your_progress": "Votre progression",
     "start_next_session": "Démarrer la session suivante",
-    "one_more_time": "Encore une fois !"
+    "one_more_time": "Encore une fois !",
+    "rest_title": "Prenez une courte pause !",
+    "rest_reason": "Votre cerveau a besoin de quelques minutes pour consolider ce que vous venez d'apprendre.",
+    "rest_tip": "Conseil : Faites une courte promenade ou prenez un café !",
+    "skip_rest": "Commencer maintenant quand même",
+    "beats_remaining": "{{count}} beat restant aujourd'hui",
+    "beats_remaining_plural": "{{count}} beats restants aujourd'hui",
+    "beat_complete_rest": "Beat maîtrisé ! Prenez une courte pause."
   },
   "presentation": {
     "settings": "Paramètres de présentation",

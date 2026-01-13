@@ -415,7 +415,14 @@
     "beat_to_learn": "Beat {{num}} para aprender",
     "your_progress": "Tu progreso",
     "start_next_session": "Iniciar siguiente sesión",
-    "one_more_time": "¡Una vez más!"
+    "one_more_time": "¡Una vez más!",
+    "rest_title": "¡Toma un breve descanso!",
+    "rest_reason": "Tu cerebro necesita unos minutos para consolidar lo que acabas de aprender.",
+    "rest_tip": "Consejo: ¡Da un pequeño paseo o toma un café!",
+    "skip_rest": "Empezar ahora de todos modos",
+    "beats_remaining": "{{count}} beat restante hoy",
+    "beats_remaining_plural": "{{count}} beats restantes hoy",
+    "beat_complete_rest": "¡Beat dominado! Toma un breve descanso."
   },
   "presentation": {
     "settings": "Configuración de presentación",

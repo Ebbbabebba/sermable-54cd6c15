@@ -611,7 +611,14 @@
     "full_recall_desc": "You've mastered all beats! Now recall the entire speech from memory.",
     "begin_recall": "Begin Full Recall",
     "hint_available": "Hints will appear if you pause for 3+ seconds",
-    "one_more_time": "One more time!"
+    "one_more_time": "One more time!",
+    "rest_title": "Take a short break!",
+    "rest_reason": "Your brain needs a few minutes to consolidate what you just learned.",
+    "rest_tip": "Tip: Take a short walk or grab a coffee!",
+    "skip_rest": "Start now anyway",
+    "beats_remaining": "{{count}} beat remaining today",
+    "beats_remaining_plural": "{{count}} beats remaining today",
+    "beat_complete_rest": "Beat mastered! Take a short break."
   },
   "day_after_recall": {
     "title": "🌅 Day-After Recall",
