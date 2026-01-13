@@ -439,7 +439,17 @@
       "title": "Konto",
       "description": "Hantera dina kontoinställningar",
       "personalizedLearning": "Personlig inlärning",
-      "personalizedLearningDesc": "Ditt övningsschema anpassas automatiskt efter hur du presterar och när du har deadline."
+      "personalizedLearningDesc": "Ditt övningsschema anpassas automatiskt efter hur du presterar och när du har deadline.",
+      "dangerZone": "Farozon",
+      "dangerZoneDesc": "Permanenta och oåterkalleliga åtgärder",
+      "deleteAccount": "Ta bort konto",
+      "deleteConfirmTitle": "Ta bort ditt konto?",
+      "deleteConfirmDesc": "Detta tar permanent bort ditt konto och all data inklusive tal, övningshistorik och framsteg. Denna åtgärd kan inte ångras.",
+      "confirmDelete": "Ja, ta bort mitt konto",
+      "deleted": "Konto borttaget",
+      "deletedDesc": "Ditt konto har tagits bort permanent.",
+      "deleteFailed": "Kunde inte ta bort kontot. Försök igen.",
+      "notLoggedIn": "Du måste vara inloggad för att ta bort ditt konto."
     },
     "practiceHours": {
       "title": "Övningstider",
@@ -483,6 +493,108 @@
       "needHelpDesc": "Vårt supportteam svarar vanligtvis inom 24 timmar. Vid brådskande ärenden, mejla oss direkt på support@sermable.com"
     },
     "signOut": "Logga ut"
+  },
+  "help": {
+    "title": "Hjälpcenter",
+    "subtitle": "FAQ & Felsökning",
+    "needMoreHelp": "Behöver du mer hjälp?",
+    "contactDescription": "Vårt team finns här för att hjälpa dig lyckas",
+    "emailSupport": "Mejla support",
+    "joinDiscord": "Gå med på Discord",
+    "frequentlyAsked": "Vanliga frågor",
+    "troubleshootingTitle": "Felsökning",
+    "madeWithLove": "Gjord med ❤️ för talare överallt",
+    "categories": {
+      "gettingStarted": "Kom igång",
+      "practice": "Övningsläge",
+      "spacedRepetition": "Smart repetition",
+      "presentation": "Presentationsläge",
+      "streaks": "Streaks & framsteg",
+      "account": "Konto & inställningar"
+    },
+    "faq": {
+      "howToAddSpeech": {
+        "question": "Hur lägger jag till ett nytt tal?",
+        "answer": "Tryck på +-knappen på din översikt, klistra in din taltext, ge den en titel och sätt eventuellt ett måldatum. AI:n delar automatiskt upp det i lättlärda avsnitt."
+      },
+      "whatIsBeat": {
+        "question": "Vad är en 'beat'?",
+        "answer": "En beat är ett litet avsnitt av ditt tal (vanligtvis 2-4 meningar) som appen hjälper dig memorera ett i taget. När du bemästrar en beat kombinerar du den med andra."
+      },
+      "howManySpeeches": {
+        "question": "Hur många tal kan jag ha?",
+        "answer": "Gratisanvändare kan ha 1 aktivt tal per månad. Premium-användare har obegränsat antal tal."
+      },
+      "howPracticeWorks": {
+        "question": "Hur fungerar övningsläget?",
+        "answer": "Övningsläget visar din taltext med vissa ord synliga som ledtrådar. Säg ditt tal högt - appen spårar dina ord i realtid och markerar din progress. Ord du kan väl bleknar gradvis bort."
+      },
+      "whyWordsHidden": {
+        "question": "Varför är vissa ord dolda?",
+        "answer": "Appen använder adaptiv inlärning för att dölja ord du behärskar. Detta utmanar ditt minne och hjälper dig verkligen memorera istället för att bara läsa. Tryck på dolda ord om du behöver en ledtråd."
+      },
+      "micNotWorking": {
+        "question": "Min mikrofon fungerar inte",
+        "answer": "Se till att du har gett mikrofonbehörigheter i dina webbläsar-/enhetsinställningar. Testa att använda Chrome eller Safari för bäst kompatibilitet. Om problemen kvarstår, testa att uppdatera sidan."
+      },
+      "whatIsSpacedRepetition": {
+        "question": "Vad är spaced repetition?",
+        "answer": "Spaced repetition är en vetenskapligt bevisad inlärningsteknik. Istället för att plugga intensivt repeterar du material i optimala intervall - precis när du är på väg att glömma. Detta bygger starkare, mer långvariga minnen."
+      },
+      "whyWait": {
+        "question": "Varför måste jag vänta på att öva?",
+        "answer": "Att vänta är en del av inlärningsprocessen! Din hjärna konsoliderar minnen under vila. Att öva för tidigt kan faktiskt störa denna process. Lita på AI-schemaläggningen för bästa resultat."
+      },
+      "canPracticeEarly": {
+        "question": "Kan jag öva tidigare om jag vill?",
+        "answer": "Premium-användare kan kringgå väntetiden med 'Öva ändå'-knappen. Men för optimal memorering rekommenderar vi att följa de schemalagda tiderna."
+      },
+      "whatIsPresentation": {
+        "question": "Vad är presentationsläge?",
+        "answer": "Presentationsläge är en hel genomkörning av ditt tal utan synligt manus. Det simulerar den riktiga upplevelsen. När du är klar får du detaljerad AI-feedback om träffsäkerhet, missade ord och förbättringsområden."
+      },
+      "whenUsePresentation": {
+        "question": "När ska jag använda presentationsläge?",
+        "answer": "Använd det när du känner dig säker på ditt tal och vill testa dig själv. Det är perfekt för slutförberedelse innan den riktiga presentationen!"
+      },
+      "howStreaksWork": {
+        "question": "Hur fungerar streaks?",
+        "answer": "Öva minst en gång om dagen för att behålla din streak. Streak-räknaren visar hur många dagar i rad du har övat. Den nollställs om du missar en dag."
+      },
+      "streakReset": {
+        "question": "Vad händer om min streak nollställs?",
+        "answer": "Oroa dig inte! Din progress är inte förlorad, bara streak-räknaren. Fortsätt öva och bygg upp den igen. Konsekvens är viktigare än något enskilt nummer."
+      },
+      "howDeleteAccount": {
+        "question": "Hur tar jag bort mitt konto?",
+        "answer": "Gå till Inställningar → scrolla längst ner → tryck på 'Ta bort konto'. Detta tar permanent bort all din data inklusive tal, progress och kontoinformation."
+      },
+      "changeLanguage": {
+        "question": "Hur ändrar jag appens språk?",
+        "answer": "Gå till Inställningar → Språk → välj ditt föredragna språk. Appen stöder engelska, svenska, spanska, franska, tyska, italienska och portugisiska."
+      }
+    },
+    "troubleshooting": {
+      "micIssues": {
+        "title": "Mikrofonen fungerar inte",
+        "step1": "Kontrollera webbläsarbehörigheter - leta efter en mikrofonikon i adressfältet",
+        "step2": "Testa att använda Chrome eller Safari för bäst kompatibilitet",
+        "step3": "Se till att ingen annan app använder mikrofonen",
+        "step4": "Uppdatera sidan och försök igen"
+      },
+      "slowPerformance": {
+        "title": "Appen är långsam",
+        "step1": "Stäng andra webbläsarflikar och appar",
+        "step2": "Rensa webbläsarens cache",
+        "step3": "Testa att använda mobilappen för bättre prestanda"
+      },
+      "appNotLoading": {
+        "title": "Appen laddas inte",
+        "step1": "Kontrollera din internetanslutning",
+        "step2": "Testa att uppdatera sidan",
+        "step3": "Rensa webbläsarens cache och cookies"
+      }
+    }
   },
   "day_after_recall": {
     "title": "🌅 Morgonåterkallelse",

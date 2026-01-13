@@ -7,7 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, MessageCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4, CreditCard, Receipt, XCircle, ChevronRight } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, MessageCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4, CreditCard, Receipt, XCircle, ChevronRight, Trash2, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +47,7 @@ const Settings = () => {
   const [practiceStartHour, setPracticeStartHour] = useState(8);
   const [practiceEndHour, setPracticeEndHour] = useState(22);
   const [autoDetectTimezone, setAutoDetectTimezone] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isPremium = subscriptionTier === 'regular' || subscriptionTier === 'student' || subscriptionTier === 'enterprise';
 
@@ -220,6 +232,52 @@ const Settings = () => {
     return `${hour.toString().padStart(2, '0')}:00`;
   };
 
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: t('common.error'),
+          description: t('settings.account.notLoggedIn'),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete account');
+      }
+
+      // Sign out and redirect
+      await supabase.auth.signOut();
+      toast({
+        title: t('settings.account.deleted'),
+        description: t('settings.account.deletedDesc'),
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast({
+        title: t('common.error'),
+        description: t('settings.account.deleteFailed'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -633,6 +691,55 @@ const Settings = () => {
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Danger Zone - Account Deletion */}
+          <Card className="border-destructive/50">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5 text-destructive" />
+                <CardTitle className="text-destructive">{t('settings.account.dangerZone')}</CardTitle>
+              </div>
+              <CardDescription>
+                {t('settings.account.dangerZoneDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full" disabled={isDeleting}>
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {t('common.loading')}
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {t('settings.account.deleteAccount')}
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('settings.account.deleteConfirmTitle')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t('settings.account.deleteConfirmDesc')}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {t('settings.account.confirmDelete')}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         </div>
