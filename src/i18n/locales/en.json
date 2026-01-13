@@ -610,7 +610,8 @@
     "full_recall_subtitle": "No script. Pure memory.",
     "full_recall_desc": "You've mastered all beats! Now recall the entire speech from memory.",
     "begin_recall": "Begin Full Recall",
-    "hint_available": "Hints will appear if you pause for 3+ seconds"
+    "hint_available": "Hints will appear if you pause for 3+ seconds",
+    "one_more_time": "One more time!"
   },
   "day_after_recall": {
     "title": "🌅 Day-After Recall",

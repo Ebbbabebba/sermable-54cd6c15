@@ -1353,6 +1353,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
                     }}
                   />
                   
+                  {/* "One more time!" indicator when 1 more recall needed */}
+                  {(sessionMode === 'recall' || phase.includes('fading')) && 
+                   hiddenWordIndices.size === words.length && 
+                   ((sessionMode === 'recall' && recallSuccessCount === 1) || 
+                    (sessionMode !== 'recall' && consecutiveNoScriptSuccess === 1)) && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 flex items-center justify-center"
+                    >
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-sm font-semibold animate-pulse">
+                        <RotateCcw className="h-4 w-4" />
+                        {t('beat_practice.one_more_time', 'One more time!')}
+                      </span>
+                    </motion.div>
+                  )}
+
                   {/* Progress indicator for fading mode */}
                   {(sessionMode === 'recall' || phase.includes('fading')) && (
                     <div className="mt-8 flex items-center gap-4">

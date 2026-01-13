@@ -414,7 +414,8 @@
     "to_learn": "à apprendre",
     "beat_to_learn": "Beat {{num}} à apprendre",
     "your_progress": "Votre progression",
-    "start_next_session": "Démarrer la session suivante"
+    "start_next_session": "Démarrer la session suivante",
+    "one_more_time": "Encore une fois !"
   },
   "presentation": {
     "settings": "Paramètres de présentation",

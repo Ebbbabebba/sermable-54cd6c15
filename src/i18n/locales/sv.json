@@ -664,7 +664,8 @@
     "to_learn": "att lära",
     "beat_to_learn": "Beat {{num}} att lära",
     "your_progress": "Din framgång",
-    "start_next_session": "Starta nästa session"
+    "start_next_session": "Starta nästa session",
+    "one_more_time": "En gång till!"
   },
   "presentation": {
     "settings": "Presentationsinställningar",
