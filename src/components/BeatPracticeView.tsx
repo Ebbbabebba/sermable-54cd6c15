@@ -1407,16 +1407,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           {!showCelebration && (
             <Button
               variant="default"
-              size="lg"
+              size="default"
               onClick={() => {
                 const allIndices = new Set(words.map((_, i) => i));
                 pauseSpeechRecognition(900);
                 checkCompletion(allIndices, failedWordIndices);
               }}
-              className="flex-1 h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25"
+              className="px-6 rounded-xl font-semibold"
             >
               {t('common.continue', 'Continue')}
-              <ChevronRight className="h-5 w-5 ml-2" />
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}
         </div>
