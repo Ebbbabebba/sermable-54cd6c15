@@ -184,29 +184,67 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       ? newBeatToLearn 
       : null;
   
+  // Get unique sentences for this beat (for short speeches, sentences may be duplicated)
+  const getUniqueSentences = useCallback((beat: Beat | null): string[] => {
+    if (!beat) return [];
+    const sentences = [beat.sentence_1_text, beat.sentence_2_text, beat.sentence_3_text];
+    // Filter unique sentences while preserving order
+    const seen = new Set<string>();
+    return sentences.filter(s => {
+      if (!s || seen.has(s)) return false;
+      seen.add(s);
+      return true;
+    });
+  }, []);
+
   // Get current sentence text based on phase
   const getCurrentText = useCallback(() => {
     if (!currentBeat) return "";
     
-    // In recall mode, show all 3 sentences together (fully hidden for quick recall)
+    const uniqueSentences = getUniqueSentences(currentBeat);
+    const uniqueCount = uniqueSentences.length;
+    
+    // For short speeches with only 1 unique sentence, always show that sentence
+    if (uniqueCount === 1) {
+      return uniqueSentences[0];
+    }
+    
+    // For 2 unique sentences
+    if (uniqueCount === 2) {
+      // In recall mode or beat phases, show both sentences
+      if (sessionMode === 'recall' || phase === 'beat_learning' || phase === 'beat_fading') {
+        return uniqueSentences.join(' ');
+      }
+      // Sentence 1 phases
+      if (phase.startsWith('sentence_1')) return uniqueSentences[0];
+      // Sentence 2 phases or combining phases
+      if (phase.startsWith('sentence_2') || phase.startsWith('sentences_1_2')) {
+        return uniqueSentences.join(' ');
+      }
+      // Sentence 3 phases - for 2 sentences, skip to full beat
+      if (phase.startsWith('sentence_3')) return uniqueSentences.join(' ');
+      return uniqueSentences.join(' ');
+    }
+    
+    // For 3 unique sentences (normal case)
     if (sessionMode === 'recall') {
-      return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text} ${currentBeat.sentence_3_text}`;
+      return uniqueSentences.join(' ');
     }
     
     if (phase === 'beat_learning' || phase === 'beat_fading') {
-      return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text} ${currentBeat.sentence_3_text}`;
+      return uniqueSentences.join(' ');
     }
     
     if (phase === 'sentences_1_2_learning' || phase === 'sentences_1_2_fading') {
-      return `${currentBeat.sentence_1_text} ${currentBeat.sentence_2_text}`;
+      return `${uniqueSentences[0]} ${uniqueSentences[1]}`;
     }
     
-    if (phase.startsWith('sentence_1')) return currentBeat.sentence_1_text;
-    if (phase.startsWith('sentence_2')) return currentBeat.sentence_2_text;
-    if (phase.startsWith('sentence_3')) return currentBeat.sentence_3_text;
+    if (phase.startsWith('sentence_1')) return uniqueSentences[0];
+    if (phase.startsWith('sentence_2')) return uniqueSentences[1];
+    if (phase.startsWith('sentence_3')) return uniqueSentences[2] || uniqueSentences[1];
     
     return "";
-  }, [currentBeat, phase, sessionMode]);
+  }, [currentBeat, phase, sessionMode, getUniqueSentences]);
 
   const currentText = getCurrentText();
   const words = currentText.split(/\s+/).filter(w => w.trim());
@@ -240,12 +278,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
 
   // Get sentence number (1, 2, or 3) or combining indicator
   const getCurrentSentenceNumber = () => {
-    if (sessionMode === 'recall') return 3; // Full beat in recall
+    const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
+    if (sessionMode === 'recall') return uniqueCount; // Full beat in recall
     if (phase.startsWith('sentence_1')) return 1;
     if (phase.startsWith('sentence_2')) return 2;
     if (phase.startsWith('sentences_1_2')) return 2; // Show as "after S2"
     if (phase.startsWith('sentence_3')) return 3;
-    return 3; // beat_learning/fading
+    return uniqueCount; // beat_learning/fading
   };
 
   // Get phase type (learning, fading, combining)
@@ -831,6 +870,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
 
   const showSentenceCelebration = () => {
     const currentPhase = phase;
+    const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
     
     resetForNextRep();
 
@@ -848,14 +888,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       setTimeout(() => {
         setShowCelebration(false);
 
-        if (currentPhase === 'sentence_1_fading') {
-          transitionToPhase('sentence_2_learning');
-        } else if (currentPhase === 'sentence_2_fading') {
-          transitionToPhase('sentences_1_2_learning');
-        } else if (currentPhase === 'sentences_1_2_fading') {
-          transitionToPhase('sentence_3_learning');
-        } else if (currentPhase === 'sentence_3_fading') {
+        // For short speeches with fewer unique sentences, skip to beat phase sooner
+        if (uniqueCount === 1) {
+          // Only 1 sentence - go straight to beat fading after sentence 1
           transitionToPhase('beat_learning');
+        } else if (uniqueCount === 2) {
+          // 2 sentences - skip sentence 3 phases
+          if (currentPhase === 'sentence_1_fading') {
+            transitionToPhase('sentence_2_learning');
+          } else if (currentPhase === 'sentence_2_fading' || currentPhase === 'sentences_1_2_fading') {
+            transitionToPhase('beat_learning');
+          }
+        } else {
+          // 3 sentences - normal flow
+          if (currentPhase === 'sentence_1_fading') {
+            transitionToPhase('sentence_2_learning');
+          } else if (currentPhase === 'sentence_2_fading') {
+            transitionToPhase('sentences_1_2_learning');
+          } else if (currentPhase === 'sentences_1_2_fading') {
+            transitionToPhase('sentence_3_learning');
+          } else if (currentPhase === 'sentence_3_fading') {
+            transitionToPhase('beat_learning');
+          }
         }
       }, 2000);
     }, 150);
@@ -1205,29 +1259,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
         <div className="w-full max-w-2xl space-y-6">
           
-          {/* Sentence dots (only in learn mode) */}
-          {sessionMode === 'learn' && !phase.includes('beat') && (
-            <div className="flex items-center justify-center gap-3">
-              {[1, 2, 3].map((sentenceNum) => {
-                const currentSentence = getCurrentSentenceNumber();
-                const isComplete = sentenceNum < currentSentence;
-                const isCurrent = sentenceNum === currentSentence;
-                return (
-                  <div
-                    key={sentenceNum}
-                    className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
-                      isComplete && "bg-primary text-primary-foreground",
-                      isCurrent && "bg-primary/20 text-primary ring-2 ring-primary",
-                      !isComplete && !isCurrent && "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {isComplete ? <CheckCircle2 className="h-5 w-5" /> : sentenceNum}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {/* Sentence dots (only in learn mode, show only unique sentences) */}
+          {sessionMode === 'learn' && !phase.includes('beat') && (() => {
+            const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
+            // Don't show dots for single sentence beats
+            if (uniqueCount <= 1) return null;
+            
+            return (
+              <div className="flex items-center justify-center gap-3">
+                {Array.from({ length: uniqueCount }, (_, i) => i + 1).map((sentenceNum) => {
+                  const currentSentence = getCurrentSentenceNumber();
+                  const isComplete = sentenceNum < currentSentence;
+                  const isCurrent = sentenceNum === currentSentence;
+                  return (
+                    <div
+                      key={sentenceNum}
+                      className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
+                        isComplete && "bg-primary text-primary-foreground",
+                        isCurrent && "bg-primary/20 text-primary ring-2 ring-primary",
+                        !isComplete && !isCurrent && "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {isComplete ? <CheckCircle2 className="h-5 w-5" /> : sentenceNum}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Phase pill */}
           <div className="flex justify-center">
