@@ -607,22 +607,6 @@ const Settings = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-between"
-                  onClick={() => window.open('/help', '_blank')}
-                >
-                  <span>{t('settings.support.helpCenter')}</span>
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between"
-                  onClick={() => window.open('https://discord.gg/sermable', '_blank')}
-                >
-                  <span>{t('settings.support.joinCommunity')}</span>
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between"
                   onClick={() => window.location.href = 'mailto:support@sermable.com'}
                 >
                   <div className="flex items-center gap-2">
