@@ -74,64 +74,46 @@ const AccountSettings = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-xl font-bold">{t('settings.account.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('settings.account.description')}</p>
-          </div>
+          <h1 className="text-lg font-semibold">{t('settings.account.title')}</h1>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Account Info */}
+      <main className="max-w-2xl mx-auto px-4 py-4 space-y-3">
+        {/* Combined Info Card */}
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              <CardTitle>{t('settings.account.personalizedLearning')}</CardTitle>
+          <CardContent className="pt-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <User className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">{t('settings.account.personalizedLearning')}</p>
+                <p className="text-xs text-muted-foreground">{t('settings.account.personalizedLearningDesc')}</p>
+              </div>
             </div>
-            <CardDescription>
-              {t('settings.account.personalizedLearningDesc')}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        {/* Data & Privacy */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              <CardTitle>{t('settings.account.dataPrivacy')}</CardTitle>
+            <div className="flex items-start gap-3">
+              <Shield className="h-5 w-5 text-primary mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">{t('settings.account.dataPrivacy')}</p>
+                <p className="text-xs text-muted-foreground">{t('settings.account.dataPrivacyDesc')}</p>
+              </div>
             </div>
-            <CardDescription>
-              {t('settings.account.dataPrivacyDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {t('settings.account.dataInfo')}
-            </p>
           </CardContent>
         </Card>
 
         {/* Danger Zone */}
         <Card className="border-destructive/50">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-destructive" />
-              <CardTitle className="text-destructive">{t('settings.account.dangerZone')}</CardTitle>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Trash2 className="h-4 w-4 text-destructive" />
+              <p className="font-medium text-sm text-destructive">{t('settings.account.dangerZone')}</p>
             </div>
-            <CardDescription>
-              {t('settings.account.dangerZoneDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            <p className="text-xs text-muted-foreground mb-3">{t('settings.account.dangerZoneDesc')}</p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full" disabled={isDeleting}>
+                <Button variant="destructive" size="sm" className="w-full" disabled={isDeleting}>
                   {isDeleting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
