@@ -648,6 +648,7 @@
     "close": "Stäng",
     "restart": "Börja om",
     "done": "Klar",
+    "skip": "Hoppa över",
     "not_supported": "Stöds inte",
     "use_chrome": "Taligenkänning kräver Chrome eller Safari."
   },

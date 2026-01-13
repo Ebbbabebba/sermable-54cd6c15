@@ -696,7 +696,7 @@
     "close": "Close",
     "exit": "Exit",
     "restart": "Restart",
-    "done": "Done",
+    "skip": "Skip",
     "not_supported": "Not Supported",
     "use_chrome": "Speech recognition requires Chrome or Safari."
   },
