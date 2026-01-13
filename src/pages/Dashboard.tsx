@@ -79,9 +79,12 @@ const Dashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const hasShownToday = sessionStorage.getItem('streak-shown-today');
-      if (hasShownToday === new Date().toDateString()) {
-        return;
+      // Check if we've already shown streak today using localStorage (persists across sessions)
+      const lastShownDate = localStorage.getItem('streak-last-shown-date');
+      const today = new Date().toDateString();
+      
+      if (lastShownDate === today) {
+        return; // Already shown today
       }
 
       // Get user's speeches first
@@ -117,8 +120,8 @@ const Dashboard = () => {
       if (allSessions.length === 0) return;
 
       let streak = 0;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
 
       const uniqueDays = new Set<number>();
       allSessions.forEach(s => {
@@ -129,20 +132,31 @@ const Dashboard = () => {
 
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
 
+      // Check if there was activity yesterday (to continue streak)
+      const yesterday = new Date(todayDate);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayTime = yesterday.getTime();
+      
+      // Calculate streak starting from yesterday (since today is new)
       for (let i = 0; i < sortedDays.length; i++) {
-        const daysDiff = Math.floor((today.getTime() - sortedDays[i]) / (1000 * 60 * 60 * 24));
+        const expectedDay = new Date(yesterdayTime);
+        expectedDay.setDate(expectedDay.getDate() - i);
         
-        if (daysDiff === i) {
+        if (sortedDays[i] === expectedDay.getTime()) {
           streak++;
+        } else if (sortedDays[i] === todayDate.getTime()) {
+          // If today already has activity, count it
+          continue;
         } else {
           break;
         }
       }
 
+      // Show streak celebration on new day if user has any streak history
       if (streak > 0) {
         setCurrentStreak(streak);
         setShowStreakCelebration(true);
-        sessionStorage.setItem('streak-shown-today', new Date().toDateString());
+        localStorage.setItem('streak-last-shown-date', today);
       }
     } catch (error) {
       console.error('Error checking streak:', error);
