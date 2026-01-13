@@ -667,36 +667,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       if (foundIdx === -1) {
         // Word was spoken but doesn't match - check if the current expected word is hidden
         // If user says a wrong word when the expected word is hidden, mark it as missed (red)
-        const expectedIdx = advancedTo;
-        if (expectedIdx < words.length && hiddenWordIndicesRef.current.has(expectedIdx)) {
-          // User said something, but it wasn't the expected hidden word
-          // Only mark as missed if the spoken word has some content (not just noise)
-          const normalizedSpoken = normalizeWord(spoken);
-          const normalizedExpected = normalizeWord(words[expectedIdx]);
-          
-          // If the spoken word is substantially different (not a minor pronunciation variance)
-          if (normalizedSpoken.length > 0 && normalizedSpoken !== normalizedExpected) {
-            // Check if it's clearly a different word (not just missing a character)
-            const lengthDiff = Math.abs(normalizedSpoken.length - normalizedExpected.length);
-            let charDiff = 0;
-            const maxLen = Math.max(normalizedSpoken.length, normalizedExpected.length);
-            for (let i = 0; i < maxLen; i++) {
-              if (normalizedSpoken[i] !== normalizedExpected[i]) charDiff++;
-            }
-            
-            // If more than half the characters are different, it's clearly a wrong word
-            if (charDiff > Math.max(2, normalizedExpected.length / 2)) {
-              newMissed.add(expectedIdx);
-              missedIndicesRef.current = newMissed;
-              setMissedIndices(newMissed);
-            }
-          }
-        }
+        // BUT we need to wait for final transcription to be sure - interim can be wrong
+        // So we DON'T mark as missed here for now - let the hesitation timer handle it
+        // or wait for a clear mismatch with more context
         continue;
       }
 
+      // Found a match - mark all words up to and including the match as spoken
       for (let j = advancedTo; j <= foundIdx; j++) {
         newSpoken.add(j);
+        // IMPORTANT: If this word was previously marked as missed (red), remove it
+        // This prevents the flash of red when speech recognition initially mishears
+        if (newMissed.has(j)) {
+          newMissed.delete(j);
+        }
+      }
+      
+      // Update missed state if we removed any
+      if (missedIndicesRef.current.size !== newMissed.size) {
+        missedIndicesRef.current = newMissed;
+        setMissedIndices(newMissed);
       }
 
       advancedTo = foundIdx + 1;
