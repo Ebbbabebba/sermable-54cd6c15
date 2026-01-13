@@ -413,8 +413,12 @@
     "account": {
       "title": "Account",
       "description": "Manage your account settings",
+      "manageAccount": "Manage Account",
       "personalizedLearning": "Personalized Learning",
       "personalizedLearningDesc": "Your practice schedule is automatically personalized based on your performance and speech deadlines.",
+      "dataPrivacy": "Data & Privacy",
+      "dataPrivacyDesc": "Your data is stored securely and never shared with third parties",
+      "dataInfo": "All your speeches, practice sessions, and progress are encrypted and stored securely. You can delete your account at any time to remove all data.",
       "dangerZone": "Danger Zone",
       "dangerZoneDesc": "Permanent and irreversible actions",
       "deleteAccount": "Delete Account",
