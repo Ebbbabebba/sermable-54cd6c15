@@ -589,14 +589,6 @@ const Settings = () => {
                 <span>{t('settings.legal.privacyPolicy')}</span>
                 <ExternalLink className="h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => window.open('/cookies', '_blank')}
-              >
-                <span>{t('settings.legal.cookiePolicy')}</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
             </CardContent>
           </Card>
 
