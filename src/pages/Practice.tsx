@@ -412,16 +412,18 @@ const [liveTranscription, setLiveTranscription] = useState("");
       
       if (beatsData) {
         setPracticeBeats(beatsData);
+
+        const hasBeats = beatsData.length > 0;
         const today = new Date().toDateString();
-        const allMastered = beatsData.every(b => b.is_mastered);
-        const masteredToday = beatsData.some(b => {
+
+        // IMPORTANT: Array.every([]) === true, so we must guard against empty beats.
+        const allMastered = hasBeats && beatsData.every((b) => b.is_mastered);
+        const masteredToday = hasBeats && beatsData.some((b) => {
           if (!b.mastered_at) return false;
           return new Date(b.mastered_at).toDateString() === today;
         });
-        
-        if (allMastered || masteredToday) {
-          setTodaySessionDone(true);
-        }
+
+        setTodaySessionDone(hasBeats && (allMastered || masteredToday));
       }
     } catch (error: any) {
       toast({
