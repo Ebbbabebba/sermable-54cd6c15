@@ -2088,13 +2088,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
             if (upcomingBeats.length === 0) return null;
             
             return (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p className="text-sm text-muted-foreground text-center">{t('beat_practice.coming_up', 'Coming up')}</p>
                 <div className="relative">
                   {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 z-10 pointer-events-none rounded-2xl" />
+                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-b from-transparent to-background z-10 pointer-events-none rounded-b-2xl" />
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {upcomingBeats.map((beat, index) => {
                       // Get unique sentences (for short speeches, sentences may be duplicated)
                       const uniqueSentences = [...new Set([beat.sentence_1_text, beat.sentence_2_text, beat.sentence_3_text].filter(Boolean))];
@@ -2105,15 +2105,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
                       return (
                         <div
                           key={beat.id}
-                          style={{ opacity: 0.6 - (index * 0.15) }}
-                          className="bg-card/50 rounded-2xl border border-border/30 p-4 text-center backdrop-blur-sm"
+                          style={{ opacity: 0.7 - (index * 0.2) }}
+                          className="bg-card/50 rounded-2xl border border-border/30 p-4 backdrop-blur-sm"
                         >
-                          <div className="flex items-center justify-center gap-2 mb-2">
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${isRecallBeat ? 'bg-amber-500/20 text-amber-500' : 'bg-primary/20 text-primary'}`}>
+                          <div className="flex items-center justify-center mb-2">
+                            <span className={`text-xs px-2.5 py-1 rounded-full whitespace-nowrap ${isRecallBeat ? 'bg-amber-500/20 text-amber-500' : 'bg-primary/20 text-primary'}`}>
                               {isRecallBeat ? '🔄 Recall' : '📚 Learn'} Beat {beat.beat_order + 1}
                             </span>
                           </div>
-                          <p className="text-sm text-muted-foreground/70 line-clamp-1">
+                          <p className="text-sm text-muted-foreground/70 text-center truncate px-2">
                             {previewWords}...
                           </p>
                         </div>
