@@ -681,25 +681,54 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       }
 
       if (foundIdx === -1) {
-        // Word was spoken but doesn't match - check if the current expected word is hidden
-        // If user says a wrong word when the expected word is hidden, mark it as missed (red)
-        // BUT we need to wait for final transcription to be sure - interim can be wrong
-        // So we DON'T mark as missed here for now - let the hesitation timer handle it
-        // or wait for a clear mismatch with more context
+        // Word was spoken but doesn't match current expected word
+        // Check if it matches a word FURTHER ahead (user skipped the current word)
+        let skippedToIdx = -1;
+        for (let i = advancedTo + 1; i < Math.min(advancedTo + 5, words.length); i++) {
+          if (wordsMatch(spoken, words[i])) {
+            skippedToIdx = i;
+            break;
+          }
+        }
+        
+        if (skippedToIdx !== -1) {
+          // User skipped ahead - mark skipped hidden words as missed (red)
+          for (let j = advancedTo; j < skippedToIdx; j++) {
+            if (hiddenWordIndicesRef.current.has(j)) {
+              newMissed.add(j);
+            }
+            newSpoken.add(j); // Still mark as "passed"
+          }
+          // Mark the matched word as spoken
+          newSpoken.add(skippedToIdx);
+          advancedTo = skippedToIdx + 1;
+          lastWordTimeRef.current = Date.now();
+          
+          // Update missed state
+          missedIndicesRef.current = newMissed;
+          setMissedIndices(newMissed);
+        }
+        // If no match found anywhere, just continue (might be filler word or noise)
         continue;
       }
 
-      // Found a match - mark all words up to and including the match as spoken
-      for (let j = advancedTo; j <= foundIdx; j++) {
-        newSpoken.add(j);
-        // IMPORTANT: If this word was previously marked as missed (red), remove it
-        // This prevents the flash of red when speech recognition initially mishears
-        if (newMissed.has(j)) {
-          newMissed.delete(j);
+      // Found a match at current position or nearby - mark all words up to match as spoken
+      // If we're jumping ahead (foundIdx > advancedTo), mark skipped hidden words as missed
+      for (let j = advancedTo; j < foundIdx; j++) {
+        if (hiddenWordIndicesRef.current.has(j)) {
+          newMissed.add(j);
         }
+        newSpoken.add(j);
+      }
+      newSpoken.add(foundIdx);
+      
+      // IMPORTANT: If this exact word was previously marked as missed (red), remove it
+      // This prevents the flash of red when speech recognition initially mishears
+      if (newMissed.has(foundIdx)) {
+        newMissed.delete(foundIdx);
       }
       
-      // Update missed state if we removed any
+      // Update missed state if changed
       if (missedIndicesRef.current.size !== newMissed.size) {
         missedIndicesRef.current = newMissed;
         setMissedIndices(newMissed);
