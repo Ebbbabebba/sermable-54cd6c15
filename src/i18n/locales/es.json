@@ -326,8 +326,8 @@
       "title": "Apariencia",
       "description": "Personaliza el aspecto de Sermable",
       "theme": "Tema",
-      "darkTheme": "Tema espacial oscuro con colores cósmicos",
-      "lightTheme": "Tema claro y limpio"
+      "darkTheme": "Oscuro",
+      "lightTheme": "Claro"
     },
     "language": {
       "title": "Idioma",

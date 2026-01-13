@@ -417,8 +417,8 @@
       "title": "Utseende",
       "description": "Välj hur appen ska se ut",
       "theme": "Tema",
-      "darkTheme": "Mörkt rymdtema",
-      "lightTheme": "Ljust tema"
+      "darkTheme": "Mörkt",
+      "lightTheme": "Ljust"
     },
     "language": {
       "title": "Språk",

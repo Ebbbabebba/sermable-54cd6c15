@@ -326,8 +326,8 @@
       "title": "Erscheinungsbild",
       "description": "Passe das Aussehen von Sermable an",
       "theme": "Design",
-      "darkTheme": "Dunkles Weltraum-Design mit kosmischen Farben",
-      "lightTheme": "Klares, helles Design"
+      "darkTheme": "Dunkel",
+      "lightTheme": "Hell"
     },
     "language": {
       "title": "Sprache",
