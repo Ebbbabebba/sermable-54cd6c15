@@ -3,12 +3,13 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -157,6 +158,10 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
 const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onExit, onSessionLimitReached }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = subscriptionTier !== 'free';
+  
+  // Sound effects
+  const soundEnabled = typeof localStorage !== 'undefined' ? localStorage.getItem('soundEnabled') !== 'false' : true;
+  const { playClick } = useSoundEffects({ enabled: soundEnabled });
   
   // Beats data
   const [beats, setBeats] = useState<Beat[]>([]);
@@ -1427,6 +1432,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
             <X className="h-5 w-5 text-muted-foreground" />
           </Button>
           
+          {/* Skip/Continue button - subtle, in header */}
+          {!showCelebration && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                playClick();
+                const allIndices = new Set(words.map((_, i) => i));
+                pauseSpeechRecognition(900);
+                checkCompletion(allIndices, failedWordIndices);
+              }}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+            >
+              <SkipForward className="h-4 w-4 mr-1" />
+              <span className="text-xs">{t('common.skip', 'Skip')}</span>
+            </Button>
+          )}
+          
           {/* Progress bar */}
           <div className="flex-1">
             <div className="h-3 bg-muted rounded-full overflow-hidden">
@@ -1618,27 +1641,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
             </AnimatePresence>
           </div>
 
-        </div>
-      </div>
-
-      {/* Fixed bottom controls - Duolingo style */}
-      <div className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent p-4 pb-6">
-        <div className="flex items-center justify-center gap-4 max-w-md mx-auto">
-          {!showCelebration && (
-            <Button
-              variant="default"
-              size="default"
-              onClick={() => {
-                const allIndices = new Set(words.map((_, i) => i));
-                pauseSpeechRecognition(900);
-                checkCompletion(allIndices, failedWordIndices);
-              }}
-              className="px-6 rounded-xl font-semibold"
-            >
-              {t('common.continue', 'Continue')}
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          )}
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, MessageCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4, CreditCard, Receipt, XCircle, ChevronRight, Trash2 } from "lucide-react";
+import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, MessageCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4, CreditCard, Receipt, XCircle, ChevronRight, Trash2, Volume2, VolumeX } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +36,10 @@ const Settings = () => {
   const [practiceStartHour, setPracticeStartHour] = useState(8);
   const [practiceEndHour, setPracticeEndHour] = useState(22);
   const [autoDetectTimezone, setAutoDetectTimezone] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const stored = localStorage.getItem('soundEnabled');
+    return stored !== 'false'; // Default to true
+  });
 
   const isPremium = subscriptionTier === 'regular' || subscriptionTier === 'student' || subscriptionTier === 'enterprise';
 
@@ -281,7 +285,7 @@ const Settings = () => {
                 {t('settings.appearance.description')}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label htmlFor="theme-toggle">{t('settings.appearance.theme')}</Label>
@@ -297,6 +301,29 @@ const Settings = () => {
                     onCheckedChange={toggleTheme}
                   />
                   <Moon className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="sound-toggle">{t('settings.appearance.sounds', 'Sound effects')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.appearance.soundsDesc', 'Play sounds on button clicks and actions')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <VolumeX className="h-4 w-4 text-muted-foreground" />
+                  <Switch
+                    id="sound-toggle"
+                    checked={soundEnabled}
+                    onCheckedChange={(checked) => {
+                      setSoundEnabled(checked);
+                      localStorage.setItem('soundEnabled', String(checked));
+                    }}
+                  />
+                  <Volume2 className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
