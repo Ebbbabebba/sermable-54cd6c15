@@ -641,13 +641,6 @@ const Settings = () => {
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
-              
-              <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                <p className="text-sm font-medium">{t('settings.support.needHelp')}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t('settings.support.needHelpDesc')}
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>
