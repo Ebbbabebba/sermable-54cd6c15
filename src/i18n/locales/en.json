@@ -392,8 +392,8 @@
       "title": "Appearance",
       "description": "Customize how Sermable looks",
       "theme": "Theme",
-      "darkTheme": "Dark space theme with cosmic colors",
-      "lightTheme": "Clean white theme"
+      "darkTheme": "Dark",
+      "lightTheme": "Light"
     },
     "language": {
       "title": "Language",
