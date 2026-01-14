@@ -44,6 +44,9 @@ interface Beat {
   is_mastered: boolean;
   mastered_at: string | null;
   last_recall_at: string | null;
+  checkpoint_sentence?: number | null;
+  checkpoint_phase?: string | null;
+  checkpoint_hidden_indices?: number[] | null;
 }
 
 interface BeatPracticeViewProps {
@@ -487,6 +490,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       } else if (firstUnmastered) {
         setSessionMode('learn');
         setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
+        
+        // Check if there's a saved checkpoint for this beat
+        if (firstUnmastered.checkpoint_phase && firstUnmastered.checkpoint_sentence) {
+          console.log('🔄 Restoring checkpoint: sentence', firstUnmastered.checkpoint_sentence, 'phase', firstUnmastered.checkpoint_phase);
+          
+          // Restore the phase
+          setPhase(firstUnmastered.checkpoint_phase as Phase);
+          
+          // Restore hidden word indices if available
+          if (firstUnmastered.checkpoint_hidden_indices && Array.isArray(firstUnmastered.checkpoint_hidden_indices)) {
+            setHiddenWordIndices(new Set(firstUnmastered.checkpoint_hidden_indices));
+            setHiddenWordOrder([...firstUnmastered.checkpoint_hidden_indices]);
+          }
+        }
       } else {
         // Either all mastered, or already learned today's quota (free user)
         // For free users hitting limit, notify parent to show upsell
@@ -1096,6 +1113,42 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     lastCompletionRepIdRef.current = -1;
     pauseSpeechRecognition(900);
     resetForNextRep();
+    
+    // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
+    if (currentBeat) {
+      supabase
+        .from('practice_beats')
+        .update({ 
+          checkpoint_sentence: null, 
+          checkpoint_phase: null,
+          checkpoint_hidden_indices: null 
+        })
+        .eq('id', currentBeat.id)
+        .then(() => {});
+    }
+  };
+
+  // Save checkpoint when user exits mid-session
+  const saveCheckpoint = async () => {
+    if (!currentBeat || sessionMode !== 'learn') return;
+    
+    const sentenceNumber = getCurrentSentenceNumber();
+    const hiddenIndicesArray = Array.from(hiddenWordIndices);
+    
+    try {
+      await supabase
+        .from('practice_beats')
+        .update({
+          checkpoint_sentence: sentenceNumber,
+          checkpoint_phase: phase,
+          checkpoint_hidden_indices: hiddenIndicesArray,
+        })
+        .eq('id', currentBeat.id);
+      
+      console.log('💾 Checkpoint saved at sentence', sentenceNumber, 'phase', phase);
+    } catch (error) {
+      console.error('Failed to save checkpoint:', error);
+    }
   };
 
   const showSentenceCelebration = () => {
@@ -1158,6 +1211,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           words_hidden_per_round: 2,
           stage_started_at: new Date().toISOString(),
           consecutive_perfect_recalls: 0,
+          // Clear checkpoint since beat is now mastered
+          checkpoint_sentence: null,
+          checkpoint_phase: null,
+          checkpoint_hidden_indices: null,
         })
         .eq('id', currentBeat.id);
       
@@ -1572,8 +1629,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
+            onClick={async () => {
               stopListening();
+              await saveCheckpoint();
               onExit?.();
             }}
             className="shrink-0 rounded-full hover:bg-muted"
