@@ -1849,26 +1849,29 @@ const [liveTranscription, setLiveTranscription] = useState("");
           <BeatPracticeView
             speechId={speech.id}
             subscriptionTier={subscriptionTier}
-            onComplete={() => {
+            onComplete={async () => {
               setIsPracticing(false);
-              // Small delay to ensure database writes have committed
-              setTimeout(() => loadSpeech(), 500);
+              // Ensure schedule is written with future date, then reload
+              await ensureNextPracticeScheduled();
+              loadSpeech();
               toast({
                 title: t('beat_practice.beat_complete'),
                 description: "All beats mastered!",
               });
             }}
-            onExit={() => {
+            onExit={async () => {
               setIsPracticing(false);
               setIsRecording(false);
-              // Small delay to ensure database writes have committed
-              setTimeout(() => loadSpeech(), 500);
+              // Ensure schedule is written with future date, then reload
+              await ensureNextPracticeScheduled();
+              loadSpeech();
             }}
-            onSessionLimitReached={() => {
+            onSessionLimitReached={async () => {
               // Free user hit daily beat limit - show premium upsell
               setIsPracticing(false);
-              // Small delay to ensure database writes have committed
-              setTimeout(() => loadSpeech(), 500);
+              // Ensure schedule is written with future date, then reload
+              await ensureNextPracticeScheduled();
+              loadSpeech();
               setShowPremiumUpsell(true);
             }}
           />
