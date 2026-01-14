@@ -1463,7 +1463,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     if (sessionMode === 'recall') {
       return {
         label: t('beat_practice.recall_mode', '🔄 Quick Recall'),
-        sublabel: `Beat ${recallIndex + 1}/${beatsToRecall.length}`,
+        sublabel: `Recall ${recallSuccessCount} of ${beatsToRecall.length}`,
       };
     }
     return {
