@@ -14,6 +14,7 @@ interface Beat {
 }
 
 // Split text into sentences, preserving punctuation
+// Ensures each sentence ends with . , ! or ?
 function splitIntoSentences(text: string): string[] {
   const normalized = (text ?? "")
     .replace(/\r\n/g, "\n")
@@ -22,31 +23,40 @@ function splitIntoSentences(text: string): string[] {
 
   if (!normalized) return [];
 
-  // 1) Split by sentence-ending punctuation. Also keep any trailing text without punctuation.
-  const baseSentences = normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [normalized];
+  // Split by sentence-ending punctuation (. ! ? ,) - keeping the punctuation
+  // Match: any text followed by punctuation, OR trailing text without punctuation
+  const chunks = normalized.match(/[^.!?,]+[.!?,]+|[^.!?,]+$/g) ?? [normalized];
 
-  // 2) If a "sentence" spans many line breaks (common in poems/scripts),
-  // split it into smaller chunks by grouping 2 lines together.
   const out: string[] = [];
 
-  for (const s of baseSentences) {
-    const trimmed = s.trim();
+  for (const chunk of chunks) {
+    const trimmed = chunk.trim();
     if (!trimmed) continue;
 
+    // Handle line breaks within a chunk - split into lines
     const lines = trimmed
       .split(/\n+/)
       .map((l) => l.trim())
       .filter(Boolean);
 
     if (lines.length >= 3) {
+      // For multi-line chunks, group 2 lines together
       for (let i = 0; i < lines.length; i += 2) {
-        const group = lines.slice(i, i + 2).join(" ").trim();
+        let group = lines.slice(i, i + 2).join(" ").trim();
+        // Ensure it ends with punctuation
+        if (group && !/[.!?,]$/.test(group)) {
+          group += ".";
+        }
         if (group) out.push(group);
       }
-      continue;
+    } else {
+      // Join lines and ensure punctuation at end
+      let sentence = lines.join(" ").trim();
+      if (sentence && !/[.!?,]$/.test(sentence)) {
+        sentence += ".";
+      }
+      if (sentence) out.push(sentence);
     }
-
-    out.push(lines.join(" "));
   }
 
   return out;
