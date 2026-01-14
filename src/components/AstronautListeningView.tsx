@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { RotateCcw } from 'lucide-react';
-import astronautImage from '@/assets/astronaut.png';
 
 interface AstronautListeningViewProps {
   text: string;
@@ -14,6 +13,137 @@ interface AstronautListeningViewProps {
   onRestartNeeded?: () => void;
   showRestartHint?: boolean;
 }
+
+// 2D Animated Astronaut SVG Component
+const AnimatedAstronaut2D = ({ isListening }: { isListening: boolean }) => {
+  return (
+    <motion.svg
+      viewBox="0 0 200 280"
+      className="w-full h-full max-w-[300px]"
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+    >
+      {/* Body */}
+      <motion.ellipse
+        cx="100"
+        cy="180"
+        rx="55"
+        ry="70"
+        fill="#e8dcc8"
+        animate={{
+          scaleY: isListening ? [1, 1.02, 1] : 1,
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Helmet */}
+      <motion.circle
+        cx="100"
+        cy="85"
+        r="50"
+        fill="#e8dcc8"
+        animate={{
+          cy: isListening ? [85, 82, 85] : 85,
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Helmet ring */}
+      <ellipse cx="100" cy="120" rx="52" ry="12" fill="#c9b89a" />
+      
+      {/* Visor */}
+      <motion.ellipse
+        cx="100"
+        cy="80"
+        rx="38"
+        ry="32"
+        fill="#1a1a2e"
+        animate={{
+          cy: isListening ? [80, 77, 80] : 80,
+        }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Visor shine */}
+      <ellipse cx="85" cy="70" rx="8" ry="5" fill="#3a3a5e" opacity="0.5" />
+      
+      {/* Left arm */}
+      <motion.g
+        animate={{
+          rotate: isListening ? [0, 5, 0, -3, 0] : [0, 2, 0],
+        }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        style={{ originX: "45px", originY: "160px" }}
+      >
+        <ellipse cx="35" cy="170" rx="18" ry="28" fill="#e8dcc8" />
+        <ellipse cx="20" cy="195" rx="14" ry="20" fill="#c9b89a" />
+        <circle cx="12" cy="215" r="12" fill="#c9b89a" />
+      </motion.g>
+      
+      {/* Right arm */}
+      <motion.g
+        animate={{
+          rotate: isListening ? [0, -5, 0, 3, 0] : [0, -2, 0],
+        }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+        style={{ originX: "155px", originY: "160px" }}
+      >
+        <ellipse cx="165" cy="170" rx="18" ry="28" fill="#e8dcc8" />
+        <ellipse cx="180" cy="195" rx="14" ry="20" fill="#c9b89a" />
+        <circle cx="188" cy="215" r="12" fill="#c9b89a" />
+      </motion.g>
+      
+      {/* Chest panel */}
+      <rect x="75" y="155" width="50" height="45" rx="5" fill="#d4c4a8" />
+      
+      {/* Sermable text */}
+      <text x="100" y="172" textAnchor="middle" fontSize="8" fill="#333" fontWeight="500">
+        sermable
+      </text>
+      
+      {/* Control buttons */}
+      <rect x="82" y="180" width="10" height="10" rx="2" fill="#c9b89a" />
+      <motion.circle 
+        cx="100" 
+        cy="185" 
+        r="5" 
+        fill="#d66b4a"
+        animate={{
+          scale: isListening ? [1, 1.2, 1] : 1,
+        }}
+        transition={{ duration: 1, repeat: Infinity }}
+      />
+      <circle cx="115" cy="185" r="5" fill="#7ba7c4" />
+      
+      {/* Waist ring */}
+      <ellipse cx="100" cy="235" rx="58" ry="12" fill="#c9b89a" />
+      
+      {/* Left leg */}
+      <motion.g
+        animate={{
+          rotate: isListening ? [0, 2, 0, -2, 0] : 0,
+        }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        style={{ originX: "75px", originY: "240px" }}
+      >
+        <ellipse cx="70" cy="255" rx="16" ry="22" fill="#e8dcc8" />
+        <ellipse cx="68" cy="280" rx="14" ry="18" fill="#c9b89a" />
+      </motion.g>
+      
+      {/* Right leg */}
+      <motion.g
+        animate={{
+          rotate: isListening ? [0, -2, 0, 2, 0] : 0,
+        }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+        style={{ originX: "125px", originY: "240px" }}
+      >
+        <ellipse cx="130" cy="255" rx="16" ry="22" fill="#e8dcc8" />
+        <ellipse cx="132" cy="280" rx="14" ry="18" fill="#c9b89a" />
+      </motion.g>
+    </motion.svg>
+  );
+};
 
 export const AstronautListeningView = ({
   text,
@@ -52,34 +182,27 @@ export const AstronautListeningView = ({
         </motion.div>
       </div>
       
-      {/* Large astronaut */}
-      <div className="flex-1 flex items-center justify-center relative -mt-8">
-        <motion.img 
-          src={astronautImage} 
-          alt="Listening astronaut"
-          className="w-[85%] max-w-[400px] h-auto object-contain"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ 
-            scale: 1, 
-            opacity: 1,
-            rotate: isListening ? [0, 1.5, 0, -1.5, 0] : 0,
+      {/* Large 2D animated astronaut */}
+      <div className="flex-1 flex items-center justify-center relative">
+        <motion.div
+          className="w-[80%] max-w-[350px] h-auto"
+          animate={{
+            y: [0, -8, 0],
+            rotate: [0, 1, 0, -1, 0],
           }}
           transition={{
-            scale: { duration: 0.5 },
-            opacity: { duration: 0.5 },
-            rotate: { 
-              duration: 4, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
-            }
+            y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+            rotate: { duration: 6, repeat: Infinity, ease: "easeInOut" },
           }}
-        />
+        >
+          <AnimatedAstronaut2D isListening={isListening} />
+        </motion.div>
         
         {/* Listening audio bars */}
         <AnimatePresence>
           {isListening && (
             <motion.div
-              className="absolute bottom-4 left-1/2 -translate-x-1/2"
+              className="absolute bottom-2 left-1/2 -translate-x-1/2"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
