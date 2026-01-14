@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
 interface WordState {
   text: string;
@@ -21,13 +21,8 @@ interface SentenceDisplayProps {
   onWordTap?: (index: number) => void;
 }
 
-// Smooth spring config for word transitions
-const wordSpring = {
-  type: "spring" as const,
-  stiffness: 300,
-  damping: 25,
-  mass: 0.8,
-};
+// Smooth easing for natural feel
+const smoothTransition = { duration: 0.4, ease: "easeOut" as const };
 
 const SentenceDisplay = ({
   text,
@@ -40,10 +35,19 @@ const SentenceDisplay = ({
 }: SentenceDisplayProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentWordRef = useRef<HTMLSpanElement>(null);
+  const [displayedIndex, setDisplayedIndex] = useState(currentWordIndex);
   
   const words = text.split(/\s+/).filter(w => w.trim());
   
-  // Auto-scroll to current word
+  // Smooth transition for current word index with slight delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDisplayedIndex(currentWordIndex);
+    }, 50); // Small delay for smoother visual transition
+    return () => clearTimeout(timer);
+  }, [currentWordIndex]);
+  
+  // Auto-scroll to current word with smooth behavior
   useEffect(() => {
     if (currentWordRef.current && containerRef.current) {
       currentWordRef.current.scrollIntoView({
@@ -52,13 +56,13 @@ const SentenceDisplay = ({
         inline: 'center',
       });
     }
-  }, [currentWordIndex]);
+  }, [displayedIndex]);
 
   const getWordState = (index: number): WordState => {
     const word = words[index];
     const isVisible = !hiddenWordIndices.has(index);
     const isSpoken = spokenIndices.has(index);
-    const isCurrent = index === currentWordIndex;
+    const isCurrent = index === displayedIndex;
     const isHesitated = hesitatedIndices.has(index);
     const isMissed = missedIndices.has(index);
 
@@ -82,9 +86,9 @@ const SentenceDisplay = ({
           key={`${index}-missed`}
           ref={state.isCurrent ? currentWordRef : undefined}
           onClick={() => onWordTap?.(index)}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={wordSpring}
+          initial={{ opacity: 0, scale: 0.85, y: 4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={smoothTransition}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
             "bg-destructive/20 text-destructive font-medium ring-1 ring-destructive/40"
@@ -102,9 +106,9 @@ const SentenceDisplay = ({
           key={`${index}-hesitated`}
           ref={state.isCurrent ? currentWordRef : undefined}
           onClick={() => onWordTap?.(index)}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={wordSpring}
+          initial={{ opacity: 0, scale: 0.85, y: 4 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={smoothTransition}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
             "bg-warning/20 text-warning font-medium ring-1 ring-warning/40"
@@ -123,10 +127,12 @@ const SentenceDisplay = ({
           key={`${index}-hidden`}
           ref={state.isCurrent ? currentWordRef : undefined}
           onClick={() => onWordTap?.(index)}
-          layout
-          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+          layout="position"
+          transition={{ 
+            layout: { duration: 0.3, ease: "easeOut" },
+          }}
           className={cn(
-            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
+            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-300",
             state.isCurrent && "ring-1 ring-primary/50 bg-primary/10",
             !state.isCurrent && "text-muted-foreground hover:bg-muted"
           )}
@@ -141,23 +147,24 @@ const SentenceDisplay = ({
       <motion.span
         key={`${index}-visible`}
         ref={state.isCurrent ? currentWordRef : undefined}
-        layout
+        layout="position"
         initial={false}
         animate={{
-          opacity: state.isSpoken ? 0.4 : 1,
-          scale: state.isCurrent && !state.isSpoken ? 1.02 : 1,
+          opacity: state.isSpoken ? 0.35 : 1,
+          scale: state.isCurrent && !state.isSpoken ? 1.03 : 1,
+          y: 0,
         }}
         transition={{
-          opacity: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
-          scale: { duration: 0.3, ease: "easeOut" },
-          layout: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] },
+          opacity: { duration: 0.5, ease: "easeOut" },
+          scale: { duration: 0.25, ease: "easeOut" },
+          layout: { duration: 0.3, ease: "easeOut" },
         }}
         className={cn(
-          "inline-block mx-0.5 px-1 py-0.5 rounded",
+          "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
           // Subtle marker for current word
-          state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60 after:absolute after:-bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-primary after:animate-pulse",
+          state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60",
           // Spoken word gets muted styling
-          state.isSpoken && "text-muted-foreground",
+          state.isSpoken && "text-muted-foreground/50",
           // Missed visible word (not hidden)
           state.isMissed && "bg-destructive/20 text-destructive",
           // Hesitated visible word (not hidden)
@@ -165,17 +172,31 @@ const SentenceDisplay = ({
         )}
       >
         {state.text}
+        {/* Subtle pulse indicator for current word */}
+        {state.isCurrent && !state.isSpoken && (
+          <motion.span
+            className="absolute -bottom-2 left-1/2 w-1.5 h-1.5 rounded-full bg-primary"
+            initial={{ opacity: 0.6, scale: 0.8 }}
+            animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            style={{ transform: 'translateX(-50%)' }}
+          />
+        )}
       </motion.span>
     );
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="text-xl md:text-2xl lg:text-3xl leading-relaxed text-center p-6 select-none"
-    >
-      {words.map((_, index) => renderWord(index))}
-    </div>
+    <LayoutGroup>
+      <div
+        ref={containerRef}
+        className="text-xl md:text-2xl lg:text-3xl leading-relaxed text-center p-6 select-none"
+      >
+        <AnimatePresence mode="sync">
+          {words.map((_, index) => renderWord(index))}
+        </AnimatePresence>
+      </div>
+    </LayoutGroup>
   );
 };
 
