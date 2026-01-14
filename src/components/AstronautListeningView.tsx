@@ -1,12 +1,8 @@
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, Float } from '@react-three/drei';
-import { Suspense, useRef, useEffect, useState } from 'react';
-import { AnimatedAstronaut } from './AnimatedAstronaut';
+import { Suspense, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Mic, RotateCcw } from 'lucide-react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import astronautImage from '@/assets/astronaut.png';
 
 interface AstronautListeningViewProps {
   text: string;
@@ -19,35 +15,6 @@ interface AstronautListeningViewProps {
   onRestartNeeded?: () => void;
   showRestartHint?: boolean;
 }
-
-// Listening astronaut with reactive animations based on speech
-const ListeningAstronaut = ({ isActive }: { isActive: boolean }) => {
-  const groupRef = useRef<THREE.Group>(null);
-  
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    
-    if (groupRef.current) {
-      // Base floating animation
-      groupRef.current.position.y = Math.sin(t * 0.5) * 0.2;
-      
-      // When listening actively, add subtle "engaged" movements
-      if (isActive) {
-        groupRef.current.rotation.y = Math.sin(t * 0.3) * 0.08;
-        groupRef.current.rotation.z = Math.sin(t * 0.4) * 0.03;
-      } else {
-        groupRef.current.rotation.y = Math.sin(t * 0.2) * 0.05;
-        groupRef.current.rotation.z = 0;
-      }
-    }
-  });
-  
-  return (
-    <group ref={groupRef}>
-      <AnimatedAstronaut />
-    </group>
-  );
-};
 
 export const AstronautListeningView = ({
   text,
@@ -63,52 +30,145 @@ export const AstronautListeningView = ({
   const words = text.split(/\s+/).filter(w => w.trim());
   const hasErrors = hesitatedIndices.size > 0 || missedIndices.size > 0;
   
+  // Subtle bobbing animation state
+  const [bobPhase, setBobPhase] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBobPhase(prev => prev + 0.05);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+  
+  const bobY = Math.sin(bobPhase) * 8;
+  const tiltZ = Math.sin(bobPhase * 0.7) * 2;
+  
   return (
-    <div className="flex flex-col h-full relative">
-      {/* Large astronaut taking center stage */}
-      <div className="flex-1 relative min-h-[300px] max-h-[450px]">
-        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-          <Suspense fallback={null}>
-            <ambientLight intensity={0.4} />
-            <directionalLight position={[5, 5, 5]} intensity={0.8} />
-            <pointLight position={[-5, 5, -5]} intensity={0.4} color="#7ba7c4" />
-            <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
-              <ListeningAstronaut isActive={isListening} />
-            </Float>
-            <Environment preset="night" />
-          </Suspense>
-        </Canvas>
-        
-        {/* Listening indicator */}
-        <AnimatePresence>
-          {isListening && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 backdrop-blur-sm"
-            >
-              <Mic className="h-4 w-4 text-primary animate-pulse" />
-              <span className="text-sm font-medium text-primary">Listening...</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Restart hint when errors occur */}
-        <AnimatePresence>
-          {showRestartHint && hasErrors && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 backdrop-blur-sm"
-            >
-              <RotateCcw className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-medium text-amber-500">Missed a word - try again!</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <div className="flex flex-col h-full relative overflow-hidden">
+      {/* FaceTime-style phone frame */}
+      <div className="flex-1 flex items-center justify-center p-6 min-h-[300px]">
+        <motion.div 
+          className="relative"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          {/* Phone frame */}
+          <div className="relative bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-[2.5rem] p-2 shadow-2xl shadow-black/50">
+            {/* Inner screen */}
+            <div className="relative bg-black rounded-[2rem] overflow-hidden w-64 h-80 sm:w-72 sm:h-96">
+              {/* Status bar with name */}
+              <div className="absolute top-0 left-0 right-0 z-10 flex justify-center pt-4">
+                <motion.div 
+                  className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-sm"
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <motion.div 
+                    className="w-2.5 h-2.5 rounded-full bg-emerald-500"
+                    animate={{ 
+                      scale: isListening ? [1, 1.2, 1] : 1,
+                      opacity: isListening ? [1, 0.7, 1] : 0.5 
+                    }}
+                    transition={{ 
+                      duration: 1, 
+                      repeat: isListening ? Infinity : 0 
+                    }}
+                  />
+                  <span className="text-white font-medium text-sm">Sermable</span>
+                </motion.div>
+              </div>
+              
+              {/* Astronaut image with subtle animations */}
+              <motion.div 
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{
+                  y: bobY,
+                  rotate: tiltZ,
+                }}
+                transition={{ type: "tween", duration: 0.05 }}
+              >
+                <img 
+                  src={astronautImage} 
+                  alt="Listening astronaut"
+                  className="w-full h-full object-contain scale-125 mt-8"
+                />
+              </motion.div>
+              
+              {/* Listening pulse effect */}
+              <AnimatePresence>
+                {isListening && (
+                  <motion.div
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                  >
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          className="w-1 bg-white rounded-full"
+                          animate={{
+                            height: [8, 24, 8],
+                          }}
+                          transition={{
+                            duration: 0.6,
+                            repeat: Infinity,
+                            delay: i * 0.1,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            
+            {/* Phone notch/dynamic island */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full" />
+          </div>
+          
+          {/* Decorative stars/sparkles around the phone */}
+          <motion.div 
+            className="absolute -top-4 -right-4 text-primary text-2xl"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, 15, 0],
+              opacity: [0.6, 1, 0.6]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            ✦
+          </motion.div>
+          <motion.div 
+            className="absolute -bottom-2 -left-6 text-primary/60 text-xl"
+            animate={{ 
+              scale: [1, 1.3, 1],
+              opacity: [0.4, 0.8, 0.4]
+            }}
+            transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
+          >
+            ✦
+          </motion.div>
+        </motion.div>
       </div>
+      
+      {/* Restart hint when errors occur */}
+      <AnimatePresence>
+        {showRestartHint && hasErrors && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 backdrop-blur-sm z-20"
+          >
+            <RotateCcw className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium text-amber-500">Missed a word - try again!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Invisible script at bottom - shows progress and reveals missed words */}
       <div className="px-4 pb-6 pt-2">
@@ -119,7 +179,6 @@ export const AstronautListeningView = ({
               const isHesitated = hesitatedIndices.has(idx);
               const isMissed = missedIndices.has(idx);
               const isCurrent = idx === currentWordIndex;
-              const isUpcoming = idx > currentWordIndex && !isSpoken;
               
               // Words are invisible by default, appear when spoken or failed
               const shouldShow = isSpoken || isHesitated || isMissed;
