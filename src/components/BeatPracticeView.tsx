@@ -629,22 +629,29 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       .replace(/[^\p{L}\p{N}]+/gu, '');
   };
 
-  // Check if spoken word matches expected
+  // Check if spoken word matches expected - STRICT matching
   const wordsMatch = (spoken: string, expected: string): boolean => {
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
+    
+    // Exact match
     if (s === e) return true;
     
-    // Allow minor typos (1 char difference for words > 3 chars)
-    if (e.length > 3) {
-      let diff = 0;
-      for (let i = 0; i < Math.max(s.length, e.length); i++) {
-        if (s[i] !== e[i]) diff++;
-      }
-      if (diff <= 1) return true;
+    // For very short words (1-3 chars), require exact match only
+    if (e.length <= 3 || s.length <= 3) {
+      return false;
     }
     
-    return false;
+    // For longer words, allow 1 char difference BUT length must be similar
+    if (Math.abs(s.length - e.length) > 1) return false;
+    
+    let diff = 0;
+    const maxLen = Math.max(s.length, e.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (s[i] !== e[i]) diff++;
+      if (diff > 1) return false; // Early exit
+    }
+    return diff <= 1;
   };
 
   // Process transcription - cursor-based
@@ -674,20 +681,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     for (const spoken of wordsToCheck) {
       if (advancedTo >= words.length) break;
 
-      // Check if the spoken word matches any word in the lookahead window
+      // STRICT: Only check current word first (no lookahead for initial match)
       let foundIdx = -1;
-      for (let i = advancedTo; i < Math.min(advancedTo + 3, words.length); i++) {
-        if (wordsMatch(spoken, words[i])) {
-          foundIdx = i;
-          break;
+      if (wordsMatch(spoken, words[advancedTo])) {
+        foundIdx = advancedTo;
+      } else {
+        // Only check next word if current didn't match (limited lookahead of 1)
+        if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1])) {
+          foundIdx = advancedTo + 1;
         }
       }
 
       if (foundIdx === -1) {
-        // Word was spoken but doesn't match current expected word
-        // Check if it matches a word FURTHER ahead (user skipped the current word)
+        // Word was spoken but doesn't match current or next word
+        // Check if it matches a word slightly further ahead (user may have skipped)
         let skippedToIdx = -1;
-        for (let i = advancedTo + 1; i < Math.min(advancedTo + 5, words.length); i++) {
+        for (let i = advancedTo + 2; i < Math.min(advancedTo + 4, words.length); i++) {
           if (wordsMatch(spoken, words[i])) {
             skippedToIdx = i;
             break;
