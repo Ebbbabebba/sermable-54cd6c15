@@ -58,42 +58,69 @@ function countWords(sentences: string[]): number {
 }
 
 // Determine sentences per beat based on total word count
+// STRICT LIMIT: Maximum 3 sentences per beat, never more
 function getSentencesPerBeat(totalWords: number): number {
   if (totalWords <= 3) return 1;
   if (totalWords <= 6) return 2;
-  return 3;
+  return 3; // MAXIMUM - never exceed this
 }
 
 // Group sentences into beats based on speech length
+// STRICT RULES:
+// - Maximum 3 parts (sentences) per beat
+// - Each part can be maximum 3 sentences from original text
+// - Never put entire speech in one beat
 function createBeats(sentences: string[]): Beat[] {
   const beats: Beat[] = [];
   const totalWords = countWords(sentences);
   const sentencesPerBeat = getSentencesPerBeat(totalWords);
 
-  console.log(`Total words: ${totalWords}, sentences per beat: ${sentencesPerBeat}`);
+  console.log(`Creating beats - Total sentences: ${sentences.length}, Total words: ${totalWords}, sentences per beat: ${sentencesPerBeat}`);
 
-  for (let i = 0; i < sentences.length; i += sentencesPerBeat) {
+  // STRICT: Always iterate through ALL sentences, grouping by sentencesPerBeat
+  // This ensures we never accidentally put all sentences in one beat
+  let i = 0;
+  while (i < sentences.length) {
     const sentence1 = (sentences[i] ?? "").trim();
-    if (!sentence1) continue;
+    if (!sentence1) {
+      i++;
+      continue;
+    }
 
-    // For 1-sentence beats, duplicate sentence1 for all three fields
-    // For 2-sentence beats, duplicate sentence2 for sentence3
-    // For 3-sentence beats, use all three (or duplicate as fallback)
-    const sentence2 = sentencesPerBeat >= 2 
-      ? (sentences[i + 1] ?? sentence1).trim() 
-      : sentence1;
-    const sentence3 = sentencesPerBeat >= 3 
-      ? (sentences[i + 2] ?? sentence2).trim() 
-      : sentence2;
+    // Get sentence2 and sentence3 based on sentencesPerBeat
+    // STRICT: Only include additional sentences if sentencesPerBeat allows
+    let sentence2 = "";
+    let sentence3 = "";
+
+    if (sentencesPerBeat === 1) {
+      // For 1-sentence beats, only use sentence1 (leave others empty)
+      sentence2 = "";
+      sentence3 = "";
+      i += 1;
+    } else if (sentencesPerBeat === 2) {
+      // For 2-sentence beats, use sentence1 and sentence2
+      sentence2 = (sentences[i + 1] ?? "").trim();
+      sentence3 = "";
+      i += 2;
+    } else {
+      // For 3-sentence beats (MAXIMUM)
+      sentence2 = (sentences[i + 1] ?? "").trim();
+      sentence3 = (sentences[i + 2] ?? "").trim();
+      i += 3;
+    }
+
+    const beatOrder = beats.length;
+    console.log(`Beat ${beatOrder}: s1="${sentence1.substring(0, 30)}...", s2="${sentence2.substring(0, 30)}...", s3="${sentence3.substring(0, 30)}..."`);
 
     beats.push({
-      beat_order: beats.length,
+      beat_order: beatOrder,
       sentence_1_text: sentence1,
       sentence_2_text: sentence2,
       sentence_3_text: sentence3,
     });
   }
 
+  console.log(`Created ${beats.length} beats from ${sentences.length} sentences`);
   return beats;
 }
 
