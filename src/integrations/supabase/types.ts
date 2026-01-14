@@ -288,6 +288,9 @@ export type Database = {
       practice_beats: {
         Row: {
           beat_order: number
+          checkpoint_hidden_indices: Json | null
+          checkpoint_phase: string | null
+          checkpoint_sentence: number | null
           consecutive_perfect_recalls: number | null
           created_at: string | null
           id: string
@@ -304,6 +307,9 @@ export type Database = {
         }
         Insert: {
           beat_order: number
+          checkpoint_hidden_indices?: Json | null
+          checkpoint_phase?: string | null
+          checkpoint_sentence?: number | null
           consecutive_perfect_recalls?: number | null
           created_at?: string | null
           id?: string
@@ -320,6 +326,9 @@ export type Database = {
         }
         Update: {
           beat_order?: number
+          checkpoint_hidden_indices?: Json | null
+          checkpoint_phase?: string | null
+          checkpoint_sentence?: number | null
           consecutive_perfect_recalls?: number | null
           created_at?: string | null
           id?: string
