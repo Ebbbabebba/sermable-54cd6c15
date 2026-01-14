@@ -577,10 +577,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     setHiddenWordOrder([]);
   };
 
-  // Progressive words to hide: starts at 3, increases to 4, then 5 with consecutive successes
+  // Progressive words to hide: 1 → 2 → 3 (like recall mode)
   const getWordsToHideCount = useCallback((successCount: number): number => {
-    // 0 successes = first attempt = 3 words, 1 success = 4 words, 2+ = 5 words
-    return Math.min(3 + successCount, 5);
+    // 0 successes = first time = 1 word, 1 success = 2 words, 2+ = 3 words (max)
+    return Math.min(1 + successCount, 3);
   }, []);
 
   // Effect to reset hidden words when changing recall beat
@@ -960,16 +960,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     }
   }
 
+  // Track fading success count for progressive hiding (1 → 2 → 3)
+  const [fadingSuccessCount, setFadingSuccessCount] = useState(0);
+  
   // Handle fading phase completion logic
   function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
     const allHidden = hiddenWordIndices.size >= words.length;
 
     if (hadErrors) {
       setConsecutiveNoScriptSuccess(0);
+      setFadingSuccessCount(0); // Reset progression on error
       
-      // Reveal words proportional to familiarity (reveal as many as we hide per success)
+      // Reveal 1 word on error (the most recently hidden)
       if (hiddenWordOrder.length > 0) {
-        const wordsToReveal = Math.min(wordsToHidePerSuccess, hiddenWordOrder.length);
+        const wordsToReveal = 1;
         const indicesToReveal = hiddenWordOrder.slice(-wordsToReveal);
         
         setHiddenWordIndices((prev) => {
@@ -982,11 +986,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       setFailedWordIndices(new Set());
       resetForNextRep();
     } else if (!allHidden) {
-      // Hide multiple words based on familiarity level
+      // Progressive hiding: 1 → 2 → 3 words based on success count
+      const wordsToHide = Math.min(1 + fadingSuccessCount, 3);
+      setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so next = 3)
+      
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
       
-      for (let i = 0; i < wordsToHidePerSuccess; i++) {
+      for (let i = 0; i < wordsToHide; i++) {
         const nextToHide = getNextWordToHide(newHidden);
         if (nextToHide !== null) {
           newHidden.add(nextToHide);
@@ -1043,6 +1050,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
     setConsecutiveNoScriptSuccess(0);
+    setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
     pauseSpeechRecognition(900);
