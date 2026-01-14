@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,10 +30,11 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Verify user using getUser
-    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    // Verify user using getUser with token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
 
-    if (userError || !user) {
+    if (userError || !userData?.user) {
       console.error('Auth error:', userError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -41,7 +42,7 @@ serve(async (req) => {
       );
     }
 
-    const userId = user.id;
+    const userId = userData.user.id;
 
     // Create service role client for database operations
     const supabase = createClient(supabaseUrl, serviceRoleKey);
