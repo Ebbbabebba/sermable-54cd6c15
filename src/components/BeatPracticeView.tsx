@@ -967,28 +967,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
   function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
     const allHidden = hiddenWordIndices.size >= words.length;
 
-    if (hadErrors) {
-      setConsecutiveNoScriptSuccess(0);
-      setFadingSuccessCount(0); // Reset progression on error
-      
-      // Reveal 1 word on error (the most recently hidden)
-      if (hiddenWordOrder.length > 0) {
-        const wordsToReveal = 1;
-        const indicesToReveal = hiddenWordOrder.slice(-wordsToReveal);
-        
-        setHiddenWordIndices((prev) => {
-          const next = new Set(prev);
-          indicesToReveal.forEach(idx => next.delete(idx));
-          return next;
-        });
-        setHiddenWordOrder((prev) => prev.slice(0, -wordsToReveal));
-      }
-      setFailedWordIndices(new Set());
-      resetForNextRep();
-    } else if (!allHidden) {
-      // Progressive hiding: 1 → 2 → 3 words based on success count
-      const wordsToHide = Math.min(1 + fadingSuccessCount, 3);
-      setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so next = 3)
+    // Always hide words progressively (1 → 2 → 3), even with errors
+    if (!allHidden) {
+      // On error: still hide 1 word. On success: progressive 1 → 2 → 3
+      const wordsToHide = hadErrors ? 1 : Math.min(1 + fadingSuccessCount, 3);
       
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
@@ -999,14 +981,32 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           newHidden.add(nextToHide);
           newOrder.push(nextToHide);
         } else {
-          break; // No more words to hide
+          break;
         }
+      }
+      
+      // If there were errors, reveal those specific failed words (make them visible again)
+      if (hadErrors) {
+        failedSet.forEach((idx) => {
+          newHidden.delete(idx);
+          // Remove from order if present
+          const orderIdx = newOrder.indexOf(idx);
+          if (orderIdx !== -1) {
+            newOrder.splice(orderIdx, 1);
+          }
+        });
+        setFadingSuccessCount(0); // Reset progression on error
+        setConsecutiveNoScriptSuccess(0);
+      } else {
+        setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 3)
       }
       
       setHiddenWordIndices(newHidden);
       setHiddenWordOrder(newOrder);
+      setFailedWordIndices(new Set());
       resetForNextRep();
     } else {
+      // All words hidden - check for mastery
       const newConsecutive = consecutiveNoScriptSuccess + 1;
       
       if (newConsecutive >= 2) {
