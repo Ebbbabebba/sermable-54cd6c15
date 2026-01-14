@@ -1436,7 +1436,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
         <p className="text-muted-foreground max-w-md">
           {allMastered 
             ? t('beat_practice.poem_memorized', "You've memorized the entire poem! Practice again tomorrow to reinforce.")
-            : t('beat_practice.come_back', `You've mastered ${masteredCount}/${totalBeats} beats. Come back in a few hours to learn the next one!`)}
+            : t('beat_practice.come_back', { current: masteredCount, total: totalBeats, defaultValue: `You've mastered ${masteredCount}/${totalBeats} beats. Come back in a few hours to learn the next one!` })}
         </p>
         <div className="flex flex-col gap-2 mt-4">
           <p className="text-sm text-muted-foreground flex items-center gap-2">
