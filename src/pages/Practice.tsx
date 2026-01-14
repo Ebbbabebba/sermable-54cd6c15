@@ -2015,8 +2015,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           {/* Session Card - Clean and simple */}
           {/* Only show "Session Complete" if session is done AND next review is still in future */}
           {(() => {
-            const isReadyNow = nextReviewDate ? nextReviewDate <= new Date() : true;
-            const showSessionComplete = todaySessionDone && !isReadyNow;
+            const showSessionComplete = todaySessionDone;
             
             return (
               <div className="bg-card rounded-3xl border border-border/50 p-6 space-y-4">
@@ -2031,14 +2030,19 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   <div>
                     <h3 className="font-semibold">
                       {showSessionComplete
-                        ? t('beat_practice.session_complete')
+                        ? t('beat_practice.done_for_today', "Done for today!")
                         : masteredBeats === 0 
                           ? t('beat_practice.todays_session')
                           : t('beat_practice.active_session')}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {showSessionComplete
-                        ? t('beat_practice.come_back_later')
+                        ? (nextReviewDate 
+                            ? <span className="flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {t('beat_practice.come_back_in', "Come back in")} <LockCountdown nextReviewDate={nextReviewDate} />
+                              </span>
+                            : t('beat_practice.come_back_later'))
                         : masteredBeats > 0 
                           ? t('beat_practice.session_desc_recall')
                           : t('beat_practice.session_desc_start')}
@@ -2046,21 +2050,31 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   </div>
                 </div>
             
-                {/* Beat pills */}
-                <div className="flex flex-wrap gap-2">
-                  {masteredBeats > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                      <RotateCcw className="h-3.5 w-3.5" />
-                      {masteredBeats} {t('beat_practice.to_recall')}
-                    </span>
-                  )}
-                  {nextBeatNumber <= totalBeats && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                      <Flame className="h-3.5 w-3.5" />
-                      {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
-                    </span>
-                  )}
-                </div>
+                {/* Beat pills - only show if session not complete */}
+                {!showSessionComplete && (
+                  <div className="flex flex-wrap gap-2">
+                    {masteredBeats > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        {masteredBeats} {t('beat_practice.to_recall')}
+                      </span>
+                    )}
+                    {nextBeatNumber <= totalBeats && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                        <Flame className="h-3.5 w-3.5" />
+                        {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
+                      </span>
+                    )}
+                  </div>
+                )}
+                
+                {/* Progress for completed session */}
+                {showSessionComplete && (
+                  <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {t('beat_practice.progress', { mastered: masteredBeats, total: totalBeats })}
+                  </div>
+                )}
               </div>
             );
           })()}
@@ -2197,19 +2211,31 @@ const [liveTranscription, setLiveTranscription] = useState("");
       {/* Fixed bottom CTA - Duolingo style */}
       <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-gradient-to-t from-background via-background to-transparent">
         <div className="max-w-md mx-auto">
-          <Button 
-            size="lg" 
-            onClick={() => handleStartPractice()}
-            disabled={isLocked}
-            className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
-          >
-            <Play className="h-5 w-5 mr-2" />
-            {isLocked 
-              ? t('practice.locked') 
-              : masteredBeats === 0
-                ? t('beat_practice.start_session', 'Start Session')
-                : t('beat_practice.start_next_session')}
-          </Button>
+          {todaySessionDone ? (
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => navigate('/dashboard')}
+              className="w-full h-14 rounded-2xl text-lg font-bold border-green-500/30 text-green-600 hover:bg-green-500/10"
+            >
+              <CheckCircle2 className="h-5 w-5 mr-2" />
+              {t('beat_practice.done_for_today', "Done for today!")}
+            </Button>
+          ) : (
+            <Button 
+              size="lg" 
+              onClick={() => handleStartPractice()}
+              disabled={isLocked}
+              className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+            >
+              <Play className="h-5 w-5 mr-2" />
+              {isLocked 
+                ? t('practice.locked') 
+                : masteredBeats === 0
+                  ? t('beat_practice.start_session', 'Start Session')
+                  : t('beat_practice.start_next_session')}
+            </Button>
+          )}
         </div>
       </div>
 
