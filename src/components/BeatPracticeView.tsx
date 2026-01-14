@@ -670,57 +670,42 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     const prevTranscriptLength = transcriptRef.current.split(/\s+/).filter(w => w.trim()).length;
     transcriptRef.current = transcript;
     
+    // ONLY process truly new words - never reprocess old ones
     const newWords = rawWords.slice(prevTranscriptLength);
-    const recentWords = rawWords.slice(Math.max(0, rawWords.length - 6));
-    const wordsToCheck = newWords.length > 0 ? newWords : recentWords;
+    
+    // If no new words, nothing to process (avoid reprocessing recent words)
+    if (newWords.length === 0) return;
     
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
 
-    for (const spoken of wordsToCheck) {
+    for (const spoken of newWords) {
       if (advancedTo >= words.length) break;
 
-      // STRICT: Only check current word first (no lookahead for initial match)
+      // STRICT: Only match the CURRENT word position - no lookahead
+      // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
       if (wordsMatch(spoken, words[advancedTo])) {
         foundIdx = advancedTo;
-      } else {
-        // Only check next word if current didn't match (limited lookahead of 1)
+      }
+
+      if (foundIdx === -1) {
+        // Current word didn't match - only check NEXT word (lookahead of 1)
+        // This handles minor recognition order issues without jumping too far
         if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1])) {
+          // Mark current word as passed (might be a filler or recognition issue)
+          if (hiddenWordIndicesRef.current.has(advancedTo)) {
+            newMissed.add(advancedTo);
+          }
+          newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
         }
       }
 
       if (foundIdx === -1) {
-        // Word was spoken but doesn't match current or next word
-        // Check if it matches a word slightly further ahead (user may have skipped)
-        let skippedToIdx = -1;
-        for (let i = advancedTo + 2; i < Math.min(advancedTo + 4, words.length); i++) {
-          if (wordsMatch(spoken, words[i])) {
-            skippedToIdx = i;
-            break;
-          }
-        }
-        
-        if (skippedToIdx !== -1) {
-          // User skipped ahead - mark skipped hidden words as missed (red)
-          for (let j = advancedTo; j < skippedToIdx; j++) {
-            if (hiddenWordIndicesRef.current.has(j)) {
-              newMissed.add(j);
-            }
-            newSpoken.add(j); // Still mark as "passed"
-          }
-          // Mark the matched word as spoken
-          newSpoken.add(skippedToIdx);
-          advancedTo = skippedToIdx + 1;
-          lastWordTimeRef.current = Date.now();
-          
-          // Update missed state
-          missedIndicesRef.current = newMissed;
-          setMissedIndices(newMissed);
-        }
-        // If no match found anywhere, just continue (might be filler word or noise)
+        // Still no match - this spoken word doesn't match expected sequence
+        // Just skip it (could be filler word, cough, background noise, etc.)
         continue;
       }
 
