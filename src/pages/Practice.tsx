@@ -437,6 +437,101 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
+  const computeNextBeatReviewDate = (goalDate: string | null | undefined) => {
+    const now = Date.now();
+
+    // Default: 24 hours
+    if (!goalDate) {
+      return new Date(now + 24 * 60 * 60 * 1000);
+    }
+
+    const goal = new Date(goalDate);
+    const msUntilGoal = goal.getTime() - now;
+    const daysUntilGoal = Math.ceil(msUntilGoal / (24 * 60 * 60 * 1000));
+
+    const hoursUntilNextReview =
+      daysUntilGoal <= 1 ? 4 : daysUntilGoal <= 3 ? 8 : daysUntilGoal <= 7 ? 12 : 24;
+
+    const next = new Date(now + hoursUntilNextReview * 60 * 60 * 1000);
+
+    // Avoid "Redo nu!" due to clock skew / rounding
+    if (next.getTime() - now < 5 * 60 * 1000) {
+      return new Date(now + 5 * 60 * 1000);
+    }
+
+    return next;
+  };
+
+  const ensureNextPracticeScheduled = useCallback(async () => {
+    if (!speech?.id) return null;
+
+    const next = computeNextBeatReviewDate(speech.goal_date);
+    const sessionDate = new Date().toISOString().split('T')[0];
+
+    try {
+      const { data: existingSchedule, error: existingError } = await supabase
+        .from('schedules')
+        .select('id')
+        .eq('speech_id', speech.id)
+        .eq('session_date', sessionDate)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingError) {
+        console.warn('⚠️ Schedule lookup failed:', existingError);
+      }
+
+      if (existingSchedule?.id) {
+        const { error: updateError } = await supabase
+          .from('schedules')
+          .update({
+            next_review_date: next.toISOString(),
+            last_reviewed_at: new Date().toISOString(),
+            completed: true,
+          })
+          .eq('id', existingSchedule.id);
+
+        if (updateError) {
+          console.error('❌ Schedule update failed:', updateError);
+        }
+      } else {
+        const { error: insertError } = await supabase
+          .from('schedules')
+          .insert({
+            speech_id: speech.id,
+            session_date: sessionDate,
+            next_review_date: next.toISOString(),
+            last_reviewed_at: new Date().toISOString(),
+            completed: true,
+          });
+
+        if (insertError) {
+          console.error('❌ Schedule insert failed:', insertError);
+        }
+      }
+
+      const { error: speechUpdateError } = await supabase
+        .from('speeches')
+        .update({ next_review_date: next.toISOString() })
+        .eq('id', speech.id);
+
+      if (speechUpdateError) {
+        console.error('❌ Speech next_review_date update failed:', speechUpdateError);
+      }
+
+      // Update local state immediately (UI feedback), loadSpeech() will reconcile afterwards.
+      setNextReviewDate(next);
+      setIsLocked(next > new Date());
+
+      console.log('📅 Next practice scheduled:', next);
+      return next;
+    } catch (err) {
+      console.error('❌ Failed to ensure next practice schedule:', err);
+      return null;
+    }
+  }, [speech?.id, speech?.goal_date]);
+
   const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false) => {
     // For free users with session done, show premium upsell
     // For premium users, always allow practice
