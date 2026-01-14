@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   try {
     // Get auth token from request
-    const authHeader = req.headers.get('Authorization');
+    const authHeader = req.headers.get('authorization') ?? req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
@@ -21,18 +21,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create Supabase client with user's token
+    const token = authHeader.replace('Bearer ', '');
+
+    // Create client for token validation + admin client for deletion
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Client with user's token to verify identity
-    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Validate user by getting their info
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    // Validate user by token (server-side)
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser(token);
     
     if (userError || !user) {
       console.error('Auth error:', userError);
