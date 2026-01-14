@@ -55,26 +55,28 @@ export const useSoundEffects = (options: SoundEffectsOptions = {}) => {
   }, [enabled, volume, getAudioContext]);
 
   const playClick = useCallback(() => {
-    // Soft, low "pop" sound - much gentler than a high beep
-    playTone(220, 0.08, 'sine'); // A3 note, very short
+    // Bright, cheerful click - higher pitch, sparkly
+    playTone(880, 0.06, 'sine'); // A5 - brighter pop
   }, [playTone]);
 
   const playSuccess = useCallback(() => {
-    // Gentle ascending chime
-    playTone(392, 0.1, 'sine'); // G4
-    setTimeout(() => playTone(523, 0.15, 'sine'), 80); // C5
+    // Happy ascending major chord arpeggio
+    playTone(523, 0.1, 'sine');  // C5
+    setTimeout(() => playTone(659, 0.1, 'sine'), 80);  // E5
+    setTimeout(() => playTone(784, 0.15, 'sine'), 160); // G5
   }, [playTone]);
 
   const playError = useCallback(() => {
-    // Soft low tone
-    playTone(196, 0.15, 'sine'); // G3
+    // Gentle reminder, not harsh - still friendly
+    playTone(330, 0.12, 'sine'); // E4 - softer, less alarming
   }, [playTone]);
 
   const playComplete = useCallback(() => {
-    // Happy completion sound
-    playTone(392, 0.1, 'sine'); // G4
-    setTimeout(() => playTone(494, 0.1, 'sine'), 100); // B4
-    setTimeout(() => playTone(587, 0.2, 'sine'), 200); // D5
+    // Celebratory fanfare - joyful ascending sequence
+    playTone(523, 0.08, 'sine');  // C5
+    setTimeout(() => playTone(659, 0.08, 'sine'), 70);   // E5
+    setTimeout(() => playTone(784, 0.08, 'sine'), 140);  // G5
+    setTimeout(() => playTone(1047, 0.25, 'sine'), 210); // C6 - high triumphant finish
   }, [playTone]);
 
   const play = useCallback((sound: SoundType) => {
