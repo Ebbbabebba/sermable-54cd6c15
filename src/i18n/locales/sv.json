@@ -654,6 +654,10 @@
   },
   "beat_practice": {
     "learned": "Inlärda",
+    "progress": "{{mastered}}/{{total}} beats inlärda",
+    "done_for_today": "Klart för idag!",
+    "coming_up": "Nästa",
+    "come_back_in": "Kom tillbaka om {{time}}",
     "remaining": "Kvar",
     "session_complete": "Session klar!",
     "todays_session": "Dagens session",

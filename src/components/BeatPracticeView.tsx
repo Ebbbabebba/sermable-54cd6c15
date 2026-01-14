@@ -946,26 +946,27 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
               const hoursUntilNextReview = daysUntilDeadline <= 1 ? 4 : daysUntilDeadline <= 3 ? 8 : daysUntilDeadline <= 7 ? 12 : 24;
               const nextReviewDate = new Date(Date.now() + hoursUntilNextReview * 60 * 60 * 1000);
               
-              // Update or insert schedule
-              supabase
-                .from('schedules')
-                .select('id')
-                .eq('speech_id', speechId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle()
-                .then(({ data: existingSchedule }) => {
+              // Update schedule and speech - await to ensure it's written before UI updates
+              (async () => {
+                try {
+                  const { data: existingSchedule } = await supabase
+                    .from('schedules')
+                    .select('id')
+                    .eq('speech_id', speechId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+                  
                   if (existingSchedule) {
-                    supabase
+                    await supabase
                       .from('schedules')
                       .update({ 
                         next_review_date: nextReviewDate.toISOString(),
                         last_reviewed_at: new Date().toISOString(),
                       })
-                      .eq('id', existingSchedule.id)
-                      .then(() => {});
+                      .eq('id', existingSchedule.id);
                   } else {
-                    supabase
+                    await supabase
                       .from('schedules')
                       .insert({
                         speech_id: speechId,
@@ -973,17 +974,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
                         next_review_date: nextReviewDate.toISOString(),
                         last_reviewed_at: new Date().toISOString(),
                         completed: true,
-                      })
-                      .then(() => {});
+                      });
                   }
-                });
-              
-              // Also update speech's next_review_date
-              supabase
-                .from('speeches')
-                .update({ next_review_date: nextReviewDate.toISOString() })
-                .eq('id', speechId)
-                .then(() => {});
+                  
+                  // Also update speech's next_review_date
+                  await supabase
+                    .from('speeches')
+                    .update({ next_review_date: nextReviewDate.toISOString() })
+                    .eq('id', speechId);
+                  
+                  console.log('📅 Schedule updated. Next review:', nextReviewDate);
+                } catch (error) {
+                  console.error('Failed to update schedule:', error);
+                }
+              })();
               
               setSessionMode('session_complete');
             }

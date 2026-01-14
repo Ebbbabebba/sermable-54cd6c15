@@ -404,6 +404,10 @@
   "beat_practice": {
     "learned": "Aprendidos",
     "remaining": "Restantes",
+    "progress": "{{mastered}}/{{total}} beats dominados",
+    "done_for_today": "Pronto por hoje!",
+    "coming_up": "Em seguida",
+    "come_back_in": "Volte em {{time}}",
     "session_complete": "Sessão concluída!",
     "todays_session": "Sessão de hoje",
     "active_session": "Sessão ativa",

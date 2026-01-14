@@ -1756,7 +1756,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
             subscriptionTier={subscriptionTier}
             onComplete={() => {
               setIsPracticing(false);
-              loadSpeech(); // Refresh data to update todaySessionDone
+              // Small delay to ensure database writes have committed
+              setTimeout(() => loadSpeech(), 500);
               toast({
                 title: t('beat_practice.beat_complete'),
                 description: "All beats mastered!",
@@ -1765,12 +1766,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
             onExit={() => {
               setIsPracticing(false);
               setIsRecording(false);
-              loadSpeech(); // Refresh data to update todaySessionDone
+              // Small delay to ensure database writes have committed
+              setTimeout(() => loadSpeech(), 500);
             }}
             onSessionLimitReached={() => {
               // Free user hit daily beat limit - show premium upsell
               setIsPracticing(false);
-              loadSpeech(); // Refresh data to update todaySessionDone
+              // Small delay to ensure database writes have committed
+              setTimeout(() => loadSpeech(), 500);
               setShowPremiumUpsell(true);
             }}
           />
