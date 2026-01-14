@@ -10,6 +10,7 @@ import BeatProgress from "./BeatProgress";
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
+import { AstronautListeningView } from "./AstronautListeningView";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -180,6 +181,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
   const [beatsToRecall, setBeatsToRecall] = useState<Beat[]>([]);
   const [recallIndex, setRecallIndex] = useState(0);
   const [recallSuccessCount, setRecallSuccessCount] = useState(0);
+  const [recallPhase, setRecallPhase] = useState<1 | 2>(1); // Phase 1: word fading, Phase 2: astronaut listening
   const [newBeatToLearn, setNewBeatToLearn] = useState<Beat | null>(null);
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(30);
   const [beatsPerDay, setBeatsPerDay] = useState(1);
@@ -572,6 +574,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     repetitionCountRef.current = 1;
     setConsecutiveNoScriptSuccess(0);
     setRecallSuccessCount(0);
+    setRecallPhase(1); // Start with phase 1 (word fading)
     // Start with all words VISIBLE (empty hidden set)
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
@@ -832,12 +835,68 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     }
   }
 
-  // Handle recall mode completion - progressive fading approach
+  // Handle recall mode completion - two-phase approach
+  // Phase 1: Progressive word hiding until all hidden
+  // Phase 2: Astronaut listening view - recite the whole beat
   function handleRecallCompletion(hadErrors: boolean) {
     pauseSpeechRecognition(1200);
 
     const allHidden = hiddenWordIndices.size >= words.length;
 
+    // PHASE 2: Astronaut listening view
+    if (recallPhase === 2) {
+      if (hadErrors) {
+        // Failed in astronaut phase - restart phase 2
+        setCelebrationMessage("🔄 Try again from the start");
+        setShowCelebration(true);
+        
+        setTimeout(() => {
+          setShowCelebration(false);
+          resetForNextRep();
+        }, 1200);
+      } else {
+        // Successfully recited in front of astronaut! Beat recall complete
+        const recalledBeat = beatsToRecall[recallIndex];
+        if (recalledBeat) {
+          supabase
+            .from('practice_beats')
+            .update({ last_recall_at: new Date().toISOString() })
+            .eq('id', recalledBeat.id)
+            .then(() => {});
+        }
+
+        setCelebrationMessage("✅ Beat recalled!");
+        setShowCelebration(true);
+
+        setTimeout(() => {
+          setShowCelebration(false);
+          
+          // Move to next beat to recall, or switch to learn mode
+          if (recallIndex < beatsToRecall.length - 1) {
+            setRecallIndex(prev => prev + 1);
+            setRecallSuccessCount(0);
+            setRecallPhase(1); // Reset to phase 1 for next beat
+            // Next recall beat also starts fully visible
+            setHiddenWordIndices(new Set());
+            setHiddenWordOrder([]);
+            resetForNextRep();
+          } else {
+            // Done with recalls, now learn new beat
+            if (newBeatToLearn) {
+              setSessionMode('learn');
+              setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
+              transitionToPhase('sentence_1_learning');
+            } else {
+              // No new beat to learn - session complete!
+              setSessionMode('session_complete');
+            }
+          }
+        }, 1800);
+      }
+      return;
+    }
+
+    // PHASE 1: Progressive word hiding
     if (hadErrors) {
       // Failed recall - reveal ONLY the words that were missed/hesitated, but still hide 3 new words
       // Reset success count back to 0 (next success will hide 3 words again)
@@ -906,57 +965,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
         resetForNextRep();
       }, 800);
     } else {
-      // All hidden and success! Count towards 2 perfect recalls
-      const newCount = recallSuccessCount + 1;
+      // All hidden and success in Phase 1! Move to Phase 2 (Astronaut listening)
+      setCelebrationMessage("🚀 Now recite to the astronaut!");
+      setShowCelebration(true);
       
-      if (newCount >= 2) {
-        // Successfully recalled this beat twice with all hidden! Update last_recall_at
-        const recalledBeat = beatsToRecall[recallIndex];
-        if (recalledBeat) {
-          supabase
-            .from('practice_beats')
-            .update({ last_recall_at: new Date().toISOString() })
-            .eq('id', recalledBeat.id)
-            .then(() => {});
-        }
-
-        setCelebrationMessage("✅ Beat recalled!");
-        setShowCelebration(true);
-
-        setTimeout(() => {
-          setShowCelebration(false);
-          
-          // Move to next beat to recall, or switch to learn mode
-          if (recallIndex < beatsToRecall.length - 1) {
-            setRecallIndex(prev => prev + 1);
-            setRecallSuccessCount(0);
-            // Next recall beat also starts fully visible
-            setHiddenWordIndices(new Set());
-            setHiddenWordOrder([]);
-            resetForNextRep();
-          } else {
-            // Done with recalls, now learn new beat
-            if (newBeatToLearn) {
-              setSessionMode('learn');
-              setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
-              transitionToPhase('sentence_1_learning');
-            } else {
-              // No new beat to learn - session complete!
-              setSessionMode('session_complete');
-            }
-          }
-        }, 1800);
-      } else {
-        // Need one more successful recall with all hidden
-        setRecallSuccessCount(newCount);
-        setCelebrationMessage(`${newCount}/2 perfect recalls ✓`);
-        setShowCelebration(true);
-        
-        setTimeout(() => {
-          setShowCelebration(false);
-          resetForNextRep();
-        }, 800);
-      }
+      setTimeout(() => {
+        setShowCelebration(false);
+        setRecallPhase(2);
+        setRecallSuccessCount(0);
+        resetForNextRep();
+      }, 1500);
     }
   }
 
@@ -1543,64 +1561,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
-        <div className="w-full max-w-2xl space-y-6">
-          
-          {/* Sentence dots (only in learn mode, show only unique sentences) */}
-          {sessionMode === 'learn' && !phase.includes('beat') && (() => {
-            const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
-            // Don't show dots for single sentence beats
-            if (uniqueCount <= 1) return null;
+        {/* Phase 2 Recall: Astronaut Listening View */}
+        {sessionMode === 'recall' && recallPhase === 2 ? (
+          <div className="w-full h-full">
+            {/* Phase indicator */}
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-purple-500/10 text-purple-500">
+                🚀 Recall {recallPhase} of 2 - Recite to the astronaut
+              </span>
+            </div>
             
-            return (
-              <div className="flex items-center justify-center gap-3">
-                {Array.from({ length: uniqueCount }, (_, i) => i + 1).map((sentenceNum) => {
-                  const currentSentence = getCurrentSentenceNumber();
-                  const isComplete = sentenceNum < currentSentence;
-                  const isCurrent = sentenceNum === currentSentence;
-                  return (
-                    <div
-                      key={sentenceNum}
-                      className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
-                        isComplete && "bg-primary text-primary-foreground",
-                        isCurrent && "bg-primary/20 text-primary ring-2 ring-primary",
-                        !isComplete && !isCurrent && "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {isComplete ? <CheckCircle2 className="h-5 w-5" /> : sentenceNum}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-
-          {/* Phase pill */}
-          <div className="flex justify-center">
-            <span className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
-              getPhaseType() === 'learning' && "bg-blue-500/10 text-blue-500",
-              getPhaseType() === 'fading' && "bg-amber-500/10 text-amber-500",
-              getPhaseType() === 'combining' && "bg-purple-500/10 text-purple-500"
-            )}>
-              {getPhaseType() === 'learning' && (
-                <>
-                  <Circle className="h-3 w-3 fill-current" />
-                  Read aloud {repetitionCount}/{requiredLearningReps}
-                </>
-              )}
-              {getPhaseType() === 'fading' && (
-                <>
-                  <GraduationCap className="h-4 w-4" />
-                  {words.length - hiddenWordIndices.size} words visible
-                </>
-              )}
-              {getPhaseType() === 'combining' && 'Combining sentences'}
-            </span>
-          </div>
-
-          {/* Main sentence card - clean and centered */}
-          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10 relative z-10">
             <AnimatePresence mode="wait">
               {showCelebration ? (
                 <motion.div
@@ -1608,100 +1578,190 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.5, opacity: 0 }}
-                  className="flex flex-col items-center gap-6 py-8"
+                  className="flex flex-col items-center justify-center gap-6 py-8 h-full"
                 >
                   <Sparkles className="h-16 w-16 text-primary animate-pulse" />
                   <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
                 </motion.div>
               ) : (
                 <motion.div
-                  key="sentence"
+                  key="astronaut"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="w-full flex flex-col items-center"
+                  className="w-full h-full"
                 >
-                  <SentenceDisplay
+                  <AstronautListeningView
                     text={currentText}
-                    hiddenWordIndices={hiddenWordIndices}
                     currentWordIndex={currentWordIndex}
                     spokenIndices={spokenIndices}
                     hesitatedIndices={hesitatedIndices}
                     missedIndices={missedIndices}
+                    isListening={isRecording}
                     onWordTap={(idx) => {
-                      if (hiddenWordIndices.has(idx)) {
-                        setHiddenWordIndices(prev => {
-                          const next = new Set(prev);
-                          next.delete(idx);
-                          return next;
-                        });
+                      // In astronaut view, tapping reveals the word as a hint
+                      if (!spokenIndices.has(idx)) {
+                        setMissedIndices(prev => new Set([...prev, idx]));
                       }
                     }}
+                    showRestartHint={hesitatedIndices.size > 0 || missedIndices.size > 0}
                   />
-                  
-                  {/* "One more time!" indicator when 1 more recall needed */}
-                  {(sessionMode === 'recall' || phase.includes('fading')) && 
-                   hiddenWordIndices.size === words.length && 
-                   ((sessionMode === 'recall' && recallSuccessCount === 1) || 
-                    (sessionMode !== 'recall' && consecutiveNoScriptSuccess === 1)) && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="mt-4 flex items-center justify-center"
-                    >
-                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
-                        <Sparkles className="h-4 w-4" />
-                        {t('beat_practice.one_more_time', 'Great! One more to lock it in ✨')}
-                      </span>
-                    </motion.div>
-                  )}
-
-                  {/* Progress indicator for fading mode */}
-                  {(sessionMode === 'recall' || phase.includes('fading')) && (
-                    <div className="mt-8 flex items-center gap-4">
-                      <div className="relative w-14 h-14">
-                        <svg className="w-14 h-14 -rotate-90">
-                          <circle
-                            cx="28" cy="28" r="24"
-                            fill="none"
-                            stroke="hsl(var(--muted))"
-                            strokeWidth="4"
-                          />
-                          <circle
-                            cx="28" cy="28" r="24"
-                            fill="none"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth="4"
-                            strokeLinecap="round"
-                            strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 151} 151`}
-                            className="transition-all duration-300"
-                          />
-                        </svg>
-                        <CheckCircle2 
-                          className={cn(
-                            "absolute inset-0 m-auto w-6 h-6 transition-colors duration-300",
-                            hiddenWordIndices.size === words.length ? "text-primary" : "text-muted-foreground/30"
-                          )}
-                        />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold">
-                          {sessionMode === 'recall' 
-                            ? `${recallSuccessCount}/2 recalls`
-                            : `${hiddenWordIndices.size}/${words.length} mastered`}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {sessionMode === 'recall' ? 'Recall from memory' : 'Words fading away'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
+        ) : (
+          /* Phase 1 Recall or Learn mode: Standard word fading view */
+          <div className="w-full max-w-2xl space-y-6">
+            
+            {/* Sentence dots (only in learn mode, show only unique sentences) */}
+            {sessionMode === 'learn' && !phase.includes('beat') && (() => {
+              const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
+              // Don't show dots for single sentence beats
+              if (uniqueCount <= 1) return null;
+              
+              return (
+                <div className="flex items-center justify-center gap-3">
+                  {Array.from({ length: uniqueCount }, (_, i) => i + 1).map((sentenceNum) => {
+                    const currentSentence = getCurrentSentenceNumber();
+                    const isComplete = sentenceNum < currentSentence;
+                    const isCurrent = sentenceNum === currentSentence;
+                    return (
+                      <div
+                        key={sentenceNum}
+                        className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
+                          isComplete && "bg-primary text-primary-foreground",
+                          isCurrent && "bg-primary/20 text-primary ring-2 ring-primary",
+                          !isComplete && !isCurrent && "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {isComplete ? <CheckCircle2 className="h-5 w-5" /> : sentenceNum}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
-        </div>
+            {/* Phase pill */}
+            <div className="flex justify-center">
+              <span className={cn(
+                "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
+                getPhaseType() === 'learning' && "bg-blue-500/10 text-blue-500",
+                getPhaseType() === 'fading' && "bg-amber-500/10 text-amber-500",
+                getPhaseType() === 'combining' && "bg-purple-500/10 text-purple-500"
+              )}>
+                {getPhaseType() === 'learning' && (
+                  <>
+                    <Circle className="h-3 w-3 fill-current" />
+                    Read aloud {repetitionCount}/{requiredLearningReps}
+                  </>
+                )}
+                {getPhaseType() === 'fading' && (
+                  <>
+                    <GraduationCap className="h-4 w-4" />
+                    {sessionMode === 'recall' 
+                      ? `Recall ${recallPhase} of 2 - ${words.length - hiddenWordIndices.size} words visible`
+                      : `${words.length - hiddenWordIndices.size} words visible`
+                    }
+                  </>
+                )}
+                {getPhaseType() === 'combining' && 'Combining sentences'}
+              </span>
+            </div>
+
+            {/* Main sentence card - clean and centered */}
+            <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10 relative z-10">
+              <AnimatePresence mode="wait">
+                {showCelebration ? (
+                  <motion.div
+                    key="celebration"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.5, opacity: 0 }}
+                    className="flex flex-col items-center gap-6 py-8"
+                  >
+                    <Sparkles className="h-16 w-16 text-primary animate-pulse" />
+                    <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="sentence"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="w-full flex flex-col items-center"
+                  >
+                    <SentenceDisplay
+                      text={currentText}
+                      hiddenWordIndices={hiddenWordIndices}
+                      currentWordIndex={currentWordIndex}
+                      spokenIndices={spokenIndices}
+                      hesitatedIndices={hesitatedIndices}
+                      missedIndices={missedIndices}
+                      onWordTap={(idx) => {
+                        if (hiddenWordIndices.has(idx)) {
+                          setHiddenWordIndices(prev => {
+                            const next = new Set(prev);
+                            next.delete(idx);
+                            return next;
+                          });
+                        }
+                      }}
+                    />
+                    
+                    {/* Progress indicator for fading mode */}
+                    {(sessionMode === 'recall' || phase.includes('fading')) && (
+                      <div className="mt-8 flex items-center gap-4">
+                        <div className="relative w-14 h-14">
+                          <svg className="w-14 h-14 -rotate-90">
+                            <circle
+                              cx="28" cy="28" r="24"
+                              fill="none"
+                              stroke="hsl(var(--muted))"
+                              strokeWidth="4"
+                            />
+                            <circle
+                              cx="28" cy="28" r="24"
+                              fill="none"
+                              stroke="hsl(var(--primary))"
+                              strokeWidth="4"
+                              strokeLinecap="round"
+                              strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 151} 151`}
+                              className="transition-all duration-300"
+                            />
+                          </svg>
+                          <CheckCircle2 
+                            className={cn(
+                              "absolute inset-0 m-auto w-6 h-6 transition-colors duration-300",
+                              hiddenWordIndices.size === words.length ? "text-primary" : "text-muted-foreground/30"
+                            )}
+                          />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-semibold">
+                            {sessionMode === 'recall' 
+                              ? `Recall ${recallPhase} of 2`
+                              : `${hiddenWordIndices.size}/${words.length} mastered`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {sessionMode === 'recall' 
+                              ? (hiddenWordIndices.size === words.length 
+                                  ? 'All words hidden - moving to phase 2!' 
+                                  : 'Words fading as you succeed')
+                              : 'Words fading away'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+          </div>
+        )}
       </div>
     </div>
   );
