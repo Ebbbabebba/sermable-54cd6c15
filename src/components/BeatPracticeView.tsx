@@ -941,7 +941,50 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
               setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
               transitionToPhase('sentence_1_learning');
             } else {
-              // No new beat to learn - session complete!
+              // No new beat to learn - update schedule and session complete!
+              // Set next review based on spaced repetition
+              const hoursUntilNextReview = daysUntilDeadline <= 1 ? 4 : daysUntilDeadline <= 3 ? 8 : daysUntilDeadline <= 7 ? 12 : 24;
+              const nextReviewDate = new Date(Date.now() + hoursUntilNextReview * 60 * 60 * 1000);
+              
+              // Update or insert schedule
+              supabase
+                .from('schedules')
+                .select('id')
+                .eq('speech_id', speechId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+                .then(({ data: existingSchedule }) => {
+                  if (existingSchedule) {
+                    supabase
+                      .from('schedules')
+                      .update({ 
+                        next_review_date: nextReviewDate.toISOString(),
+                        last_reviewed_at: new Date().toISOString(),
+                      })
+                      .eq('id', existingSchedule.id)
+                      .then(() => {});
+                  } else {
+                    supabase
+                      .from('schedules')
+                      .insert({
+                        speech_id: speechId,
+                        session_date: new Date().toISOString().split('T')[0],
+                        next_review_date: nextReviewDate.toISOString(),
+                        last_reviewed_at: new Date().toISOString(),
+                        completed: true,
+                      })
+                      .then(() => {});
+                  }
+                });
+              
+              // Also update speech's next_review_date
+              supabase
+                .from('speeches')
+                .update({ next_review_date: nextReviewDate.toISOString() })
+                .eq('id', speechId)
+                .then(() => {});
+              
               setSessionMode('session_complete');
             }
           }
@@ -1119,6 +1162,46 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           consecutive_perfect_recalls: 0,
         })
         .eq('id', currentBeat.id);
+      
+      // Update schedule's next_review_date based on spaced repetition
+      // For beat-based learning: next review in 4-24 hours depending on deadline
+      const hoursUntilNextReview = daysUntilDeadline <= 1 ? 4 : daysUntilDeadline <= 3 ? 8 : daysUntilDeadline <= 7 ? 12 : 24;
+      const nextReviewDate = new Date(Date.now() + hoursUntilNextReview * 60 * 60 * 1000);
+      
+      // Update or insert schedule for this speech
+      const { data: existingSchedule } = await supabase
+        .from('schedules')
+        .select('id')
+        .eq('speech_id', speechId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (existingSchedule) {
+        await supabase
+          .from('schedules')
+          .update({ 
+            next_review_date: nextReviewDate.toISOString(),
+            last_reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', existingSchedule.id);
+      } else {
+        await supabase
+          .from('schedules')
+          .insert({
+            speech_id: speechId,
+            session_date: new Date().toISOString().split('T')[0],
+            next_review_date: nextReviewDate.toISOString(),
+            last_reviewed_at: new Date().toISOString(),
+            completed: true,
+          });
+      }
+      
+      // Also update the speech's next_review_date directly
+      await supabase
+        .from('speeches')
+        .update({ next_review_date: nextReviewDate.toISOString() })
+        .eq('id', speechId);
       
       // Update local state so the completion screen shows correct count
       const updatedBeats = beats.map(b => 
