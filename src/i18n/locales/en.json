@@ -577,6 +577,10 @@
   },
   "beat_practice": {
     "beat_x_of_y": "Beat {{current}} of {{total}}",
+    "progress": "{{mastered}}/{{total}} beats mastered",
+    "done_for_today": "Done for today!",
+    "coming_up": "Coming up",
+    "come_back_in": "Come back in {{time}}",
     "sentence_x": "Sentence {{number}}",
     "read_x_of_3": "Read {{current}}/3",
     "read_aloud_x_of_3": "Read aloud {{current}}/3",
