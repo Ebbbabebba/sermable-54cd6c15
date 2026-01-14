@@ -79,7 +79,16 @@ Deno.serve(async (req) => {
     const schedulerSecret = Deno.env.get('SCHEDULER_SECRET');
     const providedSecret = req.headers.get('x-scheduler-secret');
     
-    if (schedulerSecret && providedSecret !== schedulerSecret) {
+    // SECURITY: SCHEDULER_SECRET must be configured - reject all requests if not set
+    if (!schedulerSecret) {
+      console.error('SCHEDULER_SECRET not configured - rejecting request for security');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (providedSecret !== schedulerSecret) {
       console.error('Unauthorized scheduler access attempt');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
