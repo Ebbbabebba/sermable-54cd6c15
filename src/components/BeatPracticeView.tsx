@@ -577,8 +577,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     setHiddenWordOrder([]);
   };
 
-  // Words to hide per successful recall repetition (2-3 words)
-  const recallWordsToHidePerSuccess = 2;
+  // Words to hide per successful recall repetition (3 words)
+  const recallWordsToHidePerSuccess = 3;
 
   // Effect to reset hidden words when changing recall beat
   useEffect(() => {
@@ -836,20 +836,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     const allHidden = hiddenWordIndices.size >= words.length;
 
     if (hadErrors) {
-      // Failed recall - reveal some words and try again
+      // Failed recall - reveal ONLY the words that were missed/hesitated (yellow/red)
       setRecallSuccessCount(0);
       
-      if (hiddenWordOrder.length > 0) {
-        // Reveal 2-3 words on failure
-        const wordsToReveal = Math.min(recallWordsToHidePerSuccess, hiddenWordOrder.length);
-        const indicesToReveal = hiddenWordOrder.slice(-wordsToReveal);
-        
+      // Get the specific word indices that failed (hesitated or missed)
+      const failedIndices = new Set<number>();
+      hesitatedIndicesRef.current.forEach(idx => failedIndices.add(idx));
+      missedIndicesRef.current.forEach(idx => failedIndices.add(idx));
+      
+      if (failedIndices.size > 0 && hiddenWordOrder.length > 0) {
+        // Only reveal the words that were actually missed/hesitated
         setHiddenWordIndices((prev) => {
           const next = new Set(prev);
-          indicesToReveal.forEach(idx => next.delete(idx));
+          failedIndices.forEach(idx => next.delete(idx));
           return next;
         });
-        setHiddenWordOrder((prev) => prev.slice(0, -wordsToReveal));
+        // Remove those indices from the hidden order so they won't be re-hidden immediately
+        setHiddenWordOrder((prev) => prev.filter(idx => !failedIndices.has(idx)));
       }
       
       setCelebrationMessage("🔄 Try again");
