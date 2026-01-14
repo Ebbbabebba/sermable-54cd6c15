@@ -84,6 +84,7 @@ const Dashboard = () => {
       const today = new Date().toDateString();
       
       if (lastShownDate === today) {
+        console.log('Streak already shown today');
         return; // Already shown today
       }
 
@@ -93,7 +94,10 @@ const Dashboard = () => {
         .select("id")
         .eq("user_id", user.id);
 
-      if (!userSpeeches || userSpeeches.length === 0) return;
+      if (!userSpeeches || userSpeeches.length === 0) {
+        console.log('No speeches found for user');
+        return;
+      }
 
       const userSpeechIds = userSpeeches.map(s => s.id);
 
@@ -117,11 +121,13 @@ const Dashboard = () => {
         ...(presentationResult.data || []).map(s => ({ date: s.created_at }))
       ];
 
+      console.log('All sessions found:', allSessions.length);
+
       if (allSessions.length === 0) return;
 
-      let streak = 0;
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
+      const todayTime = todayDate.getTime();
 
       const uniqueDays = new Set<number>();
       allSessions.forEach(s => {
@@ -131,32 +137,33 @@ const Dashboard = () => {
       });
 
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
+      console.log('Unique days:', sortedDays.length, 'Most recent:', new Date(sortedDays[0]).toDateString());
 
-      // Check if there was activity yesterday (to continue streak)
-      const yesterday = new Date(todayDate);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayTime = yesterday.getTime();
+      // Calculate streak - count consecutive days ending with the most recent activity
+      let streak = 0;
+      const mostRecentDay = sortedDays[0];
       
-      // Calculate streak starting from yesterday (since today is new)
+      // Start from the most recent activity day and count backwards
       for (let i = 0; i < sortedDays.length; i++) {
-        const expectedDay = new Date(yesterdayTime);
+        const expectedDay = new Date(mostRecentDay);
         expectedDay.setDate(expectedDay.getDate() - i);
         
-        if (sortedDays[i] === expectedDay.getTime()) {
+        if (sortedDays.includes(expectedDay.getTime())) {
           streak++;
-        } else if (sortedDays[i] === todayDate.getTime()) {
-          // If today already has activity, count it
-          continue;
         } else {
           break;
         }
       }
 
-      // Show streak celebration on new day if user has any streak history
+      console.log('Calculated streak:', streak);
+
+      // Show streak celebration if user has practiced at least once
+      // (we show their current streak to encourage continuation)
       if (streak > 0) {
         setCurrentStreak(streak);
         setShowStreakCelebration(true);
         localStorage.setItem('streak-last-shown-date', today);
+        console.log('Showing streak celebration:', streak);
       }
     } catch (error) {
       console.error('Error checking streak:', error);
