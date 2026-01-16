@@ -1,0 +1,21 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    max_build_duration: 60
+    environment:
+      vars:
+        APP_URL: https://sermable.lovable.app
+      node: latest
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Build iOS
+        script: npx react-native run-ios --no-packager
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        apple_id: ebba.djurberg@outlook.com
+        team_id: ""
+        bundle_id: com.ebba.sermable
+
