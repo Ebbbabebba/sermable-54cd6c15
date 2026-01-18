@@ -647,28 +647,75 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
   };
 
   // Check if spoken word matches expected - STRICT matching
-  const wordsMatch = (spoken: string, expected: string): boolean => {
+  // More lenient matching for visible words, stricter for hidden
+  const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false): boolean => {
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
-    // Exact match
+    // Exact match - always pass
     if (s === e) return true;
     
-    // For very short words (1-3 chars), require exact match only
-    if (e.length <= 3 || s.length <= 3) {
-      return false;
+    // Empty after normalization
+    if (!s || !e) return false;
+    
+    // For HIDDEN words, be stricter - need to prove they know it
+    if (isHidden) {
+      // Very short words (1-3 chars) require exact
+      if (e.length <= 3) return false;
+      
+      // Allow 1 char difference, similar length
+      if (Math.abs(s.length - e.length) > 1) return false;
+      let diff = 0;
+      for (let i = 0; i < Math.max(s.length, e.length); i++) {
+        if (s[i] !== e[i]) diff++;
+        if (diff > 1) return false;
+      }
+      return true;
     }
     
-    // For longer words, allow 1 char difference BUT length must be similar
-    if (Math.abs(s.length - e.length) > 1) return false;
+    // For VISIBLE words, be much more lenient - just tracking pace
+    // Short words (1-2 chars): require exact
+    if (e.length <= 2) return false;
     
-    let diff = 0;
-    const maxLen = Math.max(s.length, e.length);
-    for (let i = 0; i < maxLen; i++) {
-      if (s[i] !== e[i]) diff++;
-      if (diff > 1) return false; // Early exit
+    // 3-char words: allow 1 difference
+    if (e.length === 3) {
+      let diff = 0;
+      for (let i = 0; i < 3; i++) {
+        if (s[i] !== e[i]) diff++;
+      }
+      return diff <= 1;
     }
-    return diff <= 1;
+    
+    // 4+ char words: be very lenient
+    // Check if words share the same first letter (sound)
+    if (s[0] !== e[0] && s[0] !== e[1] && (e[0] !== s[1])) {
+      // Different starting sound - likely different word
+      // But check if it's a prefix/suffix match
+      if (!s.startsWith(e.slice(0, 2)) && !e.startsWith(s.slice(0, 2))) {
+        return false;
+      }
+    }
+    
+    // Allow length variance up to 30%
+    const lenRatio = Math.min(s.length, e.length) / Math.max(s.length, e.length);
+    if (lenRatio < 0.6) return false;
+    
+    // Count matching characters (not position-dependent)
+    const sChars = s.split('');
+    const eChars = e.split('');
+    let matches = 0;
+    const eCopy = [...eChars];
+    for (const c of sChars) {
+      const idx = eCopy.indexOf(c);
+      if (idx !== -1) {
+        matches++;
+        eCopy.splice(idx, 1);
+      }
+    }
+    
+    // Need at least 60% character overlap
+    const overlapRatio = matches / Math.max(s.length, e.length);
+    return overlapRatio >= 0.6;
   };
 
   // Process transcription - cursor-based
@@ -700,19 +747,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     for (const spoken of newWords) {
       if (advancedTo >= words.length) break;
 
+      // Check if current word is hidden (needs stricter matching)
+      const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
+      
       // STRICT: Only match the CURRENT word position - no lookahead
       // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
-      if (wordsMatch(spoken, words[advancedTo])) {
+      if (wordsMatch(spoken, words[advancedTo], currentIsHidden)) {
         foundIdx = advancedTo;
       }
 
       if (foundIdx === -1) {
         // Current word didn't match - only check NEXT word (lookahead of 1)
         // This handles minor recognition order issues without jumping too far
-        if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1])) {
+        const nextIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
+        if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1], nextIsHidden)) {
           // Mark current word as passed (might be a filler or recognition issue)
-          if (hiddenWordIndicesRef.current.has(advancedTo)) {
+          if (currentIsHidden) {
             newMissed.add(advancedTo);
           }
           newSpoken.add(advancedTo);
