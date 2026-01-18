@@ -1776,14 +1776,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
           </div>
           
           {/* Session badge */}
-          <div className={cn(
-            "shrink-0 px-3 py-1 rounded-full text-xs font-semibold",
-            sessionMode === 'recall' 
-              ? "bg-amber-500/20 text-amber-500" 
-              : "bg-primary/20 text-primary"
-          )}>
-            {sessionMode === 'recall' ? '🔄' : '📚'} {progressInfo.sublabel}
-          </div>
+          {sessionMode === 'recall' ? (
+            <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40">
+              <span className="text-xs font-bold text-amber-500 uppercase tracking-wide">Recall</span>
+              <span className="text-sm font-bold text-amber-400">{recallIndex + 1}/{beatsToRecall.length}</span>
+            </div>
+          ) : (
+            <div className={cn(
+              "shrink-0 px-3 py-1 rounded-full text-xs font-semibold",
+              "bg-primary/20 text-primary"
+            )}>
+              📚 {progressInfo.sublabel}
+            </div>
+          )}
         </div>
       </div>
 
