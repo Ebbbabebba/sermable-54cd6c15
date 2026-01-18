@@ -758,16 +758,32 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       }
 
       if (foundIdx === -1) {
-        // Current word didn't match - only check NEXT word (lookahead of 1)
+        // Current word didn't match - check NEXT word (lookahead of 1)
         // This handles minor recognition order issues without jumping too far
         const nextIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
         if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1], nextIsHidden)) {
-          // Mark current word as passed (might be a filler or recognition issue)
+          // Mark current word as passed
           if (currentIsHidden) {
+            // Hidden word was skipped - mark as missed
             newMissed.add(advancedTo);
           }
+          // Always mark current word as spoken (visible words just move on)
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
+        } else if (!currentIsHidden && advancedTo + 2 < words.length) {
+          // If current word is VISIBLE and we're stuck, check 2 words ahead
+          // This helps when recognition completely misses a visible word
+          const twoAheadIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 2);
+          if (wordsMatch(spoken, words[advancedTo + 2], twoAheadIsHidden)) {
+            // Skip current visible word and the next one (if also visible)
+            newSpoken.add(advancedTo);
+            if (!hiddenWordIndicesRef.current.has(advancedTo + 1)) {
+              newSpoken.add(advancedTo + 1);
+            } else {
+              newMissed.add(advancedTo + 1);
+            }
+            foundIdx = advancedTo + 2;
+          }
         }
       }
 
