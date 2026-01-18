@@ -654,6 +654,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
+    // Debug logging for troubleshooting
+    if (isHidden) {
+      console.log(`🎯 Hidden word match: spoken="${s}" expected="${e}" exact=${s === e}`);
+    }
+    
     // Exact match - always pass
     if (s === e) return true;
     
@@ -662,10 +667,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     
     // For HIDDEN words, be stricter - need to prove they know it
     if (isHidden) {
-      // Very short words (1-3 chars) require exact
-      if (e.length <= 3) return false;
+      // 1-2 char words require exact match
+      if (e.length <= 2) return false;
       
-      // Allow 1 char difference, similar length
+      // 3-char words: allow 1 character difference (speech recognition variance)
+      if (e.length === 3) {
+        if (Math.abs(s.length - e.length) > 1) return false;
+        let diff = 0;
+        const maxLen = Math.max(s.length, e.length);
+        for (let i = 0; i < maxLen; i++) {
+          if (s[i] !== e[i]) diff++;
+        }
+        return diff <= 1;
+      }
+      
+      // 4+ char words: allow 1 char difference, similar length
       if (Math.abs(s.length - e.length) > 1) return false;
       let diff = 0;
       for (let i = 0; i < Math.max(s.length, e.length); i++) {
