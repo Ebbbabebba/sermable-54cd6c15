@@ -140,6 +140,20 @@ const RestCountdown = ({
   );
 };
 
+// Map language code to speech recognition locale for accurate transcription
+const getRecognitionLocale = (lang: string): string => {
+  const localeMap: Record<string, string> = {
+    'sv': 'sv-SE',
+    'en': 'en-US',
+    'es': 'es-ES',
+    'fr': 'fr-FR',
+    'de': 'de-DE',
+    'it': 'it-IT',
+    'pt': 'pt-PT',
+  };
+  return localeMap[lang] || lang || 'en-US';
+};
+
 // Common words to fade first
 const COMMON_WORDS = new Set(['the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with', 'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can']);
 
@@ -1468,7 +1482,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = speechLang || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+      recognition.lang = getRecognitionLocale(speechLang);
+      console.log('🗣️ Speech recognition language:', recognition.lang);
 
       runningTranscriptRef.current = "";
 
