@@ -216,6 +216,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
   // Transcription using Web Speech API
   const recognitionRef = useRef<any>(null);
   const transcriptRef = useRef<string>("");
+  const transcriptWordsRef = useRef<string[]>([]);
   const runningTranscriptRef = useRef<string>("");
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -375,6 +376,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
 
     runningTranscriptRef.current = "";
     transcriptRef.current = "";
+    transcriptWordsRef.current = [];
 
     if (recognitionRef.current && typeof recognitionRef.current.abort === "function") {
       try {
@@ -726,18 +728,47 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     if (rawWords.length === 0) return;
 
     const currentIdx = currentWordIndexRef.current;
-    
+
     if (currentIdx >= words.length) {
       return;
     }
 
-    const prevTranscriptLength = transcriptRef.current.split(/\s+/).filter(w => w.trim()).length;
+    // Speech recognition often *updates* the last word (same word count) as it becomes final.
+    // If we only process appended words, we can get stuck (especially on the final word).
+    const prevWords = transcriptWordsRef.current;
+    const prevCount = prevWords.length;
+
+    let startIdx: number;
+
+    if (rawWords.length > prevCount) {
+      // New words appended
+      startIdx = prevCount;
+    } else {
+      // No new words appended; only reprocess if the tail changed (last 1-2 words)
+      const tailCheck = Math.min(2, rawWords.length, prevCount);
+      let tailChanged = prevCount === 0; // if we had none before, treat as changed
+
+      for (let i = 1; i <= tailCheck; i++) {
+        if (rawWords[rawWords.length - i] !== prevWords[prevCount - i]) {
+          tailChanged = true;
+          break;
+        }
+      }
+
+      if (tailChanged) {
+        // Reprocess the last couple of words to pick up corrections
+        startIdx = Math.max(0, rawWords.length - 2);
+      } else {
+        return;
+      }
+    }
+
     transcriptRef.current = transcript;
-    
-    // ONLY process truly new words - never reprocess old ones
-    const newWords = rawWords.slice(prevTranscriptLength);
-    
-    // If no new words, nothing to process (avoid reprocessing recent words)
+    transcriptWordsRef.current = rawWords;
+
+    const newWords = rawWords.slice(startIdx);
+
+    // If no words to process, nothing to do
     if (newWords.length === 0) return;
     
     let advancedTo = currentIdx;
@@ -1164,6 +1195,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     setFailedWordIndices(new Set());
 
     transcriptRef.current = "";
+    transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
     lastWordTimeRef.current = Date.now();
   };
