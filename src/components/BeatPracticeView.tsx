@@ -1708,7 +1708,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     if (sessionMode === 'recall') {
       return {
         label: t('beat_practice.recall_mode', '🔄 Quick Recall'),
-        sublabel: `Recall ${recallSuccessCount} of ${beatsToRecall.length}`,
+        sublabel: `Beat ${recallIndex + 1} of ${beatsToRecall.length}`,
       };
     }
     return {
@@ -1904,42 +1904,34 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
 
                   {/* Progress indicator for fading mode */}
                   {(sessionMode === 'recall' || phase.includes('fading')) && (
-                    <div className="mt-8 flex items-center gap-4">
-                      <div className="relative w-14 h-14">
-                        <svg className="w-14 h-14 -rotate-90">
+                    <div className="mt-8 flex items-center justify-center gap-3">
+                      <div className="relative w-12 h-12">
+                        <svg className="w-12 h-12 -rotate-90">
                           <circle
-                            cx="28" cy="28" r="24"
+                            cx="24" cy="24" r="20"
                             fill="none"
                             stroke="hsl(var(--muted))"
-                            strokeWidth="4"
+                            strokeWidth="3"
                           />
                           <circle
-                            cx="28" cy="28" r="24"
+                            cx="24" cy="24" r="20"
                             fill="none"
                             stroke="hsl(var(--primary))"
-                            strokeWidth="4"
+                            strokeWidth="3"
                             strokeLinecap="round"
-                            strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 151} 151`}
+                            strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 126} 126`}
                             className="transition-all duration-300"
                           />
                         </svg>
-                        <CheckCircle2 
-                          className={cn(
-                            "absolute inset-0 m-auto w-6 h-6 transition-colors duration-300",
-                            hiddenWordIndices.size === words.length ? "text-primary" : "text-muted-foreground/30"
-                          )}
-                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                          {Math.round((hiddenWordIndices.size / Math.max(words.length, 1)) * 100)}%
+                        </span>
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-semibold">
-                          {sessionMode === 'recall' 
-                            ? `${recallSuccessCount}/2 recalls`
-                            : `${hiddenWordIndices.size}/${words.length} mastered`}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {sessionMode === 'recall' ? 'Recall from memory' : 'Words fading away'}
-                        </p>
-                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {hiddenWordIndices.size === words.length 
+                          ? t('beat_practice.from_memory', 'From memory')
+                          : t('beat_practice.words_fading', 'Words fading')}
+                      </p>
                     </div>
                   )}
                 </motion.div>
