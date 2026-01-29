@@ -492,6 +492,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const unmasteredBeats = rows.filter(b => !b.is_mastered);
       const unmasteredCount = unmasteredBeats.length;
       
+      console.log('📊 Beats loaded:', {
+        total: rows.length,
+        mastered: masteredBeats.length,
+        unmastered: unmasteredCount,
+        beatsNeedingRecall: beatsNeedingRecall.length,
+        firstUnmasteredBeatOrder: unmasteredBeats[0]?.beat_order,
+      });
+      
       // Calculate how many beats we can learn today based on deadline
       const computedBeatsPerDay = calculateBeatsPerDay(unmasteredCount, computedDaysUntilDeadline);
       setBeatsPerDay(computedBeatsPerDay);
@@ -506,6 +514,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Premium users can learn unlimited beats; free users are limited
       const canLearnMore = isPremium || beatsLearnedToday < computedBeatsPerDay;
       const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
+      
+      console.log('📚 Beat selection:', {
+        beatsPerDay: computedBeatsPerDay,
+        beatsLearnedToday,
+        canLearnMore,
+        selectedBeatOrder: firstUnmastered?.beat_order,
+      });
       
       setBeatsToRecall(beatsNeedingRecall);
       setNewBeatToLearn(firstUnmastered);
@@ -1472,7 +1487,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const showBeatCelebration = async () => {
     // Mark beat as mastered with timestamp and advance to next practice stage
     if (currentBeat) {
-      await supabase
+      console.log('🏆 Marking beat as mastered:', currentBeat.id);
+      
+      const { error: updateError } = await supabase
         .from('practice_beats')
         .update({ 
           is_mastered: true, 
@@ -1488,6 +1505,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           checkpoint_hidden_indices: null,
         })
         .eq('id', currentBeat.id);
+      
+      if (updateError) {
+        console.error('❌ Failed to mark beat as mastered:', updateError);
+        toast({
+          variant: "destructive",
+          title: "Error saving progress",
+          description: "Please try again.",
+        });
+        return;
+      }
+      
+      console.log('✅ Beat marked as mastered successfully');
       
       // Update schedule's next_review_date based on spaced repetition
       // For beat-based learning: next review in 4-24 hours depending on deadline
@@ -1985,7 +2014,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         <p className="text-muted-foreground max-w-md">
           {allMastered 
             ? t('beat_practice.poem_memorized', "You've memorized the entire poem! Practice again tomorrow to reinforce.")
-            : t('beat_practice.come_back', { current: masteredCount, total: totalBeats, defaultValue: `You've mastered ${masteredCount}/${totalBeats} beats. Come back in a few hours to learn the next one!` })}
+            : masteredCount === 0
+              ? t('beat_practice.no_beats_yet', { total: totalBeats, defaultValue: `You have ${totalBeats} beats to learn. Complete all phases of a beat to mark it as mastered!` })
+              : t('beat_practice.come_back', { current: masteredCount, total: totalBeats, defaultValue: `You've mastered ${masteredCount}/${totalBeats} beats. Come back in a few hours to learn the next one!` })}
         </p>
         <div className="flex flex-col gap-2 mt-4">
           <p className="text-sm text-muted-foreground flex items-center gap-2">
@@ -2170,6 +2201,40 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               </div>
             );
           })()}
+          
+          {/* Beat phase indicator - show progress towards mastery */}
+          {sessionMode === 'learn' && (
+            <div className="flex justify-center mb-2">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                {(() => {
+                  const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
+                  // Calculate phase progress: S1 → S2 → S1+S2 → S3 → Full beat → Mastered
+                  const phases = uniqueCount === 1 
+                    ? ['sentence_1', 'beat', 'mastered']
+                    : uniqueCount === 2
+                      ? ['sentence_1', 'sentence_2', 'beat', 'mastered']
+                      : ['sentence_1', 'sentence_2', 'sentence_3', 'beat', 'mastered'];
+                  
+                  const currentPhaseKey = phase.includes('beat') ? 'beat' : phase.split('_').slice(0, 2).join('_');
+                  const currentIdx = phases.indexOf(currentPhaseKey);
+                  
+                  return phases.map((p, idx) => (
+                    <div 
+                      key={p} 
+                      className={cn(
+                        "w-2 h-2 rounded-full transition-all",
+                        idx < currentIdx ? "bg-primary" : 
+                        idx === currentIdx ? "bg-primary/50 ring-1 ring-primary" : 
+                        "bg-muted"
+                      )}
+                      title={p === 'mastered' ? 'Beat mastered' : p === 'beat' ? 'Full beat' : `Sentence ${p.split('_')[1]}`}
+                    />
+                  ));
+                })()}
+                <span className="ml-2">{phase.includes('beat') ? t('beat_practice.final_phase', 'Final phase!') : ''}</span>
+              </div>
+            </div>
+          )}
 
           {/* Phase pill */}
           <div className="flex justify-center">
