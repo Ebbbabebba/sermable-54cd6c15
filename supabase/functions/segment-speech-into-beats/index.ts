@@ -13,9 +13,103 @@ interface Beat {
   sentence_3_text: string;
 }
 
+// AI-powered sentence splitting for long sentences
+// Returns an array of shorter sentence fragments at natural breakpoints
+async function splitLongSentenceWithAI(sentence: string): Promise<string[]> {
+  const wordCount = sentence.split(/\s+/).filter(Boolean).length;
+  
+  // Only split sentences longer than 25 words
+  if (wordCount <= 25) {
+    return [sentence];
+  }
+  
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.log('No LOVABLE_API_KEY, skipping AI sentence splitting');
+    return [sentence];
+  }
+  
+  try {
+    console.log(`Splitting long sentence (${wordCount} words) with AI...`);
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          {
+            role: 'system',
+            content: `You split long sentences into shorter, natural phrases for memorization practice.
+
+Rules:
+1. Split at natural pause points (commas, semicolons, or logical breaks)
+2. Each fragment should be 8-20 words ideally
+3. Keep the meaning intact - don't rephrase, just find split points
+4. Each fragment should end with a comma or the original punctuation
+5. Return ONLY a JSON array of strings, nothing else
+
+Example input: "Jag, Ebba Hallert Djurberg, överläkare och min kollega Norah Hamberg, Specialistsjuksköterska hos den palliativa vårdavdelningen på karolinska institutet sedan 20 respektive 25 år tillbaka, skall idag debattera kring just denna svåra frågeställning."
+
+Example output: ["Jag, Ebba Hallert Djurberg, överläkare och min kollega Norah Hamberg,", "Specialistsjuksköterska hos den palliativa vårdavdelningen på karolinska institutet sedan 20 respektive 25 år tillbaka,", "skall idag debattera kring just denna svåra frågeställning."]`
+          },
+          {
+            role: 'user',
+            content: `Split this sentence into shorter fragments:\n\n${sentence}`
+          }
+        ],
+        temperature: 0.1,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error('AI API error:', response.status);
+      return [sentence];
+    }
+    
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+    
+    if (!content) {
+      console.log('No AI response, keeping original sentence');
+      return [sentence];
+    }
+    
+    // Parse the JSON array from the response
+    // Handle potential markdown code blocks
+    let jsonStr = content;
+    if (jsonStr.startsWith('```')) {
+      jsonStr = jsonStr.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+    }
+    
+    const fragments = JSON.parse(jsonStr);
+    
+    if (Array.isArray(fragments) && fragments.length > 1) {
+      console.log(`AI split sentence into ${fragments.length} fragments`);
+      // Ensure each fragment is trimmed and has proper punctuation
+      return fragments.map((f: string, i: number) => {
+        const trimmed = f.trim();
+        // Add comma if not already ending with punctuation (except for last fragment)
+        if (i < fragments.length - 1 && !/[.!?,;]$/.test(trimmed)) {
+          return trimmed + ',';
+        }
+        return trimmed;
+      });
+    }
+    
+    return [sentence];
+  } catch (error) {
+    console.error('AI sentence splitting failed:', error);
+    return [sentence];
+  }
+}
+
 // Split text into sentences, preserving punctuation
 // Sentence endings: . ! ? (always), or , (only after 3+ consecutive commas)
-function splitIntoSentences(text: string): string[] {
+async function splitIntoSentences(text: string): Promise<string[]> {
   const normalized = (text ?? "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
@@ -77,7 +171,7 @@ function splitIntoSentences(text: string): string[] {
   }
 
   // Handle line breaks within sentences - split multi-line chunks
-  const finalOut: string[] = [];
+  const lineProcessed: string[] = [];
   for (const sentence of out) {
     const lines = sentence
       .split(/\n+/)
@@ -92,7 +186,7 @@ function splitIntoSentences(text: string): string[] {
         if (group && !/[.!?,]$/.test(group)) {
           group += ".";
         }
-        if (group) finalOut.push(group);
+        if (group) lineProcessed.push(group);
       }
     } else {
       // Join lines and ensure punctuation at end
@@ -100,8 +194,15 @@ function splitIntoSentences(text: string): string[] {
       if (joinedSentence && !/[.!?,]$/.test(joinedSentence)) {
         joinedSentence += ".";
       }
-      if (joinedSentence) finalOut.push(joinedSentence);
+      if (joinedSentence) lineProcessed.push(joinedSentence);
     }
+  }
+
+  // AI-powered splitting of long sentences
+  const finalOut: string[] = [];
+  for (const sentence of lineProcessed) {
+    const fragments = await splitLongSentenceWithAI(sentence);
+    finalOut.push(...fragments);
   }
 
   return finalOut;
@@ -249,8 +350,8 @@ serve(async (req) => {
       );
     }
 
-    // Split into sentences
-    const sentences = splitIntoSentences(speech.text_original);
+    // Split into sentences (async for AI-powered long sentence splitting)
+    const sentences = await splitIntoSentences(speech.text_original);
     console.log(`Found ${sentences.length} sentences in speech`);
 
     // Create beats (groups of 3 sentences)
