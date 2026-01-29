@@ -89,15 +89,47 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const imageData = event.target?.result as string;
-        setCapturedImage(imageData);
+        // Automatically process the image - no preview needed
+        await processImageDirectly(imageData);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Process image directly without showing preview
+  const processImageDirectly = async (imageData: string) => {
+    setIsScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('scan-document', {
+        body: { image: imageData }
+      });
+
+      if (error) throw error;
+
+      if (data?.text) {
+        handleTextChange(text ? `${text}\n\n${data.text}` : data.text);
+        toast({
+          title: t('upload.scanSuccess'),
+          description: t('upload.scanSuccessDesc'),
+        });
+      } else {
+        throw new Error('No text extracted');
+      }
+    } catch (error: any) {
+      console.error('Scan error:', error);
+      toast({
+        variant: "destructive",
+        title: t('upload.scanError'),
+        description: t('upload.scanErrorDesc'),
+      });
+    } finally {
+      setIsScanning(false);
     }
   };
 
@@ -444,7 +476,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
               </div>
             )}
 
-            {/* Captured Image Preview */}
+            {/* Camera captured image - only for camera captures, not file uploads */}
             {capturedImage && !showCamera && (
               <div className="relative rounded-lg overflow-hidden border">
                 <img src={capturedImage} alt="Captured document" className="w-full" />
@@ -479,15 +511,26 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
               </div>
             )}
 
-            <Textarea
-              id="text"
-              placeholder={t('upload.pasteText')}
-              value={text}
-              onChange={(e) => handleTextChange(e.target.value)}
-              rows={12}
-              required
-              className="resize-none"
-            />
+            {/* Text area with loading overlay when scanning */}
+            <div className="relative">
+              {isScanning && !capturedImage && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-md flex flex-col items-center justify-center z-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+                  <p className="text-sm font-medium text-foreground">{t('upload.extracting')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Analyzing image...</p>
+                </div>
+              )}
+              <Textarea
+                id="text"
+                placeholder={t('upload.pasteText')}
+                value={text}
+                onChange={(e) => handleTextChange(e.target.value)}
+                rows={12}
+                required
+                className="resize-none"
+                disabled={isScanning && !capturedImage}
+              />
+            </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
                 {text.split(/\s+/).filter(Boolean).length} / {wordLimit} {t('dashboard.words')}
