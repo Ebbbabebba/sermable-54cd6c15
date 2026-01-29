@@ -43,14 +43,16 @@ async function splitLongSentenceWithAI(sentence: string): Promise<string[]> {
         messages: [
           {
             role: 'system',
-            content: `You split long sentences into shorter, natural phrases for memorization practice.
+            content: `You split long sentences into 2-3 shorter, natural phrases for memorization practice.
 
 Rules:
-1. Split at natural pause points (commas, semicolons, or logical breaks)
-2. Each fragment should be 8-20 words ideally
-3. Keep the meaning intact - don't rephrase, just find split points
-4. Each fragment should end with a comma or the original punctuation
-5. Return ONLY a JSON array of strings, nothing else
+1. Find natural pause points - usually after a comma that completes a logical phrase
+2. Each fragment should be 8-25 words ideally  
+3. Keep ALL original words intact - don't rephrase or remove anything
+4. Fragments ending mid-sentence should end with a comma
+5. The final fragment keeps the original punctuation (. ! ?)
+6. Return ONLY a JSON array of strings, nothing else
+7. Aim for 2-3 fragments total
 
 Example input: "Jag, Ebba Hallert Djurberg, överläkare och min kollega Norah Hamberg, Specialistsjuksköterska hos den palliativa vårdavdelningen på karolinska institutet sedan 20 respektive 25 år tillbaka, skall idag debattera kring just denna svåra frågeställning."
 
