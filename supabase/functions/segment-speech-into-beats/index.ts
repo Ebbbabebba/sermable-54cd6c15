@@ -14,7 +14,7 @@ interface Beat {
 }
 
 // Split text into sentences, preserving punctuation
-// Ensures each sentence ends with . , ! or ?
+// Sentence endings: . ! ? (always), or , (only after 3+ consecutive commas)
 function splitIntoSentences(text: string): string[] {
   const normalized = (text ?? "")
     .replace(/\r\n/g, "\n")
@@ -23,18 +23,63 @@ function splitIntoSentences(text: string): string[] {
 
   if (!normalized) return [];
 
-  // Split by sentence-ending punctuation (. ! ? ,) - keeping the punctuation
-  // Match: any text followed by punctuation, OR trailing text without punctuation
-  const chunks = normalized.match(/[^.!?,]+[.!?,]+|[^.!?,]+$/g) ?? [normalized];
-
   const out: string[] = [];
+  let currentSentence = "";
+  let consecutiveCommaCount = 0;
 
-  for (const chunk of chunks) {
-    const trimmed = chunk.trim();
-    if (!trimmed) continue;
+  // Split by whitespace to process word by word
+  const tokens = normalized.split(/(\s+)/);
 
-    // Handle line breaks within a chunk - split into lines
-    const lines = trimmed
+  for (const token of tokens) {
+    if (!token) continue;
+
+    // If it's just whitespace, add to current sentence
+    if (/^\s+$/.test(token)) {
+      currentSentence += token;
+      continue;
+    }
+
+    currentSentence += token;
+
+    // Check if token ends with sentence-ending punctuation
+    if (/[.!?]$/.test(token)) {
+      // Definite sentence end
+      const trimmed = currentSentence.trim();
+      if (trimmed) {
+        out.push(trimmed);
+      }
+      currentSentence = "";
+      consecutiveCommaCount = 0;
+    } else if (/,$/.test(token)) {
+      // Comma - only treat as sentence end after 3 consecutive commas
+      consecutiveCommaCount++;
+      if (consecutiveCommaCount >= 3) {
+        // Third comma in a row - treat as sentence end
+        const trimmed = currentSentence.trim();
+        if (trimmed) {
+          out.push(trimmed);
+        }
+        currentSentence = "";
+        consecutiveCommaCount = 0;
+      }
+    } else {
+      // No relevant punctuation - reset comma counter
+      consecutiveCommaCount = 0;
+    }
+  }
+
+  // Handle any remaining text
+  const remaining = currentSentence.trim();
+  if (remaining) {
+    // Ensure it ends with punctuation
+    const finalSentence = /[.!?,]$/.test(remaining) ? remaining : remaining + ".";
+    out.push(finalSentence);
+  }
+
+  // Handle line breaks within sentences - split multi-line chunks
+  const finalOut: string[] = [];
+  for (const sentence of out) {
+    const lines = sentence
       .split(/\n+/)
       .map((l) => l.trim())
       .filter(Boolean);
@@ -47,19 +92,19 @@ function splitIntoSentences(text: string): string[] {
         if (group && !/[.!?,]$/.test(group)) {
           group += ".";
         }
-        if (group) out.push(group);
+        if (group) finalOut.push(group);
       }
     } else {
       // Join lines and ensure punctuation at end
-      let sentence = lines.join(" ").trim();
-      if (sentence && !/[.!?,]$/.test(sentence)) {
-        sentence += ".";
+      let joinedSentence = lines.join(" ").trim();
+      if (joinedSentence && !/[.!?,]$/.test(joinedSentence)) {
+        joinedSentence += ".";
       }
-      if (sentence) out.push(sentence);
+      if (joinedSentence) finalOut.push(joinedSentence);
     }
   }
 
-  return out;
+  return finalOut;
 }
 
 // Count total words in the speech
