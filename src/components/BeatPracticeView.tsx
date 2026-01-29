@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward, BookOpen, Eye } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import BeatProgress from "./BeatProgress";
@@ -52,6 +54,7 @@ interface Beat {
 interface BeatPracticeViewProps {
   speechId: string;
   subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
+  fullSpeechText?: string; // Full speech text for "Show Whole Speech" modal
   onComplete?: () => void;
   onExit?: () => void;
   onSessionLimitReached?: () => void; // Called when free user hits daily limit
@@ -59,8 +62,8 @@ interface BeatPracticeViewProps {
 
 type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
 
-// Session modes: recall (quick review of mastered beats), learn (learning a new beat), beat_rest (pause between beats), pre_beat_recall (recall previous beat before learning new)
-type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'pre_beat_recall' | 'session_complete';
+// Session modes: recall (quick review of mastered beats), learn (learning a new beat), beat_rest (pause between beats), pre_beat_recall (recall previous beat before learning new), beat_preview (preview upcoming beat before learning)
+type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'pre_beat_recall' | 'beat_preview' | 'session_complete';
 
 // Calculate rest minutes based on deadline urgency
 const calculateRestMinutes = (daysUntilDeadline: number): number => {
@@ -172,9 +175,12 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onExit, onSessionLimitReached }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = subscriptionTier !== 'free';
+  
+  // Full speech modal state
+  const [showFullSpeechModal, setShowFullSpeechModal] = useState(false);
   
   // Sound effects
   const soundEnabled = typeof localStorage !== 'undefined' ? localStorage.getItem('soundEnabled') !== 'false' : true;
@@ -510,12 +516,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
         setRecallIndex(0);
         initializeRecallMode();
       } else if (firstUnmastered) {
-        setSessionMode('learn');
-        setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
-        
-        // Check if there's a saved checkpoint for this beat
+        // Check if there's a saved checkpoint for this beat - resume directly if so
         if (firstUnmastered.checkpoint_phase && firstUnmastered.checkpoint_sentence) {
           console.log('🔄 Restoring checkpoint: sentence', firstUnmastered.checkpoint_sentence, 'phase', firstUnmastered.checkpoint_phase);
+          
+          setSessionMode('learn');
+          setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
           
           // Restore the phase
           setPhase(firstUnmastered.checkpoint_phase as Phase);
@@ -525,6 +531,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
             setHiddenWordIndices(new Set(firstUnmastered.checkpoint_hidden_indices));
             setHiddenWordOrder([...firstUnmastered.checkpoint_hidden_indices]);
           }
+        } else {
+          // No checkpoint - show beat preview first
+          setSessionMode('beat_preview');
+          setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
         }
       } else {
         // Either all mastered, or already learned today's quota (free user)
@@ -1101,11 +1111,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
             setHiddenWordOrder([]);
             resetForNextRep();
           } else {
-            // Done with recalls, now learn new beat
+            // Done with recalls, now show beat preview before learning
             if (newBeatToLearn) {
-              setSessionMode('learn');
+              setSessionMode('beat_preview');
               setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
-              transitionToPhase('sentence_1_learning');
             } else {
               // No new beat to learn - update schedule and session complete!
               // Set next review based on spaced repetition
@@ -1767,6 +1776,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     if (recognitionRef.current) return;
     if (sessionMode === 'session_complete') return;
     if (sessionMode === 'beat_rest') return;
+    if (sessionMode === 'beat_preview') return;
 
     startRecording();
   }, [loading, currentBeat?.id, showCelebration, phase, sessionMode, recallIndex]);
@@ -1782,6 +1792,131 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  // Beat preview screen - show upcoming beat before learning
+  if (sessionMode === 'beat_preview' && newBeatToLearn) {
+    const previewBeatText = [
+      newBeatToLearn.sentence_1_text,
+      newBeatToLearn.sentence_2_text,
+      newBeatToLearn.sentence_3_text,
+    ].filter((s, i, arr) => s && arr.indexOf(s) === i).join(' ');
+    
+    const beatNumber = beats.findIndex(b => b.id === newBeatToLearn.id) + 1;
+    
+    return (
+      <div className="flex flex-col h-full bg-background">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30">
+          <div className="flex items-center justify-between max-w-2xl mx-auto">
+            {/* Exit button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onExit}
+              className="shrink-0 rounded-full hover:bg-muted"
+            >
+              <X className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            
+            {/* Full Speech Button */}
+            {fullSpeechText && (
+              <Sheet open={showFullSpeechModal} onOpenChange={setShowFullSpeechModal}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    <span className="text-xs">{t('beat_practice.full_speech', 'Full Speech')}</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[80vh]">
+                  <SheetHeader>
+                    <SheetTitle>{t('beat_practice.full_speech', 'Full Speech')}</SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-[calc(80vh-80px)] mt-4">
+                    <p className="text-base leading-relaxed whitespace-pre-wrap pr-4">
+                      {fullSpeechText}
+                    </p>
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
+            )}
+            
+            {/* Beat badge */}
+            <div className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
+              📚 {t('beat_practice.beat_number', { number: beatNumber, defaultValue: `Beat ${beatNumber}` })}
+            </div>
+          </div>
+        </div>
+
+        {/* Main content - Preview card */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
+          <div className="w-full max-w-2xl space-y-6">
+            {/* Preview header */}
+            <div className="flex flex-col items-center gap-2">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Eye className="h-12 w-12 text-primary" />
+              </motion.div>
+              <h2 className="text-xl font-semibold text-foreground">
+                {t('beat_practice.coming_up', 'Coming up...')}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('beat_practice.read_through', 'Read through once, then practice')}
+              </p>
+            </div>
+
+            {/* Beat text card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10"
+            >
+              <p className="text-lg md:text-xl leading-relaxed text-foreground text-left">
+                {previewBeatText}
+              </p>
+            </motion.div>
+
+            {/* Action buttons */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-col items-center gap-3"
+            >
+              <Button
+                size="lg"
+                className="w-full max-w-sm"
+                onClick={() => {
+                  setSessionMode('learn');
+                  transitionToPhase('sentence_1_learning');
+                }}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                {t('beat_practice.ready_to_practice', "I'm Ready to Practice")}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => {
+                  // Skip preview, go directly to learn
+                  setSessionMode('learn');
+                  transitionToPhase('sentence_1_learning');
+                }}
+              >
+                <SkipForward className="h-4 w-4 mr-1" />
+                {t('beat_practice.skip_preview', 'Skip preview')}
+              </Button>
+            </motion.div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1939,6 +2074,27 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', onComplete, onE
               <SkipForward className="h-4 w-4 mr-1" />
               <span className="text-xs">{t('common.skip', 'Skip')}</span>
             </Button>
+          )}
+          
+          {/* Full Speech Button */}
+          {fullSpeechText && (
+            <Sheet open={showFullSpeechModal} onOpenChange={setShowFullSpeechModal}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-muted">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[80vh]">
+                <SheetHeader>
+                  <SheetTitle>{t('beat_practice.full_speech', 'Full Speech')}</SheetTitle>
+                </SheetHeader>
+                <ScrollArea className="h-[calc(80vh-80px)] mt-4">
+                  <p className="text-base leading-relaxed whitespace-pre-wrap pr-4">
+                    {fullSpeechText}
+                  </p>
+                </ScrollArea>
+              </SheetContent>
+            </Sheet>
           )}
           
           {/* Progress bar */}
