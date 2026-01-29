@@ -1798,11 +1798,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   // Beat preview screen - show upcoming beat before learning
   if (sessionMode === 'beat_preview' && newBeatToLearn) {
-    const previewBeatText = [
-      newBeatToLearn.sentence_1_text,
-      newBeatToLearn.sentence_2_text,
-      newBeatToLearn.sentence_3_text,
-    ].filter((s, i, arr) => s && arr.indexOf(s) === i).join(' ');
+    // Preview should be short: show at most the first two unique sentences
+    const uniqueSentences = getUniqueSentences(newBeatToLearn);
+    const previewBeatText = uniqueSentences.slice(0, 2).join(' ');
     
     const beatNumber = beats.findIndex(b => b.id === newBeatToLearn.id) + 1;
     
