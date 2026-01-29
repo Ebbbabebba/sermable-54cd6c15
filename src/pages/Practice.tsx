@@ -1849,6 +1849,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           <BeatPracticeView
             speechId={speech.id}
             subscriptionTier={subscriptionTier}
+            fullSpeechText={speech.text_original}
             onComplete={async () => {
               setIsPracticing(false);
               // Ensure schedule is written with future date, then reload
