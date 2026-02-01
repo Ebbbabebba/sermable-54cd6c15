@@ -10,7 +10,9 @@ import { PresentationModeSelector } from "@/components/PresentationModeSelector"
 import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
 import { ViewModeSelector } from "@/components/ViewModeSelector";
+import { AudienceOverlay } from "@/components/audience";
 import type { ViewMode } from "@/components/WearableHUD";
+import type { Environment } from "@/components/audience/types";
 
 interface WordPerformance {
   word: string;
@@ -28,6 +30,7 @@ interface Speech {
   text_current: string;
   speech_language: string;
   presentation_mode?: 'strict' | 'fullscript';
+  speech_type?: string;
 }
 
 const Presentation = () => {
@@ -40,7 +43,7 @@ const Presentation = () => {
   const [loading, setLoading] = useState(true);
   
   // Mode selection
-  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | 'audience' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   
   // Session states
@@ -49,6 +52,13 @@ const Presentation = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState(0);
+  
+  // Audience mode
+  const [showAudienceOverlay, setShowAudienceOverlay] = useState(false);
+  const [currentWordPerformance, setCurrentWordPerformance] = useState<{
+    status: 'correct' | 'hesitated' | 'missed' | 'skipped';
+    timeToSpeak?: number;
+  } | null>(null);
   
   // Settings
   const [autoStopSilence, setAutoStopSilence] = useState(4);
@@ -301,6 +311,13 @@ const Presentation = () => {
     }
   };
 
+  const handleAudienceModeSelect = () => {
+    setSelectedMode('audience');
+    setShowAudienceOverlay(true);
+    // Start with strict mode but with audience overlay
+    setStage('view-mode-select');
+  };
+
   const handleViewModeSelect = (mode: ViewMode) => {
     setViewMode(mode);
     setStage('prep');
@@ -349,6 +366,7 @@ const Presentation = () => {
         </div>
         <PresentationModeSelector 
           onSelectMode={handleModeSelect}
+          onSelectAudienceMode={handleAudienceModeSelect}
         />
       </div>
     );
@@ -533,20 +551,35 @@ const Presentation = () => {
     }
   };
 
+  // Get environment for audience mode
+  const audienceEnvironment = (speech.speech_type || 'general') as Environment;
+
   // Show strict presentation live view
   return (
-    <CompactPresentationView
-      text={speech.text_original}
-      speechLanguage={speech.speech_language || 'en-US'}
-      isRecording={isRecording}
-      isProcessing={isProcessing}
-      elapsedTime={elapsedTime}
-      viewMode={viewMode}
-      onStartRecording={handleRecordingStart}
-      onStopRecording={handleStopRecording}
-      onPerformanceData={handlePerformanceData}
-      onExit={handleExit}
-    />
+    <>
+      <CompactPresentationView
+        text={speech.text_original}
+        speechLanguage={speech.speech_language || 'en-US'}
+        isRecording={isRecording}
+        isProcessing={isProcessing}
+        elapsedTime={elapsedTime}
+        viewMode={viewMode}
+        onStartRecording={handleRecordingStart}
+        onStopRecording={handleStopRecording}
+        onPerformanceData={handlePerformanceData}
+        onExit={handleExit}
+      />
+      
+      {/* Audience overlay for premium users */}
+      {selectedMode === 'audience' && (
+        <AudienceOverlay
+          isVisible={showAudienceOverlay}
+          environment={audienceEnvironment}
+          onClose={() => setShowAudienceOverlay(false)}
+          wordPerformance={currentWordPerformance}
+        />
+      )}
+    </>
   );
 };
 
