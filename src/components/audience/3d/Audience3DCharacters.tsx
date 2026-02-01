@@ -1,6 +1,6 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Cylinder, Sphere, Box } from "@react-three/drei";
+import { Sphere, Cylinder, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { DEFAULT_CHARACTERS, type AudienceState, type Expression } from "../types";
 
@@ -8,12 +8,12 @@ interface Audience3DCharactersProps {
   audienceState: AudienceState;
 }
 
-// Character positions in a semi-circle facing the camera
+// Character positions - arranged like sitting at a table facing you
 const CHARACTER_POSITIONS: [number, number, number][] = [
-  [-1.2, 0, 1],    // Sarah - left
-  [-0.4, 0, 0.8],  // Marcus - left-center
-  [0.4, 0, 0.8],   // Yuki - right-center
-  [1.2, 0, 1],     // David - right
+  [-1.3, 0, 0.6],   // Sarah - left
+  [-0.45, 0, 0.3],  // Marcus - left-center  
+  [0.45, 0, 0.3],   // Yuki - right-center
+  [1.3, 0, 0.6],    // David - right
 ];
 
 // Determine expression based on character personality and audience state
@@ -67,7 +67,7 @@ export const Audience3DCharacters = ({ audienceState }: Audience3DCharactersProp
   return (
     <group>
       {characterExpressions.map(({ character, expression, position }) => (
-        <Character3D
+        <DuolingoCharacter
           key={character.id}
           character={character}
           expression={expression}
@@ -78,234 +78,423 @@ export const Audience3DCharacters = ({ audienceState }: Audience3DCharactersProp
   );
 };
 
-interface Character3DProps {
+interface DuolingoCharacterProps {
   character: typeof DEFAULT_CHARACTERS[0];
   expression: Expression;
   position: [number, number, number];
 }
 
-const Character3D = ({ character, expression, position }: Character3DProps) => {
+// Duolingo-inspired character with smooth, bouncy animations
+const DuolingoCharacter = ({ character, expression, position }: DuolingoCharacterProps) => {
   const groupRef = useRef<THREE.Group>(null);
+  const bodyRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
-  const leftEyeRef = useRef<THREE.Mesh>(null);
-  const rightEyeRef = useRef<THREE.Mesh>(null);
+  const leftArmRef = useRef<THREE.Group>(null);
+  const rightArmRef = useRef<THREE.Group>(null);
   
-  // Clothing colors based on character
-  const clothingColor = useMemo(() => {
-    const colors: Record<string, string> = {
-      sarah: '#4F46E5',
-      marcus: '#0F766E',
-      yuki: '#DB2777',
-      david: '#1D4ED8',
+  // Track expression changes for bounce animation
+  const [prevExpression, setPrevExpression] = useState(expression);
+  const [bounceTime, setBounceTime] = useState(0);
+  
+  useEffect(() => {
+    if (prevExpression !== expression) {
+      setBounceTime(0);
+      setPrevExpression(expression);
+    }
+  }, [expression, prevExpression]);
+  
+  // Vibrant Duolingo-style colors
+  const colors = useMemo(() => {
+    const palettes: Record<string, { body: string; accent: string; skin: string }> = {
+      sarah: { body: '#58CC02', accent: '#89E219', skin: '#FFD9B3' },    // Duo green
+      marcus: { body: '#1CB0F6', accent: '#49D0FF', skin: '#C68642' },   // Duo blue  
+      yuki: { body: '#FF4B4B', accent: '#FF6B6B', skin: '#FFE0BD' },     // Duo red
+      david: { body: '#CE82FF', accent: '#E5A8FF', skin: '#FFDFC4' },    // Duo purple
     };
-    return colors[character.id] || '#4F46E5';
+    return palettes[character.id] || palettes.sarah;
   }, [character.id]);
 
-  // Animation based on expression
-  useFrame((state) => {
-    if (!headRef.current) return;
+  // Smooth spring-like animations
+  useFrame((state, delta) => {
+    if (!headRef.current || !bodyRef.current) return;
     
     const time = state.clock.elapsedTime;
+    bounceTime < 1 && setBounceTime(prev => Math.min(prev + delta * 2, 1));
     
-    // Base idle animation
-    headRef.current.rotation.y = Math.sin(time * 0.5) * 0.05;
+    // Bouncy spring factor for expression changes
+    const spring = Math.sin(bounceTime * Math.PI) * (1 - bounceTime) * 0.5;
     
-    // Expression-specific animations
+    // Idle breathing animation - subtle and smooth
+    const breathe = Math.sin(time * 1.5) * 0.015;
+    bodyRef.current.scale.y = 1 + breathe;
+    bodyRef.current.position.y = 0.55 + breathe * 0.5;
+    
+    // Head idle sway - very gentle
+    headRef.current.rotation.y = Math.sin(time * 0.7 + character.position) * 0.03;
+    headRef.current.rotation.z = Math.sin(time * 0.5) * 0.02;
+    
+    // Expression-specific animations with Duolingo-style bounce
     switch (expression) {
       case 'listening':
-        headRef.current.rotation.x = Math.sin(time * 0.8) * 0.03;
-        headRef.current.position.y = 1.55 + Math.sin(time * 1.2) * 0.02;
+        // Gentle nodding
+        headRef.current.rotation.x = Math.sin(time * 1.2) * 0.06;
+        headRef.current.position.y = 1.3 + spring * 0.1;
         break;
+        
       case 'impressed':
+        // Excited bounce up
+        headRef.current.position.y = 1.35 + spring * 0.15 + Math.sin(time * 3) * 0.02;
         headRef.current.rotation.x = -0.1;
-        headRef.current.position.y = 1.6;
+        bodyRef.current.scale.y = 1.05 + spring * 0.1;
+        // Arms up slightly
+        if (leftArmRef.current) leftArmRef.current.rotation.z = -0.3 - spring * 0.2;
+        if (rightArmRef.current) rightArmRef.current.rotation.z = 0.3 + spring * 0.2;
         break;
+        
       case 'confused':
-        headRef.current.rotation.z = Math.sin(time * 2) * 0.1;
-        headRef.current.rotation.x = 0.05;
+        // Head tilt with bounce
+        headRef.current.rotation.z = 0.15 + Math.sin(time * 2) * 0.05;
+        headRef.current.position.y = 1.28 + spring * 0.05;
         break;
+        
       case 'celebrating':
-        headRef.current.position.y = 1.55 + Math.sin(time * 8) * 0.05;
-        headRef.current.rotation.z = Math.sin(time * 6) * 0.08;
+        // Happy bouncing with arms waving
+        const celebrateBounce = Math.sin(time * 8) * 0.08;
+        headRef.current.position.y = 1.35 + celebrateBounce;
+        bodyRef.current.scale.y = 1 + Math.abs(celebrateBounce) * 0.5;
+        headRef.current.rotation.z = Math.sin(time * 6) * 0.1;
+        // Wave arms
+        if (leftArmRef.current) {
+          leftArmRef.current.rotation.z = -0.5 + Math.sin(time * 10) * 0.4;
+          leftArmRef.current.rotation.x = Math.sin(time * 8) * 0.2;
+        }
+        if (rightArmRef.current) {
+          rightArmRef.current.rotation.z = 0.5 - Math.sin(time * 10 + 0.5) * 0.4;
+          rightArmRef.current.rotation.x = Math.sin(time * 8 + 0.5) * 0.2;
+        }
         break;
+        
       case 'bored':
+        // Droopy, slow movement
         headRef.current.rotation.x = 0.15;
-        headRef.current.position.y = 1.5;
+        headRef.current.position.y = 1.25;
+        bodyRef.current.scale.y = 0.98;
+        // Arms hanging
+        if (leftArmRef.current) leftArmRef.current.rotation.z = -0.1;
+        if (rightArmRef.current) rightArmRef.current.rotation.z = 0.1;
         break;
+        
       case 'skeptical':
+        // Slight lean back, one eyebrow up effect via rotation
         headRef.current.rotation.z = -0.08;
         headRef.current.rotation.y = -0.1;
+        headRef.current.position.y = 1.3 + spring * 0.03;
         break;
-      default:
-        headRef.current.position.y = 1.55;
+        
+      default: // neutral
+        headRef.current.position.y = 1.3;
         headRef.current.rotation.x = 0;
-        headRef.current.rotation.z = 0;
-    }
-    
-    // Blink animation
-    if (leftEyeRef.current && rightEyeRef.current) {
-      const blinkCycle = Math.sin(time * 0.5 + character.position) > 0.95;
-      const eyeScale = blinkCycle ? 0.1 : 1;
-      leftEyeRef.current.scale.y = eyeScale;
-      rightEyeRef.current.scale.y = eyeScale;
+        if (leftArmRef.current) leftArmRef.current.rotation.z = -0.15;
+        if (rightArmRef.current) rightArmRef.current.rotation.z = 0.15;
     }
   });
 
-  // Eye scale based on expression
-  const eyeScaleY = useMemo(() => {
-    switch (expression) {
-      case 'impressed': return 1.3;
-      case 'bored': return 0.5;
-      case 'celebrating': return 0.7;
-      case 'confused': return 0.9;
-      default: return 1;
-    }
-  }, [expression]);
-
   return (
     <group ref={groupRef} position={position}>
-      {/* Body - torso */}
-      <group position={[0, 0.7, 0]}>
-        {/* Torso */}
-        <Cylinder args={[0.2, 0.25, 0.6, 16]} position={[0, 0.3, 0]}>
-          <meshStandardMaterial color={clothingColor} roughness={0.7} />
-        </Cylinder>
+      {/* Body - pill/capsule shape like Duolingo characters */}
+      <group ref={bodyRef} position={[0, 0.55, 0]}>
+        {/* Main body - rounded capsule */}
+        <Sphere args={[0.22, 32, 32]} scale={[1, 1.3, 0.9]}>
+          <meshToonMaterial color={colors.body} />
+        </Sphere>
         
-        {/* Shoulders */}
-        <Cylinder args={[0.08, 0.08, 0.5, 8]} rotation={[0, 0, Math.PI / 2]} position={[0, 0.55, 0]}>
-          <meshStandardMaterial color={clothingColor} roughness={0.7} />
-        </Cylinder>
-        
-        {/* Neck */}
-        <Cylinder args={[0.08, 0.1, 0.15, 12]} position={[0, 0.7, 0]}>
-          <meshStandardMaterial color={character.skinTone} roughness={0.8} />
-        </Cylinder>
+        {/* Body highlight for 3D pop */}
+        <Sphere args={[0.18, 16, 16]} position={[-0.05, 0.05, 0.1]} scale={[0.4, 0.5, 0.3]}>
+          <meshToonMaterial color={colors.accent} transparent opacity={0.6} />
+        </Sphere>
       </group>
       
-      {/* Head group for animations */}
-      <group ref={headRef} position={[0, 1.55, 0]}>
-        {/* Head */}
-        <Sphere args={[0.2, 24, 24]}>
-          <meshStandardMaterial color={character.skinTone} roughness={0.8} />
+      {/* Arms */}
+      <group ref={leftArmRef} position={[-0.25, 0.6, 0]}>
+        <Sphere args={[0.08, 16, 16]} scale={[1, 1.8, 1]} position={[0, -0.08, 0]}>
+          <meshToonMaterial color={colors.body} />
         </Sphere>
+        {/* Hand */}
+        <Sphere args={[0.06, 12, 12]} position={[0, -0.2, 0]}>
+          <meshToonMaterial color={colors.skin} />
+        </Sphere>
+      </group>
+      
+      <group ref={rightArmRef} position={[0.25, 0.6, 0]}>
+        <Sphere args={[0.08, 16, 16]} scale={[1, 1.8, 1]} position={[0, -0.08, 0]}>
+          <meshToonMaterial color={colors.body} />
+        </Sphere>
+        {/* Hand */}
+        <Sphere args={[0.06, 12, 12]} position={[0, -0.2, 0]}>
+          <meshToonMaterial color={colors.skin} />
+        </Sphere>
+      </group>
+      
+      {/* Head */}
+      <group ref={headRef} position={[0, 1.3, 0]}>
+        {/* Main head - perfectly round like Duolingo */}
+        <Sphere args={[0.28, 32, 32]}>
+          <meshToonMaterial color={colors.skin} />
+        </Sphere>
+        
+        {/* Cheek blush */}
+        <Sphere args={[0.06, 12, 12]} position={[-0.15, -0.05, 0.2]}>
+          <meshToonMaterial color="#FFB3B3" transparent opacity={0.5} />
+        </Sphere>
+        <Sphere args={[0.06, 12, 12]} position={[0.15, -0.05, 0.2]}>
+          <meshToonMaterial color="#FFB3B3" transparent opacity={0.5} />
+        </Sphere>
+        
+        {/* Face features */}
+        <DuolingoFace expression={expression} />
         
         {/* Hair */}
-        <Hair style={character.hairStyle} color={character.hairColor} />
-        
-        {/* Face */}
-        <group position={[0, 0, 0.15]}>
-          {/* Eyes */}
-          <group position={[0, 0.03, 0]}>
-            {/* Left eye white */}
-            <Sphere args={[0.035, 12, 12]} position={[-0.06, 0, 0.05]}>
-              <meshStandardMaterial color="#FFFFFF" />
-            </Sphere>
-            {/* Left pupil */}
-            <Sphere 
-              ref={leftEyeRef}
-              args={[0.02, 12, 12]} 
-              position={[-0.06, 0, 0.08]}
-              scale={[1, eyeScaleY, 1]}
-            >
-              <meshStandardMaterial color="#2C1810" />
-            </Sphere>
-            
-            {/* Right eye white */}
-            <Sphere args={[0.035, 12, 12]} position={[0.06, 0, 0.05]}>
-              <meshStandardMaterial color="#FFFFFF" />
-            </Sphere>
-            {/* Right pupil */}
-            <Sphere 
-              ref={rightEyeRef}
-              args={[0.02, 12, 12]} 
-              position={[0.06, 0, 0.08]}
-              scale={[1, eyeScaleY, 1]}
-            >
-              <meshStandardMaterial color="#2C1810" />
-            </Sphere>
-          </group>
-          
-          {/* Eyebrows */}
-          <Eyebrows expression={expression} />
-          
-          {/* Nose */}
-          <Cylinder args={[0.015, 0.02, 0.04, 8]} position={[0, -0.02, 0.08]} rotation={[Math.PI / 2, 0, 0]}>
-            <meshStandardMaterial color={character.skinTone} roughness={0.9} />
-          </Cylinder>
-          
-          {/* Mouth */}
-          <Mouth expression={expression} />
-        </group>
-        
-        {/* Ears */}
-        <Sphere args={[0.04, 8, 8]} position={[-0.2, 0, 0]} scale={[0.5, 1, 0.7]}>
-          <meshStandardMaterial color={character.skinTone} roughness={0.8} />
-        </Sphere>
-        <Sphere args={[0.04, 8, 8]} position={[0.2, 0, 0]} scale={[0.5, 1, 0.7]}>
-          <meshStandardMaterial color={character.skinTone} roughness={0.8} />
-        </Sphere>
+        <DuolingoHair style={character.hairStyle} color={character.hairColor} />
         
         {/* Accessories */}
-        {character.accessories === 'glasses' && <Glasses />}
-        {character.accessories === 'earrings' && <Earrings />}
+        {character.accessories === 'glasses' && <DuolingoGlasses />}
       </group>
       
-      {/* Chair */}
-      <Chair />
+      {/* Simple chair/seat */}
+      <Cylinder args={[0.25, 0.3, 0.15, 16]} position={[0, 0.08, 0]}>
+        <meshToonMaterial color="#4A4A4A" />
+      </Cylinder>
     </group>
   );
 };
 
-// Hair component
-const Hair = ({ style, color }: { style: string; color: string }) => {
+// Duolingo-style face with big expressive eyes
+const DuolingoFace = ({ expression }: { expression: Expression }) => {
+  const leftEyeRef = useRef<THREE.Group>(null);
+  const rightEyeRef = useRef<THREE.Group>(null);
+  
+  // Eye and mouth states based on expression
+  const faceState = useMemo(() => {
+    switch (expression) {
+      case 'impressed':
+        return { eyeScale: 1.3, eyeY: 0.05, pupilY: 0.02, mouthType: 'open-smile' };
+      case 'celebrating':
+        return { eyeScale: 0.8, eyeY: 0.05, pupilY: 0, mouthType: 'big-smile' };
+      case 'confused':
+        return { eyeScale: 1.1, eyeY: 0.03, pupilY: 0.02, mouthType: 'worried' };
+      case 'bored':
+        return { eyeScale: 0.6, eyeY: 0.02, pupilY: 0.03, mouthType: 'flat' };
+      case 'skeptical':
+        return { eyeScale: 0.85, eyeY: 0.03, pupilY: 0, mouthType: 'smirk' };
+      case 'listening':
+        return { eyeScale: 1.1, eyeY: 0.04, pupilY: 0, mouthType: 'small-smile' };
+      default:
+        return { eyeScale: 1, eyeY: 0.04, pupilY: 0, mouthType: 'neutral' };
+    }
+  }, [expression]);
+
+  // Blink animation
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    const blink = Math.sin(time * 0.4) > 0.97;
+    const blinkScale = blink ? 0.1 : 1;
+    
+    if (leftEyeRef.current) leftEyeRef.current.scale.y = blinkScale * faceState.eyeScale;
+    if (rightEyeRef.current) rightEyeRef.current.scale.y = blinkScale * faceState.eyeScale;
+  });
+
+  return (
+    <group position={[0, 0, 0.2]}>
+      {/* Eyes - big and round like Duolingo */}
+      <group ref={leftEyeRef} position={[-0.09, faceState.eyeY, 0.08]} scale={[1, faceState.eyeScale, 1]}>
+        {/* Eye white */}
+        <Sphere args={[0.06, 16, 16]}>
+          <meshToonMaterial color="#FFFFFF" />
+        </Sphere>
+        {/* Pupil */}
+        <Sphere args={[0.035, 12, 12]} position={[0, faceState.pupilY, 0.03]}>
+          <meshToonMaterial color="#1A1A1A" />
+        </Sphere>
+        {/* Eye shine */}
+        <Sphere args={[0.015, 8, 8]} position={[-0.015, 0.02, 0.05]}>
+          <meshToonMaterial color="#FFFFFF" />
+        </Sphere>
+      </group>
+      
+      <group ref={rightEyeRef} position={[0.09, faceState.eyeY, 0.08]} scale={[1, faceState.eyeScale, 1]}>
+        <Sphere args={[0.06, 16, 16]}>
+          <meshToonMaterial color="#FFFFFF" />
+        </Sphere>
+        <Sphere args={[0.035, 12, 12]} position={[0, faceState.pupilY, 0.03]}>
+          <meshToonMaterial color="#1A1A1A" />
+        </Sphere>
+        <Sphere args={[0.015, 8, 8]} position={[-0.015, 0.02, 0.05]}>
+          <meshToonMaterial color="#FFFFFF" />
+        </Sphere>
+      </group>
+      
+      {/* Eyebrows for expressions */}
+      {(expression === 'confused' || expression === 'skeptical') && (
+        <DuolingoEyebrows expression={expression} />
+      )}
+      
+      {/* Mouth */}
+      <DuolingoMouth type={faceState.mouthType} />
+    </group>
+  );
+};
+
+// Simple stylized eyebrows
+const DuolingoEyebrows = ({ expression }: { expression: Expression }) => {
+  const leftRotation = expression === 'confused' ? 0.3 : -0.2;
+  const rightRotation = expression === 'confused' ? -0.3 : 0.1;
+  
+  return (
+    <group position={[0, 0.12, 0.1]}>
+      <Cylinder 
+        args={[0.01, 0.01, 0.05, 8]} 
+        rotation={[0, 0, leftRotation]}
+        position={[-0.09, 0, 0]}
+      >
+        <meshToonMaterial color="#3D2914" />
+      </Cylinder>
+      <Cylinder 
+        args={[0.01, 0.01, 0.05, 8]} 
+        rotation={[0, 0, rightRotation]}
+        position={[0.09, 0, 0]}
+      >
+        <meshToonMaterial color="#3D2914" />
+      </Cylinder>
+    </group>
+  );
+};
+
+// Duolingo-style mouth - simple shapes
+const DuolingoMouth = ({ type }: { type: string }) => {
+  switch (type) {
+    case 'big-smile':
+      return (
+        <group position={[0, -0.1, 0.12]}>
+          {/* Wide open smile */}
+          <Sphere args={[0.06, 16, 8]} scale={[1.5, 0.8, 0.5]}>
+            <meshToonMaterial color="#FF6B6B" />
+          </Sphere>
+          {/* Teeth hint */}
+          <Sphere args={[0.04, 12, 6]} scale={[1.3, 0.4, 0.3]} position={[0, 0.02, 0.01]}>
+            <meshToonMaterial color="#FFFFFF" />
+          </Sphere>
+        </group>
+      );
+    case 'open-smile':
+      return (
+        <group position={[0, -0.1, 0.12]}>
+          <Sphere args={[0.04, 16, 8]} scale={[1.2, 0.7, 0.4]}>
+            <meshToonMaterial color="#FF6B6B" />
+          </Sphere>
+        </group>
+      );
+    case 'small-smile':
+      return (
+        <Cylinder 
+          args={[0.03, 0.03, 0.005, 16, 1, false, 0, Math.PI]} 
+          rotation={[Math.PI / 2, 0, 0]}
+          position={[0, -0.1, 0.15]}
+        >
+          <meshToonMaterial color="#E85A5A" />
+        </Cylinder>
+      );
+    case 'worried':
+      return (
+        <Sphere args={[0.025, 12, 12]} scale={[1.5, 0.8, 0.5]} position={[0, -0.11, 0.13]}>
+          <meshToonMaterial color="#E85A5A" />
+        </Sphere>
+      );
+    case 'flat':
+      return (
+        <Cylinder 
+          args={[0.003, 0.003, 0.04, 8]} 
+          rotation={[0, 0, Math.PI / 2]}
+          position={[0, -0.1, 0.15]}
+        >
+          <meshToonMaterial color="#CC6666" />
+        </Cylinder>
+      );
+    case 'smirk':
+      return (
+        <group position={[0.02, -0.1, 0.14]}>
+          <Cylinder 
+            args={[0.025, 0.025, 0.004, 16, 1, false, 0, Math.PI]} 
+            rotation={[Math.PI / 2, 0, 0.2]}
+          >
+            <meshToonMaterial color="#E85A5A" />
+          </Cylinder>
+        </group>
+      );
+    default: // neutral
+      return (
+        <Cylinder 
+          args={[0.02, 0.02, 0.004, 16, 1, false, 0, Math.PI]} 
+          rotation={[Math.PI / 2, 0, 0]}
+          position={[0, -0.1, 0.14]}
+        >
+          <meshToonMaterial color="#E85A5A" />
+        </Cylinder>
+      );
+  }
+};
+
+// Simplified hair styles
+const DuolingoHair = ({ style, color }: { style: string; color: string }) => {
   switch (style) {
     case 'short':
       return (
-        <group position={[0, 0.1, 0]}>
-          <Sphere args={[0.21, 16, 16]} scale={[1, 0.6, 1]}>
-            <meshStandardMaterial color={color} roughness={0.9} />
-          </Sphere>
-        </group>
+        <Sphere args={[0.29, 24, 16]} position={[0, 0.08, -0.02]} scale={[1, 0.5, 1]}>
+          <meshToonMaterial color={color} />
+        </Sphere>
       );
     case 'long':
       return (
         <group>
-          <Sphere args={[0.22, 16, 16]} position={[0, 0.08, -0.02]} scale={[1, 0.7, 1]}>
-            <meshStandardMaterial color={color} roughness={0.9} />
+          <Sphere args={[0.3, 24, 16]} position={[0, 0.06, -0.04]} scale={[1, 0.55, 1]}>
+            <meshToonMaterial color={color} />
           </Sphere>
-          {/* Hair strands going down */}
-          <Cylinder args={[0.18, 0.12, 0.4, 12]} position={[0, -0.15, -0.08]}>
-            <meshStandardMaterial color={color} roughness={0.9} />
+          {/* Hair going down */}
+          <Cylinder args={[0.2, 0.15, 0.35, 16]} position={[0, -0.15, -0.08]}>
+            <meshToonMaterial color={color} />
           </Cylinder>
         </group>
       );
     case 'curly':
       return (
-        <group position={[0, 0.1, 0]}>
-          <Sphere args={[0.24, 16, 16]} scale={[1, 0.7, 1]}>
-            <meshStandardMaterial color={color} roughness={1} />
+        <group>
+          <Sphere args={[0.32, 16, 16]} position={[0, 0.05, 0]} scale={[1, 0.6, 1]}>
+            <meshToonMaterial color={color} />
           </Sphere>
-          {/* Curly volume */}
-          {[-0.12, 0, 0.12].map((x, i) => (
-            <Sphere key={i} args={[0.06, 8, 8]} position={[x, 0.05, 0.1]}>
-              <meshStandardMaterial color={color} roughness={1} />
-            </Sphere>
-          ))}
+          {/* Curly puffs */}
+          <Sphere args={[0.08, 12, 12]} position={[-0.2, 0.1, 0.05]}>
+            <meshToonMaterial color={color} />
+          </Sphere>
+          <Sphere args={[0.08, 12, 12]} position={[0.2, 0.1, 0.05]}>
+            <meshToonMaterial color={color} />
+          </Sphere>
+          <Sphere args={[0.07, 12, 12]} position={[0, 0.18, 0]}>
+            <meshToonMaterial color={color} />
+          </Sphere>
         </group>
       );
     case 'ponytail':
       return (
         <group>
-          <Sphere args={[0.21, 16, 16]} position={[0, 0.1, 0]} scale={[1, 0.6, 1]}>
-            <meshStandardMaterial color={color} roughness={0.9} />
+          <Sphere args={[0.29, 24, 16]} position={[0, 0.08, -0.02]} scale={[1, 0.5, 1]}>
+            <meshToonMaterial color={color} />
           </Sphere>
           {/* Ponytail */}
-          <Cylinder args={[0.04, 0.06, 0.25, 8]} position={[0, 0, -0.22]} rotation={[0.5, 0, 0]}>
-            <meshStandardMaterial color={color} roughness={0.9} />
-          </Cylinder>
+          <Sphere args={[0.08, 12, 12]} position={[0, 0, -0.28]} scale={[0.8, 1.5, 0.8]}>
+            <meshToonMaterial color={color} />
+          </Sphere>
           {/* Hair tie */}
-          <Cylinder args={[0.05, 0.05, 0.03, 8]} position={[0, 0.05, -0.2]} rotation={[0.3, 0, 0]}>
-            <meshStandardMaterial color="#E11D48" />
+          <Cylinder args={[0.04, 0.04, 0.03, 12]} position={[0, 0.05, -0.25]} rotation={[0.3, 0, 0]}>
+            <meshToonMaterial color="#FF4B4B" />
           </Cylinder>
         </group>
       );
@@ -315,125 +504,28 @@ const Hair = ({ style, color }: { style: string; color: string }) => {
   }
 };
 
-// Eyebrows component
-const Eyebrows = ({ expression }: { expression: Expression }) => {
-  const rotation = useMemo(() => {
-    switch (expression) {
-      case 'confused': return { left: 0.3, right: -0.3 };
-      case 'skeptical': return { left: -0.2, right: 0.2 };
-      case 'impressed': return { left: 0, right: 0 };
-      default: return { left: 0, right: 0 };
-    }
-  }, [expression]);
-
-  const yOffset = expression === 'impressed' ? 0.09 : 0.07;
-
-  return (
-    <group position={[0, yOffset, 0.06]}>
-      <Box 
-        args={[0.04, 0.008, 0.01]} 
-        position={[-0.06, 0, 0]}
-        rotation={[0, 0, rotation.left]}
-      >
-        <meshStandardMaterial color="#3D2914" />
-      </Box>
-      <Box 
-        args={[0.04, 0.008, 0.01]} 
-        position={[0.06, 0, 0]}
-        rotation={[0, 0, rotation.right]}
-      >
-        <meshStandardMaterial color="#3D2914" />
-      </Box>
-    </group>
-  );
-};
-
-// Mouth component
-const Mouth = ({ expression }: { expression: Expression }) => {
-  const mouthProps = useMemo(() => {
-    switch (expression) {
-      case 'impressed':
-      case 'celebrating':
-        return { scaleX: 1.2, scaleY: 0.8, color: '#C9756B', open: true };
-      case 'confused':
-        return { scaleX: 0.7, scaleY: 0.5, color: '#C9756B', open: false };
-      case 'bored':
-        return { scaleX: 0.8, scaleY: 0.3, color: '#B8968D', open: false };
-      case 'skeptical':
-        return { scaleX: 0.9, scaleY: 0.4, color: '#B8968D', open: false };
-      default:
-        return { scaleX: 1, scaleY: 0.4, color: '#C9756B', open: false };
-    }
-  }, [expression]);
-
-  return (
-    <group position={[0, -0.06, 0.08]}>
-      {mouthProps.open ? (
-        <Sphere args={[0.025, 12, 12]} scale={[mouthProps.scaleX, mouthProps.scaleY, 0.5]}>
-          <meshStandardMaterial color={mouthProps.color} />
-        </Sphere>
-      ) : (
-        <Box args={[0.04 * mouthProps.scaleX, 0.008, 0.005]}>
-          <meshStandardMaterial color={mouthProps.color} />
-        </Box>
-      )}
-    </group>
-  );
-};
-
-// Glasses accessory
-const Glasses = () => (
-  <group position={[0, 0.03, 0.12]}>
-    {/* Left lens frame */}
-    <Cylinder args={[0.045, 0.045, 0.01, 16]} rotation={[Math.PI / 2, 0, 0]} position={[-0.06, 0, 0]}>
-      <meshStandardMaterial color="#1F2937" metalness={0.5} />
+// Simple round glasses
+const DuolingoGlasses = () => (
+  <group position={[0, 0.04, 0.22]}>
+    {/* Left lens */}
+    <Cylinder args={[0.065, 0.065, 0.015, 16]} rotation={[Math.PI / 2, 0, 0]} position={[-0.09, 0, 0]}>
+      <meshToonMaterial color="#2D3748" />
     </Cylinder>
-    {/* Right lens frame */}
-    <Cylinder args={[0.045, 0.045, 0.01, 16]} rotation={[Math.PI / 2, 0, 0]} position={[0.06, 0, 0]}>
-      <meshStandardMaterial color="#1F2937" metalness={0.5} />
+    <Cylinder args={[0.055, 0.055, 0.02, 16]} rotation={[Math.PI / 2, 0, 0]} position={[-0.09, 0, 0.005]}>
+      <meshToonMaterial color="#E2E8F0" transparent opacity={0.3} />
     </Cylinder>
+    
+    {/* Right lens */}
+    <Cylinder args={[0.065, 0.065, 0.015, 16]} rotation={[Math.PI / 2, 0, 0]} position={[0.09, 0, 0]}>
+      <meshToonMaterial color="#2D3748" />
+    </Cylinder>
+    <Cylinder args={[0.055, 0.055, 0.02, 16]} rotation={[Math.PI / 2, 0, 0]} position={[0.09, 0, 0.005]}>
+      <meshToonMaterial color="#E2E8F0" transparent opacity={0.3} />
+    </Cylinder>
+    
     {/* Bridge */}
-    <Box args={[0.03, 0.005, 0.005]} position={[0, 0, 0]}>
-      <meshStandardMaterial color="#1F2937" metalness={0.5} />
-    </Box>
-    {/* Temples */}
-    <Box args={[0.08, 0.005, 0.005]} position={[-0.14, 0, -0.04]} rotation={[0, 0.3, 0]}>
-      <meshStandardMaterial color="#1F2937" metalness={0.5} />
-    </Box>
-    <Box args={[0.08, 0.005, 0.005]} position={[0.14, 0, -0.04]} rotation={[0, -0.3, 0]}>
-      <meshStandardMaterial color="#1F2937" metalness={0.5} />
-    </Box>
-  </group>
-);
-
-// Earrings accessory
-const Earrings = () => (
-  <>
-    <Sphere args={[0.015, 8, 8]} position={[-0.2, -0.05, 0]}>
-      <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
-    </Sphere>
-    <Sphere args={[0.015, 8, 8]} position={[0.2, -0.05, 0]}>
-      <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.2} />
-    </Sphere>
-  </>
-);
-
-// Chair component
-const Chair = () => (
-  <group position={[0, 0, -0.15]}>
-    {/* Seat */}
-    <Box args={[0.35, 0.05, 0.35]} position={[0, 0.45, 0]}>
-      <meshStandardMaterial color="#2F2F2F" roughness={0.7} />
-    </Box>
-    {/* Back rest */}
-    <Box args={[0.35, 0.4, 0.05]} position={[0, 0.7, -0.15]}>
-      <meshStandardMaterial color="#2F2F2F" roughness={0.7} />
-    </Box>
-    {/* Legs */}
-    {[[-0.15, -0.15], [0.15, -0.15], [-0.15, 0.15], [0.15, 0.15]].map((pos, i) => (
-      <Cylinder key={i} args={[0.02, 0.02, 0.45, 8]} position={[pos[0], 0.225, pos[1]]}>
-        <meshStandardMaterial color="#1F1F1F" metalness={0.5} />
-      </Cylinder>
-    ))}
+    <Cylinder args={[0.01, 0.01, 0.04, 8]} rotation={[0, 0, Math.PI / 2]} position={[0, 0, 0.01]}>
+      <meshToonMaterial color="#2D3748" />
+    </Cylinder>
   </group>
 );
