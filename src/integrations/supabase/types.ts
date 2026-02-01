@@ -421,46 +421,121 @@ export type Database = {
       presentation_sessions: {
         Row: {
           accuracy: number | null
+          avg_time_per_word_ms: number | null
           created_at: string | null
           duration_seconds: number | null
           feedback_advice: string | null
           feedback_next_step: string | null
           feedback_summary: string | null
+          fluency_timeline: Json | null
           hesitations: number | null
           id: string
+          longest_pause_ms: number | null
           missed_words: string[] | null
+          mode: string | null
+          pace_consistency: number | null
           speech_id: string
           transcript: string | null
+          user_id: string | null
+          word_performance_json: Json | null
         }
         Insert: {
           accuracy?: number | null
+          avg_time_per_word_ms?: number | null
           created_at?: string | null
           duration_seconds?: number | null
           feedback_advice?: string | null
           feedback_next_step?: string | null
           feedback_summary?: string | null
+          fluency_timeline?: Json | null
           hesitations?: number | null
           id?: string
+          longest_pause_ms?: number | null
           missed_words?: string[] | null
+          mode?: string | null
+          pace_consistency?: number | null
           speech_id: string
           transcript?: string | null
+          user_id?: string | null
+          word_performance_json?: Json | null
         }
         Update: {
           accuracy?: number | null
+          avg_time_per_word_ms?: number | null
           created_at?: string | null
           duration_seconds?: number | null
           feedback_advice?: string | null
           feedback_next_step?: string | null
           feedback_summary?: string | null
+          fluency_timeline?: Json | null
           hesitations?: number | null
           id?: string
+          longest_pause_ms?: number | null
           missed_words?: string[] | null
+          mode?: string | null
+          pace_consistency?: number | null
           speech_id?: string
           transcript?: string | null
+          user_id?: string | null
+          word_performance_json?: Json | null
         }
         Relationships: [
           {
             foreignKeyName: "presentation_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      presentation_word_performance: {
+        Row: {
+          created_at: string | null
+          id: string
+          session_id: string
+          speech_id: string
+          status: string
+          time_to_speak_ms: number | null
+          was_prompted: boolean | null
+          word: string
+          word_index: number
+          wrong_attempts: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          session_id: string
+          speech_id: string
+          status?: string
+          time_to_speak_ms?: number | null
+          was_prompted?: boolean | null
+          word: string
+          word_index: number
+          wrong_attempts?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          session_id?: string
+          speech_id?: string
+          status?: string
+          time_to_speak_ms?: number | null
+          was_prompted?: boolean | null
+          word?: string
+          word_index?: number
+          wrong_attempts?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presentation_word_performance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "presentation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "presentation_word_performance_speech_id_fkey"
             columns: ["speech_id"]
             isOneToOne: false
             referencedRelation: "speeches"

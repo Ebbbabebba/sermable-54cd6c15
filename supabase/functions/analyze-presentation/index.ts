@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,15 +16,23 @@ interface WordPerformance {
   wrongWordsSaid?: string[];
 }
 
+interface FluencyTimelineEntry {
+  wordIndex: number;
+  word: string;
+  status: string;
+  timeMs: number;
+  timestamp: number;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { transcript, originalText, speechId, durationSeconds, wordPerformance } = await req.json();
+    const { transcript, originalText, speechId, durationSeconds, wordPerformance, mode = 'strict' } = await req.json();
     
-    console.log('Analyzing presentation:', { speechId, durationSeconds, hasWordPerformance: !!wordPerformance });
+    console.log('Analyzing presentation:', { speechId, durationSeconds, hasWordPerformance: !!wordPerformance, mode });
 
     const originalWords = originalText.toLowerCase().trim().split(/\s+/);
     let accuracy: number;
@@ -32,6 +41,10 @@ serve(async (req) => {
     let skippedWords: string[] = [];
     let promptedWords: string[] = [];
     let wrongAttempts: { word: string; attempts: string[] }[] = [];
+    let fluencyTimeline: FluencyTimelineEntry[] = [];
+    let avgTimePerWordMs: number | null = null;
+    let longestPauseMs: number | null = null;
+    let paceConsistency: number | null = null;
     
     // Use detailed word performance if available (from strict mode)
     if (wordPerformance && wordPerformance.length > 0) {
@@ -63,13 +76,42 @@ serve(async (req) => {
         .filter((w: WordPerformance) => w.wrongWordsSaid && w.wrongWordsSaid.length > 0)
         .map((w: WordPerformance) => ({ word: w.word, attempts: w.wrongWordsSaid! }));
       
+      // Build fluency timeline
+      fluencyTimeline = wordPerformance.map((w: WordPerformance, idx: number) => ({
+        wordIndex: w.index ?? idx,
+        word: w.word,
+        status: w.status,
+        timeMs: w.timeToSpeak ?? 0,
+        timestamp: idx * (w.timeToSpeak ?? 500), // Approximate timestamp
+      }));
+      
+      // Calculate pace metrics
+      const timings = wordPerformance
+        .filter((w: WordPerformance) => w.timeToSpeak && w.timeToSpeak > 0)
+        .map((w: WordPerformance) => w.timeToSpeak!);
+      
+      if (timings.length > 0) {
+        avgTimePerWordMs = Math.round(timings.reduce((a: number, b: number) => a + b, 0) / timings.length);
+        longestPauseMs = Math.max(...timings);
+        
+        // Calculate pace consistency (0-100, higher = more consistent)
+        const mean = avgTimePerWordMs;
+        const variance = timings.reduce((sum: number, t: number) => sum + Math.pow(t - mean, 2), 0) / timings.length;
+        const stdDev = Math.sqrt(variance);
+        const coefficientOfVariation = stdDev / mean;
+        paceConsistency = Math.max(0, Math.min(100, Math.round((1 - coefficientOfVariation) * 100)));
+      }
+      
       console.log('Performance stats:', { 
         correct: correctCount, 
         hesitated: hesitatedCount, 
         missed: missedCount, 
         skipped: skippedCount,
         prompted: promptedWords.length,
-        wrongAttempts: wrongAttempts.length
+        wrongAttempts: wrongAttempts.length,
+        avgTimePerWordMs,
+        longestPauseMs,
+        paceConsistency
       });
       
     } else if (transcript) {
@@ -110,6 +152,9 @@ serve(async (req) => {
 Accuracy: ${accuracy.toFixed(1)}%
 Duration: ${durationSeconds}s
 Hesitations/Struggles: ${hesitations}
+Pace Consistency: ${paceConsistency !== null ? paceConsistency + '%' : 'N/A'}
+Average time per word: ${avgTimePerWordMs !== null ? avgTimePerWordMs + 'ms' : 'N/A'}
+Longest pause: ${longestPauseMs !== null ? longestPauseMs + 'ms' : 'N/A'}
 Missed Words: ${missedWords.length > 0 ? missedWords.slice(0, 10).join(', ') : 'None'}
 Skipped Words: ${skippedWords.length > 0 ? skippedWords.slice(0, 10).join(', ') : 'None'}
 Words where prompt was needed: ${promptedWords.length > 0 ? promptedWords.slice(0, 10).join(', ') : 'None'}`;
@@ -139,11 +184,12 @@ IMPORTANT:
 - If accuracy is below 100%, be specific about WHY (missed words, skipped sections, needed prompts)
 - Mention specific words the user struggled with
 - If they said wrong words, explain what happened
+- Consider their pacing - if pace consistency is low, mention it
 - Keep feedback concise and actionable`
             },
             {
               role: 'user',
-              content: `Analyze this strict presentation mode performance:
+              content: `Analyze this ${mode} presentation mode performance:
 ${performanceContext}
 
 Original speech excerpt: ${originalText.substring(0, 300)}...
@@ -215,8 +261,113 @@ Format your response as JSON:
       feedbackNextStep = 'Practice again, aiming for a smooth delivery without pauses.';
     }
 
+    // Save detailed word performance to database if available
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user_id from speech
+    const { data: speechData } = await supabase
+      .from('speeches')
+      .select('user_id')
+      .eq('id', speechId)
+      .single();
+
+    const userId = speechData?.user_id;
+
+    // Create the session with enhanced data
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('presentation_sessions')
+      .insert({
+        speech_id: speechId,
+        user_id: userId,
+        accuracy: parseFloat(accuracy.toFixed(2)),
+        hesitations,
+        duration_seconds: durationSeconds,
+        transcript: transcript || '',
+        missed_words: [...missedWords, ...skippedWords],
+        feedback_summary: feedbackSummary,
+        feedback_advice: feedbackAdvice,
+        feedback_next_step: feedbackNextStep,
+        mode,
+        fluency_timeline: fluencyTimeline,
+        avg_time_per_word_ms: avgTimePerWordMs,
+        longest_pause_ms: longestPauseMs,
+        pace_consistency: paceConsistency,
+        word_performance_json: wordPerformance || [],
+      })
+      .select()
+      .single();
+
+    if (sessionError) {
+      console.error('Error saving session:', sessionError);
+    } else if (sessionData && wordPerformance && wordPerformance.length > 0) {
+      // Save individual word performance records
+      const wordRecords = wordPerformance.map((w: WordPerformance, idx: number) => ({
+        session_id: sessionData.id,
+        speech_id: speechId,
+        word: w.word,
+        word_index: w.index ?? idx,
+        status: w.status,
+        time_to_speak_ms: w.timeToSpeak ?? null,
+        was_prompted: w.wasPrompted,
+        wrong_attempts: w.wrongWordsSaid || [],
+      }));
+
+      const { error: wordError } = await supabase
+        .from('presentation_word_performance')
+        .insert(wordRecords);
+
+      if (wordError) {
+        console.error('Error saving word performance:', wordError);
+      } else {
+        console.log('Saved', wordRecords.length, 'word performance records');
+      }
+
+      // Update user_word_mastery for cross-session tracking
+      if (userId) {
+        for (const w of wordPerformance) {
+          const { data: existing } = await supabase
+            .from('user_word_mastery')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('word', w.word.toLowerCase())
+            .single();
+
+          if (existing) {
+            await supabase
+              .from('user_word_mastery')
+              .update({
+                total_correct: existing.total_correct + (w.status === 'correct' ? 1 : 0),
+                total_hesitated: existing.total_hesitated + (w.status === 'hesitated' ? 1 : 0),
+                total_missed: existing.total_missed + (w.status === 'missed' || w.status === 'skipped' ? 1 : 0),
+                mastery_level: calculateMasteryLevel(
+                  existing.total_correct + (w.status === 'correct' ? 1 : 0),
+                  existing.total_hesitated + (w.status === 'hesitated' ? 1 : 0),
+                  existing.total_missed + (w.status === 'missed' || w.status === 'skipped' ? 1 : 0)
+                ),
+                last_seen_at: new Date().toISOString(),
+              })
+              .eq('id', existing.id);
+          } else {
+            await supabase
+              .from('user_word_mastery')
+              .insert({
+                user_id: userId,
+                word: w.word.toLowerCase(),
+                total_correct: w.status === 'correct' ? 1 : 0,
+                total_hesitated: w.status === 'hesitated' ? 1 : 0,
+                total_missed: w.status === 'missed' || w.status === 'skipped' ? 1 : 0,
+                mastery_level: w.status === 'correct' ? 100 : w.status === 'hesitated' ? 50 : 0,
+              });
+          }
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
+        sessionId: sessionData?.id,
         accuracy: parseFloat(accuracy.toFixed(2)),
         hesitations,
         missedWords: [...missedWords, ...skippedWords],
@@ -227,6 +378,10 @@ Format your response as JSON:
         feedbackAdvice,
         feedbackNextStep,
         transcript: transcript || '',
+        fluencyTimeline,
+        avgTimePerWordMs,
+        longestPauseMs,
+        paceConsistency,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -239,3 +394,10 @@ Format your response as JSON:
     );
   }
 });
+
+function calculateMasteryLevel(correct: number, hesitated: number, missed: number): number {
+  const total = correct + hesitated + missed;
+  if (total === 0) return 0;
+  // Weighted: correct = 100%, hesitated = 50%, missed = 0%
+  return Math.round(((correct * 100) + (hesitated * 50)) / total);
+}
