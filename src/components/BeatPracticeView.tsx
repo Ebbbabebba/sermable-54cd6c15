@@ -619,11 +619,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
     }
 
-    // Update last practice session time
-    await supabase
-      .from('speeches')
-      .update({ last_practice_session_at: new Date().toISOString() })
-      .eq('id', speechId);
+    // NOTE: Don't update last_practice_session_at here on load
+    // It should only be updated when a beat is actually completed/mastered
+    // This prevents the lock from triggering when user just opens and exits
 
     setLoading(false);
   };
