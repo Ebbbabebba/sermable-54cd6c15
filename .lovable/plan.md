@@ -1,233 +1,226 @@
 
-# Plan: Upgrade Audience Mode with Polished Avatars and Immersive Environments
+# Plan: Fix Beat Progression and Implement Pre-Beat Recall for All Users
 
-## Problem Analysis
+## Problem Summary
 
-The current implementation has two main issues:
-1. **Avatars look tacky** - Simple SVG shapes (ellipses, paths) create a clip-art appearance
-2. **No visible environment** - Backgrounds are subtle gradients with tiny emoji decorations
+Three issues need to be fixed:
 
-## Solution Overview
-
-Replace the basic SVG avatars with a more polished, illustration-style design and create rich, immersive environment backgrounds that make users feel like they're presenting to a real audience in different settings.
+1. **Same beat keeps showing after finishing** - After mastering a beat, when the user returns to practice, the same beat appears instead of advancing to the next one
+2. **No pre-beat recall before new beats** - Users should recall the previously mastered beat once before learning a new one
+3. **No clear path to deadline-day mastery** - The system should ensure word-by-word memorization by the deadline
 
 ---
 
-## Part 1: Redesigned Avatar System
+## Root Cause Analysis
 
-### New Visual Style
-Replace the geometric SVG avatars with a more refined, illustration-inspired design:
+### Issue 1: Beat Not Advancing
+In `BeatPracticeView.tsx`, the `showBeatCelebration()` function (lines 1481-1616):
+- Marks the current beat as mastered in the database
+- Updates local state with `setBeats(updatedBeats)`
+- BUT only premium users in intensive mode (`beatsPerDay > 1`) get the flow that queues the next beat
+- Free users and `beatsPerDay === 1` users go directly to `session_complete`
+- The problem: the local `beats` state is updated, but `newBeatToLearn` is NOT updated to point to the next unmastered beat
+- On session reload, `loadOrCreateBeats()` should pick the next unmastered beat, but if it doesn't, the same beat shows again
 
-- **Faces**: Softer rounded shapes with proper proportions
-- **Eyes**: More expressive with larger pupils, subtle gradients, and better highlights
-- **Mouths**: More natural curves with proper lip shapes
-- **Hair**: Layered paths for depth and volume
-- **Bodies**: Add shoulders/torso visible in frame (like a video call)
-- **Shadows & Depth**: Add subtle drop shadows and layering for depth
-
-### Better Animation Polish
-- Smoother easing curves
-- More subtle movements (less exaggerated)
-- Natural idle animations (subtle breathing, occasional micro-movements)
-- Expression transitions that feel organic
-
----
-
-## Part 2: Immersive Environment Backgrounds
-
-### Full-Scene Backgrounds
-Instead of subtle gradients with emoji, create actual scene compositions:
-
-**Office Meeting Room**
-- Conference table visible at bottom
-- Window with city skyline in background
-- Fluorescent lighting effect
-- Whiteboard or screen on wall
-- Subtle office plant in corner
-
-**Classroom/University**
-- Chalkboard or projector screen behind
-- Desk edges visible
-- Educational posters on walls
-- Natural lighting from windows
-- Clock on wall
-
-**Conference Hall**
-- Stage curtains on sides
-- Professional lighting from above
-- Audience rows suggested in background
-- Podium edge visible
-- Venue darkness with spotlights
-
-**Wedding Venue**
-- Floral decorations
-- Elegant tablecloths
-- Chandelier lighting
-- Soft romantic color palette
-- Ribbon/fabric accents
-
-**Interview Room**
-- Professional desk/table
-- Neutral corporate colors
-- Document/clipboard on table
-- Water glass
-- Clean minimalist setting
+### Issue 2: Pre-Beat Recall Missing
+The `pre_beat_recall` mode exists but is only triggered in the intensive mode flow:
+- Line 1577-1583: Only when `shouldContinueToday && nextUnmastered` 
+- Regular users never get this mode between sessions
+- The recall should happen at the START of each new session (when returning to practice)
 
 ---
 
-## Part 3: Technical Implementation
+## Solution Design
 
-### Files to Modify
+### Part 1: Fix Beat Progression in Same Session
+
+After mastering a beat, the system should:
+1. Mark beat as mastered (already works)
+2. Find the next unmastered beat (already works)
+3. If there's a next beat AND we should continue today:
+   - Set up pre-beat recall flow (recall the just-mastered beat)
+   - Then transition to learning the next beat
+4. If session complete (no more beats today):
+   - Just show session complete (already works)
+
+### Part 2: Implement Pre-Beat Recall at Session Start
+
+When `loadOrCreateBeats()` loads and finds:
+- At least 1 mastered beat exists
+- A new beat to learn exists
+- This is NOT a recall-only session
+
+Then BEFORE showing beat_preview for the new beat:
+1. Show the last mastered beat for ONE recall pass
+2. User must recall it with all words hidden
+3. Then proceed to beat_preview for the new beat
+
+### Part 3: Ensure Word-by-Word Mastery by Deadline
+
+The current system already has strong foundations:
+- Progressive word hiding in fading phases
+- All words must be hidden for beat mastery
+- Spaced repetition intervals based on deadline
+
+To guarantee deadline-day readiness:
+- 3 days before deadline: Automatic full-speech practice mode
+- 1 day before: Only full-speech recalls (no individual beats)
+- Deadline day: Pure recall mode
+
+---
+
+## Implementation Details
+
+### File: `src/components/BeatPracticeView.tsx`
+
+#### Change 1: Add Pre-Beat Recall at Session Start
+
+In `loadOrCreateBeats()` around line 529, after determining beats to recall and new beat to learn:
+
+```
+Current logic:
+- If beatsNeedingRecall.length > 0 → recall mode
+- Else if firstUnmastered → beat_preview
+- Else → session_complete
+
+New logic:
+- If beatsNeedingRecall.length > 0 → recall mode (unchanged)
+- Else if firstUnmastered:
+  - Check if there's a PREVIOUSLY mastered beat (most recent)
+  - If yes → start in pre_beat_recall mode for that beat, queue the new beat
+  - If no (first beat ever) → go directly to beat_preview
+- Else → session_complete
+```
+
+#### Change 2: Store "Last Mastered Beat" for Pre-Recall
+
+When entering with a new beat to learn:
+1. Find the most recently mastered beat (by `mastered_at` timestamp)
+2. Set `beatToRecallBeforeNext` to that beat
+3. Set `nextBeatQueued` to the new beat to learn
+4. Enter `pre_beat_recall` mode
+
+#### Change 3: Fix In-Session Progression for All Users
+
+In `showBeatCelebration()`, after marking beat as mastered:
+- For ALL users (not just premium intensive mode), if there's a next beat:
+  - Queue the next beat
+  - Enter rest/pre-beat-recall flow
+- Remove the artificial split between premium/free for beat progression
+
+---
+
+## Session Flow Diagram
+
+```text
+User enters Practice
+         │
+         ▼
+    Load Beats
+         │
+         ├─── Has beats needing daily recall? ─── YES ──▶ RECALL MODE
+         │                                                     │
+         │                                                     ▼
+         NO                                           Recall all mastered
+         │                                            beats (2x each)
+         ▼                                                     │
+    Has new beat to learn?                                    ▼
+         │                                            Done with recalls
+         ├─── YES                                              │
+         │       │                                             ▼
+         │       ▼                                    Has new beat to learn?
+         │   Has previously mastered beat?                     │
+         │       │                                    ├─ YES ──▶ PRE-BEAT RECALL
+         │       ├── YES ──▶ PRE-BEAT RECALL                   │
+         │       │           (recall last beat once)           │
+         │       │                  │                 └─ NO ───▶ SESSION COMPLETE
+         │       │                  ▼
+         │       │           BEAT PREVIEW
+         │       │                  │
+         │       │                  ▼
+         │       │            LEARN MODE
+         │       │           (sentence by sentence)
+         │       │                  │
+         │       │                  ▼
+         │       │           Beat Mastered!
+         │       │                  │
+         │       │                  ▼
+         │       │      More beats to learn today?
+         │       │           │            │
+         │       │          YES          NO
+         │       │           │            │
+         │       │           ▼            ▼
+         │       │     Queue next    SESSION COMPLETE
+         │       │     + Rest Timer
+         │       │           │
+         │       │           ▼
+         │       │     PRE-BEAT RECALL
+         │       │     (for just-mastered)
+         │       │           │
+         │       │           ▼
+         │       │     BEAT PREVIEW
+         │       │     (for next beat)
+         │       │           │
+         │       └───────────┴──────────────────────────▶ (continue loop)
+         │
+         └─── NO ──▶ SESSION COMPLETE (all mastered or limit reached)
+```
+
+---
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/audience/AvatarCharacter.tsx` | Complete redesign with refined SVG art, add body/shoulders, better proportions |
-| `src/components/audience/AudienceGrid.tsx` | Remove card wrappers, create seamless scene integration |
-| `src/components/audience/types.ts` | Add new character customization options |
-
-### Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/components/audience/environments/OfficeBackground.tsx` | Full office scene SVG/CSS |
-| `src/components/audience/environments/ClassroomBackground.tsx` | Classroom scene |
-| `src/components/audience/environments/ConferenceBackground.tsx` | Conference hall scene |
-| `src/components/audience/environments/WeddingBackground.tsx` | Wedding venue scene |
-| `src/components/audience/environments/InterviewBackground.tsx` | Interview room scene |
-| `src/components/audience/environments/index.ts` | Environment component exports |
-
-### Avatar Redesign Details
-
-```text
-Current Avatar (100x100 viewBox):
-┌────────────────┐
-│    (hair)      │
-│  ●────────●    │  <- Simple ellipse face
-│  ○    ○       │  <- Circle eyes
-│     ─         │  <- Basic line nose
-│    ───        │  <- Path mouth
-│               │
-└────────────────┘
-
-New Avatar (100x120 viewBox):
-┌────────────────┐
-│    ▓▓▓▓▓      │  <- Layered hair with depth
-│  ╭────────╮    │
-│  │ ◐    ◐ │    │  <- Expressive eyes with gradients
-│  │   ◡   │    │  <- Natural nose shape
-│  │  ╭──╮  │    │  <- Better lip shapes
-│  ╰────────╯    │
-│   ┌──────┐     │  <- Shoulders/clothing visible
-│   │ body │     │
-└────────────────┘
-```
-
-### Environment Scene Structure
-
-```text
-┌─────────────────────────────────────────────┐
-│         [Background Elements]               │
-│   ┌─────┐                         ┌─────┐   │
-│   │ wall│    ENVIRONMENT ART      │ wall│   │
-│   │ art │    (window/board/etc)   │ art │   │
-│   └─────┘                         └─────┘   │
-├─────────────────────────────────────────────┤
-│                                             │
-│   ┌─────────┐   ┌─────────┐                 │
-│   │ Avatar1 │   │ Avatar2 │                 │
-│   │  +body  │   │  +body  │                 │
-│   └─────────┘   └─────────┘                 │
-│                                             │
-│   ┌─────────┐   ┌─────────┐                 │
-│   │ Avatar3 │   │ Avatar4 │                 │
-│   │  +body  │   │  +body  │                 │
-│   └─────────┘   └─────────┘                 │
-│                                             │
-│         [Foreground Elements]               │
-│   ─────────────────────────────────────     │
-│   Table/desk edge, props, etc.              │
-└─────────────────────────────────────────────┘
-```
+| `src/components/BeatPracticeView.tsx` | Add pre-beat recall at session start; fix beat progression for all users |
 
 ---
 
-## Part 4: Implementation Steps
+## Technical Implementation Steps
 
-### Step 1: Create Environment Backgrounds
-1. Build office scene with layered SVG/CSS elements
-2. Build classroom scene
-3. Build conference hall scene  
-4. Build wedding venue scene
-5. Build interview room scene
-6. Create EnvironmentBackground component that switches based on type
+### Step 1: Modify Session Start Logic
+In `loadOrCreateBeats()`, after line 533 (where we check for new beat to learn):
+- Find the most recently mastered beat (if any)
+- If found, set up pre-beat recall before beat preview
+- Update `sessionMode` to `pre_beat_recall` with proper state
 
-### Step 2: Redesign Avatar Component
-1. Expand viewBox to include shoulders
-2. Redesign face proportions (more natural head shape)
-3. Add gradient definitions for skin, eyes
-4. Create layered hair with multiple paths for depth
-5. Add simple clothing/body below face
-6. Refine all expression animations
-7. Add subtle idle animations (breathing, micro-movements)
+### Step 2: Simplify In-Session Beat Progression
+In `showBeatCelebration()`:
+- Remove the complex premium/free/intensive mode branching
+- After marking beat as mastered, check if there's a next unmastered beat
+- If yes AND daily limit not reached: queue it for learning (with pre-beat recall)
+- If no OR limit reached: session complete
 
-### Step 3: Integrate Environment with Grid
-1. Remove individual avatar card backgrounds
-2. Position avatars naturally within scene
-3. Add foreground elements in front of avatars
-4. Adjust avatar sizes for perspective if needed
-5. Ensure proper z-layering
-
-### Step 4: Polish and Test
-1. Test all expressions in each environment
-2. Verify animations are smooth
-3. Test on mobile viewports
-4. Ensure dark/light mode works with scenes
+### Step 3: Ensure Pre-Beat Recall Completion Flows Correctly
+In `handlePreBeatRecallCompletion()`:
+- After successful recall with all words hidden
+- Transition to `beat_preview` for the `nextBeatQueued` beat
+- This already exists but may need verification
 
 ---
 
-## Visual Preview
+## Edge Cases Handled
 
-### Office Meeting (Before vs After)
-
-**Before:**
-```text
-┌─────────────────────────┐
-│  slate gradient ☕      │
-│  ┌────┐  ┌────┐        │
-│  │ ●● │  │ ●● │        │
-│  │face│  │face│        │
-│  └────┘  └────┘        │
-│  ┌────┐  ┌────┐        │
-│  │ ●● │  │ ●● │        │
-│  └────┘  └────┘        │
-└─────────────────────────┘
-```
-
-**After:**
-```text
-┌─────────────────────────────────┐
-│ ▓▓▓▓ WHITEBOARD ▓▓▓▓   ☀️ window │
-│──────────────────────────────── │
-│                                 │
-│   👤    👤                       │
-│  ╭──╮  ╭──╮   (refined faces)  │
-│  │  │  │  │   (with shoulders) │
-│                                 │
-│   👤    👤                       │
-│  ╭──╮  ╭──╮                     │
-│  │  │  │  │                     │
-│                                 │
-│ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ │
-│    CONFERENCE TABLE             │
-└─────────────────────────────────┘
-```
+1. **First beat ever** - No pre-beat recall (nothing to recall yet)
+2. **All beats mastered** - Goes to session complete with all-mastered message
+3. **Free user daily limit** - Session complete + upsell prompt
+4. **User exits mid-session** - Checkpoint saved, resume from same spot
+5. **Deadline approaching** - Intervals shortened automatically (already works)
 
 ---
 
-## Technical Notes
+## Expected User Experience
 
-- Use CSS gradients and SVG for performance over images
-- Keep animations at 60fps with Framer Motion's GPU-accelerated properties
-- Use CSS custom properties for theme-aware colors
-- Environment backgrounds should be responsive to container size
-- Avatar redesign maintains same expression logic, just better visuals
+### Session Flow (After Fix):
+1. User opens practice for speech with Beat 1 mastered, Beat 2 unmastered
+2. System shows "Recall Time" - user recalls Beat 1 (all words hidden)
+3. After successful recall, "Coming up..." preview of Beat 2
+4. User clicks "I'm Ready to Practice"
+5. Learns Beat 2 sentence by sentence
+6. After mastering Beat 2 → Session Complete
+7. Next session: Recall Beat 2, then learn Beat 3
+
+### By Deadline Day:
+- User has mastered all beats individually
+- Daily recalls have reinforced memory
+- Full speech recall mode ensures seamless performance
