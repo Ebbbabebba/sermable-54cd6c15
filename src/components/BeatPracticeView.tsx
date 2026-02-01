@@ -547,9 +547,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             setHiddenWordOrder([...firstUnmastered.checkpoint_hidden_indices]);
           }
         } else {
-          // No checkpoint - show beat preview first
-          setSessionMode('beat_preview');
-          setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
+          // No checkpoint - check if we should do pre-beat recall first
+          // Find the most recently mastered beat (if any)
+          const lastMasteredBeat = masteredBeats
+            .filter(b => b.mastered_at)
+            .sort((a, b) => new Date(b.mastered_at!).getTime() - new Date(a.mastered_at!).getTime())[0];
+          
+          if (lastMasteredBeat) {
+            // There's a previously mastered beat - recall it once before learning the new beat
+            console.log('🔄 Pre-beat recall: recalling beat', lastMasteredBeat.beat_order, 'before learning beat', firstUnmastered.beat_order);
+            setBeatToRecallBeforeNext(lastMasteredBeat);
+            setNextBeatQueued(firstUnmastered);
+            setCurrentBeatIndex(rows.findIndex(b => b.id === lastMasteredBeat.id));
+            // Initialize pre-beat recall mode - start with all words visible
+            setPreBeatRecallSuccessCount(0);
+            setHiddenWordIndices(new Set());
+            setHiddenWordOrder([]);
+            setProtectedWordIndices(new Set());
+            setPhase('beat_fading');
+            setSessionMode('pre_beat_recall');
+          } else {
+            // First beat ever - go directly to beat preview
+            setSessionMode('beat_preview');
+            setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
+          }
         }
       } else {
         // Either all mastered, or already learned today's quota (free user)
@@ -1570,11 +1591,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         return masteredDate.toDateString() === new Date().toDateString();
       }).length;
       
-      // Check if we need to learn more beats today (intensive mode)
-      const shouldContinueToday = isPremium && nextUnmastered && beatsPerDay > 1 && beatsLearnedToday < beatsPerDay;
+      // Check if we need to learn more beats today
+      // Allow ALL users to continue to next beat in the same session (not just premium)
+      // Daily limit still applies for free users - they can't start new sessions beyond their limit
+      const shouldContinueToday = nextUnmastered && beatsLearnedToday < beatsPerDay;
       
       if (shouldContinueToday && nextUnmastered) {
-        // Premium with intensive mode: Store the just-mastered beat for recall after rest
+        // Store the just-mastered beat for recall after rest
         const justMasteredBeat = currentBeat;
         const restMins = calculateRestMinutes(daysUntilDeadline);
         setRestMinutes(restMins);
@@ -1589,23 +1612,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           setShowCelebration(false);
           setSessionMode('beat_rest');
         }, 2000);
-      } else if (isPremium && nextUnmastered && beatsPerDay === 1) {
-        // Premium with 1 beat/day: Session complete (come back tomorrow)
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
-        setShowCelebration(true);
-        
-        setTimeout(() => {
-          setShowCelebration(false);
-          setSessionMode('session_complete');
-        }, 2500);
       } else {
-        // Free user or all beats mastered: Session complete
+        // Session complete: either daily limit reached OR all beats mastered
         setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
         setShowCelebration(true);
         
         setTimeout(() => {
           setShowCelebration(false);
-          // Check if free user has more beats to learn (trigger upsell)
+          // Check if free user has more beats to learn (trigger upsell for next session)
           if (!isPremium && nextUnmastered) {
             onSessionLimitReached?.();
           }
