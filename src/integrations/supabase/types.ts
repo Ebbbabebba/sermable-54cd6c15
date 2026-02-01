@@ -805,6 +805,7 @@ export type Database = {
           presentation_mode: string | null
           review_interval: number | null
           speech_language: string | null
+          speech_type: string | null
           target_segment_length: number | null
           text_current: string
           text_original: string
@@ -832,6 +833,7 @@ export type Database = {
           presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
+          speech_type?: string | null
           target_segment_length?: number | null
           text_current: string
           text_original: string
@@ -859,6 +861,7 @@ export type Database = {
           presentation_mode?: string | null
           review_interval?: number | null
           speech_language?: string | null
+          speech_type?: string | null
           target_segment_length?: number | null
           text_current?: string
           text_original?: string
