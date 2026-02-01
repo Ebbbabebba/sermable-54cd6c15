@@ -9,7 +9,7 @@ import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
-import { ViewModeSelector } from "@/components/ViewModeSelector";
+
 import { AudienceOverlay } from "@/components/audience";
 import type { ViewMode } from "@/components/WearableHUD";
 import type { Environment } from "@/components/audience/types";
@@ -47,7 +47,7 @@ const Presentation = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   
   // Session states
-  const [stage, setStage] = useState<'mode-select' | 'view-mode-select' | 'prep' | 'live' | 'summary'>('mode-select');
+  const [stage, setStage] = useState<'mode-select' | 'prep' | 'live' | 'summary'>('mode-select');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
@@ -306,20 +306,15 @@ const Presentation = () => {
       // Go straight to live for full script mode
       setStage('live');
     } else {
-      // Strict mode goes to view mode selection
-      setStage('view-mode-select');
+      // Strict mode goes directly to prep
+      setStage('prep');
     }
   };
 
   const handleAudienceModeSelect = () => {
     setSelectedMode('audience');
     setShowAudienceOverlay(true);
-    // Start with strict mode but with audience overlay
-    setStage('view-mode-select');
-  };
-
-  const handleViewModeSelect = (mode: ViewMode) => {
-    setViewMode(mode);
+    // Audience mode goes directly to prep
     setStage('prep');
   };
 
@@ -372,16 +367,6 @@ const Presentation = () => {
     );
   }
 
-  // Show view mode selector for strict mode
-  if (stage === 'view-mode-select') {
-    return (
-      <ViewModeSelector
-        onSelectMode={handleViewModeSelect}
-        onBack={() => setStage('mode-select')}
-        speechTitle={speech.title}
-      />
-    );
-  }
 
   // Show summary (for both modes)
   if (stage === 'summary' && sessionResults) {
