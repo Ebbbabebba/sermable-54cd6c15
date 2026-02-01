@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
 import { AvatarCharacter } from "./AvatarCharacter";
+import { EnvironmentBackground } from "./environments";
 import { 
   DEFAULT_CHARACTERS, 
-  ENVIRONMENT_THEMES,
-  type Character, 
   type Expression, 
   type Environment,
   type AudienceState 
@@ -18,7 +17,7 @@ interface AudienceGridProps {
 
 // Determine expression based on character personality and audience state
 const getCharacterExpression = (
-  character: Character, 
+  character: typeof DEFAULT_CHARACTERS[0], 
   state: AudienceState
 ): Expression => {
   const { recentAccuracy, hesitationCount, monotoneScore, energyLevel } = state;
@@ -75,8 +74,6 @@ export const AudienceGrid = ({
   audienceState,
   className = ""
 }: AudienceGridProps) => {
-  const theme = ENVIRONMENT_THEMES.find(t => t.id === environment) || ENVIRONMENT_THEMES[5];
-  
   // Calculate expressions for each character
   const characterExpressions = useMemo(() => {
     return DEFAULT_CHARACTERS.map(character => ({
@@ -88,33 +85,51 @@ export const AudienceGrid = ({
   return (
     <motion.div
       className={`relative rounded-2xl overflow-hidden ${className}`}
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
+      style={{ minHeight: '320px' }}
     >
       {/* Environment background */}
-      <div className={`absolute inset-0 ${theme.ambientClass} ${theme.backgroundColor}`} />
+      <EnvironmentBackground environment={environment} />
       
-      {/* Environment-specific decorations */}
-      <EnvironmentDecorations environment={environment} />
-      
-      {/* Avatar grid - 2x2 FaceTime style */}
-      <div className="relative z-10 grid grid-cols-2 gap-3 p-4">
-        {characterExpressions.map(({ character, expression }) => (
-          <motion.div
-            key={character.id}
-            className="flex items-center justify-center p-2 rounded-xl bg-background/30 backdrop-blur-sm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: character.position * 0.1 }}
-          >
-            <AvatarCharacter 
-              character={character} 
-              expression={expression}
-              size="md"
-            />
-          </motion.div>
-        ))}
+      {/* Avatar grid - positioned naturally in scene */}
+      <div className="relative z-10 h-full flex flex-col justify-center items-center pt-20 pb-12 px-4">
+        {/* Row 1 */}
+        <div className="flex justify-center items-end gap-4 mb-2">
+          {characterExpressions.slice(0, 2).map(({ character, expression }, index) => (
+            <motion.div
+              key={character.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <AvatarCharacter 
+                character={character} 
+                expression={expression}
+                size="md"
+              />
+            </motion.div>
+          ))}
+        </div>
+        
+        {/* Row 2 */}
+        <div className="flex justify-center items-end gap-4">
+          {characterExpressions.slice(2, 4).map(({ character, expression }, index) => (
+            <motion.div
+              key={character.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (index + 2) * 0.1 }}
+            >
+              <AvatarCharacter 
+                character={character} 
+                expression={expression}
+                size="md"
+              />
+            </motion.div>
+          ))}
+        </div>
       </div>
       
       {/* Mood indicator */}
@@ -125,68 +140,19 @@ export const AudienceGrid = ({
   );
 };
 
-// Environment-specific visual decorations
-const EnvironmentDecorations = ({ environment }: { environment: Environment }) => {
-  switch (environment) {
-    case 'office_meeting':
-      return (
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Whiteboard hint */}
-          <div className="absolute top-2 right-2 w-16 h-10 bg-white/20 rounded border border-white/30" />
-          {/* Coffee cup emoji */}
-          <span className="absolute bottom-3 right-3 text-lg opacity-50">☕</span>
-        </div>
-      );
-    case 'school_presentation':
-      return (
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Chalkboard hint */}
-          <div className="absolute top-2 left-2 right-2 h-6 bg-muted/40 rounded" />
-          <span className="absolute top-3 left-4 text-xs opacity-50">📚</span>
-        </div>
-      );
-    case 'conference':
-      return (
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Stage lights */}
-          <div className="absolute top-0 left-1/4 w-8 h-2 bg-accent/30 rounded-full blur-sm" />
-          <div className="absolute top-0 right-1/4 w-8 h-2 bg-accent/30 rounded-full blur-sm" />
-          <span className="absolute top-2 right-3 text-sm opacity-50">🎤</span>
-        </div>
-      );
-    case 'wedding':
-      return (
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Flowers/decoration */}
-          <span className="absolute top-2 left-3 text-lg opacity-40">💐</span>
-          <span className="absolute top-2 right-3 text-lg opacity-40">💒</span>
-        </div>
-      );
-    case 'interview':
-      return (
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Clipboard hint */}
-          <span className="absolute bottom-3 left-3 text-lg opacity-50">📋</span>
-        </div>
-      );
-    default:
-      return null;
-  }
-};
-
 // Mood indicator component
 const MoodIndicator = ({ mood }: { mood: 'positive' | 'neutral' | 'negative' }) => {
   const moodConfig = {
-    positive: { emoji: '👏', label: 'Great job!', color: 'bg-primary/80' },
-    neutral: { emoji: '👀', label: 'Listening...', color: 'bg-secondary/80' },
-    negative: { emoji: '😬', label: 'Keep going!', color: 'bg-accent/80' },
+    positive: { emoji: '👏', label: 'Great job!', bgClass: 'bg-primary/80' },
+    neutral: { emoji: '👀', label: 'Listening...', bgClass: 'bg-secondary/80' },
+    negative: { emoji: '😬', label: 'Keep going!', bgClass: 'bg-accent/80' },
   };
   
   const config = moodConfig[mood];
   
   return (
     <motion.div
-      className={`px-3 py-1 rounded-full ${config.color} text-primary-foreground text-xs font-medium flex items-center gap-1.5`}
+      className={`px-3 py-1 rounded-full ${config.bgClass} text-primary-foreground text-xs font-medium flex items-center gap-1.5 shadow-lg backdrop-blur-sm`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       key={mood}
