@@ -1348,18 +1348,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setFailedWordIndices(new Set());
       resetForNextRep();
     } else {
-      // All words hidden - check for mastery
-      const newConsecutive = consecutiveNoScriptSuccess + 1;
-      
-      if (newConsecutive >= 2) {
-        if (phase === 'beat_fading') {
-          showBeatCelebration();
-        } else {
-          showSentenceCelebration();
-        }
+      // All words hidden - SUCCESS! 
+      // Mark beat as mastered immediately after ONE successful no-script run
+      // (Previously required 2 consecutive no-script successes, which confused users)
+      if (phase === 'beat_fading') {
+        console.log('🎉 Beat completed with all words hidden! Marking as mastered...');
+        showBeatCelebration();
       } else {
-        setConsecutiveNoScriptSuccess(newConsecutive);
-        resetForNextRep();
+        showSentenceCelebration();
       }
     }
   }
