@@ -41,14 +41,26 @@ const PresentationSummary = ({
   const minutes = Math.floor(duration / 60);
   const seconds = duration % 60;
 
+  const getHeaderContent = () => {
+    if (accuracy >= 90) {
+      return { emoji: "🎉", title: "Excellent!", subtitle: "Outstanding performance!" };
+    }
+    if (accuracy >= 75) {
+      return { emoji: "👍", title: "Good Job!", subtitle: "Here's how you did" };
+    }
+    return { emoji: "💪", title: "Keep Practicing!", subtitle: "Every attempt makes you better" };
+  };
+
+  const header = getHeaderContent();
+
   return (
     <div className="min-h-screen bg-background p-8 animate-fade-in">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="text-6xl animate-bounce">🎉</div>
-          <h1 className="text-4xl font-bold">Great Work!</h1>
-          <p className="text-xl text-muted-foreground">Here's how you did</p>
+          <div className={`text-6xl ${accuracy >= 75 ? 'animate-bounce' : ''}`}>{header.emoji}</div>
+          <h1 className="text-4xl font-bold">{header.title}</h1>
+          <p className="text-xl text-muted-foreground">{header.subtitle}</p>
         </div>
 
         {/* Main Stats */}
