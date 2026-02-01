@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
+import { SpeechTypeSelector } from "./SpeechTypeSelector";
 
 interface UploadSpeechDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
   const [familiarityLevel, setFamiliarityLevel] = useState<string>("beginner");
+  const [speechType, setSpeechType] = useState<string>("general");
   const [loading, setLoading] = useState(false);
   const [userTier, setUserTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [wordLimit, setWordLimit] = useState(500);
@@ -267,6 +269,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         goal_date: goalDate,
         familiarity_level: familiarityLevel,
         speech_language: detectedLanguage,
+        speech_type: speechType,
       }).select().single();
 
       if (error) throw error;
@@ -329,6 +332,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       setText("");
       setGoalDate("");
       setFamiliarityLevel("beginner");
+      setSpeechType("general");
       onSuccess();
     } catch (error: any) {
       toast({
@@ -404,6 +408,12 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
               This helps us adjust the difficulty level for your practice sessions
             </p>
           </div>
+
+          {/* Speech Type Selector */}
+          <SpeechTypeSelector
+            value={speechType}
+            onChange={setSpeechType}
+          />
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
