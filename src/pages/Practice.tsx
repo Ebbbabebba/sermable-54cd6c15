@@ -1860,11 +1860,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 description: "All beats mastered!",
               });
             }}
-            onExit={async () => {
+            onExit={() => {
+              // Simply exit without setting lock - lock is only set when beat is mastered
               setIsPracticing(false);
               setIsRecording(false);
-              // Ensure schedule is written with future date, then reload
-              await ensureNextPracticeScheduled();
+              // Don't call ensureNextPracticeScheduled here - only lock when beat is mastered
               loadSpeech();
             }}
             onSessionLimitReached={async () => {
