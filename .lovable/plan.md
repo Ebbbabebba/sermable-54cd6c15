@@ -1,226 +1,212 @@
 
-# Plan: Fix Beat Progression and Implement Pre-Beat Recall for All Users
+# Practice Engagement Enhancement Plan
 
-## ✅ IMPLEMENTED
-
-## Problem Summary (Solved)
-
-1. **Same beat keeps showing after finishing** - After mastering a beat, when the user returns to practice, the same beat appears instead of advancing to the next one
-2. **No pre-beat recall before new beats** - Users should recall the previously mastered beat once before learning a new one
-3. **No clear path to deadline-day mastery** - The system should ensure word-by-word memorization by the deadline
-
----
-
-## Root Cause Analysis
-
-### Issue 1: Beat Not Advancing
-In `BeatPracticeView.tsx`, the `showBeatCelebration()` function (lines 1481-1616):
-- Marks the current beat as mastered in the database
-- Updates local state with `setBeats(updatedBeats)`
-- BUT only premium users in intensive mode (`beatsPerDay > 1`) get the flow that queues the next beat
-- Free users and `beatsPerDay === 1` users go directly to `session_complete`
-- The problem: the local `beats` state is updated, but `newBeatToLearn` is NOT updated to point to the next unmastered beat
-- On session reload, `loadOrCreateBeats()` should pick the next unmastered beat, but if it doesn't, the same beat shows again
-
-### Issue 2: Pre-Beat Recall Missing
-The `pre_beat_recall` mode exists but is only triggered in the intensive mode flow:
-- Line 1577-1583: Only when `shouldContinueToday && nextUnmastered` 
-- Regular users never get this mode between sessions
-- The recall should happen at the START of each new session (when returning to practice)
+## Overview
+This plan addresses multiple user experience concerns during practice sessions:
+1. Maintaining user engagement through animations and loading facts
+2. Optimizing learning speed for merged beats
+3. Implementing true spaced repetition with one beat per day
+4. Fixing the "0 learned" display bug
+5. Fixing missing translation placeholders (showing as `{}`)
 
 ---
 
-## Solution Design
+## Technical Changes
 
-### Part 1: Fix Beat Progression in Same Session
+### 1. Enhanced Loading Overlay with Memory Facts
 
-After mastering a beat, the system should:
-1. Mark beat as mastered (already works)
-2. Find the next unmastered beat (already works)
-3. If there's a next beat AND we should continue today:
-   - Set up pre-beat recall flow (recall the just-mastered beat)
-   - Then transition to learning the next beat
-4. If session complete (no more beats today):
-   - Just show session complete (already works)
+**File:** `src/components/LoadingOverlay.tsx`
 
-### Part 2: Implement Pre-Beat Recall at Session Start
+Transform the basic loading spinner into an engaging experience:
+- Add rotating "Did you know?" memory science facts
+- Facts cycle every 3 seconds during loading
+- Example facts:
+  - "Sleep consolidates 40% more memories than staying awake"
+  - "Spaced repetition can improve retention by 200%"
+  - "Your brain rehearses learned material during REM sleep"
+  - "Testing yourself is more effective than re-reading"
+  - "Morning recall strengthens overnight memory consolidation"
 
-When `loadOrCreateBeats()` loads and finds:
-- At least 1 mastered beat exists
-- A new beat to learn exists
-- This is NOT a recall-only session
-
-Then BEFORE showing beat_preview for the new beat:
-1. Show the last mastered beat for ONE recall pass
-2. User must recall it with all words hidden
-3. Then proceed to beat_preview for the new beat
-
-### Part 3: Ensure Word-by-Word Mastery by Deadline
-
-The current system already has strong foundations:
-- Progressive word hiding in fading phases
-- All words must be hidden for beat mastery
-- Spaced repetition intervals based on deadline
-
-To guarantee deadline-day readiness:
-- 3 days before deadline: Automatic full-speech practice mode
-- 1 day before: Only full-speech recalls (no individual beats)
-- Deadline day: Pure recall mode
-
----
-
-## Implementation Details
-
-### File: `src/components/BeatPracticeView.tsx`
-
-#### Change 1: Add Pre-Beat Recall at Session Start
-
-In `loadOrCreateBeats()` around line 529, after determining beats to recall and new beat to learn:
-
+**Implementation:**
 ```
-Current logic:
-- If beatsNeedingRecall.length > 0 → recall mode
-- Else if firstUnmastered → beat_preview
-- Else → session_complete
-
-New logic:
-- If beatsNeedingRecall.length > 0 → recall mode (unchanged)
-- Else if firstUnmastered:
-  - Check if there's a PREVIOUSLY mastered beat (most recent)
-  - If yes → start in pre_beat_recall mode for that beat, queue the new beat
-  - If no (first beat ever) → go directly to beat_preview
-- Else → session_complete
-```
-
-#### Change 2: Store "Last Mastered Beat" for Pre-Recall
-
-When entering with a new beat to learn:
-1. Find the most recently mastered beat (by `mastered_at` timestamp)
-2. Set `beatToRecallBeforeNext` to that beat
-3. Set `nextBeatQueued` to the new beat to learn
-4. Enter `pre_beat_recall` mode
-
-#### Change 3: Fix In-Session Progression for All Users
-
-In `showBeatCelebration()`, after marking beat as mastered:
-- For ALL users (not just premium intensive mode), if there's a next beat:
-  - Queue the next beat
-  - Enter rest/pre-beat-recall flow
-- Remove the artificial split between premium/free for beat progression
-
----
-
-## Session Flow Diagram
-
-```text
-User enters Practice
-         │
-         ▼
-    Load Beats
-         │
-         ├─── Has beats needing daily recall? ─── YES ──▶ RECALL MODE
-         │                                                     │
-         │                                                     ▼
-         NO                                           Recall all mastered
-         │                                            beats (2x each)
-         ▼                                                     │
-    Has new beat to learn?                                    ▼
-         │                                            Done with recalls
-         ├─── YES                                              │
-         │       │                                             ▼
-         │       ▼                                    Has new beat to learn?
-         │   Has previously mastered beat?                     │
-         │       │                                    ├─ YES ──▶ PRE-BEAT RECALL
-         │       ├── YES ──▶ PRE-BEAT RECALL                   │
-         │       │           (recall last beat once)           │
-         │       │                  │                 └─ NO ───▶ SESSION COMPLETE
-         │       │                  ▼
-         │       │           BEAT PREVIEW
-         │       │                  │
-         │       │                  ▼
-         │       │            LEARN MODE
-         │       │           (sentence by sentence)
-         │       │                  │
-         │       │                  ▼
-         │       │           Beat Mastered!
-         │       │                  │
-         │       │                  ▼
-         │       │      More beats to learn today?
-         │       │           │            │
-         │       │          YES          NO
-         │       │           │            │
-         │       │           ▼            ▼
-         │       │     Queue next    SESSION COMPLETE
-         │       │     + Rest Timer
-         │       │           │
-         │       │           ▼
-         │       │     PRE-BEAT RECALL
-         │       │     (for just-mastered)
-         │       │           │
-         │       │           ▼
-         │       │     BEAT PREVIEW
-         │       │     (for next beat)
-         │       │           │
-         │       └───────────┴──────────────────────────▶ (continue loop)
-         │
-         └─── NO ──▶ SESSION COMPLETE (all mastered or limit reached)
+- Add array of memory facts (10-15 facts)
+- Add useState for current fact index
+- Add useEffect with 3-second interval to rotate facts
+- Fade animation between fact transitions
+- Add corresponding translations in all locale files
 ```
 
 ---
 
-## Files to Modify
+### 2. Merged Beat Optimization (2x Tempo)
 
-| File | Changes |
-|------|---------|
-| `src/components/BeatPracticeView.tsx` | Add pre-beat recall at session start; fix beat progression for all users |
+**File:** `src/components/BeatPracticeView.tsx`
 
----
+When 2 or more beats are practiced together (merged beats):
 
-## Technical Implementation Steps
+**Current Flow (slow):**
+1. Read through 3 times (sentence_1_learning)
+2. Fading phase (hide 1 word at a time)
+3. Repeat for each sentence, then combine
 
-### Step 1: Modify Session Start Logic
-In `loadOrCreateBeats()`, after line 533 (where we check for new beat to learn):
-- Find the most recently mastered beat (if any)
-- If found, set up pre-beat recall before beat preview
-- Update `sessionMode` to `pre_beat_recall` with proper state
+**Optimized Flow:**
+1. Skip to just 1 read-through for merged beats
+2. Hide words at 2x rate (2-4 words per successful rep instead of 1-2)
 
-### Step 2: Simplify In-Session Beat Progression
-In `showBeatCelebration()`:
-- Remove the complex premium/free/intensive mode branching
-- After marking beat as mastered, check if there's a next unmastered beat
-- If yes AND daily limit not reached: queue it for learning (with pre-beat recall)
-- If no OR limit reached: session complete
-
-### Step 3: Ensure Pre-Beat Recall Completion Flows Correctly
-In `handlePreBeatRecallCompletion()`:
-- After successful recall with all words hidden
-- Transition to `beat_preview` for the `nextBeatQueued` beat
-- This already exists but may need verification
+**Implementation:**
+- Add `isMergedBeatSession` detection when multiple beats are combined
+- For merged sessions:
+  - Set `requiredLearningReps = 1` (instead of 2-3)
+  - Double the words hidden per success: `wordsToHide = hadErrors ? 2 : Math.min(2 + (fadingSuccessCount * 2), 6)`
+- Apply same optimization during recall of multiple beats
 
 ---
 
-## Edge Cases Handled
+### 3. True Spaced Repetition: One Beat Per Day
 
-1. **First beat ever** - No pre-beat recall (nothing to recall yet)
-2. **All beats mastered** - Goes to session complete with all-mastered message
-3. **Free user daily limit** - Session complete + upsell prompt
-4. **User exits mid-session** - Checkpoint saved, resume from same spot
-5. **Deadline approaching** - Intervals shortened automatically (already works)
+**File:** `src/components/BeatPracticeView.tsx`
+
+Implement science-backed spaced repetition schedule:
+
+**New Beat Learning Cycle:**
+1. **Session**: Learn new beat (sentence by sentence, then fading)
+2. **10-minute recall**: Notification after 10 minutes for first short-term recall
+3. **Evening recall (before 10 PM)**: If less than 6 hours remain before 10 PM, defer to morning
+4. **Morning recall**: Next day morning reinforcement
+5. **Day 3+**: Recall previously learned beats together before new beat
+
+**Implementation:**
+- Modify `showBeatCelebration()` to calculate recall timings
+- Add new schedule entries with specific recall times:
+  - `recall_10min`: +10 minutes from mastery
+  - `recall_evening`: Today at 8 PM (or morning if <6 hours)
+  - `recall_morning`: Tomorrow 7-10 AM
+- Track recall types in `practice_beats` table (may need migration)
+- Update notification edge function to send reminders at these times
+
+**Recall Merging Logic (Day 3+):**
+```
+Day 1: Learn Beat 1 → 10min recall → Evening → Morning (Day 2)
+Day 2: Recall Beat 1, then Learn Beat 2 → Same cycle
+Day 3: Recall Beats 1+2 together, then Learn Beat 3
+Day 4+: Recall all previous beats together, then learn next
+```
 
 ---
 
-## Expected User Experience
+### 4. Fix "0 Learned" Bug
 
-### Session Flow (After Fix):
-1. User opens practice for speech with Beat 1 mastered, Beat 2 unmastered
-2. System shows "Recall Time" - user recalls Beat 1 (all words hidden)
-3. After successful recall, "Coming up..." preview of Beat 2
-4. User clicks "I'm Ready to Practice"
-5. Learns Beat 2 sentence by sentence
-6. After mastering Beat 2 → Session Complete
-7. Next session: Recall Beat 2, then learn Beat 3
+**File:** `src/pages/Practice.tsx`
 
-### By Deadline Day:
-- User has mastered all beats individually
-- Daily recalls have reinforced memory
-- Full speech recall mode ensures seamless performance
+**Issue:** The `masteredBeats` count shows 0 even after practicing.
+
+**Root Cause Analysis:**
+The count uses `practiceBeats.filter(b => b.is_mastered).length` but `practiceBeats` may not be updated after a beat is mastered during the session.
+
+**Fix:**
+- After returning from `BeatPracticeView`, refresh the `practiceBeats` state
+- Add a callback from `BeatPracticeView.onComplete` that includes updated beat data
+- Or trigger a full reload of `practiceBeats` when `isPracticing` changes from true to false
+
+---
+
+### 5. Fix Missing Translation Placeholders (`{}`)
+
+**Files:** All locale files (`src/i18n/locales/*.json`)
+
+**Issue:** Some translation keys show `{}` instead of actual text.
+
+**Keys to check and add:**
+- `beat_practice.beat_number` - "Beat {{number}}"
+- `beat_practice.beats_remaining` - with proper `{{count}}` handling
+- `beat_practice.come_back` - with `{{current}}` and `{{total}}`
+- `beat_practice.no_beats_yet` - with `{{total}}`
+
+**Also check:**
+- `progressive` namespace keys that might be missing fallbacks
+- Keys using `t('key.name', 'fallback')` pattern where fallback isn't translating
+
+---
+
+### 6. Session Transition Animations
+
+**File:** `src/components/BeatPracticeView.tsx`
+
+Add smooth animations between:
+- Learning → Fading transitions
+- Sentence → Next sentence transitions  
+- Beat completion celebrations
+- Session mode changes (recall → learn → rest)
+
+**Implementation:**
+- Add Framer Motion `AnimatePresence` wrapper around phase content
+- Add entrance/exit animations for text cards
+- Add progress ring animations when hiding words
+- Add confetti-style particles on beat completion
+
+---
+
+## Database Migration (if needed)
+
+If implementing granular recall scheduling:
+
+```sql
+-- Add recall tracking columns to practice_beats
+ALTER TABLE practice_beats ADD COLUMN IF NOT EXISTS
+  recall_10min_at TIMESTAMP WITH TIME ZONE,
+  recall_evening_at TIMESTAMP WITH TIME ZONE,
+  recall_morning_at TIMESTAMP WITH TIME ZONE,
+  last_merged_recall_at TIMESTAMP WITH TIME ZONE;
+```
+
+---
+
+## Push Notification Updates
+
+**File:** `supabase/functions/send-push-notifications/index.ts`
+
+Update to check for specific recall times:
+- 10-minute recall reminders
+- Evening practice reminders (if not completed today)
+- Morning recall prompts
+
+---
+
+## Summary of Changes
+
+| File | Change |
+|------|--------|
+| `LoadingOverlay.tsx` | Memory facts rotation during loading |
+| `BeatPracticeView.tsx` | 2x tempo for merged beats, 1 read-through only |
+| `BeatPracticeView.tsx` | True spaced repetition schedule |
+| `BeatPracticeView.tsx` | Session transition animations |
+| `Practice.tsx` | Fix masteredBeats refresh after practice |
+| `en.json` + all locales | Add/fix missing translation keys |
+| Database migration | Add recall scheduling columns |
+| Edge function | Update notification timing |
+
+---
+
+## Technical Notes
+
+### Merged Beat Detection
+```typescript
+const isMergedBeatSession = sessionMode === 'recall' && beatsToRecall.length > 1;
+// OR when practicing merged segments
+```
+
+### Optimized Word Hiding for Merged Sessions
+```typescript
+const baseWordsToHide = isMergedBeatSession ? 2 : 1;
+const progressionMultiplier = isMergedBeatSession ? 2 : 1;
+const wordsToHide = hadErrors 
+  ? baseWordsToHide 
+  : Math.min(baseWordsToHide + (fadingSuccessCount * progressionMultiplier), isMergedBeatSession ? 6 : 3);
+```
+
+### 10-Minute Recall Timer
+After mastering a beat:
+```typescript
+const recall10MinDate = new Date(Date.now() + 10 * 60 * 1000);
+// Store in schedule and trigger notification
+```
