@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Brain, ScrollText, Users, Lock, Sparkles } from "lucide-react";
+import { Brain, ScrollText, Users } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 
@@ -116,39 +115,16 @@ export const PresentationModeSelector = ({
               </div>
             </Card>
 
-            {/* Audience Mode - Premium */}
+            {/* Audience Mode */}
             <Card 
-              className={`p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 cursor-pointer group relative overflow-hidden ${
-                isPremium 
-                  ? 'hover:border-amber-500/50 border-amber-500/20' 
-                  : 'hover:border-muted-foreground/30'
-              }`}
+              className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group relative overflow-hidden"
               onClick={handleAudienceModeClick}
             >
-              {/* Premium glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               
               <div className="space-y-4 relative">
-                <div className="flex items-start justify-between">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Users className="w-7 h-7 text-amber-500" />
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 gap-1"
-                  >
-                    {isPremium ? (
-                      <>
-                        <Sparkles className="w-3 h-3" />
-                        {t('subscription.premium')}
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-3 h-3" />
-                        {t('subscription.premium')}
-                      </>
-                    )}
-                  </Badge>
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Users className="w-7 h-7 text-primary" />
                 </div>
                 
                 <div>
@@ -160,30 +136,25 @@ export const PresentationModeSelector = ({
 
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5">✓</span>
                     <span>{t('presentationMode.animatedAudience')}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5">✓</span>
                     <span>{t('presentationMode.realTimeReactions')}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5">✓</span>
                     <span>{t('presentationMode.multipleEnvironments')}</span>
                   </li>
                 </ul>
 
                 <Button 
-                  className={`w-full mt-4 ${
-                    isPremium 
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white' 
-                      : ''
-                  }`}
+                  className="w-full mt-4"
                   size="sm"
-                  variant={isPremium ? 'default' : 'outline'}
                   disabled={loading}
                 >
-                  {isPremium ? t('presentationMode.startWithAudience') : t('presentationMode.unlockPremium')}
+                  {t('presentationMode.startWithAudience')}
                 </Button>
               </div>
             </Card>
