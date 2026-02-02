@@ -718,5 +718,21 @@
     "tip3": "Press ESC to exit presentation",
     "tip4": "Yellow highlight = pause detected",
     "tip5": "Blue highlight = currently speaking"
+  },
+  "sleepScheduling": {
+    "morningRecall": "Morning Memory Test",
+    "morningRecallDesc": "Your brain consolidated memories overnight. Test your recall of \"{{title}}\" now for maximum retention!",
+    "eveningPractice": "Pre-Sleep Practice",
+    "eveningPracticeDesc": "Practice now and sleep on it! Your brain consolidates memories during sleep, making tonight's practice extra powerful.",
+    "optimalMorning": "Fresh Mind Practice",
+    "optimalMorningDesc": "Your brain is most receptive in the morning. Great time to learn new material!",
+    "practiceReminder": "Time to Practice",
+    "practiceReminderDesc": "Try to practice before 10 PM tonight for optimal memory consolidation during sleep.",
+    "scienceBacked": "Science-backed",
+    "testRecall": "Test Recall",
+    "practiceNow": "Practice Now"
+  },
+  "common": {
+    "later": "Later"
   }
 }

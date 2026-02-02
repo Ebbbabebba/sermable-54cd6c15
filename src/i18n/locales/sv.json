@@ -693,5 +693,21 @@
     "tip3": "Tryck ESC för att avsluta presentationen",
     "tip4": "Gul markering = paus upptäckt",
     "tip5": "Blå markering = talar just nu"
+  },
+  "sleepScheduling": {
+    "morningRecall": "Morgontest",
+    "morningRecallDesc": "Din hjärna bearbetade minnena under natten. Testa din återkallning av \"{{title}}\" nu för maximal minneslagring!",
+    "eveningPractice": "Kvällsträning",
+    "eveningPracticeDesc": "Öva nu och sov på saken! Din hjärna bearbetar minnen under sömnen, så kvällsträning är extra kraftfull.",
+    "optimalMorning": "Pigg hjärna",
+    "optimalMorningDesc": "Din hjärna är som mest mottaglig på morgonen. Perfekt tid att lära sig nytt material!",
+    "practiceReminder": "Dags att öva",
+    "practiceReminderDesc": "Försök öva innan kl 22 ikväll för optimal minnesbearbetning under sömnen.",
+    "scienceBacked": "Vetenskapligt bevisat",
+    "testRecall": "Testa minnet",
+    "practiceNow": "Öva nu"
+  },
+  "common": {
+    "later": "Senare"
   }
 }
