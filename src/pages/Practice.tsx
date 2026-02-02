@@ -403,7 +403,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
         setNextReviewDate(null);
       }
       
-      // Check if today's session is complete (beat mastered today or all beats mastered)
+      // Check if today's session is complete
       const { data: beatsData } = await supabase
         .from('practice_beats')
         .select('id, beat_order, is_mastered, mastered_at, last_recall_at, sentence_1_text, sentence_2_text, sentence_3_text')
@@ -418,12 +418,27 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
         // IMPORTANT: Array.every([]) === true, so we must guard against empty beats.
         const allMastered = hasBeats && beatsData.every((b) => b.is_mastered);
-        const masteredToday = hasBeats && beatsData.some((b) => {
+        
+        // Count how many beats were mastered today
+        const beatsLearnedToday = beatsData.filter((b) => {
           if (!b.mastered_at) return false;
           return new Date(b.mastered_at).toDateString() === today;
-        });
-
-        setTodaySessionDone(hasBeats && (allMastered || masteredToday));
+        }).length;
+        
+        // Check if there are unmastered beats remaining
+        const hasUnmasteredBeats = beatsData.some((b) => !b.is_mastered);
+        
+        // Session is "done" if:
+        // 1. All beats are mastered, OR
+        // 2. User learned at least one beat today AND there's a future lock time AND they have unmastered beats
+        //    (meaning they should wait before learning more)
+        // If no lock (free user who just mastered), they can continue immediately
+        const hasFutureLock = nextReview && new Date(nextReview) > new Date();
+        
+        // For free users: done if they learned 1 beat today AND locked
+        // For premium: done if locked (they can learn more per day based on schedule)
+        // If all mastered: always done
+        setTodaySessionDone(hasBeats && (allMastered || (beatsLearnedToday > 0 && hasFutureLock && hasUnmasteredBeats)));
       }
     } catch (error: any) {
       toast({
@@ -2135,8 +2150,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   <div>
                     <h3 className="font-semibold">
                       {showSessionComplete
-                        ? t('beat_practice.done_for_today', "Done for today!")
-                        : masteredBeats === 0 
+                        ? (nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
+                            ? t('beat_practice.done_for_now', "Done for now!")
+                            : t('beat_practice.done_for_today', "Done for today!"))
+                        : masteredBeats === 0
                           ? t('beat_practice.todays_session')
                           : t('beat_practice.active_session')}
                     </h3>
@@ -2324,7 +2341,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
               className="w-full h-14 rounded-2xl text-lg font-bold border-green-500/30 text-green-600 hover:bg-green-500/10"
             >
               <CheckCircle2 className="h-5 w-5 mr-2" />
-              {t('beat_practice.done_for_today', "Done for today!")}
+              {nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
+                ? t('beat_practice.done_for_now', "Done for now!")
+                : t('beat_practice.done_for_today', "Done for today!")}
             </Button>
           ) : (
             <Button 
