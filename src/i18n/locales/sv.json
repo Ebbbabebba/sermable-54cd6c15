@@ -656,6 +656,7 @@
     "learned": "Inlärda",
     "progress": "{{mastered}}/{{total}} beats inlärda",
     "done_for_today": "Klart för idag!",
+    "done_for_now": "Klart för nu!",
     "coming_up": "Nästa",
     "come_back_in": "Kom tillbaka om {{time}}",
     "remaining": "Kvar",
