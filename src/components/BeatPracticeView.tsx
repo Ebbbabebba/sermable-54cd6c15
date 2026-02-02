@@ -46,6 +46,7 @@ interface Beat {
   is_mastered: boolean;
   mastered_at: string | null;
   last_recall_at: string | null;
+  recall_10min_at: string | null;
   checkpoint_sentence?: number | null;
   checkpoint_phase?: string | null;
   checkpoint_hidden_indices?: number[] | null;
@@ -206,6 +207,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [newBeatToLearn, setNewBeatToLearn] = useState<Beat | null>(null);
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(30);
   const [beatsPerDay, setBeatsPerDay] = useState(1);
+  const [is10MinRecall, setIs10MinRecall] = useState(false); // Track if current recall is 10-min recall
   
   // Rest between beats state
   const [restUntilTime, setRestUntilTime] = useState<Date | null>(null);
@@ -477,16 +479,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const setBeatsAndPlan = (rows: Beat[]) => {
       setBeats(rows);
       
-      // Find mastered beats that need recall (only on new days)
+      const now = new Date();
+      
+      // Find mastered beats that need 10-minute recall (recall_10min_at is in the past and not yet recalled)
+      const beatsNeeding10MinRecall = rows.filter(b => {
+        if (!b.is_mastered || !b.recall_10min_at) return false;
+        const recall10minTime = new Date(b.recall_10min_at);
+        // Need recall if: time has passed AND we haven't recalled since mastery
+        // (i.e., last_recall_at is null or before mastered_at)
+        if (recall10minTime > now) return false;
+        if (!b.last_recall_at) return true;
+        if (b.mastered_at && new Date(b.last_recall_at) < new Date(b.mastered_at)) return true;
+        return false;
+      });
+      
+      // Find mastered beats that need regular daily recall (only on new days)
       const masteredBeats = rows.filter(b => b.is_mastered && b.mastered_at);
-      const beatsNeedingRecall = todayIsNewDay 
+      const beatsNeedingDailyRecall = todayIsNewDay 
         ? masteredBeats.filter(b => {
+            // Skip if already in 10-min recall queue
+            if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
             // Need recall if: never recalled today
             if (!b.last_recall_at) return true;
             const lastRecall = new Date(b.last_recall_at);
             return lastRecall.toDateString() !== new Date().toDateString();
           })
         : [];
+      
+      // Combine: 10-minute recalls first, then daily recalls
+      const allBeatsNeedingRecall = [...beatsNeeding10MinRecall, ...beatsNeedingDailyRecall];
       
       // Find unmastered beats
       const unmasteredBeats = rows.filter(b => !b.is_mastered);
@@ -496,7 +517,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         total: rows.length,
         mastered: masteredBeats.length,
         unmastered: unmasteredCount,
-        beatsNeedingRecall: beatsNeedingRecall.length,
+        beatsNeeding10MinRecall: beatsNeeding10MinRecall.length,
+        beatsNeedingDailyRecall: beatsNeedingDailyRecall.length,
         firstUnmasteredBeatOrder: unmasteredBeats[0]?.beat_order,
       });
       
@@ -522,13 +544,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         selectedBeatOrder: firstUnmastered?.beat_order,
       });
       
-      setBeatsToRecall(beatsNeedingRecall);
+      setBeatsToRecall(allBeatsNeedingRecall);
       setNewBeatToLearn(firstUnmastered);
       
-      // Determine starting mode
-      if (beatsNeedingRecall.length > 0) {
+      // Track if we're starting with 10-min recalls
+      setIs10MinRecall(beatsNeeding10MinRecall.length > 0);
+      
+      // Determine starting mode - prioritize 10-minute recall
+      if (allBeatsNeedingRecall.length > 0) {
         setSessionMode('recall');
         setRecallIndex(0);
+        console.log('⏰ Starting recall mode:', beatsNeeding10MinRecall.length > 0 ? '10-MINUTE RECALL' : 'daily recall');
         initializeRecallMode();
       } else if (firstUnmastered) {
         // Check if there's a saved checkpoint for this beat - resume directly if so
@@ -604,7 +630,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       console.error('Error loading beats:', error);
     }
 
+    // Check if any beat is mastered - never regenerate if so (would lose progress!)
+    const hasMasteredBeats = existingBeats?.some(b => b.is_mastered);
+    
     const shouldRegenerate =
+      !hasMasteredBeats && // Never regenerate if any beat is mastered
       !!existingBeats &&
       existingBeats.length > 0 &&
       existingBeats.some(
@@ -615,6 +645,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       );
 
     if (existingBeats && existingBeats.length > 0 && !shouldRegenerate) {
+      setBeatsAndPlan(existingBeats as Beat[]);
+      setLoading(false);
+      return;
+    }
+    
+    // Also don't regenerate if mastered beats exist
+    if (hasMasteredBeats) {
+      console.log('⚠️ Skipping regeneration - mastered beats exist');
       setBeatsAndPlan(existingBeats as Beat[]);
       setLoading(false);
       return;
@@ -1287,22 +1325,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         resetForNextRep();
       }, 800);
     } else {
-      // All hidden and success! Pre-beat recall complete - now learn the new beat
+      // All hidden and success! Pre-beat recall complete - now show the new beat preview
       setCelebrationMessage("✅ " + t('beat_practice.recall_complete', "Ready for next beat!"));
       setShowCelebration(true);
 
       setTimeout(() => {
         setShowCelebration(false);
         
-        // Now transition to learning the new beat
+        // Now transition to beat preview for the new beat
         if (nextBeatQueued) {
           setNewBeatToLearn(nextBeatQueued);
           setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
           setNextBeatQueued(null);
           setBeatToRecallBeforeNext(null);
           setPreBeatRecallSuccessCount(0);
-          setSessionMode('learn');
-          transitionToPhase('sentence_1_learning');
+          // Show beat preview first instead of jumping straight to learning
+          setSessionMode('beat_preview');
         } else {
           // No next beat - session complete
           setSessionMode('session_complete');
@@ -1504,11 +1542,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (currentBeat) {
       console.log('🏆 Marking beat as mastered:', currentBeat.id);
       
+      // Calculate 10-minute recall time
+      const recall10minAt = new Date(Date.now() + 10 * 60 * 1000);
+      
       const { error: updateError } = await supabase
         .from('practice_beats')
         .update({ 
           is_mastered: true, 
           mastered_at: new Date().toISOString(),
+          // Schedule 10-minute recall
+          recall_10min_at: recall10minAt.toISOString(),
           // Advance stage: day1_sentences → day2_beats (for next day's practice)
           practice_stage: 'day2_beats',
           words_hidden_per_round: 2,
@@ -1531,7 +1574,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         return;
       }
       
-      console.log('✅ Beat marked as mastered successfully');
+      console.log('✅ Beat marked as mastered successfully, 10min recall at:', recall10minAt.toISOString());
       
       // Update schedule's next_review_date based on spaced repetition
       // For beat-based learning: next review in 4-24 hours depending on deadline
@@ -1576,7 +1619,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Update local state so the completion screen shows correct count
       const updatedBeats = beats.map(b => 
         b.id === currentBeat.id 
-          ? { ...b, is_mastered: true, mastered_at: new Date().toISOString() }
+          ? { ...b, is_mastered: true, mastered_at: new Date().toISOString(), recall_10min_at: recall10minAt.toISOString() }
           : b
       );
       setBeats(updatedBeats);
@@ -2157,9 +2200,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           
           {/* Session badge */}
           {sessionMode === 'recall' ? (
-            <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40">
-              <span className="text-xs font-bold text-amber-500 uppercase tracking-wide">Recall</span>
-              <span className="text-sm font-bold text-amber-400">{recallIndex + 1}/{beatsToRecall.length}</span>
+            <div className={cn(
+              "shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border",
+              is10MinRecall 
+                ? "bg-orange-500/20 border-orange-500/40" 
+                : "bg-amber-500/20 border-amber-500/40"
+            )}>
+              <span className={cn(
+                "text-xs font-bold uppercase tracking-wide",
+                is10MinRecall ? "text-orange-500" : "text-amber-500"
+              )}>
+                {is10MinRecall ? "⏰ 10min" : "🔄 Recall"}
+              </span>
+              <span className={cn(
+                "text-sm font-bold",
+                is10MinRecall ? "text-orange-400" : "text-amber-400"
+              )}>
+                {recallIndex + 1}/{beatsToRecall.length}
+              </span>
             </div>
           ) : sessionMode === 'pre_beat_recall' ? (
             <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/40">
