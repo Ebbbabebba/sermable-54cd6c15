@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import LockCountdown from "./LockCountdown";
+import { useSleepAwareTracking } from "@/hooks/useSleepAwareTracking";
 
 interface Speech {
   id: string;
@@ -85,7 +86,11 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
     return () => clearInterval(interval);
   }, [speech.id]);
 
+  const { trackPracticeStart } = useSleepAwareTracking();
+
   const handleCardClick = () => {
+    // Track evening practice for morning recall prompts
+    trackPracticeStart(speech.id);
     navigate(`/practice/${speech.id}`);
   };
 
