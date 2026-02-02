@@ -51,96 +51,36 @@ const SleepAwareScheduling = () => {
       const lastEveningPractice = localStorage.getItem('last-evening-practice');
       const lastEveningData = lastEveningPractice ? JSON.parse(lastEveningPractice) : null;
       
+      // ONLY show morning recall prompt - user is already in app to practice otherwise
       // Morning time (6 AM - 10 AM) - Suggest morning recall if practiced last night
-      if (hour >= 6 && hour < 10) {
-        if (lastEveningData) {
-          const lastPracticeDate = new Date(lastEveningData.timestamp);
-          const today = new Date();
-          
-          // Check if practiced last evening (within last 12 hours)
-          const hoursSinceEvening = (today.getTime() - lastPracticeDate.getTime()) / (1000 * 60 * 60);
-          
-          if (hoursSinceEvening < 12 && hoursSinceEvening > 4) {
-            // Find the speech they practiced
-            const practicedSpeech = speeches.find(s => s.id === lastEveningData.speechId);
-            
-            if (practicedSpeech) {
-              setSuggestion({
-                type: 'morning_recall',
-                speechId: practicedSpeech.id,
-                speechTitle: practicedSpeech.title,
-                message: t('sleepScheduling.morningRecall', 'Morning Memory Test'),
-                subMessage: t('sleepScheduling.morningRecallDesc', 'Your brain consolidated memories overnight. Test your recall of "{{title}}" now for maximum retention!', { title: practicedSpeech.title }),
-                icon: 'sun'
-              });
-              setLoading(false);
-              return;
-            }
-          }
-        }
+      if (hour >= 6 && hour < 10 && lastEveningData) {
+        const lastPracticeDate = new Date(lastEveningData.timestamp);
+        const today = new Date();
         
-        // No evening practice found - suggest optimal practice time
-        const nextSpeech = speeches.find(s => s.goal_date && new Date(s.goal_date) > new Date());
-        if (nextSpeech) {
-          setSuggestion({
-            type: 'optimal_time',
-            speechId: nextSpeech.id,
-            speechTitle: nextSpeech.title,
-            message: t('sleepScheduling.optimalMorning', 'Fresh Mind Practice'),
-            subMessage: t('sleepScheduling.optimalMorningDesc', 'Your brain is most receptive in the morning. Great time to learn new material!'),
-            icon: 'brain'
-          });
-        }
-      }
-      
-      // Evening time (7 PM - 10 PM) - Suggest evening practice for sleep consolidation
-      else if (hour >= 19 && hour < 22) {
-        const speechWithUpcomingDeadline = speeches.find(s => {
-          if (!s.goal_date) return false;
-          const daysUntil = Math.ceil((new Date(s.goal_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-          return daysUntil > 0 && daysUntil <= 14;
-        });
-
-        if (speechWithUpcomingDeadline) {
-          setSuggestion({
-            type: 'evening_practice',
-            speechId: speechWithUpcomingDeadline.id,
-            speechTitle: speechWithUpcomingDeadline.title,
-            message: t('sleepScheduling.eveningPractice', 'Pre-Sleep Practice'),
-            subMessage: t('sleepScheduling.eveningPracticeDesc', 'Practice now and sleep on it! Your brain consolidates memories during sleep, making tonight\'s practice extra powerful.'),
-            icon: 'moon'
-          });
-        }
-      }
-      
-      // Late night (10 PM - midnight) - Suggest rest
-      else if (hour >= 22 || hour < 6) {
-        // Don't suggest practice late at night - sleep is important!
-        setSuggestion(null);
-      }
-      
-      // Afternoon/other times - Show general tip if they haven't practiced today
-      else {
-        const today = new Date().toDateString();
-        const practicedToday = speeches.some(s => 
-          s.last_practice_session_at && 
-          new Date(s.last_practice_session_at).toDateString() === today
-        );
-
-        if (!practicedToday) {
-          const nextSpeech = speeches.find(s => s.goal_date && new Date(s.goal_date) > new Date());
-          if (nextSpeech) {
+        // Check if practiced last evening (within last 12 hours)
+        const hoursSinceEvening = (today.getTime() - lastPracticeDate.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceEvening < 14 && hoursSinceEvening > 4) {
+          // Find the speech they practiced
+          const practicedSpeech = speeches.find(s => s.id === lastEveningData.speechId);
+          
+          if (practicedSpeech) {
             setSuggestion({
-              type: 'optimal_time',
-              speechId: nextSpeech.id,
-              speechTitle: nextSpeech.title,
-              message: t('sleepScheduling.practiceReminder', 'Time to Practice'),
-              subMessage: t('sleepScheduling.practiceReminderDesc', 'Try to practice before 10 PM tonight for optimal memory consolidation during sleep.'),
-              icon: 'clock'
+              type: 'morning_recall',
+              speechId: practicedSpeech.id,
+              speechTitle: practicedSpeech.title,
+              message: t('sleepScheduling.morningRecall', 'Morning Memory Test'),
+              subMessage: t('sleepScheduling.morningRecallDesc', 'Your brain consolidated memories overnight. Test your recall of "{{title}}" now for maximum retention!', { title: practicedSpeech.title }),
+              icon: 'sun'
             });
+            setLoading(false);
+            return;
           }
         }
       }
+      
+      // For all other times - no in-app suggestions needed
+      // Evening reminders will be sent via push notifications instead
 
       setLoading(false);
     } catch (error) {
