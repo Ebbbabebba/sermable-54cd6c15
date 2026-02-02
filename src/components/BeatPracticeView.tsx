@@ -2018,7 +2018,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </p>
         </div>
         
-        <Button variant="ghost" onClick={startNextBeat} className="mt-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => {
+            // When skipping rest, go directly to learning the next beat
+            // Skip the pre_beat_recall since there was no consolidation time
+            if (nextBeatQueued) {
+              setRestUntilTime(null);
+              setRestMinutes(0);
+              setNewBeatToLearn(nextBeatQueued);
+              setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
+              setNextBeatQueued(null);
+              setBeatToRecallBeforeNext(null); // Clear this to prevent recall
+              setSessionMode('learn');
+              transitionToPhase('sentence_1_learning');
+            } else {
+              startNextBeat();
+            }
+          }} 
+          className="mt-4"
+        >
           <Play className="h-4 w-4 mr-2" />
           {t('beat_practice.skip_rest', "Start now anyway")}
         </Button>
