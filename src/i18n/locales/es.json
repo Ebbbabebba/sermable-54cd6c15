@@ -482,5 +482,20 @@
     "startWithAudience": "Empezar con audiencia",
     "unlockPremium": "Desbloquear Premium",
     "switchModes": "Puedes cambiar de modo en cualquier momento antes de empezar"
+  },
+  "loading_facts": {
+    "did_you_know": "¿Sabías que?",
+    "sleep_consolidation": "El sueño consolida un 40% más de recuerdos que estar despierto",
+    "spaced_repetition": "La repetición espaciada puede mejorar la retención en un 200%",
+    "rem_rehearsal": "Tu cerebro repasa lo aprendido durante el sueño REM",
+    "testing_effect": "Hacerte pruebas es más efectivo que releer",
+    "morning_recall": "El recuerdo matutino fortalece la consolidación nocturna",
+    "active_recall": "El recuerdo activo crea conexiones neuronales más fuertes",
+    "forgetting_curve": "La curva del olvido cae un 70% después de 24h sin repaso",
+    "chunking": "Dividir el contenido en 3-4 partes mejora el recuerdo en un 50%",
+    "interleaving": "Mezclar diferentes temas mejora la retención a largo plazo",
+    "emotion_memory": "El compromiso emocional hace los recuerdos hasta 10x más fuertes",
+    "physical_exercise": "El ejercicio físico antes de aprender mejora la formación de memoria",
+    "elaboration": "Conectar nueva información con conocimientos existentes fortalece la memoria"
   }
 }

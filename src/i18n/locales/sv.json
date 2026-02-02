@@ -751,5 +751,20 @@
     "startWithAudience": "Starta med publik",
     "unlockPremium": "Lås upp Premium",
     "switchModes": "Du kan byta läge när som helst innan du startar"
+  },
+  "loading_facts": {
+    "did_you_know": "Visste du att?",
+    "sleep_consolidation": "Sömn konsoliderar 40% fler minnen än att vara vaken",
+    "spaced_repetition": "Spaced repetition kan förbättra minneslagring med 200%",
+    "rem_rehearsal": "Din hjärna repeterar inlärt material under REM-sömn",
+    "testing_effect": "Att testa dig själv är mer effektivt än att läsa om",
+    "morning_recall": "Morgonåterkallelse förstärker nattens minnesbearbetning",
+    "active_recall": "Aktiv återkallelse skapar starkare neurala banor",
+    "forgetting_curve": "Glömskekurvan faller 70% efter 24 timmar utan repetition",
+    "chunking": "Att dela upp innehåll i 3-4 delar förbättrar minnet med 50%",
+    "interleaving": "Att blanda olika ämnen under inlärning förbättrar långtidsminnet",
+    "emotion_memory": "Emotionellt engagemang gör minnen upp till 10x starkare",
+    "physical_exercise": "Fysisk träning före inlärning boostar minnesbildning",
+    "elaboration": "Att koppla ny info till befintlig kunskap stärker minnet"
   }
 }
