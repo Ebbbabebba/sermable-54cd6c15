@@ -20,6 +20,7 @@ import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
+import SleepAwareScheduling from "@/components/SleepAwareScheduling";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
@@ -358,6 +359,9 @@ const Dashboard = () => {
               {t('dashboard.continueOrStart')}
             </p>
           </section>
+
+          {/* Sleep-Aware Scheduling Suggestion */}
+          <SleepAwareScheduling />
 
           {/* Review Notifications */}
           <ReviewNotifications />
