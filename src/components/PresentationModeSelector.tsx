@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ export const PresentationModeSelector = ({
   onSelectMode,
   onSelectAudienceMode 
 }: PresentationModeSelectorProps) => {
+  const { t } = useTranslation();
   const { isPremium, loading } = useSubscription();
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
@@ -32,10 +34,10 @@ export const PresentationModeSelector = ({
         <div className="w-full max-w-5xl space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Choose Your Presentation Mode
+              {t('presentationMode.chooseMode')}
             </h1>
             <p className="text-muted-foreground text-lg">
-              Select how you want to practice your speech
+              {t('presentationMode.selectHow')}
             </p>
           </div>
 
@@ -49,29 +51,29 @@ export const PresentationModeSelector = ({
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-bold mb-2">Strict Mode</h3>
+                  <h3 className="text-xl font-bold mb-2">{t('presentationMode.strictMode')}</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Memorize word for word with hints
+                    {t('presentationMode.strictModeDesc')}
                   </p>
                 </div>
 
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">✓</span>
-                    <span>Progressive keyword hints</span>
+                    <span>{t('presentationMode.progressiveHints')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">✓</span>
-                    <span>Word-by-word tracking</span>
+                    <span>{t('presentationMode.wordByWord')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">✓</span>
-                    <span>Detailed analysis</span>
+                    <span>{t('presentationMode.detailedAnalysis')}</span>
                   </li>
                 </ul>
 
                 <Button className="w-full mt-4" size="sm">
-                  Select Strict Mode
+                  {t('presentationMode.selectStrict')}
                 </Button>
               </div>
             </Card>
@@ -87,29 +89,29 @@ export const PresentationModeSelector = ({
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-bold mb-2">Full Script</h3>
+                  <h3 className="text-xl font-bold mb-2">{t('presentationMode.fullScript')}</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    See everything, words fade as you speak
+                    {t('presentationMode.fullScriptDesc')}
                   </p>
                 </div>
 
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">✓</span>
-                    <span>Full text visible</span>
+                    <span>{t('presentationMode.fullTextVisible')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">✓</span>
-                    <span>Words fade when spoken</span>
+                    <span>{t('presentationMode.wordsFade')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">✓</span>
-                    <span>Build confidence naturally</span>
+                    <span>{t('presentationMode.buildConfidence')}</span>
                   </li>
                 </ul>
 
                 <Button className="w-full mt-4" size="sm" variant="secondary">
-                  Select Full Script
+                  {t('presentationMode.selectFullScript')}
                 </Button>
               </div>
             </Card>
@@ -138,36 +140,36 @@ export const PresentationModeSelector = ({
                     {isPremium ? (
                       <>
                         <Sparkles className="w-3 h-3" />
-                        Premium
+                        {t('subscription.premium')}
                       </>
                     ) : (
                       <>
                         <Lock className="w-3 h-3" />
-                        Premium
+                        {t('subscription.premium')}
                       </>
                     )}
                   </Badge>
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-bold mb-2">Audience Mode</h3>
+                  <h3 className="text-xl font-bold mb-2">{t('presentationMode.audienceMode')}</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Practice with virtual audience reactions
+                    {t('presentationMode.audienceModeDesc')}
                   </p>
                 </div>
 
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <span className="text-amber-500 mt-0.5">✓</span>
-                    <span>Animated audience avatars</span>
+                    <span>{t('presentationMode.animatedAudience')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-amber-500 mt-0.5">✓</span>
-                    <span>Real-time reactions</span>
+                    <span>{t('presentationMode.realTimeReactions')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-amber-500 mt-0.5">✓</span>
-                    <span>Multiple environments</span>
+                    <span>{t('presentationMode.multipleEnvironments')}</span>
                   </li>
                 </ul>
 
@@ -181,14 +183,14 @@ export const PresentationModeSelector = ({
                   variant={isPremium ? 'default' : 'outline'}
                   disabled={loading}
                 >
-                  {isPremium ? 'Start with Audience' : 'Unlock Premium'}
+                  {isPremium ? t('presentationMode.startWithAudience') : t('presentationMode.unlockPremium')}
                 </Button>
               </div>
             </Card>
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
-            You can switch modes anytime before starting your presentation
+            {t('presentationMode.switchModes')}
           </p>
         </div>
       </div>

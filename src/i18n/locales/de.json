@@ -442,5 +442,49 @@
     "tip3": "ESC drücken, um die Präsentation zu beenden",
     "tip4": "Gelbe Markierung = Pause erkannt",
     "tip5": "Blaue Markierung = spricht gerade"
+  },
+  "common": {
+    "later": "Später",
+    "done": "Fertig",
+    "exit": "Beenden",
+    "back": "Zurück",
+    "success": "Erfolg",
+    "error": "Fehler",
+    "loading": "Lädt...",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "skip": "Überspringen",
+    "words": "Wörter"
+  },
+  "subscription": {
+    "premium": "Premium",
+    "enterprise": "Enterprise",
+    "student": "Student",
+    "free": "Kostenlos"
+  },
+  "presentationMode": {
+    "chooseMode": "Wähle deinen Präsentationsmodus",
+    "selectHow": "Wähle, wie du deinen Vortrag üben möchtest",
+    "strictMode": "Strikter Modus",
+    "strictModeDesc": "Wort für Wort auswendig lernen mit Hinweisen",
+    "progressiveHints": "Schrittweise Hinweise",
+    "wordByWord": "Wort-für-Wort-Tracking",
+    "detailedAnalysis": "Detaillierte Analyse",
+    "selectStrict": "Strikten Modus wählen",
+    "fullScript": "Vollständiges Skript",
+    "fullScriptDesc": "Alles sehen, Wörter verblassen beim Sprechen",
+    "fullTextVisible": "Vollständiger Text sichtbar",
+    "wordsFade": "Wörter verblassen beim Sprechen",
+    "buildConfidence": "Natürlich Selbstvertrauen aufbauen",
+    "selectFullScript": "Vollständiges Skript wählen",
+    "audienceMode": "Publikumsmodus",
+    "audienceModeDesc": "Übe mit virtuellen Publikumsreaktionen",
+    "animatedAudience": "Animierte Publikumsavatare",
+    "realTimeReactions": "Echtzeit-Reaktionen",
+    "multipleEnvironments": "Mehrere Umgebungen",
+    "startWithAudience": "Mit Publikum starten",
+    "unlockPremium": "Premium freischalten",
+    "switchModes": "Du kannst den Modus jederzeit vor Beginn deiner Präsentation wechseln"
   }
 }
