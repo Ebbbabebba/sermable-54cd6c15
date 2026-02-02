@@ -486,20 +486,5 @@
     "startWithAudience": "Commencer avec le public",
     "unlockPremium": "Débloquer Premium",
     "switchModes": "Vous pouvez changer de mode à tout moment avant de commencer"
-  },
-  "loading_facts": {
-    "did_you_know": "Le saviez-vous ?",
-    "sleep_consolidation": "Le sommeil consolide 40% plus de souvenirs que l'éveil",
-    "spaced_repetition": "La répétition espacée peut améliorer la rétention de 200%",
-    "rem_rehearsal": "Votre cerveau répète le matériel appris pendant le sommeil REM",
-    "testing_effect": "Se tester est plus efficace que relire",
-    "morning_recall": "Le rappel matinal renforce la consolidation nocturne",
-    "active_recall": "Le rappel actif crée des voies neuronales plus fortes",
-    "forgetting_curve": "La courbe de l'oubli chute de 70% après 24h sans révision",
-    "chunking": "Diviser le contenu en 3-4 parties améliore le rappel de 50%",
-    "interleaving": "Mélanger différents sujets améliore la rétention à long terme",
-    "emotion_memory": "L'engagement émotionnel rend les souvenirs jusqu'à 10x plus forts",
-    "physical_exercise": "L'exercice physique avant l'apprentissage améliore la mémorisation",
-    "elaboration": "Relier de nouvelles infos aux connaissances existantes renforce la mémoire"
   }
 }

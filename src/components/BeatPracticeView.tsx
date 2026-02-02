@@ -193,18 +193,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
   const [familiarityLevel, setFamiliarityLevel] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
   
-  // Detect merged beat session (2+ beats being recalled together)
-  // This enables 2x tempo optimization
-  const [isMergedBeatSession, setIsMergedBeatSession] = useState(false);
-  
-  // Calculate words to hide per successful repetition based on familiarity and merged mode
-  // Merged sessions: 2x tempo (hide 2-6 words instead of 1-3)
-  const baseWordsToHide = isMergedBeatSession ? 2 : (familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1);
-  const wordsToHidePerSuccess = baseWordsToHide;
-  
-  // Calculate required learning repetitions based on familiarity and merged mode
-  // Merged sessions: only 1 read-through instead of 2-3
-  const requiredLearningReps = isMergedBeatSession ? 1 : (familiarityLevel === 'confident' ? 2 : 3);
+  // Calculate words to hide per successful repetition based on familiarity
+  const wordsToHidePerSuccess = familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1;
+  // Calculate required learning repetitions based on familiarity
+  const requiredLearningReps = familiarityLevel === 'confident' ? 2 : 3;
   
   // Session mode tracking
   const [sessionMode, setSessionMode] = useState<SessionMode>('recall');
@@ -532,10 +524,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       setBeatsToRecall(beatsNeedingRecall);
       setNewBeatToLearn(firstUnmastered);
-      
-      // Detect merged beat session for 2x tempo optimization
-      // Merged = recalling 2+ beats together, which happens on Day 3+
-      setIsMergedBeatSession(beatsNeedingRecall.length >= 2);
       
       // Determine starting mode
       if (beatsNeedingRecall.length > 0) {
@@ -1323,27 +1311,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
   }
 
-  // Track fading success count for progressive hiding (1 → 2 → 3, or 2 → 4 → 6 for merged)
+  // Track fading success count for progressive hiding (1 → 2 → 3)
   const [fadingSuccessCount, setFadingSuccessCount] = useState(0);
   
   // Handle fading phase completion logic
   // Key behavior: ALWAYS continue hiding words, even on errors
   // Failed words stay visible and become "protected" - they disappear LAST
-  // For merged beat sessions: 2x tempo (hide more words per success)
   function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
     const allHidden = hiddenWordIndices.size >= words.length;
-    
-    // Merged beat optimization: 2x word hiding tempo
-    const baseHideAmount = isMergedBeatSession ? 2 : 1;
-    const progressionMultiplier = isMergedBeatSession ? 2 : 1;
-    const maxWordsToHide = isMergedBeatSession ? 6 : 3;
 
     // Always hide words progressively, even with errors
     if (!allHidden) {
-      // On error: still hide words (but base amount). On success: progressive increase
-      const wordsToHide = hadErrors 
-        ? baseHideAmount 
-        : Math.min(baseHideAmount + (fadingSuccessCount * progressionMultiplier), maxWordsToHide);
+      // On error: still hide words (but fewer). On success: progressive 1 → 2 → 3
+      const wordsToHide = hadErrors ? 1 : Math.min(1 + fadingSuccessCount, 3);
       
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
@@ -1367,8 +1347,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setFadingSuccessCount(0); // Reset progression on error
         setConsecutiveNoScriptSuccess(0);
       } else {
-        // Cap progression: merged = cap at 2 (6 words), normal = cap at 2 (3 words)
-        setFadingSuccessCount(prev => Math.min(prev + 1, 2));
+        setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 3)
       }
       
       // ALWAYS hide more words (continue progression even on failure)
@@ -2018,26 +1997,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </p>
         </div>
         
-        <Button 
-          variant="ghost" 
-          onClick={() => {
-            // When skipping rest, go directly to learning the next beat
-            // Skip the pre_beat_recall since there was no consolidation time
-            if (nextBeatQueued) {
-              setRestUntilTime(null);
-              setRestMinutes(0);
-              setNewBeatToLearn(nextBeatQueued);
-              setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
-              setNextBeatQueued(null);
-              setBeatToRecallBeforeNext(null); // Clear this to prevent recall
-              setSessionMode('learn');
-              transitionToPhase('sentence_1_learning');
-            } else {
-              startNextBeat();
-            }
-          }} 
-          className="mt-4"
-        >
+        <Button variant="ghost" onClick={startNextBeat} className="mt-4">
           <Play className="h-4 w-4 mr-2" />
           {t('beat_practice.skip_rest', "Start now anyway")}
         </Button>

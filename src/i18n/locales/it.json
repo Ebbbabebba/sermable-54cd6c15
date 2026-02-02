@@ -486,20 +486,5 @@
     "startWithAudience": "Inizia con il pubblico",
     "unlockPremium": "Sblocca Premium",
     "switchModes": "Puoi cambiare modalità in qualsiasi momento prima di iniziare"
-  },
-  "loading_facts": {
-    "did_you_know": "Lo sapevi?",
-    "sleep_consolidation": "Il sonno consolida il 40% in più di ricordi rispetto alla veglia",
-    "spaced_repetition": "La ripetizione spaziata può migliorare la ritenzione del 200%",
-    "rem_rehearsal": "Il tuo cervello ripete il materiale appreso durante il sonno REM",
-    "testing_effect": "Testarti è più efficace che rileggere",
-    "morning_recall": "Il richiamo mattutino rafforza il consolidamento notturno",
-    "active_recall": "Il richiamo attivo crea percorsi neurali più forti",
-    "forgetting_curve": "La curva dell'oblio cala del 70% dopo 24h senza ripasso",
-    "chunking": "Dividere i contenuti in 3-4 parti migliora il ricordo del 50%",
-    "interleaving": "Mescolare diversi argomenti migliora la ritenzione a lungo termine",
-    "emotion_memory": "Il coinvolgimento emotivo rende i ricordi fino a 10x più forti",
-    "physical_exercise": "L'esercizio fisico prima dello studio migliora la formazione della memoria",
-    "elaboration": "Collegare nuove info alle conoscenze esistenti rafforza la memoria"
   }
 }

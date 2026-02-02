@@ -776,20 +776,5 @@
     "startWithAudience": "Start with Audience",
     "unlockPremium": "Unlock Premium",
     "switchModes": "You can switch modes anytime before starting your presentation"
-  },
-  "loading_facts": {
-    "did_you_know": "Did you know?",
-    "sleep_consolidation": "Sleep consolidates 40% more memories than staying awake",
-    "spaced_repetition": "Spaced repetition can improve retention by 200%",
-    "rem_rehearsal": "Your brain rehearses learned material during REM sleep",
-    "testing_effect": "Testing yourself is more effective than re-reading",
-    "morning_recall": "Morning recall strengthens overnight memory consolidation",
-    "active_recall": "Active recall creates stronger neural pathways than passive review",
-    "forgetting_curve": "The forgetting curve drops 70% after 24 hours without review",
-    "chunking": "Breaking content into 3-4 item chunks improves recall by 50%",
-    "interleaving": "Mixing different topics during study improves long-term retention",
-    "emotion_memory": "Emotional engagement makes memories up to 10x stronger",
-    "physical_exercise": "Physical exercise before learning boosts memory formation",
-    "elaboration": "Connecting new info to existing knowledge strengthens memories"
   }
 }

@@ -486,20 +486,5 @@
     "startWithAudience": "Mit Publikum starten",
     "unlockPremium": "Premium freischalten",
     "switchModes": "Du kannst den Modus jederzeit vor Beginn deiner Präsentation wechseln"
-  },
-  "loading_facts": {
-    "did_you_know": "Wusstest du?",
-    "sleep_consolidation": "Schlaf konsolidiert 40% mehr Erinnerungen als Wachsein",
-    "spaced_repetition": "Spaced Repetition kann die Merkfähigkeit um 200% verbessern",
-    "rem_rehearsal": "Dein Gehirn wiederholt Gelerntes während des REM-Schlafs",
-    "testing_effect": "Sich selbst zu testen ist effektiver als Wiederlesen",
-    "morning_recall": "Morgendliches Erinnern verstärkt die nächtliche Gedächtniskonsolidierung",
-    "active_recall": "Aktives Erinnern schafft stärkere neuronale Bahnen",
-    "forgetting_curve": "Die Vergessenskurve fällt nach 24 Stunden ohne Wiederholung um 70%",
-    "chunking": "Inhalte in 3-4 Teile aufzuteilen verbessert das Gedächtnis um 50%",
-    "interleaving": "Das Mischen verschiedener Themen verbessert das Langzeitgedächtnis",
-    "emotion_memory": "Emotionale Beteiligung macht Erinnerungen bis zu 10x stärker",
-    "physical_exercise": "Körperliche Bewegung vor dem Lernen fördert die Gedächtnisbildung",
-    "elaboration": "Neue Informationen mit bestehendem Wissen zu verbinden stärkt das Gedächtnis"
   }
 }

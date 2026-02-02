@@ -295,13 +295,9 @@ export type Database = {
           created_at: string | null
           id: string
           is_mastered: boolean | null
-          last_merged_recall_at: string | null
           last_recall_at: string | null
           mastered_at: string | null
           practice_stage: string | null
-          recall_10min_at: string | null
-          recall_evening_at: string | null
-          recall_morning_at: string | null
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
@@ -318,13 +314,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
-          last_merged_recall_at?: string | null
           last_recall_at?: string | null
           mastered_at?: string | null
           practice_stage?: string | null
-          recall_10min_at?: string | null
-          recall_evening_at?: string | null
-          recall_morning_at?: string | null
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
@@ -341,13 +333,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
-          last_merged_recall_at?: string | null
           last_recall_at?: string | null
           mastered_at?: string | null
           practice_stage?: string | null
-          recall_10min_at?: string | null
-          recall_evening_at?: string | null
-          recall_morning_at?: string | null
           sentence_1_text?: string
           sentence_2_text?: string
           sentence_3_text?: string
