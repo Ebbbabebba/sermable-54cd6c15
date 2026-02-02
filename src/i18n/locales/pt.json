@@ -442,5 +442,49 @@
     "tip3": "Pressione ESC para sair da apresentação",
     "tip4": "Destaque amarelo = pausa detectada",
     "tip5": "Destaque azul = falando atualmente"
+  },
+  "common": {
+    "later": "Mais tarde",
+    "done": "Pronto",
+    "exit": "Sair",
+    "back": "Voltar",
+    "success": "Sucesso",
+    "error": "Erro",
+    "loading": "Carregando...",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "close": "Fechar",
+    "skip": "Pular",
+    "words": "palavras"
+  },
+  "subscription": {
+    "premium": "Premium",
+    "enterprise": "Enterprise",
+    "student": "Estudante",
+    "free": "Grátis"
+  },
+  "presentationMode": {
+    "chooseMode": "Escolha o modo de apresentação",
+    "selectHow": "Selecione como você quer praticar seu discurso",
+    "strictMode": "Modo rigoroso",
+    "strictModeDesc": "Memorize palavra por palavra com dicas",
+    "progressiveHints": "Dicas progressivas",
+    "wordByWord": "Rastreamento palavra por palavra",
+    "detailedAnalysis": "Análise detalhada",
+    "selectStrict": "Selecionar modo rigoroso",
+    "fullScript": "Script completo",
+    "fullScriptDesc": "Veja tudo, as palavras desvanecem ao falar",
+    "fullTextVisible": "Texto completo visível",
+    "wordsFade": "Palavras desvanecem ao serem ditas",
+    "buildConfidence": "Construa confiança naturalmente",
+    "selectFullScript": "Selecionar script completo",
+    "audienceMode": "Modo audiência",
+    "audienceModeDesc": "Pratique com reações de audiência virtual",
+    "animatedAudience": "Avatares de audiência animados",
+    "realTimeReactions": "Reações em tempo real",
+    "multipleEnvironments": "Múltiplos ambientes",
+    "startWithAudience": "Iniciar com audiência",
+    "unlockPremium": "Desbloquear Premium",
+    "switchModes": "Você pode mudar de modo a qualquer momento antes de começar"
   }
 }

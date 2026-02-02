@@ -259,12 +259,12 @@ const Dashboard = () => {
               </Button>
               
               <div className="flex items-center gap-1 ml-2">
-                <span className={`text-xs px-2 py-1 rounded-full ${
+              <span className={`text-xs px-2 py-1 rounded-full ${
                   subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
                     ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 font-medium'
                     : 'text-muted-foreground bg-secondary'
                 }`}>
-                  {subscriptionTier === 'regular' ? 'Premium' : subscriptionTier === 'enterprise' ? 'Enterprise' : subscriptionTier === 'student' ? 'Student' : 'Free'}
+                  {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')}
                 </span>
                 
                 {subscriptionTier === 'free' && (
@@ -302,7 +302,7 @@ const Dashboard = () => {
                         ? 'text-amber-600 dark:text-amber-400 font-medium'
                         : 'text-muted-foreground'
                     }`}>
-                      {subscriptionTier === 'regular' ? 'Premium' : subscriptionTier === 'enterprise' ? 'Enterprise' : subscriptionTier === 'student' ? 'Student' : 'Free'} {t('dashboard.plan')}
+                      {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
                     </span>
                   </div>
                   {subscriptionTier === 'free' && (

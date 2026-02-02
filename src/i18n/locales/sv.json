@@ -709,6 +709,47 @@
     "practiceNow": "Öva nu"
   },
   "common": {
-    "later": "Senare"
+    "later": "Senare",
+    "done": "Klar",
+    "exit": "Avsluta",
+    "back": "Tillbaka",
+    "success": "Klart",
+    "error": "Fel",
+    "loading": "Laddar...",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "close": "Stäng",
+    "skip": "Hoppa över",
+    "words": "ord"
+  },
+  "subscription": {
+    "premium": "Premium",
+    "enterprise": "Enterprise",
+    "student": "Student",
+    "free": "Gratis"
+  },
+  "presentationMode": {
+    "chooseMode": "Välj presentationsläge",
+    "selectHow": "Välj hur du vill öva ditt tal",
+    "strictMode": "Strikt läge",
+    "strictModeDesc": "Memorera ord för ord med ledtrådar",
+    "progressiveHints": "Stegvisa ledtrådar",
+    "wordByWord": "Ord-för-ord-spårning",
+    "detailedAnalysis": "Detaljerad analys",
+    "selectStrict": "Välj strikt läge",
+    "fullScript": "Hela manuset",
+    "fullScriptDesc": "Se allt, ord tonas ner när du säger dem",
+    "fullTextVisible": "Hela texten synlig",
+    "wordsFade": "Ord tonas när de sägs",
+    "buildConfidence": "Bygg självförtroende naturligt",
+    "selectFullScript": "Välj hela manuset",
+    "audienceMode": "Publikläge",
+    "audienceModeDesc": "Öva med virtuell publik som reagerar",
+    "animatedAudience": "Animerade publikavatarer",
+    "realTimeReactions": "Reaktioner i realtid",
+    "multipleEnvironments": "Flera miljöer",
+    "startWithAudience": "Starta med publik",
+    "unlockPremium": "Lås upp Premium",
+    "switchModes": "Du kan byta läge när som helst innan du startar"
   }
 }

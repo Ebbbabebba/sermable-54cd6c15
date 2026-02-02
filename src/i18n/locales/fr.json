@@ -442,5 +442,49 @@
     "tip3": "Appuyez sur ESC pour quitter la présentation",
     "tip4": "Surbrillance jaune = pause détectée",
     "tip5": "Surbrillance bleue = en train de parler"
+  },
+  "common": {
+    "later": "Plus tard",
+    "done": "Terminé",
+    "exit": "Quitter",
+    "back": "Retour",
+    "success": "Succès",
+    "error": "Erreur",
+    "loading": "Chargement...",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "skip": "Passer",
+    "words": "mots"
+  },
+  "subscription": {
+    "premium": "Premium",
+    "enterprise": "Enterprise",
+    "student": "Étudiant",
+    "free": "Gratuit"
+  },
+  "presentationMode": {
+    "chooseMode": "Choisissez votre mode de présentation",
+    "selectHow": "Sélectionnez comment vous voulez pratiquer votre discours",
+    "strictMode": "Mode strict",
+    "strictModeDesc": "Mémorisez mot à mot avec des indices",
+    "progressiveHints": "Indices progressifs",
+    "wordByWord": "Suivi mot à mot",
+    "detailedAnalysis": "Analyse détaillée",
+    "selectStrict": "Sélectionner le mode strict",
+    "fullScript": "Script complet",
+    "fullScriptDesc": "Tout voir, les mots s'effacent en parlant",
+    "fullTextVisible": "Texte complet visible",
+    "wordsFade": "Les mots s'effacent une fois prononcés",
+    "buildConfidence": "Construisez votre confiance naturellement",
+    "selectFullScript": "Sélectionner le script complet",
+    "audienceMode": "Mode public",
+    "audienceModeDesc": "Pratiquez avec des réactions du public virtuel",
+    "animatedAudience": "Avatars de public animés",
+    "realTimeReactions": "Réactions en temps réel",
+    "multipleEnvironments": "Environnements multiples",
+    "startWithAudience": "Commencer avec le public",
+    "unlockPremium": "Débloquer Premium",
+    "switchModes": "Vous pouvez changer de mode à tout moment avant de commencer"
   }
 }

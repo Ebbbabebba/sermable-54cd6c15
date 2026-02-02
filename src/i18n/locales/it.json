@@ -442,5 +442,49 @@
     "tip3": "Premi ESC per uscire dalla presentazione",
     "tip4": "Evidenziazione gialla = pausa rilevata",
     "tip5": "Evidenziazione blu = sta parlando"
+  },
+  "common": {
+    "later": "Più tardi",
+    "done": "Fatto",
+    "exit": "Esci",
+    "back": "Indietro",
+    "success": "Successo",
+    "error": "Errore",
+    "loading": "Caricamento...",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "close": "Chiudi",
+    "skip": "Salta",
+    "words": "parole"
+  },
+  "subscription": {
+    "premium": "Premium",
+    "enterprise": "Enterprise",
+    "student": "Studente",
+    "free": "Gratis"
+  },
+  "presentationMode": {
+    "chooseMode": "Scegli la modalità di presentazione",
+    "selectHow": "Seleziona come vuoi esercitarti nel tuo discorso",
+    "strictMode": "Modalità rigorosa",
+    "strictModeDesc": "Memorizza parola per parola con suggerimenti",
+    "progressiveHints": "Suggerimenti progressivi",
+    "wordByWord": "Tracciamento parola per parola",
+    "detailedAnalysis": "Analisi dettagliata",
+    "selectStrict": "Seleziona modalità rigorosa",
+    "fullScript": "Script completo",
+    "fullScriptDesc": "Vedi tutto, le parole sfumano mentre parli",
+    "fullTextVisible": "Testo completo visibile",
+    "wordsFade": "Le parole sfumano quando le pronunci",
+    "buildConfidence": "Costruisci sicurezza naturalmente",
+    "selectFullScript": "Seleziona script completo",
+    "audienceMode": "Modalità pubblico",
+    "audienceModeDesc": "Esercitati con reazioni del pubblico virtuale",
+    "animatedAudience": "Avatar del pubblico animati",
+    "realTimeReactions": "Reazioni in tempo reale",
+    "multipleEnvironments": "Ambienti multipli",
+    "startWithAudience": "Inizia con il pubblico",
+    "unlockPremium": "Sblocca Premium",
+    "switchModes": "Puoi cambiare modalità in qualsiasi momento prima di iniziare"
   }
 }

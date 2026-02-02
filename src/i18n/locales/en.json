@@ -734,6 +734,47 @@
     "practiceNow": "Practice Now"
   },
   "common": {
-    "later": "Later"
+    "later": "Later",
+    "done": "Done",
+    "exit": "Exit",
+    "back": "Back",
+    "success": "Success",
+    "error": "Error",
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "skip": "Skip",
+    "words": "words"
+  },
+  "subscription": {
+    "premium": "Premium",
+    "enterprise": "Enterprise",
+    "student": "Student",
+    "free": "Free"
+  },
+  "presentationMode": {
+    "chooseMode": "Choose Your Presentation Mode",
+    "selectHow": "Select how you want to practice your speech",
+    "strictMode": "Strict Mode",
+    "strictModeDesc": "Memorize word for word with hints",
+    "progressiveHints": "Progressive keyword hints",
+    "wordByWord": "Word-by-word tracking",
+    "detailedAnalysis": "Detailed analysis",
+    "selectStrict": "Select Strict Mode",
+    "fullScript": "Full Script",
+    "fullScriptDesc": "See everything, words fade as you speak",
+    "fullTextVisible": "Full text visible",
+    "wordsFade": "Words fade when spoken",
+    "buildConfidence": "Build confidence naturally",
+    "selectFullScript": "Select Full Script",
+    "audienceMode": "Audience Mode",
+    "audienceModeDesc": "Practice with virtual audience reactions",
+    "animatedAudience": "Animated audience avatars",
+    "realTimeReactions": "Real-time reactions",
+    "multipleEnvironments": "Multiple environments",
+    "startWithAudience": "Start with Audience",
+    "unlockPremium": "Unlock Premium",
+    "switchModes": "You can switch modes anytime before starting your presentation"
   }
 }
