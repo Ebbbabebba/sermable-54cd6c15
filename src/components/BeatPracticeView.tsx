@@ -232,6 +232,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [missedIndices, setMissedIndices] = useState<Set<number>>(new Set());
   const [failedWordIndices, setFailedWordIndices] = useState<Set<number>>(new Set()); // Words that had errors
   const [protectedWordIndices, setProtectedWordIndices] = useState<Set<number>>(new Set()); // Words that failed - stay visible, disappear last
+  const [lenientWordIndices, setLenientWordIndices] = useState<Set<number>>(new Set()); // Proper nouns/names - hidden but can't turn red
+  const lenientWordIndicesRef = useRef<Set<number>>(new Set());
   const [consecutiveNoScriptSuccess, setConsecutiveNoScriptSuccess] = useState(0); // Track 2 successful no-script reps
   
   // Recording state
@@ -297,6 +299,64 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   useEffect(() => {
     missedIndicesRef.current = missedIndices;
   }, [missedIndices]);
+
+  useEffect(() => {
+    lenientWordIndicesRef.current = lenientWordIndices;
+  }, [lenientWordIndices]);
+
+  // Detect proper nouns and difficult names that speech recognition struggles with
+  // These words get hidden but can't turn red - they just move on like visible words
+  const detectLenientWords = useCallback((wordList: string[]): Set<number> => {
+    const lenient = new Set<number>();
+    
+    for (let i = 0; i < wordList.length; i++) {
+      const word = wordList[i];
+      const cleanWord = word.replace(/[^\p{L}]/gu, '');
+      
+      if (!cleanWord) continue;
+      
+      // Check if word is capitalized (potential proper noun)
+      const isCapitalized = cleanWord[0] === cleanWord[0].toUpperCase() && 
+                           cleanWord[0] !== cleanWord[0].toLowerCase();
+      
+      // Check if it's at sentence start (previous word ends with . ! ?)
+      const prevWord = i > 0 ? wordList[i - 1] : '';
+      const isAtSentenceStart = i === 0 || /[.!?]$/.test(prevWord);
+      
+      // Proper noun: capitalized but NOT at sentence start
+      if (isCapitalized && !isAtSentenceStart) {
+        lenient.add(i);
+        continue;
+      }
+      
+      // Multi-part names: look for sequences of capitalized words
+      // If previous word was marked as lenient and this is also capitalized
+      if (isCapitalized && i > 0 && lenient.has(i - 1)) {
+        lenient.add(i);
+        continue;
+      }
+      
+      // Unusual character patterns that speech recognition struggles with
+      // Words with mixed case in the middle (like "McDonald")
+      if (cleanWord.length > 2) {
+        const middlePart = cleanWord.slice(1);
+        if (/[A-Z]/.test(middlePart)) {
+          lenient.add(i);
+          continue;
+        }
+      }
+      
+      // Names with uncommon letter combinations (Nordic names, etc.)
+      // Check for double consonant patterns or unusual vowel patterns
+      const uncommonPatterns = /([bcdfghjklmnpqrstvwxz]{3,})|([äöåéèêëïîìíüùúûñçß])/i;
+      if (uncommonPatterns.test(cleanWord)) {
+        lenient.add(i);
+        continue;
+      }
+    }
+    
+    return lenient;
+  }, []);
 
   // Get current beat based on session mode
   const currentBeat = sessionMode === 'recall' 
@@ -389,7 +449,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   useEffect(() => {
     wordsLengthRef.current = words.length;
-  }, [words.length]);
+    // Detect lenient words (proper nouns, difficult names) whenever text changes
+    const detected = detectLenientWords(words);
+    setLenientWordIndices(detected);
+    lenientWordIndicesRef.current = detected;
+    if (detected.size > 0) {
+      console.log('🏷️ Lenient words detected:', [...detected].map(i => words[i]).join(', '));
+    }
+  }, [words, detectLenientWords]);
 
   useEffect(() => {
     showCelebrationRef.current = showCelebration;
@@ -766,13 +833,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   // Check if spoken word matches expected - STRICT matching
-  // More lenient matching for visible words, stricter for hidden
-  const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false): boolean => {
+  // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
+  const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
     // Debug logging for troubleshooting
-    if (isHidden) {
+    if (isHidden && !isLenient) {
       console.log(`🎯 Hidden word match: spoken="${s}" expected="${e}" exact=${s === e}`);
     }
     
@@ -782,7 +849,42 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Empty after normalization
     if (!s || !e) return false;
     
-    // For HIDDEN words, be stricter - need to prove they know it
+    // For LENIENT words (proper nouns/names), use visible word matching rules
+    // These are hidden but we expect speech recognition to struggle with them
+    if (isLenient) {
+      // Very lenient matching for names - just need some overlap
+      if (e.length <= 2) return false; // Too short, need exact
+      
+      // Check if words share the same first letter (sound)
+      if (s[0] !== e[0] && s[0] !== e[1] && (e[0] !== s[1])) {
+        if (!s.startsWith(e.slice(0, 2)) && !e.startsWith(s.slice(0, 2))) {
+          return false;
+        }
+      }
+      
+      // Allow more length variance for names (up to 40%)
+      const lenRatio = Math.min(s.length, e.length) / Math.max(s.length, e.length);
+      if (lenRatio < 0.5) return false;
+      
+      // Count matching characters (not position-dependent)
+      const sChars = s.split('');
+      const eChars = e.split('');
+      let matches = 0;
+      const eCopy = [...eChars];
+      for (const c of sChars) {
+        const idx = eCopy.indexOf(c);
+        if (idx !== -1) {
+          matches++;
+          eCopy.splice(idx, 1);
+        }
+      }
+      
+      // Need at least 50% character overlap for names (more lenient than visible)
+      const overlapRatio = matches / Math.max(s.length, e.length);
+      return overlapRatio >= 0.5;
+    }
+    
+    // For HIDDEN words (non-lenient), be stricter - need to prove they know it
     if (isHidden) {
       // 1-2 char words require exact match
       if (e.length <= 2) return false;
@@ -911,13 +1013,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     for (const spoken of newWords) {
       if (advancedTo >= words.length) break;
 
-      // Check if current word is hidden (needs stricter matching)
+      // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name)
       const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
+      const currentIsLenient = lenientWordIndicesRef.current.has(advancedTo);
       
       // STRICT: Only match the CURRENT word position - no lookahead
       // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
-      if (wordsMatch(spoken, words[advancedTo], currentIsHidden)) {
+      if (wordsMatch(spoken, words[advancedTo], currentIsHidden, currentIsLenient)) {
         foundIdx = advancedTo;
       }
 
@@ -925,26 +1028,36 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Current word didn't match - check NEXT word (lookahead of 1)
         // This handles minor recognition order issues without jumping too far
         const nextIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
-        if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1], nextIsHidden)) {
+        const nextIsLenient = lenientWordIndicesRef.current.has(advancedTo + 1);
+        if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1], nextIsHidden, nextIsLenient)) {
           // Mark current word as passed
           if (currentIsHidden) {
-            // Hidden word was skipped - mark as missed
-            newMissed.add(advancedTo);
+            // Hidden word was skipped - but check if it's a lenient word (proper noun/name)
+            // Lenient words don't turn red - they're hidden but treated like visible words
+            if (!currentIsLenient) {
+              newMissed.add(advancedTo);
+            }
           }
           // Always mark current word as spoken (visible words just move on)
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
-        } else if (!currentIsHidden && advancedTo + 2 < words.length) {
-          // If current word is VISIBLE and we're stuck, check 2 words ahead
-          // This helps when recognition completely misses a visible word
+        } else if ((!currentIsHidden || currentIsLenient) && advancedTo + 2 < words.length) {
+          // If current word is VISIBLE or LENIENT and we're stuck, check 2 words ahead
+          // This helps when recognition completely misses a visible/lenient word
           const twoAheadIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 2);
-          if (wordsMatch(spoken, words[advancedTo + 2], twoAheadIsHidden)) {
-            // Skip current visible word and the next one (if also visible)
+          const twoAheadIsLenient = lenientWordIndicesRef.current.has(advancedTo + 2);
+          if (wordsMatch(spoken, words[advancedTo + 2], twoAheadIsHidden, twoAheadIsLenient)) {
+            // Skip current visible/lenient word and the next one (if also visible/lenient)
             newSpoken.add(advancedTo);
-            if (!hiddenWordIndicesRef.current.has(advancedTo + 1)) {
-              newSpoken.add(advancedTo + 1);
+            const nextIdx = advancedTo + 1;
+            const nextIsHiddenCheck = hiddenWordIndicesRef.current.has(nextIdx);
+            const nextIdxIsLenient = lenientWordIndicesRef.current.has(nextIdx);
+            if (!nextIsHiddenCheck || nextIdxIsLenient) {
+              // Visible or lenient - just move on
+              newSpoken.add(nextIdx);
             } else {
-              newMissed.add(advancedTo + 1);
+              // Hidden and not lenient - mark as missed
+              newMissed.add(nextIdx);
             }
             foundIdx = advancedTo + 2;
           }
@@ -959,8 +1072,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       // Found a match at current position or nearby - mark all words up to match as spoken
       // If we're jumping ahead (foundIdx > advancedTo), mark skipped hidden words as missed
+      // BUT: lenient words (proper nouns/names) can't turn red - they just move on
       for (let j = advancedTo; j < foundIdx; j++) {
-        if (hiddenWordIndicesRef.current.has(j)) {
+        const isHidden = hiddenWordIndicesRef.current.has(j);
+        const isLenient = lenientWordIndicesRef.current.has(j);
+        if (isHidden && !isLenient) {
           newMissed.add(j);
         }
         newSpoken.add(j);
