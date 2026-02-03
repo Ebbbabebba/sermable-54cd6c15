@@ -196,8 +196,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Calculate words to hide per successful repetition based on familiarity
   const wordsToHidePerSuccess = familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1;
-  // Calculate required learning repetitions based on familiarity
-  const requiredLearningReps = familiarityLevel === 'confident' ? 2 : 3;
+  // Only 1 read-through required before fading begins
+  const requiredLearningReps = 1;
   
   // Session mode tracking
   const [sessionMode, setSessionMode] = useState<SessionMode>('recall');
