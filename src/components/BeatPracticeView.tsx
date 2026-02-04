@@ -1921,10 +1921,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             return;
           }
           if (hiddenWordIndicesRef.current.has(idx)) {
-            setHesitatedIndices((prev) => {
-              if (prev.has(idx)) return prev;
-              return new Set([...prev, idx]);
-            });
+            // Mark as hesitated if not already
+            if (!hesitatedIndicesRef.current.has(idx)) {
+              const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
+              hesitatedIndicesRef.current = newHesitated;
+              setHesitatedIndices(newHesitated);
+            }
+            
+            // CRITICAL FIX: After extended hesitation (6+ seconds), auto-advance to prevent freezing
+            // This happens when speech recognition can't match the spoken word at all
+            if (elapsed > 6000) {
+              console.log(`⏭️ Auto-advancing past hesitated word at index ${idx} after 6s timeout`);
+              
+              // Mark as spoken and move on
+              const newSpoken = new Set([...spokenIndicesRef.current, idx]);
+              spokenIndicesRef.current = newSpoken;
+              setSpokenIndices(newSpoken);
+              
+              // Advance word index
+              const nextIdx = idx + 1;
+              currentWordIndexRef.current = nextIdx;
+              setCurrentWordIndex(nextIdx);
+              
+              // Reset the timer for the next word
+              lastWordTimeRef.current = Date.now();
+            }
           }
         }
       }, 500);
