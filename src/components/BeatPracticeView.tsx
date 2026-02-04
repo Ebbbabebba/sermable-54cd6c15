@@ -765,10 +765,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordOrder([]);
   };
 
-  // Progressive words to hide: 1 → 2 → 3 (like recall mode)
+  // Progressive words to hide: 3 → 4 → 5 (minimum 3, increases with streak)
   const getWordsToHideCount = useCallback((successCount: number): number => {
-    // 0 successes = first time = 1 word, 1 success = 2 words, 2+ = 3 words (max)
-    return Math.min(1 + successCount, 3);
+    // Always hide minimum 3 words, then 4, then 5 (max) with success streak
+    // 0 successes = 3 words, 1 success = 4 words, 2+ successes = 5 words
+    return Math.min(3 + successCount, 5);
   }, []);
 
   // Effect to reset hidden words when changing recall beat
@@ -1393,8 +1394,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newOrder = newOrder.filter(idx => !failedIndices.has(idx));
       }
       
-      // Still hide 2 new words even on failure
-      for (let i = 0; i < 2; i++) {
+      // Still hide 3 new words even on failure (base amount)
+      for (let i = 0; i < 3; i++) {
         const nextToHide = getNextWordToHide(newHidden);
         if (nextToHide !== null && !failedIndices.has(nextToHide)) {
           newHidden.add(nextToHide);
@@ -1412,8 +1413,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         resetForNextRep();
       }, 1200);
     } else if (!allHidden) {
-      // Success but not all hidden yet - hide more words progressively
-      const wordsToHide = Math.min(2 + preBeatRecallSuccessCount, 4);
+      // Success but not all hidden yet - hide more words progressively 3 → 4 → 5
+      const wordsToHide = Math.min(3 + preBeatRecallSuccessCount, 5);
       const newSuccessCount = preBeatRecallSuccessCount + 1;
       setPreBeatRecallSuccessCount(newSuccessCount);
       
@@ -1465,7 +1466,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
   }
 
-  // Track fading success count for progressive hiding (1 → 2 → 3)
+  // Track fading success count for progressive hiding (3 → 4 → 5)
   const [fadingSuccessCount, setFadingSuccessCount] = useState(0);
   
   // Handle fading phase completion logic
@@ -1476,8 +1477,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     // Always hide words progressively, even with errors
     if (!allHidden) {
-      // On error: still hide words (but fewer). On success: progressive 1 → 2 → 3
-      const wordsToHide = hadErrors ? 1 : Math.min(1 + fadingSuccessCount, 3);
+      // On error: still hide 3 words (base amount). On success: progressive 3 → 4 → 5
+      const wordsToHide = hadErrors ? 3 : Math.min(3 + fadingSuccessCount, 5);
       
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
@@ -1498,10 +1499,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         });
         setProtectedWordIndices(newProtected);
-        setFadingSuccessCount(0); // Reset progression on error
+        setFadingSuccessCount(0); // Reset progression on error (back to 3 words)
         setConsecutiveNoScriptSuccess(0);
       } else {
-        setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 3)
+        setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
       }
       
       // ALWAYS hide more words (continue progression even on failure)
