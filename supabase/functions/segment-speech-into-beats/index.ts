@@ -110,7 +110,8 @@ Example output: ["Jag, Ebba Hallert Djurberg, överläkare och min kollega Norah
 }
 
 // Split text into sentences, preserving punctuation
-// Sentence endings: . ! ? (always), or , (only after 3+ consecutive commas)
+// Sentence endings: ONLY . ! ? (periods, exclamation marks, question marks)
+// Commas NEVER split sentences - they are part of the sentence
 async function splitIntoSentences(text: string): Promise<string[]> {
   const normalized = (text ?? "")
     .replace(/\r\n/g, "\n")
@@ -121,7 +122,6 @@ async function splitIntoSentences(text: string): Promise<string[]> {
 
   const out: string[] = [];
   let currentSentence = "";
-  let consecutiveCommaCount = 0;
 
   // Split by whitespace to process word by word
   const tokens = normalized.split(/(\s+)/);
@@ -137,7 +137,8 @@ async function splitIntoSentences(text: string): Promise<string[]> {
 
     currentSentence += token;
 
-    // Check if token ends with sentence-ending punctuation
+    // Check if token ends with sentence-ending punctuation (ONLY . ! ?)
+    // Commas are NOT sentence endings
     if (/[.!?]$/.test(token)) {
       // Definite sentence end
       const trimmed = currentSentence.trim();
@@ -145,30 +146,15 @@ async function splitIntoSentences(text: string): Promise<string[]> {
         out.push(trimmed);
       }
       currentSentence = "";
-      consecutiveCommaCount = 0;
-    } else if (/,$/.test(token)) {
-      // Comma - only treat as sentence end after 3 consecutive commas
-      consecutiveCommaCount++;
-      if (consecutiveCommaCount >= 3) {
-        // Third comma in a row - treat as sentence end
-        const trimmed = currentSentence.trim();
-        if (trimmed) {
-          out.push(trimmed);
-        }
-        currentSentence = "";
-        consecutiveCommaCount = 0;
-      }
-    } else {
-      // No relevant punctuation - reset comma counter
-      consecutiveCommaCount = 0;
     }
+    // Commas are just part of the sentence - no special handling
   }
 
   // Handle any remaining text
   const remaining = currentSentence.trim();
   if (remaining) {
     // Ensure it ends with punctuation
-    const finalSentence = /[.!?,]$/.test(remaining) ? remaining : remaining + ".";
+    const finalSentence = /[.!?]$/.test(remaining) ? remaining : remaining + ".";
     out.push(finalSentence);
   }
 
@@ -185,7 +171,7 @@ async function splitIntoSentences(text: string): Promise<string[]> {
       for (let i = 0; i < lines.length; i += 2) {
         let group = lines.slice(i, i + 2).join(" ").trim();
         // Ensure it ends with punctuation
-        if (group && !/[.!?,]$/.test(group)) {
+        if (group && !/[.!?]$/.test(group)) {
           group += ".";
         }
         if (group) lineProcessed.push(group);
@@ -193,7 +179,7 @@ async function splitIntoSentences(text: string): Promise<string[]> {
     } else {
       // Join lines and ensure punctuation at end
       let joinedSentence = lines.join(" ").trim();
-      if (joinedSentence && !/[.!?,]$/.test(joinedSentence)) {
+      if (joinedSentence && !/[.!?]$/.test(joinedSentence)) {
         joinedSentence += ".";
       }
       if (joinedSentence) lineProcessed.push(joinedSentence);
