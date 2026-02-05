@@ -1,226 +1,180 @@
 
-# Plan: Fix Beat Progression and Implement Pre-Beat Recall for All Users
 
-## ✅ IMPLEMENTED
+# General Overview Practice Mode - Implementation Plan
 
-## Problem Summary (Solved)
+## Overview
 
-1. **Same beat keeps showing after finishing** - After mastering a beat, when the user returns to practice, the same beat appears instead of advancing to the next one
-2. **No pre-beat recall before new beats** - Users should recall the previously mastered beat once before learning a new one
-3. **No clear path to deadline-day mastery** - The system should ensure word-by-word memorization by the deadline
+This feature introduces a new practice mode called **"General Overview"** that helps users learn the content and flow of their speech without word-by-word memorization. Instead of testing exact wording, this mode focuses on helping users remember the main topics, key points, and the logical structure of their speech.
 
 ---
 
-## Root Cause Analysis
+## How It Works
 
-### Issue 1: Beat Not Advancing
-In `BeatPracticeView.tsx`, the `showBeatCelebration()` function (lines 1481-1616):
-- Marks the current beat as mastered in the database
-- Updates local state with `setBeats(updatedBeats)`
-- BUT only premium users in intensive mode (`beatsPerDay > 1`) get the flow that queues the next beat
-- Free users and `beatsPerDay === 1` users go directly to `session_complete`
-- The problem: the local `beats` state is updated, but `newBeatToLearn` is NOT updated to point to the next unmastered beat
-- On session reload, `loadOrCreateBeats()` should pick the next unmastered beat, but if it doesn't, the same beat shows again
+### User Experience Flow
 
-### Issue 2: Pre-Beat Recall Missing
-The `pre_beat_recall` mode exists but is only triggered in the intensive mode flow:
-- Line 1577-1583: Only when `shouldContinueToday && nextUnmastered` 
-- Regular users never get this mode between sessions
-- The recall should happen at the START of each new session (when returning to practice)
+1. **Mode Selection**: When creating or practicing a speech, the user can choose between:
+   - **Word-by-Word** (current default) - Memorize exact wording
+   - **General Overview** (new) - Understand content and topics
 
----
+2. **Initial Read-Through**: User reads the full speech once to familiarize themselves with the content
 
-## Solution Design
+3. **Topic Practice**: 
+   - AI extracts 3-6 main topics/sections from the speech
+   - Each topic shows a brief headline and key talking points
+   - User practices by speaking about each topic in their own words
 
-### Part 1: Fix Beat Progression in Same Session
+4. **AI Evaluation**:
+   - After speaking, AI checks if the user covered the main points
+   - Feedback shows which topics were covered, missed, or partially addressed
+   - Score based on content coverage, not exact wording
 
-After mastering a beat, the system should:
-1. Mark beat as mastered (already works)
-2. Find the next unmastered beat (already works)
-3. If there's a next beat AND we should continue today:
-   - Set up pre-beat recall flow (recall the just-mastered beat)
-   - Then transition to learning the next beat
-4. If session complete (no more beats today):
-   - Just show session complete (already works)
-
-### Part 2: Implement Pre-Beat Recall at Session Start
-
-When `loadOrCreateBeats()` loads and finds:
-- At least 1 mastered beat exists
-- A new beat to learn exists
-- This is NOT a recall-only session
-
-Then BEFORE showing beat_preview for the new beat:
-1. Show the last mastered beat for ONE recall pass
-2. User must recall it with all words hidden
-3. Then proceed to beat_preview for the new beat
-
-### Part 3: Ensure Word-by-Word Mastery by Deadline
-
-The current system already has strong foundations:
-- Progressive word hiding in fading phases
-- All words must be hidden for beat mastery
-- Spaced repetition intervals based on deadline
-
-To guarantee deadline-day readiness:
-- 3 days before deadline: Automatic full-speech practice mode
-- 1 day before: Only full-speech recalls (no individual beats)
-- Deadline day: Pure recall mode
+5. **Progressive Challenge**:
+   - First sessions: Show topic headlines + key points
+   - Later sessions: Only topic headlines
+   - Mastery: Just numbered markers (Topic 1, 2, 3...)
 
 ---
 
-## Implementation Details
+## Technical Implementation
 
-### File: `src/components/BeatPracticeView.tsx`
+### 1. Database Changes
 
-#### Change 1: Add Pre-Beat Recall at Session Start
-
-In `loadOrCreateBeats()` around line 529, after determining beats to recall and new beat to learn:
-
-```
-Current logic:
-- If beatsNeedingRecall.length > 0 → recall mode
-- Else if firstUnmastered → beat_preview
-- Else → session_complete
-
-New logic:
-- If beatsNeedingRecall.length > 0 → recall mode (unchanged)
-- Else if firstUnmastered:
-  - Check if there's a PREVIOUSLY mastered beat (most recent)
-  - If yes → start in pre_beat_recall mode for that beat, queue the new beat
-  - If no (first beat ever) → go directly to beat_preview
-- Else → session_complete
-```
-
-#### Change 2: Store "Last Mastered Beat" for Pre-Recall
-
-When entering with a new beat to learn:
-1. Find the most recently mastered beat (by `mastered_at` timestamp)
-2. Set `beatToRecallBeforeNext` to that beat
-3. Set `nextBeatQueued` to the new beat to learn
-4. Enter `pre_beat_recall` mode
-
-#### Change 3: Fix In-Session Progression for All Users
-
-In `showBeatCelebration()`, after marking beat as mastered:
-- For ALL users (not just premium intensive mode), if there's a next beat:
-  - Queue the next beat
-  - Enter rest/pre-beat-recall flow
-- Remove the artificial split between premium/free for beat progression
-
----
-
-## Session Flow Diagram
+Add new columns and table for overview mode:
 
 ```text
-User enters Practice
-         │
-         ▼
-    Load Beats
-         │
-         ├─── Has beats needing daily recall? ─── YES ──▶ RECALL MODE
-         │                                                     │
-         │                                                     ▼
-         NO                                           Recall all mastered
-         │                                            beats (2x each)
-         ▼                                                     │
-    Has new beat to learn?                                    ▼
-         │                                            Done with recalls
-         ├─── YES                                              │
-         │       │                                             ▼
-         │       ▼                                    Has new beat to learn?
-         │   Has previously mastered beat?                     │
-         │       │                                    ├─ YES ──▶ PRE-BEAT RECALL
-         │       ├── YES ──▶ PRE-BEAT RECALL                   │
-         │       │           (recall last beat once)           │
-         │       │                  │                 └─ NO ───▶ SESSION COMPLETE
-         │       │                  ▼
-         │       │           BEAT PREVIEW
-         │       │                  │
-         │       │                  ▼
-         │       │            LEARN MODE
-         │       │           (sentence by sentence)
-         │       │                  │
-         │       │                  ▼
-         │       │           Beat Mastered!
-         │       │                  │
-         │       │                  ▼
-         │       │      More beats to learn today?
-         │       │           │            │
-         │       │          YES          NO
-         │       │           │            │
-         │       │           ▼            ▼
-         │       │     Queue next    SESSION COMPLETE
-         │       │     + Rest Timer
-         │       │           │
-         │       │           ▼
-         │       │     PRE-BEAT RECALL
-         │       │     (for just-mastered)
-         │       │           │
-         │       │           ▼
-         │       │     BEAT PREVIEW
-         │       │     (for next beat)
-         │       │           │
-         │       └───────────┴──────────────────────────▶ (continue loop)
-         │
-         └─── NO ──▶ SESSION COMPLETE (all mastered or limit reached)
+Table: speeches
+  + learning_mode: 'word_by_word' | 'general_overview' (existing column, add new value)
+
+Table: overview_topics (NEW)
+  - id: uuid
+  - speech_id: uuid (FK to speeches)
+  - topic_order: integer
+  - topic_title: text (e.g., "Introduction to climate change")
+  - key_points: text[] (array of 2-4 bullet points)
+  - original_section: text (the actual text this topic covers)
+  - is_mastered: boolean
+  - practice_count: integer
+  - last_coverage_score: numeric
+  - created_at: timestamp
+
+Table: overview_sessions (NEW)  
+  - id: uuid
+  - speech_id: uuid
+  - session_date: timestamp
+  - topics_covered: uuid[] (which topics were addressed)
+  - topics_missed: uuid[]
+  - overall_score: numeric (0-100)
+  - transcription: text
+  - ai_feedback: text
+  - created_at: timestamp
 ```
 
+### 2. New Edge Function: `extract-speech-topics`
+
+AI-powered function to analyze a speech and extract main topics:
+
+```text
+Input: speech text
+Output: 
+  - topics: Array of {
+      topic_order: number,
+      topic_title: string,
+      key_points: string[],
+      original_section: string
+    }
+
+Uses Lovable AI (google/gemini-3-flash-preview) to:
+1. Identify logical sections/topics in the speech
+2. Generate a concise title for each topic
+3. Extract 2-4 key talking points per topic
+4. Map each topic back to the original text section
+```
+
+### 3. New Edge Function: `analyze-overview-session`
+
+AI-powered function to evaluate how well the user covered the topics:
+
+```text
+Input: 
+  - transcription (what user said)
+  - topics (the expected topics with key points)
+  - original_speech_text
+
+Output:
+  - topics_covered: which topics were addressed
+  - topics_partially_covered: topics mentioned but incomplete
+  - topics_missed: topics not addressed
+  - coverage_score: 0-100
+  - feedback: specific guidance on what was missed
+  - suggestions: what to focus on next
+```
+
+### 4. New UI Components
+
+**OverviewModeSelector** - Updated mode selection in PresentationModeSelector:
+- Add fourth card for "General Overview" mode
+- Description: "Learn the content and flow without memorizing exact words"
+- Features: Topic-based learning, content coverage analysis, speak naturally
+
+**OverviewPracticeView** - New practice component:
+- Shows topic cards with headlines
+- Progressive hint levels (full points, headlines only, numbers only)
+- Recording with transcription
+- Results showing coverage visualization
+
+**OverviewTopicCard** - Individual topic display:
+- Topic number and title
+- Key points (collapsible based on difficulty)
+- Coverage indicator (green/yellow/red after session)
+
+**OverviewResults** - Session results view:
+- Topic coverage grid (visual representation)
+- Percentage score for content coverage
+- AI feedback on what was missed
+- Suggestions for improvement
+
+### 5. Integration Points
+
+**Practice.tsx modifications**:
+- Detect `learning_mode === 'general_overview'`
+- Render `OverviewPracticeView` instead of `BeatPracticeView`
+- Load topics from `overview_topics` table
+
+**UploadSpeechDialog modifications**:
+- Add learning mode selector
+- Trigger `extract-speech-topics` when overview mode selected
+
+**Speech Card modifications**:
+- Show learning mode indicator
+- Different progress metrics for overview mode
+
 ---
 
-## Files to Modify
+## File Changes Summary
 
-| File | Changes |
-|------|---------|
-| `src/components/BeatPracticeView.tsx` | Add pre-beat recall at session start; fix beat progression for all users |
-
----
-
-## Technical Implementation Steps
-
-### Step 1: Modify Session Start Logic
-In `loadOrCreateBeats()`, after line 533 (where we check for new beat to learn):
-- Find the most recently mastered beat (if any)
-- If found, set up pre-beat recall before beat preview
-- Update `sessionMode` to `pre_beat_recall` with proper state
-
-### Step 2: Simplify In-Session Beat Progression
-In `showBeatCelebration()`:
-- Remove the complex premium/free/intensive mode branching
-- After marking beat as mastered, check if there's a next unmastered beat
-- If yes AND daily limit not reached: queue it for learning (with pre-beat recall)
-- If no OR limit reached: session complete
-
-### Step 3: Ensure Pre-Beat Recall Completion Flows Correctly
-In `handlePreBeatRecallCompletion()`:
-- After successful recall with all words hidden
-- Transition to `beat_preview` for the `nextBeatQueued` beat
-- This already exists but may need verification
+| File | Change Type |
+|------|-------------|
+| `supabase/migrations/xxx_add_overview_tables.sql` | Create |
+| `supabase/functions/extract-speech-topics/index.ts` | Create |
+| `supabase/functions/analyze-overview-session/index.ts` | Create |
+| `src/components/OverviewPracticeView.tsx` | Create |
+| `src/components/OverviewTopicCard.tsx` | Create |
+| `src/components/OverviewResults.tsx` | Create |
+| `src/components/PresentationModeSelector.tsx` | Modify |
+| `src/components/UploadSpeechDialog.tsx` | Modify |
+| `src/pages/Practice.tsx` | Modify |
+| `src/i18n/locales/*.json` | Modify (all locales) |
+| `src/integrations/supabase/types.ts` | Auto-generated |
 
 ---
 
-## Edge Cases Handled
+## Alternative Design Consideration
 
-1. **First beat ever** - No pre-beat recall (nothing to recall yet)
-2. **All beats mastered** - Goes to session complete with all-mastered message
-3. **Free user daily limit** - Session complete + upsell prompt
-4. **User exits mid-session** - Checkpoint saved, resume from same spot
-5. **Deadline approaching** - Intervals shortened automatically (already works)
+Instead of creating a completely separate practice flow, we could also:
 
----
+1. **Hybrid Approach**: Keep beats structure but show topic summaries instead of full text during recall phases. This would reuse more existing code but might feel less natural for content-focused learning.
 
-## Expected User Experience
+2. **Cue Card Mode**: Display only key points as "cue cards" during practice, similar to what speakers use during presentations. This is simpler but less structured than the full topic system.
 
-### Session Flow (After Fix):
-1. User opens practice for speech with Beat 1 mastered, Beat 2 unmastered
-2. System shows "Recall Time" - user recalls Beat 1 (all words hidden)
-3. After successful recall, "Coming up..." preview of Beat 2
-4. User clicks "I'm Ready to Practice"
-5. Learns Beat 2 sentence by sentence
-6. After mastering Beat 2 → Session Complete
-7. Next session: Recall Beat 2, then learn Beat 3
+The recommended approach (above) creates a distinct experience optimized for content understanding while still tracking progress and using AI for feedback.
 
-### By Deadline Day:
-- User has mastered all beats individually
-- Daily recalls have reinforced memory
-- Full speech recall mode ensures seamless performance
