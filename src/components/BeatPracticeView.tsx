@@ -1206,9 +1206,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (hadErrors) {
       // Failed recall - reveal ONLY the words that were missed/hesitated, but still hide 3 new words
       // Reset success count back to 0 (next success will hide 3 words again)
-      console.log(`❌ Recall error! Resetting streak from ${recallSuccessCount} to 0`);
-      console.log(`   Hesitated indices: ${[...hesitatedIndicesRef.current].join(', ')}`);
-      console.log(`   Missed indices: ${[...missedIndicesRef.current].join(', ')}`);
       setRecallSuccessCount(0);
       
       // Get the specific word indices that failed (hesitated or missed)
@@ -1250,8 +1247,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const newSuccessCount = recallSuccessCount + 1;
       setRecallSuccessCount(newSuccessCount);
       
-      console.log(`✅ Recall success! Streak: ${recallSuccessCount} → ${newSuccessCount}, hiding ${wordsToHide} words`);
-      
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
       
@@ -1266,9 +1261,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
       
       const visibleCount = words.length - newHidden.size;
-      // Show streak info in celebration message
-      const nextWordsToHide = getWordsToHideCount(newSuccessCount);
-      setCelebrationMessage(`✓ ${visibleCount} left (${nextWordsToHide}/round)`);
+      setCelebrationMessage(`✓ ${visibleCount} words left`);
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -1476,9 +1469,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Track fading success count for progressive hiding (3 → 4 → 5)
   const [fadingSuccessCount, setFadingSuccessCount] = useState(0);
   
-  // Track consecutive success streak across the session (for debug/display)
-  const fadingStreakRef = useRef(0);
-  
   // Handle fading phase completion logic
   // Key behavior: ALWAYS continue hiding words, even on errors
   // Failed words stay visible and become "protected" - they disappear LAST
@@ -1487,13 +1477,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     // Always hide words progressively, even with errors
     if (!allHidden) {
-      // Calculate words to hide based on current streak BEFORE updating
-      // Success: progressive 3 → 4 → 5 based on fadingSuccessCount
-      // Error: reset to base 3 words
-      const currentStreak = hadErrors ? 0 : fadingSuccessCount;
-      const wordsToHide = Math.min(3 + currentStreak, 5);
-      
-      console.log(`🎯 Fading completion: hadErrors=${hadErrors}, streak=${fadingSuccessCount}, wordsToHide=${wordsToHide}`);
+      // On error: still hide 3 words (base amount). On success: progressive 3 → 4 → 5
+      const wordsToHide = hadErrors ? 3 : Math.min(3 + fadingSuccessCount, 5);
       
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
@@ -1515,14 +1500,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         });
         setProtectedWordIndices(newProtected);
         setFadingSuccessCount(0); // Reset progression on error (back to 3 words)
-        fadingStreakRef.current = 0;
         setConsecutiveNoScriptSuccess(0);
       } else {
-        // Increment success count for NEXT round (cap at 2 so max = 3+2 = 5 words)
-        const newCount = Math.min(fadingSuccessCount + 1, 2);
-        setFadingSuccessCount(newCount);
-        fadingStreakRef.current = newCount;
-        console.log(`✅ Fading success! New streak: ${newCount}, next round will hide ${Math.min(3 + newCount, 5)} words`);
+        setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
       }
       
       // ALWAYS hide more words (continue progression even on failure)
@@ -1584,17 +1564,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordOrder([]);
     setProtectedWordIndices(new Set()); // Clear protected words for new phase
     setConsecutiveNoScriptSuccess(0);
-    // Don't reset fading success count when transitioning within same beat
-    // Only reset when going to a completely new learning phase
-    if (newPhase.includes('learning') && !newPhase.includes('beat_learning')) {
-      // Starting a new sentence learning phase - keep streak from previous sentence fading
-      console.log(`📚 New learning phase ${newPhase}, keeping fading streak: ${fadingStreakRef.current}`);
-    } else if (newPhase === 'beat_learning') {
-      // Starting full beat learning - reset streak for fresh start
-      setFadingSuccessCount(0);
-      fadingStreakRef.current = 0;
-      console.log(`🎯 Beat learning phase - resetting fading streak to 0`);
-    }
+    setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
     pauseSpeechRecognition(900);
