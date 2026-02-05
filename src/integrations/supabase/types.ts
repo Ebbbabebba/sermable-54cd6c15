@@ -285,6 +285,109 @@ export type Database = {
           },
         ]
       }
+      overview_sessions: {
+        Row: {
+          ai_feedback: string | null
+          created_at: string | null
+          hint_level: number | null
+          id: string
+          overall_score: number | null
+          session_date: string | null
+          speech_id: string
+          suggestions: string | null
+          topics_covered: string[] | null
+          topics_missed: string[] | null
+          topics_partially_covered: string[] | null
+          transcription: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_feedback?: string | null
+          created_at?: string | null
+          hint_level?: number | null
+          id?: string
+          overall_score?: number | null
+          session_date?: string | null
+          speech_id: string
+          suggestions?: string | null
+          topics_covered?: string[] | null
+          topics_missed?: string[] | null
+          topics_partially_covered?: string[] | null
+          transcription?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_feedback?: string | null
+          created_at?: string | null
+          hint_level?: number | null
+          id?: string
+          overall_score?: number | null
+          session_date?: string | null
+          speech_id?: string
+          suggestions?: string | null
+          topics_covered?: string[] | null
+          topics_missed?: string[] | null
+          topics_partially_covered?: string[] | null
+          transcription?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overview_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      overview_topics: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_mastered: boolean | null
+          key_points: string[]
+          last_coverage_score: number | null
+          original_section: string | null
+          practice_count: number | null
+          speech_id: string
+          topic_order: number
+          topic_title: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_mastered?: boolean | null
+          key_points?: string[]
+          last_coverage_score?: number | null
+          original_section?: string | null
+          practice_count?: number | null
+          speech_id: string
+          topic_order: number
+          topic_title: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_mastered?: boolean | null
+          key_points?: string[]
+          last_coverage_score?: number | null
+          original_section?: string | null
+          practice_count?: number | null
+          speech_id?: string
+          topic_order?: number
+          topic_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overview_topics_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practice_beats: {
         Row: {
           beat_order: number

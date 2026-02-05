@@ -9,6 +9,7 @@ import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
+import OverviewPracticeView from "@/components/OverviewPracticeView";
 
 import { AudienceOverlay } from "@/components/audience";
 import type { ViewMode } from "@/components/WearableHUD";
@@ -43,7 +44,7 @@ const Presentation = () => {
   const [loading, setLoading] = useState(true);
   
   // Mode selection
-  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | 'audience' | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | 'audience' | 'overview' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   
   // Session states
@@ -318,6 +319,11 @@ const Presentation = () => {
     setStage('prep');
   };
 
+  const handleOverviewModeSelect = () => {
+    setSelectedMode('overview');
+    setStage('live');
+  };
+
   const handleFullScriptComplete = (durationSeconds: number) => {
     // Simple completion - no analysis, just show success
     setElapsedTime(durationSeconds);
@@ -362,6 +368,7 @@ const Presentation = () => {
         <PresentationModeSelector 
           onSelectMode={handleModeSelect}
           onSelectAudienceMode={handleAudienceModeSelect}
+          onSelectOverviewMode={handleOverviewModeSelect}
         />
       </div>
     );
@@ -392,6 +399,22 @@ const Presentation = () => {
         speechLanguage={speech.speech_language || 'en'}
         onComplete={handleFullScriptComplete}
         onExit={handleExit}
+      />
+    );
+  }
+
+  // Show overview mode
+  if (selectedMode === 'overview') {
+    return (
+      <OverviewPracticeView
+        speechId={speech.id}
+        speechTitle={speech.title}
+        speechText={speech.text_original}
+        speechLanguage={speech.speech_language || 'en'}
+        onBack={() => {
+          setSelectedMode(null);
+          setStage('mode-select');
+        }}
       />
     );
   }

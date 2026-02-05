@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.delete-user-account]
 verify_jwt = false
+
+[functions.extract-speech-topics]
+verify_jwt = true
+
+[functions.analyze-overview-session]
+verify_jwt = true
