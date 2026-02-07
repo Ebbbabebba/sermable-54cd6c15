@@ -660,7 +660,20 @@
     "partiallyCovered": "Delvis täckt",
     "missed": "Missat",
     "aiFeedback": "AI-feedback",
-    "tryAgain": "Försök igen"
+    "tryAgain": "Försök igen",
+    "section": "Avsnitt",
+    "keyWords": "Nyckelord",
+    "keyNumbers": "Nyckeltal",
+    "keyPhrases": "Nyckelfraser",
+    "explainSection": "Förklara detta avsnitt med egna ord",
+    "explainThisSection": "Förklara detta avsnitt",
+    "nextSection": "Nästa avsnitt",
+    "viewResults": "Visa resultat",
+    "mainIdea": "Huvudidé fångad",
+    "missedKeywords": "Missade nyckelord",
+    "missedNumbers": "Missade tal",
+    "missedPhrases": "Missade fraser",
+    "allKeywordsCovered": "Alla nyckelord täckta"
   },
   "presentationMode": {
     "chooseMode": "Välj läge",

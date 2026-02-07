@@ -292,6 +292,7 @@ export type Database = {
           hint_level: number | null
           id: string
           overall_score: number | null
+          section_scores: Json | null
           session_date: string | null
           speech_id: string
           suggestions: string | null
@@ -307,6 +308,7 @@ export type Database = {
           hint_level?: number | null
           id?: string
           overall_score?: number | null
+          section_scores?: Json | null
           session_date?: string | null
           speech_id: string
           suggestions?: string | null
@@ -322,6 +324,7 @@ export type Database = {
           hint_level?: number | null
           id?: string
           overall_score?: number | null
+          section_scores?: Json | null
           session_date?: string | null
           speech_id?: string
           suggestions?: string | null
@@ -346,7 +349,10 @@ export type Database = {
           created_at: string | null
           id: string
           is_mastered: boolean | null
+          key_numbers: string[] | null
+          key_phrases: string[] | null
           key_points: string[]
+          key_words: string[] | null
           last_coverage_score: number | null
           original_section: string | null
           practice_count: number | null
@@ -358,7 +364,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
+          key_numbers?: string[] | null
+          key_phrases?: string[] | null
           key_points?: string[]
+          key_words?: string[] | null
           last_coverage_score?: number | null
           original_section?: string | null
           practice_count?: number | null
@@ -370,7 +379,10 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
+          key_numbers?: string[] | null
+          key_phrases?: string[] | null
           key_points?: string[]
+          key_words?: string[] | null
           last_coverage_score?: number | null
           original_section?: string | null
           practice_count?: number | null
