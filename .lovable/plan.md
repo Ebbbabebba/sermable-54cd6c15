@@ -1,180 +1,164 @@
 
 
-# General Overview Practice Mode - Implementation Plan
+# Overview Practice Mode - Column Structure Redesign
 
-## Overview
+## Summary
 
-This feature introduces a new practice mode called **"General Overview"** that helps users learn the content and flow of their speech without word-by-word memorization. Instead of testing exact wording, this mode focuses on helping users remember the main topics, key points, and the logical structure of their speech.
+Redesign the General Overview practice mode to use a **column-based structure** per speech section. Instead of showing generic topic cards, each section displays three distinct columns: **Key Words**, **Key Numbers**, and **Key Phrases**. The user reads through the speech once, then explains each section freely while the AI evaluates coverage of these structured elements.
 
 ---
 
 ## How It Works
 
-### User Experience Flow
+### Practice Flow
 
-1. **Mode Selection**: When creating or practicing a speech, the user can choose between:
-   - **Word-by-Word** (current default) - Memorize exact wording
-   - **General Overview** (new) - Understand content and topics
+1. **Read-Through Phase** (unchanged): User reads the full speech text once
+2. **Section Practice Phase** (new column layout):
+   - Speech is divided into logical sections (e.g., Introduction, Argument, Conclusion)
+   - Each section card shows three columns side-by-side:
 
-2. **Initial Read-Through**: User reads the full speech once to familiarize themselves with the content
+   | Key Words (4-7) | Key Numbers | Key Phrases |
+   |---|---|---|
+   | global warming | 1.5C threshold | "tipping point" |
+   | youth impact | 2030 target | "generation impact" |
+   | future risk | 60% youth concern | "economic pressure" |
+   | personal story | | |
+   | urgency | | |
 
-3. **Topic Practice**: 
-   - AI extracts 3-6 main topics/sections from the speech
-   - Each topic shows a brief headline and key talking points
-   - User practices by speaking about each topic in their own words
-
-4. **AI Evaluation**:
-   - After speaking, AI checks if the user covered the main points
-   - Feedback shows which topics were covered, missed, or partially addressed
-   - Score based on content coverage, not exact wording
-
-5. **Progressive Challenge**:
-   - First sessions: Show topic headlines + key points
-   - Later sessions: Only topic headlines
-   - Mastery: Just numbered markers (Topic 1, 2, 3...)
+3. **Recording**: User presses "Explain this section" for each section individually
+4. **AI Evaluation per section**: Checks if user:
+   - Captured the main idea
+   - Mentioned minimum key words
+   - Included important numbers
+   - Reflected the overall structure
+5. **Results**: Per-section breakdown with score and specific feedback on what was missed
 
 ---
 
-## Technical Implementation
+## Database Changes
 
-### 1. Database Changes
+### Modify `overview_topics` table
 
-Add new columns and table for overview mode:
-
-```text
-Table: speeches
-  + learning_mode: 'word_by_word' | 'general_overview' (existing column, add new value)
-
-Table: overview_topics (NEW)
-  - id: uuid
-  - speech_id: uuid (FK to speeches)
-  - topic_order: integer
-  - topic_title: text (e.g., "Introduction to climate change")
-  - key_points: text[] (array of 2-4 bullet points)
-  - original_section: text (the actual text this topic covers)
-  - is_mastered: boolean
-  - practice_count: integer
-  - last_coverage_score: numeric
-  - created_at: timestamp
-
-Table: overview_sessions (NEW)  
-  - id: uuid
-  - speech_id: uuid
-  - session_date: timestamp
-  - topics_covered: uuid[] (which topics were addressed)
-  - topics_missed: uuid[]
-  - overall_score: numeric (0-100)
-  - transcription: text
-  - ai_feedback: text
-  - created_at: timestamp
-```
-
-### 2. New Edge Function: `extract-speech-topics`
-
-AI-powered function to analyze a speech and extract main topics:
+Add three new columns to store the structured extraction data:
 
 ```text
-Input: speech text
-Output: 
-  - topics: Array of {
-      topic_order: number,
-      topic_title: string,
-      key_points: string[],
-      original_section: string
-    }
-
-Uses Lovable AI (google/gemini-3-flash-preview) to:
-1. Identify logical sections/topics in the speech
-2. Generate a concise title for each topic
-3. Extract 2-4 key talking points per topic
-4. Map each topic back to the original text section
+ALTER TABLE overview_topics ADD COLUMN key_words text[] DEFAULT '{}';
+ALTER TABLE overview_topics ADD COLUMN key_numbers text[] DEFAULT '{}';
+ALTER TABLE overview_topics ADD COLUMN key_phrases text[] DEFAULT '{}';
 ```
 
-### 3. New Edge Function: `analyze-overview-session`
+The existing `key_points` column will be kept for backward compatibility but the new columns will be used for the column display.
 
-AI-powered function to evaluate how well the user covered the topics:
+### Modify `overview_sessions` table
+
+Add a `section_scores` JSONB column to store per-section results:
 
 ```text
-Input: 
-  - transcription (what user said)
-  - topics (the expected topics with key points)
-  - original_speech_text
-
-Output:
-  - topics_covered: which topics were addressed
-  - topics_partially_covered: topics mentioned but incomplete
-  - topics_missed: topics not addressed
-  - coverage_score: 0-100
-  - feedback: specific guidance on what was missed
-  - suggestions: what to focus on next
+ALTER TABLE overview_sessions ADD COLUMN section_scores jsonb DEFAULT '[]';
 ```
 
-### 4. New UI Components
+This stores an array like:
+```json
+[
+  {
+    "topic_id": "uuid",
+    "score": 76,
+    "main_idea_captured": true,
+    "key_words_mentioned": ["global warming", "urgency"],
+    "key_words_missed": ["personal story"],
+    "numbers_mentioned": ["1.5C"],
+    "numbers_missed": ["2030 target"],
+    "phrases_mentioned": [],
+    "phrases_missed": ["tipping point"]
+  }
+]
+```
 
-**OverviewModeSelector** - Updated mode selection in PresentationModeSelector:
-- Add fourth card for "General Overview" mode
-- Description: "Learn the content and flow without memorizing exact words"
-- Features: Topic-based learning, content coverage analysis, speak naturally
+---
 
-**OverviewPracticeView** - New practice component:
-- Shows topic cards with headlines
-- Progressive hint levels (full points, headlines only, numbers only)
-- Recording with transcription
-- Results showing coverage visualization
+## Edge Function Changes
 
-**OverviewTopicCard** - Individual topic display:
-- Topic number and title
-- Key points (collapsible based on difficulty)
-- Coverage indicator (green/yellow/red after session)
+### Update `extract-speech-topics`
 
-**OverviewResults** - Session results view:
-- Topic coverage grid (visual representation)
-- Percentage score for content coverage
-- AI feedback on what was missed
-- Suggestions for improvement
+Change the AI prompt to extract three structured categories per section instead of generic key points:
 
-### 5. Integration Points
+- **key_words**: 4-7 short support words representing core content
+- **key_numbers**: Important statistics, dates, and factual anchors
+- **key_phrases**: Short central expressions (never full sentences), in quotes
 
-**Practice.tsx modifications**:
-- Detect `learning_mode === 'general_overview'`
-- Render `OverviewPracticeView` instead of `BeatPracticeView`
-- Load topics from `overview_topics` table
+The function will save these into the new columns on `overview_topics`.
 
-**UploadSpeechDialog modifications**:
-- Add learning mode selector
-- Trigger `extract-speech-topics` when overview mode selected
+### Update `analyze-overview-session`
 
-**Speech Card modifications**:
-- Show learning mode indicator
-- Different progress metrics for overview mode
+Change to evaluate **per section**, one at a time. The function receives:
+- The current section's key_words, key_numbers, key_phrases
+- The user's transcription for that section
+
+It returns a per-section score with detailed breakdown of which keywords, numbers, and phrases were mentioned or missed.
+
+---
+
+## UI Component Changes
+
+### Rewrite `OverviewTopicCard`
+
+Transform from a simple topic card to a **three-column layout**:
+
+- Left column: Key Words (displayed as colored chips/tags)
+- Center column: Key Numbers (displayed with a number icon prefix)
+- Right column: Key Phrases (displayed in quotes, italic)
+
+On mobile, columns stack vertically.
+
+Each section card includes a "Explain this section" mic button at the bottom.
+
+### Rewrite `OverviewPracticeView`
+
+Change the practice flow:
+
+1. **Read-Through Phase**: Same as current (show full speech text)
+2. **Section-by-Section Practice**: Instead of recording everything at once:
+   - Show one section at a time with its three columns
+   - User taps "Explain this section" to record
+   - After recording, show immediate per-section feedback
+   - User moves to next section
+3. **Final Results**: Show overall summary with all section scores
+
+### Rewrite `OverviewResults`
+
+Update to show per-section detailed feedback:
+- Per section: score percentage with breakdown
+- Checkmarks/warnings for: structure, main idea, keywords, numbers, phrases
+- Example format:
+
+```text
+Section 1: Introduction - 76%
+  [check] Structure clear
+  [check] Main idea captured
+  [warn] Missed numbers: 2030 target
+  [warn] Missing concept: tipping point
+```
+
+---
+
+## Progressive Difficulty (kept from current design)
+
+- **Level 1 (Full hints)**: Show all three columns with content
+- **Level 2 (Titles only)**: Show section title + column headers but hide the actual words/numbers/phrases
+- **Level 3 (Numbers only)**: Show just "Section 1", "Section 2" etc.
 
 ---
 
 ## File Changes Summary
 
-| File | Change Type |
-|------|-------------|
-| `supabase/migrations/xxx_add_overview_tables.sql` | Create |
-| `supabase/functions/extract-speech-topics/index.ts` | Create |
-| `supabase/functions/analyze-overview-session/index.ts` | Create |
-| `src/components/OverviewPracticeView.tsx` | Create |
-| `src/components/OverviewTopicCard.tsx` | Create |
-| `src/components/OverviewResults.tsx` | Create |
-| `src/components/PresentationModeSelector.tsx` | Modify |
-| `src/components/UploadSpeechDialog.tsx` | Modify |
-| `src/pages/Practice.tsx` | Modify |
-| `src/i18n/locales/*.json` | Modify (all locales) |
-| `src/integrations/supabase/types.ts` | Auto-generated |
-
----
-
-## Alternative Design Consideration
-
-Instead of creating a completely separate practice flow, we could also:
-
-1. **Hybrid Approach**: Keep beats structure but show topic summaries instead of full text during recall phases. This would reuse more existing code but might feel less natural for content-focused learning.
-
-2. **Cue Card Mode**: Display only key points as "cue cards" during practice, similar to what speakers use during presentations. This is simpler but less structured than the full topic system.
-
-The recommended approach (above) creates a distinct experience optimized for content understanding while still tracking progress and using AI for feedback.
+| File | Change |
+|------|--------|
+| Database migration | Add `key_words`, `key_numbers`, `key_phrases` to `overview_topics`; add `section_scores` to `overview_sessions` |
+| `supabase/functions/extract-speech-topics/index.ts` | Update AI prompt to extract structured columns |
+| `supabase/functions/analyze-overview-session/index.ts` | Rewrite to evaluate per-section with keyword/number/phrase matching |
+| `src/components/OverviewTopicCard.tsx` | Rewrite to three-column layout with chips |
+| `src/components/OverviewPracticeView.tsx` | Rewrite to section-by-section recording flow |
+| `src/components/OverviewResults.tsx` | Rewrite to show per-section detailed feedback |
+| `src/i18n/locales/en.json` | Add new translation keys |
+| `src/i18n/locales/sv.json` | Add new translation keys |
 
