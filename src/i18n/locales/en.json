@@ -713,7 +713,20 @@
     "partiallyCovered": "Partially Covered",
     "missed": "Missed",
     "aiFeedback": "AI Feedback",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "section": "Section",
+    "keyWords": "Key Words",
+    "keyNumbers": "Key Numbers",
+    "keyPhrases": "Key Phrases",
+    "explainSection": "Explain this section in your own words",
+    "explainThisSection": "Explain This Section",
+    "nextSection": "Next Section",
+    "viewResults": "View Results",
+    "mainIdea": "Main idea captured",
+    "missedKeywords": "Missed keywords",
+    "missedNumbers": "Missed numbers",
+    "missedPhrases": "Missing phrases",
+    "allKeywordsCovered": "All keywords covered"
   },
   "presentationMode": {
     "chooseMode": "Choose Your Mode",
