@@ -160,7 +160,14 @@
     "scanError": "Skanning misslyckades",
     "scanErrorDesc": "Kunde inte extrahera text från bilden. Försök igen med en tydligare bild.",
     "cameraError": "Kamerafel",
-    "cameraErrorDesc": "Kunde inte komma åt kameran. Kontrollera behörigheter."
+    "cameraErrorDesc": "Kunde inte komma åt kameran. Kontrollera behörigheter.",
+    "learningMode": {
+      "title": "Hur vill du lära dig?",
+      "wordByWord": "Ord för ord",
+      "wordByWordDesc": "Memorera exakt formulering med progressiv ordgömning",
+      "generalOverview": "Generell översikt",
+      "generalOverviewDesc": "Lär dig innehåll och flöde med nyckelord, siffror & fraser"
+    }
   },
   "practice": {
     "title": "Övningspass",

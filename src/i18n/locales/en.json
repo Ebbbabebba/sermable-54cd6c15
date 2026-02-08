@@ -160,7 +160,14 @@
     "scanError": "Scan Failed",
     "scanErrorDesc": "Could not extract text from the image. Try again with a clearer photo.",
     "cameraError": "Camera Error",
-    "cameraErrorDesc": "Could not access the camera. Please check permissions."
+    "cameraErrorDesc": "Could not access the camera. Please check permissions.",
+    "learningMode": {
+      "title": "How do you want to learn?",
+      "wordByWord": "Word-by-Word",
+      "wordByWordDesc": "Memorize exact wording with progressive word hiding",
+      "generalOverview": "General Overview",
+      "generalOverviewDesc": "Learn content and flow using key words, numbers & phrases"
+    }
   },
   "practice": {
     "title": "Practice Session",
