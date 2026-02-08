@@ -12,6 +12,7 @@ import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
 import { SpeechTypeSelector } from "./SpeechTypeSelector";
+import { LearningModeSelector } from "./LearningModeSelector";
 
 interface UploadSpeechDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [goalDate, setGoalDate] = useState("");
   const [familiarityLevel, setFamiliarityLevel] = useState<string>("beginner");
   const [speechType, setSpeechType] = useState<string>("general");
+  const [learningMode, setLearningMode] = useState<string>("word_by_word");
   const [loading, setLoading] = useState(false);
   const [userTier, setUserTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
   const [wordLimit, setWordLimit] = useState(500);
@@ -270,21 +272,33 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         familiarity_level: familiarityLevel,
         speech_language: detectedLanguage,
         speech_type: speechType,
+        learning_mode: learningMode,
       }).select().single();
 
       if (error) throw error;
 
-      // Segment the speech automatically
-      console.log('🔄 Segmenting speech...');
-      const { error: segmentError } = await supabase.functions.invoke('segment-speech', {
-        body: { speechId: newSpeech.id }
-      });
-
-      if (segmentError) {
-        console.error('⚠️ Error segmenting speech:', segmentError);
-        // Don't fail the whole process if segmentation fails
+      if (learningMode === 'general_overview') {
+        // Extract topics for overview mode
+        console.log('🔄 Extracting speech topics for overview mode...');
+        const { error: topicError } = await supabase.functions.invoke('extract-speech-topics', {
+          body: { speechId: newSpeech.id }
+        });
+        if (topicError) {
+          console.error('⚠️ Error extracting topics:', topicError);
+        } else {
+          console.log('✅ Speech topics extracted successfully');
+        }
       } else {
-        console.log('✅ Speech segmented successfully');
+        // Segment the speech automatically for word-by-word mode
+        console.log('🔄 Segmenting speech...');
+        const { error: segmentError } = await supabase.functions.invoke('segment-speech', {
+          body: { speechId: newSpeech.id }
+        });
+        if (segmentError) {
+          console.error('⚠️ Error segmenting speech:', segmentError);
+        } else {
+          console.log('✅ Speech segmented successfully');
+        }
       }
 
       // Check memorization feasibility
@@ -333,6 +347,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       setGoalDate("");
       setFamiliarityLevel("beginner");
       setSpeechType("general");
+      setLearningMode("word_by_word");
       onSuccess();
     } catch (error: any) {
       toast({
@@ -408,6 +423,12 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
               This helps us adjust the difficulty level for your practice sessions
             </p>
           </div>
+
+          {/* Learning Mode Selector */}
+          <LearningModeSelector
+            value={learningMode}
+            onChange={setLearningMode}
+          />
 
           {/* Speech Type Selector */}
           <SpeechTypeSelector
