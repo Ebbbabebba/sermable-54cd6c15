@@ -239,7 +239,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       toast({
         variant: "destructive",
         title: t('upload.error'),
-        description: `Your speech has ${wordCount} words. ${userTier === 'free' ? 'Free plan' : 'Your plan'} allows up to ${wordLimit} words. ${userTier === 'free' ? 'Upgrade to premium for up to 5000 words.' : ''}`,
+        description: t('upload.wordLimitExceeded', { count: wordCount, limit: wordLimit }) + (userTier === 'free' ? ' ' + t('upload.wordLimitUpgrade') : ''),
       });
       return;
     }
@@ -248,7 +248,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       toast({
         variant: "destructive",
         title: t('upload.limitReached'),
-        description: "You've reached your monthly speech limit. Free users can create 1 speech per month. Upgrade to premium for unlimited speeches.",
+        description: t('upload.limitReachedDesc'),
       });
       return;
     }
@@ -312,32 +312,32 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         if (assessment.warning_level === 'critical' || assessment.warning_level === 'emergency') {
           toast({
             variant: "destructive",
-            title: "⚠️ Tight Deadline Warning",
+            title: t('upload.deadlineWarning.critical'),
             description: assessment.message,
             duration: 8000,
           });
         } else if (assessment.warning_level === 'challenging') {
           toast({
-            title: "🔥 Intensive Practice Required",
+            title: t('upload.deadlineWarning.challenging'),
             description: assessment.message,
             duration: 6000,
           });
         } else if (assessment.warning_level === 'tight') {
           toast({
-            title: "⏰ Stay Consistent",
+            title: t('upload.deadlineWarning.tight'),
             description: assessment.message,
             duration: 5000,
           });
         } else {
           toast({
             title: t('upload.success'),
-            description: "Your speech has been saved. Time to start practicing!",
+            description: t('upload.successDesc'),
           });
         }
       } else {
         toast({
           title: t('upload.success'),
-          description: "Your speech has been saved. Time to start practicing!",
+          description: t('upload.successDesc'),
         });
       }
 
@@ -369,7 +369,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         <DialogHeader>
           <DialogTitle>{t('upload.title')}</DialogTitle>
           <DialogDescription>
-            Add your speech text and set a goal date for when you need to have it memorized.
+            {t('upload.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -378,7 +378,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             <Label htmlFor="title">{t('upload.speechTitle')}</Label>
             <Input
               id="title"
-              placeholder="e.g., Quarterly Business Review"
+              placeholder={t('upload.speechTitlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -400,13 +400,13 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              When do you need to deliver this speech?
+              {t('upload.goalDateHint')}
             </p>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Label htmlFor="familiarity">How well do you know this text?</Label>
+              <Label htmlFor="familiarity">{t('upload.familiarity.label')}</Label>
               <Brain className="h-4 w-4 text-muted-foreground" />
             </div>
             <Select value={familiarityLevel} onValueChange={setFamiliarityLevel}>
@@ -414,13 +414,13 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="beginner">I don't know it at all</SelectItem>
-                <SelectItem value="intermediate">I know some parts</SelectItem>
-                <SelectItem value="confident">I know it very well</SelectItem>
+                <SelectItem value="beginner">{t('upload.familiarity.beginner')}</SelectItem>
+                <SelectItem value="intermediate">{t('upload.familiarity.intermediate')}</SelectItem>
+                <SelectItem value="confident">{t('upload.familiarity.confident')}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
-              This helps us adjust the difficulty level for your practice sessions
+              {t('upload.familiarity.hint')}
             </p>
           </div>
 
@@ -442,7 +442,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                 <Label htmlFor="text">{t('upload.speechText')}</Label>
                 <Languages className="h-4 w-4 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground">
-                  Auto-detects language
+                  {t('upload.autoDetectsLanguage')}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -549,7 +549,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                 <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-md flex flex-col items-center justify-center z-10">
                   <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
                   <p className="text-sm font-medium text-foreground">{t('upload.extracting')}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Analyzing image...</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('upload.analyzingImage')}</p>
                 </div>
               )}
               <Textarea
