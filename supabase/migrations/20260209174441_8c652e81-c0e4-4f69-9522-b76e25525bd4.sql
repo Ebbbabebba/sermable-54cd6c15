@@ -1,0 +1,2 @@
+ALTER TABLE public.speeches DROP CONSTRAINT speeches_learning_mode_check;
+ALTER TABLE public.speeches ADD CONSTRAINT speeches_learning_mode_check CHECK (learning_mode = ANY (ARRAY['spaced_repetition'::text, 'exam_prep'::text, 'word_by_word'::text, 'general_overview'::text]));
