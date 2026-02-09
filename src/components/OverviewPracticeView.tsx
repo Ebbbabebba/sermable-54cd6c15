@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mic, Square, Loader2, BookOpen, Eye, EyeOff, ChevronRight, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Mic, Square, Loader2, BookOpen, Eye, EyeOff, ChevronRight } from "lucide-react";
 import OverviewTopicCard from "./OverviewTopicCard";
 import OverviewResults from "./OverviewResults";
 import AudioRecorder, { AudioRecorderHandle } from "./AudioRecorder";
@@ -18,7 +18,6 @@ interface Topic {
   key_points: string[];
   key_words: string[];
   key_numbers: string[];
-  key_phrases: string[];
   original_section: string | null;
   is_mastered: boolean;
   practice_count: number;
@@ -34,8 +33,6 @@ interface SectionScore {
   key_words_missed: string[];
   numbers_mentioned: string[];
   numbers_missed: string[];
-  phrases_mentioned: string[];
-  phrases_missed: string[];
   feedback: string;
 }
 
@@ -48,6 +45,24 @@ interface OverviewPracticeViewProps {
 }
 
 type Phase = 'read' | 'practice' | 'recording' | 'processing' | 'section-result' | 'results';
+
+// Levenshtein distance for fuzzy matching
+const levenshtein = (a: string, b: string): number => {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+};
+
+const normalize = (s: string) => s.toLowerCase().replace(/[^\w\d]/g, '');
 
 export const OverviewPracticeView = ({
   speechId,
@@ -71,9 +86,23 @@ export const OverviewPracticeView = ({
   const [sectionScores, setSectionScores] = useState<SectionScore[]>([]);
   const [currentSectionScore, setCurrentSectionScore] = useState<SectionScore | null>(null);
 
+  // Real-time matching state
+  const [mentionedKeyWords, setMentionedKeyWords] = useState<string[]>([]);
+  const [mentionedKeyNumbers, setMentionedKeyNumbers] = useState<string[]>([]);
+  const recognitionRef = useRef<any>(null);
+
   useEffect(() => {
     loadTopics();
   }, [speechId]);
+
+  // Clean up speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
+    };
+  }, []);
 
   const loadTopics = async () => {
     setLoading(true);
@@ -87,12 +116,10 @@ export const OverviewPracticeView = ({
       if (error) throw error;
 
       if (existingTopics && existingTopics.length > 0) {
-        // Cast to handle the new columns
         const typedTopics = existingTopics.map(t => ({
           ...t,
           key_words: (t as any).key_words || [],
           key_numbers: (t as any).key_numbers || [],
-          key_phrases: (t as any).key_phrases || [],
         })) as Topic[];
         setTopics(typedTopics);
 
@@ -133,7 +160,6 @@ export const OverviewPracticeView = ({
           ...t,
           key_words: t.key_words || [],
           key_numbers: t.key_numbers || [],
-          key_phrases: t.key_phrases || [],
         })) as Topic[];
         setTopics(typedTopics);
         toast({
@@ -153,14 +179,106 @@ export const OverviewPracticeView = ({
 
   const currentTopic = topics[currentSectionIndex];
 
+  // Real-time fuzzy matching of transcribed words against keywords/numbers
+  const matchTranscription = useCallback((text: string) => {
+    if (!currentTopic) return;
+
+    const words = text.split(/\s+/).map(normalize).filter(Boolean);
+
+    const newMentionedWords: string[] = [];
+    for (const kw of currentTopic.key_words) {
+      const kwNorm = normalize(kw);
+      if (kwNorm.length === 0) continue;
+      for (const word of words) {
+        if (word.length === 0) continue;
+        const maxDist = kwNorm.length <= 3 ? 0 : 2;
+        if (levenshtein(word, kwNorm) <= maxDist) {
+          newMentionedWords.push(kw);
+          break;
+        }
+      }
+    }
+
+    const newMentionedNumbers: string[] = [];
+    for (const kn of currentTopic.key_numbers) {
+      const numParts = kn.match(/\d+[\d.,]*/g);
+      if (!numParts) continue;
+      for (const word of words) {
+        for (const numPart of numParts) {
+          if (word.includes(numPart.replace(/[.,]/g, ''))) {
+            newMentionedNumbers.push(kn);
+            break;
+          }
+        }
+        if (newMentionedNumbers.includes(kn)) break;
+      }
+    }
+
+    setMentionedKeyWords(prev => {
+      const combined = new Set([...prev, ...newMentionedWords]);
+      return Array.from(combined);
+    });
+    setMentionedKeyNumbers(prev => {
+      const combined = new Set([...prev, ...newMentionedNumbers]);
+      return Array.from(combined);
+    });
+  }, [currentTopic]);
+
+  const startRealtimeRecognition = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = speechLanguage === 'sv' ? 'sv-SE' : speechLanguage === 'de' ? 'de-DE' : speechLanguage === 'fr' ? 'fr-FR' : speechLanguage === 'es' ? 'es-ES' : 'en-US';
+
+    recognition.onresult = (event: any) => {
+      let fullText = '';
+      for (let i = 0; i < event.results.length; i++) {
+        fullText += event.results[i][0].transcript + ' ';
+      }
+      matchTranscription(fullText);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.log("Speech recognition error:", event.error);
+    };
+
+    recognition.onend = () => {
+      // Restart if still recording
+      if (recognitionRef.current === recognition) {
+        try { recognition.start(); } catch {}
+      }
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+    } catch (e) {
+      console.log("Could not start speech recognition:", e);
+    }
+  }, [speechLanguage, matchTranscription]);
+
+  const stopRealtimeRecognition = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+  };
+
   const startRecording = () => {
     setPhase('recording');
     setIsRecording(true);
+    setMentionedKeyWords([]);
+    setMentionedKeyNumbers([]);
     audioRecorderRef.current?.startRecording();
+    startRealtimeRecognition();
   };
 
   const stopRecording = () => {
     setIsRecording(false);
+    stopRealtimeRecognition();
     audioRecorderRef.current?.stopRecording();
   };
 
@@ -192,6 +310,9 @@ export const OverviewPracticeView = ({
           return;
         }
 
+        // Final match with full transcription
+        matchTranscription(userTranscription);
+
         // Analyze this specific section
         const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-overview-session', {
           body: {
@@ -202,7 +323,6 @@ export const OverviewPracticeView = ({
               topic_title: currentTopic.topic_title,
               key_words: currentTopic.key_words,
               key_numbers: currentTopic.key_numbers,
-              key_phrases: currentTopic.key_phrases,
             },
             hintLevel,
           },
@@ -221,8 +341,6 @@ export const OverviewPracticeView = ({
             key_words_missed: score.key_words_missed || [],
             numbers_mentioned: score.numbers_mentioned || [],
             numbers_missed: score.numbers_missed || [],
-            phrases_mentioned: score.phrases_mentioned || [],
-            phrases_missed: score.phrases_missed || [],
             feedback: score.feedback || "",
           };
           setCurrentSectionScore(sectionResult);
@@ -243,11 +361,12 @@ export const OverviewPracticeView = ({
 
   const handleNextSection = () => {
     setCurrentSectionScore(null);
+    setMentionedKeyWords([]);
+    setMentionedKeyNumbers([]);
     if (currentSectionIndex < topics.length - 1) {
       setCurrentSectionIndex(prev => prev + 1);
       setPhase('practice');
     } else {
-      // Save full session to DB
       saveSession();
       setPhase('results');
     }
@@ -283,6 +402,8 @@ export const OverviewPracticeView = ({
     setSectionScores([]);
     setCurrentSectionScore(null);
     setCurrentSectionIndex(0);
+    setMentionedKeyWords([]);
+    setMentionedKeyNumbers([]);
     setPhase('practice');
   };
 
@@ -421,10 +542,11 @@ export const OverviewPracticeView = ({
                 topicTitle={currentTopic.topic_title}
                 keyWords={currentTopic.key_words}
                 keyNumbers={currentTopic.key_numbers}
-                keyPhrases={currentTopic.key_phrases}
                 hintLevel={hintLevel}
                 lastScore={currentTopic.last_coverage_score}
                 isActive
+                mentionedKeyWords={mentionedKeyWords}
+                mentionedKeyNumbers={mentionedKeyNumbers}
               />
 
               {/* Explain instruction */}
@@ -471,11 +593,6 @@ export const OverviewPracticeView = ({
                   {currentSectionScore.numbers_missed.length > 0 && (
                     <div className="flex items-start gap-2 text-sm text-yellow-600">
                       ⚠️ {t('overviewMode.missedNumbers')}: {currentSectionScore.numbers_missed.join(", ")}
-                    </div>
-                  )}
-                  {currentSectionScore.phrases_missed.length > 0 && (
-                    <div className="flex items-start gap-2 text-sm text-yellow-600">
-                      ⚠️ {t('overviewMode.missedPhrases')}: {currentSectionScore.phrases_missed.join(", ")}
                     </div>
                   )}
                   {currentSectionScore.feedback && (

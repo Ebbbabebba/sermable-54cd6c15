@@ -14,8 +14,6 @@ interface SectionScore {
   key_words_missed: string[];
   numbers_mentioned: string[];
   numbers_missed: string[];
-  phrases_mentioned: string[];
-  phrases_missed: string[];
   feedback: string;
 }
 
@@ -119,15 +117,6 @@ export const OverviewResults = ({
                     </div>
                   )}
 
-                  {/* Phrases */}
-                  {section.phrases_missed.length > 0 && (
-                    <div className="flex items-start gap-2 text-sm">
-                      <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-muted-foreground">
-                        {t('overviewMode.missedPhrases')}: {section.phrases_missed.join(", ")}
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 {/* AI Feedback */}
