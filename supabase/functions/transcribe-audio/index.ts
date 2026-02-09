@@ -47,8 +47,11 @@ serve(async (req) => {
     const extension = getExtension(audioFormat);
     console.log(`Transcribing ${extension} audio chunk with language: ${audioLanguage}`);
 
+    // Strip data URL prefix if present (e.g. "data:audio/webm;base64,...")
+    const base64Data = audio.includes(',') ? audio.split(',')[1] : audio;
+    
     // Convert base64 to binary
-    const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
+    const binaryAudio = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
     // Prepare form data for Whisper API with correct format
     const formData = new FormData();
