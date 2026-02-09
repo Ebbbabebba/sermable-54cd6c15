@@ -281,7 +281,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         // Extract topics for overview mode
         console.log('🔄 Extracting speech topics for overview mode...');
         const { error: topicError } = await supabase.functions.invoke('extract-speech-topics', {
-          body: { speechId: newSpeech.id }
+          body: { speechId: newSpeech.id, speechText: text, speechLanguage: detectedLanguage }
         });
         if (topicError) {
           console.error('⚠️ Error extracting topics:', topicError);
