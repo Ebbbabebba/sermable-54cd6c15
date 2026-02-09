@@ -11,7 +11,6 @@ interface SectionData {
   topic_title: string;
   key_words: string[];
   key_numbers: string[];
-  key_phrases: string[];
 }
 
 interface SectionScore {
@@ -22,8 +21,6 @@ interface SectionScore {
   key_words_missed: string[];
   numbers_mentioned: string[];
   numbers_missed: string[];
-  phrases_mentioned: string[];
-  phrases_missed: string[];
   feedback: string;
 }
 
@@ -53,14 +50,13 @@ serve(async (req) => {
 
     const sectionData = section as SectionData;
 
-    const systemPrompt = `You are an expert at evaluating how well a speaker covers a specific section of their speech. Analyze the transcription and determine which key words, numbers, and phrases were mentioned. Be generous with matching - accept synonyms, paraphrasing, and approximate mentions. Respond ONLY with valid JSON.`;
+    const systemPrompt = `You are an expert at evaluating how well a speaker covers a specific section of their speech. Analyze the transcription and determine which key words and numbers were mentioned. Be generous with matching - accept synonyms, paraphrasing, and approximate mentions. Respond ONLY with valid JSON.`;
 
     const userPrompt = `Evaluate the following transcription against the expected section content.
 
 SECTION: "${sectionData.topic_title}"
 Expected Key Words: ${JSON.stringify(sectionData.key_words)}
 Expected Key Numbers: ${JSON.stringify(sectionData.key_numbers)}
-Expected Key Phrases: ${JSON.stringify(sectionData.key_phrases)}
 
 SPEAKER'S TRANSCRIPTION:
 """
@@ -70,7 +66,6 @@ ${transcription}
 Rules for matching:
 - A key word is "mentioned" if the speaker used the word, a synonym, or clearly referred to the concept
 - A number is "mentioned" if the speaker said the number or a close approximation
-- A phrase is "mentioned" if the speaker used the phrase or conveyed the same meaning
 - "main_idea_captured" = true if the speaker generally conveyed the section's core message
 
 Respond with this exact JSON format:
@@ -81,9 +76,7 @@ Respond with this exact JSON format:
   "key_words_missed": ["word3"],
   "numbers_mentioned": ["1.5°C"],
   "numbers_missed": ["2030 target"],
-  "phrases_mentioned": [],
-  "phrases_missed": ["tipping point"],
-  "feedback": "Good coverage of the main idea. You missed mentioning the 2030 target and the phrase 'tipping point'."
+  "feedback": "Good coverage of the main idea. You missed mentioning the 2030 target."
 }`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -145,8 +138,6 @@ Respond with this exact JSON format:
         key_words_missed: parsed.key_words_missed || [],
         numbers_mentioned: parsed.numbers_mentioned || [],
         numbers_missed: parsed.numbers_missed || [],
-        phrases_mentioned: parsed.phrases_mentioned || [],
-        phrases_missed: parsed.phrases_missed || [],
         feedback: parsed.feedback || "",
       };
     } catch (e) {

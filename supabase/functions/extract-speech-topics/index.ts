@@ -12,7 +12,6 @@ interface ExtractedTopic {
   key_points: string[];
   key_words: string[];
   key_numbers: string[];
-  key_phrases: string[];
   original_section: string;
 }
 
@@ -38,18 +37,17 @@ serve(async (req) => {
     const isSwedish = speechLanguage === 'sv';
     
     const systemPrompt = isSwedish
-      ? `Du är en expert på att analysera tal och extrahera strukturerade stödord. Din uppgift är att dela upp talet i logiska avsnitt och för varje avsnitt extrahera nyckelord, nyckeltal och nyckelfraser. Svara ENDAST med valid JSON.`
-      : `You are an expert at analyzing speeches and extracting structured support elements. Your task is to divide the speech into logical sections and for each section extract key words, key numbers, and key phrases. Respond ONLY with valid JSON.`;
+      ? `Du är en expert på att analysera tal och extrahera strukturerade stödord. Din uppgift är att dela upp talet i logiska avsnitt och för varje avsnitt extrahera nyckelord och nyckeltal. Svara ENDAST med valid JSON.`
+      : `You are an expert at analyzing speeches and extracting structured support elements. Your task is to divide the speech into logical sections and for each section extract key words and key numbers. Respond ONLY with valid JSON.`;
 
     const userPrompt = isSwedish
       ? `Analysera följande tal och dela upp det i 3-6 logiska avsnitt (t.ex. Inledning, Argument, Avslutning).
 
 För varje avsnitt, extrahera:
 
-1. **key_words** (4-7 st): Korta stödord som representerar kärninnehållet. Enstaka ord eller korta begrepp.
+1. **key_words** (4-7 st): Korta stödord som representerar kärninnehållet. Enstaka ord eller korta begrepp. VIKTIGT: Returnera dem i den ordning de förekommer i taltexten.
 2. **key_numbers** (0-4 st): Viktiga siffror, statistik, datum eller faktaankare. Inkludera enheten. Lämna tom array om inga siffror finns.
-3. **key_phrases** (1-3 st): Korta centrala uttryck - ALDRIG hela meningar. Kraftfulla fraser som fångar kärnan.
-4. **key_points** (2-4 st): Sammanfattande punkter om vad avsnittet handlar om.
+3. **key_points** (2-4 st): Sammanfattande punkter om vad avsnittet handlar om.
 
 Talet:
 """
@@ -64,7 +62,6 @@ Svara med detta exakta JSON-format:
       "topic_title": "Avsnittstitel",
       "key_words": ["stödord1", "stödord2", "stödord3", "stödord4"],
       "key_numbers": ["1.5°C-gränsen", "2030-målet"],
-      "key_phrases": ["vändpunkt", "generationens påverkan"],
       "key_points": ["Sammanfattande punkt 1", "Sammanfattande punkt 2"],
       "original_section": "Exakt text från talet..."
     }
@@ -74,10 +71,9 @@ Svara med detta exakta JSON-format:
 
 For each section, extract:
 
-1. **key_words** (4-7 items): Short support words representing the core content. Single words or short concepts.
+1. **key_words** (4-7 items): Short support words representing the core content. Single words or short concepts. IMPORTANT: Return them in the order they appear in the speech text.
 2. **key_numbers** (0-4 items): Important statistics, dates, or factual anchors. Include the unit. Leave as empty array if no numbers exist.
-3. **key_phrases** (1-3 items): Short central expressions - NEVER full sentences. Powerful phrases that capture the essence.
-4. **key_points** (2-4 items): Summary points about what the section covers.
+3. **key_points** (2-4 items): Summary points about what the section covers.
 
 The speech:
 """
@@ -92,7 +88,6 @@ Respond with this exact JSON format:
       "topic_title": "Section title",
       "key_words": ["keyword1", "keyword2", "keyword3", "keyword4"],
       "key_numbers": ["1.5°C threshold", "2030 target"],
-      "key_phrases": ["tipping point", "generation impact"],
       "key_points": ["Summary point 1", "Summary point 2"],
       "original_section": "The exact text from the speech..."
     }
@@ -181,7 +176,7 @@ Respond with this exact JSON format:
       key_points: topic.key_points || [],
       key_words: topic.key_words || [],
       key_numbers: topic.key_numbers || [],
-      key_phrases: topic.key_phrases || [],
+      key_phrases: [],
       original_section: topic.original_section,
       is_mastered: false,
       practice_count: 0,
