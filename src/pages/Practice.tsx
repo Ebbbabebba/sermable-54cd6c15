@@ -32,6 +32,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
 import DayAfterRecallView from "@/components/DayAfterRecallView";
+import OverviewPracticeView from "@/components/OverviewPracticeView";
 
 import SegmentProgress from "@/components/SegmentProgress";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -45,6 +46,7 @@ interface Speech {
   base_word_visibility_percent: number | null;
   speech_language: string | null;
   next_review_date?: string | null;
+  learning_mode?: string | null;
 }
 
 interface Segment {
@@ -1792,6 +1794,19 @@ const [liveTranscription, setLiveTranscription] = useState("");
   }
 
   if (!speech) return null;
+
+  // General Overview Mode - route to OverviewPracticeView
+  if (speech.learning_mode === 'general_overview') {
+    return (
+      <OverviewPracticeView
+        speechId={speech.id}
+        speechTitle={speech.title}
+        speechText={speech.text_original}
+        speechLanguage={speech.speech_language || 'en'}
+        onBack={() => navigate("/dashboard")}
+      />
+    );
+  }
 
   // Day-After Recall Mode
   if (isDayAfterRecall && !showResults) {
