@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Sparkles, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Sparkles, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1785,6 +1785,27 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
+  const handleSwitchLearningMode = async () => {
+    if (!speech) return;
+    const newMode = speech.learning_mode === 'general_overview' ? 'word_by_word' : 'general_overview';
+    try {
+      const { error } = await supabase
+        .from('speeches')
+        .update({ learning_mode: newMode })
+        .eq('id', speech.id);
+      if (error) throw error;
+      setSpeech({ ...speech, learning_mode: newMode });
+      toast({
+        title: newMode === 'general_overview' 
+          ? t('upload.learningMode.generalOverview') 
+          : t('upload.learningMode.wordByWord'),
+        description: t('upload.learningMode.title'),
+      });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: t('common.error'), description: error.message });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1804,6 +1825,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
         speechText={speech.text_original}
         speechLanguage={speech.speech_language || 'en'}
         onBack={() => navigate("/dashboard")}
+        onSwitchMode={handleSwitchLearningMode}
       />
     );
   }
@@ -2110,6 +2132,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
               </div>
             )}
           </div>
+
+          {/* Learning mode toggle */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSwitchLearningMode}
+            className="gap-2"
+          >
+            <BookOpen className="w-4 h-4" />
+            {t('upload.learningMode.generalOverview')}
+          </Button>
 
           {/* Progress stats - Duolingo style circles */}
           <div className="flex justify-center gap-6">

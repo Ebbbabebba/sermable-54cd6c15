@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mic, Square, Loader2, BookOpen, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { ArrowLeft, Mic, Square, Loader2, BookOpen, Brain, Eye, EyeOff, ChevronRight } from "lucide-react";
 import OverviewTopicCard from "./OverviewTopicCard";
 import OverviewResults from "./OverviewResults";
 import AudioRecorder, { AudioRecorderHandle } from "./AudioRecorder";
@@ -42,6 +42,7 @@ interface OverviewPracticeViewProps {
   speechText: string;
   speechLanguage: string;
   onBack: () => void;
+  onSwitchMode?: () => void;
 }
 
 type Phase = 'read' | 'practice' | 'recording' | 'processing' | 'section-result' | 'results';
@@ -70,6 +71,7 @@ export const OverviewPracticeView = ({
   speechText,
   speechLanguage,
   onBack,
+  onSwitchMode,
 }: OverviewPracticeViewProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -466,12 +468,20 @@ export const OverviewPracticeView = ({
             {t('common.back')}
           </Button>
 
-          {phase !== 'read' && (
-            <Button variant="outline" size="sm" onClick={toggleHintLevel}>
-              {hintLevel === 1 ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
-              {getHintLevelLabel()}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {onSwitchMode && phase === 'read' && (
+              <Button variant="outline" size="sm" onClick={onSwitchMode}>
+                <Brain className="w-4 h-4 mr-2" />
+                {t('upload.learningMode.wordByWord')}
+              </Button>
+            )}
+            {phase !== 'read' && (
+              <Button variant="outline" size="sm" onClick={toggleHintLevel}>
+                {hintLevel === 1 ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
+                {getHintLevelLabel()}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Title */}
