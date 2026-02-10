@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mic, Square, Loader2, BookOpen, Brain, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { ArrowLeft, Mic, Square, Loader2, BookOpen, Brain, Eye, EyeOff, ChevronRight, Settings } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import OverviewTopicCard from "./OverviewTopicCard";
 import OverviewResults from "./OverviewResults";
 import AudioRecorder, { AudioRecorderHandle } from "./AudioRecorder";
@@ -469,18 +470,29 @@ export const OverviewPracticeView = ({
           </Button>
 
           <div className="flex items-center gap-2">
-            {onSwitchMode && phase === 'read' && (
-              <Button variant="outline" size="sm" onClick={onSwitchMode}>
-                <Brain className="w-4 h-4 mr-2" />
-                {t('upload.learningMode.wordByWord')}
-              </Button>
-            )}
             {phase !== 'read' && (
               <Button variant="outline" size="sm" onClick={toggleHintLevel}>
                 {hintLevel === 1 ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
                 {getHintLevelLabel()}
               </Button>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-9 w-9">
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {onSwitchMode && (
+                  <DropdownMenuItem onClick={onSwitchMode} className="gap-2">
+                    <Brain className="w-4 h-4" />
+                    {t('upload.learningMode.wordByWord')}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
