@@ -185,7 +185,8 @@ IMPORTANT:
 - Mention specific words the user struggled with
 - If they said wrong words, explain what happened
 - Consider their pacing - if pace consistency is low, mention it
-- Keep feedback concise and actionable`
+- Keep feedback concise and actionable
+- PROPER NOUNS & NAMES: Names of people, places, organizations (e.g. "Ebba Hallert Djurberg") are often misinterpreted by speech recognition. Treat them with maximum leniency - accept any phonetically similar variation and do NOT penalize for name differences. Just gently correct the name if needed.`
             },
             {
               role: 'user',

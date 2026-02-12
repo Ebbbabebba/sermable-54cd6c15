@@ -67,6 +67,7 @@ Rules for matching:
 - A key word is "mentioned" if the speaker used the word, a synonym, or clearly referred to the concept
 - A number is "mentioned" if the speaker said the number or a close approximation
 - "main_idea_captured" = true if the speaker generally conveyed the section's core message
+- PROPER NOUNS & NAMES: Names of people, places, organizations are often misinterpreted by speech recognition. Accept any phonetically similar variation and do NOT penalize for name differences. Just gently correct if needed.
 
 Respond with this exact JSON format:
 {
