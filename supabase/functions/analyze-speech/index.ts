@@ -263,6 +263,7 @@ ACCEPT AS CORRECT:
 ✅ Filler words: Completely IGNORE "um", "uh", "like", "you know", "I mean" - don't penalize at all
 ✅ Minor word order changes IF natural: "I really think" = "I think really" (accept if meaning unchanged)
 ✅ Common contractions: "cause" = "because", "'em" = "them", "ya" = "you"
+✅ PROPER NOUNS & NAMES: Names of people, places, organizations (e.g. "Ebba Hallert Djurberg", "Stockholm", "UNESCO") should be treated with MAXIMUM LENIENCY. Speech recognition frequently misinterprets names. Accept any phonetically similar variation. If a name was attempted but transcribed differently, mark it as CORRECT. NEVER penalize for name pronunciation differences.
 
 REJECT AS INCORRECT:
 ❌ Semantically different words: "shares" ≠ "chairs", "Alex" ≠ "Ebba", "investment" ≠ "environment", "morning" ≠ "evening"
