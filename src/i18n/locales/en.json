@@ -615,7 +615,7 @@
   },
   "beat_practice": {
     "beat_x_of_y": "Beat {{current}} of {{total}}",
-    "progress": "{{mastered}}/{{total}} beats mastered",
+    "progress": "{{mastered}}/{{total}} beats completed",
     "done_for_today": "Done for today!",
     "done_for_now": "Done for now!",
     "coming_up": "Coming up",
@@ -713,7 +713,7 @@
     "all_complete": "🎉 Speech memorized!",
     "session_done": "Session Complete!",
     "come_back_tomorrow": "Come back tomorrow to reinforce your memory!",
-    "progress": "{{mastered}}/{{total}} beats mastered. Rest and return later!",
+    "progress": "{{mastered}}/{{total}} beats completed. Rest and return later!",
     "sleep_tip": "Sleep consolidates memories better than repetition",
     "no_beats": "No beats found",
     "try_again": "Try again",
