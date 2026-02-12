@@ -341,7 +341,7 @@ const Presentation = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="h-screen bg-background flex items-center justify-center overflow-hidden">
         <div className="text-center">
           <div className="animate-pulse text-muted-foreground">Loading presentation...</div>
         </div>
@@ -354,7 +354,7 @@ const Presentation = () => {
   // Show mode selector
   if (stage === 'mode-select') {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="h-screen bg-background overflow-hidden">
         <div className="absolute top-4 left-4 z-10">
           <Button
             variant="ghost"
