@@ -47,6 +47,8 @@ interface Beat {
   mastered_at: string | null;
   last_recall_at: string | null;
   recall_10min_at: string | null;
+  recall_evening_at: string | null;
+  recall_morning_at: string | null;
   checkpoint_sentence?: number | null;
   checkpoint_phase?: string | null;
   checkpoint_hidden_indices?: number[] | null;
@@ -560,12 +562,39 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         return false;
       });
       
+      // Find mastered beats that need evening recall (recall_evening_at is in the past and not yet recalled after evening time)
+      const beatsNeedingEveningRecall = rows.filter(b => {
+        if (!b.is_mastered || !b.recall_evening_at) return false;
+        // Skip if already in 10-min recall queue
+        if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
+        const recallEveningTime = new Date(b.recall_evening_at);
+        if (recallEveningTime > now) return false;
+        // Check if already recalled after the evening time
+        if (b.last_recall_at && new Date(b.last_recall_at) >= recallEveningTime) return false;
+        return true;
+      });
+      
+      // Find mastered beats that need morning recall (recall_morning_at is in the past and not yet recalled after morning time)
+      const beatsNeedingMorningRecall = rows.filter(b => {
+        if (!b.is_mastered || !b.recall_morning_at) return false;
+        // Skip if already in other recall queues
+        if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
+        if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
+        const recallMorningTime = new Date(b.recall_morning_at);
+        if (recallMorningTime > now) return false;
+        // Check if already recalled after the morning time
+        if (b.last_recall_at && new Date(b.last_recall_at) >= recallMorningTime) return false;
+        return true;
+      });
+      
       // Find mastered beats that need regular daily recall (only on new days)
       const masteredBeats = rows.filter(b => b.is_mastered && b.mastered_at);
       const beatsNeedingDailyRecall = todayIsNewDay 
         ? masteredBeats.filter(b => {
-            // Skip if already in 10-min recall queue
+            // Skip if already in any recall queue
             if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
+            if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
+            if (beatsNeedingMorningRecall.some(r => r.id === b.id)) return false;
             // Need recall if: never recalled today
             if (!b.last_recall_at) return true;
             const lastRecall = new Date(b.last_recall_at);
@@ -573,8 +602,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           })
         : [];
       
-      // Combine: 10-minute recalls first, then daily recalls
-      const allBeatsNeedingRecall = [...beatsNeeding10MinRecall, ...beatsNeedingDailyRecall];
+      // Combine: 10-minute recalls first, then evening, then morning, then daily recalls
+      const allBeatsNeedingRecall = [...beatsNeeding10MinRecall, ...beatsNeedingEveningRecall, ...beatsNeedingMorningRecall, ...beatsNeedingDailyRecall];
       
       // Find unmastered beats
       const unmasteredBeats = rows.filter(b => !b.is_mastered);
@@ -585,6 +614,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         mastered: masteredBeats.length,
         unmastered: unmasteredCount,
         beatsNeeding10MinRecall: beatsNeeding10MinRecall.length,
+        beatsNeedingEveningRecall: beatsNeedingEveningRecall.length,
+        beatsNeedingMorningRecall: beatsNeedingMorningRecall.length,
         beatsNeedingDailyRecall: beatsNeedingDailyRecall.length,
         firstUnmasteredBeatOrder: unmasteredBeats[0]?.beat_order,
       });
@@ -617,11 +648,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Track if we're starting with 10-min recalls
       setIs10MinRecall(beatsNeeding10MinRecall.length > 0);
       
-      // Determine starting mode - prioritize 10-minute recall
+      // Determine starting mode - prioritize recalls by type
       if (allBeatsNeedingRecall.length > 0) {
         setSessionMode('recall');
         setRecallIndex(0);
-        console.log('⏰ Starting recall mode:', beatsNeeding10MinRecall.length > 0 ? '10-MINUTE RECALL' : 'daily recall');
+        const recallType = beatsNeeding10MinRecall.length > 0 ? '10-MINUTE RECALL' 
+          : beatsNeedingEveningRecall.length > 0 ? 'EVENING RECALL'
+          : beatsNeedingMorningRecall.length > 0 ? 'MORNING RECALL'
+          : 'daily recall';
+        console.log('⏰ Starting recall mode:', recallType);
         initializeRecallMode();
       } else if (firstUnmastered) {
         // Check if there's a saved checkpoint for this beat - resume directly if so
@@ -1659,20 +1694,48 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (currentBeat) {
       console.log('🏆 Marking beat as mastered:', currentBeat.id);
       
-      // Calculate 10-minute recall time
-      const recall10minAt = new Date(Date.now() + 10 * 60 * 1000);
+      // Calculate recall timestamps for spaced repetition
+      const now = new Date();
+      const recall10minAt = new Date(now.getTime() + 10 * 60 * 1000);
+      
+      // Evening recall: same day at 8 PM (or 2+ hours later if mastered after 6 PM)
+      const eveningTarget = new Date(now);
+      eveningTarget.setHours(20, 0, 0, 0); // 8 PM today
+      let recallEveningAt: Date;
+      if (now.getHours() >= 18) {
+        // Mastered after 6 PM - schedule 2 hours from now
+        recallEveningAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      } else if (now.getHours() >= 20) {
+        // Already past 8 PM - schedule for tomorrow morning instead (skip evening)
+        recallEveningAt = eveningTarget; // Will be in the past, won't trigger
+      } else {
+        recallEveningAt = eveningTarget;
+      }
+      
+      // Morning recall: next day at 7 AM
+      const recallMorningAt = new Date(now);
+      recallMorningAt.setDate(recallMorningAt.getDate() + 1);
+      recallMorningAt.setHours(7, 0, 0, 0);
+      
+      console.log('📅 Scheduling recalls:', {
+        '10min': recall10minAt.toISOString(),
+        'evening': recallEveningAt.toISOString(),
+        'morning': recallMorningAt.toISOString(),
+      });
       
       const { error: updateError } = await supabase
         .from('practice_beats')
         .update({ 
           is_mastered: true, 
-          mastered_at: new Date().toISOString(),
-          // Schedule 10-minute recall
+          mastered_at: now.toISOString(),
+          // Schedule recalls
           recall_10min_at: recall10minAt.toISOString(),
+          recall_evening_at: recallEveningAt.toISOString(),
+          recall_morning_at: recallMorningAt.toISOString(),
           // Advance stage: day1_sentences → day2_beats (for next day's practice)
           practice_stage: 'day2_beats',
           words_hidden_per_round: 2,
-          stage_started_at: new Date().toISOString(),
+          stage_started_at: now.toISOString(),
           consecutive_perfect_recalls: 0,
           // Clear checkpoint since beat is now mastered
           checkpoint_sentence: null,
@@ -1736,7 +1799,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Update local state so the completion screen shows correct count
       const updatedBeats = beats.map(b => 
         b.id === currentBeat.id 
-          ? { ...b, is_mastered: true, mastered_at: new Date().toISOString(), recall_10min_at: recall10minAt.toISOString() }
+          ? { ...b, is_mastered: true, mastered_at: now.toISOString(), recall_10min_at: recall10minAt.toISOString(), recall_evening_at: recallEveningAt.toISOString(), recall_morning_at: recallMorningAt.toISOString() }
           : b
       );
       setBeats(updatedBeats);
