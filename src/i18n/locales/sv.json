@@ -761,7 +761,7 @@
   },
   "beat_practice": {
     "learned": "Inlärda",
-    "progress": "{{mastered}}/{{total}} beats inlärda",
+    "progress": "{{mastered}}/{{total}} beats genomgångna",
     "done_for_today": "Klart för idag!",
     "done_for_now": "Klart för nu!",
     "coming_up": "Nästa",
