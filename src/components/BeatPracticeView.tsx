@@ -66,11 +66,11 @@ type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning'
 // Session modes: recall (quick review of mastered beats), learn (learning a new beat), beat_rest (pause between beats), pre_beat_recall (recall previous beat before learning new), beat_preview (preview upcoming beat before learning)
 type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'pre_beat_recall' | 'beat_preview' | 'session_complete';
 
-// Calculate rest minutes based on deadline urgency
-const calculateRestMinutes = (daysUntilDeadline: number): number => {
-  if (daysUntilDeadline <= 1) return 5;    // Very tight: 5 min
-  if (daysUntilDeadline <= 3) return 10;   // Tight: 10 min
-  return 15;                                // Normal: 15 min
+// Always 10 minutes coffee break after mastering a beat
+// Follows spaced repetition: short break helps consolidation
+// After the break, a quick recall of the just-mastered beat is triggered automatically
+const calculateRestMinutes = (_daysUntilDeadline: number): number => {
+  return 10; // Always 10 minutes coffee break
 };
 
 // Countdown timer component for rest screen
@@ -2154,11 +2154,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         </motion.div>
         
         <h2 className="text-2xl font-bold">
-          {t('beat_practice.rest_title', "Take a short break!")}
+          {t('beat_practice.rest_title', "☕ Coffee Break!")}
         </h2>
         
         <p className="text-muted-foreground max-w-md">
-          {t('beat_practice.rest_reason', "Your brain needs a few minutes to consolidate what you just learned.")}
+          {t('beat_practice.rest_reason', "Take a 10-minute break to let your brain consolidate. After the break, you'll do a quick review of what you just learned.")}
         </p>
         
         {/* Countdown timer */}
@@ -2174,7 +2174,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             {t('beat_practice.rest_tip', "Tip: Take a short walk or grab a coffee!")}
           </p>
           <p className="text-sm text-muted-foreground">
-            {t('beat_practice.beats_remaining', `${beatsRemaining} beat${beatsRemaining !== 1 ? 's' : ''} remaining today`)}
+            {t('beat_practice.rest_recall_info', "After the break: quick recall → then next beat")}
           </p>
         </div>
         
