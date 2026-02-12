@@ -2051,7 +2051,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const hasBeats = totalBeats > 0;
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-auto">
       <LoadingOverlay isVisible={isProcessing} />
       
       {/* Duolingo-style header with progress bar */}
