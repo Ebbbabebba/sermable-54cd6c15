@@ -2215,7 +2215,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                         ? (nextReviewDate 
                             ? <span className="flex items-center gap-1">
                                 <Clock className="h-3.5 w-3.5" />
-                                {t('beat_practice.come_back_in', "Come back in")} <LockCountdown nextReviewDate={nextReviewDate} />
+                                {t('beat_practice.come_back_in', "Come back in {{time}}", { time: '' })}<LockCountdown nextReviewDate={nextReviewDate} />
                               </span>
                             : t('beat_practice.come_back_later'))
                         : masteredBeats > 0 
