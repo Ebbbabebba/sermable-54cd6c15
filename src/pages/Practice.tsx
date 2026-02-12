@@ -1809,7 +1809,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center overflow-hidden">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
@@ -1834,7 +1834,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Day-After Recall Mode
   if (isDayAfterRecall && !showResults) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* Minimal header with exit */}
         <header className="flex items-center justify-between p-4 border-b border-border/50">
           <Button
@@ -1876,7 +1876,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Focus Mode: Beat-based sentence-by-sentence practice
   if (isPracticing && !showResults) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* Minimal header with exit */}
         <header className="flex items-center justify-between p-4 border-b border-border/50">
           <Button
@@ -1938,7 +1938,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Analysis screen: Clean, minimal results view
   if (showResults && sessionResults) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="h-screen bg-background overflow-hidden">
         <LoadingOverlay isVisible={isProcessing} />
         
         {/* Exit button */}
@@ -2051,7 +2051,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const hasBeats = totalBeats > 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <LoadingOverlay isVisible={isProcessing} />
       
       {/* Duolingo-style header with progress bar */}
