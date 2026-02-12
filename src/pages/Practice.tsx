@@ -2104,6 +2104,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
               >
                 <Presentation className="h-4 w-4" />
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSwitchLearningMode} className="gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    {t('upload.learningMode.generalOverview')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -2133,23 +2148,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
               </div>
             )}
           </div>
-
-          {/* Settings dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9">
-                <Settings className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSwitchLearningMode} className="gap-2">
-                <BookOpen className="w-4 h-4" />
-                {t('upload.learningMode.generalOverview')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           {/* Progress stats - Duolingo style circles */}
           <div className="flex justify-center gap-6">
