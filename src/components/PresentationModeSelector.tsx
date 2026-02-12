@@ -42,7 +42,7 @@ export const PresentationModeSelector = ({
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Strict Mode */}
             <Card className="p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group"
                   onClick={() => onSelectMode('strict')}>
@@ -105,42 +105,6 @@ export const PresentationModeSelector = ({
 
                 <Button className="w-full mt-3" size="sm" variant="secondary">
                   {t('presentationMode.selectFullScript')}
-                </Button>
-              </div>
-            </Card>
-
-            {/* General Overview Mode */}
-            <Card 
-              className="p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group relative overflow-hidden"
-              onClick={onSelectOverviewMode}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              
-              <div className="space-y-4 relative">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <BookOpen className="w-6 h-6 text-primary" />
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-bold mb-1">{t('presentationMode.overviewMode')}</h3>
-                  <p className="text-muted-foreground text-xs mb-3">
-                    {t('presentationMode.overviewModeDesc')}
-                  </p>
-                </div>
-
-                <ul className="space-y-1.5 text-xs text-muted-foreground">
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span>{t('presentationMode.topicBased')}</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
-                    <span>{t('presentationMode.speakNaturally')}</span>
-                  </li>
-                </ul>
-
-                <Button className="w-full mt-3" size="sm" variant="secondary">
-                  {t('presentationMode.selectOverview')}
                 </Button>
               </div>
             </Card>
