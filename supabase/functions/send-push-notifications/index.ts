@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
 
     console.log('Fetching users with due reviews...');
     
-    // Get all users with due reviews
+    // Get all users with due reviews (speech-level)
     const { data: usersWithDueReviews, error } = await supabase
       .rpc('get_users_with_due_reviews');
 
@@ -112,10 +112,109 @@ Deno.serve(async (req) => {
     }
 
     console.log(`Found ${usersWithDueReviews?.length || 0} users with due reviews`);
+    
+    // Also check for beat-level evening/morning recalls
+    const now = new Date().toISOString();
+    const { data: beatRecalls, error: beatError } = await supabase
+      .from('practice_beats')
+      .select(`
+        id,
+        beat_order,
+        recall_evening_at,
+        recall_morning_at,
+        last_recall_at,
+        speech_id,
+        speeches!inner(user_id, title)
+      `)
+      .eq('is_mastered', true)
+      .or(`recall_evening_at.lte.${now},recall_morning_at.lte.${now}`)
+      .not('recall_evening_at', 'is', null);
+    
+    if (beatError) {
+      console.error('Error fetching beat recalls:', beatError);
+    }
+    
+    // Filter beat recalls that haven't been recalled yet
+    const pendingBeatRecalls = (beatRecalls || []).filter((beat: any) => {
+      const lastRecall = beat.last_recall_at ? new Date(beat.last_recall_at) : null;
+      
+      // Check evening recall
+      if (beat.recall_evening_at) {
+        const eveningTime = new Date(beat.recall_evening_at);
+        if (eveningTime <= new Date(now) && (!lastRecall || lastRecall < eveningTime)) {
+          return true;
+        }
+      }
+      
+      // Check morning recall
+      if (beat.recall_morning_at) {
+        const morningTime = new Date(beat.recall_morning_at);
+        if (morningTime <= new Date(now) && (!lastRecall || lastRecall < morningTime)) {
+          return true;
+        }
+      }
+      
+      return false;
+    });
+    
+    console.log(`Found ${pendingBeatRecalls.length} beats needing evening/morning recall`);
+    
+    // Group beat recalls by user
+    const beatRecallsByUser = new Map<string, { type: 'evening' | 'morning'; speechTitle: string }[]>();
+    for (const beat of pendingBeatRecalls) {
+      const speech = (beat as any).speeches;
+      if (!speech) continue;
+      const userId = speech.user_id;
+      if (!beatRecallsByUser.has(userId)) {
+        beatRecallsByUser.set(userId, []);
+      }
+      
+      const lastRecall = beat.last_recall_at ? new Date(beat.last_recall_at) : null;
+      const isEvening = beat.recall_evening_at && new Date(beat.recall_evening_at) <= new Date(now) && (!lastRecall || lastRecall < new Date(beat.recall_evening_at));
+      
+      beatRecallsByUser.get(userId)!.push({
+        type: isEvening ? 'evening' : 'morning',
+        speechTitle: speech.title,
+      });
+    }
+    
+    // Send beat recall notifications
+    for (const [userId, recalls] of beatRecallsByUser.entries()) {
+      // Get user's push token
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('push_token, push_platform')
+        .eq('id', userId)
+        .eq('notifications_enabled', true)
+        .not('push_token', 'is', null)
+        .single();
+      
+      if (!profile) continue;
+      
+      const isEvening = recalls.some(r => r.type === 'evening');
+      const speechTitles = [...new Set(recalls.map(r => r.speechTitle))];
+      
+      const title = isEvening 
+        ? '🌙 Evening Review Time!'
+        : '☀️ Morning Memory Test!';
+      
+      const body = isEvening
+        ? `Time for a quick evening review of "${speechTitles[0]}". Sleep will lock it into memory!`
+        : `Your brain consolidated overnight. Quick recall of "${speechTitles[0]}" now for maximum retention!`;
+      
+      const notificationData = {
+        type: isEvening ? 'evening_recall' : 'morning_recall',
+        user_id: userId,
+      };
+      
+      if (profile.push_platform === 'ios' || profile.push_platform === 'android') {
+        await sendFCMNotification(profile.push_token, title, body, notificationData);
+      }
+    }
 
     const results = [];
 
-    // Send notifications to each user
+    // Send speech-level notifications to each user
     for (const user of (usersWithDueReviews as UserWithDueReviews[] || [])) {
       const title = user.due_count === 1 
         ? '📝 Speech Review Due!'

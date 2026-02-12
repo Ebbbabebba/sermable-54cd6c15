@@ -34,53 +34,80 @@ const SleepAwareScheduling = () => {
       }
 
       const hour = new Date().getHours();
+      const now = new Date();
       
-      // Get user's speeches with upcoming deadlines
-      const { data: speeches } = await supabase
-        .from("speeches")
-        .select("id, title, goal_date, last_practice_session_at")
-        .order("goal_date", { ascending: true })
-        .limit(5);
-
-      if (!speeches || speeches.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // Check for last evening practice (stored in localStorage)
-      const lastEveningPractice = localStorage.getItem('last-evening-practice');
-      const lastEveningData = lastEveningPractice ? JSON.parse(lastEveningPractice) : null;
-      
-      // ONLY show morning recall prompt - user is already in app to practice otherwise
-      // Morning time (6 AM - 10 AM) - Suggest morning recall if practiced last night
-      if (hour >= 6 && hour < 10 && lastEveningData) {
-        const lastPracticeDate = new Date(lastEveningData.timestamp);
-        const today = new Date();
+      // Check for beats needing morning recall from the database
+      if (hour >= 6 && hour < 10) {
+        const { data: morningRecallBeats } = await supabase
+          .from('practice_beats')
+          .select(`
+            id,
+            beat_order,
+            recall_morning_at,
+            last_recall_at,
+            speech_id,
+            speeches!inner(id, title)
+          `)
+          .eq('is_mastered', true)
+          .not('recall_morning_at', 'is', null)
+          .lte('recall_morning_at', now.toISOString());
         
-        // Check if practiced last evening (within last 12 hours)
-        const hoursSinceEvening = (today.getTime() - lastPracticeDate.getTime()) / (1000 * 60 * 60);
+        // Filter to those not yet recalled after morning time
+        const pendingMorningRecalls = (morningRecallBeats || []).filter((beat: any) => {
+          const morningTime = new Date(beat.recall_morning_at);
+          if (!beat.last_recall_at) return true;
+          return new Date(beat.last_recall_at) < morningTime;
+        });
         
-        if (hoursSinceEvening < 14 && hoursSinceEvening > 4) {
-          // Find the speech they practiced
-          const practicedSpeech = speeches.find(s => s.id === lastEveningData.speechId);
+        if (pendingMorningRecalls.length > 0) {
+          const firstBeat = pendingMorningRecalls[0] as any;
+          const speechTitle = firstBeat.speeches?.title || 'your speech';
+          const speechId = firstBeat.speech_id;
           
-          if (practicedSpeech) {
-            setSuggestion({
-              type: 'morning_recall',
-              speechId: practicedSpeech.id,
-              speechTitle: practicedSpeech.title,
-              message: t('sleepScheduling.morningRecall', 'Morning Memory Test'),
-              subMessage: t('sleepScheduling.morningRecallDesc', 'Your brain consolidated memories overnight. Test your recall of "{{title}}" now for maximum retention!', { title: practicedSpeech.title }),
-              icon: 'sun'
-            });
-            setLoading(false);
-            return;
-          }
+          setSuggestion({
+            type: 'morning_recall',
+            speechId: speechId,
+            speechTitle: speechTitle,
+            message: t('sleepScheduling.morningRecall', 'Morning Memory Test'),
+            subMessage: t('sleepScheduling.morningRecallDesc', 'Your brain consolidated memories overnight. Test your recall of "{{title}}" now for maximum retention!', { title: speechTitle }),
+            icon: 'sun'
+          });
+          setLoading(false);
+          return;
         }
       }
       
-      // For all other times - no in-app suggestions needed
-      // Evening reminders will be sent via push notifications instead
+      // Fallback: check localStorage for evening practice (legacy support)
+      if (hour >= 6 && hour < 10) {
+        const lastEveningPractice = localStorage.getItem('last-evening-practice');
+        const lastEveningData = lastEveningPractice ? JSON.parse(lastEveningPractice) : null;
+        
+        if (lastEveningData) {
+          const lastPracticeDate = new Date(lastEveningData.timestamp);
+          const hoursSinceEvening = (now.getTime() - lastPracticeDate.getTime()) / (1000 * 60 * 60);
+          
+          if (hoursSinceEvening < 14 && hoursSinceEvening > 4) {
+            const { data: speeches } = await supabase
+              .from("speeches")
+              .select("id, title")
+              .eq('id', lastEveningData.speechId)
+              .single();
+            
+            if (speeches) {
+              setSuggestion({
+                type: 'morning_recall',
+                speechId: speeches.id,
+                speechTitle: speeches.title,
+                message: t('sleepScheduling.morningRecall', 'Morning Memory Test'),
+                subMessage: t('sleepScheduling.morningRecallDesc', 'Your brain consolidated memories overnight. Test your recall of "{{title}}" now for maximum retention!', { title: speeches.title }),
+                icon: 'sun'
+              });
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      }
 
       setLoading(false);
     } catch (error) {
