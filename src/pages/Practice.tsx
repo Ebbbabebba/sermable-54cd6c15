@@ -2384,15 +2384,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </main>
 
       {/* Fixed bottom CTA - Duolingo style */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-gradient-to-t from-background via-background to-transparent">
-        <div className="max-w-md mx-auto">
-          {todaySessionDone ? (
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => navigate('/dashboard')}
-              className="w-full h-14 rounded-2xl text-lg font-bold border-green-500/30 text-green-600 hover:bg-green-500/10"
-            >
+        <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-background">
+          <div className="max-w-md mx-auto">
+            {todaySessionDone ? (
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/dashboard')}
+                className="w-full h-14 rounded-2xl text-lg font-bold border-green-500/30 text-green-600 hover:bg-green-500/10 bg-background"
+              >
               <CheckCircle2 className="h-5 w-5 mr-2" />
               {nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
                 ? t('beat_practice.done_for_now', "Done for now!")
