@@ -31,7 +31,7 @@ export const PresentationModeSelector = ({
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5 overflow-hidden">
         <div className="w-full max-w-5xl space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
