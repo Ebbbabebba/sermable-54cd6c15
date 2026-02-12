@@ -700,12 +700,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             setCurrentBeatIndex(rows.findIndex(b => b.id === firstUnmastered.id));
           }
         }
+      } else if (masteredBeats.length > 0) {
+        // All beats completed - start a recall/practice session on the first beat
+        console.log('🔄 All beats completed - starting recall practice on first beat');
+        const beatToRecall = masteredBeats.sort((a, b) => a.beat_order - b.beat_order)[0];
+        setBeatsToRecall([beatToRecall]);
+        setSessionMode('recall');
+        setRecallIndex(0);
+        setCurrentBeatIndex(rows.findIndex(b => b.id === beatToRecall.id));
+        initializeRecallMode();
       } else {
-        // Either all mastered, or already learned today's quota (free user)
-        // For free users hitting limit, notify parent to show upsell
-        if (!isPremium && unmasteredCount > 0) {
-          onSessionLimitReached?.();
-        }
+        // No beats at all
         setSessionMode('session_complete');
       }
     };
@@ -1828,7 +1833,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setNextBeatQueued(nextUnmastered);
         setBeatToRecallBeforeNext(justMasteredBeat); // Save for recall after rest
         
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_rest', "Beat mastered! Take a short break."));
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_rest', "Beat complete! Take a short break."));
         setShowCelebration(true);
         
         setTimeout(() => {
@@ -1837,7 +1842,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 2000);
       } else {
         // Session complete: either daily limit reached OR all beats mastered
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat mastered! Session complete."));
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat complete! Session done."));
         setShowCelebration(true);
         
         setTimeout(() => {
@@ -2260,12 +2265,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         <Medal className="h-20 w-20 text-primary animate-pulse" />
         <h2 className="text-2xl font-bold">
           {allMastered 
-            ? t('beat_practice.all_mastered', "🎉 All beats mastered!")
+            ? t('beat_practice.all_completed', "🎉 All beats completed!")
             : t('beat_practice.session_complete', "Session Complete!")}
         </h2>
         <p className="text-muted-foreground max-w-md">
           {allMastered 
-            ? t('beat_practice.poem_memorized', "You've memorized the entire poem! Practice again tomorrow to reinforce.")
+            ? t('beat_practice.all_completed_desc', "Great work! Practice again later to reinforce your memory.")
             : masteredCount === 0
               ? t('beat_practice.no_beats_yet', { total: totalBeats, defaultValue: `You have ${totalBeats} beats to learn. Complete all phases of a beat to mark it as mastered!` })
               : t('beat_practice.come_back', { current: masteredCount, total: totalBeats, defaultValue: `You've mastered ${masteredCount}/${totalBeats} beats. Come back in a few hours to learn the next one!` })}
