@@ -760,7 +760,7 @@
     "use_chrome": "Taligenkänning kräver Chrome eller Safari."
   },
   "beat_practice": {
-    "learned": "Inlärda",
+    "learned": "Genomgångna",
     "progress": "{{mastered}}/{{total}} beats genomgångna",
     "done_for_today": "Klart för idag!",
     "done_for_now": "Klart för nu!",

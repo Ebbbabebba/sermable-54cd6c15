@@ -2191,7 +2191,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             const showSessionComplete = todaySessionDone;
             
             return (
-              <div className="bg-card rounded-3xl border border-border p-6 space-y-4">
+              <div className="bg-background rounded-3xl border border-border p-6 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${showSessionComplete ? 'bg-green-500/10' : 'bg-primary/10'}`}>
                     {showSessionComplete ? (
