@@ -219,16 +219,7 @@ const Dashboard = () => {
     setShowPremiumDialog(true);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground text-sm">{t('dashboard.loading')}</p>
-        </div>
-      </div>
-    );
-  }
+  // No full-screen loading blocker — show the shell immediately
 
   return (
     <div className="min-h-screen bg-background">
@@ -412,7 +403,20 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {speeches.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[1, 2, 3].map(i => (
+                  <Card key={i} className="border-0 shadow-apple-xl animate-pulse">
+                    <CardContent className="p-6 space-y-4">
+                      <div className="h-5 bg-muted rounded w-3/4" />
+                      <div className="h-4 bg-muted rounded w-1/2" />
+                      <div className="h-3 bg-muted rounded w-full" />
+                      <div className="h-3 bg-muted rounded w-2/3" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : speeches.length === 0 ? (
               <Card className="border-0 shadow-apple-xl animate-fade-in">
                 <CardContent className="py-16 text-center">
                   <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
