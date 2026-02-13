@@ -249,17 +249,21 @@ export const StrictPresentationView = ({
       const silenceDuration = Date.now() - lastProgressTime.current;
       const currentWord = words[currentWordIndex];
       
-      // Show "try" prompt after 1.5s of silence
-      if (silenceDuration >= 1500 && !showHint) {
+      // Detect if this is the first word of a sentence
+      const isSentenceStart = currentWordIndex === 0 || /[.!?]$/.test(words[currentWordIndex - 1]);
+      const effectiveDelay = isSentenceStart ? 4000 : 2000;
+      
+      // Show "try" prompt at 60% of the delay
+      const tryDelay = Math.round(effectiveDelay * 0.6);
+      if (silenceDuration >= tryDelay && !showHint) {
         setShowHint({ word: currentWord, phase: "trying" });
       }
       
-      // Show full word after 3s (or 1s if user made wrong attempt)
-      const showWordDelay = wrongAttempts.current.length > 0 ? 1000 : 3000;
+      // Show full word after effective delay (or faster if wrong attempt)
+      const showWordDelay = wrongAttempts.current.length > 0 ? Math.round(effectiveDelay * 0.5) : effectiveDelay;
       if (silenceDuration >= showWordDelay && showHint?.phase === "trying") {
         setShowHint({ word: currentWord, phase: "showing" });
         
-        // Mark as prompted
         setWordPerformance(prev => {
           const existing = prev.find(p => p.index === currentWordIndex);
           if (existing) {

@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
 interface PresentationControlsProps {
-  pauseThreshold: number;
-  setPauseThreshold: (value: number) => void;
+  hintDelay: number;
+  setHintDelay: (value: number) => void;
+  sentenceStartDelay: number;
+  setSentenceStartDelay: (value: number) => void;
   autoReveal: boolean;
   setAutoReveal: (value: boolean) => void;
   fontSize: number;
@@ -17,8 +19,10 @@ interface PresentationControlsProps {
 }
 
 const PresentationControls = ({
-  pauseThreshold,
-  setPauseThreshold,
+  hintDelay,
+  setHintDelay,
+  sentenceStartDelay,
+  setSentenceStartDelay,
   autoReveal,
   setAutoReveal,
   fontSize,
@@ -28,7 +32,7 @@ const PresentationControls = ({
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 flex items-start justify-center pt-20">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex items-start justify-center pt-20">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -46,25 +50,47 @@ const PresentationControls = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Pause Threshold */}
+          {/* Word Hint Delay */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="pause-threshold">{t('presentation.pauseDetection')}</Label>
+              <Label htmlFor="hint-delay">Word hint delay</Label>
               <span className="text-sm text-muted-foreground">
-                {(pauseThreshold / 1000).toFixed(1)}s
+                {(hintDelay / 1000).toFixed(1)}s
               </span>
             </div>
             <Slider
-              id="pause-threshold"
-              min={2000}
-              max={8000}
+              id="hint-delay"
+              min={1000}
+              max={5000}
               step={500}
-              value={[pauseThreshold]}
-              onValueChange={(value) => setPauseThreshold(value[0])}
+              value={[hintDelay]}
+              onValueChange={(value) => setHintDelay(value[0])}
               className="w-full"
             />
             <p className="text-xs text-muted-foreground">
-              {t('presentation.howLongToWait')}
+              How long before a forgotten word appears
+            </p>
+          </div>
+
+          {/* Sentence Start Delay */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sentence-delay">Sentence start delay</Label>
+              <span className="text-sm text-muted-foreground">
+                {(sentenceStartDelay / 1000).toFixed(1)}s
+              </span>
+            </div>
+            <Slider
+              id="sentence-delay"
+              min={2000}
+              max={8000}
+              step={500}
+              value={[sentenceStartDelay]}
+              onValueChange={(value) => setSentenceStartDelay(value[0])}
+              className="w-full"
+            />
+            <p className="text-xs text-muted-foreground">
+              Extra time for the first word of a new sentence
             </p>
           </div>
 
@@ -100,18 +126,6 @@ const PresentationControls = ({
               onValueChange={(value) => setFontSize(value[0])}
               className="w-full"
             />
-          </div>
-
-          {/* Instructions */}
-          <div className="pt-4 border-t border-border">
-            <h4 className="text-sm font-semibold mb-2">{t('presentation.quickTips')}</h4>
-            <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• {t('presentation.tip1')}</li>
-              <li>• {t('presentation.tip2')}</li>
-              <li>• {t('presentation.tip3')}</li>
-              <li>• {t('presentation.tip4')}</li>
-              <li>• {t('presentation.tip5')}</li>
-            </ul>
           </div>
         </CardContent>
       </Card>

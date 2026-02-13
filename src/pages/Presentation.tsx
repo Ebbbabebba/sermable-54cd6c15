@@ -4,12 +4,13 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { X, Play } from "lucide-react";
+import { X, Play, Settings } from "lucide-react";
 import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
 import OverviewPracticeView from "@/components/OverviewPracticeView";
+import PresentationControls from "@/components/PresentationControls";
 
 import { AudienceOverlay } from "@/components/audience";
 import type { ViewMode } from "@/components/WearableHUD";
@@ -64,6 +65,9 @@ const Presentation = () => {
   // Settings
   const [autoStopSilence, setAutoStopSilence] = useState(4);
   const [fontSize, setFontSize] = useState(40);
+  const [showSettings, setShowSettings] = useState(false);
+  const [hintDelay, setHintDelay] = useState(2000);
+  const [sentenceStartDelay, setSentenceStartDelay] = useState(4000);
   
   // Results
   const [sessionResults, setSessionResults] = useState<any>(null);
@@ -421,9 +425,19 @@ const Presentation = () => {
 
   // Show prep screen (for strict mode)
   if (stage === 'prep') {
-    const modeLabel = 'Strict';
     return (
       <div className="min-h-screen bg-background p-8">
+        {/* Settings gear button */}
+        <div className="absolute top-4 right-4 z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowSettings(true)}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
+
         <div className="max-w-2xl mx-auto space-y-6">
           <Button
             variant="ghost"
@@ -437,58 +451,23 @@ const Presentation = () => {
           <div className="space-y-2">
             <h1 className="text-4xl font-bold capitalize">{speech.title}</h1>
             <p className="text-muted-foreground">
-              {modeLabel} Mode • {speech.text_original.split(/\s+/).length} words
+              Strict Mode • {speech.text_original.split(/\s+/).length} words
             </p>
           </div>
 
-          <div className="p-6 bg-muted/30 rounded-lg space-y-4">
-            <h3 className="font-semibold text-lg">Settings</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Auto-stop after silence</label>
-                <div className="flex items-center gap-4 mt-2">
-                  <input
-                    type="range"
-                    min="2"
-                    max="8"
-                    value={autoStopSilence}
-                    onChange={(e) => setAutoStopSilence(parseInt(e.target.value))}
-                    className="flex-1"
-                  />
-                  <span className="text-sm text-muted-foreground w-12">{autoStopSilence}s</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Text size</label>
-                <div className="flex items-center gap-4 mt-2">
-                  <input
-                    type="range"
-                    min="24"
-                    max="56"
-                    value={fontSize}
-                    onChange={(e) => setFontSize(parseInt(e.target.value))}
-                    className="flex-1"
-                  />
-                  <span className="text-sm text-muted-foreground w-12">{fontSize}px</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 bg-primary/5 rounded-lg border border-primary/20 space-y-2">
-            <h4 className="font-semibold">How it works:</h4>
-            <ul className="text-sm space-y-1 text-muted-foreground">
-              <li>• Keywords will be shown to guide you</li>
-              <li>• Speak naturally - no feedback while presenting</li>
-              <li>• Auto-stops after {autoStopSilence}s of silence</li>
-              <li>• Get detailed analysis when you're done</li>
+          <div className="p-6 bg-primary/5 rounded-lg border border-primary/20 space-y-3">
+            <h4 className="font-semibold text-lg">How it works</h4>
+            <ul className="text-sm space-y-2 text-muted-foreground">
+              <li>• Speak your speech from memory</li>
+              <li>• Forgotten words appear after {(hintDelay / 1000).toFixed(1)}s of hesitation</li>
+              <li>• First word of a new sentence gets {(sentenceStartDelay / 1000).toFixed(1)}s extra time</li>
+              <li>• Get detailed analysis when you finish</li>
             </ul>
           </div>
 
           <Button
-            size="lg"
+            size="xl"
+            variant="apple"
             onClick={handleStartPresentation}
             className="w-full"
           >
@@ -496,6 +475,21 @@ const Presentation = () => {
             Start Presentation
           </Button>
         </div>
+
+        {/* Settings overlay */}
+        {showSettings && (
+          <PresentationControls
+            hintDelay={hintDelay}
+            setHintDelay={setHintDelay}
+            sentenceStartDelay={sentenceStartDelay}
+            setSentenceStartDelay={setSentenceStartDelay}
+            autoReveal={true}
+            setAutoReveal={() => {}}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            onClose={() => setShowSettings(false)}
+          />
+        )}
       </div>
     );
   }
@@ -576,7 +570,35 @@ const Presentation = () => {
         onStopRecording={handleStopRecording}
         onPerformanceData={handlePerformanceData}
         onExit={handleExit}
+        hintDelay={hintDelay}
+        sentenceStartDelay={sentenceStartDelay}
       />
+      
+      {/* Settings gear during live */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowSettings(true)}
+          className="bg-background/50 backdrop-blur-sm"
+        >
+          <Settings className="h-5 w-5" />
+        </Button>
+      </div>
+      
+      {showSettings && (
+        <PresentationControls
+          hintDelay={hintDelay}
+          setHintDelay={setHintDelay}
+          sentenceStartDelay={sentenceStartDelay}
+          setSentenceStartDelay={setSentenceStartDelay}
+          autoReveal={true}
+          setAutoReveal={() => {}}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
       
       {/* Audience overlay for premium users */}
       {selectedMode === 'audience' && (
