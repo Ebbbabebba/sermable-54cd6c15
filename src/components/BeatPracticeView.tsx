@@ -381,6 +381,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         continue;
       }
       
+      // Sentence-start capitalized word followed by another capitalized word = name
+      // e.g. "Ebba Hallert" where "Ebba" starts a sentence
+      if (isCapitalized && isAtSentenceStart && i + 1 < wordList.length) {
+        const nextWord = wordList[i + 1].replace(/[^\p{L}]/gu, '');
+        if (nextWord && nextWord[0] === nextWord[0].toUpperCase() && nextWord[0] !== nextWord[0].toLowerCase()) {
+          lenient.add(i);
+          continue;
+        }
+      }
+      
       // Multi-part names: look for sequences of capitalized words
       // If previous word was marked as lenient and this is also capitalized
       if (isCapitalized && i > 0 && lenient.has(i - 1)) {
@@ -981,19 +991,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // For LENIENT words (proper nouns/names), use visible word matching rules
     // These are hidden but we expect speech recognition to struggle with them
     if (isLenient) {
-      // Very lenient matching for names - just need some overlap
-      if (e.length <= 2) return false; // Too short, need exact
+      // VERY lenient matching for names/proper nouns - speech recognition often 
+      // produces completely different text for names like "Ebba Hallert Djurberg"
+      if (e.length <= 2) return s === e; // Too short, need exact
       
-      // Check if words share the same first letter (sound)
-      if (s[0] !== e[0] && s[0] !== e[1] && (e[0] !== s[1])) {
-        if (!s.startsWith(e.slice(0, 2)) && !e.startsWith(s.slice(0, 2))) {
-          return false;
-        }
+      // Accept if first letter matches - names often get partially right
+      if (s.length >= 2 && e.length >= 2 && s[0] === e[0]) return true;
+      
+      // Accept if first 2 chars of either match the other
+      if (s.length >= 2 && e.length >= 2) {
+        if (s.startsWith(e.slice(0, 2)) || e.startsWith(s.slice(0, 2))) return true;
       }
       
-      // Allow more length variance for names (up to 40%)
+      // Allow very high length variance for names (up to 60%)
       const lenRatio = Math.min(s.length, e.length) / Math.max(s.length, e.length);
-      if (lenRatio < 0.5) return false;
+      if (lenRatio < 0.3) return false;
       
       // Count matching characters (not position-dependent)
       const sChars = s.split('');
@@ -1008,9 +1020,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }
       }
       
-      // Need at least 50% character overlap for names (more lenient than visible)
+      // Need only 35% character overlap for names (very lenient)
       const overlapRatio = matches / Math.max(s.length, e.length);
-      return overlapRatio >= 0.5;
+      return overlapRatio >= 0.35;
     }
     
     // For HIDDEN words (non-lenient), be stricter - need to prove they know it
@@ -2118,10 +2130,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setHesitatedIndices(newHesitated);
             }
             
-            // CRITICAL FIX: After extended hesitation (6+ seconds), auto-advance to prevent freezing
-            // This happens when speech recognition can't match the spoken word at all
-            if (elapsed > 6000) {
-              console.log(`⏭️ Auto-advancing past hesitated word at index ${idx} after 6s timeout`);
+            // Auto-advance past stuck words to prevent freezing
+            // Lenient words (names/proper nouns) get a faster timeout since speech recognition
+            // consistently struggles with them (e.g. "Ebba Hallert Djurberg")
+            const isLenientWord = lenientWordIndicesRef.current.has(idx);
+            const autoAdvanceMs = isLenientWord ? 3000 : 6000;
+            if (elapsed > autoAdvanceMs) {
+              console.log(`⏭️ Auto-advancing past ${isLenientWord ? 'lenient' : 'hesitated'} word "${words[idx]}" at index ${idx} after ${autoAdvanceMs/1000}s timeout`);
               
               // Mark as spoken and move on
               const newSpoken = new Set([...spokenIndicesRef.current, idx]);
