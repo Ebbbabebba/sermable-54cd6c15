@@ -1194,23 +1194,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           foundIdx = advancedTo + 1;
         } else if ((!currentIsHidden || currentIsLenient) && advancedTo + 2 < words.length) {
           // If current word is VISIBLE or LENIENT and we're stuck, check 2 words ahead
-          // This helps when recognition completely misses a visible/lenient word
-          const twoAheadIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 2);
-          const twoAheadIsLenient = lenientWordIndicesRef.current.has(advancedTo + 2);
-          if (wordsMatch(spoken, words[advancedTo + 2], twoAheadIsHidden, twoAheadIsLenient)) {
-            // Skip current visible/lenient word and the next one (if also visible/lenient)
-            newSpoken.add(advancedTo);
-            const nextIdx = advancedTo + 1;
-            const nextIsHiddenCheck = hiddenWordIndicesRef.current.has(nextIdx);
-            const nextIdxIsLenient = lenientWordIndicesRef.current.has(nextIdx);
-            if (!nextIsHiddenCheck || nextIdxIsLenient) {
-              // Visible or lenient - just move on
-              newSpoken.add(nextIdx);
-            } else {
-              // Hidden and not lenient - mark as missed
-              newMissed.add(nextIdx);
+          // BUT only if the word in between is also visible/lenient (prevent jumping over hidden words)
+          const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
+          const betweenIsLenient = lenientWordIndicesRef.current.has(advancedTo + 1);
+          if (!betweenIsHidden || betweenIsLenient) {
+            const twoAheadIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 2);
+            const twoAheadIsLenient = lenientWordIndicesRef.current.has(advancedTo + 2);
+            if (wordsMatch(spoken, words[advancedTo + 2], twoAheadIsHidden, twoAheadIsLenient)) {
+              // Skip current visible/lenient word and the next one (if also visible/lenient)
+              newSpoken.add(advancedTo);
+              const nextIdx = advancedTo + 1;
+              if (!betweenIsHidden || betweenIsLenient) {
+                newSpoken.add(nextIdx);
+              } else {
+                newMissed.add(nextIdx);
+              }
+              foundIdx = advancedTo + 2;
             }
-            foundIdx = advancedTo + 2;
           }
         }
       }
@@ -2177,7 +2177,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setHesitatedIndices(newHesitated);
             }
             
-            // Auto-advance past stuck words to prevent freezing
+          // Auto-advance past stuck words to prevent freezing
             // Lenient words (names/proper nouns) get a faster timeout since speech recognition
             // consistently struggles with them (e.g. "Ebba Hallert Djurberg")
             const isLenientWord = lenientWordIndicesRef.current.has(idx);
@@ -2196,6 +2196,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setCurrentWordIndex(nextIdx);
               
               // Reset the timer for the next word
+              lastWordTimeRef.current = Date.now();
+            }
+          } else if (!hiddenWordIndicesRef.current.has(idx)) {
+            // VISIBLE word stuck for 2s+ — auto-advance the pulse
+            // Visible words are just reading, not recall, so advance faster
+            if (elapsed > 2000) {
+              console.log(`⏭️ Auto-advancing past visible word "${words[idx]}" at index ${idx} (stuck 2s+)`);
+              
+              const newSpoken = new Set([...spokenIndicesRef.current, idx]);
+              spokenIndicesRef.current = newSpoken;
+              setSpokenIndices(newSpoken);
+              
+              const nextIdx = idx + 1;
+              currentWordIndexRef.current = nextIdx;
+              setCurrentWordIndex(nextIdx);
+              
               lastWordTimeRef.current = Date.now();
             }
           }
