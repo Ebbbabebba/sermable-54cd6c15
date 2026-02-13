@@ -1881,7 +1881,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Focus Mode: Beat-based sentence-by-sentence practice
   if (isPracticing && !showResults) {
     return (
-      <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="h-screen bg-background flex flex-col">
         {/* Minimal header with exit */}
         <header className="flex items-center justify-between p-4 border-b border-border/50">
           <Button
