@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward, BookOpen, Eye } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -272,6 +272,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [isMergedRecall, setIsMergedRecall] = useState(false); // Track if current recall is a merged recall
   const [mergedRecallBeats, setMergedRecallBeats] = useState<Beat[]>([]); // Beats included in merged recall
   const [isEndOfSessionRecall, setIsEndOfSessionRecall] = useState(false); // 10-min recall before session_complete
+  const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
   
   // Rest between beats state
   const [restUntilTime, setRestUntilTime] = useState<Date | null>(null);
@@ -2004,7 +2005,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             setBeatsToRecall([justMasteredBeat]);
             setRestUntilTime(new Date(Date.now() + 10 * 60 * 1000));
             setRestMinutes(10);
+            setShowSkipWarning(false);
             setSessionMode('coffee_break');
+            
+            // Schedule browser notification after 10 minutes
+            if ('Notification' in window && Notification.permission === 'granted') {
+              setTimeout(() => {
+                new Notification('☕ Coffee break is over!', {
+                  body: 'Time for your quick recall session. Come back and practice!',
+                  icon: '/favicon.ico',
+                });
+              }, 10 * 60 * 1000);
+            } else if ('Notification' in window && Notification.permission === 'default') {
+              Notification.requestPermission();
+            }
           } else {
             setSessionMode('session_complete');
           }
@@ -2407,6 +2421,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   // Coffee break screen - 10 min timer before recall
   if (sessionMode === 'coffee_break' && restUntilTime) {
+    
     const startCoffeeBreakRecall = () => {
       setRestUntilTime(null);
       setRestMinutes(0);
@@ -2418,14 +2433,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setSessionMode('recall');
     };
 
+    const handleSkipClick = () => {
+      if (isPremium) {
+        setShowSkipWarning(true);
+      }
+    };
+
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
         <motion.div
-          initial={{ scale: 0, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          className="text-7xl"
         >
-          <Coffee className="h-24 w-24 text-amber-500" />
+          ☕
         </motion.div>
         
         <motion.h2 
@@ -2434,7 +2456,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          ☕ {t('beat_practice.coffee_break_title', "Coffee Break!")}
+          {t('beat_practice.coffee_break_title', "Coffee Break!")}
         </motion.h2>
         
         <motion.p 
@@ -2466,18 +2488,60 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           transition={{ delay: 0.8 }}
         >
           <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            {t('beat_practice.coffee_notification', "You'll receive a notification when it's time to practice")}
+          </p>
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
             {t('beat_practice.coffee_tip', "Tip: Take a short walk or grab a coffee!")}
           </p>
-          <p className="text-sm text-muted-foreground">
-            🧠 {t('beat_practice.coffee_recall_info', "After the break: quick recall of what you just learned")}
-          </p>
         </motion.div>
         
-        <Button variant="ghost" onClick={startCoffeeBreakRecall} className="mt-4">
-          <Play className="h-4 w-4 mr-2" />
-          {t('beat_practice.skip_break', "Start recall now")}
-        </Button>
+        {/* Skip button - premium only */}
+        {isPremium ? (
+          <>
+            <Button variant="ghost" onClick={handleSkipClick} className="mt-4 text-muted-foreground">
+              <Play className="h-4 w-4 mr-2" />
+              {t('beat_practice.skip_break', "Start recall now")}
+            </Button>
+            
+            {/* Warning dialog for premium users */}
+            <AnimatePresence>
+              {showSkipWarning && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="bg-warning/10 border border-warning/30 rounded-xl p-4 max-w-sm"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="h-5 w-5 text-warning" />
+                    <span className="font-semibold text-warning text-sm">
+                      {t('beat_practice.skip_warning_title', "Are you sure?")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {t('beat_practice.skip_warning_desc', "The 10-minute break helps your brain consolidate what you just learned. Skipping it may reduce retention.")}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowSkipWarning(false)} className="flex-1">
+                      {t('beat_practice.keep_waiting', "Keep waiting")}
+                    </Button>
+                    <Button size="sm" variant="default" onClick={startCoffeeBreakRecall} className="flex-1">
+                      {t('beat_practice.skip_anyway', "Skip anyway")}
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        ) : (
+          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground/60">
+            <Lock className="h-3.5 w-3.5" />
+            <Crown className="h-3.5 w-3.5" />
+            <span>{t('beat_practice.skip_premium_only', "Premium users can skip the wait")}</span>
+          </div>
+        )}
       </div>
     );
   }
