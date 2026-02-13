@@ -2270,9 +2270,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </div>
         </div>
 
-        {/* Main content - Preview card */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
-          <div className="w-full max-w-2xl space-y-6">
+        {/* Main content - Preview card - scrollable for long text */}
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
             {/* Preview header */}
             <div className="flex flex-col items-center gap-2">
               <motion.div
@@ -2576,9 +2576,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         </div>
       </div>
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-6">
-        <div className="w-full max-w-2xl space-y-6">
+      {/* Main content area - scrollable when text overflows */}
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
           
           {/* Sentence dots (only in learn mode, show only unique sentences) */}
           {sessionMode === 'learn' && !phase.includes('beat') && (() => {
