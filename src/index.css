@@ -434,26 +434,26 @@
     }
   }
 
-  /* Steady glow for current word - very slow breathing */
+  /* Snappy glow for current word - quick pulse */
   @keyframes currentWordGlow {
     0%, 100% {
-      box-shadow: 0 0 8px hsl(var(--primary) / 0.3);
+      box-shadow: 0 0 6px hsl(var(--primary) / 0.25);
     }
     50% {
-      box-shadow: 0 0 14px hsl(var(--primary) / 0.45);
+      box-shadow: 0 0 16px hsl(var(--primary) / 0.55);
     }
   }
 
   .word-breathe {
-    animation: wordBreathe 5s ease-in-out infinite;
+    animation: wordBreathe 3s ease-in-out infinite;
   }
 
   .word-breathe-subtle {
-    animation: wordBreatheSubtle 4s ease-in-out infinite;
+    animation: wordBreatheSubtle 2.5s ease-in-out infinite;
   }
 
   .word-glow-current {
-    animation: currentWordGlow 4s ease-in-out infinite;
+    animation: currentWordGlow 1.5s ease-in-out infinite;
   }
 
   /* Ultra-smooth word state transitions - no layout shifts */
