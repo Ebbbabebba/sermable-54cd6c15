@@ -25,6 +25,8 @@ interface CompactPresentationViewProps {
   onStopRecording: () => void;
   onPerformanceData: (data: WordPerformance[]) => void;
   onExit?: () => void;
+  hintDelay?: number;
+  sentenceStartDelay?: number;
 }
 
 // Map short language codes to full locale codes for Web Speech API
@@ -95,6 +97,8 @@ export const CompactPresentationView = ({
   onStopRecording,
   onPerformanceData,
   onExit,
+  hintDelay = 2000,
+  sentenceStartDelay = 4000,
 }: CompactPresentationViewProps) => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showHint, setShowHint] = useState<{ word: string; phase: "trying" | "showing" } | null>(null);
@@ -232,13 +236,20 @@ export const CompactPresentationView = ({
       const silenceDuration = Date.now() - lastProgressTime.current;
       const currentWord = words[currentWordIndex];
       
-      if (silenceDuration >= 1500 && !showHint) {
+      // Detect if this is the first word of a sentence
+      const isSentenceStart = currentWordIndex === 0 || /[.!?]$/.test(words[currentWordIndex - 1]);
+      const effectiveDelay = isSentenceStart ? sentenceStartDelay : hintDelay;
+      
+      // Show "try" prompt at 60% of the delay
+      const tryDelay = Math.round(effectiveDelay * 0.6);
+      
+      if (silenceDuration >= tryDelay && !showHint) {
         setShowHint({ word: currentWord, phase: "trying" });
         setStatus('silence');
         haptics.trigger('warning');
       }
       
-      const showWordDelay = wrongAttempts.current.length > 0 ? 1000 : 3000;
+      const showWordDelay = wrongAttempts.current.length > 0 ? Math.round(effectiveDelay * 0.5) : effectiveDelay;
       if (silenceDuration >= showWordDelay && showHint?.phase === "trying") {
         setShowHint({ word: currentWord, phase: "showing" });
         setWordPerformance(prev => {
