@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -491,7 +491,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [currentBeat, phase, sessionMode, getUniqueSentences]);
 
   const currentText = getCurrentText();
-  const words = currentText.split(/\s+/).filter(w => w.trim());
+  const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
 
   // Identify which word indices are "first word of a sentence"
   // These should never turn yellow (hesitated) due to natural pause between sentences
@@ -2487,7 +2487,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               size="sm"
               onClick={() => {
                 playClick();
-                const allIndices = new Set(words.map((_, i) => i));
+                const allIndices = new Set<number>(words.map((_, i) => i));
                 pauseSpeechRecognition(900);
                 checkCompletion(allIndices, failedWordIndices);
               }}

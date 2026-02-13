@@ -785,7 +785,19 @@
     "skip_rest": "Börja nu ändå",
     "beats_remaining": "{{count}} beat kvar idag",
     "beats_remaining_plural": "{{count}} beats kvar idag",
-    "beat_complete_rest": "Beat klar! Ta en kort paus."
+    "beat_complete_rest": "Beat klar! Ta en kort paus.",
+    "read_through": "Läs igenom en gång, sedan övar vi",
+    "ready_to_practice": "Jag är redo att öva",
+    "skip_preview": "Hoppa över förhandsgranskning",
+    "full_speech": "Hela talet",
+    "beat_number": "Beat {{number}}",
+    "recall_previous": "Återkalla föregående beat",
+    "from_memory": "Från minnet",
+    "words_fading": "Ord försvinner",
+    "recall_complete_almost": "Perfekt! Går vidare...",
+    "recall_in_progress": "Återkallar...",
+    "final_phase": "Sista fasen!",
+    "rest_recall_info": "Efter pausen: snabb återkallning → sedan nästa beat"
   },
   "presentation": {
     "settings": "Presentationsinställningar",
