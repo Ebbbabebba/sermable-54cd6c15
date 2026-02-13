@@ -2321,19 +2321,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 {t('beat_practice.ready_to_practice', "I'm Ready to Practice")}
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => {
-                  // Skip preview, go directly to learn
-                  setSessionMode('learn');
-                  transitionToPhase('sentence_1_learning');
-                }}
-              >
-                <SkipForward className="h-4 w-4 mr-1" />
-                {t('beat_practice.skip_preview', 'Skip preview')}
-              </Button>
             </motion.div>
           </div>
         </div>
