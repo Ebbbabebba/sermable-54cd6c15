@@ -122,12 +122,13 @@ Deno.serve(async (req) => {
         beat_order,
         recall_evening_at,
         recall_morning_at,
+        next_scheduled_recall_at,
         last_recall_at,
         speech_id,
         speeches!inner(user_id, title)
       `)
       .eq('is_mastered', true)
-      .or(`recall_evening_at.lte.${now},recall_morning_at.lte.${now}`)
+      .or(`recall_evening_at.lte.${now},recall_morning_at.lte.${now},next_scheduled_recall_at.lte.${now}`)
       .not('recall_evening_at', 'is', null);
     
     if (beatError) {
@@ -154,13 +155,21 @@ Deno.serve(async (req) => {
         }
       }
       
+      // Check scheduled 2/3/5/7 recall
+      if (beat.next_scheduled_recall_at) {
+        const scheduledTime = new Date(beat.next_scheduled_recall_at);
+        if (scheduledTime <= new Date(now) && (!lastRecall || lastRecall < scheduledTime)) {
+          return true;
+        }
+      }
+      
       return false;
     });
     
     console.log(`Found ${pendingBeatRecalls.length} beats needing evening/morning recall`);
     
     // Group beat recalls by user
-    const beatRecallsByUser = new Map<string, { type: 'evening' | 'morning'; speechTitle: string }[]>();
+    const beatRecallsByUser = new Map<string, { type: 'evening' | 'morning' | 'scheduled'; speechTitle: string }[]>();
     for (const beat of pendingBeatRecalls) {
       const speech = (beat as any).speeches;
       if (!speech) continue;
@@ -171,9 +180,11 @@ Deno.serve(async (req) => {
       
       const lastRecall = beat.last_recall_at ? new Date(beat.last_recall_at) : null;
       const isEvening = beat.recall_evening_at && new Date(beat.recall_evening_at) <= new Date(now) && (!lastRecall || lastRecall < new Date(beat.recall_evening_at));
+      const isMorning = !isEvening && beat.recall_morning_at && new Date(beat.recall_morning_at) <= new Date(now) && (!lastRecall || lastRecall < new Date(beat.recall_morning_at));
+      const isScheduled = !isEvening && !isMorning && beat.next_scheduled_recall_at && new Date(beat.next_scheduled_recall_at) <= new Date(now) && (!lastRecall || lastRecall < new Date(beat.next_scheduled_recall_at));
       
       beatRecallsByUser.get(userId)!.push({
-        type: isEvening ? 'evening' : 'morning',
+        type: isEvening ? 'evening' : isMorning ? 'morning' : 'scheduled',
         speechTitle: speech.title,
       });
     }
@@ -192,15 +203,20 @@ Deno.serve(async (req) => {
       if (!profile) continue;
       
       const isEvening = recalls.some(r => r.type === 'evening');
+      const isScheduled = recalls.some(r => r.type === 'scheduled');
       const speechTitles = [...new Set(recalls.map(r => r.speechTitle))];
       
       const title = isEvening 
         ? '🌙 Evening Review Time!'
-        : '☀️ Morning Memory Test!';
+        : isScheduled
+          ? '📅 Scheduled Review Due!'
+          : '☀️ Morning Memory Test!';
       
       const body = isEvening
         ? `Time for a quick evening review of "${speechTitles[0]}". Sleep will lock it into memory!`
-        : `Your brain consolidated overnight. Quick recall of "${speechTitles[0]}" now for maximum retention!`;
+        : isScheduled
+          ? `Time for your spaced repetition review of "${speechTitles[0]}". Keep your memory strong!`
+          : `Your brain consolidated overnight. Quick recall of "${speechTitles[0]}" now for maximum retention!`;
       
       const notificationData = {
         type: isEvening ? 'evening_recall' : 'morning_recall',

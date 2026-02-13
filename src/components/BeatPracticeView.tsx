@@ -49,10 +49,57 @@ interface Beat {
   recall_10min_at: string | null;
   recall_evening_at: string | null;
   recall_morning_at: string | null;
+  recall_session_number?: number;
+  next_scheduled_recall_at?: string | null;
+  last_merged_recall_at?: string | null;
   checkpoint_sentence?: number | null;
   checkpoint_phase?: string | null;
   checkpoint_hidden_indices?: number[] | null;
 }
+
+// 2/3/5/7 spaced repetition intervals (days between sessions)
+const SPACED_REPETITION_INTERVALS = [0, 0, 2, 3, 5, 7, 7, 7]; // session 0-1 = same day (10min/evening/morning), then 2/3/5/7 day gaps
+
+/**
+ * Calculate next recall date using 2/3/5/7 spaced repetition schedule.
+ * Compresses intervals proportionally when a deadline is close.
+ */
+const calculateNextRecallDate = (
+  sessionNumber: number, 
+  lastRecallAt: Date, 
+  goalDate: Date | null
+): Date | null => {
+  // Sessions 0-1 are handled by 10min/evening/morning recalls
+  if (sessionNumber < 2) return null;
+  
+  const intervalIndex = Math.min(sessionNumber, SPACED_REPETITION_INTERVALS.length - 1);
+  let intervalDays = SPACED_REPETITION_INTERVALS[intervalIndex];
+  
+  // Compress intervals if deadline is close
+  if (goalDate) {
+    const now = new Date();
+    const totalDaysRemaining = Math.max(1, Math.ceil((goalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    // Calculate total remaining interval days from this session onwards
+    let totalRemainingIntervals = 0;
+    for (let i = intervalIndex; i < SPACED_REPETITION_INTERVALS.length; i++) {
+      totalRemainingIntervals += SPACED_REPETITION_INTERVALS[i];
+    }
+    
+    // If remaining intervals exceed remaining days, compress proportionally
+    if (totalRemainingIntervals > 0 && totalDaysRemaining < totalRemainingIntervals) {
+      const compressionRatio = totalDaysRemaining / totalRemainingIntervals;
+      intervalDays = Math.max(1, Math.round(intervalDays * compressionRatio));
+    }
+  }
+  
+  if (intervalDays <= 0) return null;
+  
+  const nextDate = new Date(lastRecallAt);
+  nextDate.setDate(nextDate.getDate() + intervalDays);
+  nextDate.setHours(8, 0, 0, 0); // Schedule at 8 AM
+  return nextDate;
+};
 
 interface BeatPracticeViewProps {
   speechId: string;
@@ -210,6 +257,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(30);
   const [beatsPerDay, setBeatsPerDay] = useState(1);
   const [is10MinRecall, setIs10MinRecall] = useState(false); // Track if current recall is 10-min recall
+  const [goalDate, setGoalDate] = useState<Date | null>(null);
+  const [isMergedRecall, setIsMergedRecall] = useState(false); // Track if current recall is a merged recall
+  const [mergedRecallBeats, setMergedRecallBeats] = useState<Beat[]>([]); // Beats included in merged recall
   
   // Rest between beats state
   const [restUntilTime, setRestUntilTime] = useState<Date | null>(null);
@@ -544,6 +594,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     
     // Store for later use in rest calculations
     setDaysUntilDeadline(computedDaysUntilDeadline);
+    setGoalDate(goalDate);
 
     const setBeatsAndPlan = (rows: Beat[]) => {
       setBeats(rows);
@@ -602,8 +653,38 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           })
         : [];
       
-      // Combine: 10-minute recalls first, then evening, then morning, then daily recalls
-      const allBeatsNeedingRecall = [...beatsNeeding10MinRecall, ...beatsNeedingEveningRecall, ...beatsNeedingMorningRecall, ...beatsNeedingDailyRecall];
+      // Find mastered beats that need scheduled 2/3/5/7 recall (next_scheduled_recall_at is in the past)
+      const beatsNeedingScheduledRecall = masteredBeats.filter(b => {
+        if (!b.next_scheduled_recall_at) return false;
+        // Skip if already in any other recall queue
+        if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
+        if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
+        if (beatsNeedingMorningRecall.some(r => r.id === b.id)) return false;
+        if (beatsNeedingDailyRecall.some(r => r.id === b.id)) return false;
+        const scheduledTime = new Date(b.next_scheduled_recall_at);
+        if (scheduledTime > now) return false;
+        // Check if already recalled after the scheduled time
+        if (b.last_recall_at && new Date(b.last_recall_at) >= scheduledTime) return false;
+        return true;
+      });
+      
+      // Combine: 10-minute recalls first, then evening, then morning, then scheduled 2/3/5/7, then daily recalls
+      const allBeatsNeedingRecall = [
+        ...beatsNeeding10MinRecall, 
+        ...beatsNeedingEveningRecall, 
+        ...beatsNeedingMorningRecall, 
+        ...beatsNeedingScheduledRecall,
+        ...beatsNeedingDailyRecall,
+      ];
+      
+      // Check if we need a merged recall (2+ mastered beats and any individual recall is due)
+      const shouldDoMergedRecall = masteredBeats.length >= 2 && allBeatsNeedingRecall.length > 0;
+      // Check if merged recall was already done recently (within last 4 hours)
+      const mergedRecallNeeded = shouldDoMergedRecall && masteredBeats.every(b => {
+        if (!b.last_merged_recall_at) return true;
+        const lastMerged = new Date(b.last_merged_recall_at);
+        return (now.getTime() - lastMerged.getTime()) > 4 * 60 * 60 * 1000; // 4 hours
+      });
       
       // Find unmastered beats
       const unmasteredBeats = rows.filter(b => !b.is_mastered);
@@ -616,7 +697,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         beatsNeeding10MinRecall: beatsNeeding10MinRecall.length,
         beatsNeedingEveningRecall: beatsNeedingEveningRecall.length,
         beatsNeedingMorningRecall: beatsNeedingMorningRecall.length,
+        beatsNeedingScheduledRecall: beatsNeedingScheduledRecall.length,
         beatsNeedingDailyRecall: beatsNeedingDailyRecall.length,
+        mergedRecallNeeded,
         firstUnmasteredBeatOrder: unmasteredBeats[0]?.beat_order,
       });
       
@@ -644,6 +727,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       setBeatsToRecall(allBeatsNeedingRecall);
       setNewBeatToLearn(firstUnmastered);
+      
+      // Store merged recall info
+      if (mergedRecallNeeded) {
+        setMergedRecallBeats(masteredBeats.sort((a, b) => a.beat_order - b.beat_order));
+      }
       
       // Track if we're starting with 10-min recalls
       setIs10MinRecall(beatsNeeding10MinRecall.length > 0);
@@ -1315,44 +1403,115 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const newCount = recallSuccessCount + 1;
       
       if (newCount >= 2) {
-        // Successfully recalled this beat twice with all hidden! Update last_recall_at
+        // Successfully recalled this beat twice with all hidden! Update last_recall_at + 2/3/5/7 schedule
         const recalledBeat = beatsToRecall[recallIndex];
-        if (recalledBeat) {
+        if (recalledBeat && !isMergedRecall) {
+          const currentSessionNum = recalledBeat.recall_session_number ?? 0;
+          const newSessionNum = currentSessionNum + 1;
+          const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate);
+          
+          const updateData: Record<string, any> = { 
+            last_recall_at: new Date().toISOString(),
+            recall_session_number: newSessionNum,
+          };
+          if (nextRecallDate) {
+            updateData.next_scheduled_recall_at = nextRecallDate.toISOString();
+          }
+          
           supabase
             .from('practice_beats')
-            .update({ last_recall_at: new Date().toISOString() })
+            .update(updateData)
             .eq('id', recalledBeat.id)
-            .then(() => {});
+            .then(() => {
+              console.log(`📅 Beat ${recalledBeat.beat_order} recall session ${newSessionNum}, next scheduled:`, nextRecallDate?.toISOString() ?? 'none');
+            });
+        }
+        
+        // If this was a merged recall, update last_merged_recall_at for all merged beats
+        if (isMergedRecall && mergedRecallBeats.length > 0) {
+          const now = new Date().toISOString();
+          for (const mb of mergedRecallBeats) {
+            supabase
+              .from('practice_beats')
+              .update({ last_merged_recall_at: now })
+              .eq('id', mb.id)
+              .then(() => {});
+          }
+          console.log(`🔗 Merged recall completed for ${mergedRecallBeats.length} beats`);
         }
 
-        setCelebrationMessage("✅ Beat recalled!");
+        setCelebrationMessage(isMergedRecall ? "✅ Full recall complete!" : "✅ Beat recalled!");
         setShowCelebration(true);
 
         setTimeout(() => {
           setShowCelebration(false);
           
-          // Move to next beat to recall, or switch to learn mode
-          if (recallIndex < beatsToRecall.length - 1) {
-            setRecallIndex(prev => prev + 1);
-            setRecallSuccessCount(0);
-            // Next recall beat also starts fully visible
-            setHiddenWordIndices(new Set());
-            setHiddenWordOrder([]);
-            resetForNextRep();
-          } else {
-            // Done with recalls, now show beat preview before learning
+          if (isMergedRecall) {
+            // Merged recall done - now check for unlearned beats or complete session
+            setIsMergedRecall(false);
             if (newBeatToLearn) {
               setSessionMode('beat_preview');
               setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
             } else {
-              // No new beat to learn - recall-only session complete!
-              // Do NOT update the schedule/next_review_date here.
-              // Recalls (morning, evening, daily) are lightweight check-ins;
-              // pushing the schedule forward would lock the user out of
-              // their next regular practice session.
-              console.log('✅ Recall-only session complete — schedule unchanged');
-              
-              setSessionMode('session_complete');
+              // Check for unlearned beats in the full beats array
+              const nextUnlearned = beats.find(b => !b.is_mastered);
+              if (nextUnlearned) {
+                setNewBeatToLearn(nextUnlearned);
+                setSessionMode('beat_preview');
+                setCurrentBeatIndex(beats.findIndex(b => b.id === nextUnlearned.id));
+              } else {
+                console.log('✅ All recalls + merged recall complete — session done');
+                setSessionMode('session_complete');
+              }
+            }
+          } else if (recallIndex < beatsToRecall.length - 1) {
+            // Move to next beat to recall
+            setRecallIndex(prev => prev + 1);
+            setRecallSuccessCount(0);
+            setHiddenWordIndices(new Set());
+            setHiddenWordOrder([]);
+            resetForNextRep();
+          } else {
+            // Done with individual recalls - check if merged recall is needed
+            if (mergedRecallBeats.length >= 2) {
+              console.log('🔗 Starting merged recall of', mergedRecallBeats.length, 'beats');
+              // Create a synthetic "merged beat" that combines all mastered beats' text
+              const mergedBeat: Beat = {
+                id: 'merged-recall',
+                beat_order: -1,
+                sentence_1_text: mergedRecallBeats.map(b => b.sentence_1_text).join(' '),
+                sentence_2_text: mergedRecallBeats.map(b => b.sentence_2_text).join(' '),
+                sentence_3_text: mergedRecallBeats.map(b => b.sentence_3_text).join(' '),
+                is_mastered: true,
+                mastered_at: null,
+                last_recall_at: null,
+                recall_10min_at: null,
+                recall_evening_at: null,
+                recall_morning_at: null,
+              };
+              setIsMergedRecall(true);
+              setBeatsToRecall([mergedBeat]);
+              setRecallIndex(0);
+              setRecallSuccessCount(0);
+              setHiddenWordIndices(new Set());
+              setHiddenWordOrder([]);
+              resetForNextRep();
+            } else if (newBeatToLearn) {
+              // No merged recall needed - show beat preview before learning
+              setSessionMode('beat_preview');
+              setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
+            } else {
+              // No new beat to learn - check for unlearned beats
+              const nextUnlearned = beats.find(b => !b.is_mastered);
+              if (nextUnlearned) {
+                console.log('🔄 After recall, jumping to next unlearned beat:', nextUnlearned.beat_order);
+                setNewBeatToLearn(nextUnlearned);
+                setSessionMode('beat_preview');
+                setCurrentBeatIndex(beats.findIndex(b => b.id === nextUnlearned.id));
+              } else {
+                console.log('✅ Recall-only session complete — schedule unchanged');
+                setSessionMode('session_complete');
+              }
             }
           }
         }, 1800);
@@ -1696,6 +1855,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           recall_10min_at: recall10minAt.toISOString(),
           recall_evening_at: recallEveningAt.toISOString(),
           recall_morning_at: recallMorningAt.toISOString(),
+          // Initialize 2/3/5/7 schedule
+          recall_session_number: 0,
+          next_scheduled_recall_at: null, // Will be set after morning recall (session 1 complete)
           // Advance stage: day1_sentences → day2_beats (for next day's practice)
           practice_stage: 'day2_beats',
           words_hidden_per_round: 2,
@@ -2375,7 +2537,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 "text-xs font-bold uppercase tracking-wide",
                 is10MinRecall ? "text-orange-500" : "text-amber-500"
               )}>
-                {is10MinRecall ? "⏰ 10min" : "🔄 Recall"}
+                {isMergedRecall ? "🔗 Full Speech" : is10MinRecall ? "⏰ 10min" : "🔄 Recall"}
               </span>
               <span className={cn(
                 "text-sm font-bold",
