@@ -207,8 +207,19 @@ const getRecognitionLocale = (lang: string): string => {
   return localeMap[lang] || lang || 'en-US';
 };
 
-// Common words to fade first
-const COMMON_WORDS = new Set(['the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with', 'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can']);
+// Gap/filler words that are ALWAYS hidden from the start (EN + SV)
+const COMMON_WORDS = new Set([
+  // English
+  'the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with',
+  'as', 'at', 'by', 'this', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had',
+  'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can',
+  'or', 'but', 'so', 'if', 'not', 'no', 'yes', 'up', 'out', 'from',
+  // Swedish
+  'och', 'i', 'på', 'att', 'en', 'ett', 'av', 'för', 'med', 'som', 'är', 'var',
+  'den', 'det', 'de', 'om', 'till', 'från', 'har', 'kan', 'ska', 'vill',
+  'men', 'eller', 'så', 'när', 'där', 'här', 'inte', 'bara', 'även', 'också',
+  'vi', 'jag', 'du', 'han', 'hon', 'ni', 'sin', 'sitt', 'sina',
+]);
 
 // Check if it's a new calendar day (for 1 beat per day logic)
 const isNewDay = (lastPractice: Date | null): boolean => {
@@ -911,13 +922,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, []);
 
   // Effect to reset hidden words when changing recall beat
+  // Gap words (COMMON_WORDS) are always pre-hidden from the start
   useEffect(() => {
     if (sessionMode === 'recall' && words.length > 0) {
-      // Start fully visible for each recall beat
-      setHiddenWordIndices(new Set());
-      setHiddenWordOrder([]);
+      const preHidden = new Set<number>();
+      const preHiddenOrder: number[] = [];
+      words.forEach((w, i) => {
+        const clean = w.toLowerCase().replace(/[^\p{L}]/gu, '');
+        if (COMMON_WORDS.has(clean)) {
+          preHidden.add(i);
+          preHiddenOrder.push(i);
+        }
+      });
+      setHiddenWordIndices(preHidden);
+      setHiddenWordOrder(preHiddenOrder);
     }
-  }, [sessionMode, recallIndex]);
+  }, [sessionMode, recallIndex, words]);
 
   // Determine which word to hide next (priority order)
   // Protected words (failed/hesitated) are hidden LAST
