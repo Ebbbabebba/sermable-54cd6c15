@@ -37,7 +37,7 @@ const SleepAwareScheduling = () => {
       const now = new Date();
       
       // Check for beats needing morning recall from the database
-      if (hour >= 6 && hour < 10) {
+      if (hour >= 6 && hour < 12) {
         const { data: morningRecallBeats } = await supabase
           .from('practice_beats')
           .select(`
@@ -78,7 +78,7 @@ const SleepAwareScheduling = () => {
       }
       
       // Fallback: check localStorage for evening practice (legacy support)
-      if (hour >= 6 && hour < 10) {
+      if (hour >= 6 && hour < 12) {
         const lastEveningPractice = localStorage.getItem('last-evening-practice');
         const lastEveningData = lastEveningPractice ? JSON.parse(lastEveningPractice) : null;
         
@@ -127,7 +127,7 @@ const SleepAwareScheduling = () => {
         }));
       }
       
-      navigate(`/practice/${suggestion.speechId}`);
+      navigate(`/practice/${suggestion.speechId}?recall=morning`);
     }
   };
 

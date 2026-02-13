@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -81,6 +81,8 @@ interface SessionResults {
 const Practice = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isRecallMode = searchParams.get('recall') === 'morning';
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -393,12 +395,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
         setNextReviewDate(reviewDate);
         console.log('📅 Next review date set:', reviewDate);
         
-        // Lock if review date is in future
-        if (reviewDate > new Date()) {
+        // Lock if review date is in future — but bypass if coming from morning recall
+        if (reviewDate > new Date() && !isRecallMode) {
           setIsLocked(true);
           console.log('🔒 Speech locked until:', reviewDate);
         } else {
           setIsLocked(false);
+          if (isRecallMode) {
+            console.log('☀️ Morning recall mode — bypassing lock');
+          }
         }
       } else {
         console.log('ℹ️ No next review date found or speech never practiced');
