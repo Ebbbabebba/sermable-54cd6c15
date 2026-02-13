@@ -201,7 +201,20 @@ function countWords(sentences: string[]): number {
   return sentences.reduce((total, s) => total + s.split(/\s+/).filter(Boolean).length, 0);
 }
 
-// Determine sentences per beat based on total word count
+// Count words in a single sentence
+function sentenceWordCount(s: string): number {
+  return s.split(/\s+/).filter(Boolean).length;
+}
+
+// Ensure a sentence ends with terminal punctuation (. ! ?)
+function ensureEndsPeriod(s: string): string {
+  const trimmed = s.trim();
+  if (!trimmed) return trimmed;
+  if (/[.!?]$/.test(trimmed)) return trimmed;
+  return trimmed + '.';
+}
+
+// Determine base sentences per beat based on total word count
 // STRICT LIMIT: Maximum 3 sentences per beat, never more
 function getSentencesPerBeat(totalWords: number): number {
   if (totalWords <= 3) return 1;
@@ -209,48 +222,64 @@ function getSentencesPerBeat(totalWords: number): number {
   return 3; // MAXIMUM - never exceed this
 }
 
+// Maximum words allowed in a single beat before preferring fewer sentences
+const MAX_BEAT_WORDS = 30;
+
 // Group sentences into beats based on speech length
 // STRICT RULES:
 // - Maximum 3 parts (sentences) per beat
-// - Each part can be maximum 3 sentences from original text
+// - Beats exceeding ~30 words fall back to 2 sentences instead of 3
+// - Every beat's last non-empty sentence must end with terminal punctuation
 // - Never put entire speech in one beat
 function createBeats(sentences: string[]): Beat[] {
   const beats: Beat[] = [];
   const totalWords = countWords(sentences);
-  const sentencesPerBeat = getSentencesPerBeat(totalWords);
+  const baseSentencesPerBeat = getSentencesPerBeat(totalWords);
 
-  console.log(`Creating beats - Total sentences: ${sentences.length}, Total words: ${totalWords}, sentences per beat: ${sentencesPerBeat}`);
+  console.log(`Creating beats - Total sentences: ${sentences.length}, Total words: ${totalWords}, base sentences per beat: ${baseSentencesPerBeat}`);
 
-  // STRICT: Always iterate through ALL sentences, grouping by sentencesPerBeat
-  // This ensures we never accidentally put all sentences in one beat
   let i = 0;
   while (i < sentences.length) {
-    const sentence1 = (sentences[i] ?? "").trim();
+    let sentence1 = (sentences[i] ?? "").trim();
     if (!sentence1) {
       i++;
       continue;
     }
 
-    // Get sentence2 and sentence3 based on sentencesPerBeat
-    // STRICT: Only include additional sentences if sentencesPerBeat allows
     let sentence2 = "";
     let sentence3 = "";
 
-    if (sentencesPerBeat === 1) {
-      // For 1-sentence beats, only use sentence1 (leave others empty)
-      sentence2 = "";
-      sentence3 = "";
+    if (baseSentencesPerBeat === 1) {
       i += 1;
-    } else if (sentencesPerBeat === 2) {
-      // For 2-sentence beats, use sentence1 and sentence2
+    } else if (baseSentencesPerBeat === 2) {
       sentence2 = (sentences[i + 1] ?? "").trim();
-      sentence3 = "";
       i += 2;
     } else {
-      // For 3-sentence beats (MAXIMUM)
-      sentence2 = (sentences[i + 1] ?? "").trim();
-      sentence3 = (sentences[i + 2] ?? "").trim();
-      i += 3;
+      // Try 3 sentences, but fall back to 2 if total words would exceed MAX_BEAT_WORDS
+      const s2 = (sentences[i + 1] ?? "").trim();
+      const s3 = (sentences[i + 2] ?? "").trim();
+      const wordsWith3 = sentenceWordCount(sentence1) + sentenceWordCount(s2) + sentenceWordCount(s3);
+
+      if (s3 && wordsWith3 > MAX_BEAT_WORDS) {
+        // Too long with 3 sentences – use only 2
+        console.log(`Beat would be ${wordsWith3} words with 3 sentences, falling back to 2`);
+        sentence2 = s2;
+        sentence3 = "";
+        i += 2;
+      } else {
+        sentence2 = s2;
+        sentence3 = s3;
+        i += 3;
+      }
+    }
+
+    // Ensure the last non-empty sentence ends with terminal punctuation
+    if (sentence3) {
+      sentence3 = ensureEndsPeriod(sentence3);
+    } else if (sentence2) {
+      sentence2 = ensureEndsPeriod(sentence2);
+    } else {
+      sentence1 = ensureEndsPeriod(sentence1);
     }
 
     const beatOrder = beats.length;
