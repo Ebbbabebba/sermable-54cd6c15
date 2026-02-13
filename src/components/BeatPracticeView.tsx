@@ -1051,49 +1051,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return true;
     }
     
-    // For VISIBLE words, be much more lenient - just tracking pace
+    // For VISIBLE words, slightly more lenient than hidden but still meaningful
     // Short words (1-2 chars): require exact
     if (e.length <= 2) return false;
     
     // 3-char words: allow 1 difference
     if (e.length === 3) {
+      if (Math.abs(s.length - e.length) > 1) return false;
       let diff = 0;
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < Math.max(s.length, e.length); i++) {
         if (s[i] !== e[i]) diff++;
       }
       return diff <= 1;
     }
     
-    // 4+ char words: be very lenient
-    // Check if words share the same first letter (sound)
-    if (s[0] !== e[0] && s[0] !== e[1] && (e[0] !== s[1])) {
-      // Different starting sound - likely different word
-      // But check if it's a prefix/suffix match
-      if (!s.startsWith(e.slice(0, 2)) && !e.startsWith(s.slice(0, 2))) {
-        return false;
-      }
+    // 4+ char words: use Levenshtein with slightly more tolerance than hidden
+    // Don't match if lengths are too different
+    if (Math.abs(s.length - e.length) > 2) return false;
+    
+    // Must share first letter (same starting sound)
+    if (s[0] !== e[0]) return false;
+    
+    // Allow 1 char diff for 4-6 letter words, 2 for 7-10, 3 for 11+
+    const maxDist = e.length <= 6 ? 1 : e.length <= 10 ? 2 : 3;
+    let diff = 0;
+    for (let i = 0; i < Math.max(s.length, e.length); i++) {
+      if (s[i] !== e[i]) diff++;
+      if (diff > maxDist) return false;
     }
-    
-    // Allow length variance up to 30%
-    const lenRatio = Math.min(s.length, e.length) / Math.max(s.length, e.length);
-    if (lenRatio < 0.6) return false;
-    
-    // Count matching characters (not position-dependent)
-    const sChars = s.split('');
-    const eChars = e.split('');
-    let matches = 0;
-    const eCopy = [...eChars];
-    for (const c of sChars) {
-      const idx = eCopy.indexOf(c);
-      if (idx !== -1) {
-        matches++;
-        eCopy.splice(idx, 1);
-      }
-    }
-    
-    // Need at least 60% character overlap
-    const overlapRatio = matches / Math.max(s.length, e.length);
-    return overlapRatio >= 0.6;
+    return true;
   };
 
   // Process transcription - cursor-based
