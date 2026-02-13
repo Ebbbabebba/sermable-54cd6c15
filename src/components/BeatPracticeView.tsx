@@ -1345,53 +1345,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setSessionMode('beat_preview');
               setCurrentBeatIndex(beats.findIndex(b => b.id === newBeatToLearn.id));
             } else {
-              // No new beat to learn - update schedule and session complete!
-              // Set next review based on spaced repetition
-              const hoursUntilNextReview = daysUntilDeadline <= 1 ? 4 : daysUntilDeadline <= 3 ? 8 : daysUntilDeadline <= 7 ? 12 : 24;
-              const nextReviewDate = new Date(Date.now() + hoursUntilNextReview * 60 * 60 * 1000);
-              
-              // Update schedule and speech - await to ensure it's written before UI updates
-              (async () => {
-                try {
-                  const { data: existingSchedule } = await supabase
-                    .from('schedules')
-                    .select('id')
-                    .eq('speech_id', speechId)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-                  
-                  if (existingSchedule) {
-                    await supabase
-                      .from('schedules')
-                      .update({ 
-                        next_review_date: nextReviewDate.toISOString(),
-                        last_reviewed_at: new Date().toISOString(),
-                      })
-                      .eq('id', existingSchedule.id);
-                  } else {
-                    await supabase
-                      .from('schedules')
-                      .insert({
-                        speech_id: speechId,
-                        session_date: new Date().toISOString().split('T')[0],
-                        next_review_date: nextReviewDate.toISOString(),
-                        last_reviewed_at: new Date().toISOString(),
-                        completed: true,
-                      });
-                  }
-                  
-                  // Also update speech's next_review_date
-                  await supabase
-                    .from('speeches')
-                    .update({ next_review_date: nextReviewDate.toISOString() })
-                    .eq('id', speechId);
-                  
-                  console.log('📅 Schedule updated. Next review:', nextReviewDate);
-                } catch (error) {
-                  console.error('Failed to update schedule:', error);
-                }
-              })();
+              // No new beat to learn - recall-only session complete!
+              // Do NOT update the schedule/next_review_date here.
+              // Recalls (morning, evening, daily) are lightweight check-ins;
+              // pushing the schedule forward would lock the user out of
+              // their next regular practice session.
+              console.log('✅ Recall-only session complete — schedule unchanged');
               
               setSessionMode('session_complete');
             }
