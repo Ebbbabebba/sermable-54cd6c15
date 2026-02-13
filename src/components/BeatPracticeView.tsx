@@ -1676,10 +1676,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recallEveningAt = eveningTarget;
       }
       
-      // Morning recall: next day at 7 AM
+      // Morning recall: next day at 6 AM (always available from 6 AM local time)
       const recallMorningAt = new Date(now);
       recallMorningAt.setDate(recallMorningAt.getDate() + 1);
-      recallMorningAt.setHours(7, 0, 0, 0);
+      recallMorningAt.setHours(6, 0, 0, 0);
       
       console.log('📅 Scheduling recalls:', {
         '10min': recall10minAt.toISOString(),
