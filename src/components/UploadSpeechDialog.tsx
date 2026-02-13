@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
-import { SpeechTypeSelector } from "./SpeechTypeSelector";
+
 import { LearningModeSelector } from "./LearningModeSelector";
 
 interface UploadSpeechDialogProps {
@@ -430,11 +430,6 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             onChange={setLearningMode}
           />
 
-          {/* Speech Type Selector */}
-          <SpeechTypeSelector
-            value={speechType}
-            onChange={setSpeechType}
-          />
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">

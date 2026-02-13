@@ -371,8 +371,6 @@ const Presentation = () => {
         </div>
         <PresentationModeSelector 
           onSelectMode={handleModeSelect}
-          onSelectAudienceMode={handleAudienceModeSelect}
-          onSelectOverviewMode={handleOverviewModeSelect}
         />
       </div>
     );
