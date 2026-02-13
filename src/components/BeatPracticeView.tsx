@@ -113,7 +113,7 @@ interface BeatPracticeViewProps {
 type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
 
 // Session modes: recall (quick review of mastered beats), learn (learning a new beat), beat_rest (pause between beats), pre_beat_recall (recall previous beat before learning new), beat_preview (preview upcoming beat before learning)
-type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'pre_beat_recall' | 'beat_preview' | 'session_complete';
+type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'pre_beat_recall' | 'beat_preview' | 'coffee_break' | 'session_complete';
 
 // Always 10 minutes coffee break after mastering a beat
 // Follows spaced repetition: short break helps consolidation
@@ -1989,23 +1989,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           setSessionMode('beat_rest');
         }, 2000);
       } else {
-        // Session ending: trigger immediate 10-min recall of the just-mastered beat before session_complete
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat complete! Quick recall next."));
+        // Session ending: show coffee break with 10-min timer, then recall
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat complete! Coffee break time."));
         setShowCelebration(true);
+        
+        // Store the beat for recall after coffee break
+        const justMasteredBeat = currentBeat;
         
         setTimeout(() => {
           setShowCelebration(false);
-          // Set up recall of the just-mastered beat
-          if (currentBeat) {
-            console.log('🔄 Starting end-of-session 10-min recall for beat:', currentBeat.id);
+          if (justMasteredBeat) {
+            console.log('☕ Starting 10-min coffee break for beat:', justMasteredBeat.id);
             setIsEndOfSessionRecall(true);
-            setIs10MinRecall(true);
-            setBeatsToRecall([currentBeat]);
-            setRecallIndex(0);
-            setRecallSuccessCount(0);
-            setHiddenWordIndices(new Set());
-            setHiddenWordOrder([]);
-            setSessionMode('recall');
+            setBeatsToRecall([justMasteredBeat]);
+            setRestUntilTime(new Date(Date.now() + 10 * 60 * 1000));
+            setRestMinutes(10);
+            setSessionMode('coffee_break');
           } else {
             setSessionMode('session_complete');
           }
@@ -2227,6 +2226,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (sessionMode === 'session_complete') return;
     if (sessionMode === 'beat_rest') return;
     if (sessionMode === 'beat_preview') return;
+    if (sessionMode === 'coffee_break') return;
 
     startRecording();
   }, [loading, currentBeat?.id, showCelebration, phase, sessionMode, recallIndex]);
@@ -2400,6 +2400,83 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         <Button variant="ghost" onClick={startNextBeat} className="mt-4">
           <Play className="h-4 w-4 mr-2" />
           {t('beat_practice.skip_rest', "Start now anyway")}
+        </Button>
+      </div>
+    );
+  }
+
+  // Coffee break screen - 10 min timer before recall
+  if (sessionMode === 'coffee_break' && restUntilTime) {
+    const startCoffeeBreakRecall = () => {
+      setRestUntilTime(null);
+      setRestMinutes(0);
+      setIs10MinRecall(true);
+      setRecallIndex(0);
+      setRecallSuccessCount(0);
+      setHiddenWordIndices(new Set());
+      setHiddenWordOrder([]);
+      setSessionMode('recall');
+    };
+
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+        <motion.div
+          initial={{ scale: 0, rotate: -20 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        >
+          <Coffee className="h-24 w-24 text-amber-500" />
+        </motion.div>
+        
+        <motion.h2 
+          className="text-2xl font-bold"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          ☕ {t('beat_practice.coffee_break_title', "Coffee Break!")}
+        </motion.h2>
+        
+        <motion.p 
+          className="text-muted-foreground max-w-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          {t('beat_practice.coffee_break_desc', "Great job! Take a 10-minute break to let your brain consolidate what you just learned. A quick recall will start when the timer runs out.")}
+        </motion.p>
+        
+        {/* Countdown timer */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <RestCountdown 
+            targetTime={restUntilTime} 
+            onComplete={startCoffeeBreakRecall}
+            restMinutes={restMinutes}
+          />
+        </motion.div>
+        
+        <motion.div 
+          className="flex flex-col gap-2 mt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            {t('beat_practice.coffee_tip', "Tip: Take a short walk or grab a coffee!")}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            🧠 {t('beat_practice.coffee_recall_info', "After the break: quick recall of what you just learned")}
+          </p>
+        </motion.div>
+        
+        <Button variant="ghost" onClick={startCoffeeBreakRecall} className="mt-4">
+          <Play className="h-4 w-4 mr-2" />
+          {t('beat_practice.skip_break', "Start recall now")}
         </Button>
       </div>
     );
