@@ -273,6 +273,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [mergedRecallBeats, setMergedRecallBeats] = useState<Beat[]>([]); // Beats included in merged recall
   const [isEndOfSessionRecall, setIsEndOfSessionRecall] = useState(false); // 10-min recall before session_complete
   const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
+  const [showPreBeatRecallIntro, setShowPreBeatRecallIntro] = useState(false); // Animated intro before pre-beat recall
   
   // Rest between beats state
   const [restUntilTime, setRestUntilTime] = useState<Date | null>(null);
@@ -805,6 +806,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             setProtectedWordIndices(new Set());
             setPhase('beat_fading');
             setSessionMode('pre_beat_recall');
+            setShowPreBeatRecallIntro(true);
           } else {
             // First beat ever - go directly to beat preview
             setSessionMode('beat_preview');
@@ -1974,20 +1976,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const shouldContinueToday = nextUnmastered && beatsLearnedToday < beatsPerDay;
       
       if (shouldContinueToday && nextUnmastered) {
-        // Store the just-mastered beat for recall after rest
+        // Go directly to pre-beat recall intro (no 10-min wait between beats)
         const justMasteredBeat = currentBeat;
-        const restMins = calculateRestMinutes(daysUntilDeadline);
-        setRestMinutes(restMins);
-        setRestUntilTime(new Date(Date.now() + restMins * 60 * 1000));
         setNextBeatQueued(nextUnmastered);
-        setBeatToRecallBeforeNext(justMasteredBeat); // Save for recall after rest
+        setBeatToRecallBeforeNext(justMasteredBeat);
         
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_rest', "Beat complete! Take a short break."));
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_rest', "Beat complete! Quick recall first."));
         setShowCelebration(true);
         
         setTimeout(() => {
           setShowCelebration(false);
-          setSessionMode('beat_rest');
+          setShowPreBeatRecallIntro(true);
+          setPreBeatRecallSuccessCount(0);
+          setHiddenWordIndices(new Set());
+          setHiddenWordOrder([]);
+          setProtectedWordIndices(new Set());
+          setPhase('beat_fading');
+          setCurrentBeatIndex(updatedBeats.findIndex(b => b.id === justMasteredBeat.id));
+          setSessionMode('pre_beat_recall');
         }, 2000);
       } else {
         // Session ending: show coffee break with 10-min timer, then recall
@@ -2419,6 +2425,91 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     );
   }
 
+  // Pre-beat recall intro screen - animated transition before recalling old beat
+  if (sessionMode === 'pre_beat_recall' && showPreBeatRecallIntro && beatToRecallBeforeNext) {
+    const introRecallBeatNumber = beats.findIndex(b => b.id === beatToRecallBeforeNext.id) + 1;
+    const nextBeatNumber = nextBeatQueued ? beats.findIndex(b => b.id === nextBeatQueued.id) + 1 : null;
+    
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+        {/* Exit button */}
+        <div className="absolute top-4 left-4">
+          <Button variant="ghost" size="icon" onClick={onExit} className="rounded-full hover:bg-muted">
+            <X className="h-5 w-5 text-muted-foreground" />
+          </Button>
+        </div>
+        
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 15, duration: 0.6 }}
+          className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center"
+        >
+          <RotateCcw className="h-10 w-10 text-purple-500" />
+        </motion.div>
+        
+        <motion.h2 
+          className="text-2xl font-bold"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          {t('beat_practice.recall_intro_title', "Quick Recall")}
+        </motion.h2>
+        
+        <motion.p 
+          className="text-muted-foreground max-w-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          {t('beat_practice.recall_intro_desc', {
+            beatNumber: introRecallBeatNumber,
+            defaultValue: `Before the next beat, let's make sure you still remember Beat ${introRecallBeatNumber}.`
+          })}
+        </motion.p>
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="bg-muted/50 rounded-xl px-4 py-3 max-w-sm"
+        >
+          <p className="text-xs text-muted-foreground flex items-center gap-2">
+            <Eye className="h-3.5 w-3.5 shrink-0" />
+            {t('beat_practice.recall_intro_hint', "Words will progressively hide as you speak correctly. Common words are pre-hidden.")}
+          </p>
+        </motion.div>
+        
+        {nextBeatNumber && (
+          <motion.p
+            className="text-xs text-muted-foreground/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+          >
+            {t('beat_practice.recall_intro_next', { beatNumber: nextBeatNumber, defaultValue: `Next up: Beat ${nextBeatNumber}` })}
+          </motion.p>
+        )}
+        
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+        >
+          <Button 
+            onClick={() => { setShowPreBeatRecallIntro(false); resetForNextRep(); }}
+            className="mt-2 gap-2"
+            size="lg"
+          >
+            <Play className="h-4 w-4" />
+            {t('beat_practice.start_recall', "Start Recall")}
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Coffee break screen - 10 min timer before recall
   if (sessionMode === 'coffee_break' && restUntilTime) {
     
@@ -2829,6 +2920,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               )}
             </span>
           </div>
+
+          {/* Explanation for hidden words during recall */}
+          {(sessionMode === 'recall' || sessionMode === 'pre_beat_recall') && hiddenWordIndices.size > 0 && (
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-xs text-muted-foreground/60 -mt-3"
+            >
+              {t('beat_practice.hidden_words_explanation', 'Common words are pre-hidden to test your recall')}
+            </motion.p>
+          )}
 
           {/* Main sentence card - clean and centered */}
           <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10 relative z-10">
