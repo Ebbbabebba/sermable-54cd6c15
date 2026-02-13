@@ -271,6 +271,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [goalDate, setGoalDate] = useState<Date | null>(null);
   const [isMergedRecall, setIsMergedRecall] = useState(false); // Track if current recall is a merged recall
   const [mergedRecallBeats, setMergedRecallBeats] = useState<Beat[]>([]); // Beats included in merged recall
+  const [isEndOfSessionRecall, setIsEndOfSessionRecall] = useState(false); // 10-min recall before session_complete
   
   // Rest between beats state
   const [restUntilTime, setRestUntilTime] = useState<Date | null>(null);
@@ -1464,6 +1465,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setTimeout(() => {
           setShowCelebration(false);
           
+          // End-of-session recall complete — go to session_complete
+          if (isEndOfSessionRecall) {
+            console.log('✅ End-of-session 10-min recall complete — session done');
+            setIsEndOfSessionRecall(false);
+            setIs10MinRecall(false);
+            setSessionMode('session_complete');
+            return;
+          }
           if (isMergedRecall) {
             // Merged recall done - now check for unlearned beats or complete session
             setIsMergedRecall(false);
@@ -1980,17 +1989,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           setSessionMode('beat_rest');
         }, 2000);
       } else {
-        // Session complete: either daily limit reached OR all beats mastered
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat complete! Session done."));
+        // Session ending: trigger immediate 10-min recall of the just-mastered beat before session_complete
+        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat complete! Quick recall next."));
         setShowCelebration(true);
         
         setTimeout(() => {
           setShowCelebration(false);
+          // Set up recall of the just-mastered beat
+          if (currentBeat) {
+            console.log('🔄 Starting end-of-session 10-min recall for beat:', currentBeat.id);
+            setIsEndOfSessionRecall(true);
+            setIs10MinRecall(true);
+            setBeatsToRecall([currentBeat]);
+            setRecallIndex(0);
+            setRecallSuccessCount(0);
+            setHiddenWordIndices(new Set());
+            setHiddenWordOrder([]);
+            setSessionMode('recall');
+          } else {
+            setSessionMode('session_complete');
+          }
           // Check if free user has more beats to learn (trigger upsell for next session)
           if (!isPremium && nextUnmastered) {
             onSessionLimitReached?.();
           }
-          setSessionMode('session_complete');
         }, 2500);
       }
     }
