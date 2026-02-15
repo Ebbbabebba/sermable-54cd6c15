@@ -1,73 +1,71 @@
 
 
-# Strict Presentation Mode Redesign
+# Improve Strict Presentation Mode UX
 
 ## Overview
-Simplify the strict mode prep screen by removing inline settings and replacing them with a clean "How it works" section + Start button. Settings move to a gear icon in the corner. Also update the hint timing logic: 2s delay for mid-sentence words, 4s for first word of a new sentence (configurable in settings).
+Three improvements to the strict presentation mode:
+1. Clearer instructions on the prep screen explaining the flow
+2. Nicer word hint appearance using Framer Motion animations (smooth slide-up with blur, scaling)
+3. Screen pulse effect when hesitation is detected and a hint is on its way
 
 ## Changes
 
-### 1. Redesign the Strict Mode Prep Screen (`src/pages/Presentation.tsx`)
-- Remove the entire "Settings" block (auto-stop silence slider, font size slider) from the `stage === 'prep'` view
-- Keep only:
-  - Speech title and word count
-  - "How it works" card explaining the mechanic (speak your speech, forgotten words appear after a pause, first words in sentences get extra time)
-  - A large "Start Presentation" button
-- Add a **Settings gear icon button** in the top-right corner that opens the `PresentationControls` overlay
-- Add new state for `hintDelay` (default 2000ms) and `sentenceStartDelay` (default 4000ms) to replace/complement `autoStopSilence`
+### 1. Clearer Prep Screen Instructions (`src/pages/Presentation.tsx`)
+- Rewrite the "How it works" section with a step-by-step flow that feels more like onboarding:
+  - Step 1: "Press start and begin speaking your speech from memory"
+  - Step 2: "If you hesitate, a gentle hint will appear to help you"  
+  - Step 3: "Keep going -- your performance is tracked for review"
+- Add a subtle motivational note like "No text on screen. Just you and your words."
+- Keep it clean and scannable
 
-### 2. Update PresentationControls (`src/components/PresentationControls.tsx`)
-- Replace/rename the "Pause Detection" slider to control two values:
-  - **Word hint delay**: How long before a forgotten word appears (default 2s, range 1-5s)
-  - **Sentence start delay**: Extra time given for first word of a new sentence (default 4s, range 2-8s)
-- Keep font size slider
-- Keep auto-reveal toggle
-- Pass these new settings as props
+### 2. Animated Word Hints (`src/components/StrictPresentationView.tsx`)
+- Import `motion` and `AnimatePresence` from `framer-motion`
+- Replace the current static hint strip with animated versions:
+  - **"Trying" phase**: Slides up softly with a blur-to-clear effect, gentle scale from 0.95 to 1
+  - **"Showing" phase**: Word appears with a spring animation, slightly larger initial scale that settles
+- Use `AnimatePresence` with `mode="wait"` so transitions between phases are smooth
+- Add a subtle backdrop blur behind the hint for better readability
 
-### 3. Update Hint Timing Logic (`src/components/CompactPresentationView.tsx` and `src/components/StrictPresentationView.tsx`)
-- Detect if current word is the first word of a sentence (check if previous word ends with `.`, `!`, `?`, or index is 0)
-- Use `sentenceStartDelay` (4s default) for sentence-start words
-- Use `hintDelay` (2s default) for mid-sentence words
-- The "try to say it" prompt and full word reveal use these adjusted timers
-- Pass `hintDelay` and `sentenceStartDelay` as props from `Presentation.tsx`
-
-### 4. Wire It All Together in `Presentation.tsx`
-- Add state: `showSettings`, `hintDelay`, `sentenceStartDelay`
-- Show settings gear button during `prep` and `live` stages
-- Pass timing props down to `CompactPresentationView`
+### 3. Screen Pulse During Hesitation (`src/components/StrictPresentationView.tsx`)
+- Add a new state: `isHesitating` (boolean) that turns true when the silence timer crosses ~60% of the delay threshold (the "trying" phase trigger)
+- When `isHesitating` is true, render a full-screen overlay `motion.div` with:
+  - A soft pulsing border/glow effect around the edges of the screen using `animate` with repeating opacity and box-shadow
+  - Uses primary color at low opacity (e.g., `hsl(var(--primary) / 0.08)`)
+  - Pulses with a ~1.5s cycle
+- When the user speaks the word (hint clears), the pulse fades out smoothly
+- This gives a visual "the screen is waiting for you" feeling without being intrusive
 
 ## Technical Details
 
-### Sentence boundary detection
+### Framer Motion hint animation config
 ```text
-isSentenceStart = (index === 0) || /[.!?]$/.test(words[index - 1])
-effectiveDelay = isSentenceStart ? sentenceStartDelay : hintDelay
+"trying" phase:
+  initial: { opacity: 0, y: 20, filter: "blur(8px)", scale: 0.95 }
+  animate: { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }
+  transition: { duration: 0.4, ease: "easeOut" }
+
+"showing" phase:
+  initial: { opacity: 0, scale: 0.8 }
+  animate: { opacity: 1, scale: 1 }
+  transition: { type: "spring", stiffness: 300, damping: 25 }
+
+exit: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.2 } }
 ```
 
-### Prep screen layout (simplified)
+### Screen pulse overlay
 ```text
-+----------------------------------+
-| [Back]                    [Gear] |
-|                                  |
-|    "My Speech Title"             |
-|    Strict Mode - 342 words       |
-|                                  |
-|  +----------------------------+  |
-|  | How it works:              |  |
-|  | - Speak from memory        |  |
-|  | - Forgotten words appear   |  |
-|  |   after 2s (4s for new     |  |
-|  |   sentences)               |  |
-|  | - Get analysis afterward   |  |
-|  +----------------------------+  |
-|                                  |
-|  [====  Start Presentation  ====]|
-+----------------------------------+
+Rendered as a fixed inset-0 div with pointer-events-none
+animate: {
+  boxShadow: [
+    "inset 0 0 60px hsl(var(--primary) / 0.05)",
+    "inset 0 0 100px hsl(var(--primary) / 0.12)",
+    "inset 0 0 60px hsl(var(--primary) / 0.05)"
+  ]
+}
+transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
 ```
 
-### Ideas for Further Development
-- **Speed coaching**: Track words-per-minute and show pacing feedback
-- **Confidence score**: Rate overall fluency based on hesitation ratio
-- **Streak tracking**: Count consecutive words spoken without prompts
-- **Comparison mode**: Side-by-side results from multiple sessions
-- **Export results**: Share or download presentation analytics as PDF
+### Files to edit
+- `src/pages/Presentation.tsx` -- prep screen instructions
+- `src/components/StrictPresentationView.tsx` -- animated hints + screen pulse
+
