@@ -2181,6 +2181,32 @@ const [liveTranscription, setLiveTranscription] = useState("");
               </div>
               <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.learned')}</span>
             </div>
+
+            <div className="flex flex-col items-center">
+              <div className="relative w-16 h-16">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50" cy="50" r="42"
+                    fill="none"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="8"
+                  />
+                  <circle
+                    cx="50" cy="50" r="42"
+                    fill="none"
+                    stroke="hsl(142 71% 45%)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(totalBeats > 0 ? Math.round((masteredBeats / totalBeats) * 100) : 0) * 2.64} 264`}
+                    className="transition-all duration-700"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold">{totalBeats > 0 ? Math.round((masteredBeats / totalBeats) * 100) : 0}%</span>
+                </div>
+              </div>
+              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.mastery', 'Mastery')}</span>
+            </div>
             
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
