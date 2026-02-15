@@ -453,14 +453,30 @@ const Presentation = () => {
             </p>
           </div>
 
-          <div className="p-6 bg-primary/5 rounded-lg border border-primary/20 space-y-3">
-            <h4 className="font-semibold text-lg">How it works</h4>
-            <ul className="text-sm space-y-2 text-muted-foreground">
-              <li>• Speak your speech from memory</li>
-              <li>• Forgotten words appear after {(hintDelay / 1000).toFixed(1)}s of hesitation</li>
-              <li>• First word of a new sentence gets {(sentenceStartDelay / 1000).toFixed(1)}s extra time</li>
-              <li>• Get detailed analysis when you finish</li>
-            </ul>
+          <div className="p-6 bg-primary/5 rounded-lg border border-primary/20 space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">1</div>
+                <div>
+                  <p className="font-medium text-sm">Press start and begin speaking your speech from memory</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">No text on screen. Just you and your words.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">2</div>
+                <div>
+                  <p className="font-medium text-sm">If you hesitate, a gentle hint will appear to help you</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">The screen pulses softly while waiting, then reveals the word.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">3</div>
+                <div>
+                  <p className="font-medium text-sm">Keep going — your performance is tracked for review</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Get detailed analysis when you finish.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <Button
