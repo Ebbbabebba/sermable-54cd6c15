@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface WordPerformance {
   word: string;
@@ -95,6 +96,7 @@ export const StrictPresentationView = ({
   const [showHint, setShowHint] = useState<{ word: string; phase: "trying" | "showing" } | null>(null);
   const [wordPerformance, setWordPerformance] = useState<WordPerformance[]>([]);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [isHesitating, setIsHesitating] = useState(false);
   
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -256,6 +258,7 @@ export const StrictPresentationView = ({
       // Show "try" prompt at 60% of the delay
       const tryDelay = Math.round(effectiveDelay * 0.6);
       if (silenceDuration >= tryDelay && !showHint) {
+        setIsHesitating(true);
         setShowHint({ word: currentWord, phase: "trying" });
       }
       
@@ -311,6 +314,7 @@ export const StrictPresentationView = ({
         // Move to next word
         setCurrentWordIndex(prev => prev + 1);
         setShowHint(null);
+        setIsHesitating(false);
         wrongAttempts.current = [];
         wordStartTimeRef.current = Date.now();
         lastProgressTime.current = Date.now();
@@ -347,6 +351,7 @@ export const StrictPresentationView = ({
             
             setCurrentWordIndex(prev => prev + i + 1);
             setShowHint(null);
+            setIsHesitating(false);
             wrongAttempts.current = [];
             wordStartTimeRef.current = Date.now();
             lastProgressTime.current = Date.now();
@@ -388,6 +393,7 @@ export const StrictPresentationView = ({
     if (isRecording) {
       setCurrentWordIndex(0);
       setShowHint(null);
+      setIsHesitating(false);
       setWordPerformance([]);
       transcriptRef.current = "";
       wrongAttempts.current = [];
@@ -483,34 +489,68 @@ export const StrictPresentationView = ({
         )}
       </div>
 
-      {/* Teleprompter Hint Strip */}
-      {showHint && (
-        <div 
-          className={cn(
-            "fixed bottom-32 left-0 right-0 z-40 flex items-center justify-center transition-all duration-300",
-            "animate-fade-in"
+      {/* Hesitation Pulse Overlay */}
+      <AnimatePresence>
+        {isHesitating && (
+          <motion.div
+            className="fixed inset-0 z-30 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              boxShadow: [
+                "inset 0 0 60px hsl(var(--primary) / 0.05)",
+                "inset 0 0 100px hsl(var(--primary) / 0.12)",
+                "inset 0 0 60px hsl(var(--primary) / 0.05)",
+              ],
+            }}
+            exit={{ opacity: 0, transition: { duration: 0.4 } }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Animated Teleprompter Hint Strip */}
+      <div className="fixed bottom-32 left-0 right-0 z-40 flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          {showHint && (
+            <motion.div
+              key={showHint.phase}
+              initial={
+                showHint.phase === "trying"
+                  ? { opacity: 0, y: 20, filter: "blur(8px)", scale: 0.95 }
+                  : { opacity: 0, scale: 0.8 }
+              }
+              animate={
+                showHint.phase === "trying"
+                  ? { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }
+                  : { opacity: 1, scale: 1 }
+              }
+              exit={{ opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.2 } }}
+              transition={
+                showHint.phase === "trying"
+                  ? { duration: 0.4, ease: "easeOut" }
+                  : { type: "spring", stiffness: 300, damping: 25 }
+              }
+              className={cn(
+                "px-12 py-6 rounded-2xl shadow-2xl min-w-[300px] text-center backdrop-blur-sm",
+                showHint.phase === "trying"
+                  ? "bg-primary/90 text-primary-foreground"
+                  : "bg-yellow-500 text-yellow-950"
+              )}
+            >
+              {showHint.phase === "trying" ? (
+                <span className="text-3xl md:text-5xl font-medium">
+                  💭 Try to say it...
+                </span>
+              ) : (
+                <span className="text-4xl md:text-6xl font-bold tracking-wide">
+                  {showHint.word}
+                </span>
+              )}
+            </motion.div>
           )}
-        >
-          <div 
-            className={cn(
-              "px-12 py-6 rounded-2xl shadow-2xl transition-all duration-300 min-w-[300px] text-center",
-              showHint.phase === "trying" 
-                ? "bg-primary/90 text-primary-foreground" 
-                : "bg-yellow-500 text-yellow-950"
-            )}
-          >
-            {showHint.phase === "trying" ? (
-              <span className="text-3xl md:text-5xl font-medium">
-                💭 Try to say it...
-              </span>
-            ) : (
-              <span className="text-4xl md:text-6xl font-bold tracking-wide">
-                {showHint.word}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+        </AnimatePresence>
+      </div>
 
       {/* Bottom Controls */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
