@@ -2052,6 +2052,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
     : segments.filter(s => s.is_mastered).length;
   const totalBeats = practiceBeats.length > 0 ? practiceBeats.length : segments.length;
   const progressPercent = totalBeats > 0 ? (masteredBeats / totalBeats) * 100 : 0;
+  // Mastery = how much of the script is memorized (hidden from view)
+  // 100% visibility = 0% mastery, 0% visibility = 100% mastery
+  const masteryPercent = segments.length > 0
+    ? Math.round(segments.reduce((sum, s) => sum + (100 - (s.visibility_percent ?? 100)), 0) / segments.length)
+    : 0;
   const nextBeatNumber = masteredBeats + 1;
   const hasBeats = totalBeats > 0;
 
@@ -2197,12 +2202,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     stroke="hsl(142 71% 45%)"
                     strokeWidth="8"
                     strokeLinecap="round"
-                    strokeDasharray={`${(totalBeats > 0 ? Math.round((masteredBeats / totalBeats) * 100) : 0) * 2.64} 264`}
+                    strokeDasharray={`${masteryPercent * 2.64} 264`}
                     className="transition-all duration-700"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold">{totalBeats > 0 ? Math.round((masteredBeats / totalBeats) * 100) : 0}%</span>
+                  <span className="text-lg font-bold">{masteryPercent}%</span>
                 </div>
               </div>
               <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.mastery', 'Mastery')}</span>
