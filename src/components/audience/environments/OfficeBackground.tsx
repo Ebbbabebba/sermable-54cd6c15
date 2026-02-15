@@ -76,16 +76,29 @@ export const OfficeBackground = () => {
       <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-amber-800 to-amber-700 dark:from-amber-900 dark:to-amber-800 rounded-t-lg shadow-lg">
         {/* Table reflection */}
         <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-b from-white/20 to-transparent rounded-t-lg" />
-        {/* Coffee cup */}
-        <div className="absolute -top-4 right-8">
-          <div className="w-4 h-4 bg-white dark:bg-slate-200 rounded-b-lg rounded-t-sm shadow-sm" />
-          <div className="absolute top-0.5 right-0 w-1.5 h-2 border border-slate-300 dark:border-slate-400 rounded-r-full" />
-          {/* Steam */}
+        {/* Abstract coffee cup */}
+        <div className="absolute -top-5 right-8">
+          {/* Cup body - abstract rounded shape */}
           <motion.div 
-            className="absolute -top-2 left-1 w-0.5 h-2 bg-slate-300/50 rounded-full"
-            animate={{ y: [-2, -4], opacity: [0.5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-200 to-amber-400 dark:from-amber-300 dark:to-amber-500 opacity-70"
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
+          {/* Steam wisps - abstract floating circles */}
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full bg-foreground/10"
+              style={{ width: 3 - i, height: 3 - i, left: 1 + i * 2 }}
+              animate={{ 
+                y: [-4, -10 - i * 3], 
+                x: [0, (i - 1) * 2],
+                opacity: [0.4, 0], 
+                scale: [0.8, 1.4] 
+              }}
+              transition={{ duration: 2 + i * 0.5, repeat: Infinity, delay: i * 0.6, ease: "easeOut" }}
+            />
+          ))}
         </div>
         {/* Notebook */}
         <div className="absolute -top-3 left-6 w-6 h-4 bg-slate-100 dark:bg-slate-300 rounded-sm shadow-sm transform -rotate-6">
