@@ -61,7 +61,7 @@ const DeleteAccountRequest = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <Button variant="ghost" size="icon" className="absolute left-4 top-4" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="icon" className="absolute left-4 top-4" onClick={() => window.history.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Trash2 className="h-10 w-10 text-destructive mx-auto mb-2" />
