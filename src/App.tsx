@@ -14,6 +14,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Help from "./pages/Help";
 import SharedSpeech from "./pages/SharedSpeech";
+import DeleteAccountRequest from "./pages/DeleteAccountRequest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/help" element={<Help />} />
           <Route path="/share/:token" element={<SharedSpeech />} />
+          <Route path="/delete-account" element={<DeleteAccountRequest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
