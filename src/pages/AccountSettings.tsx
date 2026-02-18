@@ -274,14 +274,19 @@ const AccountSettings = () => {
         {/* Deletion Request Link */}
         <Card>
           <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-sm">{t('settings.account.deletionLink', 'Account Deletion Link')}</p>
-                <p className="text-xs text-muted-foreground">{t('settings.account.deletionLinkDesc', 'Share this link to request account and data deletion')}</p>
-              </div>
+            <p className="font-medium text-sm mb-1">{t('settings.account.deletionLink', 'Account Deletion Link')}</p>
+            <p className="text-xs text-muted-foreground mb-3">{t('settings.account.deletionLinkDesc', 'Share this link to request account and data deletion')}</p>
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={`${window.location.origin}/delete-account`}
+                className="text-xs h-9"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
               <Button
                 variant="outline"
                 size="sm"
+                className="shrink-0"
                 onClick={() => {
                   const url = `${window.location.origin}/delete-account`;
                   navigator.clipboard.writeText(url);
