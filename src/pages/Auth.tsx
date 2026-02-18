@@ -24,7 +24,13 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        const pendingToken = sessionStorage.getItem('pending-share-token');
+        if (pendingToken) {
+          sessionStorage.removeItem('pending-share-token');
+          navigate(`/share/${pendingToken}`);
+        } else {
+          navigate("/dashboard");
+        }
       }
     };
     checkUser();
@@ -47,7 +53,13 @@ const Auth = () => {
           title: t('auth.welcomeBackToast'),
           description: t('auth.signInSuccess'),
         });
-        navigate("/dashboard");
+        const pendingToken = sessionStorage.getItem('pending-share-token');
+        if (pendingToken) {
+          sessionStorage.removeItem('pending-share-token');
+          navigate(`/share/${pendingToken}`);
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
