@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Trash2, Loader2, User, Shield, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, User, Shield, Lock, Eye, EyeOff, CheckCircle2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -226,6 +226,30 @@ const AccountSettings = () => {
             )}
           </CardContent>
         </Card>
+        {/* Deletion Request Link */}
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">{t('settings.account.deletionLink', 'Account Deletion Link')}</p>
+                <p className="text-xs text-muted-foreground">{t('settings.account.deletionLinkDesc', 'Share this link to request account and data deletion')}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const url = `${window.location.origin}/delete-account`;
+                  navigator.clipboard.writeText(url);
+                  toast({ title: t('common.success', 'Success'), description: t('settings.account.linkCopied', 'Link copied to clipboard') });
+                }}
+              >
+                <ExternalLink className="h-4 w-4 mr-1" />
+                {t('common.copy', 'Copy')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Danger Zone */}
         <Card className="border-destructive/50">
           <CardContent className="pt-4">
