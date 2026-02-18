@@ -67,7 +67,7 @@ const DeleteAccountRequest = () => {
           <Trash2 className="h-10 w-10 text-destructive mx-auto mb-2" />
           <CardTitle className="text-xl">Delete Account & Data</CardTitle>
           <CardDescription>
-            Request deletion of your Sermable account and all associated data including speeches, practice sessions, and progress.
+            Request deletion of your account and all associated data including speeches, practice sessions, and progress.
           </CardDescription>
         </CardHeader>
         <CardContent>
