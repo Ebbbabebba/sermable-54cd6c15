@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Trash2, Loader2, User, Shield, Lock, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, User, Shield, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -30,6 +30,7 @@ const AccountSettings = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordChanged, setPasswordChanged] = useState(false);
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) {
@@ -60,6 +61,8 @@ const AccountSettings = () => {
       });
       setNewPassword("");
       setConfirmPassword("");
+      setPasswordChanged(true);
+      setTimeout(() => setPasswordChanged(false), 5000);
     } catch (error: any) {
       toast({
         title: t('common.error'),
@@ -213,6 +216,14 @@ const AccountSettings = () => {
                 t('settings.account.updatePassword', 'Update Password')
               )}
             </Button>
+            {passwordChanged && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20 animate-fade-in">
+                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                  {t('settings.account.passwordChanged', 'Your password has been updated')} ✓
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
         {/* Danger Zone */}
