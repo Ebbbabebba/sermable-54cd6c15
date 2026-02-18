@@ -273,14 +273,12 @@ const AccountSettings = () => {
 
         {/* Deletion Request Link */}
         <div className="text-center pt-2">
-          <a
-            href="https://sermable.lovable.app/delete-account"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => navigate('/delete-account')}
             className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
           >
             {t('settings.account.requestDeletion', 'Request account & data deletion')}
-          </a>
+          </button>
         </div>
       </main>
     </div>
