@@ -937,6 +937,7 @@ export type Database = {
           practice_segment_start: number | null
           presentation_mode: string | null
           review_interval: number | null
+          share_token: string | null
           speech_language: string | null
           speech_type: string | null
           target_segment_length: number | null
@@ -965,6 +966,7 @@ export type Database = {
           practice_segment_start?: number | null
           presentation_mode?: string | null
           review_interval?: number | null
+          share_token?: string | null
           speech_language?: string | null
           speech_type?: string | null
           target_segment_length?: number | null
@@ -993,6 +995,7 @@ export type Database = {
           practice_segment_start?: number | null
           presentation_mode?: string | null
           review_interval?: number | null
+          share_token?: string | null
           speech_language?: string | null
           speech_type?: string | null
           target_segment_length?: number | null
