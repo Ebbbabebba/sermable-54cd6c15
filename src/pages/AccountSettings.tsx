@@ -272,33 +272,16 @@ const AccountSettings = () => {
         </Card>
 
         {/* Deletion Request Link */}
-        <Card>
-          <CardContent className="pt-4">
-            <p className="font-medium text-sm mb-1">{t('settings.account.deletionLink', 'Account Deletion Link')}</p>
-            <p className="text-xs text-muted-foreground mb-3">{t('settings.account.deletionLinkDesc', 'Share this link to request account and data deletion')}</p>
-            <div className="flex items-center gap-2">
-              <Input
-                readOnly
-                value={`${window.location.origin}/delete-account`}
-                className="text-xs h-9"
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={() => {
-                  const url = `${window.location.origin}/delete-account`;
-                  navigator.clipboard.writeText(url);
-                  toast({ title: t('common.success', 'Success'), description: t('settings.account.linkCopied', 'Link copied to clipboard') });
-                }}
-              >
-                <ExternalLink className="h-4 w-4 mr-1" />
-                {t('common.copy', 'Copy')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="text-center pt-2">
+          <a
+            href="/delete-account"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+          >
+            {t('settings.account.requestDeletion', 'Request account & data deletion')}
+          </a>
+        </div>
       </main>
     </div>
   );
