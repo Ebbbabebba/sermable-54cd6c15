@@ -1822,13 +1822,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // Only 1 sentence - go straight to beat fading after sentence 1
           transitionToPhase('beat_learning');
         } else if (uniqueCount === 2) {
-          // 2 sentences - practice each alone, then combine
+          // 2 sentences - practice each alone, then combine (1+2 IS the whole beat)
           if (currentPhase === 'sentence_1_fading') {
             transitionToPhase('sentence_2_learning');
           } else if (currentPhase === 'sentence_2_fading') {
             transitionToPhase('sentences_1_2_learning');
           } else if (currentPhase === 'sentences_1_2_fading') {
-            transitionToPhase('beat_learning');
+            // For 2 sentences, combined 1+2 IS the full beat - mark as mastered
+            showBeatCelebration();
+            return;
           }
         } else {
           // 3 sentences - normal flow
