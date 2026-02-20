@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Play, Trash2, Presentation, Clock, Crown, Mic, Eye, Target, Share2, Loader2, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Play, Trash2, Presentation, Clock, Crown, Mic, Eye, Target, Share2, Loader2, Check } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import LockCountdown from "./LockCountdown";
 import { useSleepAwareTracking } from "@/hooks/useSleepAwareTracking";
 
@@ -48,6 +51,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const [showPresentationPremium, setShowPresentationPremium] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [deadlineOpen, setDeadlineOpen] = useState(false);
   
   // Check if this is the only speech for a free user
   const isOnlyFreeSpeech = subscriptionTier === 'free' && totalSpeeches === 1;
@@ -91,9 +95,24 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const { trackPracticeStart } = useSleepAwareTracking();
 
   const handleCardClick = () => {
-    // Track evening practice for morning recall prompts
     trackPracticeStart(speech.id);
     navigate(`/practice/${speech.id}`);
+  };
+
+  const handleDeadlineChange = async (newDate: Date | undefined) => {
+    if (!newDate) return;
+    try {
+      const { error } = await supabase
+        .from("speeches")
+        .update({ goal_date: format(newDate, "yyyy-MM-dd") })
+        .eq("id", speech.id);
+      if (error) throw error;
+      setDeadlineOpen(false);
+      toast({ title: t('dashboard.deadlineUpdated', 'Deadline updated') });
+      onUpdate();
+    } catch (error: any) {
+      toast({ variant: "destructive", title: t('common.error'), description: error.message });
+    }
   };
 
   const handleDelete = async () => {
@@ -190,10 +209,26 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Calendar className="h-3.5 w-3.5" />
-          <span>{t('dashboard.goal')}: {format(goalDate, "MMM dd, yyyy")}</span>
-        </div>
+        <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
+          <PopoverTrigger asChild>
+            <button
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CalendarIcon className="h-3.5 w-3.5" />
+              <span>{t('dashboard.goal')}: {format(goalDate, "MMM dd, yyyy")}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              mode="single"
+              selected={goalDate}
+              onSelect={handleDeadlineChange}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
 
         {isLocked && nextReviewDate && (
           <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-xl">
