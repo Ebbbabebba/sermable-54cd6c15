@@ -2222,6 +2222,78 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </div>
 
           {/* Session Card - Clean and simple */}
+          {/* Only show "Session Complete" if session is done AND next review is still in future */}
+          {(() => {
+            const showSessionComplete = todaySessionDone;
+            const isFullyMastered = showSessionComplete && masteryPercent >= 100;
+            const isInProgress = showSessionComplete && masteryPercent < 100;
+            
+            return (
+              <div className="bg-background rounded-3xl border border-border p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isFullyMastered ? 'bg-green-500/10' : showSessionComplete ? 'bg-amber-500/10' : 'bg-primary/10'}`}>
+                    {isFullyMastered ? (
+                      <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    ) : showSessionComplete ? (
+                      <Clock className="h-6 w-6 text-amber-500" />
+                    ) : (
+                      <Target className="h-6 w-6 text-primary" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">
+                      {showSessionComplete
+                        ? (nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
+                              ? t('beat_practice.done_for_now', "Done for now!")
+                              : t('beat_practice.done_for_today', "Done for today!"))
+                        : masteredBeats === 0
+                          ? t('beat_practice.todays_session')
+                          : t('beat_practice.active_session')}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {showSessionComplete
+                        ? (nextReviewDate 
+                              ? <span className="flex items-center gap-1">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  {t('beat_practice.come_back_in', "Come back in {{time}}", { time: '' })}<LockCountdown nextReviewDate={nextReviewDate} />
+                                </span>
+                              : t('beat_practice.come_back_later'))
+                        : masteredBeats > 0 
+                          ? t('beat_practice.session_desc_recall')
+                          : t('beat_practice.session_desc_start')}
+                    </p>
+                  </div>
+                </div>
+            
+                {/* Beat pills - only show if session not complete */}
+                {!showSessionComplete && (
+                  <div className="flex flex-wrap gap-2">
+                    {masteredBeats > 0 && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        {masteredBeats} {t('beat_practice.to_recall')}
+                      </span>
+                    )}
+                    {nextBeatNumber <= totalBeats && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                        <Flame className="h-3.5 w-3.5" />
+                        {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
+                      </span>
+                    )}
+                  </div>
+                )}
+                
+                {/* Progress for completed session */}
+                {showSessionComplete && (
+                  <div className={`flex items-center gap-2 text-sm ${isFullyMastered ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                    {isFullyMastered ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                    {t('beat_practice.progress', { mastered: masteredBeats, total: totalBeats })}
+                    {!isFullyMastered && <span className="text-muted-foreground">· {masteryPercent}% {t('beat_practice.mastery', 'mastery')}</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Upcoming beats preview - stacked and faded */}
           {(() => {
