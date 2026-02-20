@@ -20,6 +20,12 @@ const Index = () => {
 
   useEffect(() => {
     const checkAuthAndOnboarding = async () => {
+      // Desktop users only see download links, no login needed
+      if (!isMobileDevice) {
+        setIsLoading(false);
+        return;
+      }
+
       const onboardingComplete = localStorage.getItem("onboarding_complete");
       
       if (!onboardingComplete) {
@@ -38,7 +44,7 @@ const Index = () => {
     };
 
     checkAuthAndOnboarding();
-  }, [navigate]);
+  }, [navigate, isMobileDevice]);
 
   if (isLoading) {
     return (
