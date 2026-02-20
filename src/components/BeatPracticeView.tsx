@@ -2773,7 +2773,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 "text-xs font-bold uppercase tracking-wide",
                 is10MinRecall ? "text-orange-500" : "text-amber-500"
               )}>
-                {isMergedRecall ? "🔗 Full Speech" : is10MinRecall ? "⏰ 10min" : "🔄 Recall"}
+                {isMergedRecall ? "🔗 Full Speech" : (is10MinRecall && !newBeatToLearn) ? "⏰ 10min" : "🔄 Recall"}
               </span>
               <span className={cn(
                 "text-sm font-bold",
