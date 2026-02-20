@@ -2681,44 +2681,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
         </DialogContent>
       </Dialog>
 
-      {/* Session Complete Dialog */}
-      <Dialog open={showSessionComplete} onOpenChange={setShowSessionComplete}>
-        <DialogContent className="max-w-sm text-center">
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-            </div>
-            
-            <DialogHeader className="text-center">
-              <DialogTitle className="text-center">
-                {t('practice.sessionCompleteTitle', "Today's Session Complete!")}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <p className="text-sm text-muted-foreground">
-              {t('practice.sessionCompleteDesc', "Great work! Your brain needs time to consolidate what you've learned. Come back later for better retention.")}
-            </p>
-            
-            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-              <GraduationCap className="h-4 w-4 text-primary" />
-              <span>{t('practice.restHelpsMemory', 'Rest helps memory consolidation')}</span>
-            </div>
-          </div>
-          
-          <DialogFooter className="flex-col gap-2">
-            <Button 
-              onClick={() => {
-                setShowSessionComplete(false);
-                navigate("/dashboard");
-              }}
-              className="w-full"
-            >
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              {t('common.okay', 'Okay')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
