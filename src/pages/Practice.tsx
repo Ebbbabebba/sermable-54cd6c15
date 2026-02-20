@@ -2225,13 +2225,17 @@ const [liveTranscription, setLiveTranscription] = useState("");
           {/* Only show "Session Complete" if session is done AND next review is still in future */}
           {(() => {
             const showSessionComplete = todaySessionDone;
+            const isFullyMastered = showSessionComplete && masteryPercent >= 100;
+            const isInProgress = showSessionComplete && masteryPercent < 100;
             
             return (
               <div className="bg-background rounded-3xl border border-border p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${showSessionComplete ? 'bg-green-500/10' : 'bg-primary/10'}`}>
-                    {showSessionComplete ? (
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isFullyMastered ? 'bg-green-500/10' : showSessionComplete ? 'bg-amber-500/10' : 'bg-primary/10'}`}>
+                    {isFullyMastered ? (
                       <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    ) : showSessionComplete ? (
+                      <Clock className="h-6 w-6 text-amber-500" />
                     ) : (
                       <Target className="h-6 w-6 text-primary" />
                     )}
@@ -2285,9 +2289,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 
                 {/* Progress for completed session */}
                 {showSessionComplete && (
-                  <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                    <CheckCircle2 className="h-4 w-4" />
+                  <div className={`flex items-center gap-2 text-sm ${isFullyMastered ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                    {isFullyMastered ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                     {t('beat_practice.progress', { mastered: masteredBeats, total: totalBeats })}
+                    {!isFullyMastered && <span className="text-muted-foreground">· {masteryPercent}% {t('beat_practice.mastery', 'mastery')}</span>}
                   </div>
                 )}
               </div>
@@ -2431,9 +2436,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 size="lg" 
                 variant="outline"
                 onClick={() => navigate('/dashboard')}
-                className="w-full h-14 rounded-2xl text-lg font-bold border-green-500/30 text-green-600 hover:bg-green-500/10 bg-background"
+                className={`w-full h-14 rounded-2xl text-lg font-bold bg-background ${masteryPercent >= 100 ? 'border-green-500/30 text-green-600 hover:bg-green-500/10' : 'border-amber-500/30 text-amber-600 hover:bg-amber-500/10'}`}
               >
-              <CheckCircle2 className="h-5 w-5 mr-2" />
+              {masteryPercent >= 100 ? <CheckCircle2 className="h-5 w-5 mr-2" /> : <Clock className="h-5 w-5 mr-2" />}
               {nextReviewDate && nextReviewDate <= new Date()
                 ? t('beat_practice.start_next_session', "Start Next Session")
                 : nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
