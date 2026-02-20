@@ -2159,8 +2159,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
             )}
           </div>
 
-          {/* Progress stats - Duolingo style circles */}
-          <div className="flex justify-center gap-6">
+          {/* Progress stats */}
+          <div className="flex justify-center gap-8">
             <div className="flex flex-col items-center">
               <div className="relative w-16 h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -2185,32 +2185,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 </div>
               </div>
               <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.learned')}</span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="relative w-16 h-16">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="hsl(var(--muted))"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="hsl(142 71% 45%)"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={`${masteryPercent * 2.64} 264`}
-                    className="transition-all duration-700"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold">{masteryPercent}%</span>
-                </div>
-              </div>
-              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.mastery', 'Mastery')}</span>
             </div>
             
             <div className="flex flex-col items-center">
