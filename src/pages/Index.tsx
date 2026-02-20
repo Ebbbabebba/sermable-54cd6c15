@@ -17,6 +17,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useTranslation();
   const isMobileDevice = useIsMobileDevice();
+  const [showDownloadLinks, setShowDownloadLinks] = useState(false);
 
   useEffect(() => {
     const checkAuthAndOnboarding = async () => {
@@ -93,8 +94,11 @@ const Index = () => {
                 {t('home.haveAccount')}
               </Button>
             </>
-          ) : (
+          ) : showDownloadLinks ? (
             <>
+              <p className="text-sm text-muted-foreground mb-2">
+                {t('home.mobileOnly', 'sermable is available on mobile devices. Download the app to log in.')}
+              </p>
               <a
                 href="https://apps.apple.com/app/sermable/id0000000000"
                 target="_blank"
@@ -128,6 +132,24 @@ const Index = () => {
                   Get it on Google Play
                 </Button>
               </a>
+            </>
+          ) : (
+            <>
+              <Button 
+                size="lg" 
+                onClick={() => setShowDownloadLinks(true)}
+                className="w-full text-base font-semibold py-6"
+              >
+                {t('home.getStarted')}
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => setShowDownloadLinks(true)}
+                className="w-full text-base font-semibold py-6"
+              >
+                {t('home.haveAccount')}
+              </Button>
             </>
           )}
         </div>
