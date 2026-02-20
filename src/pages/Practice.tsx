@@ -2345,13 +2345,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
           {/* Next session info - only show if there's a next review date AND practice history */}
           {nextReviewDate && practiceBeats.length > 0 && (
             <div className={`flex flex-col gap-3 p-4 rounded-2xl ${isLocked ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-primary/5 border border-primary/20'}`}>
-              {todaySessionDone && (
-                <h3 className="text-lg font-bold text-center">
-                  {nextReviewDate.toDateString() === new Date().toDateString()
-                    ? t('beat_practice.done_for_now', "Done for now!")
-                    : t('beat_practice.done_for_today', "Done for today!")}
-                </h3>
-              )}
               <div className="flex items-center gap-3">
                 <Clock className={`h-5 w-5 shrink-0 ${isLocked ? 'text-amber-500' : 'text-primary'}`} />
                 <div className="flex-1">
