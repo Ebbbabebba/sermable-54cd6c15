@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+const useIsMobileDevice = () => {
+  return useMemo(() => {
+    const ua = navigator.userAgent || navigator.vendor || "";
+    return /android|iphone|ipad|ipod|mobile/i.test(ua);
+  }, []);
+};
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -19,8 +26,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const isMobileDevice = useIsMobileDevice();
 
   useEffect(() => {
+    // Desktop users cannot log in — redirect to download page
+    if (!isMobileDevice) {
+      navigate("/", { replace: true });
+      return;
+    }
+
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -34,7 +48,7 @@ const Auth = () => {
       }
     };
     checkUser();
-  }, [navigate]);
+  }, [navigate, isMobileDevice]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
