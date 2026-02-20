@@ -102,11 +102,60 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const handleDeadlineChange = async (newDate: Date | undefined) => {
     if (!newDate) return;
     try {
+      const newGoalDate = format(newDate, "yyyy-MM-dd");
+      
+      // Update speech goal_date
       const { error } = await supabase
         .from("speeches")
-        .update({ goal_date: format(newDate, "yyyy-MM-dd") })
+        .update({ goal_date: newGoalDate })
         .eq("id", speech.id);
       if (error) throw error;
+
+      // Recalculate segment schedules based on new deadline
+      const { data: segments } = await supabase
+        .from("speech_segments")
+        .select("id, next_review_at")
+        .eq("speech_id", speech.id);
+
+      if (segments && segments.length > 0) {
+        const now = new Date();
+        const newGoal = new Date(newGoalDate);
+        const daysLeft = Math.max(1, differenceInDays(newGoal, now));
+
+        // Cap all segment review dates to not exceed the new deadline
+        for (const segment of segments) {
+          if (segment.next_review_at) {
+            const reviewDate = new Date(segment.next_review_at);
+            if (reviewDate > newGoal) {
+              await supabase
+                .from("speech_segments")
+                .update({ next_review_at: newGoal.toISOString() })
+                .eq("id", segment.id);
+            }
+          }
+        }
+      }
+
+      // Also update schedule next_review_date if it exceeds new deadline
+      const { data: schedule } = await supabase
+        .from("schedules")
+        .select("id, next_review_date")
+        .eq("speech_id", speech.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (schedule?.next_review_date) {
+        const newGoal = new Date(newGoalDate);
+        const reviewDate = new Date(schedule.next_review_date);
+        if (reviewDate > newGoal) {
+          await supabase
+            .from("schedules")
+            .update({ next_review_date: newGoal.toISOString() })
+            .eq("id", schedule.id);
+        }
+      }
+
       setDeadlineOpen(false);
       toast({ title: t('dashboard.deadlineUpdated', 'Deadline updated') });
       onUpdate();
@@ -199,11 +248,15 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
             isOverdue 
               ? "bg-destructive/10 text-destructive" 
-              : "bg-secondary text-muted-foreground"
+              : daysRemaining === 0
+                ? "bg-orange-500/15 text-orange-600 dark:text-orange-400"
+                : "bg-secondary text-muted-foreground"
           }`}>
             {isOverdue
               ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
-              : t(daysRemaining === 1 ? 'dashboard.daysLeft' : 'dashboard.daysLeftPlural', { count: daysRemaining })}
+              : daysRemaining === 0
+                ? t('dashboard.presentationDay', '🎤 Presentation day!')
+                : t(daysRemaining === 1 ? 'dashboard.daysLeft' : 'dashboard.daysLeftPlural', { count: daysRemaining })}
           </span>
         </div>
       </CardHeader>
