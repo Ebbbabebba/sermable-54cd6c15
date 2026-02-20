@@ -2378,49 +2378,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
           )}
 
 
-          {/* Next session info - only show if there's a next review date AND practice history */}
-          {nextReviewDate && practiceBeats.length > 0 && (
-            <div className={`flex flex-col gap-3 p-4 rounded-2xl ${isLocked ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-primary/5 border border-primary/20'}`}>
-              <div className="flex items-center gap-3">
-                <Clock className={`h-5 w-5 shrink-0 ${isLocked ? 'text-amber-500' : 'text-primary'}`} />
-                <div className="flex-1">
-                  <p className="text-sm font-medium mb-1">
-                    {isLocked 
-                      ? t('practice.aiRecommendsWaiting')
-                      : t('dashboard.nextPractice')}
-                  </p>
-                  <p className={`text-lg font-bold ${isLocked ? 'text-amber-600 dark:text-amber-400' : 'text-primary'}`}>
-                    <LockCountdown nextReviewDate={nextReviewDate} />
-                  </p>
-                </div>
-              </div>
-              
-              {isLocked && subscriptionTier === 'free' && (
-                <Button 
-                  variant="link" 
-                  size="sm"
-                  onClick={() => navigate("/settings")}
-                  className="text-amber-600 p-0 h-auto justify-start"
-                >
-                  <Crown className="h-3.5 w-3.5 mr-1" />
-                  {t('practice.upgradeToPremium')}
-                </Button>
-              )}
-              
-              {/* Premium Practice Anyway button */}
-              {isLocked && subscriptionTier !== 'free' && (
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowTimingWarning(true)}
-                  className="w-full border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
-                >
-                  <Crown className="h-3.5 w-3.5 mr-1.5" />
-                  {t('practice.practiceAnyway')}
-                </Button>
-              )}
-            </div>
-          )}
         </div>
       </main>
 
