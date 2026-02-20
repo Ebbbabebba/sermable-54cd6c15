@@ -2239,21 +2239,25 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   <div>
                     <h3 className="font-semibold">
                       {showSessionComplete
-                        ? (nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
-                            ? t('beat_practice.done_for_now', "Done for now!")
-                            : t('beat_practice.done_for_today', "Done for today!"))
+                        ? (nextReviewDate && nextReviewDate <= new Date()
+                            ? t('beat_practice.start_next_session', "Start Next Session")
+                            : nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
+                              ? t('beat_practice.done_for_now', "Done for now!")
+                              : t('beat_practice.done_for_today', "Done for today!"))
                         : masteredBeats === 0
                           ? t('beat_practice.todays_session')
                           : t('beat_practice.active_session')}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {showSessionComplete
-                        ? (nextReviewDate 
-                            ? <span className="flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" />
-                                {t('beat_practice.come_back_in', "Come back in {{time}}", { time: '' })}<LockCountdown nextReviewDate={nextReviewDate} />
-                              </span>
-                            : t('beat_practice.come_back_later'))
+                        ? (nextReviewDate && nextReviewDate <= new Date()
+                            ? t('beat_practice.ready_to_practice', "Ready to practice!")
+                            : nextReviewDate 
+                              ? <span className="flex items-center gap-1">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  {t('beat_practice.come_back_in', "Come back in {{time}}", { time: '' })}<LockCountdown nextReviewDate={nextReviewDate} />
+                                </span>
+                              : t('beat_practice.come_back_later'))
                         : masteredBeats > 0 
                           ? t('beat_practice.session_desc_recall')
                           : t('beat_practice.session_desc_start')}
@@ -2430,9 +2434,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 className="w-full h-14 rounded-2xl text-lg font-bold border-green-500/30 text-green-600 hover:bg-green-500/10 bg-background"
               >
               <CheckCircle2 className="h-5 w-5 mr-2" />
-              {nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
-                ? t('beat_practice.done_for_now', "Done for now!")
-                : t('beat_practice.done_for_today', "Done for today!")}
+              {nextReviewDate && nextReviewDate <= new Date()
+                ? t('beat_practice.start_next_session', "Start Next Session")
+                : nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
+                  ? t('beat_practice.done_for_now', "Done for now!")
+                  : t('beat_practice.done_for_today', "Done for today!")}
             </Button>
           ) : (
             <Button 
