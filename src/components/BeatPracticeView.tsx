@@ -2398,54 +2398,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     );
   }
 
-  // Rest screen between beats (for intensive mode)
-  if (sessionMode === 'beat_rest' && restUntilTime) {
-    const masteredCount = beats.filter(b => b.is_mastered).length;
-    const totalBeats = beats.length;
-    const beatsRemaining = totalBeats - masteredCount;
-    
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Coffee className="h-20 w-20 text-amber-500" />
-        </motion.div>
-        
-        <h2 className="text-2xl font-bold">
-          {t('beat_practice.rest_title', "☕ Coffee Break!")}
-        </h2>
-        
-        <p className="text-muted-foreground max-w-md">
-          {t('beat_practice.rest_reason', "Take a 10-minute break to let your brain consolidate. After the break, you'll do a quick review of what you just learned.")}
-        </p>
-        
-        {/* Countdown timer */}
-        <RestCountdown 
-          targetTime={restUntilTime} 
-          onComplete={startNextBeat}
-          restMinutes={restMinutes}
-        />
-        
-        <div className="flex flex-col gap-2 mt-4">
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
-            {t('beat_practice.rest_tip', "Tip: Take a short walk or grab a coffee!")}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('beat_practice.rest_recall_info', "After the break: quick recall → then next beat")}
-          </p>
-        </div>
-        
-        <Button variant="ghost" onClick={startNextBeat} className="mt-4">
-          <Play className="h-4 w-4 mr-2" />
-          {t('beat_practice.skip_rest', "Start now anyway")}
-        </Button>
-      </div>
-    );
-  }
 
   // Pre-beat recall intro screen - animated transition before recalling old beat
   if (sessionMode === 'pre_beat_recall' && showPreBeatRecallIntro && beatToRecallBeforeNext) {
