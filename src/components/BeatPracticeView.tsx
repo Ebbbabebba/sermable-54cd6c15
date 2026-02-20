@@ -475,8 +475,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
       // Sentence 1 phases
       if (phase.startsWith('sentence_1')) return uniqueSentences[0];
-      // Sentence 2 phases or combining phases
-      if (phase.startsWith('sentence_2') || phase.startsWith('sentences_1_2')) {
+      // Sentence 2 phases - show only sentence 2
+      if (phase.startsWith('sentence_2')) return uniqueSentences[1];
+      // Combining phases - show both
+      if (phase.startsWith('sentences_1_2')) {
         return uniqueSentences.join(' ');
       }
       // Sentence 3 phases - for 2 sentences, skip to full beat
@@ -1820,10 +1822,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // Only 1 sentence - go straight to beat fading after sentence 1
           transitionToPhase('beat_learning');
         } else if (uniqueCount === 2) {
-          // 2 sentences - skip sentence 3 phases
+          // 2 sentences - practice each alone, then combine
           if (currentPhase === 'sentence_1_fading') {
             transitionToPhase('sentence_2_learning');
-          } else if (currentPhase === 'sentence_2_fading' || currentPhase === 'sentences_1_2_fading') {
+          } else if (currentPhase === 'sentence_2_fading') {
+            transitionToPhase('sentences_1_2_learning');
+          } else if (currentPhase === 'sentences_1_2_fading') {
             transitionToPhase('beat_learning');
           }
         } else {
