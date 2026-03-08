@@ -463,6 +463,7 @@ export const CompactPresentationView = ({
       setShowHint(null);
       setWordPerformance([]);
       transcriptRef.current = "";
+      lastProcessedInterimRef.current = "";
       wrongAttempts.current = [];
       wordStartTimeRef.current = Date.now();
       lastProgressTime.current = Date.now();
