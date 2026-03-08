@@ -53,7 +53,7 @@ export const PresentationModeSelector = ({
                   </li>
                 </ul>
 
-                <Button className="w-full mt-3" size="sm">
+                <Button className="w-full mt-3" size="sm" variant="default">
                   {t('presentationMode.selectStrict')}
                 </Button>
               </div>
@@ -87,7 +87,7 @@ export const PresentationModeSelector = ({
                   </li>
                 </ul>
 
-                <Button className="w-full mt-3" size="sm" variant="secondary">
+                <Button className="w-full mt-3" size="sm" variant="default">
                   {t('presentationMode.selectFullScript')}
                 </Button>
               </div>
@@ -121,7 +121,7 @@ export const PresentationModeSelector = ({
                   </li>
                 </ul>
 
-                <Button className="w-full mt-3" size="sm" variant="secondary">
+                <Button className="w-full mt-3" size="sm" variant="default">
                   {t('presentationMode.selectGeneral')}
                 </Button>
               </div>
