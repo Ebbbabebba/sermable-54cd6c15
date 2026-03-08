@@ -98,7 +98,7 @@ export const CompactPresentationView = ({
   onStopRecording,
   onPerformanceData,
   onExit,
-  hintDelay = 2000,
+  hintDelay = 1000,
   sentenceStartDelay = 4000,
 }: CompactPresentationViewProps) => {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
