@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,7 @@ export const CompactPresentationView = ({
   const [status, setStatus] = useState<'idle' | 'speaking' | 'silence' | 'error' | 'success'>('idle');
   
   const haptics = useHapticFeedback({ enabled: true });
+  const { t } = useTranslation();
   
   const recognitionRef = useRef<any>(null);
   const wordStartTimeRef = useRef<number>(Date.now());
@@ -479,7 +481,7 @@ export const CompactPresentationView = ({
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="text-center space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-              <p className="text-lg font-medium">Analyzing...</p>
+              <p className="text-lg font-medium">{t('presentation.analyzingShort')}</p>
             </div>
           </div>
         )}
@@ -502,7 +504,7 @@ export const CompactPresentationView = ({
           className="fixed top-4 left-4 z-50 gap-2"
         >
           <X className="h-4 w-4" />
-          Exit
+          {t('common.exit')}
         </Button>
       )}
 
@@ -512,12 +514,12 @@ export const CompactPresentationView = ({
           {isRecording ? (
             <>
               <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm font-medium">Recording</span>
+              <span className="text-sm font-medium">{t('presentation.recording')}</span>
             </>
           ) : (
             <>
               <div className="w-3 h-3 rounded-full bg-muted" />
-              <span className="text-sm font-medium text-muted-foreground">Ready</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('presentation.ready')}</span>
             </>
           )}
         </div>
@@ -537,9 +539,9 @@ export const CompactPresentationView = ({
       <div className="min-h-screen flex flex-col items-center justify-center px-6 py-24">
         {!isRecording ? (
           <div className="text-center space-y-4">
-            <p className="text-xl text-muted-foreground">Press the button to start</p>
+            <p className="text-xl text-muted-foreground">{t('presentation.pressToStart')}</p>
             <p className="text-sm text-muted-foreground/60">
-              Your speech will appear sentence by sentence
+              {t('presentation.speechAppearSentence')}
             </p>
           </div>
         ) : (
@@ -638,7 +640,7 @@ export const CompactPresentationView = ({
                     exit={{ opacity: 0 }}
                     className="mt-6 text-sm text-muted-foreground"
                   >
-                    💭 Try to say it...
+                    {t('presentation.tryToSayIt')}
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -671,7 +673,7 @@ export const CompactPresentationView = ({
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-            <p className="text-lg font-medium">Analyzing your presentation...</p>
+            <p className="text-lg font-medium">{t('presentation.analyzing')}</p>
           </div>
         </div>
       )}
