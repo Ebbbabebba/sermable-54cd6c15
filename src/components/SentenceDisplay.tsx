@@ -21,8 +21,8 @@ interface SentenceDisplayProps {
   onWordTap?: (index: number) => void;
 }
 
-// Smooth easing for natural feel
-const smoothTransition = { duration: 0.4, ease: "easeOut" as const };
+// Snappy easing for responsive feel
+const smoothTransition = { duration: 0.25, ease: "easeOut" as const };
 
 const SentenceDisplay = ({
   text,
@@ -39,12 +39,9 @@ const SentenceDisplay = ({
   
   const words = text.split(/\s+/).filter(w => w.trim());
   
-  // Smooth transition for current word index with slight delay
+  // Immediate transition for current word - no delay
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDisplayedIndex(currentWordIndex);
-    }, 50); // Small delay for smoother visual transition
-    return () => clearTimeout(timer);
+    setDisplayedIndex(currentWordIndex);
   }, [currentWordIndex]);
   
   // Auto-scroll to current word with smooth behavior
@@ -129,7 +126,7 @@ const SentenceDisplay = ({
           onClick={() => onWordTap?.(index)}
           layout="position"
           transition={{ 
-            layout: { duration: 0.3, ease: "easeOut" },
+            layout: { duration: 0.2, ease: "easeOut" },
           }}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-300",
@@ -155,9 +152,9 @@ const SentenceDisplay = ({
           y: 0,
         }}
         transition={{
-          opacity: { duration: 0.5, ease: "easeOut" },
-          scale: { duration: 0.25, ease: "easeOut" },
-          layout: { duration: 0.3, ease: "easeOut" },
+          opacity: { duration: 0.2, ease: "easeOut" },
+          scale: { duration: 0.15, ease: "easeOut" },
+          layout: { duration: 0.2, ease: "easeOut" },
         }}
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
