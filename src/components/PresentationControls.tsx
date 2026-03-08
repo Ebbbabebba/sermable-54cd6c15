@@ -53,7 +53,7 @@ const PresentationControls = ({
           {/* Word Hint Delay */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="hint-delay">Word hint delay</Label>
+              <Label htmlFor="hint-delay">{t('presentation.wordHintDelay')}</Label>
               <span className="text-sm text-muted-foreground">
                 {(hintDelay / 1000).toFixed(1)}s
               </span>
@@ -68,14 +68,14 @@ const PresentationControls = ({
               className="w-full"
             />
             <p className="text-xs text-muted-foreground">
-              How long before a forgotten word appears
+              {t('presentation.wordHintDelayDesc')}
             </p>
           </div>
 
           {/* Sentence Start Delay */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="sentence-delay">Sentence start delay</Label>
+              <Label htmlFor="sentence-delay">{t('presentation.sentenceStartDelay')}</Label>
               <span className="text-sm text-muted-foreground">
                 {(sentenceStartDelay / 1000).toFixed(1)}s
               </span>
@@ -90,7 +90,7 @@ const PresentationControls = ({
               className="w-full"
             />
             <p className="text-xs text-muted-foreground">
-              Extra time for the first word of a new sentence
+              {t('presentation.sentenceStartDelayDesc')}
             </p>
           </div>
 
