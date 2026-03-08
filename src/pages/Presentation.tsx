@@ -304,14 +304,18 @@ const Presentation = () => {
     navigate('/dashboard');
   };
 
-  const handleModeSelect = (mode: 'strict' | 'fullscript') => {
+  const handleModeSelect = (mode: 'strict' | 'fullscript' | 'overview') => {
+    if (mode === 'overview') {
+      setSelectedMode('overview');
+      setStage('live');
+      return;
+    }
+    
     setSelectedMode(mode);
     
     if (mode === 'fullscript') {
-      // Go straight to live for full script mode
       setStage('live');
     } else {
-      // Strict mode goes directly to prep
       setStage('prep');
     }
   };
