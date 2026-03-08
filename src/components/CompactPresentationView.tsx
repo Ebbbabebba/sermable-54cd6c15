@@ -120,6 +120,7 @@ export const CompactPresentationView = ({
   const maxRestartAttempts = 10;
   const currentWordIndexRef = useRef(0);
   const processTranscriptRef = useRef<(t: string) => void>(() => {});
+  const lastProcessedInterimRef = useRef<string>("");
   
   const words = text.split(/\s+/).filter(w => w.length > 0);
   const progress = (currentWordIndex / words.length) * 100;
@@ -222,17 +223,36 @@ export const CompactPresentationView = ({
 
     recognition.onresult = (event: any) => {
       let finalTranscript = "";
+      let interimTranscript = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           finalTranscript += transcript + " ";
+        } else {
+          interimTranscript += transcript;
         }
+      }
+
+      // Process interim results for real-time feel
+      if (interimTranscript && interimTranscript !== lastProcessedInterimRef.current) {
+        // Only process new words from interim that we haven't seen
+        const prevWords = lastProcessedInterimRef.current.toLowerCase().trim().split(/\s+/).filter(w => w.length > 0);
+        const currentWords = interimTranscript.toLowerCase().trim().split(/\s+/).filter(w => w.length > 0);
+        
+        // Find new words at the end of the interim transcript
+        const newWords = currentWords.slice(prevWords.length);
+        if (newWords.length > 0) {
+          processTranscriptRef.current(newWords.join(" "));
+        }
+        lastProcessedInterimRef.current = interimTranscript;
       }
 
       if (finalTranscript) {
         transcriptRef.current += finalTranscript;
-        processTranscriptRef.current(finalTranscript);
+        // Reset interim tracking since final result replaces interim
+        lastProcessedInterimRef.current = "";
+        // Don't re-process words already handled via interim
       }
       
       setAudioLevel(0.8);
