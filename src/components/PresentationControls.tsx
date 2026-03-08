@@ -60,9 +60,9 @@ const PresentationControls = ({
             </div>
             <Slider
               id="hint-delay"
-              min={1000}
+              min={500}
               max={5000}
-              step={500}
+              step={250}
               value={[hintDelay]}
               onValueChange={(value) => setHintDelay(value[0])}
               className="w-full"
