@@ -116,6 +116,8 @@ export const CompactPresentationView = ({
   const lastProgressTime = useRef<number>(Date.now());
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
+  const currentWordIndexRef = useRef(0);
+  const processTranscriptRef = useRef<(t: string) => void>(() => {});
   
   const words = text.split(/\s+/).filter(w => w.length > 0);
   const progress = (currentWordIndex / words.length) * 100;
