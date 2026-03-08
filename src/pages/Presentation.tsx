@@ -9,7 +9,7 @@ import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
-import OverviewPracticeView from "@/components/OverviewPracticeView";
+import ScriptPracticeView from "@/components/ScriptPracticeView";
 import PresentationControls from "@/components/PresentationControls";
 
 import { AudienceOverlay } from "@/components/audience";
@@ -45,7 +45,7 @@ const Presentation = () => {
   const [loading, setLoading] = useState(true);
   
   // Mode selection
-  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | 'audience' | 'overview' | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | 'audience' | 'overview' | 'script' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   
   // Session states
@@ -306,7 +306,7 @@ const Presentation = () => {
 
   const handleModeSelect = (mode: 'strict' | 'fullscript' | 'overview') => {
     if (mode === 'overview') {
-      setSelectedMode('overview');
+      setSelectedMode('script');
       setStage('live');
       return;
     }
@@ -409,10 +409,10 @@ const Presentation = () => {
     );
   }
 
-  // Show overview mode
-  if (selectedMode === 'overview') {
+  // Show script practice mode
+  if (selectedMode === 'script') {
     return (
-      <OverviewPracticeView
+      <ScriptPracticeView
         speechId={speech.id}
         speechTitle={speech.title}
         speechText={speech.text_original}
