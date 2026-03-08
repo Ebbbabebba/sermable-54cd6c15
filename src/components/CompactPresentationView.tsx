@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Volume2, X } from "lucide-react";
+import { Mic, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WearableHUD, type ViewMode } from "./WearableHUD";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface WordPerformance {
   word: string;
@@ -118,21 +119,70 @@ export const CompactPresentationView = ({
   
   const words = text.split(/\s+/).filter(w => w.length > 0);
   const progress = (currentWordIndex / words.length) * 100;
-  
-  // Get the next few keywords for display
-  const getNextKeywords = (count: number = 3): string[] => {
-    const keywords: string[] = [];
-    for (let i = currentWordIndex; i < Math.min(currentWordIndex + count, words.length); i++) {
-      const word = words[i];
-      // Filter out small words, keep important ones
-      if (word.length > 3) {
-        keywords.push(word);
-        if (keywords.length >= count) break;
+
+  // Split text into sentences for teleprompter display
+  const sentences = useMemo(() => {
+    const result: { words: string[]; startIndex: number }[] = [];
+    let currentSentence: string[] = [];
+    let sentenceStart = 0;
+
+    words.forEach((word, i) => {
+      currentSentence.push(word);
+      // Check if word ends a sentence
+      if (/[.!?]$/.test(word) || i === words.length - 1) {
+        result.push({ words: [...currentSentence], startIndex: sentenceStart });
+        currentSentence = [];
+        sentenceStart = i + 1;
+      }
+    });
+
+    // Handle case where last chunk didn't end with punctuation
+    if (currentSentence.length > 0) {
+      result.push({ words: currentSentence, startIndex: sentenceStart });
+    }
+
+    return result;
+  }, [text]);
+
+  // Find which sentence the current word belongs to
+  const currentSentenceIndex = useMemo(() => {
+    for (let i = 0; i < sentences.length; i++) {
+      const s = sentences[i];
+      if (currentWordIndex >= s.startIndex && currentWordIndex < s.startIndex + s.words.length) {
+        return i;
       }
     }
-    return keywords;
-  };
-  
+    return sentences.length - 1;
+  }, [currentWordIndex, sentences]);
+
+  // Track recently spoken words for staggered fade-out
+  const [fadingWords, setFadingWords] = useState<Set<number>>(new Set());
+
+  // When currentWordIndex advances, add the previous word to fading set
+  const prevWordIndexRef = useRef(0);
+  useEffect(() => {
+    if (currentWordIndex > prevWordIndexRef.current && isRecording) {
+      const newFading = new Set(fadingWords);
+      for (let i = prevWordIndexRef.current; i < currentWordIndex; i++) {
+        newFading.add(i);
+        // Remove from fading after animation completes
+        setTimeout(() => {
+          setFadingWords(prev => {
+            const next = new Set(prev);
+            next.delete(i);
+            return next;
+          });
+        }, 500);
+      }
+      setFadingWords(newFading);
+    }
+    prevWordIndexRef.current = currentWordIndex;
+  }, [currentWordIndex, isRecording]);
+
+  // Determine hesitation state for current word glow
+  const isHesitating = showHint?.phase === "trying";
+  const isShowingHint = showHint?.phase === "showing";
+
   const nextKeyword = words[currentWordIndex] || '';
 
   // Initialize speech recognition
