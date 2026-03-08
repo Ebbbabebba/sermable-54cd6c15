@@ -443,13 +443,13 @@ const Presentation = () => {
             className="mb-4"
           >
             <X className="h-4 w-4 mr-2" />
-            Back to Mode Selection
+            {t('presentation.backToModeSelection')}
           </Button>
 
           <div className="space-y-2">
             <h1 className="text-4xl font-bold capitalize">{speech.title}</h1>
             <p className="text-muted-foreground">
-              Strict Mode • {speech.text_original.split(/\s+/).length} words
+              {t('presentation.strictModeLabel')} • {t('presentation.wordsCount', { count: speech.text_original.split(/\s+/).length })}
             </p>
           </div>
 
@@ -458,22 +458,22 @@ const Presentation = () => {
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">1</div>
                 <div>
-                  <p className="font-medium text-sm">Press start and begin speaking your speech from memory</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">No text on screen. Just you and your words.</p>
+                  <p className="font-medium text-sm">{t('presentation.step1Title')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('presentation.step1Desc')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">2</div>
                 <div>
-                  <p className="font-medium text-sm">If you hesitate, a gentle hint will appear to help you</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">The screen pulses softly while waiting, then reveals the word.</p>
+                  <p className="font-medium text-sm">{t('presentation.step2Title')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('presentation.step2Desc')}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">3</div>
                 <div>
-                  <p className="font-medium text-sm">Keep going — your performance is tracked for review</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Get detailed analysis when you finish.</p>
+                  <p className="font-medium text-sm">{t('presentation.step3Title')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('presentation.step3Desc')}</p>
                 </div>
               </div>
             </div>
@@ -486,7 +486,7 @@ const Presentation = () => {
             className="w-full"
           >
             <Play className="h-5 w-5 mr-2" />
-            Start Presentation
+            {t('presentation.startPresentation')}
           </Button>
         </div>
 
@@ -516,8 +516,8 @@ const Presentation = () => {
 
     try {
       toast({
-        title: "Processing...",
-        description: "Analyzing your presentation",
+        title: t('presentation.processing'),
+        description: t('presentation.processingDesc'),
       });
 
       // Analyze presentation with detailed word performance
