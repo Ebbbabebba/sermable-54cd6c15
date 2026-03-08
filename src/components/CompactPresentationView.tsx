@@ -116,6 +116,8 @@ export const CompactPresentationView = ({
   const lastProgressTime = useRef<number>(Date.now());
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
+  const currentWordIndexRef = useRef(0);
+  const processTranscriptRef = useRef<(t: string) => void>(() => {});
   
   const words = text.split(/\s+/).filter(w => w.length > 0);
   const progress = (currentWordIndex / words.length) * 100;
@@ -228,7 +230,7 @@ export const CompactPresentationView = ({
 
       if (finalTranscript) {
         transcriptRef.current += finalTranscript;
-        processTranscript(finalTranscript);
+        processTranscriptRef.current(finalTranscript);
       }
       
       setAudioLevel(0.8);
@@ -319,57 +321,58 @@ export const CompactPresentationView = ({
   // Process transcript and match words
   const processTranscript = useCallback((newTranscript: string) => {
     const spokenWords = newTranscript.toLowerCase().trim().split(/\s+/).filter(w => w.length > 0);
+    let localIndex = currentWordIndexRef.current;
     
     for (const spokenWord of spokenWords) {
-      if (currentWordIndex >= words.length) break;
+      if (localIndex >= words.length) break;
       
-      const targetWord = words[currentWordIndex];
+      const targetWord = words[localIndex];
       const similarity = getWordSimilarity(spokenWord, targetWord);
       
       if (similarity >= 0.5) {
         const timeToSpeak = Date.now() - wordStartTimeRef.current;
         const wasPrompted = showHint?.phase === "showing";
-        const status: WordPerformance["status"] = 
+        const wordStatus: WordPerformance["status"] = 
           wasPrompted ? "hesitated" : 
           timeToSpeak > 2500 ? "hesitated" : 
           "correct";
         
         const performance: WordPerformance = {
           word: targetWord,
-          index: currentWordIndex,
-          status,
+          index: localIndex,
+          status: wordStatus,
           timeToSpeak,
           wasPrompted,
           wrongWordsSaid: wrongAttempts.current.length > 0 ? [...wrongAttempts.current] : undefined,
         };
         
         setWordPerformance(prev => [...prev, performance]);
-        setCurrentWordIndex(prev => prev + 1);
+        localIndex++;
+        setCurrentWordIndex(localIndex);
+        currentWordIndexRef.current = localIndex;
         setShowHint(null);
         wrongAttempts.current = [];
         wordStartTimeRef.current = Date.now();
         lastProgressTime.current = Date.now();
         
-        // Haptic feedback for success
         haptics.trigger('success');
         setStatus('success');
         setTimeout(() => setStatus('speaking'), 200);
         
-        // Check for segment progress (every 10 words)
-        if ((currentWordIndex + 1) % 10 === 0) {
+        if (localIndex % 10 === 0) {
           haptics.trigger('progress');
         }
       } else {
-        // Check for skipped words
+        // Check for skipped words (lookahead)
         let foundAhead = false;
-        for (let i = 1; i <= 3 && currentWordIndex + i < words.length; i++) {
-          const aheadWord = words[currentWordIndex + i];
+        for (let i = 1; i <= 3 && localIndex + i < words.length; i++) {
+          const aheadWord = words[localIndex + i];
           if (getWordSimilarity(spokenWord, aheadWord) >= 0.5) {
             for (let j = 0; j < i; j++) {
-              const skippedWord = words[currentWordIndex + j];
+              const skippedWord = words[localIndex + j];
               setWordPerformance(prev => [...prev, {
                 word: skippedWord,
-                index: currentWordIndex + j,
+                index: localIndex + j,
                 status: "skipped",
                 wasPrompted: false,
               }]);
@@ -377,13 +380,15 @@ export const CompactPresentationView = ({
             
             setWordPerformance(prev => [...prev, {
               word: aheadWord,
-              index: currentWordIndex + i,
+              index: localIndex + i,
               status: "correct",
               timeToSpeak: Date.now() - wordStartTimeRef.current,
               wasPrompted: false,
             }]);
             
-            setCurrentWordIndex(prev => prev + i + 1);
+            localIndex = localIndex + i + 1;
+            setCurrentWordIndex(localIndex);
+            currentWordIndexRef.current = localIndex;
             setShowHint(null);
             wrongAttempts.current = [];
             wordStartTimeRef.current = Date.now();
@@ -401,7 +406,12 @@ export const CompactPresentationView = ({
         }
       }
     }
-  }, [currentWordIndex, words, showHint, haptics]);
+  }, [words, showHint, haptics]);
+
+  // Keep ref in sync
+  useEffect(() => {
+    processTranscriptRef.current = processTranscript;
+  }, [processTranscript]);
 
   // Send performance data when recording stops
   useEffect(() => {
@@ -427,6 +437,7 @@ export const CompactPresentationView = ({
   useEffect(() => {
     if (isRecording) {
       setCurrentWordIndex(0);
+      currentWordIndexRef.current = 0;
       setShowHint(null);
       setWordPerformance([]);
       transcriptRef.current = "";
