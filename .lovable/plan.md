@@ -1,71 +1,69 @@
 
 
-# Improve Strict Presentation Mode UX
+# Redesign Strict Presentation Mode: Sentence Context View
 
-## Overview
-Three improvements to the strict presentation mode:
-1. Clearer instructions on the prep screen explaining the flow
-2. Nicer word hint appearance using Framer Motion animations (smooth slide-up with blur, scaling)
-3. Screen pulse effect when hesitation is detected and a hint is on its way
+## Current behavior
+Right now, strict mode shows a blank screen with a microphone icon. When you hesitate, a hint strip appears at the bottom showing one word. There's no context of where you are in the speech.
 
-## Changes
+## Proposed new behavior
 
-### 1. Clearer Prep Screen Instructions (`src/pages/Presentation.tsx`)
-- Rewrite the "How it works" section with a step-by-step flow that feels more like onboarding:
-  - Step 1: "Press start and begin speaking your speech from memory"
-  - Step 2: "If you hesitate, a gentle hint will appear to help you"  
-  - Step 3: "Keep going -- your performance is tracked for review"
-- Add a subtle motivational note like "No text on screen. Just you and your words."
-- Keep it clean and scannable
+Replace the blank screen with a **sentence-based teleprompter** that shows the current sentence with context, and words fade out as you speak them successfully.
 
-### 2. Animated Word Hints (`src/components/StrictPresentationView.tsx`)
-- Import `motion` and `AnimatePresence` from `framer-motion`
-- Replace the current static hint strip with animated versions:
-  - **"Trying" phase**: Slides up softly with a blur-to-clear effect, gentle scale from 0.95 to 1
-  - **"Showing" phase**: Word appears with a spring animation, slightly larger initial scale that settles
-- Use `AnimatePresence` with `mode="wait"` so transitions between phases are smooth
-- Add a subtle backdrop blur behind the hint for better readability
+### How it works
 
-### 3. Screen Pulse During Hesitation (`src/components/StrictPresentationView.tsx`)
-- Add a new state: `isHesitating` (boolean) that turns true when the silence timer crosses ~60% of the delay threshold (the "trying" phase trigger)
-- When `isHesitating` is true, render a full-screen overlay `motion.div` with:
-  - A soft pulsing border/glow effect around the edges of the screen using `animate` with repeating opacity and box-shadow
-  - Uses primary color at low opacity (e.g., `hsl(var(--primary) / 0.08)`)
-  - Pulses with a ~1.5s cycle
-- When the user speaks the word (hint clears), the pulse fades out smoothly
-- This gives a visual "the screen is waiting for you" feeling without being intrusive
+1. **Show the full current sentence** on screen, centered, with comfortable reading size
+2. **The current expected word** is rendered extra large and bold (black/foreground), making it clear where you are
+3. **Upcoming words** in the sentence are shown in a lighter muted color at normal size -- giving you a preview of what's coming
+4. **Previous words** (already spoken) fade out smoothly as the AI hears you say them -- they shrink and become transparent over ~400ms
+5. **Sentence transitions**: When you finish a sentence, the next sentence slides in smoothly
+6. A small **progress indicator** shows which sentence you're on (e.g., "3/12")
 
-## Technical Details
+### Visual layout
 
-### Framer Motion hint animation config
 ```text
-"trying" phase:
-  initial: { opacity: 0, y: 20, filter: "blur(8px)", scale: 0.95 }
-  animate: { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }
-  transition: { duration: 0.4, ease: "easeOut" }
-
-"showing" phase:
-  initial: { opacity: 0, scale: 0.8 }
-  animate: { opacity: 1, scale: 1 }
-  transition: { type: "spring", stiffness: 300, damping: 25 }
-
-exit: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.2 } }
+┌─────────────────────────────────────────────┐
+│  ✕ Exit                    Recording ● 2/12 │
+│                                             │
+│                                             │
+│     ░░░░░░░░░░░░░░░░░░░░  (progress bar)   │
+│                                             │
+│                                             │
+│       the congregation                      │  ← already spoken (fading out)
+│                                             │
+│            TODAY                             │  ← current word (extra large, bold)
+│                                             │
+│    we gather to celebrate                   │  ← upcoming words (muted, normal size)
+│    the union of two souls                   │
+│                                             │
+│                                             │
+│              ⏺ / ⏹                          │  ← record button
+└─────────────────────────────────────────────┘
 ```
 
-### Screen pulse overlay
-```text
-Rendered as a fixed inset-0 div with pointer-events-none
-animate: {
-  boxShadow: [
-    "inset 0 0 60px hsl(var(--primary) / 0.05)",
-    "inset 0 0 100px hsl(var(--primary) / 0.12)",
-    "inset 0 0 60px hsl(var(--primary) / 0.05)"
-  ]
-}
-transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-```
+### Fade-out behavior
+- When speech recognition matches a word, it doesn't just disappear -- it **fades and shrinks** over 400ms using Framer Motion
+- Multiple words spoken quickly fade out in a staggered sequence (matching the existing word-queue pattern from practice mode)
+- This creates the feeling of "the speech dissolving as you speak it"
 
-### Files to edit
-- `src/pages/Presentation.tsx` -- prep screen instructions
-- `src/components/StrictPresentationView.tsx` -- animated hints + screen pulse
+### Hesitation hints
+- Keep the existing hint timing logic (60% delay = "try" prompt, full delay = word reveal)
+- But instead of a separate hint strip, the **current word pulses/glows** when hesitating
+- If the full hint triggers, the current word transitions from muted to fully visible with a spring animation
+
+## Technical changes
+
+### `src/components/CompactPresentationView.tsx`
+- Split the speech text into sentences (by `.!?`)
+- Track `currentSentenceIndex` alongside `currentWordIndex`
+- Replace the microphone-orb UI (lines 476-526) with the sentence display:
+  - Map over words in the current sentence
+  - Apply different styles based on word state: spoken (fading), current (large/bold), upcoming (muted)
+  - Use `motion.span` with `AnimatePresence` for fade-out of spoken words
+- Replace the hint strip (lines 528-549) with inline word glow/pulse on the current word
+- Keep all existing speech recognition, silence detection, and performance tracking logic unchanged
+- Show previous sentence (faded) and next sentence (preview) for additional context
+
+### No other files need changes
+- The prep screen, settings, and results flow remain the same
+- All speech recognition and word matching logic stays identical
 
