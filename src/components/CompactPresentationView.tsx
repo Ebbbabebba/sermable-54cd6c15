@@ -230,7 +230,7 @@ export const CompactPresentationView = ({
 
       if (finalTranscript) {
         transcriptRef.current += finalTranscript;
-        processTranscript(finalTranscript);
+        processTranscriptRef.current(finalTranscript);
       }
       
       setAudioLevel(0.8);
@@ -437,6 +437,7 @@ export const CompactPresentationView = ({
   useEffect(() => {
     if (isRecording) {
       setCurrentWordIndex(0);
+      currentWordIndexRef.current = 0;
       setShowHint(null);
       setWordPerformance([]);
       transcriptRef.current = "";
