@@ -909,10 +909,10 @@
     "startWithAudience": "Start with Audience",
     "unlockPremium": "Unlock Premium",
     "switchModes": "You can switch modes anytime before starting your presentation",
-    "generalMode": "General Mode",
-    "generalModeDesc": "Practice with key words as anchors — speak in your own words",
-    "keyWordsAnchors": "Key words & numbers as anchors",
-    "ownWordsStyle": "Speak in your own style",
-    "selectGeneral": "Select General Mode"
+    "generalMode": "Script Mode",
+    "generalModeDesc": "Learn via reference words — read, recall, retell",
+    "keyWordsAnchors": "AI picks one reference word per beat",
+    "ownWordsStyle": "Retell in your own words",
+    "selectGeneral": "Select Script Mode"
   }
 }
