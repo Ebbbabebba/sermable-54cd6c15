@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Volume2, X } from "lucide-react";
+import { Mic, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WearableHUD, type ViewMode } from "./WearableHUD";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface WordPerformance {
   word: string;
@@ -118,21 +119,70 @@ export const CompactPresentationView = ({
   
   const words = text.split(/\s+/).filter(w => w.length > 0);
   const progress = (currentWordIndex / words.length) * 100;
-  
-  // Get the next few keywords for display
-  const getNextKeywords = (count: number = 3): string[] => {
-    const keywords: string[] = [];
-    for (let i = currentWordIndex; i < Math.min(currentWordIndex + count, words.length); i++) {
-      const word = words[i];
-      // Filter out small words, keep important ones
-      if (word.length > 3) {
-        keywords.push(word);
-        if (keywords.length >= count) break;
+
+  // Split text into sentences for teleprompter display
+  const sentences = useMemo(() => {
+    const result: { words: string[]; startIndex: number }[] = [];
+    let currentSentence: string[] = [];
+    let sentenceStart = 0;
+
+    words.forEach((word, i) => {
+      currentSentence.push(word);
+      // Check if word ends a sentence
+      if (/[.!?]$/.test(word) || i === words.length - 1) {
+        result.push({ words: [...currentSentence], startIndex: sentenceStart });
+        currentSentence = [];
+        sentenceStart = i + 1;
+      }
+    });
+
+    // Handle case where last chunk didn't end with punctuation
+    if (currentSentence.length > 0) {
+      result.push({ words: currentSentence, startIndex: sentenceStart });
+    }
+
+    return result;
+  }, [text]);
+
+  // Find which sentence the current word belongs to
+  const currentSentenceIndex = useMemo(() => {
+    for (let i = 0; i < sentences.length; i++) {
+      const s = sentences[i];
+      if (currentWordIndex >= s.startIndex && currentWordIndex < s.startIndex + s.words.length) {
+        return i;
       }
     }
-    return keywords;
-  };
-  
+    return sentences.length - 1;
+  }, [currentWordIndex, sentences]);
+
+  // Track recently spoken words for staggered fade-out
+  const [fadingWords, setFadingWords] = useState<Set<number>>(new Set());
+
+  // When currentWordIndex advances, add the previous word to fading set
+  const prevWordIndexRef = useRef(0);
+  useEffect(() => {
+    if (currentWordIndex > prevWordIndexRef.current && isRecording) {
+      const newFading = new Set(fadingWords);
+      for (let i = prevWordIndexRef.current; i < currentWordIndex; i++) {
+        newFading.add(i);
+        // Remove from fading after animation completes
+        setTimeout(() => {
+          setFadingWords(prev => {
+            const next = new Set(prev);
+            next.delete(i);
+            return next;
+          });
+        }, 500);
+      }
+      setFadingWords(newFading);
+    }
+    prevWordIndexRef.current = currentWordIndex;
+  }, [currentWordIndex, isRecording]);
+
+  // Determine hesitation state for current word glow
+  const isHesitating = showHint?.phase === "trying";
+  const isShowingHint = showHint?.phase === "showing";
+
   const nextKeyword = words[currentWordIndex] || '';
 
   // Initialize speech recognition
@@ -472,82 +522,125 @@ export const CompactPresentationView = ({
         )}
       </div>
 
-      {/* Main Content */}
-      <div className="min-h-screen flex flex-col items-center justify-center p-8">
-        <div className="relative">
-          <div 
-            className={cn(
-              "absolute inset-0 rounded-full transition-all duration-150",
-              isRecording && "animate-pulse"
-            )}
-            style={{
-              transform: `scale(${1 + audioLevel * 0.3})`,
-              background: isRecording 
-                ? `radial-gradient(circle, hsl(var(--primary) / ${0.1 + audioLevel * 0.2}) 0%, transparent 70%)`
-                : "transparent",
-            }}
-          />
-          
-          <div 
-            className={cn(
-              "w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300",
-              isRecording 
-                ? "bg-primary/10 border-4 border-primary shadow-lg shadow-primary/20" 
-                : "bg-muted/50 border-2 border-border"
-            )}
-          >
-            <Volume2 
-              className={cn(
-                "w-16 h-16 transition-all duration-300",
-                isRecording ? "text-primary" : "text-muted-foreground"
-              )}
-              style={{
-                transform: isRecording ? `scale(${1 + audioLevel * 0.2})` : "scale(1)",
-              }}
-            />
+      {/* Main Content - Sentence Teleprompter */}
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 py-24">
+        {!isRecording ? (
+          <div className="text-center space-y-4">
+            <p className="text-xl text-muted-foreground">Press the button to start</p>
+            <p className="text-sm text-muted-foreground/60">
+              Your speech will appear sentence by sentence
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="w-full max-w-2xl space-y-8">
+            {/* Progress bar */}
+            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
 
-        <p className={cn(
-          "mt-8 text-lg transition-all duration-300",
-          isRecording ? "text-foreground" : "text-muted-foreground"
-        )}>
-          {isRecording ? "Speak your presentation..." : "Press the button to start"}
-        </p>
+            {/* Sentence display area */}
+            <div className="min-h-[300px] flex flex-col items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentSentenceIndex}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3"
+                >
+                  {sentences[currentSentenceIndex]?.words.map((word, wordIdx) => {
+                    const globalIndex = sentences[currentSentenceIndex].startIndex + wordIdx;
+                    const isSpoken = globalIndex < currentWordIndex;
+                    const isCurrent = globalIndex === currentWordIndex;
+                    const isFading = fadingWords.has(globalIndex);
 
-        {isRecording && (
-          <div className="mt-4 w-48 h-1 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-300 rounded-full"
-              style={{ width: `${progress}%` }}
-            />
+                    return (
+                      <AnimatePresence key={globalIndex} mode="popLayout">
+                        {/* Don't render fully spoken words that finished fading */}
+                        {(!isSpoken || isFading) && (
+                          <motion.span
+                            layout
+                            initial={false}
+                            animate={
+                              isFading
+                                ? { opacity: 0, scale: 0.7, filter: "blur(4px)" }
+                                : isCurrent
+                                  ? { opacity: 1, scale: 1, filter: "blur(0px)" }
+                                  : { opacity: 0.35, scale: 1, filter: "blur(0px)" }
+                            }
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                            className={cn(
+                              "inline-block transition-colors duration-200",
+                              isCurrent
+                                ? "text-3xl md:text-5xl font-bold text-foreground"
+                                : "text-lg md:text-2xl font-normal text-muted-foreground",
+                              isFading && "pointer-events-none"
+                            )}
+                          >
+                            {/* Hesitation glow on current word */}
+                            {isCurrent && (isHesitating || isShowingHint) && (
+                              <motion.span
+                                className="absolute inset-0 rounded-lg"
+                                animate={{
+                                  boxShadow: [
+                                    "0 0 8px hsl(var(--primary) / 0.2)",
+                                    "0 0 20px hsl(var(--primary) / 0.5)",
+                                    "0 0 8px hsl(var(--primary) / 0.2)",
+                                  ],
+                                }}
+                                transition={{ duration: 1.2, repeat: Infinity }}
+                              />
+                            )}
+                            <span className="relative">
+                              {isCurrent && isShowingHint ? (
+                                <motion.span
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                  className="text-primary"
+                                >
+                                  {word}
+                                </motion.span>
+                              ) : (
+                                word
+                              )}
+                            </span>
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    );
+                  })}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* "Try to say it" nudge */}
+              <AnimatePresence>
+                {isHesitating && !isShowingHint && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-6 text-sm text-muted-foreground"
+                  >
+                    💭 Try to say it...
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Sentence indicator */}
+            <p className="text-center text-xs text-muted-foreground/50">
+              {currentSentenceIndex + 1} / {sentences.length}
+            </p>
           </div>
         )}
-      </div>
 
-      {/* Hint Strip */}
-      {showHint && (
-        <div className="fixed bottom-32 left-0 right-0 z-40 flex items-center justify-center animate-fade-in">
-          <div 
-            className={cn(
-              "px-12 py-6 rounded-2xl shadow-2xl transition-all duration-300 min-w-[300px] text-center",
-              showHint.phase === "trying" 
-                ? "bg-primary/90 text-primary-foreground" 
-                : "bg-yellow-500 text-yellow-950"
-            )}
-          >
-            {showHint.phase === "trying" ? (
-              <span className="text-3xl md:text-5xl font-medium">
-                💭 Try to say it...
-              </span>
-            ) : (
-              <span className="text-4xl md:text-6xl font-bold tracking-wide">
-                {showHint.word}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Bottom Controls */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
