@@ -66,7 +66,7 @@ const Presentation = () => {
   const [autoStopSilence, setAutoStopSilence] = useState(4);
   const [fontSize, setFontSize] = useState(40);
   const [showSettings, setShowSettings] = useState(false);
-  const [hintDelay, setHintDelay] = useState(2000);
+  const [hintDelay, setHintDelay] = useState(1000);
   const [sentenceStartDelay, setSentenceStartDelay] = useState(4000);
   
   // Results
