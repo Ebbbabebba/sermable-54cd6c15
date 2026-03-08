@@ -2,10 +2,10 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, ScrollText } from "lucide-react";
+import { Brain, ScrollText, MonitorPlay } from "lucide-react";
 
 interface PresentationModeSelectorProps {
-  onSelectMode: (mode: 'strict' | 'fullscript') => void;
+  onSelectMode: (mode: 'strict' | 'fullscript' | 'overview') => void;
 }
 
 export const PresentationModeSelector = ({ 
@@ -26,7 +26,7 @@ export const PresentationModeSelector = ({
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             {/* Strict Mode */}
             <Card className="p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group"
                   onClick={() => onSelectMode('strict')}>
