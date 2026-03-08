@@ -126,7 +126,7 @@ const SentenceDisplay = ({
           onClick={() => onWordTap?.(index)}
           layout="position"
           transition={{ 
-            layout: { duration: 0.3, ease: "easeOut" },
+            layout: { duration: 0.2, ease: "easeOut" },
           }}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-300",
