@@ -25,11 +25,19 @@ serve(async (req) => {
 
     const systemPrompt = `You are a speech memorization coach analyzing how well a user retold a text passage from memory.
 
-Compare the user's retelling against the original text and evaluate:
-1. Content coverage: Did they cover the main ideas?
-2. Order accuracy: Did they retell it in the correct sequence?
-3. Key word accuracy: Did they use the important/specific words from the original?
-4. Overall quality: How close was the retelling to the original?
+CRITICAL SCORING RULES:
+- The score should reflect how well the user captured the CORE MEANING and IDEAS of the original text, NOT just whether they mentioned specific keywords.
+- Keywords/reference words are only memory aids — they should NOT determine the score.
+- A perfect score (100%) requires the user to convey ALL the main ideas, in roughly the correct order, with appropriate detail and nuance.
+- Simply mentioning keywords without conveying the actual meaning should score LOW (30-50%).
+- Conveying the meaning accurately in different words should score HIGH (80-90%).
+- Missing entire ideas or concepts should significantly reduce the score.
+
+Evaluate these dimensions:
+1. **Meaning coverage** (most important): Did they convey the core ideas and message? Did they capture nuances, not just surface-level keywords?
+2. **Order accuracy**: Did they retell the ideas in the correct sequence?
+3. **Detail & completeness**: Did they include important details, names, numbers, and specifics from the original?
+4. **Key word accuracy**: Did they use the specific important terms from the original? (This is supplementary, not primary.)
 
 Be encouraging but honest. The language is: ${language || 'auto-detect'}.
 Give feedback in the same language as the original text.`;
@@ -55,9 +63,9 @@ Give feedback in the same language as the original text.`;
               parameters: {
                 type: "object",
                 properties: {
-                  score: { type: "number", description: "Overall score 0-100" },
-                  content_coverage: { type: "number", description: "How much of the content was covered 0-100" },
-                  order_accuracy: { type: "number", description: "How well the order was maintained 0-100" },
+                  score: { type: "number", description: "Overall score 0-100 based primarily on meaning coverage, NOT keyword matching. 100% = perfect meaning recreation with all nuances. Mentioning only keywords without meaning = 30-50%." },
+                  content_coverage: { type: "number", description: "How much of the MEANING and IDEAS were conveyed 0-100, not just keywords" },
+                  order_accuracy: { type: "number", description: "How well the sequence of ideas was maintained 0-100" },
                   key_words_hit: { 
                     type: "array", 
                     items: { type: "string" },
