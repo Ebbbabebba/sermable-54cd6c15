@@ -1001,6 +1001,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Check if spoken word matches expected - STRICT matching
   // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
   const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
+    // Auto-accept hard-to-recognize words (numbers, year ranges, abbreviations)
+    if (isHardToRecognizeWord(expected)) {
+      console.log(`🔢 Auto-accepting hard-to-recognize word: "${expected}"`);
+      return true;
+    }
+    
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     

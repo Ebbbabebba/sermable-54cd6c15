@@ -119,8 +119,9 @@ export const FullScriptView = ({
         
         const targetWord = normalizeWord(updated[scriptPos].text);
         const similarity = getWordSimilarity(spokenWord, targetWord);
+        const hardWord = isHardToRecognizeWord(updated[scriptPos].text);
         
-        if (similarity >= 0.7) {
+        if (hardWord || similarity >= 0.7) {
           // Match - mark as spoken
           updated[scriptPos] = { ...updated[scriptPos], spoken: true };
           scriptPos++;

@@ -291,11 +291,12 @@ const EnhancedWordTracker = ({
 
           // Check if current words match - require HIGH similarity to prevent premature matching
           const similarity = getWordSimilarity(transcribedWord, targetWord);
+          const hardWord = isHardToRecognizeWord(targetWord);
 
           // Check for compound hyphenated words (e.g., "all-consuming" matches "all consuming")
           let wordsConsumed = 1;
-          // STRICTER: Require 80%+ similarity for match (was 50%)
-          if (similarity >= 0.80 || 
+          // STRICTER: Require 80%+ similarity for match (was 50%), or auto-accept hard words
+          if (hardWord || similarity >= 0.80 || 
               (newWordIdx + 1 < newWords.length && 
                getWordSimilarity(transcribedWord + newWords[newWordIdx + 1], targetWord) >= 0.80)) {
             

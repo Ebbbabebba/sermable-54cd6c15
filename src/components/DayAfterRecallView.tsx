@@ -154,6 +154,9 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
   
   // Check if spoken word matches expected
   const wordsMatch = (spoken: string, expected: string): boolean => {
+    // Auto-accept hard-to-recognize words
+    if (isHardToRecognizeWord(expected)) return true;
+    
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     if (s === e) return true;
