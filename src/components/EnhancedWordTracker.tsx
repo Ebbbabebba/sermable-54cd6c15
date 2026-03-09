@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { RealtimeTranscriber } from "@/utils/RealtimeTranscription";
+import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 
 interface EnhancedWordTrackerProps {
   text: string;
