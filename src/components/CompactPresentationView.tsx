@@ -61,6 +61,8 @@ const getRecognitionLanguage = (lang: string): string => {
   return langMap[lang.toLowerCase()] || `${lang}-${lang.toUpperCase()}`;
 };
 
+import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+
 // Normalize text for comparison (Unicode-aware)
 const normalizeWord = (text: string): string => {
   return text
@@ -349,9 +351,10 @@ export const CompactPresentationView = ({
       if (localIndex >= words.length) break;
       
       const targetWord = words[localIndex];
+      const hardWord = isHardToRecognizeWord(targetWord);
       const similarity = getWordSimilarity(spokenWord, targetWord);
       
-      if (similarity >= 0.5) {
+      if (similarity >= 0.5 || hardWord) {
         const timeToSpeak = Date.now() - wordStartTimeRef.current;
         const wasPrompted = showHint?.phase === "showing";
         const wordStatus: WordPerformance["status"] = 

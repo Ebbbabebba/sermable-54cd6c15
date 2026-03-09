@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Circle, Square } from "lucide-react";
@@ -118,8 +119,9 @@ export const FullScriptView = ({
         
         const targetWord = normalizeWord(updated[scriptPos].text);
         const similarity = getWordSimilarity(spokenWord, targetWord);
+        const hardWord = isHardToRecognizeWord(updated[scriptPos].text);
         
-        if (similarity >= 0.7) {
+        if (hardWord || similarity >= 0.7) {
           // Match - mark as spoken
           updated[scriptPos] = { ...updated[scriptPos], spoken: true };
           scriptPos++;
