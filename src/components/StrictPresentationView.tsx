@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 
 interface WordPerformance {
   word: string;
