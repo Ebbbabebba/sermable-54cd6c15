@@ -61,6 +61,8 @@ const getRecognitionLanguage = (lang: string): string => {
   return langMap[lang.toLowerCase()] || `${lang}-${lang.toUpperCase()}`;
 };
 
+import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+
 // Normalize text for comparison (Unicode-aware)
 const normalizeWord = (text: string): string => {
   return text
