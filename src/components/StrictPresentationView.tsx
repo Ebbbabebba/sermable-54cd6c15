@@ -291,9 +291,9 @@ export const StrictPresentationView = ({
       
       const targetWord = words[currentWordIndex];
       const hardWord = isHardToRecognizeWord(targetWord);
-      const similarity = getWordSimilarity(spokenWord, targetWord);
+      const similarity = hardWord ? 1.0 : getWordSimilarity(spokenWord, targetWord);
       
-      if (similarity >= 0.5 || hardWord) {
+      if (similarity >= 0.5) {
         // Match found!
         const timeToSpeak = Date.now() - wordStartTimeRef.current;
         const wasPrompted = showHint?.phase === "showing";
