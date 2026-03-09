@@ -63,9 +63,9 @@ Give feedback in the same language as the original text.`;
               parameters: {
                 type: "object",
                 properties: {
-                  score: { type: "number", description: "Overall score 0-100" },
-                  content_coverage: { type: "number", description: "How much of the content was covered 0-100" },
-                  order_accuracy: { type: "number", description: "How well the order was maintained 0-100" },
+                  score: { type: "number", description: "Overall score 0-100 based primarily on meaning coverage, NOT keyword matching. 100% = perfect meaning recreation with all nuances. Mentioning only keywords without meaning = 30-50%." },
+                  content_coverage: { type: "number", description: "How much of the MEANING and IDEAS were conveyed 0-100, not just keywords" },
+                  order_accuracy: { type: "number", description: "How well the sequence of ideas was maintained 0-100" },
                   key_words_hit: { 
                     type: "array", 
                     items: { type: "string" },
