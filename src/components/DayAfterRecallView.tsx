@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Medal, GraduationCap, RotateCcw, CheckCircle2 } from "lucide-react";
