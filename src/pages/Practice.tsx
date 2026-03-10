@@ -1802,19 +1802,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
   if (!speech) return null;
 
-  // General Overview Mode - route to OverviewPracticeView
-  if (speech.learning_mode === 'general_overview') {
-    return (
-      <OverviewPracticeView
-        speechId={speech.id}
-        speechTitle={speech.title}
-        speechText={speech.text_original}
-        speechLanguage={speech.speech_language || 'en'}
-        onBack={() => navigate("/dashboard")}
-        onSwitchMode={handleSwitchLearningMode}
-      />
-    );
-  }
 
   // Day-After Recall Mode
   if (isDayAfterRecall && !showResults) {
