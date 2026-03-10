@@ -33,7 +33,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
 import DayAfterRecallView from "@/components/DayAfterRecallView";
-import OverviewPracticeView from "@/components/OverviewPracticeView";
+
 
 import SegmentProgress from "@/components/SegmentProgress";
 import { useTheme } from "@/contexts/ThemeContext";
