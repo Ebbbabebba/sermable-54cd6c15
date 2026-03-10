@@ -2090,10 +2090,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSwitchLearningMode} className="gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    {t('upload.learningMode.generalOverview')}
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

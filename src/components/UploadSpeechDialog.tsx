@@ -12,7 +12,7 @@ import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
 
-import { LearningModeSelector } from "./LearningModeSelector";
+
 
 interface UploadSpeechDialogProps {
   open: boolean;
