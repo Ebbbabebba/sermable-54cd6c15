@@ -1791,26 +1791,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
-  const handleSwitchLearningMode = async () => {
-    if (!speech) return;
-    const newMode = speech.learning_mode === 'general_overview' ? 'word_by_word' : 'general_overview';
-    try {
-      const { error } = await supabase
-        .from('speeches')
-        .update({ learning_mode: newMode })
-        .eq('id', speech.id);
-      if (error) throw error;
-      setSpeech({ ...speech, learning_mode: newMode });
-      toast({
-        title: newMode === 'general_overview' 
-          ? t('upload.learningMode.generalOverview') 
-          : t('upload.learningMode.wordByWord'),
-        description: t('upload.learningMode.title'),
-      });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: t('common.error'), description: error.message });
-    }
-  };
 
   if (loading) {
     return (
