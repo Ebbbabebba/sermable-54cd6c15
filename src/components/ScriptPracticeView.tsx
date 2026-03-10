@@ -4,11 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Play, Square, RotateCcw, ChevronRight, 
   Loader2, BookOpen, KeyRound, Mic, Merge, Split,
-  CheckCircle2, XCircle, AlertCircle
+  CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, Trophy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,9 +26,18 @@ interface RetellingResult {
   key_words_hit: string[];
   key_words_missed: string[];
   feedback: string;
+  transcript?: string;
 }
 
-type Phase = 'loading' | 'reading' | 'reference' | 'recording' | 'analyzing' | 'results';
+interface BeatSessionResult {
+  beatStart: number;
+  beatEnd: number;
+  score: number;
+  content_coverage: number;
+  order_accuracy: number;
+}
+
+type Phase = 'loading' | 'reading' | 'reference' | 'recording' | 'analyzing' | 'results' | 'summary';
 
 interface ScriptPracticeViewProps {
   speechId: string;
@@ -52,9 +62,15 @@ const ScriptPracticeView = ({
   const [currentBeatIndex, setCurrentBeatIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('loading');
   const [result, setResult] = useState<RetellingResult | null>(null);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [lastTranscript, setLastTranscript] = useState<string>("");
 
-  // Aggregation: which beats are combined for the current session
-  const [aggregatedRange, setAggregatedRange] = useState<[number, number]>([0, 0]); // [start, end] inclusive
+  // Session tracking
+  const [sessionResults, setSessionResults] = useState<BeatSessionResult[]>([]);
+  const sessionStartTime = useRef<number>(Date.now());
+
+  // Aggregation
+  const [aggregatedRange, setAggregatedRange] = useState<[number, number]>([0, 0]);
 
   // Recording
   const [isRecording, setIsRecording] = useState(false);
@@ -62,14 +78,34 @@ const ScriptPracticeView = ({
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Load beats on mount
+  // Load beats on mount - try cache first
   useEffect(() => {
-    extractBeats();
+    loadOrExtractBeats();
   }, []);
 
-  const extractBeats = async () => {
+  const loadOrExtractBeats = async () => {
     setPhase('loading');
     try {
+      // Try loading cached beats first
+      const { data: cachedBeats, error: cacheError } = await supabase
+        .from('script_beats')
+        .select('*')
+        .eq('speech_id', speechId)
+        .order('beat_index', { ascending: true });
+
+      if (!cacheError && cachedBeats && cachedBeats.length > 0) {
+        const mapped: Beat[] = cachedBeats.map(b => ({
+          beat_index: b.beat_index,
+          text: b.text,
+          reference_word: b.reference_word,
+        }));
+        setBeats(mapped);
+        setAggregatedRange([0, 0]);
+        setPhase('reading');
+        return;
+      }
+
+      // Extract fresh beats
       const { data, error } = await supabase.functions.invoke('extract-reference-words', {
         body: { text: speechText, language: speechLanguage }
       });
@@ -78,9 +114,19 @@ const ScriptPracticeView = ({
       if (!data?.beats || data.beats.length === 0) throw new Error("No beats extracted");
 
       setBeats(data.beats);
-      setCurrentBeatIndex(0);
       setAggregatedRange([0, 0]);
       setPhase('reading');
+
+      // Cache beats in background
+      const beatsToInsert = data.beats.map((b: Beat) => ({
+        speech_id: speechId,
+        beat_index: b.beat_index,
+        text: b.text,
+        reference_word: b.reference_word,
+      }));
+
+      await supabase.from('script_beats').delete().eq('speech_id', speechId);
+      await supabase.from('script_beats').insert(beatsToInsert);
     } catch (err: any) {
       console.error("Error extracting beats:", err);
       toast({
@@ -163,7 +209,6 @@ const ScriptPracticeView = ({
     setPhase('analyzing');
 
     try {
-      // Transcribe
       const reader = new FileReader();
       reader.readAsDataURL(audioBlob);
 
@@ -176,18 +221,45 @@ const ScriptPracticeView = ({
           });
           if (transcriptError) throw transcriptError;
 
-          // Analyze retelling
+          const transcript = transcriptData.transcript || '';
+          setLastTranscript(transcript);
+
           const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-retelling', {
             body: {
               originalText: currentText,
-              transcript: transcriptData.transcript,
+              transcript,
               language: speechLanguage,
             }
           });
           if (analysisError) throw analysisError;
 
-          setResult(analysisData);
+          const resultWithTranscript = { ...analysisData, transcript };
+          setResult(resultWithTranscript);
           setPhase('results');
+
+          // Save session to database
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('script_sessions').insert({
+              speech_id: speechId,
+              user_id: user.id,
+              beat_start: aggregatedRange[0],
+              beat_end: aggregatedRange[1],
+              score: analysisData.score,
+              content_coverage: analysisData.content_coverage,
+              order_accuracy: analysisData.order_accuracy,
+              transcript,
+            });
+          }
+
+          // Track for summary
+          setSessionResults(prev => [...prev, {
+            beatStart: aggregatedRange[0],
+            beatEnd: aggregatedRange[1],
+            score: analysisData.score,
+            content_coverage: analysisData.content_coverage,
+            order_accuracy: analysisData.order_accuracy,
+          }]);
         } catch (err: any) {
           console.error("Analysis error:", err);
           toast({ variant: "destructive", title: "Analysis failed", description: err.message });
@@ -202,6 +274,8 @@ const ScriptPracticeView = ({
 
   const handleRepeat = () => {
     setResult(null);
+    setShowOriginal(false);
+    setLastTranscript("");
     setPhase('reading');
   };
 
@@ -211,29 +285,30 @@ const ScriptPracticeView = ({
       setAggregatedRange([nextIndex, nextIndex]);
       setCurrentBeatIndex(nextIndex);
       setResult(null);
+      setShowOriginal(false);
+      setLastTranscript("");
       setPhase('reading');
     } else {
-      // All beats done
-      toast({ title: "🎉 " + t('script.allDone', 'All beats completed!') });
-      onBack();
+      // All beats done — show summary
+      setPhase('summary');
     }
   };
 
   const handleAggregate = () => {
-    // Expand range to include next beat
     const newEnd = Math.min(aggregatedRange[1] + 1, totalBeats - 1);
     if (newEnd > aggregatedRange[1]) {
       setAggregatedRange([aggregatedRange[0], newEnd]);
       setResult(null);
+      setShowOriginal(false);
       setPhase('reading');
     }
   };
 
   const handleDisaggregate = () => {
-    // Shrink range back to single beat
     if (aggregatedRange[1] > aggregatedRange[0]) {
       setAggregatedRange([aggregatedRange[0], aggregatedRange[0]]);
       setResult(null);
+      setShowOriginal(false);
       setPhase('reading');
     }
   };
@@ -252,6 +327,12 @@ const ScriptPracticeView = ({
     if (score >= 60) return <AlertCircle className="h-6 w-6 text-yellow-500" />;
     return <XCircle className="h-6 w-6 text-red-500" />;
   };
+
+  // Summary calculations
+  const overallScore = sessionResults.length > 0
+    ? Math.round(sessionResults.reduce((sum, r) => sum + r.score, 0) / sessionResults.length)
+    : 0;
+  const totalTimeMinutes = Math.round((Date.now() - sessionStartTime.current) / 60000);
 
   // Loading state
   if (phase === 'loading') {
@@ -276,7 +357,7 @@ const ScriptPracticeView = ({
         <div className="text-center">
           <p className="text-sm font-medium truncate max-w-[200px]">{speechTitle}</p>
           <p className="text-xs text-muted-foreground">
-            {t('script.beatOf', 'Beat {{current}} of {{total}}', {
+            {phase !== 'summary' && t('script.beatOf', 'Beat {{current}} of {{total}}', {
               current: aggregatedRange[1] + 1,
               total: totalBeats,
             })}
@@ -287,13 +368,13 @@ const ScriptPracticeView = ({
       </div>
 
       {/* Progress */}
-      <Progress value={progressPercent} className="h-1 rounded-none" />
+      {phase !== 'summary' && <Progress value={progressPercent} className="h-1 rounded-none" />}
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-2xl">
           <AnimatePresence mode="wait">
-            {/* PHASE: Reading the beat */}
+            {/* PHASE: Reading */}
             {phase === 'reading' && (
               <motion.div
                 key="reading"
@@ -326,7 +407,7 @@ const ScriptPracticeView = ({
               </motion.div>
             )}
 
-            {/* PHASE: Show reference word(s) */}
+            {/* PHASE: Reference word */}
             {phase === 'reference' && (
               <motion.div
                 key="reference"
@@ -465,6 +546,41 @@ const ScriptPracticeView = ({
                   </Card>
                 </div>
 
+                {/* Transcript comparison */}
+                {lastTranscript && (
+                  <Card className="border border-border">
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">{t('script.yourRetelling', 'What you said')}</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowOriginal(!showOriginal)}
+                          className="gap-1.5 text-xs"
+                        >
+                          {showOriginal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          {showOriginal
+                            ? t('script.hideOriginal', 'Hide original')
+                            : t('script.showOriginal', 'Show original')}
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground italic leading-relaxed">
+                        "{lastTranscript}"
+                      </p>
+                      {showOriginal && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="pt-3 border-t border-border"
+                        >
+                          <p className="text-xs font-medium text-muted-foreground mb-1">{t('script.original', 'Original')}</p>
+                          <p className="text-sm leading-relaxed">{currentText}</p>
+                        </motion.div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Key words */}
                 {result.key_words_hit.length > 0 && (
                   <div className="space-y-2">
@@ -512,29 +628,106 @@ const ScriptPracticeView = ({
                   </Button>
                 </div>
 
-                {/* Aggregate / Disaggregate */}
-                <div className="flex gap-3 pt-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleAggregate}
-                    disabled={!canAggregate}
-                    className="flex-1 gap-2 text-xs"
-                  >
-                    <Merge className="h-4 w-4" />
-                    {t('script.aggregate', 'Add next beat')}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDisaggregate}
-                    disabled={!canDisaggregate}
-                    className="flex-1 gap-2 text-xs"
-                  >
-                    <Split className="h-4 w-4" />
-                    {t('script.disaggregate', 'Single beat only')}
-                  </Button>
+                {/* Aggregate / Disaggregate with tooltips */}
+                <TooltipProvider>
+                  <div className="flex gap-3 pt-1">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleAggregate}
+                          disabled={!canAggregate}
+                          className="flex-1 gap-2 text-xs"
+                        >
+                          <Merge className="h-4 w-4" />
+                          {t('script.aggregate', 'Add next beat')}
+                          {canAggregate && (
+                            <span className="text-muted-foreground">
+                              ({aggregatedRange[0] + 1}–{aggregatedRange[1] + 2})
+                            </span>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('script.aggregateTooltip', 'Combine with next beat for a bigger challenge')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleDisaggregate}
+                          disabled={!canDisaggregate}
+                          className="flex-1 gap-2 text-xs"
+                        >
+                          <Split className="h-4 w-4" />
+                          {t('script.disaggregate', 'Single beat only')}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('script.disaggregateTooltip', 'Go back to practicing one beat at a time')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
+              </motion.div>
+            )}
+
+            {/* PHASE: Session Summary */}
+            {phase === 'summary' && (
+              <motion.div
+                key="summary"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-6"
+              >
+                <div className="text-center space-y-4">
+                  <Trophy className="h-12 w-12 text-primary mx-auto" />
+                  <h2 className="text-2xl font-bold">{t('script.sessionComplete', 'Session Complete!')}</h2>
+                  <div>
+                    <span className={`text-5xl font-bold ${getScoreColor(overallScore)}`}>
+                      {overallScore}%
+                    </span>
+                    <p className="text-muted-foreground mt-1">
+                      {t('script.averageScore', 'Average score')}
+                    </p>
+                  </div>
+                  {totalTimeMinutes > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {t('script.timeSpent', '{{minutes}} min', { minutes: totalTimeMinutes })}
+                    </p>
+                  )}
                 </div>
+
+                {/* Per-beat breakdown */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">{t('script.perBeat', 'Per beat')}</p>
+                  {sessionResults.map((sr, i) => (
+                    <Card key={i}>
+                      <CardContent className="p-3 flex items-center justify-between">
+                        <span className="text-sm">
+                          {sr.beatStart === sr.beatEnd
+                            ? `Beat ${sr.beatStart + 1}`
+                            : `Beats ${sr.beatStart + 1}–${sr.beatEnd + 1}`}
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground">
+                            {sr.content_coverage}% content · {sr.order_accuracy}% order
+                          </span>
+                          <span className={`text-sm font-bold ${getScoreColor(sr.score)}`}>
+                            {sr.score}%
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <Button size="lg" className="w-full" onClick={onBack}>
+                  {t('common.done', 'Done')}
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>

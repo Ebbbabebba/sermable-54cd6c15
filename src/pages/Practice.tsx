@@ -33,7 +33,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
 import DayAfterRecallView from "@/components/DayAfterRecallView";
-import OverviewPracticeView from "@/components/OverviewPracticeView";
+
 
 import SegmentProgress from "@/components/SegmentProgress";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -1791,26 +1791,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
-  const handleSwitchLearningMode = async () => {
-    if (!speech) return;
-    const newMode = speech.learning_mode === 'general_overview' ? 'word_by_word' : 'general_overview';
-    try {
-      const { error } = await supabase
-        .from('speeches')
-        .update({ learning_mode: newMode })
-        .eq('id', speech.id);
-      if (error) throw error;
-      setSpeech({ ...speech, learning_mode: newMode });
-      toast({
-        title: newMode === 'general_overview' 
-          ? t('upload.learningMode.generalOverview') 
-          : t('upload.learningMode.wordByWord'),
-        description: t('upload.learningMode.title'),
-      });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: t('common.error'), description: error.message });
-    }
-  };
 
   if (loading) {
     return (
@@ -1822,19 +1802,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
   if (!speech) return null;
 
-  // General Overview Mode - route to OverviewPracticeView
-  if (speech.learning_mode === 'general_overview') {
-    return (
-      <OverviewPracticeView
-        speechId={speech.id}
-        speechTitle={speech.title}
-        speechText={speech.text_original}
-        speechLanguage={speech.speech_language || 'en'}
-        onBack={() => navigate("/dashboard")}
-        onSwitchMode={handleSwitchLearningMode}
-      />
-    );
-  }
 
   // Day-After Recall Mode
   if (isDayAfterRecall && !showResults) {
@@ -2123,10 +2090,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSwitchLearningMode} className="gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    {t('upload.learningMode.generalOverview')}
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

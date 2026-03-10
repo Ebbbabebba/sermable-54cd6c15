@@ -801,6 +801,88 @@ export type Database = {
           },
         ]
       }
+      script_beats: {
+        Row: {
+          beat_index: number
+          created_at: string
+          id: string
+          reference_word: string
+          speech_id: string
+          text: string
+        }
+        Insert: {
+          beat_index: number
+          created_at?: string
+          id?: string
+          reference_word: string
+          speech_id: string
+          text: string
+        }
+        Update: {
+          beat_index?: number
+          created_at?: string
+          id?: string
+          reference_word?: string
+          speech_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "script_beats_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      script_sessions: {
+        Row: {
+          beat_end: number
+          beat_start: number
+          content_coverage: number | null
+          created_at: string
+          id: string
+          order_accuracy: number | null
+          score: number | null
+          speech_id: string
+          transcript: string | null
+          user_id: string
+        }
+        Insert: {
+          beat_end: number
+          beat_start: number
+          content_coverage?: number | null
+          created_at?: string
+          id?: string
+          order_accuracy?: number | null
+          score?: number | null
+          speech_id: string
+          transcript?: string | null
+          user_id: string
+        }
+        Update: {
+          beat_end?: number
+          beat_start?: number
+          content_coverage?: number | null
+          created_at?: string
+          id?: string
+          order_accuracy?: number | null
+          score?: number | null
+          speech_id?: string
+          transcript?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "script_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "speeches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       speech_phrases: {
         Row: {
           created_at: string | null

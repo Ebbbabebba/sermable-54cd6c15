@@ -12,7 +12,7 @@ import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
 
-import { LearningModeSelector } from "./LearningModeSelector";
+
 
 interface UploadSpeechDialogProps {
   open: boolean;
@@ -277,28 +277,15 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
 
       if (error) throw error;
 
-      if (learningMode === 'general_overview') {
-        // Extract topics for overview mode
-        console.log('🔄 Extracting speech topics for overview mode...');
-        const { error: topicError } = await supabase.functions.invoke('extract-speech-topics', {
-          body: { speechId: newSpeech.id, speechText: text, speechLanguage: detectedLanguage }
-        });
-        if (topicError) {
-          console.error('⚠️ Error extracting topics:', topicError);
-        } else {
-          console.log('✅ Speech topics extracted successfully');
-        }
+      // Segment the speech automatically
+      console.log('🔄 Segmenting speech...');
+      const { error: segmentError } = await supabase.functions.invoke('segment-speech', {
+        body: { speechId: newSpeech.id }
+      });
+      if (segmentError) {
+        console.error('⚠️ Error segmenting speech:', segmentError);
       } else {
-        // Segment the speech automatically for word-by-word mode
-        console.log('🔄 Segmenting speech...');
-        const { error: segmentError } = await supabase.functions.invoke('segment-speech', {
-          body: { speechId: newSpeech.id }
-        });
-        if (segmentError) {
-          console.error('⚠️ Error segmenting speech:', segmentError);
-        } else {
-          console.log('✅ Speech segmented successfully');
-        }
+        console.log('✅ Speech segmented successfully');
       }
 
       // Check memorization feasibility
@@ -424,11 +411,6 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             </p>
           </div>
 
-          {/* Learning Mode Selector */}
-          <LearningModeSelector
-            value={learningMode}
-            onChange={setLearningMode}
-          />
 
 
           <div className="space-y-2">
