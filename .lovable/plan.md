@@ -1,71 +1,76 @@
 
 
-# Improve Strict Presentation Mode UX
+# Remove Old General/Overview Mode & Improve Script Mode
 
-## Overview
-Three improvements to the strict presentation mode:
-1. Clearer instructions on the prep screen explaining the flow
-2. Nicer word hint appearance using Framer Motion animations (smooth slide-up with blur, scaling)
-3. Screen pulse effect when hesitation is detected and a hint is on its way
+## What's changing
 
-## Changes
+### 1. Remove the old "General Overview" learning mode entirely
+The old overview system (topic extraction, `overview_topics` table, `OverviewPracticeView`) will be removed. Script Mode replaces it everywhere.
 
-### 1. Clearer Prep Screen Instructions (`src/pages/Presentation.tsx`)
-- Rewrite the "How it works" section with a step-by-step flow that feels more like onboarding:
-  - Step 1: "Press start and begin speaking your speech from memory"
-  - Step 2: "If you hesitate, a gentle hint will appear to help you"  
-  - Step 3: "Keep going -- your performance is tracked for review"
-- Add a subtle motivational note like "No text on screen. Just you and your words."
-- Keep it clean and scannable
+**Files to edit:**
+- `src/components/LearningModeSelector.tsx` — Remove the `general_overview` option. Since only `word_by_word` remains, either keep just one option or remove the selector entirely and default to `word_by_word`.
+- `src/components/UploadSpeechDialog.tsx` — Remove the `general_overview` branch that calls `extract-speech-topics`. All speeches use `word_by_word` + segmentation.
+- `src/pages/Practice.tsx` — Remove the `general_overview` routing block (lines ~1825-1836) that renders `OverviewPracticeView`. Remove `handleSwitchLearningMode`. Remove import of `OverviewPracticeView`.
+- `src/components/PresentationModeSelector.tsx` — The "General/Overview" card (3rd card) should be renamed to "Script Mode" with updated description reflecting the beat + reference word flow. Keep the 3-column grid with Strict, Full Script, Script.
 
-### 2. Animated Word Hints (`src/components/StrictPresentationView.tsx`)
-- Import `motion` and `AnimatePresence` from `framer-motion`
-- Replace the current static hint strip with animated versions:
-  - **"Trying" phase**: Slides up softly with a blur-to-clear effect, gentle scale from 0.95 to 1
-  - **"Showing" phase**: Word appears with a spring animation, slightly larger initial scale that settles
-- Use `AnimatePresence` with `mode="wait"` so transitions between phases are smooth
-- Add a subtle backdrop blur behind the hint for better readability
+### 2. Improve Script Mode UX
 
-### 3. Screen Pulse During Hesitation (`src/components/StrictPresentationView.tsx`)
-- Add a new state: `isHesitating` (boolean) that turns true when the silence timer crosses ~60% of the delay threshold (the "trying" phase trigger)
-- When `isHesitating` is true, render a full-screen overlay `motion.div` with:
-  - A soft pulsing border/glow effect around the edges of the screen using `animate` with repeating opacity and box-shadow
-  - Uses primary color at low opacity (e.g., `hsl(var(--primary) / 0.08)`)
-  - Pulses with a ~1.5s cycle
-- When the user speaks the word (hint clears), the pulse fades out smoothly
-- This gives a visual "the screen is waiting for you" feeling without being intrusive
+**Current issues & improvements:**
 
-## Technical Details
+- **No progress persistence** — Beats are re-extracted every time. Store extracted beats in the database so users resume where they left off.
+- **No session history** — Results aren't saved. Track scores per beat over time to show mastery.
+- **Missing "show original" after results** — After seeing the score, let users tap to reveal the original text side-by-side with what they said.
+- **No transcript shown** — Show the user's actual transcription in the results so they can see what was heard vs the original.
+- **Aggregate/disaggregate UX is unclear** — Add labels and tooltips explaining what these buttons do. Show the beat range visually.
+- **No overall session summary** — When all beats are done, show a summary screen with scores per beat, overall score, and time spent instead of just navigating back.
 
-### Framer Motion hint animation config
+**Files to edit:**
+- `src/components/ScriptPracticeView.tsx`:
+  - Show transcript in results phase alongside original text
+  - Add "Show original" toggle in results
+  - Build a completion summary screen when all beats are done
+  - Better labels for aggregate/disaggregate buttons
+  
+**Database migration:**
+- Create `script_beats` table to cache extracted beats per speech
+- Create `script_sessions` table to store per-beat results over time
+
 ```text
-"trying" phase:
-  initial: { opacity: 0, y: 20, filter: "blur(8px)", scale: 0.95 }
-  animate: { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }
-  transition: { duration: 0.4, ease: "easeOut" }
+script_beats:
+  id uuid PK
+  speech_id uuid FK -> speeches.id
+  beat_index int
+  text text
+  reference_word text
+  created_at timestamp
 
-"showing" phase:
-  initial: { opacity: 0, scale: 0.8 }
-  animate: { opacity: 1, scale: 1 }
-  transition: { type: "spring", stiffness: 300, damping: 25 }
-
-exit: { opacity: 0, y: -10, scale: 0.95, transition: { duration: 0.2 } }
+script_sessions:
+  id uuid PK
+  speech_id uuid FK -> speeches.id  
+  user_id uuid
+  beat_start int
+  beat_end int
+  score int
+  content_coverage int
+  order_accuracy int
+  transcript text
+  created_at timestamp
 ```
 
-### Screen pulse overlay
-```text
-Rendered as a fixed inset-0 div with pointer-events-none
-animate: {
-  boxShadow: [
-    "inset 0 0 60px hsl(var(--primary) / 0.05)",
-    "inset 0 0 100px hsl(var(--primary) / 0.12)",
-    "inset 0 0 60px hsl(var(--primary) / 0.05)"
-  ]
-}
-transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-```
+### 3. Files to delete (cleanup)
+- `src/components/OverviewPracticeView.tsx` — No longer used
+- `src/components/OverviewTopicCard.tsx` — No longer used  
+- `src/components/OverviewResults.tsx` — No longer used
 
-### Files to edit
-- `src/pages/Presentation.tsx` -- prep screen instructions
-- `src/components/StrictPresentationView.tsx` -- animated hints + screen pulse
+### Summary of all changes
+
+| Area | Action |
+|------|--------|
+| `LearningModeSelector.tsx` | Remove `general_overview` option |
+| `UploadSpeechDialog.tsx` | Remove overview topic extraction branch |
+| `Practice.tsx` | Remove overview routing + switch mode logic |
+| `PresentationModeSelector.tsx` | Rename 3rd card to "Script Mode" |
+| `ScriptPracticeView.tsx` | Add transcript display, completion summary, beat caching, clearer aggregate UX |
+| DB migration | Create `script_beats` + `script_sessions` tables |
+| Cleanup | Delete `OverviewPracticeView`, `OverviewTopicCard`, `OverviewResults` |
 
