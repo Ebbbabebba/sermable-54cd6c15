@@ -156,7 +156,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const [supportWord, setSupportWord] = useState<string | null>(null);
   const [supportWordIndex, setSupportWordIndex] = useState<number | null>(null);
   const [hintLevel, setHintLevel] = useState<0 | 1 | 2 | 3>(0); // Progressive hint level
-  const hintTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Auto-scheduling state (no manual rating)
   const [adaptiveScheduleResult, setAdaptiveScheduleResult] = useState<{
     intervalMinutes: number;
