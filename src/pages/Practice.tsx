@@ -137,7 +137,7 @@ const Practice = () => {
   }
   const wordQueueRef = useRef<QueuedWord[]>([]);
   const isProcessingQueueRef = useRef(false);
-  const queueProcessorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const queueProcessorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWordsIndices, setSpokenWordsIndices] = useState<Set<number>>(new Set());
   const [hesitatedWordsIndices, setHesitatedWordsIndices] = useState<Set<number>>(new Set());
