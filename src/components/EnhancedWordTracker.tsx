@@ -110,7 +110,7 @@ const EnhancedWordTracker = ({
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const currentWordIndexRef = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const revealTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSpokenIndexRef = useRef(-1);
   const wordTimestamps = useRef<Map<number, number>>(new Map()); // Track when each word position was reached
   const transcriberRef = useRef<RealtimeTranscriber | null>(null);
@@ -122,7 +122,7 @@ const EnhancedWordTracker = ({
     wordIndex: number;
     isAnimating: boolean;
   } | null>(null);
-  const pauseDetectionTimer = useRef<NodeJS.Timeout | null>(null);
+  const pauseDetectionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastProgressTime = useRef<number>(Date.now());
   const lastWordIndex = useRef<number>(-1);
   const [liquidColumn, setLiquidColumn] = useState<{
@@ -770,10 +770,10 @@ const EnhancedWordTracker = ({
         }
       }
 
-      pauseDetectionTimer.current = setTimeout(checkForPause, 200) as unknown as NodeJS.Timeout;
+      pauseDetectionTimer.current = setTimeout(checkForPause, 200);
     };
 
-    pauseDetectionTimer.current = setTimeout(checkForPause, 200) as unknown as NodeJS.Timeout;
+    pauseDetectionTimer.current = setTimeout(checkForPause, 200);
 
     return () => {
       if (pauseDetectionTimer.current) {

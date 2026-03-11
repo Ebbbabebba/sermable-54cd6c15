@@ -71,7 +71,7 @@ export const FullScriptView = ({
   
   const recognitionRef = useRef<any>(null);
   const startTimeRef = useRef<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const processedWordsRef = useRef<number>(0);
 
   // Initialize word states

@@ -315,7 +315,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const transcriptWordsRef = useRef<string[]>([]);
   const runningTranscriptRef = useRef<string>("");
   const lastWordTimeRef = useRef<number>(Date.now());
-  const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Guards against duplicate "sentence complete" triggers for the same repetition
   const lastCompletionRepIdRef = useRef<number>(-1);

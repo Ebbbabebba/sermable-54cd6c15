@@ -26,7 +26,7 @@ export default function SpeechTrainingLine({
   const expectedWords = expectedText.trim().split(/\s+/);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const lastWordTimeRef = useRef<number>(Date.now());
-  const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setWords(expectedWords.map((w) => ({ text: w, status: 'gray' })));

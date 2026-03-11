@@ -137,7 +137,7 @@ const Practice = () => {
   }
   const wordQueueRef = useRef<QueuedWord[]>([]);
   const isProcessingQueueRef = useRef(false);
-  const queueProcessorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const queueProcessorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 const [liveTranscription, setLiveTranscription] = useState("");
   const [spokenWordsIndices, setSpokenWordsIndices] = useState<Set<number>>(new Set());
   const [hesitatedWordsIndices, setHesitatedWordsIndices] = useState<Set<number>>(new Set());
@@ -156,7 +156,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const [supportWord, setSupportWord] = useState<string | null>(null);
   const [supportWordIndex, setSupportWordIndex] = useState<number | null>(null);
   const [hintLevel, setHintLevel] = useState<0 | 1 | 2 | 3>(0); // Progressive hint level
-  const hintTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Auto-scheduling state (no manual rating)
   const [adaptiveScheduleResult, setAdaptiveScheduleResult] = useState<{
     intervalMinutes: number;
@@ -167,9 +167,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
     learningStage: string;
   } | null>(null);
   const lastWordTimeRef = useRef<number>(Date.now());
-  const hesitationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audioRecorderRef = useRef<AudioRecorderHandle>(null);
-  const transcriptionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptionIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastProcessedChunkIndex = useRef(0);
   const recognitionRef = useRef<any>(null);
   const audioFormatRef = useRef<string>('audio/webm');
