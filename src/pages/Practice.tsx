@@ -443,10 +443,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
         // If no lock (free user who just mastered), they can continue immediately
         const hasFutureLock = nextReview && new Date(nextReview) > new Date();
         
-        // For free users: done if they learned 1 beat today AND locked
-        // For premium: done if locked (they can learn more per day based on schedule)
-        // If all mastered: always done
-        setTodaySessionDone(hasBeats && (allMastered || (beatsLearnedToday > 0 && hasFutureLock && hasUnmasteredBeats)));
+        // Session is "done" if:
+        // 1. All beats mastered AND next review is still in the future (or no review scheduled)
+        // 2. User learned beats today AND locked AND has unmastered beats remaining
+        // NOT done if all mastered but a recall is due (review date is past) — user should do the recall
+        const allMasteredAndNothingDue = allMastered && (!nextReview || hasFutureLock);
+        setTodaySessionDone(hasBeats && (allMasteredAndNothingDue || (beatsLearnedToday > 0 && hasFutureLock && hasUnmasteredBeats)));
       }
     } catch (error: any) {
       toast({
