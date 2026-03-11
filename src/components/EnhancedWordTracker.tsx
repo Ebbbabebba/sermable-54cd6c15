@@ -770,10 +770,10 @@ const EnhancedWordTracker = ({
         }
       }
 
-      pauseDetectionTimer.current = setTimeout(checkForPause, 200) as unknown as NodeJS.Timeout;
+      pauseDetectionTimer.current = setTimeout(checkForPause, 200);
     };
 
-    pauseDetectionTimer.current = setTimeout(checkForPause, 200) as unknown as NodeJS.Timeout;
+    pauseDetectionTimer.current = setTimeout(checkForPause, 200);
 
     return () => {
       if (pauseDetectionTimer.current) {

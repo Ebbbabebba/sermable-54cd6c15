@@ -100,8 +100,8 @@ export const StrictPresentationView = ({
   const [isHesitating, setIsHesitating] = useState(false);
   
   const recognitionRef = useRef<any>(null);
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const hintTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wordStartTimeRef = useRef<number>(Date.now());
   const transcriptRef = useRef<string>("");
   const wrongAttempts = useRef<string[]>([]);
