@@ -122,7 +122,7 @@ const EnhancedWordTracker = ({
     wordIndex: number;
     isAnimating: boolean;
   } | null>(null);
-  const pauseDetectionTimer = useRef<NodeJS.Timeout | null>(null);
+  const pauseDetectionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastProgressTime = useRef<number>(Date.now());
   const lastWordIndex = useRef<number>(-1);
   const [liquidColumn, setLiquidColumn] = useState<{
