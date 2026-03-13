@@ -139,6 +139,25 @@ const EnhancedWordTracker = ({
   const lastWrongAttemptTime = useRef<number>(0); // Track when user made a wrong attempt (trying)
   const userIsTrying = useRef<boolean>(false); // Track if user is actively trying to say the word
 
+  // === ADAPTIVE TEMPO INTEGRATION ===
+  const {
+    recordWordTiming,
+    getAdaptiveThreshold,
+    getAdaptiveHintDelays,
+    phase: tempoPhase,
+    tempoWPM,
+    reset: resetTempo,
+    medianInterval,
+  } = useAdaptiveTempo();
+
+  // Stagger queue: words to mark are queued and processed one-at-a-time
+  const staggerQueueRef = useRef<Array<{ index: number; status: "correct" | "hesitated" | "missed"; now: number }>>([]); 
+  const staggerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastWordMarkedTime = useRef<number>(0); // When the last word was visually marked
+
+  // Interim transcript for current-word highlighting only
+  const [interimHighlightIndex, setInterimHighlightIndex] = useState<number | null>(null);
+
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
   }, [currentWordIndex]);
