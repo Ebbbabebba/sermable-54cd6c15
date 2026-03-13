@@ -244,6 +244,14 @@ const EnhancedWordTracker = ({
     if (!isRecording) return;
 
     const intervalId = setInterval(() => {
+      // Min-time guard: don't process if we just marked a word recently
+      // This prevents marking words faster than physically possible to speak
+      const timeSinceLastMark = Date.now() - lastWordMarkedTime.current;
+      const minGap = medianInterval > 0 ? Math.max(80, medianInterval * 0.4) : 80; // 40% of median pace, min 80ms
+      if (timeSinceLastMark < minGap && lastWordMarkedTime.current > 0) {
+        return; // Too soon since last word was marked
+      }
+
       // Use the transcription prop if available (from Web Speech API), otherwise use OpenAI realtime
       const transcript = transcription || accumulatedTranscript.current;
       if (!transcript || transcript.trim() === "") return;
