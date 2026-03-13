@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { RealtimeTranscriber } from "@/utils/RealtimeTranscription";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { useAdaptiveTempo } from "@/hooks/useAdaptiveTempo";
 
 interface EnhancedWordTrackerProps {
   text: string;
@@ -138,6 +139,25 @@ const EnhancedWordTracker = ({
   const lastWrongAttemptTime = useRef<number>(0); // Track when user made a wrong attempt (trying)
   const userIsTrying = useRef<boolean>(false); // Track if user is actively trying to say the word
 
+  // === ADAPTIVE TEMPO INTEGRATION ===
+  const {
+    recordWordTiming,
+    getAdaptiveThreshold,
+    getAdaptiveHintDelays,
+    phase: tempoPhase,
+    tempoWPM,
+    reset: resetTempo,
+    medianInterval,
+  } = useAdaptiveTempo();
+
+  // Stagger queue: words to mark are queued and processed one-at-a-time
+  const staggerQueueRef = useRef<Array<{ index: number; status: "correct" | "hesitated" | "missed"; now: number }>>([]); 
+  const staggerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastWordMarkedTime = useRef<number>(0); // When the last word was visually marked
+
+  // Interim transcript for current-word highlighting only
+  const [interimHighlightIndex, setInterimHighlightIndex] = useState<number | null>(null);
+
   useEffect(() => {
     currentWordIndexRef.current = currentWordIndex;
   }, [currentWordIndex]);
@@ -172,17 +192,15 @@ const EnhancedWordTracker = ({
       (transcriptText, isFinal) => {
         if (isFinal) {
           console.log("📝 FINAL transcript received:", transcriptText);
-          // DON'T accumulate - OpenAI sends COMPLETE transcript each time
           accumulatedTranscript.current = transcriptText;
-
           console.log("📝 Current transcript:", accumulatedTranscript.current);
-
-          // Update parent component with full transcript
           if (onTranscriptUpdate) {
             onTranscriptUpdate(accumulatedTranscript.current);
           }
+        } else {
+          // Use interim transcripts for current-word highlighting only
+          handleInterimHighlight(transcriptText);
         }
-        // IGNORE interim transcripts for coloring - they cause premature coloring
       },
       (error) => {
         console.error("❌ Transcription error:", error);
@@ -198,11 +216,42 @@ const EnhancedWordTracker = ({
     };
   }, [onTranscriptUpdate]);
 
+  // Handle interim transcripts: update current-word highlight without marking words
+  const handleInterimHighlight = useCallback((interimText: string) => {
+    if (!interimText || interimText.trim() === "") return;
+    const normalizeText = (t: string) => normalizeNordic(t.toLowerCase().replace(/[^\w\s]/g, ""));
+    const interimWords = normalizeText(interimText).split(/\s+/).filter(w => w.length > 0);
+    if (interimWords.length === 0) return;
+    
+    const lastInterimWord = interimWords[interimWords.length - 1];
+    const currentIdx = currentWordIndexRef.current;
+    
+    // Check if the last interim word loosely matches the current expected word
+    setWordStates(prevStates => {
+      if (currentIdx >= prevStates.length) return prevStates;
+      const targetWord = normalizeText(prevStates[currentIdx].text);
+      const sim = getWordSimilarity(lastInterimWord, targetWord);
+      if (sim >= 0.5) {
+        // Highlight this word as "being spoken" without marking it
+        setInterimHighlightIndex(currentIdx);
+      }
+      return prevStates; // No state change
+    });
+  }, []);
+
   // Process ONLY NEW words from final transcripts
   useEffect(() => {
     if (!isRecording) return;
 
     const intervalId = setInterval(() => {
+      // Min-time guard: don't process if we just marked a word recently
+      // This prevents marking words faster than physically possible to speak
+      const timeSinceLastMark = Date.now() - lastWordMarkedTime.current;
+      const minGap = medianInterval > 0 ? Math.max(80, medianInterval * 0.4) : 80; // 40% of median pace, min 80ms
+      if (timeSinceLastMark < minGap && lastWordMarkedTime.current > 0) {
+        return; // Too soon since last word was marked
+      }
+
       // Use the transcription prop if available (from Web Speech API), otherwise use OpenAI realtime
       const transcript = transcription || accumulatedTranscript.current;
       if (!transcript || transcript.trim() === "") return;
@@ -250,10 +299,10 @@ const EnhancedWordTracker = ({
                   hesitationTimers.current.delete(i);
                 }
                 
-                // Start new hesitation timer (1s for regular words, 3s for sentence start)
+                // Start new hesitation timer using adaptive threshold
                 const isStartOfSentence = i === 0 || updatedStates[i - 1]?.text.match(/[.!?]$/);
-                const hesitationDelay = isStartOfSentence ? 3000 : 1000;
-                
+                const hesitationDelay = getAdaptiveThreshold({ wordLength: targetWord.length, isAfterSentence: !!isStartOfSentence, isFirstWord: i === 0 });
+
                 const hesitationTimer = setTimeout(() => {
                   setWordStates((states) => {
                     const updated = [...states];
@@ -312,12 +361,17 @@ const EnhancedWordTracker = ({
               }
             }
             
-            // MATCH - determine performance status based on TIMING ONLY
-            // Check if this is start of sentence for timing threshold
+            // MATCH - determine performance status using ADAPTIVE threshold
             const isStartOfSentence = scriptPosition === 0 || updatedStates[scriptPosition - 1]?.text.match(/[.!?]$/);
-            const hesitationThreshold = isStartOfSentence ? 3000 : 1000;
+            const hesitationThreshold = getAdaptiveThreshold({ wordLength: targetWord.length, isAfterSentence: !!isStartOfSentence, isFirstWord: scriptPosition === 0 });
             const timeAtWord = wordTimestamps.current.get(scriptPosition);
-            const tookTooLong = timeAtWord ? now - timeAtWord >= hesitationThreshold : false;
+            const timeSinceWordStart = timeAtWord ? now - timeAtWord : 0;
+            const tookTooLong = timeSinceWordStart >= hesitationThreshold;
+
+            // Record timing for adaptive tempo learning
+            if (timeAtWord) {
+              recordWordTiming(timeSinceWordStart, targetWord.length, !!isStartOfSentence);
+            }
 
             // Check if this word was shown in forgotten popup
             const wasForgotten = forgottenWordPopup?.wordIndex === scriptPosition;
@@ -358,7 +412,9 @@ const EnhancedWordTracker = ({
 
             wordTimestamps.current.delete(scriptPosition);
             lastSpokenIndexRef.current = scriptPosition;
-            
+            lastWordMarkedTime.current = now; // Track when we marked this word
+            setInterimHighlightIndex(null); // Clear interim highlight
+
             // Clear teleprompter hint when word is spoken
             if (teleprompterHint?.wordIndex === scriptPosition) {
               setTeleprompterHint(null);
@@ -557,12 +613,12 @@ const EnhancedWordTracker = ({
         if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
           wordTimestamps.current.set(currentIdx, now);
           
-          // If this word is hidden and not yet spoken, start hint timer
-          // 3s for first word after sentence, 1s for other words
+          // If this word is hidden and not yet spoken, start hint timer using adaptive delays
           if (updatedStates[currentIdx].hidden && !hiddenWordTimers.current.has(currentIdx)) {
             const isStartOfSentence = currentIdx === 0 || updatedStates[currentIdx - 1]?.text.match(/[.!?]$/);
-            const hintDelay = isStartOfSentence ? 3000 : 1000;
-            
+            const wordLen = updatedStates[currentIdx].text.replace(/[^\w]/g, '').length;
+            const { initialDelay: hintDelay } = getAdaptiveHintDelays({ wordLength: wordLen, isAfterSentence: !!isStartOfSentence, isFirstWord: currentIdx === 0 });
+
             const timer = setTimeout(() => {
               setWordStates((states) => {
                 const updated = [...states];
@@ -587,17 +643,17 @@ const EnhancedWordTracker = ({
           }
         }
 
-        // Update current indicator
+        // Update current indicator (also consider interim highlight for visual feedback)
         return updatedStates.map((state, idx) => ({
           ...state,
-          isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken,
+          isCurrent: (idx === currentIdx || idx === interimHighlightIndex) && currentIdx !== -1 && !state.spoken,
         }));
       });
-    }, 150); // Process every 150ms - slower to ensure words are fully spoken before highlighting
+    }, 100); // Process every 100ms - faster pickup with min-time guard protecting against premature marking
 
     return () => clearInterval(intervalId);
-  }, [isRecording, transcription, liquidColumn]);
-  
+  }, [isRecording, transcription, liquidColumn, medianInterval, interimHighlightIndex, getAdaptiveThreshold, getAdaptiveHintDelays, recordWordTiming]);
+
   // Liquid column animation
   useEffect(() => {
     if (!liquidColumn || !isRecording) return;
@@ -799,6 +855,10 @@ const EnhancedWordTracker = ({
         setTeleprompterHint(null); // Reset teleprompter
         userIsTrying.current = false;
         lastWrongAttemptTime.current = 0;
+        resetTempo();
+        lastWordMarkedTime.current = 0;
+        staggerQueueRef.current = [];
+        setInterimHighlightIndex(null);
         setLiquidColumn(null);
         if (liquidAnimationRef.current) {
           cancelAnimationFrame(liquidAnimationRef.current);
