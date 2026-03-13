@@ -291,10 +291,10 @@ const EnhancedWordTracker = ({
                   hesitationTimers.current.delete(i);
                 }
                 
-                // Start new hesitation timer (1s for regular words, 3s for sentence start)
+                // Start new hesitation timer using adaptive threshold
                 const isStartOfSentence = i === 0 || updatedStates[i - 1]?.text.match(/[.!?]$/);
-                const hesitationDelay = isStartOfSentence ? 3000 : 1000;
-                
+                const hesitationDelay = getAdaptiveThreshold({ wordLength: targetWord.length, isAfterSentence: !!isStartOfSentence, isFirstWord: i === 0 });
+
                 const hesitationTimer = setTimeout(() => {
                   setWordStates((states) => {
                     const updated = [...states];
