@@ -429,8 +429,8 @@ const EnhancedWordTracker = ({
             // NO MATCH - check if transcribed word matches ahead in script (skip detection)
             let matchFound = false;
 
-            // Look ahead up to 5 words in script - only mark visible words as MISSED if 2+ words skipped
-            for (let lookAhead = 1; lookAhead <= 5 && scriptPosition + lookAhead < targetWords.length; lookAhead++) {
+            // Look ahead up to 2 words in script - strict to prevent premature jumping
+            for (let lookAhead = 1; lookAhead <= 2 && scriptPosition + lookAhead < targetWords.length; lookAhead++) {
               let lookAheadSimilarity = getWordSimilarity(transcribedWord, targetWords[scriptPosition + lookAhead]);
               let lookAheadWordsConsumed = 1;
               
@@ -440,13 +440,13 @@ const EnhancedWordTracker = ({
                   transcribedWord + newWords[newWordIdx + 1],
                   targetWords[scriptPosition + lookAhead]
                 );
-                if (twoWordLookAhead >= 0.5 && twoWordLookAhead > lookAheadSimilarity) {
+                if (twoWordLookAhead >= 0.75 && twoWordLookAhead > lookAheadSimilarity) {
                   lookAheadSimilarity = twoWordLookAhead;
                   lookAheadWordsConsumed = 2;
                 }
               }
 
-              if (lookAheadSimilarity >= 0.5) {
+              if (lookAheadSimilarity >= 0.75) {
                 // Mark skipped words - but NEVER mark hidden words as "missed", only as "hesitated"
                 if (lookAhead >= 1) {
                   console.log(
