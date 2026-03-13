@@ -613,12 +613,12 @@ const EnhancedWordTracker = ({
         if (currentIdx !== -1 && !wordTimestamps.current.has(currentIdx)) {
           wordTimestamps.current.set(currentIdx, now);
           
-          // If this word is hidden and not yet spoken, start hint timer
-          // 3s for first word after sentence, 1s for other words
+          // If this word is hidden and not yet spoken, start hint timer using adaptive delays
           if (updatedStates[currentIdx].hidden && !hiddenWordTimers.current.has(currentIdx)) {
             const isStartOfSentence = currentIdx === 0 || updatedStates[currentIdx - 1]?.text.match(/[.!?]$/);
-            const hintDelay = isStartOfSentence ? 3000 : 1000;
-            
+            const wordLen = updatedStates[currentIdx].text.replace(/[^\w]/g, '').length;
+            const { initialDelay: hintDelay } = getAdaptiveHintDelays({ wordLength: wordLen, isAfterSentence: !!isStartOfSentence, isFirstWord: currentIdx === 0 });
+
             const timer = setTimeout(() => {
               setWordStates((states) => {
                 const updated = [...states];
