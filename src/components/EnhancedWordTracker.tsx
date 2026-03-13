@@ -353,12 +353,17 @@ const EnhancedWordTracker = ({
               }
             }
             
-            // MATCH - determine performance status based on TIMING ONLY
-            // Check if this is start of sentence for timing threshold
+            // MATCH - determine performance status using ADAPTIVE threshold
             const isStartOfSentence = scriptPosition === 0 || updatedStates[scriptPosition - 1]?.text.match(/[.!?]$/);
-            const hesitationThreshold = isStartOfSentence ? 3000 : 1000;
+            const hesitationThreshold = getAdaptiveThreshold({ wordLength: targetWord.length, isAfterSentence: !!isStartOfSentence, isFirstWord: scriptPosition === 0 });
             const timeAtWord = wordTimestamps.current.get(scriptPosition);
-            const tookTooLong = timeAtWord ? now - timeAtWord >= hesitationThreshold : false;
+            const timeSinceWordStart = timeAtWord ? now - timeAtWord : 0;
+            const tookTooLong = timeSinceWordStart >= hesitationThreshold;
+
+            // Record timing for adaptive tempo learning
+            if (timeAtWord) {
+              recordWordTiming(timeSinceWordStart, targetWord.length, !!isStartOfSentence);
+            }
 
             // Check if this word was shown in forgotten popup
             const wasForgotten = forgottenWordPopup?.wordIndex === scriptPosition;
