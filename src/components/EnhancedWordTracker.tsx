@@ -643,17 +643,17 @@ const EnhancedWordTracker = ({
           }
         }
 
-        // Update current indicator
+        // Update current indicator (also consider interim highlight for visual feedback)
         return updatedStates.map((state, idx) => ({
           ...state,
-          isCurrent: idx === currentIdx && currentIdx !== -1 && !state.spoken,
+          isCurrent: (idx === currentIdx || idx === interimHighlightIndex) && currentIdx !== -1 && !state.spoken,
         }));
       });
-    }, 150); // Process every 150ms - slower to ensure words are fully spoken before highlighting
+    }, 100); // Process every 100ms - faster pickup with min-time guard protecting against premature marking
 
     return () => clearInterval(intervalId);
-  }, [isRecording, transcription, liquidColumn]);
-  
+  }, [isRecording, transcription, liquidColumn, medianInterval, interimHighlightIndex, getAdaptiveThreshold, getAdaptiveHintDelays, recordWordTiming]);
+
   // Liquid column animation
   useEffect(() => {
     if (!liquidColumn || !isRecording) return;
