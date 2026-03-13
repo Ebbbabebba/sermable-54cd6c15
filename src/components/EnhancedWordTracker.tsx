@@ -412,7 +412,9 @@ const EnhancedWordTracker = ({
 
             wordTimestamps.current.delete(scriptPosition);
             lastSpokenIndexRef.current = scriptPosition;
-            
+            lastWordMarkedTime.current = now; // Track when we marked this word
+            setInterimHighlightIndex(null); // Clear interim highlight
+
             // Clear teleprompter hint when word is spoken
             if (teleprompterHint?.wordIndex === scriptPosition) {
               setTeleprompterHint(null);
