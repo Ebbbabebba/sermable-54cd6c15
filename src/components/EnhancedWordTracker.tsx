@@ -192,17 +192,15 @@ const EnhancedWordTracker = ({
       (transcriptText, isFinal) => {
         if (isFinal) {
           console.log("📝 FINAL transcript received:", transcriptText);
-          // DON'T accumulate - OpenAI sends COMPLETE transcript each time
           accumulatedTranscript.current = transcriptText;
-
           console.log("📝 Current transcript:", accumulatedTranscript.current);
-
-          // Update parent component with full transcript
           if (onTranscriptUpdate) {
             onTranscriptUpdate(accumulatedTranscript.current);
           }
+        } else {
+          // Use interim transcripts for current-word highlighting only
+          handleInterimHighlight(transcriptText);
         }
-        // IGNORE interim transcripts for coloring - they cause premature coloring
       },
       (error) => {
         console.error("❌ Transcription error:", error);
@@ -217,6 +215,29 @@ const EnhancedWordTracker = ({
       }
     };
   }, [onTranscriptUpdate]);
+
+  // Handle interim transcripts: update current-word highlight without marking words
+  const handleInterimHighlight = useCallback((interimText: string) => {
+    if (!interimText || interimText.trim() === "") return;
+    const normalizeText = (t: string) => normalizeNordic(t.toLowerCase().replace(/[^\w\s]/g, ""));
+    const interimWords = normalizeText(interimText).split(/\s+/).filter(w => w.length > 0);
+    if (interimWords.length === 0) return;
+    
+    const lastInterimWord = interimWords[interimWords.length - 1];
+    const currentIdx = currentWordIndexRef.current;
+    
+    // Check if the last interim word loosely matches the current expected word
+    setWordStates(prevStates => {
+      if (currentIdx >= prevStates.length) return prevStates;
+      const targetWord = normalizeText(prevStates[currentIdx].text);
+      const sim = getWordSimilarity(lastInterimWord, targetWord);
+      if (sim >= 0.5) {
+        // Highlight this word as "being spoken" without marking it
+        setInterimHighlightIndex(currentIdx);
+      }
+      return prevStates; // No state change
+    });
+  }, []);
 
   // Process ONLY NEW words from final transcripts
   useEffect(() => {
