@@ -855,6 +855,10 @@ const EnhancedWordTracker = ({
         setTeleprompterHint(null); // Reset teleprompter
         userIsTrying.current = false;
         lastWrongAttemptTime.current = 0;
+        resetTempo();
+        lastWordMarkedTime.current = 0;
+        staggerQueueRef.current = [];
+        setInterimHighlightIndex(null);
         setLiquidColumn(null);
         if (liquidAnimationRef.current) {
           cancelAnimationFrame(liquidAnimationRef.current);
