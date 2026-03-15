@@ -2104,10 +2104,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
         <div className="w-full max-w-md space-y-5 sm:space-y-8">
           
           {/* Mascot / Icon area */}
-          <div className="flex flex-col items-center text-center space-y-4">
+          <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <GraduationCap className="h-12 w-12 text-primary" />
+              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <GraduationCap className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
               </div>
             </div>
             
