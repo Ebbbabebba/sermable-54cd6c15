@@ -2153,7 +2153,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="relative w-16 h-16">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle
                     cx="50" cy="50" r="42"
@@ -2172,15 +2172,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold">{masteryPercent}%</span>
+                  <span className="text-sm sm:text-lg font-bold">{masteryPercent}%</span>
                 </div>
               </div>
               <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.mastery', 'Mastery')}</span>
             </div>
             
             <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-lg font-bold text-muted-foreground">{totalBeats - masteredBeats}</span>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-sm sm:text-lg font-bold text-muted-foreground">{totalBeats - masteredBeats}</span>
               </div>
               <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.remaining')}</span>
             </div>
