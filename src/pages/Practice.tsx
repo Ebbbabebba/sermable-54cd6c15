@@ -2100,14 +2100,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </header>
 
       {/* Main content - centered and focused */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 pb-32">
-        <div className="w-full max-w-md space-y-8">
+      <main className="flex-1 flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-8 pb-28">
+        <div className="w-full max-w-md space-y-5 sm:space-y-8">
           
           {/* Mascot / Icon area */}
-          <div className="flex flex-col items-center text-center space-y-4">
+          <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <GraduationCap className="h-12 w-12 text-primary" />
+              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <GraduationCap className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
               </div>
             </div>
             
@@ -2125,9 +2125,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </div>
 
           {/* Progress stats - Duolingo style circles */}
-          <div className="flex justify-center gap-6">
+          <div className="flex justify-center gap-4 sm:gap-6">
             <div className="flex flex-col items-center">
-              <div className="relative w-16 h-16">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle
                     cx="50" cy="50" r="42"
@@ -2153,7 +2153,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="relative w-16 h-16">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle
                     cx="50" cy="50" r="42"
@@ -2172,15 +2172,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold">{masteryPercent}%</span>
+                  <span className="text-sm sm:text-lg font-bold">{masteryPercent}%</span>
                 </div>
               </div>
               <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.mastery', 'Mastery')}</span>
             </div>
             
             <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-lg font-bold text-muted-foreground">{totalBeats - masteredBeats}</span>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-sm sm:text-lg font-bold text-muted-foreground">{totalBeats - masteredBeats}</span>
               </div>
               <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.remaining')}</span>
             </div>
