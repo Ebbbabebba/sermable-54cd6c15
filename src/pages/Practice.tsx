@@ -2125,9 +2125,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </div>
 
           {/* Progress stats - Duolingo style circles */}
-          <div className="flex justify-center gap-6">
+          <div className="flex justify-center gap-4 sm:gap-6">
             <div className="flex flex-col items-center">
-              <div className="relative w-16 h-16">
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle
                     cx="50" cy="50" r="42"
