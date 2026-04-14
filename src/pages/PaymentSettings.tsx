@@ -88,6 +88,8 @@ const PaymentSettings = () => {
         </div>
       </header>
 
+      <PaymentTestModeBanner />
+
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="space-y-6">
           <div className="animate-fade-in">
@@ -137,30 +139,36 @@ const PaymentSettings = () => {
                       <span className="font-medium">€7.90 - 11 feb 2026</span>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      toast({
-                        title: t('settings.subscription.comingSoon'),
-                        description: t('settings.subscription.viewAllPaymentsDesc'),
-                      });
-                    }}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    {t('settings.subscription.viewAllPayments')}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Payment Method */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                    <CardTitle>{t('settings.payment.paymentMethod')}</CardTitle>
-                  </div>
-                </CardHeader>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          const env = getPaddleEnvironment();
+                          const { data: sub } = await supabase
+                            .from('subscriptions')
+                            .select('paddle_subscription_id, paddle_customer_id')
+                            .eq('user_id', userId!)
+                            .eq('environment', env)
+                            .single();
+                          
+                          if (sub) {
+                            await initializePaddle();
+                            // Open Paddle customer portal
+                            window.open(`https://customer-portal.paddle.com/cpl_${sub.paddle_customer_id}`, '_blank');
+                          }
+                        } catch {
+                          toast({
+                            title: "Could not open billing portal",
+                            description: "Please try again later.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Manage Billing
+                    </Button>
                 <CardContent>
                   <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border">
                     <div className="flex items-center gap-3">
