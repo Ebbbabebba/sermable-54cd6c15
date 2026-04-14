@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,9 @@ import { ArrowLeft, Crown, CreditCard, Receipt, Check, GraduationCap, Zap, FileS
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { initializePaddle, getPaddleEnvironment } from "@/lib/paddle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,14 +34,31 @@ const PaymentSettings = () => {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | null>(null);
   const [showStudentPricing, setShowStudentPricing] = useState(false);
   const [showCancelSection, setShowCancelSection] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | undefined>();
+  const [userId, setUserId] = useState<string | undefined>();
+  const [searchParams] = useSearchParams();
+  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
 
   const isPremium = subscriptionTier === 'regular' || subscriptionTier === 'student' || subscriptionTier === 'enterprise';
+
+  // Show success toast if returning from checkout
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'success') {
+      toast({
+        title: "🎉 Welcome to Premium!",
+        description: "Your subscription is being activated. It may take a moment.",
+      });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+
+        setUserEmail(user.email || undefined);
+        setUserId(user.id);
 
         const { data: profile } = await supabase
           .from("profiles")
