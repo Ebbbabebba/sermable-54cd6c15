@@ -169,30 +169,6 @@ const PaymentSettings = () => {
                       <CreditCard className="h-4 w-4 mr-2" />
                       Manage Billing
                     </Button>
-                <CardContent>
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-6 bg-gradient-to-r from-blue-600 to-blue-400 rounded flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">VISA</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">•••• •••• •••• 4242</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.payment.expires')} 12/27</p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        toast({
-                          title: t('settings.subscription.comingSoon'),
-                          description: t('settings.payment.updateCardDesc'),
-                        });
-                      }}
-                    >
-                      {t('settings.payment.update')}
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
 
