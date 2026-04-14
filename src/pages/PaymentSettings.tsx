@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,9 @@ import { ArrowLeft, Crown, CreditCard, Receipt, Check, GraduationCap, Zap, FileS
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { initializePaddle, getPaddleEnvironment } from "@/lib/paddle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,14 +34,31 @@ const PaymentSettings = () => {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | null>(null);
   const [showStudentPricing, setShowStudentPricing] = useState(false);
   const [showCancelSection, setShowCancelSection] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | undefined>();
+  const [userId, setUserId] = useState<string | undefined>();
+  const [searchParams] = useSearchParams();
+  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
 
   const isPremium = subscriptionTier === 'regular' || subscriptionTier === 'student' || subscriptionTier === 'enterprise';
+
+  // Show success toast if returning from checkout
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'success') {
+      toast({
+        title: "🎉 Welcome to Premium!",
+        description: "Your subscription is being activated. It may take a moment.",
+      });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+
+        setUserEmail(user.email || undefined);
+        setUserId(user.id);
 
         const { data: profile } = await supabase
           .from("profiles")
@@ -67,6 +87,8 @@ const PaymentSettings = () => {
           </Button>
         </div>
       </header>
+
+      <PaymentTestModeBanner />
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="space-y-6">
@@ -117,54 +139,36 @@ const PaymentSettings = () => {
                       <span className="font-medium">€7.90 - 11 feb 2026</span>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      toast({
-                        title: t('settings.subscription.comingSoon'),
-                        description: t('settings.subscription.viewAllPaymentsDesc'),
-                      });
-                    }}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    {t('settings.subscription.viewAllPayments')}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Payment Method */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                    <CardTitle>{t('settings.payment.paymentMethod')}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-6 bg-gradient-to-r from-blue-600 to-blue-400 rounded flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">VISA</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">•••• •••• •••• 4242</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.payment.expires')} 12/27</p>
-                      </div>
-                    </div>
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        toast({
-                          title: t('settings.subscription.comingSoon'),
-                          description: t('settings.payment.updateCardDesc'),
-                        });
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          const env = getPaddleEnvironment();
+                          const { data: sub } = await supabase
+                            .from('subscriptions')
+                            .select('paddle_subscription_id, paddle_customer_id')
+                            .eq('user_id', userId!)
+                            .eq('environment', env)
+                            .single();
+                          
+                          if (sub) {
+                            await initializePaddle();
+                            // Open Paddle customer portal
+                            window.open(`https://customer-portal.paddle.com/cpl_${sub.paddle_customer_id}`, '_blank');
+                          }
+                        } catch {
+                          toast({
+                            title: "Could not open billing portal",
+                            description: "Please try again later.",
+                            variant: "destructive",
+                          });
+                        }
                       }}
                     >
-                      {t('settings.payment.update')}
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Manage Billing
                     </Button>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -405,16 +409,35 @@ const PaymentSettings = () => {
                   <Button
                     className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20"
                     size="lg"
-                    disabled={!selectedPlan}
-                    onClick={() => {
-                      toast({
-                        title: t('settings.subscription.comingSoon'),
-                        description: t('settings.subscription.comingSoonDesc'),
-                      });
+                    disabled={!selectedPlan || checkoutLoading}
+                    onClick={async () => {
+                      if (!selectedPlan) return;
+                      
+                      // Determine the right price ID
+                      let priceId: string;
+                      if (showStudentPricing) {
+                        priceId = selectedPlan === 'annual' ? 'student_yearly' : 'student_monthly';
+                      } else {
+                        priceId = selectedPlan === 'annual' ? 'regular_yearly' : 'regular_monthly';
+                      }
+
+                      try {
+                        await openCheckout({
+                          priceId,
+                          customerEmail: userEmail,
+                          customData: { userId: userId || '' },
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Checkout error",
+                          description: "Could not open checkout. Please try again.",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                   >
                     <Zap className="h-4 w-4 mr-2" />
-                    {t('settings.subscription.upgradeCta')}
+                    {checkoutLoading ? "Loading..." : t('settings.subscription.upgradeCta')}
                   </Button>
 
                   {/* Student link */}
