@@ -409,16 +409,35 @@ const PaymentSettings = () => {
                   <Button
                     className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20"
                     size="lg"
-                    disabled={!selectedPlan}
-                    onClick={() => {
-                      toast({
-                        title: t('settings.subscription.comingSoon'),
-                        description: t('settings.subscription.comingSoonDesc'),
-                      });
+                    disabled={!selectedPlan || checkoutLoading}
+                    onClick={async () => {
+                      if (!selectedPlan) return;
+                      
+                      // Determine the right price ID
+                      let priceId: string;
+                      if (showStudentPricing) {
+                        priceId = selectedPlan === 'annual' ? 'student_yearly' : 'student_monthly';
+                      } else {
+                        priceId = selectedPlan === 'annual' ? 'regular_yearly' : 'regular_monthly';
+                      }
+
+                      try {
+                        await openCheckout({
+                          priceId,
+                          customerEmail: userEmail,
+                          customData: { userId: userId || '' },
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Checkout error",
+                          description: "Could not open checkout. Please try again.",
+                          variant: "destructive",
+                        });
+                      }
                     }}
                   >
                     <Zap className="h-4 w-4 mr-2" />
-                    {t('settings.subscription.upgradeCta')}
+                    {checkoutLoading ? "Loading..." : t('settings.subscription.upgradeCta')}
                   </Button>
 
                   {/* Student link */}
