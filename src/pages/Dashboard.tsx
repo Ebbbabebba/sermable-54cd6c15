@@ -239,7 +239,7 @@ const Dashboard = () => {
 
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-foreground">Sermable</h1>
+          <div className="w-8" />
           
           {/* Desktop Navigation */}
           {!isMobile && (
