@@ -225,8 +225,8 @@ const PaymentSettings = () => {
                                     if (error) throw error;
                                     setSubscriptionTier('free');
                                     toast({
-                                      title: t('settings.subscription.cancelledTitle'),
-                                      description: t('settings.subscription.cancelledDesc'),
+                                      title: "Subscription cancelled",
+                                      description: "Your premium access has been revoked.",
                                     });
                                   } catch (err) {
                                     console.error("Cancel error:", err);
