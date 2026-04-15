@@ -1,3 +1,5 @@
+import { requestMicrophoneAccess } from "@/utils/microphone";
+
 export class AudioRecorder {
   private stream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
@@ -8,14 +10,12 @@ export class AudioRecorder {
 
   async start() {
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
+      this.stream = await requestMicrophoneAccess({
+        sampleRate: 24000,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
       });
       
       this.audioContext = new AudioContext({
