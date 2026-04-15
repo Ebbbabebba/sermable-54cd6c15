@@ -216,11 +216,26 @@ const PaymentSettings = () => {
                               <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                               <AlertDialogAction
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                onClick={() => {
-                                  toast({
-                                    title: t('settings.subscription.comingSoon'),
-                                    description: t('settings.subscription.cancelDesc'),
-                                  });
+                                onClick={async () => {
+                                  try {
+                                    const env = getPaddleEnvironment();
+                                    const { error } = await supabase.functions.invoke("cancel-subscription", {
+                                      body: { environment: env },
+                                    });
+                                    if (error) throw error;
+                                    setSubscriptionTier('free');
+                                    toast({
+                                      title: t('settings.subscription.cancelledTitle'),
+                                      description: t('settings.subscription.cancelledDesc'),
+                                    });
+                                  } catch (err) {
+                                    console.error("Cancel error:", err);
+                                    toast({
+                                      title: "Error",
+                                      description: "Could not cancel subscription. Please try again.",
+                                      variant: "destructive",
+                                    });
+                                  }
                                 }}
                               >
                                 {t('settings.subscription.confirmCancel')}
