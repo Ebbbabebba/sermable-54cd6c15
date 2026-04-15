@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { PublicFooter } from "@/components/PublicFooter";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -55,12 +56,18 @@ const Index = () => {
             </h1>
           </div>
           
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in">
+          <p className="text-lg md:text-xl text-muted-foreground mb-6 animate-fade-in">
             {t('app.tagline')}
           </p>
+
+          {/* Public pricing */}
+          <div className="animate-fade-in mb-8 text-sm text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">Plans starting from €3.90/month</p>
+            <p>Student: €3.90/mo · Regular: €7.90/mo · Save ~16% annually</p>
+          </div>
         </div>
 
-        <div className="px-6 pb-8 space-y-3 max-w-md w-full mx-auto animate-fade-in">
+        <div className="px-6 pb-4 space-y-3 max-w-md w-full mx-auto animate-fade-in">
           <Button 
             size="lg" 
             onClick={() => navigate("/auth?mode=signup")}
@@ -77,6 +84,7 @@ const Index = () => {
             {t('home.haveAccount')}
           </Button>
         </div>
+        <PublicFooter />
       </div>
     </div>
   );
