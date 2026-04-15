@@ -60,11 +60,6 @@ const Index = () => {
             {t('app.tagline')}
           </p>
 
-          {/* Public pricing */}
-          <div className="animate-fade-in mb-8 text-sm text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">Plans starting from €3.90/month</p>
-            <p>Student: €3.90/mo · Regular: €7.90/mo · Save ~16% annually</p>
-          </div>
         </div>
 
         <div className="px-6 pb-4 space-y-3 max-w-md w-full mx-auto animate-fade-in">
