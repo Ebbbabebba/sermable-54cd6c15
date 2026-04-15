@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Crown, CreditCard, Receipt, Check, GraduationCap, Zap, FileStack, Presentation, BarChart3, ChevronDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Crown, CreditCard, Receipt, Check, GraduationCap, Zap, FileStack, Presentation, BarChart3, ChevronDown, AlertTriangle, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
