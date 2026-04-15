@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "re
 import { Button } from "@/components/ui/button";
 import { Circle, CircleSlash, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { requestMicrophoneAccess } from "@/utils/microphone";
 
 export interface AudioRecorderHandle {
   getCurrentAudioBlob: () => Blob | null;
@@ -85,28 +86,12 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
 
     const startRecording = async () => {
       try {
-        // Check if microphone permission is already granted
-        if (navigator.permissions) {
-          const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-          
-          if (permissionStatus.state === 'denied') {
-            toast({
-              variant: "destructive",
-              title: "Microphone access denied",
-              description: "Please enable microphone access in your browser settings to record your practice.",
-            });
-            return;
-          }
-        }
-
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: {
-            sampleRate: 24000,
-            channelCount: 1,
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          }
+        const stream = await requestMicrophoneAccess({
+          sampleRate: 24000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
         });
 
         streamRef.current = stream;
@@ -169,21 +154,10 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
         });
       } catch (error: any) {
         console.error('Error starting recording:', error);
-        
-        let errorMessage = "Please allow microphone access to record your practice.";
-        
-        if (error.name === 'NotAllowedError') {
-          errorMessage = "Microphone access was denied. Please enable it in your browser settings.";
-        } else if (error.name === 'NotFoundError') {
-          errorMessage = "No microphone found. Please connect a microphone and try again.";
-        } else if (error.name === 'NotReadableError') {
-          errorMessage = "Your microphone is already in use by another application.";
-        }
-        
         toast({
           variant: "destructive",
           title: "Microphone access error",
-          description: errorMessage,
+          description: error.message || "Please allow microphone access to record your practice.",
         });
       }
     };
