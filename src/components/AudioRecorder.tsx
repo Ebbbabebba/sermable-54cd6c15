@@ -154,21 +154,10 @@ const AudioRecorder = forwardRef<AudioRecorderHandle, AudioRecorderProps>(
         });
       } catch (error: any) {
         console.error('Error starting recording:', error);
-        
-        let errorMessage = "Please allow microphone access to record your practice.";
-        
-        if (error.name === 'NotAllowedError') {
-          errorMessage = "Microphone access was denied. Please enable it in your browser settings.";
-        } else if (error.name === 'NotFoundError') {
-          errorMessage = "No microphone found. Please connect a microphone and try again.";
-        } else if (error.name === 'NotReadableError') {
-          errorMessage = "Your microphone is already in use by another application.";
-        }
-        
         toast({
           variant: "destructive",
           title: "Microphone access error",
-          description: errorMessage,
+          description: error.message || "Please allow microphone access to record your practice.",
         });
       }
     };

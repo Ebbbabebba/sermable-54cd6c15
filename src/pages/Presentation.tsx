@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { requestMicrophoneAccess } from "@/utils/microphone";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,14 +134,12 @@ const Presentation = () => {
 
   const handleRecordingStart = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        }
+      const stream = await requestMicrophoneAccess({
+        sampleRate: 24000,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
       });
 
       streamRef.current = stream;
