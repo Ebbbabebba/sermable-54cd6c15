@@ -464,6 +464,44 @@ const PaymentSettings = () => {
               </Card>
             </>
           )}
+          {/* Legal & Policies */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-primary" />
+                <CardTitle>{t('settings.legal.termsTitle')}</CardTitle>
+              </div>
+              <CardDescription>
+                {t('settings.legal.termsDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => window.open('/terms', '_blank')}
+              >
+                <span>{t('settings.legal.termsOfService')}</span>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => window.open('/privacy', '_blank')}
+              >
+                <span>{t('settings.legal.privacyPolicy')}</span>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => window.open('/refund-policy', '_blank')}
+              >
+                <span>{t('settings.legal.refundPolicy', 'Refund Policy')}</span>
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
