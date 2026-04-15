@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { PublicFooter } from "@/components/PublicFooter";
+
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -189,7 +189,6 @@ const Auth = () => {
           </div>
         </CardContent>
     </Card>
-    <PublicFooter />
     </div>
   );
 };
