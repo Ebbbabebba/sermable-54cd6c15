@@ -212,14 +212,26 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
       }
 
       const shareUrl = `${window.location.origin}/share/${token}`;
+      const shareData = {
+        title: speech.title,
+        text: `Practice "${speech.title}" on Sermable`,
+        url: shareUrl,
+      };
       
-      if (navigator.share) {
-        await navigator.share({ title: speech.title, text: `Practice "${speech.title}" on Sermable`, url: shareUrl });
+      // Check if Web Share API is available AND can share this data
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else if (navigator.share) {
+        // Fallback: some browsers support share but not canShare
+        try {
+          await navigator.share(shareData);
+        } catch (shareErr: any) {
+          if (shareErr.name === 'AbortError') return;
+          // If share fails, fall back to clipboard
+          await fallbackCopy(shareUrl);
+        }
       } else {
-        await navigator.clipboard.writeText(shareUrl);
-        setShareSuccess(true);
-        setTimeout(() => setShareSuccess(false), 2000);
-        toast({ title: t('dashboard.linkCopied', 'Link copied!'), description: t('dashboard.linkCopiedDesc', 'Share this link with others') });
+        await fallbackCopy(shareUrl);
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
@@ -228,6 +240,25 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
     } finally {
       setIsSharing(false);
     }
+  };
+
+  const fallbackCopy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Final fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+    setShareSuccess(true);
+    setTimeout(() => setShareSuccess(false), 2000);
+    toast({ title: t('dashboard.linkCopied', 'Link copied!'), description: t('dashboard.linkCopiedDesc', 'Share this link with others') });
   };
 
   return (
