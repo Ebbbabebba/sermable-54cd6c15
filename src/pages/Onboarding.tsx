@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MessageCircle, GraduationCap, TrendingUp, Theater, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { PublicFooter } from "@/components/PublicFooter";
 
 const ONBOARDING_STEPS = [
   { key: 'welcome', icon: Star },
@@ -109,6 +110,7 @@ const Onboarding = () => {
           <ChevronRight className="ml-2 h-5 w-5" />
         </Button>
       </div>
+      <PublicFooter />
     </div>
   );
 };

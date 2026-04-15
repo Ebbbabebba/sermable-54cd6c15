@@ -13,6 +13,7 @@ import PaymentSettings from "./pages/PaymentSettings";
 import AccountSettings from "./pages/AccountSettings";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import RefundPolicy from "./pages/RefundPolicy";
 import Help from "./pages/Help";
 import SharedSpeech from "./pages/SharedSpeech";
 import DeleteAccountRequest from "./pages/DeleteAccountRequest";
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/settings/account" element={<AccountSettings />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/help" element={<Help />} />
           <Route path="/share/:token" element={<SharedSpeech />} />
           <Route path="/delete-account" element={<DeleteAccountRequest />} />
