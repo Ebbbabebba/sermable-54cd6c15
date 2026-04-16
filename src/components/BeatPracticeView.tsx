@@ -2520,7 +2520,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
           className="text-7xl"
         >
-          ☕
+          <Coffee className="h-16 w-16 text-amber-600 dark:text-amber-400" />
         </motion.div>
         
         <motion.h2 
@@ -2966,7 +2966,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                     >
                       <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
                         <Sparkles className="h-4 w-4" />
-                        {t('beat_practice.one_more_time', 'Great! One more to lock it in ✨')}
+                        {t('beat_practice.one_more_time', 'Great! One more to lock it in')}
                       </span>
                     </motion.div>
                   )}
