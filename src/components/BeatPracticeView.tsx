@@ -2307,7 +2307,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return (
       <div className="flex flex-col h-full bg-background">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30">
+        <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
           <div className="flex items-center justify-between max-w-2xl mx-auto">
             {/* Exit button */}
             <Button
@@ -2415,7 +2415,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
         {/* Exit button */}
-        <div className="absolute top-4 left-4">
+        <div className="absolute left-4" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
           <Button variant="ghost" size="icon" onClick={onExit} className="rounded-full hover:bg-muted">
             <X className="h-5 w-5 text-muted-foreground" />
           </Button>
@@ -2693,7 +2693,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Duolingo-style header with progress */}
-      <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30">
+      <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
         <div className="flex items-center gap-4 max-w-2xl mx-auto">
           {/* Exit button */}
           <Button
