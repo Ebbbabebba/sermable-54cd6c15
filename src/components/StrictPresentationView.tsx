@@ -542,7 +542,7 @@ export const StrictPresentationView = ({
             >
               {showHint.phase === "trying" ? (
                 <span className="text-3xl md:text-5xl font-medium">
-                  💭 Try to say it...
+                  Try to say it...
                 </span>
               ) : (
                 <span className="text-4xl md:text-6xl font-bold tracking-wide">

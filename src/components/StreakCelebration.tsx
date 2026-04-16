@@ -54,7 +54,7 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
           </motion.div>
           
           <div className="text-2xl font-bold mb-2">
-            Day Streak! 🔥
+            Day Streak!
           </div>
           
           <p className="text-muted-foreground mb-8">
@@ -67,7 +67,7 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
             size="lg"
             className="w-full text-lg font-bold py-6 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
           >
-            🎉 Yay!
+            Yay!
           </Button>
         </motion.div>
       </motion.div>

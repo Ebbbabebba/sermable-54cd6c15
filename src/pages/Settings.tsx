@@ -44,13 +44,13 @@ const Settings = () => {
   const isPremium = subscriptionTier === 'regular' || subscriptionTier === 'student' || subscriptionTier === 'enterprise';
 
   const languages = [
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'sv', name: 'Svenska', flag: '🇸🇪' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-    { code: 'pt', name: 'Português', flag: '🇵🇹' },
+    { code: 'en', name: 'English' },
+    { code: 'sv', name: 'Svenska' },
+    { code: 'es', name: 'Español' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'pt', name: 'Português' },
   ];
 
   const handleLanguageChange = (langCode: string) => {
@@ -349,16 +349,13 @@ const Settings = () => {
                 >
                   <SelectTrigger id="app-language" className="w-full">
                     <SelectValue>
-                      {languages.find(l => l.code === currentLanguage)?.flag} {languages.find(l => l.code === currentLanguage)?.name}
+                      {languages.find(l => l.code === currentLanguage)?.name}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {languages.map((lang) => (
                       <SelectItem key={lang.code} value={lang.code}>
-                        <div className="flex items-center gap-2">
-                          <span>{lang.flag}</span>
-                          <span>{lang.name}</span>
-                        </div>
+                        {lang.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

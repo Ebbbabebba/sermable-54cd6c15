@@ -145,10 +145,10 @@ export const ENVIRONMENT_THEMES: EnvironmentTheme[] = [
 ];
 
 export const SPEECH_TYPES = [
-  { value: 'office_meeting', label: 'Office Meeting', icon: '💼' },
-  { value: 'school_presentation', label: 'School/University', icon: '🎓' },
-  { value: 'conference', label: 'Conference', icon: '🎤' },
-  { value: 'wedding', label: 'Wedding/Celebration', icon: '💒' },
-  { value: 'interview', label: 'Interview', icon: '🤝' },
-  { value: 'general', label: 'General', icon: '📝' },
+  { value: 'office_meeting', label: 'Office Meeting', icon: '' },
+  { value: 'school_presentation', label: 'School/University', icon: '' },
+  { value: 'conference', label: 'Conference', icon: '' },
+  { value: 'wedding', label: 'Wedding/Celebration', icon: '' },
+  { value: 'interview', label: 'Interview', icon: '' },
+  { value: 'general', label: 'General', icon: '' },
 ];

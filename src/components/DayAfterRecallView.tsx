@@ -416,7 +416,7 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
         </motion.div>
         
         <h2 className="text-2xl font-bold">
-          {t('day_after_recall.stable', '🎉 Speech is stable!')}
+          {t('day_after_recall.stable', 'Speech is stable!')}
         </h2>
         
         <p className="text-muted-foreground max-w-md">
@@ -444,7 +444,7 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-blue-500/20 text-blue-500">
-            {t('day_after_recall.title', '🌅 Day-After Recall')}
+            {t('day_after_recall.title', 'Day-After Recall')}
           </div>
           <span className="text-sm text-muted-foreground">
             {t('day_after_recall.attempt', 'Attempt')} {attemptNumber}

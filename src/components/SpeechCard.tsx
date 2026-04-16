@@ -286,7 +286,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             {isOverdue
               ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
               : daysRemaining === 0
-                ? t('dashboard.presentationDay', '🎤 Presentation day!')
+                ? t('dashboard.presentationDay', 'Presentation day!')
                 : t(daysRemaining === 1 ? 'dashboard.daysLeft' : 'dashboard.daysLeftPlural', { count: daysRemaining })}
           </span>
         </div>
@@ -389,7 +389,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
                   {isOnlyFreeSpeech && (
                     <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
                       <p className="text-sm font-medium">
-                        ⚠️ {t('dashboard.deleteOnlyFreeSpeechWarning', "This is your only free speech this month. Free users can only create 1 speech per month. If you delete it, you won't be able to create a new one until next month.")}
+                        {t('dashboard.deleteOnlyFreeSpeechWarning', "This is your only free speech this month. Free users can only create 1 speech per month. If you delete it, you won't be able to create a new one until next month.")}
                       </p>
                     </div>
                   )}

@@ -72,7 +72,7 @@ const ReviewNotifications = () => {
       if (error) throw error;
 
       toast({
-        title: remembered ? "Great job! 🎉" : "Keep practicing! 💪",
+        title: remembered ? "Great job!" : "Keep practicing!",
         description: remembered 
           ? "Your next review is scheduled based on your progress."
           : "We'll remind you sooner to help you master this speech.",

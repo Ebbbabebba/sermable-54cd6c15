@@ -745,7 +745,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const canLearnMore = isPremium || beatsLearnedToday < computedBeatsPerDay;
       const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
       
-      console.log('📚 Beat selection:', {
+      console.log('Beat selection:', {
         beatsPerDay: computedBeatsPerDay,
         beatsLearnedToday,
         canLearnMore,
@@ -1392,7 +1392,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }
       }
       
-      setCelebrationMessage("🔄 Try again");
+      setCelebrationMessage("Try again");
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -1601,7 +1601,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }
       }
       
-      setCelebrationMessage("🔄 Try again");
+      setCelebrationMessage("Try again");
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -1813,9 +1813,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     let message = t('beat_practice.excellent_next');
     if (currentPhase === 'sentence_2_fading') {
-      message = t('beat_practice.lets_combine', "🔗 Let's combine them!");
+      message = t('beat_practice.lets_combine', "Let's combine them!");
     } else if (currentPhase === 'sentence_3_fading') {
-      message = t('beat_practice.final_combine', "🚀 Now all together!");
+      message = t('beat_practice.final_combine', "Now all together!");
     }
     setCelebrationMessage(message);
 
@@ -1995,7 +1995,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setNextBeatQueued(nextUnmastered);
         setBeatToRecallBeforeNext(justMasteredBeat);
         
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete_rest', "Beat complete! Quick recall first."));
+        setCelebrationMessage(t('beat_practice.beat_complete_rest', "Beat complete! Quick recall first."));
         setShowCelebration(true);
         
         setTimeout(() => {
@@ -2011,7 +2011,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 2000);
       } else {
         // Session ending: show coffee break with 10-min timer, then recall
-        setCelebrationMessage("🏆 " + t('beat_practice.beat_complete', "Beat complete! Coffee break time."));
+        setCelebrationMessage(t('beat_practice.beat_complete', "Beat complete! Coffee break time."));
         setShowCelebration(true);
         
         // Store the beat for recall after coffee break
@@ -2343,7 +2343,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             
             {/* Beat badge */}
             <div className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
-              📚 {t('beat_practice.beat_number', { number: beatNumber, defaultValue: `Beat ${beatNumber}` })}
+              {t('beat_practice.beat_number', { number: beatNumber, defaultValue: `Beat ${beatNumber}` })}
             </div>
           </div>
         </div>
@@ -2630,7 +2630,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         <Medal className="h-20 w-20 text-primary animate-pulse" />
         <h2 className="text-2xl font-bold">
           {allMastered 
-            ? t('beat_practice.all_completed', "🎉 All beats completed!")
+            ? t('beat_practice.all_completed', "All beats completed!")
             : t('beat_practice.session_complete', "Session Complete!")}
         </h2>
         <p className="text-muted-foreground max-w-md">
@@ -2672,18 +2672,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const getProgressInfo = () => {
     if (sessionMode === 'recall') {
       return {
-        label: t('beat_practice.recall_mode', '🔄 Quick Recall'),
+        label: t('beat_practice.recall_mode', 'Quick Recall'),
         sublabel: `Recall ${recallIndex + 1} of ${beatsToRecall.length}`,
       };
     }
     if (sessionMode === 'pre_beat_recall') {
       return {
-        label: t('beat_practice.pre_beat_recall_mode', '🧠 Recall Time'),
+        label: t('beat_practice.pre_beat_recall_mode', 'Recall Time'),
         sublabel: t('beat_practice.recall_before_next', 'Recall before next beat'),
       };
     }
     return {
-      label: t('beat_practice.learn_mode', '📚 Learning New Beat'),
+      label: t('beat_practice.learn_mode', 'Learning New Beat'),
       sublabel: `Beat ${currentBeatIndex + 1}/${beats.length}`,
     };
   };
@@ -2781,7 +2781,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 "text-xs font-bold uppercase tracking-wide",
                 is10MinRecall ? "text-orange-500" : "text-amber-500"
               )}>
-                {isMergedRecall ? "🔗 Full Speech" : (is10MinRecall && !newBeatToLearn) ? "⏰ 10min" : "🔄 Recall"}
+                {isMergedRecall ? "Full Speech" : (is10MinRecall && !newBeatToLearn) ? "10min" : "Recall"}
               </span>
               <span className={cn(
                 "text-sm font-bold",
@@ -2792,14 +2792,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </div>
           ) : sessionMode === 'pre_beat_recall' ? (
             <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/40">
-              <span className="text-xs font-bold text-purple-500 uppercase tracking-wide">🧠 Recall Time</span>
+              <span className="text-xs font-bold text-purple-500 uppercase tracking-wide">Recall Time</span>
             </div>
           ) : (
             <div className={cn(
               "shrink-0 px-3 py-1 rounded-full text-xs font-semibold",
               "bg-primary/20 text-primary"
             )}>
-              📚 {progressInfo.sublabel}
+              {progressInfo.sublabel}
             </div>
           )}
         </div>

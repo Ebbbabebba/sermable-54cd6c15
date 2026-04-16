@@ -108,12 +108,12 @@ export const Audience3DScene = ({
 // Get readable environment label
 const getEnvironmentLabel = (environment: EnvType): string => {
   const labels: Record<EnvType, string> = {
-    office_meeting: '🏢 Office Meeting',
-    school_presentation: '🎓 Classroom',
-    conference: '🎤 Conference Hall',
-    wedding: '💒 Wedding Reception',
-    interview: '💼 Interview Room',
-    general: '📋 General',
+    office_meeting: 'Office Meeting',
+    school_presentation: 'Classroom',
+    conference: 'Conference Hall',
+    wedding: 'Wedding Reception',
+    interview: 'Interview Room',
+    general: 'General',
   };
   return labels[environment] || 'General';
 };
@@ -181,9 +181,9 @@ const getEnvironmentPreset = (environment: EnvType): "apartment" | "city" | "daw
 // Duolingo-style mood indicator with bouncy animation
 const MoodIndicator3D = ({ mood }: { mood: 'positive' | 'neutral' | 'negative' }) => {
   const moodConfig = {
-    positive: { emoji: '🎉', label: 'Great job!', gradient: 'from-green-400 to-emerald-500' },
-    neutral: { emoji: '👀', label: 'Listening...', gradient: 'from-blue-400 to-cyan-500' },
-    negative: { emoji: '💪', label: 'Keep going!', gradient: 'from-orange-400 to-amber-500' },
+    positive: { label: 'Great job!', gradient: 'from-green-400 to-emerald-500' },
+    neutral: { label: 'Listening...', gradient: 'from-blue-400 to-cyan-500' },
+    negative: { label: 'Keep going!', gradient: 'from-orange-400 to-amber-500' },
   };
   
   const config = moodConfig[mood];
@@ -196,13 +196,6 @@ const MoodIndicator3D = ({ mood }: { mood: 'positive' | 'neutral' | 'negative' }
       key={mood}
       transition={{ type: "spring", stiffness: 400, damping: 15 }}
     >
-      <motion.span 
-        className="text-2xl"
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-      >
-        {config.emoji}
-      </motion.span>
       <span>{config.label}</span>
     </motion.div>
   );

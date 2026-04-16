@@ -8,12 +8,12 @@ interface SpeechTypeSelectorProps {
 }
 
 const SPEECH_TYPE_OPTIONS = [
-  { value: 'office_meeting', icon: '💼' },
-  { value: 'school_presentation', icon: '🎓' },
-  { value: 'conference', icon: '🎤' },
-  { value: 'wedding', icon: '💒' },
-  { value: 'interview', icon: '🤝' },
-  { value: 'general', icon: '📝' },
+  { value: 'office_meeting' },
+  { value: 'school_presentation' },
+  { value: 'conference' },
+  { value: 'wedding' },
+  { value: 'interview' },
+  { value: 'general' },
 ];
 
 export const SpeechTypeSelector = ({ 
@@ -40,7 +40,6 @@ export const SpeechTypeSelector = ({
                 : "border-border bg-card"
             )}
           >
-            <span className="text-lg">{type.icon}</span>
             <span className="text-sm font-medium">{t(`upload.speechType.${type.value}`)}</span>
           </button>
         ))}
