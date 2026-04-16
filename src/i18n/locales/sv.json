@@ -807,7 +807,12 @@
     "recall_complete_almost": "Perfekt! Går vidare...",
     "recall_in_progress": "Återkallar...",
     "final_phase": "Sista fasen!",
-    "rest_recall_info": "Efter pausen: snabb återkallning → sedan nästa beat"
+    "rest_recall_info": "Efter pausen: snabb återkallning → sedan nästa beat",
+    "coffee_break_title": "Kaffepaus",
+    "coffee_break_desc": "Bra jobbat! Ta en 10-minuters paus så att hjärnan kan befästa det du just lärt dig. En snabb återkallning startar när tiden löper ut.",
+    "coffee_notification": "Du får en notis när det är dags att öva",
+    "coffee_tip": "Tips: Ta en kort promenad eller hämta en kopp kaffe!",
+    "skip_break": "Starta återkallning nu"
   },
   "presentation": {
     "settings": "Presentationsinställningar",
