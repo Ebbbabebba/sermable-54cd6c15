@@ -45,7 +45,7 @@ const Onboarding = () => {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       {/* Skip button */}
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute right-6 z-20" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}>
         <Button
           variant="ghost"
           onClick={handleSkip}

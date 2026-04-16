@@ -58,8 +58,8 @@ const DeleteAccountRequest = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <Card className="w-full max-w-md relative">
         <CardHeader className="text-center">
           <Button variant="ghost" size="icon" className="absolute left-4 top-4" onClick={() => window.history.back()}>
             <ArrowLeft className="h-5 w-5" />
