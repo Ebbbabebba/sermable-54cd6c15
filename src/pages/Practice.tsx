@@ -1715,25 +1715,64 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   };
 
+  const handleOpenSpeechSettings = () => {
+    if (!speech) return;
+    setEditingSpeechType(speech.speech_type || 'general');
+    setEditingDeadline(speech.goal_date ? new Date(speech.goal_date) : undefined);
+    setShowSpeechSettings(true);
+  };
+
+  const handleSaveSpeechSettings = async () => {
+    if (!speech || !editingDeadline) return;
+
+    try {
+      const newGoalDate = format(editingDeadline, "yyyy-MM-dd");
+      const { error } = await supabase
+        .from('speeches')
+        .update({
+          speech_type: editingSpeechType,
+          goal_date: newGoalDate,
+        })
+        .eq('id', speech.id);
+
+      if (error) throw error;
+
+      toast({
+        title: t('common.success', 'Success'),
+        description: t('dashboard.deadlineUpdated', 'Speech settings updated'),
+      });
+
+      setSpeech(prev => prev ? {
+        ...prev,
+        speech_type: editingSpeechType,
+        goal_date: newGoalDate,
+      } : prev);
+      setShowSpeechSettings(false);
+      loadSpeech();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: t('practice.failedToSave'),
+        description: error.message,
+      });
+    }
+  };
+
   const handleSaveScript = async () => {
     if (!speech || !editedScriptText.trim()) return;
     
     try {
-      // Update the speech text - keep text_current as-is to preserve bracket progress
-      // Only update text_original (the source text)
+      const trimmedText = editedScriptText.trim();
+
       const { error } = await supabase
         .from('speeches')
         .update({ 
-          text_original: editedScriptText.trim(),
-          // Note: We intentionally do NOT reset text_current here
-          // to preserve any bracket-based word hiding progress
+          text_original: trimmedText,
         })
         .eq('id', speech.id);
       
       if (error) throw error;
       
-      // Update existing segments' text WITHOUT resetting progress
-      // Get current segments to preserve their mastery data
       const { data: existingSegments } = await supabase
         .from('speech_segments')
         .select('*')
@@ -1741,41 +1780,34 @@ const [liveTranscription, setLiveTranscription] = useState("");
         .order('segment_order', { ascending: true });
       
       if (existingSegments && existingSegments.length > 0) {
-        // Update segment text but KEEP progress (is_mastered, times_practiced, etc.)
-        const newWordCount = editedScriptText.trim().split(/\s+/).length;
+        const newWordCount = trimmedText.split(/\s+/).length;
         
-        // If there's only one segment, update it preserving progress
         if (existingSegments.length === 1) {
           await supabase
             .from('speech_segments')
             .update({
-              segment_text: editedScriptText.trim(),
+              segment_text: trimmedText,
               end_word_index: newWordCount - 1,
-              // Preserve: is_mastered, times_practiced, average_accuracy, etc.
             })
             .eq('id', existingSegments[0].id);
         } else {
-          // Multiple segments - update the first one with new text
-          // This is a simplification; for complex multi-segment cases, 
-          // we'd need smarter text diffing
           await supabase
             .from('speech_segments')
             .update({
-              segment_text: editedScriptText.trim(),
+              segment_text: trimmedText,
               end_word_index: newWordCount - 1,
             })
             .eq('id', existingSegments[0].id);
         }
       } else {
-        // No segments exist, create one (preserves old behavior for edge case)
         await supabase
           .from('speech_segments')
           .insert({
             speech_id: speech.id,
             segment_order: 0,
-            segment_text: editedScriptText.trim(),
+            segment_text: trimmedText,
             start_word_index: 0,
-            end_word_index: editedScriptText.trim().split(/\s+/).length - 1,
+            end_word_index: trimmedText.split(/\s+/).length - 1,
             is_mastered: false,
             times_practiced: 0
           });
@@ -1787,10 +1819,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
       });
       
       setIsEditingScript(false);
-      
-      // Update local state immediately for practice
-      setActiveSegmentText(editedScriptText.trim());
-      loadSpeech(); // Reload to get fresh data
+      setSpeech(prev => prev ? { ...prev, text_original: trimmedText } : prev);
+      setActiveSegmentText(trimmedText);
+      setActiveSegmentOriginalText(trimmedText);
+      loadSpeech();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -1919,11 +1951,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Analysis screen: Clean, minimal results view
   if (showResults && sessionResults) {
     return (
-      <div className="h-screen bg-background overflow-hidden">
+      <div className="h-screen bg-background overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <LoadingOverlay isVisible={isProcessing} />
         
-        {/* Exit button */}
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute left-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <Button
             variant="ghost"
             size="icon"
@@ -2041,10 +2072,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
       <LoadingOverlay isVisible={isProcessing} />
       
       {/* Duolingo-style header with progress bar */}
-      <header className="sticky top-0 z-10 bg-background border-b border-border/30">
+      <header className="sticky top-0 z-10 bg-background border-b border-border/30" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="container mx-auto px-4 py-3">
-          {/* Close button and progress */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -2054,7 +2084,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <X className="h-5 w-5 text-muted-foreground" />
             </Button>
             
-            {/* Progress bar */}
             <div className="flex-1">
               <div className="h-3 bg-muted rounded-full overflow-hidden">
                 <div 
@@ -2064,7 +2093,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
               </div>
             </div>
             
-            {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
               {subscriptionTier !== 'free' && (
                 <Button
@@ -2096,9 +2124,19 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     <Settings className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {subscriptionTier !== 'free' && (
+                    <DropdownMenuItem onClick={handleOpenEditScript}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      {t('practice.editScriptTitle')}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={handleOpenSpeechSettings}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    {t('nav.settings')}
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -2429,8 +2467,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
       {/* Edit Script Dialog */}
       <Dialog open={isEditingScript} onOpenChange={setIsEditingScript}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader className="pr-10">
             <DialogTitle>{t('practice.editScriptTitle')}</DialogTitle>
             <DialogDescription>
               {t('practice.editScriptDesc')}
@@ -2442,11 +2480,58 @@ const [liveTranscription, setLiveTranscription] = useState("");
             className="min-h-[300px] font-mono text-sm"
             placeholder={t('practice.enterSpeechText')}
           />
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsEditingScript(false)}>
               {t('common.cancel')}
             </Button>
             <Button onClick={handleSaveScript}>
+              {t('practice.saveChanges')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSpeechSettings} onOpenChange={setShowSpeechSettings}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader className="pr-10">
+            <DialogTitle>{t('nav.settings')}</DialogTitle>
+            <DialogDescription>
+              Update speech type and deadline.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <SpeechTypeSelector value={editingSpeechType} onChange={setEditingSpeechType} />
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Deadline</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editingDeadline ? format(editingDeadline, 'PPP') : <span>Select deadline</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editingDeadline}
+                    onSelect={setEditingDeadline}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowSpeechSettings(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleSaveSpeechSettings} disabled={!editingDeadline}>
               {t('practice.saveChanges')}
             </Button>
           </DialogFooter>
