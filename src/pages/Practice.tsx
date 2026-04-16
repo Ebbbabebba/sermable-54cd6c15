@@ -1954,7 +1954,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
       <div className="h-screen bg-background overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <LoadingOverlay isVisible={isProcessing} />
         
-        <div className="absolute left-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+        <div className="absolute left-4 z-10" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
           <Button
             variant="ghost"
             size="icon"
@@ -2072,7 +2072,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
       <LoadingOverlay isVisible={isProcessing} />
       
       {/* Duolingo-style header with progress bar */}
-      <header className="sticky top-0 z-10 bg-background border-b border-border/30" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <header className="sticky top-0 z-10 bg-background border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
             <Button
