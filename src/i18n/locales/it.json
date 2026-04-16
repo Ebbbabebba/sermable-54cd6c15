@@ -400,22 +400,19 @@
     },
     "signOut": "Esci"
   },
-"common": {
-    "loading": "Caricamento...",
-    "error": "Errore",
-    "success": "Successo",
-    "cancel": "Annulla",
-    "save": "Salva",
-    "delete": "Elimina",
-    "edit": "Modifica",
-    "back": "Indietro",
-    "next": "Avanti",
-    "previous": "Precedente",
-    "close": "Chiudi",
-    "restart": "Riavvia",
+  "common": {
+    "later": "Più tardi",
     "done": "Fatto",
-    "not_supported": "Non supportato",
-    "use_chrome": "Il riconoscimento vocale richiede Chrome o Safari."
+    "exit": "Esci",
+    "back": "Indietro",
+    "success": "Successo",
+    "error": "Errore",
+    "loading": "Caricamento...",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "close": "Chiudi",
+    "skip": "Salta",
+    "words": "parole"
   },
   "beat_practice": {
     "learned": "Imparati",
@@ -481,20 +478,6 @@
     "startPresentation": "Avvia presentazione",
     "processing": "Elaborazione...",
     "processingDesc": "Analisi della presentazione"
-  },
-  "common": {
-    "later": "Più tardi",
-    "done": "Fatto",
-    "exit": "Esci",
-    "back": "Indietro",
-    "success": "Successo",
-    "error": "Errore",
-    "loading": "Caricamento...",
-    "cancel": "Annulla",
-    "delete": "Elimina",
-    "close": "Chiudi",
-    "skip": "Salta",
-    "words": "parole"
   },
   "subscription": {
     "premium": "Premium",

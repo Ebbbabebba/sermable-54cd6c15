@@ -400,22 +400,19 @@
     },
     "signOut": "Abmelden"
   },
-"common": {
-    "loading": "Wird geladen...",
-    "error": "Fehler",
-    "success": "Erfolg",
-    "cancel": "Abbrechen",
-    "save": "Speichern",
-    "delete": "Löschen",
-    "edit": "Bearbeiten",
-    "back": "Zurück",
-    "next": "Weiter",
-    "previous": "Zurück",
-    "close": "Schließen",
-    "restart": "Neu starten",
+  "common": {
+    "later": "Später",
     "done": "Fertig",
-    "not_supported": "Nicht unterstützt",
-    "use_chrome": "Spracherkennung erfordert Chrome oder Safari."
+    "exit": "Beenden",
+    "back": "Zurück",
+    "success": "Erfolg",
+    "error": "Fehler",
+    "loading": "Lädt...",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "skip": "Überspringen",
+    "words": "Wörter"
   },
   "beat_practice": {
     "learned": "Gelernt",
@@ -481,20 +478,6 @@
     "startPresentation": "Präsentation starten",
     "processing": "Verarbeitung...",
     "processingDesc": "Präsentation wird analysiert"
-  },
-  "common": {
-    "later": "Später",
-    "done": "Fertig",
-    "exit": "Beenden",
-    "back": "Zurück",
-    "success": "Erfolg",
-    "error": "Fehler",
-    "loading": "Lädt...",
-    "cancel": "Abbrechen",
-    "delete": "Löschen",
-    "close": "Schließen",
-    "skip": "Überspringen",
-    "words": "Wörter"
   },
   "subscription": {
     "premium": "Premium",

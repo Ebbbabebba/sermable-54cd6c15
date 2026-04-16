@@ -38,7 +38,7 @@ import DayAfterRecallView from "@/components/DayAfterRecallView";
 
 
 import SegmentProgress from "@/components/SegmentProgress";
-import { SpeechTypeSelector } from "@/components/SpeechTypeSelector";
+import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
@@ -114,7 +114,7 @@ const Practice = () => {
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   const [showSpeechSettings, setShowSpeechSettings] = useState(false);
-  const [editingSpeechType, setEditingSpeechType] = useState<string>('general');
+  const [editingLearningMode, setEditingLearningMode] = useState<string>('word_by_word');
   const [editingDeadline, setEditingDeadline] = useState<Date | undefined>(undefined);
   const [showPresentationPremium, setShowPresentationPremium] = useState(false);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
@@ -1717,7 +1717,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
   const handleOpenSpeechSettings = () => {
     if (!speech) return;
-    setEditingSpeechType(speech.speech_type || 'general');
+    setEditingLearningMode(speech.learning_mode || 'word_by_word');
     setEditingDeadline(speech.goal_date ? new Date(speech.goal_date) : undefined);
     setShowSpeechSettings(true);
   };
@@ -1730,7 +1730,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
       const { error } = await supabase
         .from('speeches')
         .update({
-          speech_type: editingSpeechType,
+          learning_mode: editingLearningMode,
           goal_date: newGoalDate,
         })
         .eq('id', speech.id);
@@ -1744,7 +1744,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
       setSpeech(prev => prev ? {
         ...prev,
-        speech_type: editingSpeechType,
+        learning_mode: editingLearningMode,
         goal_date: newGoalDate,
       } : prev);
       setShowSpeechSettings(false);
@@ -2094,16 +2094,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
             
             <div className="flex items-center gap-1 shrink-0">
-              {subscriptionTier !== 'free' && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleOpenEditScript}
-                  className="rounded-full"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -2496,15 +2486,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
           <DialogHeader className="pr-10">
             <DialogTitle>{t('nav.settings')}</DialogTitle>
             <DialogDescription>
-              Update speech type and deadline.
+              {t('practice.speechSettingsDesc', 'Update practice mode and deadline.')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
-            <SpeechTypeSelector value={editingSpeechType} onChange={setEditingSpeechType} />
+            <LearningModeSelector value={editingLearningMode} onChange={setEditingLearningMode} />
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Deadline</label>
+              <label className="text-sm font-medium">{t('upload.goalDate', 'Deadline')}</label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -2512,7 +2502,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     className="w-full justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editingDeadline ? format(editingDeadline, 'PPP') : <span>Select deadline</span>}
+                    {editingDeadline ? format(editingDeadline, 'PPP') : <span>{t('upload.goalDate', 'Select deadline')}</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
