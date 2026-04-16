@@ -1113,7 +1113,7 @@ const EnhancedWordTracker = ({
                 className="text-white font-semibold tracking-wide animate-pulse"
                 style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)" }}
               >
-                💭 Försök säga det...
+                Försök säga det...
               </span>
             </div>
           )}
@@ -1152,7 +1152,7 @@ const EnhancedWordTracker = ({
       {isRecording && (
         <div className="mb-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
           <p className="text-sm text-blue-600 dark:text-blue-400 font-medium text-center">
-            🎤 Listening - Speak clearly and words will light up as you go
+            Listening - Speak clearly and words will light up as you go
           </p>
         </div>
       )}

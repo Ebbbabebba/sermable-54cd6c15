@@ -292,9 +292,9 @@ const BracketedTextDisplay = ({
                   </TooltipTrigger>
                   {(isMissed || isHesitated || isInProblemPhrase) && (
                     <TooltipContent side="top" className="text-xs">
-                      {isMissed ? "❌ Skipped or incorrect" : 
-                       isHesitated ? "⚠️ Hesitated here" :
-                       `📦 Focus area (missed ${problemPhraseInfo?.timesMissed || 0}x)`}
+                      {isMissed ? "Skipped or incorrect" : 
+                       isHesitated ? "Hesitated here" :
+                       `Focus area (missed ${problemPhraseInfo?.timesMissed || 0}x)`}
                     </TooltipContent>
                   )}
                 </Tooltip>
@@ -366,7 +366,7 @@ const BracketedTextDisplay = ({
                 bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5",
                 hasHintingWord && "ring-2 ring-yellow-500 ring-offset-2"
               )}
-              title={bracketProblemPhraseInfo.isInProblemPhrase ? `📦 Focus area (missed ${bracketProblemPhraseInfo.timesMissed}x)` : undefined}
+              title={bracketProblemPhraseInfo.isInProblemPhrase ? `Focus area (missed ${bracketProblemPhraseInfo.timesMissed}x)` : undefined}
             >
               {/* Hint bubble for hidden word */}
               <AnimatePresence>
@@ -469,7 +469,7 @@ const BracketedTextDisplay = ({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="text-xs">
-                          {errorWord.isMissed ? "❌ Missed" : "⚠️ Hesitated"}
+                          {errorWord.isMissed ? "Missed" : "Hesitated"}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

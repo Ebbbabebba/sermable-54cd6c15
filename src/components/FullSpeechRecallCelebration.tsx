@@ -119,7 +119,7 @@ const FullSpeechRecallCelebration = ({ onStart, totalWords }: FullSpeechRecallCe
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              🔥 Full Recall Mode
+              Full Recall Mode
             </motion.h2>
 
             <motion.p
