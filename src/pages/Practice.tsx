@@ -1849,7 +1849,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
     return (
       <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* Minimal header with exit */}
-        <header className="flex items-center justify-between p-4 border-b border-border/50">
+        <header className="flex items-center justify-between p-4 border-b border-border/50" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
           <Button
             variant="ghost"
             size="sm"
