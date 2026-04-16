@@ -282,7 +282,7 @@ const Dashboard = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent className="bg-card border-l border-border">
+              <SheetContent className="bg-card border-l border-border" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
                 <SheetHeader>
                   <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
                 </SheetHeader>
