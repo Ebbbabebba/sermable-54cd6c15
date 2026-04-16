@@ -400,22 +400,19 @@
     },
     "signOut": "Se déconnecter"
   },
-"common": {
-    "loading": "Chargement...",
-    "error": "Erreur",
-    "success": "Succès",
-    "cancel": "Annuler",
-    "save": "Enregistrer",
-    "delete": "Supprimer",
-    "edit": "Modifier",
-    "back": "Retour",
-    "next": "Suivant",
-    "previous": "Précédent",
-    "close": "Fermer",
-    "restart": "Redémarrer",
+  "common": {
+    "later": "Plus tard",
     "done": "Terminé",
-    "not_supported": "Non pris en charge",
-    "use_chrome": "La reconnaissance vocale nécessite Chrome ou Safari."
+    "exit": "Quitter",
+    "back": "Retour",
+    "success": "Succès",
+    "error": "Erreur",
+    "loading": "Chargement...",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "skip": "Passer",
+    "words": "mots"
   },
   "beat_practice": {
     "learned": "Appris",
@@ -481,20 +478,6 @@
     "startPresentation": "Démarrer la présentation",
     "processing": "Traitement...",
     "processingDesc": "Analyse de votre présentation"
-  },
-  "common": {
-    "later": "Plus tard",
-    "done": "Terminé",
-    "exit": "Quitter",
-    "back": "Retour",
-    "success": "Succès",
-    "error": "Erreur",
-    "loading": "Chargement...",
-    "cancel": "Annuler",
-    "delete": "Supprimer",
-    "close": "Fermer",
-    "skip": "Passer",
-    "words": "mots"
   },
   "subscription": {
     "premium": "Premium",
