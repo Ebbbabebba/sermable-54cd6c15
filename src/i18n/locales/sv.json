@@ -205,7 +205,7 @@
     },
     "deadlineWarning": {
       "critical": "⚠️ Snäv deadline-varning",
-      "challenging": "🔥 Intensiv övning krävs",
+      "challenging": "Intensiv övning krävs",
       "tight": "⏰ Var konsekvent"
     },
     "learningMode": {
@@ -669,13 +669,13 @@
     "tap_hint": "Tryck var som helst för nyckelordstips",
     "attempt_complete": "Bra! Låt oss försöka igen",
     "fewer_stops": "Du behövde {{count}} nyckelord. Försök behöva färre den här gången.",
-    "stable": "🎉 Talet är stabilt!",
+    "stable": "Talet är stabilt!",
     "stable_desc": "Du klarade hela talet utan att behöva några nyckelord. Ditt minne är konsoliderat!",
     "attempts": "Klart på {{count}} försök"
   },
   "progressive": {
     "beat_mastered": "Beat inlärt!",
-    "all_complete": "🎉 Talet memorerat!",
+    "all_complete": "Talet memorerat!",
     "session_done": "Session klar!",
     "come_back_tomorrow": "Kom tillbaka imorgon för att förstärka minnet!",
     "progress": "{{mastered}}/{{total}} beats inlärda. Vila och återvänd senare!",
@@ -838,7 +838,7 @@
     "analyzingShort": "Analyserar...",
     "pressToStart": "Tryck på knappen för att börja",
     "speechAppearSentence": "Ditt tal visas mening för mening",
-    "tryToSayIt": "💭 Försök säga det...",
+    "tryToSayIt": "Försök säga det...",
     "backToModeSelection": "Tillbaka till lägesval",
     "strictModeLabel": "Strikt läge",
     "wordsCount": "{{count}} ord",
