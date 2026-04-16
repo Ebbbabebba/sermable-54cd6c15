@@ -93,6 +93,25 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
     return () => clearInterval(interval);
   }, [speech.id]);
 
+  useEffect(() => {
+    const fetchMastery = async () => {
+      try {
+        const { data: beats } = await supabase
+          .from("practice_beats")
+          .select("is_mastered")
+          .eq("speech_id", speech.id);
+        
+        if (beats && beats.length > 0) {
+          const mastered = beats.filter(b => b.is_mastered).length;
+          setMasteryPercent(Math.round((mastered / beats.length) * 100));
+        }
+      } catch (error) {
+        console.error('Error fetching mastery:', error);
+      }
+    };
+    fetchMastery();
+  }, [speech.id]);
+
   const { trackPracticeStart } = useSleepAwareTracking();
 
   const handleCardClick = () => {
