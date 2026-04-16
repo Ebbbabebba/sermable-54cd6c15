@@ -329,26 +329,45 @@ const Dashboard = () => {
         <div className="space-y-10">
           {/* Welcome Section - Large, clean typography */}
           <section className="animate-fade-in">
-            <h2 className="text-3xl font-semibold text-foreground mb-1">
-              {(() => {
-                const hour = new Date().getHours();
-                const rawName = user?.user_metadata?.full_name?.split(' ')[0] || "";
-                const name = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase() : "";
-                
-                let greeting = "";
-                if (hour >= 5 && hour < 11) {
-                  greeting = t('dashboard.goodMorning');
-                } else if (hour >= 11 && hour < 19) {
-                  greeting = t('dashboard.welcomeBack');
-                } else {
-                  greeting = t('dashboard.goodEvening');
-                }
-                return name ? `${greeting}, ${name}` : greeting;
-              })()}
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              {t('dashboard.continueOrStart')}
-            </p>
+            {(() => {
+              const hour = new Date().getHours();
+              const rawName = user?.user_metadata?.full_name?.split(' ')[0] || "";
+              const name = rawName ? rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase() : "";
+              
+              let greeting = "";
+              let currentPeriod = "";
+              if (hour >= 5 && hour < 11) {
+                greeting = t('dashboard.goodMorning');
+                currentPeriod = "morning";
+              } else if (hour >= 11 && hour < 19) {
+                greeting = t('dashboard.welcomeBack');
+                currentPeriod = "afternoon";
+              } else {
+                greeting = t('dashboard.goodEvening');
+                currentPeriod = "evening";
+              }
+              
+              const lastShownPeriod = sessionStorage.getItem('greeting_period');
+              const greetingText = name ? `${greeting}, ${name}` : greeting;
+              
+              if (lastShownPeriod === currentPeriod) {
+                return null;
+              }
+              
+              // Mark this period as shown
+              sessionStorage.setItem('greeting_period', currentPeriod);
+              
+              return (
+                <>
+                  <h2 className="text-3xl font-semibold text-foreground mb-1">
+                    {greetingText}
+                  </h2>
+                  <p className="text-muted-foreground text-lg">
+                    {t('dashboard.continueOrStart')}
+                  </p>
+                </>
+              );
+            })()}
           </section>
 
           {/* Sleep-Aware Scheduling removed */}
