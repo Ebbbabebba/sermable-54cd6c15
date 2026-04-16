@@ -349,16 +349,13 @@ const Settings = () => {
                 >
                   <SelectTrigger id="app-language" className="w-full">
                     <SelectValue>
-                      {languages.find(l => l.code === currentLanguage)?.flag} {languages.find(l => l.code === currentLanguage)?.name}
+                      {languages.find(l => l.code === currentLanguage)?.name}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {languages.map((lang) => (
                       <SelectItem key={lang.code} value={lang.code}>
-                        <div className="flex items-center gap-2">
-                          <span>{lang.flag}</span>
-                          <span>{lang.name}</span>
-                        </div>
+                        {lang.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
