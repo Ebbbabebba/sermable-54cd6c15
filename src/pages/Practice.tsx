@@ -1890,27 +1890,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   if (isPracticing && !showResults) {
     return (
       <div className="h-screen bg-background flex flex-col">
-        {/* Minimal header with exit */}
-        <header className="flex items-center justify-between p-4 border-b border-border/50" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setIsPracticing(false);
-              setIsRecording(false);
-            }}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t('common.exit')}
-          </Button>
-          <h1 className="text-sm font-medium text-muted-foreground truncate max-w-[50%]">
-            {speech.title}
-          </h1>
-          <div className="w-16" /> {/* Spacer for centering */}
-        </header>
-        
-        {/* Full-height beat practice */}
+        {/* Full-height beat practice - BeatPracticeView has its own header */}
         <div className="flex-1 flex flex-col">
           <BeatPracticeView
             speechId={speech.id}
