@@ -525,7 +525,7 @@ export const CompactPresentationView = ({
           variant="ghost"
           size="sm"
           onClick={onExit}
-          className="fixed top-4 left-4 z-50 gap-2"
+          className="fixed left-4 z-50 gap-2" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}
         >
           <X className="h-4 w-4" />
           {t('common.exit')}
