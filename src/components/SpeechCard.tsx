@@ -96,14 +96,15 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   useEffect(() => {
     const fetchMastery = async () => {
       try {
-        const { data: beats } = await supabase
-          .from("practice_beats")
-          .select("is_mastered")
+        // Use segment visibility to match Practice page mastery calculation
+        const { data: segments } = await supabase
+          .from("speech_segments")
+          .select("visibility_percent")
           .eq("speech_id", speech.id);
         
-        if (beats && beats.length > 0) {
-          const mastered = beats.filter(b => b.is_mastered).length;
-          setMasteryPercent(Math.round((mastered / beats.length) * 100));
+        if (segments && segments.length > 0) {
+          const avg = segments.reduce((sum, s) => sum + (100 - (s.visibility_percent ?? 100)), 0) / segments.length;
+          setMasteryPercent(Math.round(avg));
         }
       } catch (error) {
         console.error('Error fetching mastery:', error);
