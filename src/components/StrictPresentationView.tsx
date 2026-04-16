@@ -407,7 +407,7 @@ export const StrictPresentationView = ({
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Status Bar */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-background/95 backdrop-blur-sm px-6 py-3 rounded-full border border-border shadow-lg">
+      <div className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-background/95 backdrop-blur-sm px-6 py-3 rounded-full border border-border shadow-lg" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
         <div className="flex items-center gap-2">
           {isRecording ? (
             <>

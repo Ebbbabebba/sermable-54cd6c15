@@ -362,7 +362,7 @@ const Presentation = () => {
   if (stage === 'mode-select') {
     return (
       <div className="h-screen bg-background overflow-hidden">
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute left-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
@@ -427,9 +427,9 @@ const Presentation = () => {
   // Show prep screen (for strict mode)
   if (stage === 'prep') {
     return (
-      <div className="min-h-screen bg-background p-8">
+      <div className="min-h-screen bg-background p-8" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 2rem)' }}>
         {/* Settings gear button */}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute right-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <Button
             variant="ghost"
             size="icon"
@@ -592,7 +592,7 @@ const Presentation = () => {
       />
       
       {/* Settings gear during live */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed right-4 z-50" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
         <Button
           variant="ghost"
           size="icon"
