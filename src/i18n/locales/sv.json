@@ -658,7 +658,7 @@
     }
   },
   "day_after_recall": {
-    "title": "🌅 Morgonåterkallelse",
+    "title": "Morgonåterkallelse",
     "card_desc": "Testa ditt minne utan manus. Få nyckelordstips bara vid behov.",
     "no_script": "Inget synligt manus",
     "pacing_pulse": "Blå puls för tempo",
