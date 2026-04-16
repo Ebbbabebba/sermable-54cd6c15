@@ -205,7 +205,7 @@
     },
     "deadlineWarning": {
       "critical": "⚠️ Tight Deadline Warning",
-      "challenging": "🔥 Intensive Practice Required",
+      "challenging": "Intensive Practice Required",
       "tight": "⏰ Stay Consistent"
     },
     "learningMode": {
@@ -661,8 +661,8 @@
     "ready_to_practice": "Ready to practice!",
     "session_complete": "Session Complete!",
     "come_back_later": "Come back later for the next beat",
-    "all_mastered": "🎉 All beats completed!",
-    "all_completed": "🎉 All beats completed!",
+    "all_mastered": "All beats completed!",
+    "all_completed": "All beats completed!",
     "all_completed_desc": "Great work! Practice again later to reinforce your memory.",
     "poem_memorized": "Great work! Practice again later to reinforce your memory.",
     "come_back": "You've completed {{current}}/{{total}} beats. Come back later to learn the next one!",
@@ -697,7 +697,7 @@
     "tap_hint": "Tap anywhere for keyword hint",
     "attempt_complete": "Good! Let's try again",
     "fewer_stops": "You needed {{count}} keyword(s). Try to need fewer this time.",
-    "stable": "🎉 Speech is stable!",
+    "stable": "Speech is stable!",
     "stable_desc": "You completed the entire speech without needing any keyword support. Your memory is consolidated!",
     "attempts": "Completed in {{count}} attempt(s)"
   },
@@ -731,7 +731,7 @@
   },
   "progressive": {
     "beat_mastered": "Beat mastered!",
-    "all_complete": "🎉 Speech memorized!",
+    "all_complete": "Speech memorized!",
     "session_done": "Session Complete!",
     "come_back_tomorrow": "Come back tomorrow to reinforce your memory!",
     "progress": "{{mastered}}/{{total}} beats completed. Rest and return later!",
@@ -854,7 +854,7 @@
     "analyzingShort": "Analyzing...",
     "pressToStart": "Press the button to start",
     "speechAppearSentence": "Your speech will appear sentence by sentence",
-    "tryToSayIt": "💭 Try to say it...",
+    "tryToSayIt": "Try to say it...",
     "backToModeSelection": "Back to Mode Selection",
     "strictModeLabel": "Strict Mode",
     "wordsCount": "{{count}} words",
