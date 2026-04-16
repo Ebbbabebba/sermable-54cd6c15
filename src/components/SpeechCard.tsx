@@ -52,6 +52,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const [isSharing, setIsSharing] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [deadlineOpen, setDeadlineOpen] = useState(false);
+  const [masteryPercent, setMasteryPercent] = useState<number | null>(null);
   
   // Check if this is the only speech for a free user
   const isOnlyFreeSpeech = subscriptionTier === 'free' && totalSpeeches === 1;
