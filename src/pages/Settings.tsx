@@ -2,21 +2,49 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Languages, Globe, Bell, Flame, Trophy, Crown, Check, GraduationCap, FileText, MessageCircle, ExternalLink, Mail, Moon, Sun, Clock, Presentation, Mic, FileStack, AlertTriangle, BarChart3, Zap, Clock4, CreditCard, Receipt, XCircle, ChevronRight, Trash2, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Languages, Bell, Flame, Trophy, CreditCard, ChevronRight, Trash2, Volume2, VolumeX, Moon, Sun, Clock, MessageCircle, Mail, ExternalLink, FileText, Clock4 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
+
+// iOS-style section wrapper
+const Section = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`mx-4 rounded-xl bg-card overflow-hidden ${className}`}>
+    {children}
+  </div>
+);
+
+// iOS-style row
+const Row = ({ children, onClick, last = false }: { children: React.ReactNode; onClick?: () => void; last?: boolean }) => (
+  <div
+    className={`flex items-center justify-between px-4 py-3 min-h-[44px] ${!last ? 'border-b border-border/40 ml-4 pl-0' : ''} ${onClick ? 'active:bg-muted/60 cursor-pointer' : ''}`}
+    onClick={onClick}
+  >
+    {children}
+  </div>
+);
+
+// Section header label
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <div className="px-8 pt-6 pb-1.5">
+    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</span>
+  </div>
+);
+
+// Section footer hint
+const SectionFooter = ({ children }: { children: React.ReactNode }) => (
+  <div className="px-8 pt-1.5 pb-2">
+    <span className="text-xs text-muted-foreground leading-tight">{children}</span>
+  </div>
+);
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -29,16 +57,14 @@ const Settings = () => {
   const [bestStreak, setBestStreak] = useState(0);
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
-  // Removed selectedPlan and showStudentPricing - moved to PaymentSettings
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   
-  // Practice hours state
   const [practiceStartHour, setPracticeStartHour] = useState(8);
   const [practiceEndHour, setPracticeEndHour] = useState(22);
   const [autoDetectTimezone, setAutoDetectTimezone] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem('soundEnabled');
-    return stored !== 'false'; // Default to true
+    return stored !== 'false';
   });
 
   const isPremium = subscriptionTier === 'regular' || subscriptionTier === 'student' || subscriptionTier === 'enterprise';
@@ -60,16 +86,13 @@ const Settings = () => {
   };
 
   useEffect(() => {
-    // Sync with current language on mount
     setCurrentLanguage(i18n.language);
     
-    // Load user data
     const loadUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Load practice hours and subscription from profile
         const { data: profile } = await supabase
           .from("profiles")
           .select("practice_start_hour, practice_end_hour, timezone, subscription_tier")
@@ -82,111 +105,78 @@ const Settings = () => {
           if (profile.subscription_tier) setSubscriptionTier(profile.subscription_tier);
         }
 
-        // Auto-detect and update timezone if enabled
-        if (autoDetectTimezone) {
-          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-          if (!profile?.timezone || profile.timezone !== detectedTimezone) {
-            await supabase
-              .from("profiles")
-              .update({ timezone: detectedTimezone })
-              .eq("id", user.id);
-          }
-        }
-
-        // Calculate streak (count both practice + full presentations)
+        // Calculate streaks
         const { data: userSpeeches } = await supabase
           .from("speeches")
           .select("id")
           .eq("user_id", user.id);
 
-        if (!userSpeeches || userSpeeches.length === 0) {
-          setCurrentStreak(0);
-          setBestStreak(0);
-          return;
-        }
+        if (userSpeeches && userSpeeches.length > 0) {
+          const userSpeechIds = userSpeeches.map(s => s.id);
 
-        const userSpeechIds = userSpeeches.map((s) => s.id);
+          const [practiceResult, presentationResult] = await Promise.all([
+            supabase
+              .from("practice_sessions")
+              .select("session_date")
+              .in("speech_id", userSpeechIds)
+              .order("session_date", { ascending: false }),
+            supabase
+              .from("presentation_sessions")
+              .select("created_at")
+              .in("speech_id", userSpeechIds)
+              .order("created_at", { ascending: false })
+          ]);
 
-        const [practiceResult, presentationResult] = await Promise.all([
-          supabase
-            .from("practice_sessions")
-            .select("session_date, speech_id")
-            .in("speech_id", userSpeechIds)
-            .order("session_date", { ascending: false }),
-          supabase
-            .from("presentation_sessions")
-            .select("created_at, speech_id")
-            .in("speech_id", userSpeechIds)
-            .order("created_at", { ascending: false }),
-        ]);
+          const allDates = [
+            ...(practiceResult.data || []).map(s => s.session_date),
+            ...(presentationResult.data || []).map(s => s.created_at)
+          ];
 
-        const allSessions = [
-          ...(practiceResult.data || []).map((s) => ({ date: s.session_date })),
-          ...(presentationResult.data || []).map((s) => ({ date: s.created_at })),
-        ];
+          const uniqueDays = new Set<number>();
+          allDates.forEach(d => {
+            const date = new Date(d);
+            date.setHours(0, 0, 0, 0);
+            uniqueDays.add(date.getTime());
+          });
 
-        const DAY_MS = 1000 * 60 * 60 * 24;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+          const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
 
-        const uniqueDays = new Set<number>();
-        for (const s of allSessions) {
-          if (!s.date) continue;
-          const d = new Date(s.date);
-          d.setHours(0, 0, 0, 0);
-          uniqueDays.add(d.getTime());
-        }
+          if (sortedDays.length > 0) {
+            let streak = 0;
+            const mostRecent = sortedDays[0];
+            for (let i = 0; i < sortedDays.length; i++) {
+              const expected = new Date(mostRecent);
+              expected.setDate(expected.getDate() - i);
+              if (sortedDays.includes(expected.getTime())) {
+                streak++;
+              } else break;
+            }
+            setCurrentStreak(streak);
 
-        const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
-
-        // Current streak: count consecutive days ending today OR yesterday
-        let streak = 0;
-        if (sortedDays.length > 0) {
-          const firstDiff = Math.floor((today.getTime() - sortedDays[0]) / DAY_MS);
-          if (firstDiff === 0 || firstDiff === 1) {
-            streak = 1;
+            let best = 0;
+            let tempStreak = 1;
             for (let i = 1; i < sortedDays.length; i++) {
-              const gap = Math.floor((sortedDays[i - 1] - sortedDays[i]) / DAY_MS);
-              if (gap === 1) streak++;
-              else break;
+              const diff = sortedDays[i - 1] - sortedDays[i];
+              if (diff === 86400000) {
+                tempStreak++;
+              } else {
+                best = Math.max(best, tempStreak);
+                tempStreak = 1;
+              }
             }
+            best = Math.max(best, tempStreak);
+            setBestStreak(best);
           }
         }
-
-        setCurrentStreak(streak);
-
-        // Best streak: longest consecutive-day run
-        let maxStreak = 0;
-        let tempStreak = 0;
-        let prevDay: number | null = null;
-
-        for (const day of sortedDays) {
-          if (prevDay === null) {
-            tempStreak = 1;
-          } else {
-            const diff = Math.floor((prevDay - day) / DAY_MS);
-            if (diff === 1) {
-              tempStreak++;
-            } else {
-              maxStreak = Math.max(maxStreak, tempStreak);
-              tempStreak = 1;
-            }
-          }
-          prevDay = day;
-        }
-        maxStreak = Math.max(maxStreak, tempStreak);
-        setBestStreak(maxStreak);
-
       } catch (error) {
         console.error('Error loading user data:', error);
       }
     };
 
     loadUserData();
-  }, [i18n.language, autoDetectTimezone]);
+  }, [i18n.language]);
 
-  // Save practice hours
-  const savePracticeHours = async (startHour: number, endHour: number) => {
+  const savePracticeHours = async (start: number, end: number) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -194,8 +184,9 @@ const Settings = () => {
       await supabase
         .from("profiles")
         .update({
-          practice_start_hour: startHour,
-          practice_end_hour: endHour
+          practice_start_hour: start,
+          practice_end_hour: end,
+          timezone: autoDetectTimezone ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
         })
         .eq("id", user.id);
 
@@ -225,454 +216,287 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+    <div className="min-h-screen bg-secondary/30">
+      {/* iOS-style navigation bar */}
+      <header className="sticky top-0 z-10 backdrop-blur-xl bg-secondary/60 border-b border-border/30" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="flex items-center h-11 px-4">
+          <Button variant="ghost" size="sm" className="text-primary -ml-2 gap-1 px-2" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-4 w-4" />
             {t('common.back')}
           </Button>
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-[17px] font-semibold">{t('settings.title')}</h1>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="space-y-6">
-          <div className="animate-fade-in">
-            <h1 className="text-4xl font-bold mb-2">{t('settings.title')}</h1>
-            <p className="text-muted-foreground">
-              {t('settings.subtitle')}
-            </p>
+      <div className="pb-12 overflow-y-auto" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 3rem)' }}>
+        {/* Subscription */}
+        <SectionLabel>{t('settings.payment.title')}</SectionLabel>
+        <Section>
+          <Row onClick={() => navigate("/settings/payment")} last>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                <CreditCard className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <div>
+                <span className="text-sm font-medium">{isPremium ? t('settings.payment.managePlan') : t('settings.payment.viewPlans')}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isPremium && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium">
+                  Premium
+                </span>
+              )}
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </Row>
+        </Section>
+
+        {/* Appearance */}
+        <SectionLabel>{t('settings.appearance.title')}</SectionLabel>
+        <Section>
+          <Row>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-indigo-500/15 flex items-center justify-center">
+                {theme === 'dark' ? <Moon className="h-4 w-4 text-indigo-500" /> : <Sun className="h-4 w-4 text-indigo-500" />}
+              </div>
+              <span className="text-sm">{t('settings.appearance.theme')}</span>
+            </div>
+            <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+          </Row>
+          <Row last>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-pink-500/15 flex items-center justify-center">
+                {soundEnabled ? <Volume2 className="h-4 w-4 text-pink-500" /> : <VolumeX className="h-4 w-4 text-pink-500" />}
+              </div>
+              <span className="text-sm">{t('settings.appearance.sounds', 'Sound effects')}</span>
+            </div>
+            <Switch
+              checked={soundEnabled}
+              onCheckedChange={(checked) => {
+                setSoundEnabled(checked);
+                localStorage.setItem('soundEnabled', String(checked));
+              }}
+            />
+          </Row>
+        </Section>
+
+        {/* Language */}
+        <SectionLabel>{t('settings.language.title')}</SectionLabel>
+        <Section>
+          <Row last>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-green-500/15 flex items-center justify-center">
+                <Languages className="h-4 w-4 text-green-600" />
+              </div>
+              <span className="text-sm">{t('settings.language.appLanguage')}</span>
+            </div>
+            <Select value={currentLanguage} onValueChange={handleLanguageChange}>
+              <SelectTrigger className="w-auto min-w-[120px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+                <SelectValue>
+                  {languages.find(l => l.code === currentLanguage)?.name}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Row>
+        </Section>
+        <SectionFooter>{t('settings.language.hint')}</SectionFooter>
+
+        {/* Streak / Profile */}
+        <SectionLabel>{t('settings.profile.title')}</SectionLabel>
+        <Section>
+          <div className="grid grid-cols-2 divide-x divide-border/40">
+            <div className="p-4 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+                <Flame className="h-3.5 w-3.5" />
+                <span className="text-xs">{t('settings.profile.currentStreak')}</span>
+              </div>
+              <div className="text-2xl font-bold">{currentStreak}</div>
+              <div className="text-[10px] text-muted-foreground">{t('settings.profile.days')}</div>
+            </div>
+            <div className="p-4 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+                <Trophy className="h-3.5 w-3.5" />
+                <span className="text-xs">{t('settings.profile.bestStreak')}</span>
+              </div>
+              <div className="text-2xl font-bold">{bestStreak}</div>
+              <div className="text-[10px] text-muted-foreground">{t('settings.profile.days')}</div>
+            </div>
           </div>
+        </Section>
+        <SectionFooter>{t('settings.profile.keepStreakDesc')}</SectionFooter>
 
-          {/* Payment & Subscription - Navigates to dedicated page */}
-          <Card 
-            className="cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => navigate("/settings/payment")}
-          >
-            <CardHeader>
-              <div className="flex items-center justify-between">
+        {/* Practice Hours */}
+        <SectionLabel>{t('settings.practiceHours.title')}</SectionLabel>
+        <Section>
+          <Row>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-orange-500/15 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-orange-500" />
+              </div>
+              <span className="text-sm">{t('settings.practiceHours.startTime')}</span>
+            </div>
+            <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
+              <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 13 }, (_, i) => i + 5).map((hour) => (
+                  <SelectItem key={hour} value={hour.toString()}>
+                    {formatHour(hour)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Row>
+          <Row>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-orange-500/15 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-orange-500" />
+              </div>
+              <span className="text-sm">{t('settings.practiceHours.endTime')}</span>
+            </div>
+            <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
+              <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 8 }, (_, i) => i + 17).map((hour) => (
+                  <SelectItem key={hour} value={hour.toString()}>
+                    {formatHour(hour)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Row>
+          <Row last>
+            <div className="flex items-center gap-3">
+              <span className="text-sm">{t('settings.practiceHours.autoTimezone')}</span>
+            </div>
+            <Switch checked={autoDetectTimezone} onCheckedChange={setAutoDetectTimezone} />
+          </Row>
+        </Section>
+        <SectionFooter>{t('settings.practiceHours.sleepProtection')}</SectionFooter>
+
+        {/* Notifications */}
+        <SectionLabel>{t('settings.notifications.title')}</SectionLabel>
+        <Section>
+          {!isNativePlatform ? (
+            <div className="px-4 py-3">
+              <p className="text-sm text-muted-foreground">{t('settings.notifications.nativeRequired')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('settings.notifications.nativeRequiredDesc')}</p>
+            </div>
+          ) : (
+            <>
+              <Row last={!notificationsEnabled}>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
-                    <CreditCard className="h-5 w-5 text-primary-foreground" />
+                  <div className="w-7 h-7 rounded-md bg-red-500/15 flex items-center justify-center">
+                    <Bell className="h-4 w-4 text-red-500" />
                   </div>
-                  <div>
-                    <CardTitle>{t('settings.payment.title')}</CardTitle>
-                    <CardDescription>
-                      {isPremium ? t('settings.payment.managePlan') : t('settings.payment.viewPlans')}
-                    </CardDescription>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isPremium && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium">
-                      Premium
-                    </span>
-                  )}
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* Appearance Settings */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                {theme === 'dark' ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
-                <CardTitle>{t('settings.appearance.title')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('settings.appearance.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="theme-toggle">{t('settings.appearance.theme')}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {theme === 'dark' ? t('settings.appearance.darkTheme') : t('settings.appearance.lightTheme')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sun className="h-4 w-4 text-muted-foreground" />
-                  <Switch
-                    id="theme-toggle"
-                    checked={theme === 'dark'}
-                    onCheckedChange={toggleTheme}
-                  />
-                  <Moon className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label htmlFor="sound-toggle">{t('settings.appearance.sounds', 'Sound effects')}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.appearance.soundsDesc', 'Play sounds on button clicks and actions')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <VolumeX className="h-4 w-4 text-muted-foreground" />
-                  <Switch
-                    id="sound-toggle"
-                    checked={soundEnabled}
-                    onCheckedChange={(checked) => {
-                      setSoundEnabled(checked);
-                      localStorage.setItem('soundEnabled', String(checked));
-                    }}
-                  />
-                  <Volume2 className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Language Settings */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Languages className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.language.title')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('settings.language.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Label htmlFor="app-language">{t('settings.language.appLanguage')}</Label>
-                <Select
-                  value={currentLanguage}
-                  onValueChange={handleLanguageChange}
-                >
-                  <SelectTrigger id="app-language" className="w-full">
-                    <SelectValue>
-                      {languages.find(l => l.code === currentLanguage)?.name}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {languages.map((lang) => (
-                      <SelectItem key={lang.code} value={lang.code}>
-                        {lang.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  {t('settings.language.hint')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Profile & Streak */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.profile.title')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('settings.profile.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Flame className="h-4 w-4" />
-                    <span className="text-sm">{t('settings.profile.currentStreak')}</span>
-                  </div>
-                  <div className="text-3xl font-bold">{currentStreak}</div>
-                  <div className="text-xs text-muted-foreground">{t('settings.profile.days')}</div>
-                </div>
-
-                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Trophy className="h-4 w-4" />
-                    <span className="text-sm">{t('settings.profile.bestStreak')}</span>
-                  </div>
-                  <div className="text-3xl font-bold">{bestStreak}</div>
-                  <div className="text-xs text-muted-foreground">{t('settings.profile.days')}</div>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-primary/10 p-4 space-y-2">
-                <p className="text-sm font-medium">{t('settings.profile.keepStreak')}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t('settings.profile.keepStreakDesc')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-
-          {/* Practice Hours */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.practiceHours.title')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('settings.practiceHours.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('settings.practiceHours.startTime')}</Label>
-                  <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 13 }, (_, i) => i + 5).map((hour) => (
-                        <SelectItem key={hour} value={hour.toString()}>
-                          {formatHour(hour)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('settings.practiceHours.endTime')}</Label>
-                  <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 8 }, (_, i) => i + 17).map((hour) => (
-                        <SelectItem key={hour} value={hour.toString()}>
-                          {formatHour(hour)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-primary/10 p-4 space-y-2">
-                <p className="text-sm font-medium">
-                  {t('settings.practiceHours.preview', { 
-                    start: formatHour(practiceStartHour), 
-                    end: formatHour(practiceEndHour) 
-                  })}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t('settings.practiceHours.sleepProtection')}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>{t('settings.practiceHours.autoTimezone')}</Label>
-                  <p className="text-xs text-muted-foreground">
-                    {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                  </p>
+                  <span className="text-sm">{t('settings.notifications.pushNotifications')}</span>
                 </div>
                 <Switch
-                  checked={autoDetectTimezone}
-                  onCheckedChange={setAutoDetectTimezone}
+                  checked={notificationsEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked) registerPushNotifications();
+                  }}
                 />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Notification Settings */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.notifications.title')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('settings.notifications.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {!isNativePlatform ? (
-                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                  <p className="text-sm font-medium">{t('settings.notifications.nativeRequired')}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('settings.notifications.nativeRequiredDesc')}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{t('settings.notifications.pushNotifications')}</Label>
-                      <p className="text-xs text-muted-foreground">
-                        {t('settings.notifications.pushNotificationsDesc')}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notificationsEnabled}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          registerPushNotifications();
-                        }
-                      }}
-                    />
-                  </div>
-                  
-                  {notificationsEnabled && (
-                    <>
-                      <Separator />
-                      
-                      {/* Notification Time Window */}
-                      <div className="space-y-3">
-                        <Label className="flex items-center gap-2">
-                          <Clock4 className="h-4 w-4" />
-                          {t('settings.notifications.notificationWindow')}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          {t('settings.notifications.notificationWindowDesc')}
-                        </p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <Label className="text-xs">{t('settings.notifications.from')}</Label>
-                            <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
-                              <SelectTrigger className="h-9">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                                  <SelectItem key={hour} value={hour.toString()}>
-                                    {formatHour(hour)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">{t('settings.notifications.to')}</Label>
-                            <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
-                              <SelectTrigger className="h-9">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                                  <SelectItem key={hour} value={hour.toString()}>
-                                    {formatHour(hour)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="rounded-lg bg-primary/10 p-3 space-y-1">
-                        <p className="text-sm font-medium">
-                          ✓ {t('settings.notifications.enabled')}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('settings.notifications.windowPreview', {
-                            start: formatHour(practiceStartHour),
-                            end: formatHour(practiceEndHour)
-                          })}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
+              </Row>
+              {notificationsEnabled && (
+                <>
+                  <Row>
+                    <span className="text-sm">{t('settings.notifications.from')}</span>
+                    <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
+                      <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                          <SelectItem key={hour} value={hour.toString()}>
+                            {formatHour(hour)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Row>
+                  <Row last>
+                    <span className="text-sm">{t('settings.notifications.to')}</span>
+                    <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
+                      <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                          <SelectItem key={hour} value={hour.toString()}>
+                            {formatHour(hour)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Row>
+                </>
               )}
-            </CardContent>
-          </Card>
+            </>
+          )}
+        </Section>
 
+        {/* Support */}
+        <SectionLabel>{t('settings.support.title')}</SectionLabel>
+        <Section>
+          <Row onClick={() => window.location.href = 'mailto:support@sermable.com'} last>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-blue-500/15 flex items-center justify-center">
+                <Mail className="h-4 w-4 text-blue-500" />
+              </div>
+              <span className="text-sm">{t('settings.support.emailSupport')}</span>
+            </div>
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+          </Row>
+        </Section>
 
-          {/* Contact Support/Help Center */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.support.title')}</CardTitle>
+        {/* Legal */}
+        <SectionLabel>{t('settings.legal.termsTitle')}</SectionLabel>
+        <Section>
+          <Row onClick={() => window.open('/terms', '_blank')}>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-gray-500/15 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-gray-500" />
               </div>
-              <CardDescription>
-                {t('settings.support.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-between"
-                  onClick={() => window.location.href = 'mailto:support@sermable.com'}
-                >
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    <span>{t('settings.support.emailSupport')}</span>
-                  </div>
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <span className="text-sm">{t('settings.legal.termsOfService')}</span>
+            </div>
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+          </Row>
+          <Row onClick={() => window.open('/privacy', '_blank')}>
+            <span className="text-sm ml-10">{t('settings.legal.privacyPolicy')}</span>
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+          </Row>
+          <Row onClick={() => window.open('/refund-policy', '_blank')} last>
+            <span className="text-sm ml-10">Refund Policy</span>
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+          </Row>
+        </Section>
 
-          {/* Legal */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.legal.termsTitle')}</CardTitle>
+        {/* Account */}
+        <SectionLabel>{t('settings.account.title')}</SectionLabel>
+        <Section className="mb-8">
+          <Row onClick={() => navigate('/settings/account')} last>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-md bg-red-500/15 flex items-center justify-center">
+                <Trash2 className="h-4 w-4 text-red-500" />
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => window.open('/terms', '_blank')}
-              >
-                <span>{t('settings.legal.termsOfService')}</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => window.open('/privacy', '_blank')}
-              >
-                <span>{t('settings.legal.privacyPolicy')}</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => window.open('/refund-policy', '_blank')}
-              >
-                <span>Refund Policy</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Account Settings */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Trash2 className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.account.title')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('settings.account.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => navigate('/settings/account')}
-              >
-                <span>{t('settings.account.manageAccount')}</span>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+              <span className="text-sm">{t('settings.account.manageAccount')}</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Row>
+        </Section>
+      </div>
     </div>
   );
 };

@@ -237,8 +237,8 @@ const Dashboard = () => {
         onOpenChange={setShowPremiumDialog} 
       />
 
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/30" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="px-4 h-11 flex items-center justify-between">
           <div className="w-8" />
           
           {/* Desktop Navigation */}
@@ -325,7 +325,7 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 pb-28">
+      <main className="px-4 py-6 pb-28">
         <div className="space-y-10">
           {/* Welcome Section - Large, clean typography */}
           <section className="animate-fade-in">
