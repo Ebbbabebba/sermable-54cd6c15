@@ -157,7 +157,7 @@ const MoodIndicator = ({ mood }: { mood: 'positive' | 'neutral' | 'negative' }) 
       animate={{ opacity: 1, y: 0 }}
       key={mood}
     >
-      <span>{config.emoji}</span>
+      
       <span>{config.label}</span>
     </motion.div>
   );
