@@ -348,7 +348,7 @@ const ScriptPracticeView = ({
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 p-4 backdrop-blur-sm" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           {t('common.back', 'Back')}

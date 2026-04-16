@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Sparkles, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Sparkles, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +38,7 @@ import DayAfterRecallView from "@/components/DayAfterRecallView";
 
 
 import SegmentProgress from "@/components/SegmentProgress";
+import { SpeechTypeSelector } from "@/components/SpeechTypeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
@@ -46,6 +49,7 @@ interface Speech {
   goal_date: string;
   base_word_visibility_percent: number | null;
   speech_language: string | null;
+  speech_type?: string | null;
   next_review_date?: string | null;
   learning_mode?: string | null;
 }
@@ -109,6 +113,9 @@ const Practice = () => {
   const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
+  const [showSpeechSettings, setShowSpeechSettings] = useState(false);
+  const [editingSpeechType, setEditingSpeechType] = useState<string>('general');
+  const [editingDeadline, setEditingDeadline] = useState<Date | undefined>(undefined);
   const [showPresentationPremium, setShowPresentationPremium] = useState(false);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [todaySessionDone, setTodaySessionDone] = useState(false);

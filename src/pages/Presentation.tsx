@@ -361,12 +361,12 @@ const Presentation = () => {
   // Show mode selector
   if (stage === 'mode-select') {
     return (
-      <div className="h-screen bg-background overflow-hidden">
+      <div className="h-screen bg-background overflow-hidden" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
         <div className="absolute left-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="gap-2"
+            className="gap-2 bg-background/80 backdrop-blur-sm"
           >
             <X className="h-4 w-4" />
             Exit
