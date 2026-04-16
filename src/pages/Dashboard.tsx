@@ -351,8 +351,7 @@ const Dashboard = () => {
             </p>
           </section>
 
-          {/* Sleep-Aware Scheduling Suggestion */}
-          <SleepAwareScheduling />
+          {/* Sleep-Aware Scheduling removed */}
 
           {/* Review Notifications */}
           <ReviewNotifications />
