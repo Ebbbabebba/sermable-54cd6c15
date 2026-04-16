@@ -411,6 +411,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
             </p>
           </div>
 
+          <LearningModeSelector value={learningMode} onChange={setLearningMode} />
 
 
           <div className="space-y-2">
