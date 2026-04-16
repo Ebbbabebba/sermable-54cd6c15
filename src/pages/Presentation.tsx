@@ -362,7 +362,7 @@ const Presentation = () => {
   if (stage === 'mode-select') {
     return (
       <div className="h-screen bg-background overflow-hidden">
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute left-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
