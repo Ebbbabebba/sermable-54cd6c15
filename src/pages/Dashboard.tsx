@@ -237,7 +237,7 @@ const Dashboard = () => {
         onOpenChange={setShowPremiumDialog} 
       />
 
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="w-8" />
           
