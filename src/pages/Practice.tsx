@@ -38,7 +38,7 @@ import DayAfterRecallView from "@/components/DayAfterRecallView";
 
 
 import SegmentProgress from "@/components/SegmentProgress";
-import { SpeechTypeSelector } from "@/components/SpeechTypeSelector";
+import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface Speech {
