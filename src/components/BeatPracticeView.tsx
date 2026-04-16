@@ -1342,7 +1342,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       } else {
         repetitionCountRef.current = currentRep + 1;
         pauseSpeechRecognition(900);
-        setCelebrationMessage(`${currentRep}/${requiredLearningReps} ✓`);
+        setCelebrationMessage(`${currentRep}/${requiredLearningReps}`);
         setShowCelebration(true);
 
         setTimeout(() => {
@@ -1421,7 +1421,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
       
       const visibleCount = words.length - newHidden.size;
-      setCelebrationMessage(`✓ ${visibleCount} words left`);
+      setCelebrationMessage(`${visibleCount} words left`);
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -1472,7 +1472,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           console.log(`🔗 Merged recall completed for ${mergedRecallBeats.length} beats`);
         }
 
-        setCelebrationMessage(isMergedRecall ? "✅ Full recall complete!" : "✅ Beat recalled!");
+        setCelebrationMessage(isMergedRecall ? "Full recall complete!" : "Beat recalled!");
         setShowCelebration(true);
 
         setTimeout(() => {
@@ -1558,7 +1558,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       } else {
         // Need one more successful recall with all hidden
         setRecallSuccessCount(newCount);
-        setCelebrationMessage(`${newCount}/2 perfect recalls ✓`);
+        setCelebrationMessage(`${newCount}/2 perfect recalls`);
         setShowCelebration(true);
         
         setTimeout(() => {
@@ -1630,7 +1630,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
       
       const visibleCount = words.length - newHidden.size;
-      setCelebrationMessage(`✓ ${visibleCount} words left`);
+      setCelebrationMessage(`${visibleCount} words left`);
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -1641,7 +1641,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }, 800);
     } else {
       // All hidden and success! Pre-beat recall complete - now show the new beat preview
-      setCelebrationMessage("✅ " + t('beat_practice.recall_complete', "Ready for next beat!"));
+      setCelebrationMessage(t('beat_practice.recall_complete', "Ready for next beat!"));
       setShowCelebration(true);
 
       setTimeout(() => {
@@ -2031,7 +2031,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             // Schedule browser notification after 10 minutes
             if ('Notification' in window && Notification.permission === 'granted') {
               setTimeout(() => {
-                new Notification('☕ Coffee break is over!', {
+                new Notification('Coffee break is over!', {
                   body: 'Time for your quick recall session. Come back and practice!',
                   icon: '/favicon.ico',
                 });

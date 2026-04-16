@@ -685,7 +685,7 @@
     "beat_complete_rest": "Beat complete! Take a short break."
   },
   "day_after_recall": {
-    "title": "🌅 Day-After Recall",
+    "title": "Day-After Recall",
     "card_desc": "Test your memory with no script. Get keyword hints only when needed.",
     "no_script": "No visible script",
     "pacing_pulse": "Blue pacing pulse",

@@ -44,11 +44,11 @@ export const PresentationModeSelector = ({
 
                 <ul className="space-y-1.5 text-xs text-muted-foreground">
                   <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5 font-bold">•</span>
                     <span>{t('presentationMode.progressiveHints')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5 font-bold">•</span>
                     <span>{t('presentationMode.wordByWord')}</span>
                   </li>
                 </ul>
@@ -78,11 +78,11 @@ export const PresentationModeSelector = ({
 
                 <ul className="space-y-1.5 text-xs text-muted-foreground">
                   <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5 font-bold">•</span>
                     <span>{t('presentationMode.fullTextVisible')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5 font-bold">•</span>
                     <span>{t('presentationMode.wordsFade')}</span>
                   </li>
                 </ul>
@@ -112,11 +112,11 @@ export const PresentationModeSelector = ({
 
                 <ul className="space-y-1.5 text-xs text-muted-foreground">
                   <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5 font-bold">•</span>
                     <span>{t('presentationMode.referenceWordAnchors', 'Reference word anchors')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">✓</span>
+                    <span className="text-primary mt-0.5 font-bold">•</span>
                     <span>{t('presentationMode.retellFromMemory', 'Retell from memory')}</span>
                   </li>
                 </ul>
