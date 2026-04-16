@@ -531,7 +531,7 @@ export const AvatarCharacter = ({
                 animate={{ opacity: [0, 1, 0], y: [5, -5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
-                ✨
+                
               </motion.text>
               <motion.text
                 x="80"
@@ -541,7 +541,7 @@ export const AvatarCharacter = ({
                 animate={{ opacity: [0, 1, 0], y: [5, -5] }}
                 transition={{ duration: 1.5, delay: 0.4, repeat: Infinity }}
               >
-                ⭐
+                
               </motion.text>
             </>
           )}

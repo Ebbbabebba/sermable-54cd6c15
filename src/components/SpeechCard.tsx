@@ -286,7 +286,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             {isOverdue
               ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
               : daysRemaining === 0
-                ? t('dashboard.presentationDay', '🎤 Presentation day!')
+                ? t('dashboard.presentationDay', 'Presentation day!')
                 : t(daysRemaining === 1 ? 'dashboard.daysLeft' : 'dashboard.daysLeftPlural', { count: daysRemaining })}
           </span>
         </div>

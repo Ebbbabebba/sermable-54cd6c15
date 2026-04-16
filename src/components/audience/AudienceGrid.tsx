@@ -143,9 +143,9 @@ export const AudienceGrid = ({
 // Mood indicator component
 const MoodIndicator = ({ mood }: { mood: 'positive' | 'neutral' | 'negative' }) => {
   const moodConfig = {
-    positive: { emoji: '👏', label: 'Great job!', bgClass: 'bg-primary/80' },
-    neutral: { emoji: '👀', label: 'Listening...', bgClass: 'bg-secondary/80' },
-    negative: { emoji: '😬', label: 'Keep going!', bgClass: 'bg-accent/80' },
+    positive: { label: 'Great job!', bgClass: 'bg-primary/80' },
+    neutral: { label: 'Listening...', bgClass: 'bg-secondary/80' },
+    negative: { label: 'Keep going!', bgClass: 'bg-accent/80' },
   };
   
   const config = moodConfig[mood];
