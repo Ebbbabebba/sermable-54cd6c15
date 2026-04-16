@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
-
+import { LearningModeSelector } from "@/components/LearningModeSelector";
 
 
 interface UploadSpeechDialogProps {
@@ -26,7 +26,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [text, setText] = useState("");
   const [goalDate, setGoalDate] = useState("");
   const [familiarityLevel, setFamiliarityLevel] = useState<string>("beginner");
-  const [speechType, setSpeechType] = useState<string>("general");
+  
   const [learningMode, setLearningMode] = useState<string>("word_by_word");
   const [loading, setLoading] = useState(false);
   const [userTier, setUserTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
