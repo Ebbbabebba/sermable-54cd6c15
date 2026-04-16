@@ -389,7 +389,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
                   {isOnlyFreeSpeech && (
                     <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
                       <p className="text-sm font-medium">
-                        ⚠️ {t('dashboard.deleteOnlyFreeSpeechWarning', "This is your only free speech this month. Free users can only create 1 speech per month. If you delete it, you won't be able to create a new one until next month.")}
+                        {t('dashboard.deleteOnlyFreeSpeechWarning', "This is your only free speech this month. Free users can only create 1 speech per month. If you delete it, you won't be able to create a new one until next month.")}
                       </p>
                     </div>
                   )}
