@@ -351,7 +351,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             <span className="font-medium text-foreground">{progress}%</span>
           </div>
           <Progress value={progress} className="h-1.5" />
-          {masteryPercent !== null && masteryPercent > 0 && (
+        {masteryPercent !== null && (
             <div className="flex items-center gap-1.5 text-xs">
               <Target className="h-3 w-3 text-emerald-500" />
               <span className="text-emerald-600 dark:text-emerald-400 font-medium">
