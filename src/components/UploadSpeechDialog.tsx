@@ -271,7 +271,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         goal_date: goalDate,
         familiarity_level: familiarityLevel,
         speech_language: detectedLanguage,
-        speech_type: speechType,
+        speech_type: 'general',
         learning_mode: learningMode,
       }).select().single();
 
@@ -333,7 +333,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
       setText("");
       setGoalDate("");
       setFamiliarityLevel("beginner");
-      setSpeechType("general");
+      
       setLearningMode("word_by_word");
       onSuccess();
     } catch (error: any) {
