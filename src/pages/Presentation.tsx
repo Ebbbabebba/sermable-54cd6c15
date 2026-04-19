@@ -32,7 +32,7 @@ interface Speech {
   text_original: string;
   text_current: string;
   speech_language: string;
-  presentation_mode?: 'strict' | 'fullscript';
+  presentation_mode?: 'strict';
   speech_type?: string;
 }
 
@@ -107,7 +107,7 @@ const Presentation = () => {
       if (error) throw error;
       setSpeech({
         ...data,
-        presentation_mode: (data.presentation_mode === 'fullscript' ? 'fullscript' : 'strict') as 'strict' | 'fullscript'
+        presentation_mode: 'strict' as const,
       });
     } catch (error: any) {
       toast({
