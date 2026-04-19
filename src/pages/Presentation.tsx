@@ -452,7 +452,7 @@ const Presentation = () => {
           <div className="space-y-2">
             <h1 className="text-4xl font-bold capitalize">{speech.title}</h1>
             <p className="text-muted-foreground">
-              {t('presentation.strictModeLabel')} • {t('presentation.wordsCount', { count: speech.text_original.split(/\s+/).length })}
+              {t('presentation.wholeSpeechModeLabel', 'Whole Speech Mode')} • {t('presentation.wordsCount', { count: speech.text_original.split(/\s+/).length })}
             </p>
           </div>
 
