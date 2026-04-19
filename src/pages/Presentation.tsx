@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { X, Play, Settings } from "lucide-react";
 import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
-import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
 import ScriptPracticeView from "@/components/ScriptPracticeView";
+import ListenMode from "@/components/ListenMode";
 import PresentationControls from "@/components/PresentationControls";
 
 import { AudienceOverlay } from "@/components/audience";
@@ -46,7 +46,7 @@ const Presentation = () => {
   const [loading, setLoading] = useState(true);
   
   // Mode selection
-  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | 'audience' | 'overview' | 'script' | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'listen' | 'audience' | 'overview' | 'script' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   
   // Session states
@@ -303,16 +303,16 @@ const Presentation = () => {
     navigate('/dashboard');
   };
 
-  const handleModeSelect = (mode: 'strict' | 'fullscript' | 'overview') => {
+  const handleModeSelect = (mode: 'strict' | 'listen' | 'overview') => {
     if (mode === 'overview') {
       setSelectedMode('script');
       setStage('live');
       return;
     }
-    
+
     setSelectedMode(mode);
-    
-    if (mode === 'fullscript') {
+
+    if (mode === 'listen') {
       setStage('live');
     } else {
       setStage('prep');
@@ -396,10 +396,10 @@ const Presentation = () => {
     );
   }
 
-  // Show full script live mode
-  if (stage === 'live' && selectedMode === 'fullscript') {
+  // Show Listen Mode (no follow-along; reveals next words after 2s pause)
+  if (stage === 'live' && selectedMode === 'listen') {
     return (
-      <FullScriptView
+      <ListenMode
         text={speech.text_original}
         speechLanguage={speech.speech_language || 'en'}
         onComplete={handleFullScriptComplete}
