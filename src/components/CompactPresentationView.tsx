@@ -236,25 +236,35 @@ export const CompactPresentationView = ({
         }
       }
 
-      // Process interim results for real-time feel
+      // Process interim results for real-time feel.
+      // Recognizers sometimes revise earlier words mid-stream (e.g. "their" -> "there"),
+      // so we can't rely on prefix length alone. Pass the full interim and let the
+      // matcher (which uses currentWordIndexRef) skip already-matched words.
       if (interimTranscript && interimTranscript !== lastProcessedInterimRef.current) {
-        // Only process new words from interim that we haven't seen
         const prevWords = lastProcessedInterimRef.current.toLowerCase().trim().split(/\s+/).filter(w => w.length > 0);
         const currentWords = interimTranscript.toLowerCase().trim().split(/\s+/).filter(w => w.length > 0);
-        
-        // Find new words at the end of the interim transcript
-        const newWords = currentWords.slice(prevWords.length);
-        if (newWords.length > 0) {
-          processTranscriptRef.current(newWords.join(" "));
+
+        // If word count grew, process only the new tail (fast path)
+        // Otherwise (revision happened), reprocess the last few words to catch corrections
+        let toProcess: string[];
+        if (currentWords.length > prevWords.length) {
+          toProcess = currentWords.slice(prevWords.length);
+        } else {
+          // Reprocess last 3 words to catch in-place corrections that would otherwise stall progress
+          toProcess = currentWords.slice(Math.max(0, currentWords.length - 3));
+        }
+        if (toProcess.length > 0) {
+          processTranscriptRef.current(toProcess.join(" "));
         }
         lastProcessedInterimRef.current = interimTranscript;
       }
 
       if (finalTranscript) {
         transcriptRef.current += finalTranscript;
-        // Reset interim tracking since final result replaces interim
+        // Final transcripts can contain corrections that interim missed.
+        // Process them too — the matcher is idempotent (skips already-matched words via currentWordIndexRef).
+        processTranscriptRef.current(finalTranscript);
         lastProcessedInterimRef.current = "";
-        // Don't re-process words already handled via interim
       }
       
       setAudioLevel(0.8);
