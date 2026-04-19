@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { X, Play, Settings } from "lucide-react";
 import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
-import { FullScriptView } from "@/components/FullScriptView";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
 import ScriptPracticeView from "@/components/ScriptPracticeView";
+import ListenMode from "@/components/ListenMode";
 import PresentationControls from "@/components/PresentationControls";
 
 import { AudienceOverlay } from "@/components/audience";
@@ -32,7 +32,7 @@ interface Speech {
   text_original: string;
   text_current: string;
   speech_language: string;
-  presentation_mode?: 'strict' | 'fullscript';
+  presentation_mode?: 'strict';
   speech_type?: string;
 }
 
@@ -46,7 +46,7 @@ const Presentation = () => {
   const [loading, setLoading] = useState(true);
   
   // Mode selection
-  const [selectedMode, setSelectedMode] = useState<'strict' | 'fullscript' | 'audience' | 'overview' | 'script' | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'listen' | 'audience' | 'overview' | 'script' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('full');
   
   // Session states
@@ -107,7 +107,7 @@ const Presentation = () => {
       if (error) throw error;
       setSpeech({
         ...data,
-        presentation_mode: (data.presentation_mode === 'fullscript' ? 'fullscript' : 'strict') as 'strict' | 'fullscript'
+        presentation_mode: 'strict' as const,
       });
     } catch (error: any) {
       toast({
@@ -303,16 +303,16 @@ const Presentation = () => {
     navigate('/dashboard');
   };
 
-  const handleModeSelect = (mode: 'strict' | 'fullscript' | 'overview') => {
+  const handleModeSelect = (mode: 'strict' | 'listen' | 'overview') => {
     if (mode === 'overview') {
       setSelectedMode('script');
       setStage('live');
       return;
     }
-    
+
     setSelectedMode(mode);
-    
-    if (mode === 'fullscript') {
+
+    if (mode === 'listen') {
       setStage('live');
     } else {
       setStage('prep');
@@ -396,10 +396,10 @@ const Presentation = () => {
     );
   }
 
-  // Show full script live mode
-  if (stage === 'live' && selectedMode === 'fullscript') {
+  // Show Listen Mode (no follow-along; reveals next words after 2s pause)
+  if (stage === 'live' && selectedMode === 'listen') {
     return (
-      <FullScriptView
+      <ListenMode
         text={speech.text_original}
         speechLanguage={speech.speech_language || 'en'}
         onComplete={handleFullScriptComplete}
@@ -452,7 +452,7 @@ const Presentation = () => {
           <div className="space-y-2">
             <h1 className="text-4xl font-bold capitalize">{speech.title}</h1>
             <p className="text-muted-foreground">
-              {t('presentation.strictModeLabel')} • {t('presentation.wordsCount', { count: speech.text_original.split(/\s+/).length })}
+              {t('presentation.wholeSpeechModeLabel', 'Whole Speech Mode')} • {t('presentation.wordsCount', { count: speech.text_original.split(/\s+/).length })}
             </p>
           </div>
 
