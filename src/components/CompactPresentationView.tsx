@@ -398,9 +398,10 @@ export const CompactPresentationView = ({
           haptics.trigger('progress');
         }
       } else {
-        // Check for skipped words (lookahead)
+        // Check for skipped words (lookahead) — allow generous skipping so users
+        // can jump over filler/connector words and the index never gets stuck.
         let foundAhead = false;
-        for (let i = 1; i <= 3 && localIndex + i < words.length; i++) {
+        for (let i = 1; i <= 8 && localIndex + i < words.length; i++) {
           const aheadWord = words[localIndex + i];
           if (getWordSimilarity(spokenWord, aheadWord) >= 0.5) {
             for (let j = 0; j < i; j++) {
