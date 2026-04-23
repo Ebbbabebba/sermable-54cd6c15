@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { initializePaddle, getPaddleEnvironment } from "@/lib/paddle";
+import { isIOSNativeApp, triggerNativeIAP } from "@/lib/iosBridge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -427,8 +428,16 @@ const PaymentSettings = () => {
                     disabled={!selectedPlan || checkoutLoading}
                     onClick={async () => {
                       if (!selectedPlan) return;
-                      
-                      // Determine the right price ID
+
+                      // iOS native app: route to StoreKit IAP via the bridge.
+                      // Apple requires digital subscriptions to use IAP, not Paddle.
+                      // Student pricing is web-only (see PaymentSettings notes).
+                      if (isIOSNativeApp()) {
+                        triggerNativeIAP(selectedPlan === 'annual' ? 'buyYearly' : 'buyMonthly');
+                        return;
+                      }
+
+                      // Web (and Android): use Paddle checkout.
                       let priceId: string;
                       if (showStudentPricing) {
                         priceId = selectedPlan === 'annual' ? 'student_yearly' : 'student_monthly';
@@ -455,8 +464,8 @@ const PaymentSettings = () => {
                     {checkoutLoading ? "Loading..." : t('settings.subscription.upgradeCta')}
                   </Button>
 
-                  {/* Student link */}
-                  {!showStudentPricing && (
+                  {/* Student link – web only. On iOS, students upgrade via sermable.se. */}
+                  {!showStudentPricing && !isIOSNativeApp() && (
                     <button
                       onClick={() => setShowStudentPricing(true)}
                       className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
