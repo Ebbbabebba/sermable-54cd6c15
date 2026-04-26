@@ -1,28 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Crown, CreditCard, Receipt, Check, GraduationCap, Zap, FileStack, Presentation, BarChart3, ChevronDown, AlertTriangle, ExternalLink } from "lucide-react";
+import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { initializePaddle, getPaddleEnvironment } from "@/lib/paddle";
 import { isIOSNativeApp, triggerNativeIAP } from "@/lib/iosBridge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
@@ -32,34 +16,16 @@ const PaymentSettings = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | null>(null);
-  const [showStudentPricing, setShowStudentPricing] = useState(false);
-  const [showCancelSection, setShowCancelSection] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | undefined>();
-  const [userId, setUserId] = useState<string | undefined>();
-  const [searchParams] = useSearchParams();
-  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+  const isIOS = isIOSNativeApp();
 
-  const isPremium = subscriptionTier === 'regular' || subscriptionTier === 'student' || subscriptionTier === 'enterprise';
-
-  // Show success toast if returning from checkout
-  useEffect(() => {
-    if (searchParams.get('checkout') === 'success') {
-      toast({
-        title: "🎉 Welcome to Premium!",
-        description: "Your subscription is being activated. It may take a moment.",
-      });
-    }
-  }, [searchParams]);
+  const isPremium = subscriptionTier !== 'free';
 
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-
-        setUserEmail(user.email || undefined);
-        setUserId(user.id);
 
         const { data: profile } = await supabase
           .from("profiles")
@@ -78,6 +44,18 @@ const PaymentSettings = () => {
     loadUserData();
   }, []);
 
+  const handleUpgrade = () => {
+    if (isIOS) {
+      triggerNativeIAP(selectedPlan === 'yearly' ? 'buyYearly' : 'buyMonthly');
+      return;
+    }
+
+    toast({
+      title: "Upgrade in the iOS app",
+      description: "Premium subscriptions are available through the Sermable iOS app on the App Store.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
@@ -89,443 +67,155 @@ const PaymentSettings = () => {
         </div>
       </header>
 
-      <PaymentTestModeBanner />
-
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
+      <main className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="space-y-6">
           <div className="animate-fade-in">
-            <h1 className="text-4xl font-bold mb-2">{t('settings.payment.title')}</h1>
+            <h1 className="text-4xl font-bold mb-2">Sermable Premium</h1>
             <p className="text-muted-foreground">
-              {t('settings.payment.subtitle')}
+              Unlock the full Sermable experience.
             </p>
           </div>
 
           {isPremium ? (
-            <>
-              {/* Premium Status */}
-              <Card className="border-0 bg-gradient-to-br from-amber-500/10 via-background to-orange-500/10">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
-                      <Crown className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle>{t('settings.subscription.youArePremium')}</CardTitle>
-                      <CardDescription>{t('settings.subscription.premiumDesc')}</CardDescription>
-                    </div>
+            <Card className="border-0 bg-gradient-to-br from-amber-500/10 via-background to-orange-500/10">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
+                    <Crown className="h-5 w-5 text-white" />
                   </div>
-                </CardHeader>
-              </Card>
-
-              {/* Payment History */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Receipt className="h-5 w-5 text-primary" />
-                    <CardTitle>{t('settings.subscription.paymentHistory')}</CardTitle>
+                  <div>
+                    <CardTitle>You are Premium</CardTitle>
+                    <CardDescription>
+                      Manage or cancel your subscription in your Apple ID settings.
+                    </CardDescription>
                   </div>
-                  <CardDescription>
-                    {t('settings.payment.viewPayments')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="rounded-xl bg-card border p-4 space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t('settings.subscription.lastPayment')}</span>
-                      <span className="font-medium">€7.90 - 11 jan 2026</span>
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{t('settings.subscription.nextPayment')}</span>
-                      <span className="font-medium">€7.90 - 11 feb 2026</span>
-                    </div>
-                  </div>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        try {
-                          const env = getPaddleEnvironment();
-                          const { data: sub } = await supabase
-                            .from('subscriptions')
-                            .select('paddle_subscription_id, paddle_customer_id')
-                            .eq('user_id', userId!)
-                            .eq('environment', env)
-                            .single();
-                          
-                          if (sub) {
-                            await initializePaddle();
-                            // Open Paddle customer portal
-                            window.open(`https://customer-portal.paddle.com/cpl_${sub.paddle_customer_id}`, '_blank');
-                          }
-                        } catch {
-                          toast({
-                            title: "Could not open billing portal",
-                            description: "Please try again later.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Manage Billing
-                    </Button>
-                </CardContent>
-              </Card>
-
-              {/* Hidden Cancel Section - requires extra click */}
-              <Collapsible open={showCancelSection} onOpenChange={setShowCancelSection}>
-                <Card className="border-muted">
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                          <CardTitle className="text-base font-normal text-muted-foreground">
-                            {t('settings.payment.moreOptions')}
-                          </CardTitle>
-                        </div>
-                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showCancelSection ? 'rotate-180' : ''}`} />
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="pt-0 space-y-4">
-                      <Separator />
-                      <div className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          {t('settings.payment.cancelInfo')}
-                        </p>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                            >
-                              {t('settings.subscription.cancelSubscription')}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{t('settings.subscription.cancelConfirmTitle')}</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {t('settings.subscription.cancelConfirmDesc')}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                onClick={async () => {
-                                  try {
-                                    const env = getPaddleEnvironment();
-                                    const { error } = await supabase.functions.invoke("cancel-subscription", {
-                                      body: { environment: env },
-                                    });
-                                    if (error) throw error;
-                                    setSubscriptionTier('free');
-                                    toast({
-                                      title: "Subscription cancelled",
-                                      description: "Your premium access has been revoked.",
-                                    });
-                                  } catch (err) {
-                                    console.error("Cancel error:", err);
-                                    toast({
-                                      title: "Error",
-                                      description: "Could not cancel subscription. Please try again.",
-                                      variant: "destructive",
-                                    });
-                                  }
-                                }}
-                              >
-                                {t('settings.subscription.confirmCancel')}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        <p className="text-xs text-muted-foreground">
-                          {t('settings.subscription.cancelNote')}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            </>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    window.open('https://apps.apple.com/account/subscriptions', '_blank');
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Manage subscription in App Store
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
-            /* Free User View - Upgrade Options */
-            <>
-              <Card className="border-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/10 rounded-full blur-2xl" />
-                
-                <CardHeader className="relative pb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
-                      <Crown className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">{t('settings.subscription.upgradeToPremium')}</CardTitle>
-                      <CardDescription className="text-xs">
-                        {t('settings.subscription.description')}
-                      </CardDescription>
-                    </div>
+            <Card className="border-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+
+              <CardHeader className="relative pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
+                    <Crown className="h-5 w-5 text-primary-foreground" />
                   </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-5 relative">
-                  {/* Key benefits */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                        <FileStack className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.unlimitedSpeeches')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.noLimits')}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
-                        <Presentation className="h-4 w-4 text-accent-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.presentationMode')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.fullRunthrough')}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                        <Zap className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.overrideLock')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.practiceAnytime')}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                      <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
-                        <BarChart3 className="h-4 w-4 text-accent-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{t('settings.subscription.advancedAnalytics')}</p>
-                        <p className="text-xs text-muted-foreground">{t('settings.subscription.deepInsights')}</p>
-                      </div>
-                    </div>
+                  <div>
+                    <CardTitle className="text-xl">Upgrade to Premium</CardTitle>
+                    <CardDescription className="text-xs">
+                      Everything you need to memorize any speech.
+                    </CardDescription>
                   </div>
+                </div>
+              </CardHeader>
 
-                  {/* Pricing Cards */}
-                  <div className="space-y-3 pt-2">
-                    {showStudentPricing ? (
-                      <>
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                          <GraduationCap className="h-4 w-4 text-primary" />
-                          <p className="text-sm font-medium text-primary">{t('settings.subscription.studentPricing')}</p>
-                        </div>
-                        
-                        <button
-                          onClick={() => setSelectedPlan('annual')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
-                            selectedPlan === 'annual'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
-                            selectedPlan === 'annual' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
-                          }`}>
-                            {t('settings.subscription.bestValue')}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.studentAnnual')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€3.33</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                            <p className="text-xs opacity-60 mt-1">€39.90 {t('settings.subscription.billedYearly')}</p>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => setSelectedPlan('monthly')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left ${
-                            selectedPlan === 'monthly'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.studentMonthly')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€3.90</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                          </div>
-                        </button>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowStudentPricing(false)}
-                          className="w-full text-muted-foreground"
-                        >
-                          {t('settings.subscription.backToRegular')}
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setSelectedPlan('annual')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
-                            selectedPlan === 'annual'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
-                            selectedPlan === 'annual' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
-                          }`}>
-                            {t('settings.subscription.mostPopular')}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.annual')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€6.66</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                            <p className="text-xs opacity-60 mt-1">€79.90 {t('settings.subscription.billedYearly')} · {t('settings.subscription.save')} 33%</p>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => setSelectedPlan('monthly')}
-                          className={`w-full p-4 rounded-2xl transition-all text-left ${
-                            selectedPlan === 'monthly'
-                              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                              : 'bg-card border-2 border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-sm font-medium opacity-80">{t('settings.subscription.monthly')}</p>
-                            <div className="flex items-baseline gap-2 mt-1">
-                              <p className="text-3xl font-bold">€7.90</p>
-                              <p className="text-sm opacity-70">/{t('settings.subscription.month')}</p>
-                            </div>
-                          </div>
-                        </button>
-                      </>
-                    )}
+              <CardContent className="space-y-5 relative">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                    <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                      <FileStack className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium">Unlimited speeches</p>
                   </div>
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                    <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
+                      <Presentation className="h-4 w-4 text-accent-foreground" />
+                    </div>
+                    <p className="text-sm font-medium">Presentation mode</p>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                    <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
+                      <Zap className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium">Practice anytime</p>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
+                    <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
+                      <BarChart3 className="h-4 w-4 text-accent-foreground" />
+                    </div>
+                    <p className="text-sm font-medium">Advanced analytics</p>
+                  </div>
+                </div>
 
-                  {/* CTA Button */}
-                  <Button
-                    className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20"
-                    size="lg"
-                    disabled={!selectedPlan || checkoutLoading}
-                    onClick={async () => {
-                      if (!selectedPlan) return;
-
-                      // iOS native app: route to StoreKit IAP via the bridge.
-                      // Apple requires digital subscriptions to use IAP, not Paddle.
-                      // Student pricing is web-only (see PaymentSettings notes).
-                      if (isIOSNativeApp()) {
-                        triggerNativeIAP(selectedPlan === 'annual' ? 'buyYearly' : 'buyMonthly');
-                        return;
-                      }
-
-                      // Web (and Android): use Paddle checkout.
-                      let priceId: string;
-                      if (showStudentPricing) {
-                        priceId = selectedPlan === 'annual' ? 'student_yearly' : 'student_monthly';
-                      } else {
-                        priceId = selectedPlan === 'annual' ? 'regular_yearly' : 'regular_monthly';
-                      }
-
-                      try {
-                        await openCheckout({
-                          priceId,
-                          customerEmail: userEmail,
-                          customData: { userId: userId || '' },
-                        });
-                      } catch (error) {
-                        toast({
-                          title: "Checkout error",
-                          description: "Could not open checkout. Please try again.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
+                <div className="space-y-3 pt-2">
+                  <button
+                    onClick={() => setSelectedPlan('yearly')}
+                    className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
+                      selectedPlan === 'yearly'
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                        : 'bg-card border-2 border-border hover:border-primary/50'
+                    }`}
                   >
-                    <Zap className="h-4 w-4 mr-2" />
-                    {checkoutLoading ? "Loading..." : t('settings.subscription.upgradeCta')}
-                  </Button>
+                    <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
+                      selectedPlan === 'yearly' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
+                    }`}>
+                      Best value
+                    </div>
+                    <p className="text-sm font-medium opacity-80">Yearly</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <p className="text-3xl font-bold">799 SEK</p>
+                      <p className="text-sm opacity-70">/year</p>
+                    </div>
+                    <p className="text-xs opacity-60 mt-1">≈ 66 SEK/month</p>
+                  </button>
 
-                  {/* Student link – web only. On iOS, students upgrade via sermable.se. */}
-                  {!showStudentPricing && !isIOSNativeApp() && (
-                    <button
-                      onClick={() => setShowStudentPricing(true)}
-                      className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <GraduationCap className="h-3.5 w-3.5" />
-                      {t('settings.subscription.studentButton')}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setSelectedPlan('monthly')}
+                    className={`w-full p-4 rounded-2xl transition-all text-left ${
+                      selectedPlan === 'monthly'
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                        : 'bg-card border-2 border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <p className="text-sm font-medium opacity-80">Monthly</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <p className="text-3xl font-bold">99 SEK</p>
+                      <p className="text-sm opacity-70">/month</p>
+                    </div>
+                  </button>
+                </div>
 
-                  {/* Trust badges */}
-                  <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Check className="h-3 w-3" /> {t('settings.subscription.cancelAnytime')}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Check className="h-3 w-3" /> {t('settings.subscription.securePayment')}
-                    </span>
+                <Button
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  onClick={handleUpgrade}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  {isIOS ? 'Upgrade with Apple Pay' : 'Get Premium'}
+                </Button>
+
+                {!isIOS && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Premium subscriptions are available in the Sermable iOS app on the App Store.
+                  </p>
+                )}
+
+                <div className="space-y-1.5 pt-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-primary shrink-0" />
+                    <span>Cancel anytime in your Apple ID settings</span>
                   </div>
-                </CardContent>
-              </Card>
-            </>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-primary shrink-0" />
+                    <span>Subscription auto-renews until canceled</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
-          {/* Legal & Policies */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-primary" />
-                <CardTitle>{t('settings.legal.termsTitle')}</CardTitle>
-              </div>
-              <CardDescription>
-                {t('settings.legal.termsDescription')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => window.open('/terms', '_blank')}
-              >
-                <span>{t('settings.legal.termsOfService')}</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => window.open('/privacy', '_blank')}
-              >
-                <span>{t('settings.legal.privacyPolicy')}</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                onClick={() => window.open('/refund-policy', '_blank')}
-              >
-                <span>{t('settings.legal.refundPolicy', 'Refund Policy')}</span>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </main>
     </div>
