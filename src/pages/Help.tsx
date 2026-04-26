@@ -170,22 +170,14 @@ const Help = () => {
             </CardTitle>
             <CardDescription>{t('help.contactDescription')}</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-3">
+          <CardContent>
             <Button
               variant="outline"
-              className="flex-1 justify-start"
+              className="w-full justify-start"
               onClick={() => window.location.href = 'mailto:support@sermable.com'}
             >
               <Mail className="h-4 w-4 mr-2" />
               {t('help.emailSupport')}
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 justify-start"
-              onClick={() => window.open('https://discord.gg/sermable', '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              {t('help.joinDiscord')}
             </Button>
           </CardContent>
         </Card>
