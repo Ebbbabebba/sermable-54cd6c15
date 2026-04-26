@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { getPaddleEnvironment } from "@/lib/paddle";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
@@ -36,7 +35,6 @@ export const useSubscription = () => {
 
     loadSubscription();
 
-    // Listen for realtime changes to profile tier
     const channel = supabase
       .channel('subscription-changes')
       .on(
