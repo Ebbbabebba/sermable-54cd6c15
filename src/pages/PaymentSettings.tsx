@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isIOSNativeApp, triggerNativeIAP, getNativePrices } from "@/lib/iosBridge";
@@ -206,7 +207,7 @@ const PaymentSettings = () => {
                   onClick={handleUpgrade}
                 >
                   <Crown className="h-4 w-4 mr-2" />
-                  {isIOS ? 'Upgrade with Apple Pay' : 'Get Premium'}
+                  {isIOS ? 'Subscribe' : 'Get Premium'}
                 </Button>
 
                 {!isIOS && (
@@ -216,13 +217,19 @@ const PaymentSettings = () => {
                 )}
 
                 <div className="space-y-1.5 pt-2 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-3 w-3 text-primary shrink-0" />
-                    <span>Cancel anytime in your Apple ID settings</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-3 w-3 text-primary shrink-0" />
-                    <span>Subscription auto-renews until canceled</span>
+                  <p>
+                    Payment will be charged to your Apple ID account at confirmation of purchase.
+                    Subscription automatically renews unless auto-renew is turned off at least 24 hours
+                    before the end of the current period. Manage or cancel anytime in your Apple ID
+                    account settings.
+                  </p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
+                    <Link to="/terms" className="underline hover:text-foreground">
+                      Terms of Use (EULA)
+                    </Link>
+                    <Link to="/privacy" className="underline hover:text-foreground">
+                      Privacy Policy
+                    </Link>
                   </div>
                 </div>
               </CardContent>
