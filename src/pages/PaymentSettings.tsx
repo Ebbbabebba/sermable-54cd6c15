@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { isIOSNativeApp, triggerNativeIAP } from "@/lib/iosBridge";
+import { isIOSNativeApp, triggerNativeIAP, getNativePrices } from "@/lib/iosBridge";
 import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
@@ -18,6 +18,7 @@ const PaymentSettings = () => {
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const isIOS = isIOSNativeApp();
+  const [prices, setPrices] = useState<{ monthly?: string; yearly?: string }>(getNativePrices());
 
   const isPremium = subscriptionTier !== 'free';
 
@@ -43,6 +44,15 @@ const PaymentSettings = () => {
 
     loadUserData();
   }, []);
+
+  // Fetch localized App Store prices and listen for native updates
+  useEffect(() => {
+    if (!isIOS) return;
+    triggerNativeIAP('fetchPrices');
+    const onUpdate = () => setPrices({ ...getNativePrices() });
+    window.addEventListener('iap-prices-updated', onUpdate);
+    return () => window.removeEventListener('iap-prices-updated', onUpdate);
+  }, [isIOS]);
 
   const handleUpgrade = () => {
     if (isIOS) {
@@ -166,10 +176,12 @@ const PaymentSettings = () => {
                     </div>
                     <p className="text-sm font-medium opacity-80">Yearly</p>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <p className="text-3xl font-bold">799 SEK</p>
+                      <p className="text-3xl font-bold">{prices.yearly ?? '799 SEK'}</p>
                       <p className="text-sm opacity-70">/year</p>
                     </div>
-                    <p className="text-xs opacity-60 mt-1">≈ 66 SEK/month</p>
+                    {!prices.yearly && (
+                      <p className="text-xs opacity-60 mt-1">≈ 66 SEK/month</p>
+                    )}
                   </button>
 
                   <button
@@ -182,7 +194,7 @@ const PaymentSettings = () => {
                   >
                     <p className="text-sm font-medium opacity-80">Monthly</p>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <p className="text-3xl font-bold">99 SEK</p>
+                      <p className="text-3xl font-bold">{prices.monthly ?? '99 SEK'}</p>
                       <p className="text-sm opacity-70">/month</p>
                     </div>
                   </button>
