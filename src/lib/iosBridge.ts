@@ -2,9 +2,13 @@
 //
 // On iOS, Apple requires digital subscriptions to be sold through StoreKit IAP.
 // The native iOS app (Swift) registers a WKScriptMessageHandler named "iapHandler"
-// that listens for "buyMonthly" / "buyYearly" messages and triggers StoreKit.
+// that listens for "buyMonthly" / "buyYearly" / "fetchPrices" messages.
 //
-// On the web (and on Android), this bridge is absent and we fall back to Paddle.
+// For localized prices, the native side calls back via:
+//   window.__iapPrices = { monthly: "99 kr", yearly: "799 kr" }
+//   window.dispatchEvent(new CustomEvent("iap-prices-updated"))
+//
+// On the web (and on Android), this bridge is absent.
 
 declare global {
   interface Window {
@@ -14,6 +18,10 @@ declare global {
           postMessage: (message: string) => void;
         };
       };
+    };
+    __iapPrices?: {
+      monthly?: string;
+      yearly?: string;
     };
   }
 }
@@ -27,12 +35,21 @@ export function isIOSNativeApp(): boolean {
   return Boolean(window.webkit?.messageHandlers?.iapHandler);
 }
 
-export type IAPProduct = "buyMonthly" | "buyYearly";
+export type IAPMessage = "buyMonthly" | "buyYearly" | "fetchPrices";
 
 /**
  * Trigger a native In-App Purchase via the iOS bridge.
  * Caller should first check `isIOSNativeApp()`.
  */
-export function triggerNativeIAP(product: IAPProduct): void {
-  window.webkit?.messageHandlers?.iapHandler?.postMessage(product);
+export function triggerNativeIAP(message: IAPMessage): void {
+  window.webkit?.messageHandlers?.iapHandler?.postMessage(message);
+}
+
+/**
+ * Read the localized prices the native iOS app pushed onto window.
+ * Returns undefined fields when the native side hasn't responded yet.
+ */
+export function getNativePrices(): { monthly?: string; yearly?: string } {
+  if (typeof window === "undefined") return {};
+  return window.__iapPrices ?? {};
 }
