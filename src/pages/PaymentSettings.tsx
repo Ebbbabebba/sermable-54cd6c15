@@ -18,6 +18,7 @@ const PaymentSettings = () => {
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const isIOS = isIOSNativeApp();
+  const [prices, setPrices] = useState<{ monthly?: string; yearly?: string }>(getNativePrices());
 
   const isPremium = subscriptionTier !== 'free';
 
