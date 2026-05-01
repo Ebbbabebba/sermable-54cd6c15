@@ -40,6 +40,7 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/help" element={<Help />} />
+          <Route path="/support" element={<Help />} />
           <Route path="/share/:token" element={<SharedSpeech />} />
           <Route path="/delete-account" element={<DeleteAccountRequest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
