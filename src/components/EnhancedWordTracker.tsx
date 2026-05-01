@@ -508,7 +508,7 @@ const EnhancedWordTracker = ({
                   transcribedWord + newWords[newWordIdx + 1],
                   targetWords[scriptPosition + lookAhead]
                 );
-                if (twoWordLookAhead >= 0.75 && twoWordLookAhead > lookAheadSimilarity) {
+                if (twoWordLookAhead >= 0.85 && twoWordLookAhead > lookAheadSimilarity) {
                   lookAheadSimilarity = twoWordLookAhead;
                   lookAheadWordsConsumed = 2;
                 }
