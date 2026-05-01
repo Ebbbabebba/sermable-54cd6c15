@@ -51,7 +51,28 @@ const normalizeNordic = (text: string): string => {
     .replace(/[^\wåäöæøéèêëàáâãäüïîôûùúñçšž\s]/gi, ""); // Keep spaces!
 };
 
-// Calculate word similarity score (0-1) for pronunciation matching - STRICT to prevent premature matching
+// True Levenshtein edit distance (catches actual phonetic similarity, not positional accidents)
+const editDistance = (a: string, b: string): number => {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const dp: number[] = new Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) dp[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1]
+        ? prev
+        : 1 + Math.min(prev, dp[j], dp[j - 1]);
+      prev = tmp;
+    }
+  }
+  return dp[b.length];
+};
+
+// Calculate word similarity (0-1) using Levenshtein. STRICT — wrong words must NOT match.
 const getWordSimilarity = (word1: string, word2: string): number => {
   const w1 = normalizeNordic(word1);
   const w2 = normalizeNordic(word2);
@@ -59,36 +80,27 @@ const getWordSimilarity = (word1: string, word2: string): number => {
   // Exact match
   if (w1 === w2) return 1.0;
 
-  // Very short words (3 chars or less) must match exactly
-  if (w1.length <= 3 || w2.length <= 3) {
+  // Short words (≤4 chars) must match exactly — too easy to confuse otherwise
+  if (w1.length <= 4 || w2.length <= 4) {
     return w1 === w2 ? 1.0 : 0.0;
   }
 
-  // Don't match if lengths are too different (prevents partial words matching)
+  // Length must be close — wrong words often have very different lengths
   const maxLen = Math.max(w1.length, w2.length);
   const minLen = Math.min(w1.length, w2.length);
-  if (minLen < maxLen * 0.75) return 0.0;
+  if (minLen < maxLen * 0.8) return 0.0;
 
-  // Prefix matching only for very similar lengths (95%+ length match)
-  if (minLen / maxLen >= 0.95) {
-    if (w1.startsWith(w2) || w2.startsWith(w1)) return 0.95;
-  }
+  // Use real edit distance — only allow 1 edit for medium words, 2 for long words
+  const dist = editDistance(w1, w2);
+  const maxAllowedEdits = maxLen >= 8 ? 2 : 1;
+  if (dist > maxAllowedEdits) return 0.0;
 
-  // Character-by-character similarity - stricter scoring
-  let matches = 0;
-  const compareLength = Math.min(w1.length, w2.length);
-  for (let i = 0; i < compareLength; i++) {
-    if (w1[i] === w2[i]) matches++;
-  }
-
-  // Require at least 80% character match for any similarity score
-  const similarity = matches / Math.max(w1.length, w2.length);
-  return similarity >= 0.8 ? similarity : 0.0;
+  return 1 - dist / maxLen;
 };
 
-// Check if words are similar enough to be considered a match - VERY STRICT threshold
+// Words match only on near-perfect similarity (prevents wrong word acceptance)
 const isSimilarWord = (word1: string, word2: string): boolean => {
-  return getWordSimilarity(word1, word2) >= 0.85; // 85% threshold - stricter to prevent premature matching
+  return getWordSimilarity(word1, word2) >= 0.88;
 };
 
 const isKeywordWord = (word: string): boolean => {
