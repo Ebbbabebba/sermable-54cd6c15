@@ -45,6 +45,15 @@ const PaymentSettings = () => {
     loadUserData();
   }, []);
 
+  // Fetch localized App Store prices and listen for native updates
+  useEffect(() => {
+    if (!isIOS) return;
+    triggerNativeIAP('fetchPrices');
+    const onUpdate = () => setPrices({ ...getNativePrices() });
+    window.addEventListener('iap-prices-updated', onUpdate);
+    return () => window.removeEventListener('iap-prices-updated', onUpdate);
+  }, [isIOS]);
+
   const handleUpgrade = () => {
     if (isIOS) {
       triggerNativeIAP(selectedPlan === 'yearly' ? 'buyYearly' : 'buyMonthly');
