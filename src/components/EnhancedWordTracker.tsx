@@ -514,7 +514,7 @@ const EnhancedWordTracker = ({
                 }
               }
 
-              if (lookAheadSimilarity >= 0.75) {
+              if (lookAheadSimilarity >= 0.88) {
                 // Mark skipped words - but NEVER mark hidden words as "missed", only as "hesitated"
                 if (lookAhead >= 1) {
                   console.log(
