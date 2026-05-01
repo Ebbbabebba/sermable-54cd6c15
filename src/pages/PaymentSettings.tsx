@@ -176,11 +176,11 @@ const PaymentSettings = () => {
                     </div>
                     <p className="text-sm font-medium opacity-80">Yearly</p>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <p className="text-3xl font-bold">{prices.yearly ?? '799 SEK'}</p>
+                      <p className="text-3xl font-bold">{prices.yearly ?? '299 kr'}</p>
                       <p className="text-sm opacity-70">/year</p>
                     </div>
                     {!prices.yearly && (
-                      <p className="text-xs opacity-60 mt-1">≈ 66 SEK/month</p>
+                      <p className="text-xs opacity-60 mt-1">≈ 25 kr/month</p>
                     )}
                   </button>
 
