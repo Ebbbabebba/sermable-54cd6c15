@@ -259,7 +259,7 @@ const EnhancedWordTracker = ({
       // Min-time guard: don't process if we just marked a word recently
       // This prevents marking words faster than physically possible to speak
       const timeSinceLastMark = Date.now() - lastWordMarkedTime.current;
-      const minGap = medianInterval > 0 ? Math.max(80, medianInterval * 0.4) : 80; // 40% of median pace, min 80ms
+      const minGap = medianInterval > 0 ? Math.max(180, medianInterval * 0.6) : 200; // 60% of median pace, min 180ms — prevents too-fast acceptance
       if (timeSinceLastMark < minGap && lastWordMarkedTime.current > 0) {
         return; // Too soon since last word was marked
       }
