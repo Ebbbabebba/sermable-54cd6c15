@@ -356,10 +356,10 @@ const EnhancedWordTracker = ({
 
           // Check for compound hyphenated words (e.g., "all-consuming" matches "all consuming")
           let wordsConsumed = 1;
-          // STRICTER: Require 80%+ similarity for match, or auto-accept hard words (numbers, years)
-          if ((hardWord && transcribedWord.length > 0) || similarity >= 0.80 || 
+          // STRICT: Require 88%+ similarity (≈1 edit). Hard words (numbers/years) auto-accept on any speech.
+          if ((hardWord && transcribedWord.length > 0) || similarity >= 0.88 || 
               (newWordIdx + 1 < newWords.length && 
-               getWordSimilarity(transcribedWord + newWords[newWordIdx + 1], targetWord) >= 0.80)) {
+               getWordSimilarity(transcribedWord + newWords[newWordIdx + 1], targetWord) >= 0.88)) {
             
             // Check if this is a hyphenated word split across two spoken words
             if (newWordIdx + 1 < newWords.length) {
