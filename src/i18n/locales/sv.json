@@ -812,7 +812,8 @@
     "coffee_break_desc": "Bra jobbat! Ta en 10-minuters paus så att hjärnan kan befästa det du just lärt dig. En snabb återkallning startar när tiden löper ut.",
     "coffee_notification": "Du får en notis när det är dags att öva",
     "coffee_tip": "Tips: Ta en kort promenad eller hämta en kopp kaffe!",
-    "skip_break": "Starta återkallning nu"
+    "skip_break": "Starta återkallning nu",
+    "skip_break_locked": "Hoppa över pausen"
   },
   "presentation": {
     "settings": "Presentationsinställningar",
