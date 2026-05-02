@@ -179,28 +179,20 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
 
       <Card className="border-0 bg-card/60">
         <CardContent className="p-2 sm:p-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
+          {loading || generating ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              {generating && (
+                <p className="text-sm text-muted-foreground">
+                  {t("calendar.generating")}
+                </p>
+              )}
             </div>
           ) : events.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
               <p className="text-sm text-muted-foreground max-w-xs">
-                {t("calendar.empty")}
+                {goalDate ? t("calendar.empty") : t("calendar.noDeadlineDescription")}
               </p>
-              <Button onClick={handleGenerate} disabled={generating || !goalDate}>
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t("calendar.generating")}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {t("calendar.generate")}
-                  </>
-                )}
-              </Button>
             </div>
           ) : (
             <Calendar
