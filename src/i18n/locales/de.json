@@ -508,5 +508,43 @@
     "startWithAudience": "Mit Publikum starten",
     "unlockPremium": "Premium freischalten",
     "switchModes": "Du kannst den Modus jederzeit vor Beginn deiner Präsentation wechseln"
+  },
+  "calendar": {
+    "practice": "Übung",
+    "recall": "Recall",
+    "test": "Komplett",
+    "presentationDay": "Präsentationstag",
+    "completed": "Erledigt",
+    "done": "Fertig",
+    "today": "Heute",
+    "start": "Start",
+    "restDay": "Ruhetag — keine geplanten Einheiten.",
+    "noSessions": "Keine Einheiten",
+    "plannedSessions_one": "{{count}} geplante Einheit",
+    "plannedSessions_other": "{{count}} geplante Einheiten",
+    "empty": "Noch kein Plan. Erstelle einen basierend auf deiner Frist.",
+    "generate": "Plan erstellen",
+    "generating": "Wird erstellt…",
+    "generated": "Plan erstellt",
+    "generatedDescription": "{{count}} kommende Einheiten erstellt.",
+    "generateFailed": "Plan konnte nicht erstellt werden",
+    "regenerate": "Neu erstellen",
+    "noDeadlineTitle": "Keine Frist gesetzt",
+    "noDeadlineDescription": "Füge ein Zieldatum hinzu, um einen Übungsplan zu erstellen."
+  },
+  "speechDetail": {
+    "notFound": "Rede nicht gefunden",
+    "practice": "Üben",
+    "present": "Präsentieren",
+    "scriptPreview": "Skript",
+    "wordCount_one": "{{count}} Wort",
+    "wordCount_other": "{{count}} Wörter",
+    "daysLeft_one": "{{count}} Tag übrig",
+    "daysLeft_other": "{{count}} Tage übrig",
+    "lastAccuracy": "Letzte Genauigkeit {{value}}%",
+    "tabs": {
+      "overview": "Übersicht",
+      "calendar": "Kalender"
+    }
   }
 }

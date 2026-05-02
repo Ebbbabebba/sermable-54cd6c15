@@ -8,6 +8,7 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import Practice from "./pages/Practice";
 import Presentation from "./pages/Presentation";
+import SpeechDetail from "./pages/SpeechDetail";
 import Settings from "./pages/Settings";
 import PaymentSettings from "./pages/PaymentSettings";
 import AccountSettings from "./pages/AccountSettings";
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/practice/:id" element={<Practice />} />
           <Route path="/presentation/:id" element={<Presentation />} />
+          <Route path="/speech/:id" element={<SpeechDetail />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/settings/payment" element={<PaymentSettings />} />
           <Route path="/settings/account" element={<AccountSettings />} />

@@ -174,15 +174,30 @@ function calculateSM2(
 }
 
 function getMaxIntervalForDeadline(daysUntilDeadline: number): number {
-  if (daysUntilDeadline <= 0) return 30; // 30 min max if past deadline
-  if (daysUntilDeadline === 1) return 60; // 1 hour
-  if (daysUntilDeadline === 2) return 2 * 60; // 2 hours
-  if (daysUntilDeadline <= 3) return 4 * 60; // 4 hours
-  if (daysUntilDeadline <= 5) return 8 * 60; // 8 hours
-  if (daysUntilDeadline <= 7) return 12 * 60; // 12 hours
-  if (daysUntilDeadline <= 14) return 24 * 60; // 1 day
-  if (daysUntilDeadline <= 30) return 3 * 24 * 60; // 3 days
-  return 7 * 24 * 60; // 7 days max
+  // Softer caps: don't crush the difference between "good" and "easy" near deadline.
+  if (daysUntilDeadline <= 0) return 60;            // 1 hour
+  if (daysUntilDeadline === 1) return 4 * 60;       // 4 hours
+  if (daysUntilDeadline <= 3) return 12 * 60;       // 12 hours
+  if (daysUntilDeadline <= 7) return 24 * 60;       // 1 day
+  if (daysUntilDeadline <= 14) return 2 * 24 * 60;  // 2 days
+  if (daysUntilDeadline <= 30) return 5 * 24 * 60;  // 5 days
+  return 10 * 24 * 60;                              // 10 days max
+}
+
+// Auto-derive an SM-2 rating from session accuracy + word visibility.
+// Lets us skip asking the user to manually rate every session.
+function deriveRatingFromAccuracy(
+  accuracy: number,           // 0-1
+  visibilityPercent: number,  // 0-100, lower = more words hidden = harder
+): UserRating {
+  // Easy: perfect run with most words hidden
+  if (accuracy >= 0.98 && visibilityPercent <= 50) return 'easy';
+  // Good: solid performance
+  if (accuracy >= 0.90) return 'good';
+  // Hard: passable but bumpy
+  if (accuracy >= 0.75) return 'hard';
+  // Again: too many misses, schedule a fast retry
+  return 'again';
 }
 
 serve(async (req) => {
@@ -215,9 +230,28 @@ serve(async (req) => {
       );
     }
 
-    const { speechId, userRating, sessionAccuracy, wordVisibilityPercent = 100 } = await req.json();
-    
-    console.log('📚 SM-2 Update for speech:', speechId, 'Rating:', userRating, 'Accuracy:', sessionAccuracy);
+    const {
+      speechId,
+      userRating: rawUserRating,
+      sessionAccuracy,
+      wordVisibilityPercent = 100,
+    } = await req.json();
+
+    // Auto-derive rating from accuracy when the client doesn't pass one.
+    // accuracy comes in as 0-1 OR 0-100 depending on the caller — normalize.
+    const accuracyNormalized = typeof sessionAccuracy === 'number'
+      ? (sessionAccuracy > 1 ? sessionAccuracy / 100 : sessionAccuracy)
+      : 0;
+
+    const userRating: UserRating = (rawUserRating as UserRating | undefined)
+      ?? deriveRatingFromAccuracy(accuracyNormalized, wordVisibilityPercent);
+
+    console.log(
+      '📚 SM-2 Update for speech:', speechId,
+      'Rating:', userRating, '(rawUserRating:', rawUserRating, ')',
+      'Accuracy:', accuracyNormalized,
+      'Visibility%:', wordVisibilityPercent,
+    );
 
     // Verify user owns the speech
     const { data: speech, error: speechError } = await supabase
@@ -266,7 +300,7 @@ serve(async (req) => {
 
     // Calculate new schedule using SM-2
     const sm2Result = calculateSM2(
-      userRating as UserRating,
+      userRating,
       currentState,
       currentInterval,
       currentEaseFactor,
@@ -340,6 +374,48 @@ serve(async (req) => {
         base_word_visibility_percent: wordVisibilityPercent
       })
       .eq('id', speechId);
+
+    // Mark today's first non-completed calendar event as completed.
+    // Best-effort: failures here should NOT abort the SM-2 update.
+    try {
+      const todayISO = new Date().toISOString().split('T')[0];
+      const { data: todaysEvents } = await supabase
+        .from('speech_calendar_events')
+        .select('id')
+        .eq('speech_id', speechId)
+        .eq('user_id', user.id)
+        .eq('event_date', todayISO)
+        .eq('completed', false)
+        .order('event_type', { ascending: true })
+        .limit(1);
+
+      if (todaysEvents && todaysEvents.length > 0) {
+        await supabase
+          .from('speech_calendar_events')
+          .update({
+            completed: true,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', todaysEvents[0].id);
+      }
+    } catch (calErr) {
+      console.warn('Could not mark calendar event complete:', calErr);
+    }
+
+    // Regenerate the future calendar so it reflects the new pace.
+    // Best-effort — if it fails the user still gets the SM-2 response.
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/generate-speech-schedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ speechId }),
+      });
+    } catch (regenErr) {
+      console.warn('Could not regenerate calendar:', regenErr);
+    }
 
     // Format interval for display
     const formatInterval = (minutes: number): string => {

@@ -870,5 +870,43 @@
     "enterprise": "Enterprise",
     "student": "Student",
     "free": "Gratis"
+  },
+  "calendar": {
+    "practice": "Övning",
+    "recall": "Recall",
+    "test": "Helkörning",
+    "presentationDay": "Presentationsdag",
+    "completed": "Avklarad",
+    "done": "Klar",
+    "today": "Idag",
+    "start": "Starta",
+    "restDay": "Vilodag — inga inplanerade pass.",
+    "noSessions": "Inga pass",
+    "plannedSessions_one": "{{count}} inplanerat pass",
+    "plannedSessions_other": "{{count}} inplanerade pass",
+    "empty": "Inget schema än. Generera ett baserat på din deadline.",
+    "generate": "Generera schema",
+    "generating": "Genererar…",
+    "generated": "Schema skapat",
+    "generatedDescription": "Skapade {{count}} kommande pass.",
+    "generateFailed": "Kunde inte generera schema",
+    "regenerate": "Generera om",
+    "noDeadlineTitle": "Ingen deadline satt",
+    "noDeadlineDescription": "Lägg till ett måldatum för att skapa övningsschema."
+  },
+  "speechDetail": {
+    "notFound": "Talet hittades inte",
+    "practice": "Öva",
+    "present": "Presentera",
+    "scriptPreview": "Manus",
+    "wordCount_one": "{{count}} ord",
+    "wordCount_other": "{{count}} ord",
+    "daysLeft_one": "{{count}} dag kvar",
+    "daysLeft_other": "{{count}} dagar kvar",
+    "lastAccuracy": "Senaste resultat {{value}}%",
+    "tabs": {
+      "overview": "Översikt",
+      "calendar": "Kalender"
+    }
   }
 }

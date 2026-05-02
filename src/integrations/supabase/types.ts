@@ -883,6 +883,45 @@ export type Database = {
           },
         ]
       }
+      speech_calendar_events: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          event_date: string
+          event_type: string
+          id: string
+          session_id: string | null
+          speech_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          event_date: string
+          event_type: string
+          id?: string
+          session_id?: string | null
+          speech_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          id?: string
+          session_id?: string | null
+          speech_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       speech_phrases: {
         Row: {
           created_at: string | null
