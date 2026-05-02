@@ -2515,7 +2515,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     };
 
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+      <div
+        className="flex flex-col items-center h-full overflow-y-auto p-8 text-center gap-6"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}
+      >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
