@@ -4,11 +4,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Play, Mic, Target, Trophy, RefreshCw } from "lucide-react";
+import { Loader2, Play, Mic, Sparkles, Target, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { format, isSameDay, isAfter, startOfDay } from "date-fns";
+import { format, isAfter, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type EventType = "practice" | "recall" | "test" | "presentation";
@@ -36,7 +35,6 @@ const EVENT_ICONS: Record<EventType, typeof Mic> = {
 
 const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps) => {
   const { t } = useTranslation();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,8 +42,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [month, setMonth] = useState<Date>(new Date());
 
-  const loadEvents = async () => {
-    setLoading(true);
+  const loadEvents = async (): Promise<CalendarEvent[]> => {
     const { data, error } = await supabase
       .from("speech_calendar_events")
       .select("id, event_date, event_type, completed, completed_at")
@@ -54,49 +51,45 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
 
     if (error) {
       console.error("Failed to load calendar events:", error);
-    } else {
-      setEvents((data ?? []) as CalendarEvent[]);
+      return [];
     }
-    setLoading(false);
+    const list = (data ?? []) as CalendarEvent[];
+    setEvents(list);
+    return list;
   };
 
-  useEffect(() => {
-    loadEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speechId]);
-
-  const handleGenerate = async () => {
-    if (!goalDate) {
-      toast({
-        title: t("calendar.noDeadlineTitle"),
-        description: t("calendar.noDeadlineDescription"),
-        variant: "destructive",
-      });
-      return;
-    }
+  const autoGenerate = async () => {
+    if (!goalDate) return;
     setGenerating(true);
-    const { data, error } = await supabase.functions.invoke(
+    const { error } = await supabase.functions.invoke(
       "generate-speech-schedule",
       { body: { speechId } },
     );
-    setGenerating(false);
-    if (error || (data && (data as { error?: string }).error)) {
-      console.error("Generate failed:", error, data);
-      toast({
-        title: t("calendar.generateFailed"),
-        description: error?.message ?? (data as { error?: string })?.error ?? "",
-        variant: "destructive",
-      });
-      return;
+    if (error) {
+      console.error("Auto-generate schedule failed:", error);
+    } else {
+      await loadEvents();
     }
-    await loadEvents();
-    toast({
-      title: t("calendar.generated"),
-      description: t("calendar.generatedDescription", {
-        count: (data as { generated?: number })?.generated ?? 0,
-      }),
-    });
+    setGenerating(false);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const list = await loadEvents();
+      if (cancelled) return;
+      // Auto-generate if missing and we have a deadline
+      if (list.length === 0 && goalDate) {
+        await autoGenerate();
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speechId, goalDate]);
 
   // Group events by date for the day picker modifiers
   const eventsByDate = useMemo(() => {
@@ -184,28 +177,20 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
 
       <Card className="border-0 bg-card/60">
         <CardContent className="p-2 sm:p-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
+          {loading || generating ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              {generating && (
+                <p className="text-sm text-muted-foreground">
+                  {t("calendar.generating")}
+                </p>
+              )}
             </div>
           ) : events.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
               <p className="text-sm text-muted-foreground max-w-xs">
-                {t("calendar.empty")}
+                {goalDate ? t("calendar.empty") : t("calendar.noDeadlineDescription")}
               </p>
-              <Button onClick={handleGenerate} disabled={generating || !goalDate}>
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t("calendar.generating")}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {t("calendar.generate")}
-                  </>
-                )}
-              </Button>
             </div>
           ) : (
             <Calendar
@@ -239,17 +224,6 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                     : t("calendar.noSessions")}
                 </p>
               </div>
-              {!isSelectedFuture && events.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleGenerate}
-                  disabled={generating}
-                  title={t("calendar.regenerate")}
-                >
-                  <RefreshCw className={cn("h-4 w-4", generating && "animate-spin")} />
-                </Button>
-              )}
             </div>
 
             {selectedEvents.length > 0 ? (
