@@ -316,6 +316,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const transcriptRef = useRef<string>("");
   const transcriptWordsRef = useRef<string[]>([]);
   const runningTranscriptRef = useRef<string>("");
+  const latestSpeechResultCountRef = useRef(0);
+  const ignoreResultsBeforeIndexRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1754,6 +1756,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
+    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
     lastWordTimeRef.current = Date.now();
   };
 
