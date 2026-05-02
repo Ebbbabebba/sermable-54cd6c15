@@ -452,7 +452,6 @@ export const CompactPresentationView = ({
           // misrecognition doesn't flash red constantly.
           if (wrongAttempts.current.length >= 2) {
             setStatus('error');
-            haptics.trigger('error');
           }
         }
       }
