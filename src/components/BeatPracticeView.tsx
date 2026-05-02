@@ -543,7 +543,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     showCelebrationRef.current = showCelebration;
   }, [showCelebration]);
 
-  // Hard-stop + delay restart to prevent Web Speech from replaying buffered results
+  // Flush buffered transcripts WITHOUT aborting recognition. Aborting + restarting
+  // the Web Speech engine triggers the iOS/Safari microphone "ding" sound on every
+  // pause, which feels like a constant chime during practice. By keeping the
+  // recognizer running and just ignoring incoming results for `pauseMs`, we get
+  // the same de-bounce behavior silently.
   const pauseSpeechRecognition = (pauseMs: number) => {
     const until = Date.now() + pauseMs;
 
@@ -554,14 +558,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
 
-    if (recognitionRef.current && typeof recognitionRef.current.abort === "function") {
-      try {
-        recognitionRef.current.abort();
-      } catch {
-        // ignore
-      }
-    }
+    // NOTE: intentionally NOT calling recognitionRef.current.abort() here.
+    // The ignoreResultsUntilRef window already discards stale tokens, and skipping
+    // the abort avoids the system mic chime that plays on every restart.
   };
+
 
   // Get sentence number (1, 2, or 3) or combining indicator
   const getCurrentSentenceNumber = () => {
