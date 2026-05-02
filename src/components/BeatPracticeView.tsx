@@ -13,6 +13,7 @@ import BeatProgress from "./BeatProgress";
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
+import PremiumUpgradeDialog from "./PremiumUpgradeDialog";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
