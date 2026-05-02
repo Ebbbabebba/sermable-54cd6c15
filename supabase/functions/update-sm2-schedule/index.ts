@@ -375,6 +375,48 @@ serve(async (req) => {
       })
       .eq('id', speechId);
 
+    // Mark today's first non-completed calendar event as completed.
+    // Best-effort: failures here should NOT abort the SM-2 update.
+    try {
+      const todayISO = new Date().toISOString().split('T')[0];
+      const { data: todaysEvents } = await supabase
+        .from('speech_calendar_events')
+        .select('id')
+        .eq('speech_id', speechId)
+        .eq('user_id', user.id)
+        .eq('event_date', todayISO)
+        .eq('completed', false)
+        .order('event_type', { ascending: true })
+        .limit(1);
+
+      if (todaysEvents && todaysEvents.length > 0) {
+        await supabase
+          .from('speech_calendar_events')
+          .update({
+            completed: true,
+            completed_at: new Date().toISOString(),
+          })
+          .eq('id', todaysEvents[0].id);
+      }
+    } catch (calErr) {
+      console.warn('Could not mark calendar event complete:', calErr);
+    }
+
+    // Regenerate the future calendar so it reflects the new pace.
+    // Best-effort — if it fails the user still gets the SM-2 response.
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/generate-speech-schedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({ speechId }),
+      });
+    } catch (regenErr) {
+      console.warn('Could not regenerate calendar:', regenErr);
+    }
+
     // Format interval for display
     const formatInterval = (minutes: number): string => {
       if (minutes < 60) return `${Math.round(minutes)} minute${Math.round(minutes) !== 1 ? 's' : ''}`;
