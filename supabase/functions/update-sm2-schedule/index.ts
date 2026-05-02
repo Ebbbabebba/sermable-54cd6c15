@@ -174,15 +174,30 @@ function calculateSM2(
 }
 
 function getMaxIntervalForDeadline(daysUntilDeadline: number): number {
-  if (daysUntilDeadline <= 0) return 30; // 30 min max if past deadline
-  if (daysUntilDeadline === 1) return 60; // 1 hour
-  if (daysUntilDeadline === 2) return 2 * 60; // 2 hours
-  if (daysUntilDeadline <= 3) return 4 * 60; // 4 hours
-  if (daysUntilDeadline <= 5) return 8 * 60; // 8 hours
-  if (daysUntilDeadline <= 7) return 12 * 60; // 12 hours
-  if (daysUntilDeadline <= 14) return 24 * 60; // 1 day
-  if (daysUntilDeadline <= 30) return 3 * 24 * 60; // 3 days
-  return 7 * 24 * 60; // 7 days max
+  // Softer caps: don't crush the difference between "good" and "easy" near deadline.
+  if (daysUntilDeadline <= 0) return 60;            // 1 hour
+  if (daysUntilDeadline === 1) return 4 * 60;       // 4 hours
+  if (daysUntilDeadline <= 3) return 12 * 60;       // 12 hours
+  if (daysUntilDeadline <= 7) return 24 * 60;       // 1 day
+  if (daysUntilDeadline <= 14) return 2 * 24 * 60;  // 2 days
+  if (daysUntilDeadline <= 30) return 5 * 24 * 60;  // 5 days
+  return 10 * 24 * 60;                              // 10 days max
+}
+
+// Auto-derive an SM-2 rating from session accuracy + word visibility.
+// Lets us skip asking the user to manually rate every session.
+function deriveRatingFromAccuracy(
+  accuracy: number,           // 0-1
+  visibilityPercent: number,  // 0-100, lower = more words hidden = harder
+): UserRating {
+  // Easy: perfect run with most words hidden
+  if (accuracy >= 0.98 && visibilityPercent <= 50) return 'easy';
+  // Good: solid performance
+  if (accuracy >= 0.90) return 'good';
+  // Hard: passable but bumpy
+  if (accuracy >= 0.75) return 'hard';
+  // Again: too many misses, schedule a fast retry
+  return 'again';
 }
 
 serve(async (req) => {
