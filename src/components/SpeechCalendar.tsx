@@ -35,7 +35,6 @@ const EVENT_ICONS: Record<EventType, typeof Mic> = {
 
 const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps) => {
   const { t } = useTranslation();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
