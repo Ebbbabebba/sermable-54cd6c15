@@ -226,17 +226,6 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                     : t("calendar.noSessions")}
                 </p>
               </div>
-              {!isSelectedFuture && events.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleGenerate}
-                  disabled={generating}
-                  title={t("calendar.regenerate")}
-                >
-                  <RefreshCw className={cn("h-4 w-4", generating && "animate-spin")} />
-                </Button>
-              )}
             </div>
 
             {selectedEvents.length > 0 ? (
