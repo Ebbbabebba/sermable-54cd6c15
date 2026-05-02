@@ -649,7 +649,7 @@ export const CompactPresentationView = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.35 }}
-                  className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-2xl md:text-4xl leading-relaxed"
+                  className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-2xl md:text-4xl leading-relaxed font-semibold"
                 >
                   {sentences[currentSentenceIndex]?.words.map((word, wordIdx) => {
                     const globalIndex = sentences[currentSentenceIndex].startIndex + wordIdx;
@@ -660,12 +660,12 @@ export const CompactPresentationView = ({
                       <span
                         key={globalIndex}
                         className={cn(
-                          "inline-block transition-all duration-300 ease-out relative",
+                          "inline-block transition-colors duration-700 ease-out relative",
                           isCurrent
-                            ? "font-bold text-foreground"
+                            ? "text-foreground"
                             : isSpoken
-                              ? "font-normal text-muted-foreground/30"
-                              : "font-normal text-muted-foreground/70"
+                              ? "text-muted-foreground/25"
+                              : "text-muted-foreground/70"
                         )}
                       >
                         {/* Hesitation glow on current word — absolute so it doesn't push siblings */}
