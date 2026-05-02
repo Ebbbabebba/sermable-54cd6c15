@@ -4,6 +4,31 @@ import { Capacitor } from "@capacitor/core";
 const PREVIEW_KEY = "sermable_preview_unlock";
 const APP_STORE_URL = "https://apps.apple.com/app/sermable/id0000000000";
 
+const detectNative = (): boolean => {
+  // 1. Official Capacitor API
+  try {
+    if (Capacitor?.isNativePlatform?.()) return true;
+    const platform = Capacitor?.getPlatform?.();
+    if (platform === "ios" || platform === "android") return true;
+  } catch {}
+
+  // 2. Global injected by Capacitor's native bridge
+  try {
+    const w = window as any;
+    if (w.Capacitor?.isNativePlatform?.()) return true;
+    if (w.Capacitor?.platform && w.Capacitor.platform !== "web") return true;
+    if (w.webkit?.messageHandlers?.bridge) return true; // iOS WKWebView bridge
+  } catch {}
+
+  // 3. User-agent fallback (Capacitor injects "CapacitorWebView" or similar)
+  try {
+    const ua = navigator.userAgent || "";
+    if (/Capacitor|CapacitorWebView/i.test(ua)) return true;
+  } catch {}
+
+  return false;
+};
+
 /**
  * Browser gate: when the app is opened in a regular web browser (Safari,
  * Chrome, etc.), show only an "Download on the App Store" page.
@@ -16,15 +41,7 @@ export const BrowserGate = ({ children }: { children: React.ReactNode }) => {
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Native app always passes through
-    let isNative = false;
-    try {
-      isNative = Capacitor?.isNativePlatform?.() ?? false;
-    } catch {
-      isNative = false;
-    }
-
-    if (isNative) {
+    if (detectNative()) {
       setAllowed(true);
       return;
     }
@@ -43,6 +60,15 @@ export const BrowserGate = ({ children }: { children: React.ReactNode }) => {
     try {
       stored = localStorage.getItem(PREVIEW_KEY) === "1";
     } catch {}
+
+    // Re-check native shortly in case Capacitor injects late
+    if (!stored) {
+      const t = setTimeout(() => {
+        if (detectNative()) setAllowed(true);
+        else setAllowed(false);
+      }, 300);
+      return () => clearTimeout(t);
+    }
 
     setAllowed(stored);
   }, []);
