@@ -2614,11 +2614,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </AnimatePresence>
           </>
         ) : (
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground/60">
-            <Lock className="h-3.5 w-3.5" />
-            <Crown className="h-3.5 w-3.5" />
-            <span>{t('beat_practice.skip_premium_only', "Premium users can skip the wait")}</span>
-          </div>
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setShowCoffeePremiumUpsell(true)}
+              className="mt-4 text-muted-foreground"
+            >
+              <Crown className="h-4 w-4 mr-2 text-amber-500" />
+              {t('beat_practice.skip_break_locked', "Skip the break")}
+            </Button>
+            <PremiumUpgradeDialog
+              open={showCoffeePremiumUpsell}
+              onOpenChange={setShowCoffeePremiumUpsell}
+            />
+          </>
         )}
       </div>
     );
