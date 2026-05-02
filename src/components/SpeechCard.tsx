@@ -297,6 +297,18 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
               {format(new Date(speech.created_at), "MMM dd, yyyy")}
             </CardDescription>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/speech/${speech.id}`);
+            }}
+            title={t("speechDetail.tabs.calendar")}
+          >
+            <CalendarIcon className="h-4 w-4" />
+          </Button>
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
             isOverdue 
               ? "bg-destructive/10 text-destructive" 
