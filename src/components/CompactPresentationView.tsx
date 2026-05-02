@@ -278,7 +278,6 @@ export const CompactPresentationView = ({
     recognition.onerror = (event: any) => {
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         setStatus('error');
-        haptics.trigger('error');
       }
     };
 
