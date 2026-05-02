@@ -63,6 +63,16 @@ const getRecognitionLanguage = (lang: string): string => {
 
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 
+// --- Matching tuning ---
+// Tightened from 0.5 to stop unrelated words from leapfrogging the cursor.
+const SIMILARITY_THRESHOLD = 0.72;
+// Lookahead must clear a higher bar so a stray match doesn't skip a whole phrase.
+const LOOKAHEAD_THRESHOLD = 0.78;
+// Only allow skipping at most 2 words at a time.
+const LOOKAHEAD_WORDS = 2;
+// Minimum time between successful matches — prevents one burst from chain-advancing.
+const MIN_WORD_DWELL_MS = 220;
+
 // Normalize text for comparison (Unicode-aware)
 const normalizeWord = (text: string): string => {
   return text
