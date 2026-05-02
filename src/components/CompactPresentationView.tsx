@@ -68,8 +68,14 @@ import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 const SIMILARITY_THRESHOLD = 0.72;
 // Lookahead must clear a higher bar so a stray match doesn't skip a whole phrase.
 const LOOKAHEAD_THRESHOLD = 0.78;
-// Only allow skipping at most 2 words at a time.
+// Only allow skipping at most 2 words at a time in normal flow.
 const LOOKAHEAD_WORDS = 2;
+// When the speaker is clearly stuck (we have multiple unmatched attempts OR they
+// have been on the same word for a while), widen the lookahead window so a word
+// further ahead can force-advance the cursor past the stuck word.
+const STUCK_LOOKAHEAD_WORDS = 6;
+const STUCK_ATTEMPTS_THRESHOLD = 2;
+const STUCK_TIME_MS = 2500;
 // Minimum time between successful matches — prevents one burst from chain-advancing.
 const MIN_WORD_DWELL_MS = 220;
 
