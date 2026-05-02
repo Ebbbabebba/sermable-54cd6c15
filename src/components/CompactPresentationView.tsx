@@ -399,13 +399,12 @@ export const CompactPresentationView = ({
         lastProgressTime.current = Date.now();
         lastMatchAtRef.current = Date.now();
 
-        haptics.trigger('success');
+        // Only buzz when a beat (sentence) ends — keeps the per-word stream silent.
+        if (/[.!?]$/.test(targetWord)) {
+          haptics.trigger('success');
+        }
         setStatus('success');
         setTimeout(() => setStatus('speaking'), 200);
-
-        if (localIndex % 10 === 0) {
-          haptics.trigger('progress');
-        }
       } else {
         // Tighter lookahead: only 2 words ahead, higher bar — prevents stray
         // tokens from leapfrogging entire phrases and falsely marking them skipped.
