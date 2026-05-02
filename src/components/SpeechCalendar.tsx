@@ -4,11 +4,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Play, Mic, Target, Trophy, RefreshCw } from "lucide-react";
+import { Loader2, Play, Mic, Target, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { format, isSameDay, isAfter, startOfDay } from "date-fns";
+import { format, isAfter, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type EventType = "practice" | "recall" | "test" | "presentation";
