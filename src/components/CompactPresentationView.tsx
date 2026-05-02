@@ -499,6 +499,7 @@ export const CompactPresentationView = ({
       wrongAttempts.current = [];
       wordStartTimeRef.current = Date.now();
       lastProgressTime.current = Date.now();
+      lastMatchAtRef.current = 0;
       setStatus('idle');
     }
   }, [isRecording]);
