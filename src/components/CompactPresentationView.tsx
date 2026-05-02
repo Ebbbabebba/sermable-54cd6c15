@@ -278,7 +278,6 @@ export const CompactPresentationView = ({
     recognition.onerror = (event: any) => {
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         setStatus('error');
-        haptics.trigger('error');
       }
     };
 
@@ -336,7 +335,6 @@ export const CompactPresentationView = ({
       if (silenceDuration >= tryDelay && !showHint) {
         setShowHint({ word: currentWord, phase: "trying" });
         setStatus('silence');
-        haptics.trigger('warning');
       }
       
       const showWordDelay = wrongAttempts.current.length > 0 ? Math.round(effectiveDelay * 0.5) : effectiveDelay;
@@ -401,13 +399,12 @@ export const CompactPresentationView = ({
         lastProgressTime.current = Date.now();
         lastMatchAtRef.current = Date.now();
 
-        haptics.trigger('success');
+        // Only buzz when a beat (sentence) ends — keeps the per-word stream silent.
+        if (/[.!?]$/.test(targetWord)) {
+          haptics.trigger('success');
+        }
         setStatus('success');
         setTimeout(() => setStatus('speaking'), 200);
-
-        if (localIndex % 10 === 0) {
-          haptics.trigger('progress');
-        }
       } else {
         // Tighter lookahead: only 2 words ahead, higher bar — prevents stray
         // tokens from leapfrogging entire phrases and falsely marking them skipped.
@@ -455,7 +452,6 @@ export const CompactPresentationView = ({
           // misrecognition doesn't flash red constantly.
           if (wrongAttempts.current.length >= 2) {
             setStatus('error');
-            haptics.trigger('error');
           }
         }
       }
