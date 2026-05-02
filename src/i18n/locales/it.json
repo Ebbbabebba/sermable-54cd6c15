@@ -530,7 +530,8 @@
     "generateFailed": "Impossibile generare",
     "regenerate": "Rigenera",
     "noDeadlineTitle": "Nessuna scadenza",
-    "noDeadlineDescription": "Aggiungi una data obiettivo per generare un programma."
+    "noDeadlineDescription": "Aggiungi una data obiettivo per generare un programma.",
+    "plannedSessions": "{{count}} sessioni pianificate"
   },
   "speechDetail": {
     "notFound": "Discorso non trovato",

@@ -882,8 +882,8 @@
     "start": "Starta",
     "restDay": "Vilodag — inga inplanerade pass.",
     "noSessions": "Inga pass",
-    "plannedSessions_one": "{{count}} inplanerat pass",
-    "plannedSessions_other": "{{count}} inplanerade pass",
+    "plannedSessions_one": "{{count}} planerat pass",
+    "plannedSessions_other": "{{count}} planerade pass",
     "empty": "Inget schema än. Generera ett baserat på din deadline.",
     "generate": "Generera schema",
     "generating": "Genererar…",
@@ -892,7 +892,8 @@
     "generateFailed": "Kunde inte generera schema",
     "regenerate": "Generera om",
     "noDeadlineTitle": "Ingen deadline satt",
-    "noDeadlineDescription": "Lägg till ett måldatum för att skapa övningsschema."
+    "noDeadlineDescription": "Lägg till ett måldatum för att skapa övningsschema.",
+    "plannedSessions": "{{count}} planerade pass"
   },
   "speechDetail": {
     "notFound": "Talet hittades inte",
