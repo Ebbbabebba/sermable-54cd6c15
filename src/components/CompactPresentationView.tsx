@@ -495,6 +495,26 @@ export const CompactPresentationView = ({
     }
   }, [isRecording]);
 
+  // Auto-stop and trigger analysis when the user reaches the end of the script.
+  // Small delay so the final word's success animation/haptic can play first.
+  const autoStoppedRef = useRef(false);
+  useEffect(() => {
+    if (!isRecording) {
+      autoStoppedRef.current = false;
+      return;
+    }
+    if (autoStoppedRef.current) return;
+    if (words.length === 0) return;
+    if (currentWordIndex >= words.length) {
+      autoStoppedRef.current = true;
+      const timer = setTimeout(() => {
+        onStopRecording();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [currentWordIndex, isRecording, words.length, onStopRecording]);
+
+
   // Reset state when recording starts
   useEffect(() => {
     if (isRecording) {
