@@ -80,14 +80,25 @@ const getWordSimilarity = (word1: string, word2: string): number => {
   // Exact match
   if (w1 === w2) return 1.0;
 
-  // Short words (≤4 chars) must match exactly — too easy to confuse otherwise
-  if (w1.length <= 4 || w2.length <= 4) {
-    return w1 === w2 ? 1.0 : 0.0;
+  const maxLen = Math.max(w1.length, w2.length);
+  const minLen = Math.min(w1.length, w2.length);
+
+  // Very short words (1-2 chars) MUST match exactly — too easy to confuse ("är" vs "ar")
+  if (maxLen <= 2) {
+    return 0.0;
+  }
+
+  // Short words (3-4 chars): allow 1 edit (handles "era"→"ära", "eran", "erra")
+  // This catches Nordic char misrecognition + common Web Speech API tail variants.
+  if (maxLen <= 4) {
+    const dist = editDistance(w1, w2);
+    if (dist > 1) return 0.0;
+    // Require first letter to match — prevents "och" vs "att" type errors
+    if (w1[0] !== w2[0]) return 0.0;
+    return 1 - dist / maxLen;
   }
 
   // Length must be close — wrong words often have very different lengths
-  const maxLen = Math.max(w1.length, w2.length);
-  const minLen = Math.min(w1.length, w2.length);
   if (minLen < maxLen * 0.8) return 0.0;
 
   // Use real edit distance — only allow 1 edit for medium words, 2 for long words
