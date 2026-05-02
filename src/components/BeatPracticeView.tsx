@@ -2117,7 +2117,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         let interim = "";
 
+        latestSpeechResultCountRef.current = Math.max(latestSpeechResultCountRef.current, event.results.length);
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (i < ignoreResultsBeforeIndexRef.current) continue;
+
           const res = event.results[i];
           const chunk = res?.[0]?.transcript ?? "";
 
