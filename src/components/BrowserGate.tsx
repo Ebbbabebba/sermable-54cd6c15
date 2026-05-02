@@ -1,97 +1,27 @@
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 
-const PREVIEW_KEY = "sermable_preview_unlock";
 const APP_STORE_URL = "https://apps.apple.com/app/sermable/id0000000000";
 
-type CapacitorWindow = Window & {
-  Capacitor?: {
-    isNativePlatform?: () => boolean;
-    platform?: string;
-  };
-  webkit?: {
-    messageHandlers?: {
-      bridge?: unknown;
-    };
-  };
-};
-
-const detectNative = (): boolean => {
-  const url = new URL(window.location.href);
-  if (url.searchParams.get("native_app") === "1") return true;
-
-  // 1. Official Capacitor API
-  if (Capacitor?.isNativePlatform?.()) return true;
-  const platform = Capacitor?.getPlatform?.();
-  if (platform === "ios" || platform === "android") return true;
-
-  // 2. Global injected by Capacitor's native bridge
-  const w = window as CapacitorWindow;
-  if (w.Capacitor?.isNativePlatform?.()) return true;
-  if (w.Capacitor?.platform && w.Capacitor.platform !== "web") return true;
-  if (w.webkit?.messageHandlers?.bridge) return true; // iOS WKWebView bridge
-
-  // 3. User-agent fallback (Capacitor injects "CapacitorWebView" or similar)
-  const ua = navigator.userAgent || "";
-  if (/Capacitor|CapacitorWebView/i.test(ua)) return true;
-
-  const isIosWebKit = /iPhone|iPad|iPod/i.test(ua) && /AppleWebKit/i.test(ua);
-  const isKnownBrowser = /Safari|CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
-  if (isIosWebKit && !isKnownBrowser) return true;
-
-  return false;
-};
-
 /**
- * Browser gate: when the app is opened in a regular web browser (Safari,
- * Chrome, etc.), show only an "Download on the App Store" page.
+ * Browser gate.
  *
- * Bypasses:
- *  - Running inside the native iOS/Android app (Capacitor)
- *  - URL contains ?preview=1 (persisted to localStorage so it survives navigation)
+ * The iOS app bundles the web build (no `server.url` in capacitor.config.ts),
+ * so it loads from capacitor://localhost and `Capacitor.isNativePlatform()`
+ * is always true inside the native app — no race conditions.
+ *
+ * Anywhere else (Safari, Chrome, the Lovable preview URL, sermable.lovable.app)
+ * we show a hard wall pointing to the App Store.
  */
 export const BrowserGate = ({ children }: { children: React.ReactNode }) => {
-  const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [isNative, setIsNative] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (detectNative()) {
-      setAllowed(true);
-      return;
-    }
-
-    // Preview unlock via ?preview=1 (persisted)
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("preview") === "1") {
-      try {
-        localStorage.setItem(PREVIEW_KEY, "1");
-      } catch {
-        // Ignore blocked storage; the current URL still grants access.
-      }
-      setAllowed(true);
-      return;
-    }
-
-    let stored = false;
-    try {
-      stored = localStorage.getItem(PREVIEW_KEY) === "1";
-    } catch {
-      stored = false;
-    }
-
-    // Re-check native shortly in case Capacitor injects late
-    if (!stored) {
-      const t = setTimeout(() => {
-        if (detectNative()) setAllowed(true);
-        else setAllowed(false);
-      }, 300);
-      return () => clearTimeout(t);
-    }
-
-    setAllowed(stored);
+    setIsNative(Capacitor.isNativePlatform());
   }, []);
 
-  if (allowed === null) return null;
-  if (allowed) return <>{children}</>;
+  if (isNative === null) return null;
+  if (isNative) return <>{children}</>;
 
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground px-6 py-12">
@@ -107,8 +37,8 @@ export const BrowserGate = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         <p className="text-base text-muted-foreground">
-          Sermable is available as an iOS app. Download it from the App Store to
-          get started.
+          Sermable is only available as an iOS app. Download it from the App
+          Store to get started.
         </p>
 
         <a
