@@ -19,36 +19,39 @@ import Help from "./pages/Help";
 import SharedSpeech from "./pages/SharedSpeech";
 import DeleteAccountRequest from "./pages/DeleteAccountRequest";
 import NotFound from "./pages/NotFound";
+import { BrowserGate } from "./components/BrowserGate";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/practice/:id" element={<Practice />} />
-          <Route path="/presentation/:id" element={<Presentation />} />
-          <Route path="/speech/:id" element={<SpeechDetail />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/settings/payment" element={<PaymentSettings />} />
-          <Route path="/settings/account" element={<AccountSettings />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/refund-policy" element={<RefundPolicy />} />
-          <Route path="/help" element={<Help />} />
-          <Route path="/support" element={<Help />} />
-          <Route path="/share/:token" element={<SharedSpeech />} />
-          <Route path="/delete-account" element={<DeleteAccountRequest />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <BrowserGate>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/practice/:id" element={<Practice />} />
+            <Route path="/presentation/:id" element={<Presentation />} />
+            <Route path="/speech/:id" element={<SpeechDetail />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/payment" element={<PaymentSettings />} />
+            <Route path="/settings/account" element={<AccountSettings />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/support" element={<Help />} />
+            <Route path="/share/:token" element={<SharedSpeech />} />
+            <Route path="/delete-account" element={<DeleteAccountRequest />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </BrowserGate>
     </TooltipProvider>
   </QueryClientProvider>
 );
