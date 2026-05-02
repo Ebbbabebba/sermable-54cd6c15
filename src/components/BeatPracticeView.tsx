@@ -2215,23 +2215,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               // Reset the timer for the next word
               lastWordTimeRef.current = Date.now();
             }
-          } else if (!hiddenWordIndicesRef.current.has(idx)) {
-            // VISIBLE word stuck for 2s+ — auto-advance the pulse
-            // Visible words are just reading, not recall, so advance faster
-            if (elapsed > 2000) {
-              console.log(`⏭️ Auto-advancing past visible word "${words[idx]}" at index ${idx} (stuck 2s+)`);
-              
-              const newSpoken = new Set([...spokenIndicesRef.current, idx]);
-              spokenIndicesRef.current = newSpoken;
-              setSpokenIndices(newSpoken);
-              
-              const nextIdx = idx + 1;
-              currentWordIndexRef.current = nextIdx;
-              setCurrentWordIndex(nextIdx);
-              
-              lastWordTimeRef.current = Date.now();
-            }
           }
+          // NOTE: visible words are NEVER auto-advanced. The cursor must wait
+          // for the user to actually speak the word — auto-advancing on a read
+          // pause makes the pulse jump ahead before the user has spoken.
         }
       }, 500);
       
