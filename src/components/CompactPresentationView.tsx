@@ -412,8 +412,16 @@ export const CompactPresentationView = ({
       } else {
         // Tighter lookahead: only 2 words ahead, higher bar — prevents stray
         // tokens from leapfrogging entire phrases and falsely marking them skipped.
+        // BUT if the speaker is clearly stuck on the current word (multiple wrong
+        // attempts or stuck for >2.5s), widen the window so we can leapfrog and
+        // catch up to where they actually are.
+        const isStuck =
+          wrongAttempts.current.length >= STUCK_ATTEMPTS_THRESHOLD ||
+          Date.now() - wordStartTimeRef.current > STUCK_TIME_MS;
+        const maxLookahead = isStuck ? STUCK_LOOKAHEAD_WORDS : LOOKAHEAD_WORDS;
+
         let foundAhead = false;
-        for (let i = 1; i <= LOOKAHEAD_WORDS && localIndex + i < words.length; i++) {
+        for (let i = 1; i <= maxLookahead && localIndex + i < words.length; i++) {
           const aheadWord = words[localIndex + i];
           const aheadHard = isHardToRecognizeWord(aheadWord);
           const aheadSim = aheadHard ? 1.0 : getWordSimilarity(spokenWord, aheadWord);
