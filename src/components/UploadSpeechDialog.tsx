@@ -288,6 +288,22 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         console.log('✅ Speech segmented successfully');
       }
 
+      // Generate spaced repetition calendar schedule if a goal date is set
+      if (goalDate) {
+        try {
+          const { error: scheduleError } = await supabase.functions.invoke('generate-speech-schedule', {
+            body: { speechId: newSpeech.id }
+          });
+          if (scheduleError) {
+            console.error('⚠️ Error generating schedule:', scheduleError);
+          } else {
+            console.log('📅 Calendar schedule generated');
+          }
+        } catch (e) {
+          console.error('⚠️ Schedule generation failed:', e);
+        }
+      }
+
       // Check memorization feasibility
       const { data: feasibilityData, error: feasibilityError } = await (supabase as any)
         .rpc('assess_memorization_feasibility', { p_speech_id: newSpeech.id });
