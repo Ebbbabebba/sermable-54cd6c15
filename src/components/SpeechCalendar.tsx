@@ -44,8 +44,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [month, setMonth] = useState<Date>(new Date());
 
-  const loadEvents = async () => {
-    setLoading(true);
+  const loadEvents = async (): Promise<CalendarEvent[]> => {
     const { data, error } = await supabase
       .from("speech_calendar_events")
       .select("id, event_date, event_type, completed, completed_at")
@@ -54,49 +53,45 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
 
     if (error) {
       console.error("Failed to load calendar events:", error);
-    } else {
-      setEvents((data ?? []) as CalendarEvent[]);
+      return [];
     }
-    setLoading(false);
+    const list = (data ?? []) as CalendarEvent[];
+    setEvents(list);
+    return list;
   };
 
-  useEffect(() => {
-    loadEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speechId]);
-
-  const handleGenerate = async () => {
-    if (!goalDate) {
-      toast({
-        title: t("calendar.noDeadlineTitle"),
-        description: t("calendar.noDeadlineDescription"),
-        variant: "destructive",
-      });
-      return;
-    }
+  const autoGenerate = async () => {
+    if (!goalDate) return;
     setGenerating(true);
-    const { data, error } = await supabase.functions.invoke(
+    const { error } = await supabase.functions.invoke(
       "generate-speech-schedule",
       { body: { speechId } },
     );
-    setGenerating(false);
-    if (error || (data && (data as { error?: string }).error)) {
-      console.error("Generate failed:", error, data);
-      toast({
-        title: t("calendar.generateFailed"),
-        description: error?.message ?? (data as { error?: string })?.error ?? "",
-        variant: "destructive",
-      });
-      return;
+    if (error) {
+      console.error("Auto-generate schedule failed:", error);
+    } else {
+      await loadEvents();
     }
-    await loadEvents();
-    toast({
-      title: t("calendar.generated"),
-      description: t("calendar.generatedDescription", {
-        count: (data as { generated?: number })?.generated ?? 0,
-      }),
-    });
+    setGenerating(false);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const list = await loadEvents();
+      if (cancelled) return;
+      // Auto-generate if missing and we have a deadline
+      if (list.length === 0 && goalDate) {
+        await autoGenerate();
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speechId, goalDate]);
 
   // Group events by date for the day picker modifiers
   const eventsByDate = useMemo(() => {
