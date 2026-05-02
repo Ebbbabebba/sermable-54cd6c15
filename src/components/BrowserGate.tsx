@@ -21,35 +21,23 @@ const detectNative = (): boolean => {
   if (url.searchParams.get("native_app") === "1") return true;
 
   // 1. Official Capacitor API
-  try {
-    if (Capacitor?.isNativePlatform?.()) return true;
-    const platform = Capacitor?.getPlatform?.();
-    if (platform === "ios" || platform === "android") return true;
-  } catch {
-    return false;
-  }
+  if (Capacitor?.isNativePlatform?.()) return true;
+  const platform = Capacitor?.getPlatform?.();
+  if (platform === "ios" || platform === "android") return true;
 
   // 2. Global injected by Capacitor's native bridge
-  try {
-    const w = window as CapacitorWindow;
-    if (w.Capacitor?.isNativePlatform?.()) return true;
-    if (w.Capacitor?.platform && w.Capacitor.platform !== "web") return true;
-    if (w.webkit?.messageHandlers?.bridge) return true; // iOS WKWebView bridge
-  } catch {
-    return false;
-  }
+  const w = window as CapacitorWindow;
+  if (w.Capacitor?.isNativePlatform?.()) return true;
+  if (w.Capacitor?.platform && w.Capacitor.platform !== "web") return true;
+  if (w.webkit?.messageHandlers?.bridge) return true; // iOS WKWebView bridge
 
   // 3. User-agent fallback (Capacitor injects "CapacitorWebView" or similar)
-  try {
-    const ua = navigator.userAgent || "";
-    if (/Capacitor|CapacitorWebView/i.test(ua)) return true;
+  const ua = navigator.userAgent || "";
+  if (/Capacitor|CapacitorWebView/i.test(ua)) return true;
 
-    const isIosWebKit = /iPhone|iPad|iPod/i.test(ua) && /AppleWebKit/i.test(ua);
-    const isKnownBrowser = /Safari|CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
-    if (isIosWebKit && !isKnownBrowser) return true;
-  } catch {
-    return false;
-  }
+  const isIosWebKit = /iPhone|iPad|iPod/i.test(ua) && /AppleWebKit/i.test(ua);
+  const isKnownBrowser = /Safari|CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
+  if (isIosWebKit && !isKnownBrowser) return true;
 
   return false;
 };
