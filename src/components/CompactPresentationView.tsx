@@ -335,7 +335,6 @@ export const CompactPresentationView = ({
       if (silenceDuration >= tryDelay && !showHint) {
         setShowHint({ word: currentWord, phase: "trying" });
         setStatus('silence');
-        haptics.trigger('warning');
       }
       
       const showWordDelay = wrongAttempts.current.length > 0 ? Math.round(effectiveDelay * 0.5) : effectiveDelay;
