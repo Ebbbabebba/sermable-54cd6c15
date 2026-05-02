@@ -914,7 +914,8 @@
     "generateFailed": "Could not generate schedule",
     "regenerate": "Regenerate",
     "noDeadlineTitle": "No deadline set",
-    "noDeadlineDescription": "Add a goal date to generate a practice schedule."
+    "noDeadlineDescription": "Add a goal date to generate a practice schedule.",
+    "plannedSessions": "{{count}} planned sessions"
   },
   "speechDetail": {
     "notFound": "Speech not found",

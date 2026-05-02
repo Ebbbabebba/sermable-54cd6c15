@@ -516,8 +516,8 @@
     "start": "Iniciar",
     "restDay": "Día de descanso — sin sesiones.",
     "noSessions": "Sin sesiones",
-    "plannedSessions_one": "{{count}} sesión planeada",
-    "plannedSessions_other": "{{count}} sesiones planeadas",
+    "plannedSessions_one": "{{count}} sesión planificada",
+    "plannedSessions_other": "{{count}} sesiones planificadas",
     "empty": "Aún no hay plan. Genera uno según tu fecha límite.",
     "generate": "Generar plan",
     "generating": "Generando…",
@@ -526,7 +526,8 @@
     "generateFailed": "No se pudo generar",
     "regenerate": "Regenerar",
     "noDeadlineTitle": "Sin fecha límite",
-    "noDeadlineDescription": "Añade una fecha objetivo para generar un plan."
+    "noDeadlineDescription": "Añade una fecha objetivo para generar un plan.",
+    "plannedSessions": "{{count}} sesiones planificadas"
   },
   "speechDetail": {
     "notFound": "Discurso no encontrado",

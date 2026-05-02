@@ -520,8 +520,8 @@
     "start": "Start",
     "restDay": "Ruhetag — keine geplanten Einheiten.",
     "noSessions": "Keine Einheiten",
-    "plannedSessions_one": "{{count}} geplante Einheit",
-    "plannedSessions_other": "{{count}} geplante Einheiten",
+    "plannedSessions_one": "{{count}} geplante Sitzung",
+    "plannedSessions_other": "{{count}} geplante Sitzungen",
     "empty": "Noch kein Plan. Erstelle einen basierend auf deiner Frist.",
     "generate": "Plan erstellen",
     "generating": "Wird erstellt…",
@@ -530,7 +530,8 @@
     "generateFailed": "Plan konnte nicht erstellt werden",
     "regenerate": "Neu erstellen",
     "noDeadlineTitle": "Keine Frist gesetzt",
-    "noDeadlineDescription": "Füge ein Zieldatum hinzu, um einen Übungsplan zu erstellen."
+    "noDeadlineDescription": "Füge ein Zieldatum hinzu, um einen Übungsplan zu erstellen.",
+    "plannedSessions": "{{count}} geplante Sitzungen"
   },
   "speechDetail": {
     "notFound": "Rede nicht gefunden",
