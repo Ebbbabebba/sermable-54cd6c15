@@ -399,10 +399,8 @@ export const CompactPresentationView = ({
         lastProgressTime.current = Date.now();
         lastMatchAtRef.current = Date.now();
 
-        // Only buzz when a beat (sentence) ends — keeps the per-word stream silent.
-        if (/[.!?]$/.test(targetWord)) {
-          haptics.trigger('success');
-        }
+        // No per-word or per-sentence buzz — only the final completion buzz fires
+        // (see haptics.trigger('complete') when the whole beat finishes).
         setStatus('success');
         setTimeout(() => setStatus('speaking'), 200);
       } else {
