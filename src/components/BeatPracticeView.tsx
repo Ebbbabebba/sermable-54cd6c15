@@ -316,6 +316,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const transcriptRef = useRef<string>("");
   const transcriptWordsRef = useRef<string[]>([]);
   const runningTranscriptRef = useRef<string>("");
+  const latestSpeechResultCountRef = useRef(0);
+  const ignoreResultsBeforeIndexRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1754,6 +1756,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
+    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
     lastWordTimeRef.current = Date.now();
   };
 
@@ -2110,11 +2113,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         if (showCelebrationRef.current) return;
         if (Date.now() < ignoreResultsUntilRef.current) return;
 
+        latestSpeechResultCountRef.current = Math.max(latestSpeechResultCountRef.current, event.results.length);
+
         const currentRepId = repetitionIdRef.current;
 
         let interim = "";
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (i < ignoreResultsBeforeIndexRef.current) continue;
+
           const res = event.results[i];
           const chunk = res?.[0]?.transcript ?? "";
 
