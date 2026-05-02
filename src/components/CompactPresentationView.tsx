@@ -363,19 +363,25 @@ export const CompactPresentationView = ({
     
     for (const spokenWord of spokenWords) {
       if (localIndex >= words.length) break;
-      
+
+      // Per-word dwell — don't allow a single burst of speech to chain-advance
+      // multiple words instantly. Wait MIN_WORD_DWELL_MS between matches.
+      if (Date.now() - lastMatchAtRef.current < MIN_WORD_DWELL_MS) {
+        break;
+      }
+
       const targetWord = words[localIndex];
       const hardWord = isHardToRecognizeWord(targetWord);
       const similarity = hardWord ? 1.0 : getWordSimilarity(spokenWord, targetWord);
-      
-      if (similarity >= 0.5) {
+
+      if (similarity >= SIMILARITY_THRESHOLD) {
         const timeToSpeak = Date.now() - wordStartTimeRef.current;
         const wasPrompted = showHint?.phase === "showing";
-        const wordStatus: WordPerformance["status"] = 
-          wasPrompted ? "hesitated" : 
-          timeToSpeak > 2500 ? "hesitated" : 
+        const wordStatus: WordPerformance["status"] =
+          wasPrompted ? "hesitated" :
+          timeToSpeak > 2500 ? "hesitated" :
           "correct";
-        
+
         const performance: WordPerformance = {
           word: targetWord,
           index: localIndex,
@@ -384,7 +390,7 @@ export const CompactPresentationView = ({
           wasPrompted,
           wrongWordsSaid: wrongAttempts.current.length > 0 ? [...wrongAttempts.current] : undefined,
         };
-        
+
         setWordPerformance(prev => [...prev, performance]);
         localIndex++;
         setCurrentWordIndex(localIndex);
@@ -393,21 +399,24 @@ export const CompactPresentationView = ({
         wrongAttempts.current = [];
         wordStartTimeRef.current = Date.now();
         lastProgressTime.current = Date.now();
-        
+        lastMatchAtRef.current = Date.now();
+
         haptics.trigger('success');
         setStatus('success');
         setTimeout(() => setStatus('speaking'), 200);
-        
+
         if (localIndex % 10 === 0) {
           haptics.trigger('progress');
         }
       } else {
-        // Check for skipped words (lookahead) — allow generous skipping so users
-        // can jump over filler/connector words and the index never gets stuck.
+        // Tighter lookahead: only 2 words ahead, higher bar — prevents stray
+        // tokens from leapfrogging entire phrases and falsely marking them skipped.
         let foundAhead = false;
-        for (let i = 1; i <= 8 && localIndex + i < words.length; i++) {
+        for (let i = 1; i <= LOOKAHEAD_WORDS && localIndex + i < words.length; i++) {
           const aheadWord = words[localIndex + i];
-          if (getWordSimilarity(spokenWord, aheadWord) >= 0.5) {
+          const aheadHard = isHardToRecognizeWord(aheadWord);
+          const aheadSim = aheadHard ? 1.0 : getWordSimilarity(spokenWord, aheadWord);
+          if (aheadSim >= LOOKAHEAD_THRESHOLD) {
             for (let j = 0; j < i; j++) {
               const skippedWord = words[localIndex + j];
               setWordPerformance(prev => [...prev, {
@@ -417,7 +426,7 @@ export const CompactPresentationView = ({
                 wasPrompted: false,
               }]);
             }
-            
+
             setWordPerformance(prev => [...prev, {
               word: aheadWord,
               index: localIndex + i,
@@ -425,7 +434,7 @@ export const CompactPresentationView = ({
               timeToSpeak: Date.now() - wordStartTimeRef.current,
               wasPrompted: false,
             }]);
-            
+
             localIndex = localIndex + i + 1;
             setCurrentWordIndex(localIndex);
             currentWordIndexRef.current = localIndex;
@@ -433,16 +442,21 @@ export const CompactPresentationView = ({
             wrongAttempts.current = [];
             wordStartTimeRef.current = Date.now();
             lastProgressTime.current = Date.now();
+            lastMatchAtRef.current = Date.now();
             foundAhead = true;
             break;
           }
         }
-        
+
         if (!foundAhead) {
           wrongAttempts.current.push(spokenWord);
           lastProgressTime.current = Date.now();
-          setStatus('error');
-          haptics.trigger('error');
+          // Only signal error after a couple of wrong attempts so a single
+          // misrecognition doesn't flash red constantly.
+          if (wrongAttempts.current.length >= 2) {
+            setStatus('error');
+            haptics.trigger('error');
+          }
         }
       }
     }
