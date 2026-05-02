@@ -133,6 +133,7 @@ export const CompactPresentationView = ({
   const currentWordIndexRef = useRef(0);
   const processTranscriptRef = useRef<(t: string) => void>(() => {});
   const lastProcessedInterimRef = useRef<string>("");
+  const lastMatchAtRef = useRef<number>(0);
   
   const words = text.split(/\s+/).filter(w => w.length > 0);
   const progress = (currentWordIndex / words.length) * 100;
