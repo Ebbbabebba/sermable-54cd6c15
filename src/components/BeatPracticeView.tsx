@@ -13,6 +13,7 @@ import BeatProgress from "./BeatProgress";
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
+import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -274,6 +275,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [mergedRecallBeats, setMergedRecallBeats] = useState<Beat[]>([]); // Beats included in merged recall
   const [isEndOfSessionRecall, setIsEndOfSessionRecall] = useState(false); // 10-min recall before session_complete
   const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
+  const [showCoffeePremiumUpsell, setShowCoffeePremiumUpsell] = useState(false); // Free-user upsell when tapping skip
   const [showPreBeatRecallIntro, setShowPreBeatRecallIntro] = useState(false); // Animated intro before pre-beat recall
   
   // Rest between beats state
@@ -2513,7 +2515,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     };
 
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+      <div
+        className="flex flex-col items-center h-full overflow-y-auto p-8 text-center gap-6"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}
+      >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -2609,11 +2614,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </AnimatePresence>
           </>
         ) : (
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground/60">
-            <Lock className="h-3.5 w-3.5" />
-            <Crown className="h-3.5 w-3.5" />
-            <span>{t('beat_practice.skip_premium_only', "Premium users can skip the wait")}</span>
-          </div>
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setShowCoffeePremiumUpsell(true)}
+              className="mt-4 text-muted-foreground"
+            >
+              <Crown className="h-4 w-4 mr-2 text-amber-500" />
+              {t('beat_practice.skip_break_locked', "Skip the break")}
+            </Button>
+            <PremiumUpgradeDialog
+              open={showCoffeePremiumUpsell}
+              onOpenChange={setShowCoffeePremiumUpsell}
+            />
+          </>
         )}
       </div>
     );
