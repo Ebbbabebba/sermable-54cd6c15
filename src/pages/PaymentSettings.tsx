@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { isIOSNativeApp, triggerNativeIAP, getNativePrices } from "@/lib/iosBridge";
+import { getLocalizedFallbackPrices } from "@/lib/localizedPricing";
 import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
@@ -19,6 +20,7 @@ const PaymentSettings = () => {
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const isIOS = isIOSNativeApp();
+  const fallbackPrices = getLocalizedFallbackPrices();
   const [prices, setPrices] = useState<{ monthly?: string; yearly?: string }>(getNativePrices());
 
   const isPremium = subscriptionTier !== 'free';
