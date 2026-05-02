@@ -5,6 +5,9 @@ const PREVIEW_KEY = "sermable_preview_unlock";
 const APP_STORE_URL = "https://apps.apple.com/app/sermable/id0000000000";
 
 const detectNative = (): boolean => {
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("native_app") === "1") return true;
+
   // 1. Official Capacitor API
   try {
     if (Capacitor?.isNativePlatform?.()) return true;
@@ -24,6 +27,10 @@ const detectNative = (): boolean => {
   try {
     const ua = navigator.userAgent || "";
     if (/Capacitor|CapacitorWebView/i.test(ua)) return true;
+
+    const isIosWebKit = /iPhone|iPad|iPod/i.test(ua) && /AppleWebKit/i.test(ua);
+    const isKnownBrowser = /Safari|CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
+    if (isIosWebKit && !isKnownBrowser) return true;
   } catch {}
 
   return false;
