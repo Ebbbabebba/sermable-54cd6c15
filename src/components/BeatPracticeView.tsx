@@ -2113,11 +2113,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         if (showCelebrationRef.current) return;
         if (Date.now() < ignoreResultsUntilRef.current) return;
 
+        latestSpeechResultCountRef.current = Math.max(latestSpeechResultCountRef.current, event.results.length);
+
         const currentRepId = repetitionIdRef.current;
 
         let interim = "";
-
-        latestSpeechResultCountRef.current = Math.max(latestSpeechResultCountRef.current, event.results.length);
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           if (i < ignoreResultsBeforeIndexRef.current) continue;
