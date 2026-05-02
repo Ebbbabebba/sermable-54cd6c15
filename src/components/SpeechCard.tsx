@@ -177,6 +177,18 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         }
       }
 
+      // Regenerate calendar events for the new deadline
+      try {
+        const { error: scheduleError } = await supabase.functions.invoke('generate-speech-schedule', {
+          body: { speechId: speech.id }
+        });
+        if (scheduleError) {
+          console.error('⚠️ Error regenerating calendar:', scheduleError);
+        }
+      } catch (e) {
+        console.error('⚠️ Calendar regeneration failed:', e);
+      }
+
       setDeadlineOpen(false);
       toast({ title: t('dashboard.deadlineUpdated', 'Deadline updated') });
       onUpdate();
