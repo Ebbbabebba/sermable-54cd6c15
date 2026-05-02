@@ -4,27 +4,40 @@ import { Capacitor } from "@capacitor/core";
 const PREVIEW_KEY = "sermable_preview_unlock";
 const APP_STORE_URL = "https://apps.apple.com/app/sermable/id0000000000";
 
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    isNativePlatform?: () => boolean;
+    platform?: string;
+  };
+  webkit?: {
+    messageHandlers?: {
+      bridge?: unknown;
+    };
+  };
+};
+
 const detectNative = (): boolean => {
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("native_app") === "1") return true;
+
   // 1. Official Capacitor API
-  try {
-    if (Capacitor?.isNativePlatform?.()) return true;
-    const platform = Capacitor?.getPlatform?.();
-    if (platform === "ios" || platform === "android") return true;
-  } catch {}
+  if (Capacitor?.isNativePlatform?.()) return true;
+  const platform = Capacitor?.getPlatform?.();
+  if (platform === "ios" || platform === "android") return true;
 
   // 2. Global injected by Capacitor's native bridge
-  try {
-    const w = window as any;
-    if (w.Capacitor?.isNativePlatform?.()) return true;
-    if (w.Capacitor?.platform && w.Capacitor.platform !== "web") return true;
-    if (w.webkit?.messageHandlers?.bridge) return true; // iOS WKWebView bridge
-  } catch {}
+  const w = window as CapacitorWindow;
+  if (w.Capacitor?.isNativePlatform?.()) return true;
+  if (w.Capacitor?.platform && w.Capacitor.platform !== "web") return true;
+  if (w.webkit?.messageHandlers?.bridge) return true; // iOS WKWebView bridge
 
   // 3. User-agent fallback (Capacitor injects "CapacitorWebView" or similar)
-  try {
-    const ua = navigator.userAgent || "";
-    if (/Capacitor|CapacitorWebView/i.test(ua)) return true;
-  } catch {}
+  const ua = navigator.userAgent || "";
+  if (/Capacitor|CapacitorWebView/i.test(ua)) return true;
+
+  const isIosWebKit = /iPhone|iPad|iPod/i.test(ua) && /AppleWebKit/i.test(ua);
+  const isKnownBrowser = /Safari|CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
+  if (isIosWebKit && !isKnownBrowser) return true;
 
   return false;
 };
@@ -51,7 +64,9 @@ export const BrowserGate = ({ children }: { children: React.ReactNode }) => {
     if (url.searchParams.get("preview") === "1") {
       try {
         localStorage.setItem(PREVIEW_KEY, "1");
-      } catch {}
+      } catch {
+        // Ignore blocked storage; the current URL still grants access.
+      }
       setAllowed(true);
       return;
     }
@@ -59,7 +74,9 @@ export const BrowserGate = ({ children }: { children: React.ReactNode }) => {
     let stored = false;
     try {
       stored = localStorage.getItem(PREVIEW_KEY) === "1";
-    } catch {}
+    } catch {
+      stored = false;
+    }
 
     // Re-check native shortly in case Capacitor injects late
     if (!stored) {

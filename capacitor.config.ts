@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Sermable',
   webDir: 'dist',
   server: {
-    url: 'https://9b848729-39c6-4dff-8ad7-85a9c71f1e67.lovableproject.com?forceHideBadge=true',
+    url: 'https://9b848729-39c6-4dff-8ad7-85a9c71f1e67.lovableproject.com?forceHideBadge=true&native_app=1',
     cleartext: true
   },
   plugins: {
