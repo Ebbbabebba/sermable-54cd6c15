@@ -617,7 +617,10 @@ export const CompactPresentationView = ({
               />
             </div>
 
-            {/* Sentence display area */}
+            {/* Sentence display area — layout is LOCKED. All words render at the
+                same size and position so the text doesn't reflow as the user
+                speaks. Spoken words are dimmed in place; the current word is
+                emphasized with weight + color only, never size. */}
             <div className="min-h-[300px] flex flex-col items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -626,68 +629,54 @@ export const CompactPresentationView = ({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.35 }}
-                  className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3"
+                  className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-2xl md:text-4xl leading-relaxed"
                 >
                   {sentences[currentSentenceIndex]?.words.map((word, wordIdx) => {
                     const globalIndex = sentences[currentSentenceIndex].startIndex + wordIdx;
                     const isSpoken = globalIndex < currentWordIndex;
                     const isCurrent = globalIndex === currentWordIndex;
-                    const isFading = fadingWords.has(globalIndex);
 
                     return (
-                      <AnimatePresence key={globalIndex} mode="popLayout">
-                        {/* Don't render fully spoken words that finished fading */}
-                        {(!isSpoken || isFading) && (
-                          <motion.span
-                            layout
-                            initial={false}
-                            animate={
-                              isFading
-                                ? { opacity: 0, scale: 0.7, filter: "blur(4px)" }
-                                : isCurrent
-                                  ? { opacity: 1, scale: 1, filter: "blur(0px)" }
-                                  : { opacity: 0.35, scale: 1, filter: "blur(0px)" }
-                            }
-                            transition={{ duration: 0.4, ease: "easeOut" }}
-                            className={cn(
-                              "inline-block transition-colors duration-200",
-                              isCurrent
-                                ? "text-3xl md:text-5xl font-bold text-foreground"
-                                : "text-lg md:text-2xl font-normal text-muted-foreground",
-                              isFading && "pointer-events-none"
-                            )}
-                          >
-                            {/* Hesitation glow on current word */}
-                            {isCurrent && (isHesitating || isShowingHint) && (
-                              <motion.span
-                                className="absolute inset-0 rounded-lg"
-                                animate={{
-                                  boxShadow: [
-                                    "0 0 8px hsl(var(--primary) / 0.2)",
-                                    "0 0 20px hsl(var(--primary) / 0.5)",
-                                    "0 0 8px hsl(var(--primary) / 0.2)",
-                                  ],
-                                }}
-                                transition={{ duration: 1.2, repeat: Infinity }}
-                              />
-                            )}
-                            <span className="relative">
-                              {isCurrent && isShowingHint ? (
-                                <motion.span
-                                  initial={{ opacity: 0, scale: 0.8 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                                  className="text-primary"
-                                >
-                                  {word}
-                                </motion.span>
-                              ) : (
-                                word
-                              )}
-                            </span>
-                          </motion.span>
+                      <span
+                        key={globalIndex}
+                        className={cn(
+                          "inline-block transition-all duration-300 ease-out relative",
+                          isCurrent
+                            ? "font-bold text-foreground"
+                            : isSpoken
+                              ? "font-normal text-muted-foreground/30"
+                              : "font-normal text-muted-foreground/70"
                         )}
-                      </AnimatePresence>
+                      >
+                        {/* Hesitation glow on current word — absolute so it doesn't push siblings */}
+                        {isCurrent && (isHesitating || isShowingHint) && (
+                          <motion.span
+                            className="absolute inset-0 rounded-lg pointer-events-none"
+                            animate={{
+                              boxShadow: [
+                                "0 0 8px hsl(var(--primary) / 0.2)",
+                                "0 0 20px hsl(var(--primary) / 0.5)",
+                                "0 0 8px hsl(var(--primary) / 0.2)",
+                              ],
+                            }}
+                            transition={{ duration: 1.2, repeat: Infinity }}
+                          />
+                        )}
+                        <span className="relative">
+                          {isCurrent && isShowingHint ? (
+                            <motion.span
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-primary"
+                            >
+                              {word}
+                            </motion.span>
+                          ) : (
+                            word
+                          )}
+                        </span>
+                      </span>
                     );
                   })}
                 </motion.div>
