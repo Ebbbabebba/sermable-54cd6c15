@@ -41,8 +41,15 @@ const getWordSimilarity = (w1: string, w2: string): number => {
   return matches / maxLen;
 };
 
-const SILENCE_HINT_MS = 2000;
-const HINT_WORD_COUNT = 4; // how many upcoming words to reveal as a hint
+// Tighter matching so wrong sentences don't race the cursor forward.
+const SIMILARITY_THRESHOLD = 0.72;
+const LOOKAHEAD_THRESHOLD = 0.78;
+const LOOKAHEAD_WORDS = 2;
+
+// Hint escalation thresholds
+const HINT_STAGE_1_MS = 2000; // show next 3 words
+const HINT_STAGE_2_MS = 4000; // show rest of current sentence
+const HINT_STAGE_3_MS = 6000; // also reveal the word after
 
 const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProps) => {
   const { t } = useTranslation();
@@ -50,7 +57,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
 
   const [isRecording, setIsRecording] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [hintShown, setHintShown] = useState(false);
+  const [hintStage, setHintStage] = useState<0 | 1 | 2 | 3>(0);
   const [elapsed, setElapsed] = useState(0);
 
   const recognitionRef = useRef<any>(null);
@@ -63,7 +70,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
   // Sync ref
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
 
-  // Match incoming spoken words to script with generous lookahead
+  // Match incoming spoken words to script with tightened lookahead
   const processSpoken = useCallback((spoken: string) => {
     const tokens = spoken.toLowerCase().trim().split(/\s+/).filter(Boolean);
     let idx = currentIndexRef.current;
@@ -75,15 +82,17 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       const hard = isHardToRecognizeWord(target);
       const sim = hard ? 1.0 : getWordSimilarity(tok, target);
 
-      if (sim >= 0.5) {
+      if (sim >= SIMILARITY_THRESHOLD) {
         idx++;
         progressed = true;
         continue;
       }
-      // Lookahead — allow user to jump over words
+      // Tight lookahead — only allow jumping over 1-2 words and require a high match.
       let jumped = false;
-      for (let i = 1; i <= 8 && idx + i < words.length; i++) {
-        if (getWordSimilarity(tok, words[idx + i]) >= 0.5) {
+      for (let i = 1; i <= LOOKAHEAD_WORDS && idx + i < words.length; i++) {
+        const aheadHard = isHardToRecognizeWord(words[idx + i]);
+        const aheadSim = aheadHard ? 1.0 : getWordSimilarity(tok, words[idx + i]);
+        if (aheadSim >= LOOKAHEAD_THRESHOLD) {
           idx = idx + i + 1;
           progressed = true;
           jumped = true;
@@ -98,7 +107,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     if (progressed) {
       currentIndexRef.current = idx;
       setCurrentIndex(idx);
-      setHintShown(false);
+      setHintStage(0);
       lastSpeechAtRef.current = Date.now();
     }
   }, [words]);
@@ -116,6 +125,8 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     rec.maxAlternatives = 3;
 
     rec.onstart = () => { restartAttemptsRef.current = 0; };
+    // Only mark "speech detected" when the engine signals real speech onset —
+    // NOT on every interim result (which fire continuously and would mask silence).
     rec.onspeechstart = () => { lastSpeechAtRef.current = Date.now(); };
 
     rec.onresult = (event: any) => {
@@ -127,15 +138,14 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
         else interimT += tr;
       }
 
-      lastSpeechAtRef.current = Date.now();
-
+      // Process only the new tail of interim transcripts.
       if (interimT && interimT !== lastProcessedInterimRef.current) {
         const prevWords = lastProcessedInterimRef.current.toLowerCase().trim().split(/\s+/).filter(Boolean);
         const curWords = interimT.toLowerCase().trim().split(/\s+/).filter(Boolean);
-        const toProcess = curWords.length > prevWords.length
-          ? curWords.slice(prevWords.length)
-          : curWords.slice(Math.max(0, curWords.length - 3));
-        if (toProcess.length) processSpoken(toProcess.join(" "));
+        if (curWords.length > prevWords.length) {
+          const toProcess = curWords.slice(prevWords.length);
+          if (toProcess.length) processSpoken(toProcess.join(" "));
+        }
         lastProcessedInterimRef.current = interimT;
       }
 
@@ -143,6 +153,8 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
         processSpoken(finalT);
         lastProcessedInterimRef.current = "";
       }
+      // NOTE: do not update lastSpeechAtRef here — only processSpoken (on real
+      // matches) and onspeechstart should reset the silence clock.
     };
 
     rec.onerror = (e: any) => {
@@ -173,18 +185,27 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     };
   }, [isRecording, speechLanguage, processSpoken]);
 
-  // Silence detector → reveal hint after 2s
+  // Silence detector → escalate hint stage as silence grows
   useEffect(() => {
     if (!isRecording) return;
     const interval = setInterval(() => {
       if (currentIndexRef.current >= words.length) return;
       const silence = Date.now() - lastSpeechAtRef.current;
-      if (silence >= SILENCE_HINT_MS) {
-        setHintShown(true);
-      }
+
+      let nextStage: 0 | 1 | 2 | 3 = 0;
+      if (silence >= HINT_STAGE_3_MS) nextStage = 3;
+      else if (silence >= HINT_STAGE_2_MS) nextStage = 2;
+      else if (silence >= HINT_STAGE_1_MS) nextStage = 1;
+
+      setHintStage(prev => (prev !== nextStage ? nextStage : prev));
     }, 200);
     return () => clearInterval(interval);
   }, [isRecording, words.length]);
+
+  // Reset hint when index advances
+  useEffect(() => {
+    setHintStage(0);
+  }, [currentIndex]);
 
   // Timer
   useEffect(() => {
@@ -201,7 +222,8 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     setCurrentIndex(0);
     currentIndexRef.current = 0;
     lastSpeechAtRef.current = Date.now();
-    setHintShown(false);
+    lastProcessedInterimRef.current = "";
+    setHintStage(0);
     setIsRecording(true);
   };
 
@@ -216,8 +238,28 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
-  // Words to reveal as a hint
-  const hintWords = words.slice(currentIndex, currentIndex + HINT_WORD_COUNT).join(" ");
+  // Compute hint content based on stage
+  const hintContent = useMemo(() => {
+    if (hintStage === 0 || currentIndex >= words.length) return null;
+
+    if (hintStage === 1) {
+      return words.slice(currentIndex, currentIndex + 3).join(" ");
+    }
+
+    // Stage 2 & 3 — reveal up to the end of the current sentence.
+    let end = currentIndex;
+    while (end < words.length && end < currentIndex + 14) {
+      end++;
+      if (/[.!?]$/.test(words[end - 1])) break;
+    }
+    let sentence = words.slice(currentIndex, end).join(" ");
+
+    if (hintStage === 3 && end < words.length) {
+      sentence += `   →   ${words[end]}`;
+    }
+    return sentence;
+  }, [hintStage, currentIndex, words]);
+
   const progress = words.length > 0 ? Math.round((currentIndex / words.length) * 100) : 0;
 
   return (
@@ -264,9 +306,9 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
         ) : (
           <div className="w-full max-w-3xl min-h-[200px] flex items-center justify-center">
             <AnimatePresence mode="wait">
-              {hintShown && currentIndex < words.length ? (
+              {hintStage > 0 && hintContent ? (
                 <motion.div
-                  key={`hint-${currentIndex}`}
+                  key={`hint-${currentIndex}-${hintStage}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -274,10 +316,17 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
                   className="space-y-3"
                 >
                   <p className="text-sm uppercase tracking-wide text-muted-foreground">
-                    {t("listenMode.nextWords", "Next words")}
+                    {hintStage === 1
+                      ? t("listenMode.nextWords", "Next words")
+                      : hintStage === 2
+                        ? t("listenMode.nextSentence", "Next sentence")
+                        : t("listenMode.fullHint", "Full hint")}
                   </p>
-                  <p className="text-3xl md:text-4xl font-semibold leading-snug">
-                    {hintWords}
+                  <p className={cn(
+                    "font-semibold leading-snug",
+                    hintStage === 1 ? "text-3xl md:text-4xl" : "text-2xl md:text-3xl"
+                  )}>
+                    {hintContent}
                   </p>
                 </motion.div>
               ) : (
