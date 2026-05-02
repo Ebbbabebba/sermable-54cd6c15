@@ -508,5 +508,43 @@
     "startWithAudience": "Inizia con il pubblico",
     "unlockPremium": "Sblocca Premium",
     "switchModes": "Puoi cambiare modalità in qualsiasi momento prima di iniziare"
+  },
+  "calendar": {
+    "practice": "Pratica",
+    "recall": "Recall",
+    "test": "Esecuzione",
+    "presentationDay": "Giorno della presentazione",
+    "completed": "Completato",
+    "done": "Fatto",
+    "today": "Oggi",
+    "start": "Inizia",
+    "restDay": "Giorno di riposo — nessuna sessione.",
+    "noSessions": "Nessuna sessione",
+    "plannedSessions_one": "{{count}} sessione pianificata",
+    "plannedSessions_other": "{{count}} sessioni pianificate",
+    "empty": "Nessun programma. Generane uno in base alla scadenza.",
+    "generate": "Genera programma",
+    "generating": "Generazione…",
+    "generated": "Programma creato",
+    "generatedDescription": "Create {{count}} sessioni future.",
+    "generateFailed": "Impossibile generare",
+    "regenerate": "Rigenera",
+    "noDeadlineTitle": "Nessuna scadenza",
+    "noDeadlineDescription": "Aggiungi una data obiettivo per generare un programma."
+  },
+  "speechDetail": {
+    "notFound": "Discorso non trovato",
+    "practice": "Esercitati",
+    "present": "Presenta",
+    "scriptPreview": "Copione",
+    "wordCount_one": "{{count}} parola",
+    "wordCount_other": "{{count}} parole",
+    "daysLeft_one": "{{count}} giorno rimasto",
+    "daysLeft_other": "{{count}} giorni rimasti",
+    "lastAccuracy": "Ultima precisione {{value}}%",
+    "tabs": {
+      "overview": "Panoramica",
+      "calendar": "Calendario"
+    }
   }
 }

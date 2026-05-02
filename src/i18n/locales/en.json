@@ -892,5 +892,43 @@
     "enterprise": "Enterprise",
     "student": "Student",
     "free": "Free"
+  },
+  "calendar": {
+    "practice": "Practice",
+    "recall": "Recall",
+    "test": "Full run",
+    "presentationDay": "Presentation Day",
+    "completed": "Completed",
+    "done": "Done",
+    "today": "Today",
+    "start": "Start",
+    "restDay": "Rest day — no scheduled sessions.",
+    "noSessions": "No sessions",
+    "plannedSessions_one": "{{count}} planned session",
+    "plannedSessions_other": "{{count}} planned sessions",
+    "empty": "No schedule yet. Generate one based on your deadline.",
+    "generate": "Generate schedule",
+    "generating": "Generating…",
+    "generated": "Schedule generated",
+    "generatedDescription": "Created {{count}} upcoming events.",
+    "generateFailed": "Could not generate schedule",
+    "regenerate": "Regenerate",
+    "noDeadlineTitle": "No deadline set",
+    "noDeadlineDescription": "Add a goal date to generate a practice schedule."
+  },
+  "speechDetail": {
+    "notFound": "Speech not found",
+    "practice": "Practice",
+    "present": "Present",
+    "scriptPreview": "Script",
+    "wordCount_one": "{{count}} word",
+    "wordCount_other": "{{count}} words",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "lastAccuracy": "Last accuracy {{value}}%",
+    "tabs": {
+      "overview": "Overview",
+      "calendar": "Calendar"
+    }
   }
 }
