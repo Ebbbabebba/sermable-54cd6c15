@@ -230,9 +230,28 @@ serve(async (req) => {
       );
     }
 
-    const { speechId, userRating, sessionAccuracy, wordVisibilityPercent = 100 } = await req.json();
-    
-    console.log('📚 SM-2 Update for speech:', speechId, 'Rating:', userRating, 'Accuracy:', sessionAccuracy);
+    const {
+      speechId,
+      userRating: rawUserRating,
+      sessionAccuracy,
+      wordVisibilityPercent = 100,
+    } = await req.json();
+
+    // Auto-derive rating from accuracy when the client doesn't pass one.
+    // accuracy comes in as 0-1 OR 0-100 depending on the caller — normalize.
+    const accuracyNormalized = typeof sessionAccuracy === 'number'
+      ? (sessionAccuracy > 1 ? sessionAccuracy / 100 : sessionAccuracy)
+      : 0;
+
+    const userRating: UserRating = (rawUserRating as UserRating | undefined)
+      ?? deriveRatingFromAccuracy(accuracyNormalized, wordVisibilityPercent);
+
+    console.log(
+      '📚 SM-2 Update for speech:', speechId,
+      'Rating:', userRating, '(rawUserRating:', rawUserRating, ')',
+      'Accuracy:', accuracyNormalized,
+      'Visibility%:', wordVisibilityPercent,
+    );
 
     // Verify user owns the speech
     const { data: speech, error: speechError } = await supabase
@@ -281,7 +300,7 @@ serve(async (req) => {
 
     // Calculate new schedule using SM-2
     const sm2Result = calculateSM2(
-      userRating as UserRating,
+      userRating,
       currentState,
       currentInterval,
       currentEaseFactor,
