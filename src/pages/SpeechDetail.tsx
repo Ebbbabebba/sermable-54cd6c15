@@ -90,7 +90,10 @@ const SpeechDetail = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-3xl space-y-6">
+      <main
+        className="container mx-auto px-4 py-6 max-w-3xl space-y-6"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}
+      >
         <div>
           <h1 className="text-3xl font-bold mb-1">{speech.title}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
