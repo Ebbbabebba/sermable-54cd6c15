@@ -297,16 +297,40 @@ const PaymentSettings = () => {
                   size="lg"
                   className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
                   onClick={handleUpgrade}
+                  disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
                 >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {isIOS ? 'Subscribe' : 'Get Premium'}
+                  {purchaseState === 'processing' || purchaseState === 'verifying' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {purchaseState === 'verifying' ? 'Verifying purchase…' : 'Processing…'}
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      {isIOS ? 'Subscribe' : 'Get Premium'}
+                    </>
+                  )}
                 </Button>
 
+                {purchaseState === 'error' && purchaseError && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <p>{purchaseError}</p>
+                  </div>
+                )}
+
                 {isIOS && (
-                  <Button variant="ghost" size="sm" className="w-full" onClick={handleRestore}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleRestore}
+                    disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
+                  >
                     Restore purchases
                   </Button>
                 )}
+
 
                 {!isIOS && (
                   <p className="text-xs text-center text-muted-foreground">
