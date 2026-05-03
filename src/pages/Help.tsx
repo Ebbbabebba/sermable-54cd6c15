@@ -177,8 +177,12 @@ const Help = () => {
               onClick={() => window.location.href = 'mailto:support@sermable.com'}
             >
               <Mail className="h-4 w-4 mr-2" />
-              {t('help.emailSupport')}
+              support@sermable.com
             </Button>
+            <p className="text-xs text-muted-foreground mt-3">
+              We typically respond within 24–48 hours on business days (Monday–Friday, CET).
+              Account, billing and subscription issues are prioritised.
+            </p>
           </CardContent>
         </Card>
 
