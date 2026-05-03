@@ -59,3 +59,6 @@ verify_jwt = true
 
 [functions.get-shared-speech]
 verify_jwt = false
+
+[functions.verify-apple-iap]
+verify_jwt = false
