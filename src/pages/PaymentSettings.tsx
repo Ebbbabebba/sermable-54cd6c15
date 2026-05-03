@@ -19,6 +19,8 @@ const PaymentSettings = () => {
   const { toast } = useToast();
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+  const [purchaseState, setPurchaseState] = useState<'idle' | 'processing' | 'verifying' | 'success' | 'error'>('idle');
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const isIOS = isIOSNativeApp();
   const fallbackPrices = getLocalizedFallbackPrices();
   const [prices, setPrices] = useState<{ monthly?: string; yearly?: string }>(getNativePrices());
