@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, ExternalLink } from "lucide-react";
+import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
