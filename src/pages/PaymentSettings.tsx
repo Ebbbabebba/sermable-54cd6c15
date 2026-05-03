@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, ExternalLink } from "lucide-react";
+import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,8 @@ const PaymentSettings = () => {
   const { toast } = useToast();
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+  const [purchaseState, setPurchaseState] = useState<'idle' | 'processing' | 'verifying' | 'success' | 'error'>('idle');
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const isIOS = isIOSNativeApp();
   const fallbackPrices = getLocalizedFallbackPrices();
   const [prices, setPrices] = useState<{ monthly?: string; yearly?: string }>(getNativePrices());
@@ -57,26 +59,50 @@ const PaymentSettings = () => {
     return () => window.removeEventListener('iap-prices-updated', onUpdate);
   }, [isIOS]);
 
+  // Helper: re-check subscription status from backend (fallback verification)
+  const checkSubscriptionStatus = async (): Promise<boolean> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", user.id)
+      .single();
+    if (profile?.subscription_tier) {
+      setSubscriptionTier(profile.subscription_tier);
+      return profile.subscription_tier !== 'free';
+    }
+    return false;
+  };
+
   // Listen for successful native purchases and verify with backend
   useEffect(() => {
     if (!isIOS) return;
     const cleanup = installPurchaseListener(async (result) => {
+      setPurchaseState('verifying');
       if (result.success && result.active) {
-        toast({
-          title: "Welcome to Premium!",
-          description: "Your subscription is now active.",
-        });
-        // Refresh tier from DB
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("subscription_tier")
-            .eq("id", user.id)
-            .single();
-          if (profile?.subscription_tier) setSubscriptionTier(profile.subscription_tier);
+        const isPrem = await checkSubscriptionStatus();
+        if (isPrem) {
+          setPurchaseState('success');
+          setPurchaseError(null);
+          toast({
+            title: "✅ Welcome to Premium!",
+            description: "Your subscription is now active.",
+          });
+        } else {
+          // Backend says verified but profile not yet updated — retry once
+          await new Promise(r => setTimeout(r, 1500));
+          const retry = await checkSubscriptionStatus();
+          if (retry) {
+            setPurchaseState('success');
+          } else {
+            setPurchaseState('error');
+            setPurchaseError("Payment received but account not yet upgraded. Please tap 'Restore purchases'.");
+          }
         }
       } else {
+        setPurchaseState('error');
+        setPurchaseError(result.error ?? "Verification failed. Please try again or contact support.");
         toast({
           title: "Purchase verification failed",
           description: result.error ?? "Please try again or contact support.",
@@ -86,7 +112,12 @@ const PaymentSettings = () => {
     });
     const onFail = (e: Event) => {
       const detail = (e as CustomEvent<{ reason?: string }>).detail;
-      if (detail?.reason === 'userCancelled') return;
+      if (detail?.reason === 'userCancelled') {
+        setPurchaseState('idle');
+        return;
+      }
+      setPurchaseState('error');
+      setPurchaseError(detail?.reason ?? "Please try again.");
       toast({
         title: "Purchase failed",
         description: detail?.reason ?? "Please try again.",
@@ -102,6 +133,8 @@ const PaymentSettings = () => {
 
   const handleUpgrade = () => {
     if (isIOS) {
+      setPurchaseState('processing');
+      setPurchaseError(null);
       triggerNativeIAP(selectedPlan === 'yearly' ? 'buyYearly' : 'buyMonthly');
       return;
     }
@@ -112,10 +145,21 @@ const PaymentSettings = () => {
     });
   };
 
-  const handleRestore = () => {
+  const handleRestore = async () => {
     if (!isIOS) return;
+    setPurchaseState('verifying');
     triggerNativeIAP('restorePurchases');
     toast({ title: "Restoring purchases…" });
+    // After 4s, fall back to checking subscription directly from backend
+    setTimeout(async () => {
+      const isPrem = await checkSubscriptionStatus();
+      if (isPrem) {
+        setPurchaseState('success');
+        toast({ title: "✅ Premium restored!" });
+      } else {
+        setPurchaseState('idle');
+      }
+    }, 4000);
   };
 
   return (
@@ -253,16 +297,40 @@ const PaymentSettings = () => {
                   size="lg"
                   className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
                   onClick={handleUpgrade}
+                  disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
                 >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {isIOS ? 'Subscribe' : 'Get Premium'}
+                  {purchaseState === 'processing' || purchaseState === 'verifying' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {purchaseState === 'verifying' ? 'Verifying purchase…' : 'Processing…'}
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      {isIOS ? 'Subscribe' : 'Get Premium'}
+                    </>
+                  )}
                 </Button>
 
+                {purchaseState === 'error' && purchaseError && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <p>{purchaseError}</p>
+                  </div>
+                )}
+
                 {isIOS && (
-                  <Button variant="ghost" size="sm" className="w-full" onClick={handleRestore}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleRestore}
+                    disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
+                  >
                     Restore purchases
                   </Button>
                 )}
+
 
                 {!isIOS && (
                   <p className="text-xs text-center text-muted-foreground">
