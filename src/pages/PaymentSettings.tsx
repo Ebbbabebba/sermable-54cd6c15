@@ -7,7 +7,7 @@ import { ArrowLeft, Crown, Check, Zap, FileStack, Presentation, BarChart3, Exter
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { isIOSNativeApp, triggerNativeIAP, getNativePrices } from "@/lib/iosBridge";
+import { isIOSNativeApp, triggerNativeIAP, getNativePrices, installPurchaseListener } from "@/lib/iosBridge";
 import { getLocalizedFallbackPrices } from "@/lib/localizedPricing";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -57,6 +57,49 @@ const PaymentSettings = () => {
     return () => window.removeEventListener('iap-prices-updated', onUpdate);
   }, [isIOS]);
 
+  // Listen for successful native purchases and verify with backend
+  useEffect(() => {
+    if (!isIOS) return;
+    const cleanup = installPurchaseListener(async (result) => {
+      if (result.success && result.active) {
+        toast({
+          title: "Welcome to Premium!",
+          description: "Your subscription is now active.",
+        });
+        // Refresh tier from DB
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("subscription_tier")
+            .eq("id", user.id)
+            .single();
+          if (profile?.subscription_tier) setSubscriptionTier(profile.subscription_tier);
+        }
+      } else {
+        toast({
+          title: "Purchase verification failed",
+          description: result.error ?? "Please try again or contact support.",
+          variant: "destructive",
+        });
+      }
+    });
+    const onFail = (e: Event) => {
+      const detail = (e as CustomEvent<{ reason?: string }>).detail;
+      if (detail?.reason === 'userCancelled') return;
+      toast({
+        title: "Purchase failed",
+        description: detail?.reason ?? "Please try again.",
+        variant: "destructive",
+      });
+    };
+    window.addEventListener('iap-purchase-failed', onFail);
+    return () => {
+      cleanup();
+      window.removeEventListener('iap-purchase-failed', onFail);
+    };
+  }, [isIOS, toast]);
+
   const handleUpgrade = () => {
     if (isIOS) {
       triggerNativeIAP(selectedPlan === 'yearly' ? 'buyYearly' : 'buyMonthly');
@@ -67,6 +110,12 @@ const PaymentSettings = () => {
       title: "Upgrade in the iOS app",
       description: "Premium subscriptions are available through the Sermable iOS app on the App Store.",
     });
+  };
+
+  const handleRestore = () => {
+    if (!isIOS) return;
+    triggerNativeIAP('restorePurchases');
+    toast({ title: "Restoring purchases…" });
   };
 
   return (
