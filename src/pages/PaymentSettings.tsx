@@ -258,6 +258,12 @@ const PaymentSettings = () => {
                   {isIOS ? 'Subscribe' : 'Get Premium'}
                 </Button>
 
+                {isIOS && (
+                  <Button variant="ghost" size="sm" className="w-full" onClick={handleRestore}>
+                    Restore purchases
+                  </Button>
+                )}
+
                 {!isIOS && (
                   <p className="text-xs text-center text-muted-foreground">
                     Premium subscriptions are available in the Sermable iOS app on the App Store.
