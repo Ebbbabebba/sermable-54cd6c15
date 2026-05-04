@@ -822,9 +822,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         }
       } else if (masteredBeats.length > 0) {
-        // All beats completed - start a recall/practice session on the first beat
-        console.log('🔄 All beats completed - starting recall practice on first beat');
-        const beatToRecall = masteredBeats.sort((a, b) => a.beat_order - b.beat_order)[0];
+        // All beats completed - rotate through beats by least-recently practiced
+        // Pick the beat that's been practiced the longest time ago (or never recalled)
+        // Tie-break by lowest recall_session_number, then by beat_order.
+        const sortedForMaintenance = [...masteredBeats].sort((a, b) => {
+          const aRecall = a.last_recall_at ? new Date(a.last_recall_at).getTime() : 0;
+          const bRecall = b.last_recall_at ? new Date(b.last_recall_at).getTime() : 0;
+          if (aRecall !== bRecall) return aRecall - bRecall; // oldest first
+          const aSess = a.recall_session_number ?? 0;
+          const bSess = b.recall_session_number ?? 0;
+          if (aSess !== bSess) return aSess - bSess; // least-reviewed first
+          return a.beat_order - b.beat_order;
+        });
+        const beatToRecall = sortedForMaintenance[0];
+        console.log('🔄 All beats completed - maintenance recall on beat', beatToRecall.beat_order, '(last recalled:', beatToRecall.last_recall_at ?? 'never', ')');
         setBeatsToRecall([beatToRecall]);
         setSessionMode('recall');
         setRecallIndex(0);
