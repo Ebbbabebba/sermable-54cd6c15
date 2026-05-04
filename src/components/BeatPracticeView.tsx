@@ -671,18 +671,27 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       });
       
       // Find mastered beats that need regular daily recall (only on new days)
+      // Sort by least-recently recalled so we rotate through them instead of
+      // always practicing the same beat first.
       const masteredBeats = rows.filter(b => b.is_mastered && b.mastered_at);
       const beatsNeedingDailyRecall = todayIsNewDay 
-        ? masteredBeats.filter(b => {
-            // Skip if already in any recall queue
-            if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
-            if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
-            if (beatsNeedingMorningRecall.some(r => r.id === b.id)) return false;
-            // Need recall if: never recalled today
-            if (!b.last_recall_at) return true;
-            const lastRecall = new Date(b.last_recall_at);
-            return lastRecall.toDateString() !== new Date().toDateString();
-          })
+        ? masteredBeats
+            .filter(b => {
+              // Skip if already in any recall queue
+              if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
+              if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
+              if (beatsNeedingMorningRecall.some(r => r.id === b.id)) return false;
+              // Need recall if: never recalled today
+              if (!b.last_recall_at) return true;
+              const lastRecall = new Date(b.last_recall_at);
+              return lastRecall.toDateString() !== new Date().toDateString();
+            })
+            .sort((a, b) => {
+              const aR = a.last_recall_at ? new Date(a.last_recall_at).getTime() : 0;
+              const bR = b.last_recall_at ? new Date(b.last_recall_at).getTime() : 0;
+              if (aR !== bR) return aR - bR;
+              return a.beat_order - b.beat_order;
+            })
         : [];
       
       // Find mastered beats that need scheduled 2/3/5/7 recall (next_scheduled_recall_at is in the past)
@@ -822,9 +831,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         }
       } else if (masteredBeats.length > 0) {
-        // All beats completed - start a recall/practice session on the first beat
-        console.log('🔄 All beats completed - starting recall practice on first beat');
-        const beatToRecall = masteredBeats.sort((a, b) => a.beat_order - b.beat_order)[0];
+        // All beats completed - rotate through beats by least-recently practiced
+        // Pick the beat that's been practiced the longest time ago (or never recalled)
+        // Tie-break by lowest recall_session_number, then by beat_order.
+        const sortedForMaintenance = [...masteredBeats].sort((a, b) => {
+          const aRecall = a.last_recall_at ? new Date(a.last_recall_at).getTime() : 0;
+          const bRecall = b.last_recall_at ? new Date(b.last_recall_at).getTime() : 0;
+          if (aRecall !== bRecall) return aRecall - bRecall; // oldest first
+          const aSess = a.recall_session_number ?? 0;
+          const bSess = b.recall_session_number ?? 0;
+          if (aSess !== bSess) return aSess - bSess; // least-reviewed first
+          return a.beat_order - b.beat_order;
+        });
+        const beatToRecall = sortedForMaintenance[0];
+        console.log('🔄 All beats completed - maintenance recall on beat', beatToRecall.beat_order, '(last recalled:', beatToRecall.last_recall_at ?? 'never', ')');
         setBeatsToRecall([beatToRecall]);
         setSessionMode('recall');
         setRecallIndex(0);

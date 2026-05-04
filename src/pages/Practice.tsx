@@ -2243,12 +2243,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
           {(() => {
             const today = new Date().toDateString();
             
-            // Get beats needing recall (mastered but not recalled today)
-            const beatsNeedingRecall = practiceBeats.filter(b => {
-              if (!b.is_mastered) return false;
-              if (!b.last_recall_at) return true;
-              return new Date(b.last_recall_at).toDateString() !== today;
-            });
+            // Get beats needing recall (mastered but not recalled today),
+            // sorted by least-recently recalled so the same beat doesn't
+            // dominate the preview every session.
+            const beatsNeedingRecall = practiceBeats
+              .filter(b => {
+                if (!b.is_mastered) return false;
+                if (!b.last_recall_at) return true;
+                return new Date(b.last_recall_at).toDateString() !== today;
+              })
+              .sort((a, b) => {
+                const aR = a.last_recall_at ? new Date(a.last_recall_at).getTime() : 0;
+                const bR = b.last_recall_at ? new Date(b.last_recall_at).getTime() : 0;
+                if (aR !== bR) return aR - bR;
+                return a.beat_order - b.beat_order;
+              });
             
             // Get next unmastered beat to learn
             const nextToLearn = practiceBeats.find(b => !b.is_mastered);
