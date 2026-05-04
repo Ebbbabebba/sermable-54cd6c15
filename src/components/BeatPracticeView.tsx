@@ -671,18 +671,27 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       });
       
       // Find mastered beats that need regular daily recall (only on new days)
+      // Sort by least-recently recalled so we rotate through them instead of
+      // always practicing the same beat first.
       const masteredBeats = rows.filter(b => b.is_mastered && b.mastered_at);
       const beatsNeedingDailyRecall = todayIsNewDay 
-        ? masteredBeats.filter(b => {
-            // Skip if already in any recall queue
-            if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
-            if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
-            if (beatsNeedingMorningRecall.some(r => r.id === b.id)) return false;
-            // Need recall if: never recalled today
-            if (!b.last_recall_at) return true;
-            const lastRecall = new Date(b.last_recall_at);
-            return lastRecall.toDateString() !== new Date().toDateString();
-          })
+        ? masteredBeats
+            .filter(b => {
+              // Skip if already in any recall queue
+              if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
+              if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
+              if (beatsNeedingMorningRecall.some(r => r.id === b.id)) return false;
+              // Need recall if: never recalled today
+              if (!b.last_recall_at) return true;
+              const lastRecall = new Date(b.last_recall_at);
+              return lastRecall.toDateString() !== new Date().toDateString();
+            })
+            .sort((a, b) => {
+              const aR = a.last_recall_at ? new Date(a.last_recall_at).getTime() : 0;
+              const bR = b.last_recall_at ? new Date(b.last_recall_at).getTime() : 0;
+              if (aR !== bR) return aR - bR;
+              return a.beat_order - b.beat_order;
+            })
         : [];
       
       // Find mastered beats that need scheduled 2/3/5/7 recall (next_scheduled_recall_at is in the past)
