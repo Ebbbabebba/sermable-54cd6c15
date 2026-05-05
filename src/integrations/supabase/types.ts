@@ -407,23 +407,28 @@ export type Database = {
           checkpoint_phase: string | null
           checkpoint_sentence: number | null
           consecutive_perfect_recalls: number | null
+          cooldown_until: string | null
           created_at: string | null
           id: string
           is_mastered: boolean | null
+          last_failure_at: string | null
           last_merged_recall_at: string | null
           last_recall_at: string | null
           mastered_at: string | null
           next_scheduled_recall_at: string | null
+          passed_in_full_speech: boolean
           practice_stage: string | null
           recall_10min_at: string | null
           recall_evening_at: string | null
           recall_morning_at: string | null
           recall_session_number: number | null
+          recent_failure_count: number
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
           speech_id: string
           stage_started_at: string | null
+          total_successful_recalls: number
           words_hidden_per_round: number | null
         }
         Insert: {
@@ -432,23 +437,28 @@ export type Database = {
           checkpoint_phase?: string | null
           checkpoint_sentence?: number | null
           consecutive_perfect_recalls?: number | null
+          cooldown_until?: string | null
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
+          last_failure_at?: string | null
           last_merged_recall_at?: string | null
           last_recall_at?: string | null
           mastered_at?: string | null
           next_scheduled_recall_at?: string | null
+          passed_in_full_speech?: boolean
           practice_stage?: string | null
           recall_10min_at?: string | null
           recall_evening_at?: string | null
           recall_morning_at?: string | null
           recall_session_number?: number | null
+          recent_failure_count?: number
           sentence_1_text: string
           sentence_2_text: string
           sentence_3_text: string
           speech_id: string
           stage_started_at?: string | null
+          total_successful_recalls?: number
           words_hidden_per_round?: number | null
         }
         Update: {
@@ -457,23 +467,28 @@ export type Database = {
           checkpoint_phase?: string | null
           checkpoint_sentence?: number | null
           consecutive_perfect_recalls?: number | null
+          cooldown_until?: string | null
           created_at?: string | null
           id?: string
           is_mastered?: boolean | null
+          last_failure_at?: string | null
           last_merged_recall_at?: string | null
           last_recall_at?: string | null
           mastered_at?: string | null
           next_scheduled_recall_at?: string | null
+          passed_in_full_speech?: boolean
           practice_stage?: string | null
           recall_10min_at?: string | null
           recall_evening_at?: string | null
           recall_morning_at?: string | null
           recall_session_number?: number | null
+          recent_failure_count?: number
           sentence_1_text?: string
           sentence_2_text?: string
           sentence_3_text?: string
           speech_id?: string
           stage_started_at?: string | null
+          total_successful_recalls?: number
           words_hidden_per_round?: number | null
         }
         Relationships: [

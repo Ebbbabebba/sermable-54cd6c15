@@ -57,6 +57,11 @@ interface Beat {
   checkpoint_sentence?: number | null;
   checkpoint_phase?: string | null;
   checkpoint_hidden_indices?: number[] | null;
+  passed_in_full_speech?: boolean;
+  recent_failure_count?: number;
+  last_failure_at?: string | null;
+  cooldown_until?: string | null;
+  total_successful_recalls?: number;
 }
 
 // 2/3/5/7 spaced repetition intervals (days between sessions)
@@ -633,9 +638,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       const now = new Date();
       
+      // Helper: a beat is "in cooldown" if cooldown_until is in the future.
+      // Cooldown beats skip SOLO recall but still join merged rehearsals.
+      const isInCooldown = (b: Beat) => {
+        if (!b.cooldown_until) return false;
+        return new Date(b.cooldown_until) > now;
+      };
+
+      // ADAPTIVE ROTATION: beats at session_number >= 5 (the 7-day rung) have
+      // proven durable — drop them from short-cycle 10min/evening/morning/daily
+      // rotations. They only resurface on their scheduled ladder or merged recall.
+      const isShortCycleEligible = (b: Beat) => (b.recall_session_number ?? 0) < 5;
+
       // Find mastered beats that need 10-minute recall (recall_10min_at is in the past and not yet recalled)
       const beatsNeeding10MinRecall = rows.filter(b => {
         if (!b.is_mastered || !b.recall_10min_at) return false;
+        if (!isShortCycleEligible(b)) return false;
+        if (isInCooldown(b)) return false;
         const recall10minTime = new Date(b.recall_10min_at);
         // Need recall if: time has passed AND we haven't recalled since mastery
         // (i.e., last_recall_at is null or before mastered_at)
@@ -648,6 +667,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Find mastered beats that need evening recall (recall_evening_at is in the past and not yet recalled after evening time)
       const beatsNeedingEveningRecall = rows.filter(b => {
         if (!b.is_mastered || !b.recall_evening_at) return false;
+        if (!isShortCycleEligible(b)) return false;
+        if (isInCooldown(b)) return false;
         // Skip if already in 10-min recall queue
         if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
         const recallEveningTime = new Date(b.recall_evening_at);
@@ -660,6 +681,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Find mastered beats that need morning recall (recall_morning_at is in the past and not yet recalled after morning time)
       const beatsNeedingMorningRecall = rows.filter(b => {
         if (!b.is_mastered || !b.recall_morning_at) return false;
+        if (!isShortCycleEligible(b)) return false;
+        if (isInCooldown(b)) return false;
         // Skip if already in other recall queues
         if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
         if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
@@ -677,6 +700,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const beatsNeedingDailyRecall = todayIsNewDay 
         ? masteredBeats
             .filter(b => {
+              if (!isShortCycleEligible(b)) return false;
+              if (isInCooldown(b)) return false;
               // Skip if already in any recall queue
               if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
               if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
@@ -695,8 +720,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         : [];
       
       // Find mastered beats that need scheduled 2/3/5/7 recall (next_scheduled_recall_at is in the past)
+      // Note: scheduled-ladder recall IS allowed even for high-session beats — it's
+      // exactly how they stay durable. But cooldown still suppresses solo recall.
       const beatsNeedingScheduledRecall = masteredBeats.filter(b => {
         if (!b.next_scheduled_recall_at) return false;
+        if (isInCooldown(b)) return false;
         // Skip if already in any other recall queue
         if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
         if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
@@ -1421,25 +1449,58 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Reset success count back to 0 (next success will hide 3 words again)
       setRecallSuccessCount(0);
 
-      // DEMOTE ON FAILURE: if this beat had moved into the long 2/3/5/7 ladder,
-      // step it back one rung and reschedule the next recall for tomorrow so the
-      // user re-encounters a struggling beat sooner instead of after 5–7 days.
+      // FAILURE SEVERITY WEIGHTING:
+      //   • full blank      (>50% missed)  → demote 2 rungs, 1-day cooldown candidate
+      //   • stumble         (20–50%)       → demote 1 rung
+      //   • tiny hesitation (<20%)         → no demotion, just retry
+      // Plus FAILURE CLUSTERING: 2 fails within 48h → cooldown for 24h (still merged-eligible).
       const failedBeat = beatsToRecall[recallIndex];
-      if (failedBeat && !isMergedRecall && (failedBeat.recall_session_number ?? 0) > 0) {
-        const demotedSession = Math.max(0, (failedBeat.recall_session_number ?? 0) - 1);
-        const tomorrow = new Date();
+      if (failedBeat && !isMergedRecall) {
+        const totalFailed = hesitatedIndicesRef.current.size + missedIndicesRef.current.size;
+        const failRatio = words.length > 0 ? totalFailed / words.length : 0;
+
+        let demotionRungs = 0;
+        if (failRatio > 0.5) demotionRungs = 2;
+        else if (failRatio > 0.2) demotionRungs = 1;
+        else demotionRungs = 0;
+
+        const currentSession = failedBeat.recall_session_number ?? 0;
+        const demotedSession = Math.max(0, currentSession - demotionRungs);
+
+        // Failure clustering — count fails in last 48h
+        const now = new Date();
+        const lastFail = failedBeat.last_failure_at ? new Date(failedBeat.last_failure_at) : null;
+        const within48h = lastFail && (now.getTime() - lastFail.getTime()) < 48 * 60 * 60 * 1000;
+        const newFailCount = within48h ? (failedBeat.recent_failure_count ?? 0) + 1 : 1;
+
+        const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(8, 0, 0, 0);
+
+        const updateData: Record<string, any> = {
+          last_recall_at: now.toISOString(),
+          last_failure_at: now.toISOString(),
+          recent_failure_count: newFailCount,
+        };
+
+        if (demotionRungs > 0 && currentSession > 0) {
+          updateData.recall_session_number = demotedSession;
+          updateData.next_scheduled_recall_at = tomorrow.toISOString();
+        }
+
+        // Cooldown trigger: 2+ failures within 48h
+        if (newFailCount >= 2) {
+          const cooldownEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          updateData.cooldown_until = cooldownEnd.toISOString();
+          console.log(`🧊 Beat ${failedBeat.beat_order} entered 24h cooldown (${newFailCount} fails in 48h)`);
+        }
+
         supabase
           .from('practice_beats')
-          .update({
-            recall_session_number: demotedSession,
-            next_scheduled_recall_at: tomorrow.toISOString(),
-            last_recall_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq('id', failedBeat.id)
           .then(() => {
-            console.log(`⬇️ Demoted beat ${failedBeat.beat_order} to session ${demotedSession}, next recall tomorrow`);
+            console.log(`⬇️ Beat ${failedBeat.beat_order} fail (${Math.round(failRatio*100)}%) → demote ${demotionRungs} → session ${demotedSession}`);
           });
       }
       
@@ -1514,37 +1575,52 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const recalledBeat = beatsToRecall[recallIndex];
         if (recalledBeat && !isMergedRecall) {
           const currentSessionNum = recalledBeat.recall_session_number ?? 0;
-          const newSessionNum = currentSessionNum + 1;
+          // GRADUATION GATE: cap at session 4 (3-day rung) until the beat has
+          // succeeded inside a full-speech / merged rehearsal at least once.
+          // This prevents 7-day gaps on beats that were never tested in context.
+          const wantsToClimb = currentSessionNum + 1;
+          const isCappedByGraduation = wantsToClimb >= 4 && !recalledBeat.passed_in_full_speech;
+          const newSessionNum = isCappedByGraduation ? Math.min(wantsToClimb, 3) : wantsToClimb;
           const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate);
-          
-          const updateData: Record<string, any> = { 
+
+          const updateData: Record<string, any> = {
             last_recall_at: new Date().toISOString(),
             recall_session_number: newSessionNum,
+            recent_failure_count: 0, // success resets failure clustering
+            cooldown_until: null,
+            total_successful_recalls: (recalledBeat.total_successful_recalls ?? 0) + 1,
           };
           if (nextRecallDate) {
             updateData.next_scheduled_recall_at = nextRecallDate.toISOString();
           }
-          
+
           supabase
             .from('practice_beats')
             .update(updateData)
             .eq('id', recalledBeat.id)
             .then(() => {
-              console.log(`📅 Beat ${recalledBeat.beat_order} recall session ${newSessionNum}, next scheduled:`, nextRecallDate?.toISOString() ?? 'none');
+              console.log(`📅 Beat ${recalledBeat.beat_order} → session ${newSessionNum}${isCappedByGraduation ? ' (capped: needs full-speech pass)' : ''}, next:`, nextRecallDate?.toISOString() ?? 'none');
             });
         }
-        
-        // If this was a merged recall, update last_merged_recall_at for all merged beats
+
+        // If this was a merged recall, update last_merged_recall_at AND mark all
+        // included beats as having passed in full-speech context (graduation).
         if (isMergedRecall && mergedRecallBeats.length > 0) {
           const now = new Date().toISOString();
           for (const mb of mergedRecallBeats) {
             supabase
               .from('practice_beats')
-              .update({ last_merged_recall_at: now })
+              .update({
+                last_merged_recall_at: now,
+                passed_in_full_speech: true,
+                total_successful_recalls: (mb.total_successful_recalls ?? 0) + 1,
+                recent_failure_count: 0,
+                cooldown_until: null,
+              })
               .eq('id', mb.id)
               .then(() => {});
           }
-          console.log(`🔗 Merged recall completed for ${mergedRecallBeats.length} beats`);
+          console.log(`🔗 Merged recall → ${mergedRecallBeats.length} beats graduated for full-speech pass`);
         }
 
         setCelebrationMessage(isMergedRecall ? "Full recall complete!" : "Beat recalled!");
