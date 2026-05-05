@@ -1552,37 +1552,52 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const recalledBeat = beatsToRecall[recallIndex];
         if (recalledBeat && !isMergedRecall) {
           const currentSessionNum = recalledBeat.recall_session_number ?? 0;
-          const newSessionNum = currentSessionNum + 1;
+          // GRADUATION GATE: cap at session 4 (3-day rung) until the beat has
+          // succeeded inside a full-speech / merged rehearsal at least once.
+          // This prevents 7-day gaps on beats that were never tested in context.
+          const wantsToClimb = currentSessionNum + 1;
+          const isCappedByGraduation = wantsToClimb >= 4 && !recalledBeat.passed_in_full_speech;
+          const newSessionNum = isCappedByGraduation ? Math.min(wantsToClimb, 3) : wantsToClimb;
           const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate);
-          
-          const updateData: Record<string, any> = { 
+
+          const updateData: Record<string, any> = {
             last_recall_at: new Date().toISOString(),
             recall_session_number: newSessionNum,
+            recent_failure_count: 0, // success resets failure clustering
+            cooldown_until: null,
+            total_successful_recalls: (recalledBeat.total_successful_recalls ?? 0) + 1,
           };
           if (nextRecallDate) {
             updateData.next_scheduled_recall_at = nextRecallDate.toISOString();
           }
-          
+
           supabase
             .from('practice_beats')
             .update(updateData)
             .eq('id', recalledBeat.id)
             .then(() => {
-              console.log(`📅 Beat ${recalledBeat.beat_order} recall session ${newSessionNum}, next scheduled:`, nextRecallDate?.toISOString() ?? 'none');
+              console.log(`📅 Beat ${recalledBeat.beat_order} → session ${newSessionNum}${isCappedByGraduation ? ' (capped: needs full-speech pass)' : ''}, next:`, nextRecallDate?.toISOString() ?? 'none');
             });
         }
-        
-        // If this was a merged recall, update last_merged_recall_at for all merged beats
+
+        // If this was a merged recall, update last_merged_recall_at AND mark all
+        // included beats as having passed in full-speech context (graduation).
         if (isMergedRecall && mergedRecallBeats.length > 0) {
           const now = new Date().toISOString();
           for (const mb of mergedRecallBeats) {
             supabase
               .from('practice_beats')
-              .update({ last_merged_recall_at: now })
+              .update({
+                last_merged_recall_at: now,
+                passed_in_full_speech: true,
+                total_successful_recalls: (mb.total_successful_recalls ?? 0) + 1,
+                recent_failure_count: 0,
+                cooldown_until: null,
+              })
               .eq('id', mb.id)
               .then(() => {});
           }
-          console.log(`🔗 Merged recall completed for ${mergedRecallBeats.length} beats`);
+          console.log(`🔗 Merged recall → ${mergedRecallBeats.length} beats graduated for full-speech pass`);
         }
 
         setCelebrationMessage(isMergedRecall ? "Full recall complete!" : "Beat recalled!");
