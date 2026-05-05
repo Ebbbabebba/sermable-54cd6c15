@@ -1392,6 +1392,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Failed recall - reveal ONLY the words that were missed/hesitated, but still hide 3 new words
       // Reset success count back to 0 (next success will hide 3 words again)
       setRecallSuccessCount(0);
+
+      // DEMOTE ON FAILURE: if this beat had moved into the long 2/3/5/7 ladder,
+      // step it back one rung and reschedule the next recall for tomorrow so the
+      // user re-encounters a struggling beat sooner instead of after 5–7 days.
+      const failedBeat = beatsToRecall[recallIndex];
+      if (failedBeat && !isMergedRecall && (failedBeat.recall_session_number ?? 0) > 0) {
+        const demotedSession = Math.max(0, (failedBeat.recall_session_number ?? 0) - 1);
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(8, 0, 0, 0);
+        supabase
+          .from('practice_beats')
+          .update({
+            recall_session_number: demotedSession,
+            next_scheduled_recall_at: tomorrow.toISOString(),
+            last_recall_at: new Date().toISOString(),
+          })
+          .eq('id', failedBeat.id)
+          .then(() => {
+            console.log(`⬇️ Demoted beat ${failedBeat.beat_order} to session ${demotedSession}, next recall tomorrow`);
+          });
+      }
       
       // Get the specific word indices that failed (hesitated or missed)
       const failedIndices = new Set<number>();
