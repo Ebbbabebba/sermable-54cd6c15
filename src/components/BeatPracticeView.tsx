@@ -831,6 +831,34 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         }
       } else if (masteredBeats.length > 0) {
+        // DAY-BEFORE / DEADLINE-DAY FULL REHEARSAL:
+        // When the presentation is ≤1 day away and all beats are mastered,
+        // always run the merged full-speech recall instead of single-beat maintenance.
+        // This guarantees at least one true end-to-end run-through before showtime.
+        if (masteredBeats.length >= 2 && computedDaysUntilDeadline <= 1) {
+          console.log('🎤 Deadline ≤1 day — forcing full-speech merged rehearsal');
+          const mergedBeat: Beat = {
+            id: 'merged-recall',
+            beat_order: -1,
+            sentence_1_text: masteredBeats.map(b => b.sentence_1_text).join(' '),
+            sentence_2_text: masteredBeats.map(b => b.sentence_2_text).join(' '),
+            sentence_3_text: masteredBeats.map(b => b.sentence_3_text).join(' '),
+            is_mastered: true,
+            mastered_at: null,
+            last_recall_at: null,
+            recall_10min_at: null,
+            recall_evening_at: null,
+            recall_morning_at: null,
+          };
+          setMergedRecallBeats(masteredBeats.sort((a, b) => a.beat_order - b.beat_order));
+          setIsMergedRecall(true);
+          setBeatsToRecall([mergedBeat]);
+          setSessionMode('recall');
+          setRecallIndex(0);
+          initializeRecallMode();
+          return;
+        }
+
         // All beats completed - rotate through beats by least-recently practiced
         // Pick the beat that's been practiced the longest time ago (or never recalled)
         // Tie-break by lowest recall_session_number, then by beat_order.
