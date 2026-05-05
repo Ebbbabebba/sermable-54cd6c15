@@ -831,6 +831,34 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         }
       } else if (masteredBeats.length > 0) {
+        // DAY-BEFORE / DEADLINE-DAY FULL REHEARSAL:
+        // When the presentation is ≤1 day away and all beats are mastered,
+        // always run the merged full-speech recall instead of single-beat maintenance.
+        // This guarantees at least one true end-to-end run-through before showtime.
+        if (masteredBeats.length >= 2 && computedDaysUntilDeadline <= 1) {
+          console.log('🎤 Deadline ≤1 day — forcing full-speech merged rehearsal');
+          const mergedBeat: Beat = {
+            id: 'merged-recall',
+            beat_order: -1,
+            sentence_1_text: masteredBeats.map(b => b.sentence_1_text).join(' '),
+            sentence_2_text: masteredBeats.map(b => b.sentence_2_text).join(' '),
+            sentence_3_text: masteredBeats.map(b => b.sentence_3_text).join(' '),
+            is_mastered: true,
+            mastered_at: null,
+            last_recall_at: null,
+            recall_10min_at: null,
+            recall_evening_at: null,
+            recall_morning_at: null,
+          };
+          setMergedRecallBeats(masteredBeats.sort((a, b) => a.beat_order - b.beat_order));
+          setIsMergedRecall(true);
+          setBeatsToRecall([mergedBeat]);
+          setSessionMode('recall');
+          setRecallIndex(0);
+          initializeRecallMode();
+          return;
+        }
+
         // All beats completed - rotate through beats by least-recently practiced
         // Pick the beat that's been practiced the longest time ago (or never recalled)
         // Tie-break by lowest recall_session_number, then by beat_order.
@@ -1392,6 +1420,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Failed recall - reveal ONLY the words that were missed/hesitated, but still hide 3 new words
       // Reset success count back to 0 (next success will hide 3 words again)
       setRecallSuccessCount(0);
+
+      // DEMOTE ON FAILURE: if this beat had moved into the long 2/3/5/7 ladder,
+      // step it back one rung and reschedule the next recall for tomorrow so the
+      // user re-encounters a struggling beat sooner instead of after 5–7 days.
+      const failedBeat = beatsToRecall[recallIndex];
+      if (failedBeat && !isMergedRecall && (failedBeat.recall_session_number ?? 0) > 0) {
+        const demotedSession = Math.max(0, (failedBeat.recall_session_number ?? 0) - 1);
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(8, 0, 0, 0);
+        supabase
+          .from('practice_beats')
+          .update({
+            recall_session_number: demotedSession,
+            next_scheduled_recall_at: tomorrow.toISOString(),
+            last_recall_at: new Date().toISOString(),
+          })
+          .eq('id', failedBeat.id)
+          .then(() => {
+            console.log(`⬇️ Demoted beat ${failedBeat.beat_order} to session ${demotedSession}, next recall tomorrow`);
+          });
+      }
       
       // Get the specific word indices that failed (hesitated or missed)
       const failedIndices = new Set<number>();
