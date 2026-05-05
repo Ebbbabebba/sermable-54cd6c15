@@ -1426,25 +1426,58 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Reset success count back to 0 (next success will hide 3 words again)
       setRecallSuccessCount(0);
 
-      // DEMOTE ON FAILURE: if this beat had moved into the long 2/3/5/7 ladder,
-      // step it back one rung and reschedule the next recall for tomorrow so the
-      // user re-encounters a struggling beat sooner instead of after 5–7 days.
+      // FAILURE SEVERITY WEIGHTING:
+      //   • full blank      (>50% missed)  → demote 2 rungs, 1-day cooldown candidate
+      //   • stumble         (20–50%)       → demote 1 rung
+      //   • tiny hesitation (<20%)         → no demotion, just retry
+      // Plus FAILURE CLUSTERING: 2 fails within 48h → cooldown for 24h (still merged-eligible).
       const failedBeat = beatsToRecall[recallIndex];
-      if (failedBeat && !isMergedRecall && (failedBeat.recall_session_number ?? 0) > 0) {
-        const demotedSession = Math.max(0, (failedBeat.recall_session_number ?? 0) - 1);
-        const tomorrow = new Date();
+      if (failedBeat && !isMergedRecall) {
+        const totalFailed = hesitatedIndicesRef.current.size + missedIndicesRef.current.size;
+        const failRatio = words.length > 0 ? totalFailed / words.length : 0;
+
+        let demotionRungs = 0;
+        if (failRatio > 0.5) demotionRungs = 2;
+        else if (failRatio > 0.2) demotionRungs = 1;
+        else demotionRungs = 0;
+
+        const currentSession = failedBeat.recall_session_number ?? 0;
+        const demotedSession = Math.max(0, currentSession - demotionRungs);
+
+        // Failure clustering — count fails in last 48h
+        const now = new Date();
+        const lastFail = failedBeat.last_failure_at ? new Date(failedBeat.last_failure_at) : null;
+        const within48h = lastFail && (now.getTime() - lastFail.getTime()) < 48 * 60 * 60 * 1000;
+        const newFailCount = within48h ? (failedBeat.recent_failure_count ?? 0) + 1 : 1;
+
+        const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(8, 0, 0, 0);
+
+        const updateData: Record<string, any> = {
+          last_recall_at: now.toISOString(),
+          last_failure_at: now.toISOString(),
+          recent_failure_count: newFailCount,
+        };
+
+        if (demotionRungs > 0 && currentSession > 0) {
+          updateData.recall_session_number = demotedSession;
+          updateData.next_scheduled_recall_at = tomorrow.toISOString();
+        }
+
+        // Cooldown trigger: 2+ failures within 48h
+        if (newFailCount >= 2) {
+          const cooldownEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          updateData.cooldown_until = cooldownEnd.toISOString();
+          console.log(`🧊 Beat ${failedBeat.beat_order} entered 24h cooldown (${newFailCount} fails in 48h)`);
+        }
+
         supabase
           .from('practice_beats')
-          .update({
-            recall_session_number: demotedSession,
-            next_scheduled_recall_at: tomorrow.toISOString(),
-            last_recall_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq('id', failedBeat.id)
           .then(() => {
-            console.log(`⬇️ Demoted beat ${failedBeat.beat_order} to session ${demotedSession}, next recall tomorrow`);
+            console.log(`⬇️ Beat ${failedBeat.beat_order} fail (${Math.round(failRatio*100)}%) → demote ${demotionRungs} → session ${demotedSession}`);
           });
       }
       
