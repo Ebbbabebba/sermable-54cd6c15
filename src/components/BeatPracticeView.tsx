@@ -638,9 +638,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       const now = new Date();
       
+      // Helper: a beat is "in cooldown" if cooldown_until is in the future.
+      // Cooldown beats skip SOLO recall but still join merged rehearsals.
+      const isInCooldown = (b: Beat) => {
+        if (!b.cooldown_until) return false;
+        return new Date(b.cooldown_until) > now;
+      };
+
+      // ADAPTIVE ROTATION: beats at session_number >= 5 (the 7-day rung) have
+      // proven durable — drop them from short-cycle 10min/evening/morning/daily
+      // rotations. They only resurface on their scheduled ladder or merged recall.
+      const isShortCycleEligible = (b: Beat) => (b.recall_session_number ?? 0) < 5;
+
       // Find mastered beats that need 10-minute recall (recall_10min_at is in the past and not yet recalled)
       const beatsNeeding10MinRecall = rows.filter(b => {
         if (!b.is_mastered || !b.recall_10min_at) return false;
+        if (!isShortCycleEligible(b)) return false;
+        if (isInCooldown(b)) return false;
         const recall10minTime = new Date(b.recall_10min_at);
         // Need recall if: time has passed AND we haven't recalled since mastery
         // (i.e., last_recall_at is null or before mastered_at)
@@ -653,6 +667,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Find mastered beats that need evening recall (recall_evening_at is in the past and not yet recalled after evening time)
       const beatsNeedingEveningRecall = rows.filter(b => {
         if (!b.is_mastered || !b.recall_evening_at) return false;
+        if (!isShortCycleEligible(b)) return false;
+        if (isInCooldown(b)) return false;
         // Skip if already in 10-min recall queue
         if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
         const recallEveningTime = new Date(b.recall_evening_at);
@@ -665,6 +681,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Find mastered beats that need morning recall (recall_morning_at is in the past and not yet recalled after morning time)
       const beatsNeedingMorningRecall = rows.filter(b => {
         if (!b.is_mastered || !b.recall_morning_at) return false;
+        if (!isShortCycleEligible(b)) return false;
+        if (isInCooldown(b)) return false;
         // Skip if already in other recall queues
         if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
         if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
@@ -682,6 +700,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const beatsNeedingDailyRecall = todayIsNewDay 
         ? masteredBeats
             .filter(b => {
+              if (!isShortCycleEligible(b)) return false;
+              if (isInCooldown(b)) return false;
               // Skip if already in any recall queue
               if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
               if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
@@ -700,8 +720,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         : [];
       
       // Find mastered beats that need scheduled 2/3/5/7 recall (next_scheduled_recall_at is in the past)
+      // Note: scheduled-ladder recall IS allowed even for high-session beats — it's
+      // exactly how they stay durable. But cooldown still suppresses solo recall.
       const beatsNeedingScheduledRecall = masteredBeats.filter(b => {
         if (!b.next_scheduled_recall_at) return false;
+        if (isInCooldown(b)) return false;
         // Skip if already in any other recall queue
         if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
         if (beatsNeedingEveningRecall.some(r => r.id === b.id)) return false;
