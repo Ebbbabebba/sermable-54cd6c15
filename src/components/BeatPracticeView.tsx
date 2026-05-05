@@ -57,6 +57,11 @@ interface Beat {
   checkpoint_sentence?: number | null;
   checkpoint_phase?: string | null;
   checkpoint_hidden_indices?: number[] | null;
+  passed_in_full_speech?: boolean;
+  recent_failure_count?: number;
+  last_failure_at?: string | null;
+  cooldown_until?: string | null;
+  total_successful_recalls?: number;
 }
 
 // 2/3/5/7 spaced repetition intervals (days between sessions)
