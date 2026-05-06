@@ -74,7 +74,9 @@ const SPACED_REPETITION_INTERVALS = [0, 0, 2, 3, 5, 7, 7, 7]; // session 0-1 = s
 const calculateNextRecallDate = (
   sessionNumber: number, 
   lastRecallAt: Date, 
-  goalDate: Date | null
+  goalDate: Date | null,
+  preferredHours?: number[] | null,
+  fallbackHour: number = 8
 ): Date | null => {
   // Sessions 0-1 are handled by 10min/evening/morning recalls
   if (sessionNumber < 2) return null;
@@ -87,13 +89,11 @@ const calculateNextRecallDate = (
     const now = new Date();
     const totalDaysRemaining = Math.max(1, Math.ceil((goalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     
-    // Calculate total remaining interval days from this session onwards
     let totalRemainingIntervals = 0;
     for (let i = intervalIndex; i < SPACED_REPETITION_INTERVALS.length; i++) {
       totalRemainingIntervals += SPACED_REPETITION_INTERVALS[i];
     }
     
-    // If remaining intervals exceed remaining days, compress proportionally
     if (totalRemainingIntervals > 0 && totalDaysRemaining < totalRemainingIntervals) {
       const compressionRatio = totalDaysRemaining / totalRemainingIntervals;
       intervalDays = Math.max(1, Math.round(intervalDays * compressionRatio));
@@ -104,8 +104,59 @@ const calculateNextRecallDate = (
   
   const nextDate = new Date(lastRecallAt);
   nextDate.setDate(nextDate.getDate() + intervalDays);
-  nextDate.setHours(8, 0, 0, 0); // Schedule at 8 AM
+
+  // PREDICTIVE RESCHEDULING: snap to user's best practice hour.
+  // preferredHours comes from user_learning_analytics; fall back to profile's
+  // practice_start_hour, then 8 AM.
+  const validHours = (preferredHours ?? [])
+    .filter(h => Number.isFinite(h) && h >= 0 && h <= 23)
+    .sort((a, b) => a - b);
+  const targetHour = validHours[0] ?? fallbackHour;
+  nextDate.setHours(targetHour, 0, 0, 0);
   return nextDate;
+};
+
+// HYBRID ENDURANCE DRILLS: select which beats merge into a "full" recall.
+// On even drill counts, run the entire speech (full endurance).
+// On odd drill counts (with ≥4 mastered beats and identifiable weak beats),
+// run a spot-reinforcement merge: weak beats + the ending. This builds
+// fluency without forcing a full slog every single time.
+const selectBeatsForEnduranceDrill = (
+  masteredBeats: Beat[],
+  drillCounter: number
+): { beats: Beat[]; isFullSpeech: boolean } => {
+  const sorted = [...masteredBeats].sort((a, b) => a.beat_order - b.beat_order);
+  if (sorted.length < 4 || drillCounter % 2 === 0) {
+    return { beats: sorted, isFullSpeech: true };
+  }
+
+  // Identify weak beats: in cooldown, recent failures, or low success count.
+  const now = Date.now();
+  const isWeak = (b: Beat) =>
+    (b.recent_failure_count ?? 0) > 0 ||
+    (b.cooldown_until && new Date(b.cooldown_until).getTime() > now) ||
+    (b.total_successful_recalls ?? 0) < 2;
+
+  const weakBeats = sorted.filter(isWeak);
+  if (weakBeats.length === 0) {
+    return { beats: sorted, isFullSpeech: true };
+  }
+
+  // Spot-reinforcement merge: weak beats + last 2 beats (ending), de-duped, ordered.
+  const endingBeats = sorted.slice(-2);
+  const idSet = new Set<string>();
+  const merged: Beat[] = [];
+  for (const b of [...weakBeats, ...endingBeats].sort((a, b) => a.beat_order - b.beat_order)) {
+    if (!idSet.has(b.id)) {
+      idSet.add(b.id);
+      merged.push(b);
+    }
+  }
+  // Safety: if we ended up with most beats anyway, just do a full pass.
+  if (merged.length >= sorted.length - 1) {
+    return { beats: sorted, isFullSpeech: true };
+  }
+  return { beats: merged, isFullSpeech: false };
 };
 
 interface BeatPracticeViewProps {
@@ -280,6 +331,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [isMergedRecall, setIsMergedRecall] = useState(false); // Track if current recall is a merged recall
   const [mergedRecallBeats, setMergedRecallBeats] = useState<Beat[]>([]); // Beats included in merged recall
   const [isEndOfSessionRecall, setIsEndOfSessionRecall] = useState(false); // 10-min recall before session_complete
+  // Predictive rescheduling: user's best practice hours (from analytics or profile)
+  const [preferredPracticeHours, setPreferredPracticeHours] = useState<number[]>([]);
+  const [fallbackPracticeHour, setFallbackPracticeHour] = useState<number>(8);
+  // Hybrid endurance drills: alternate full-speech vs spot-reinforcement merges
+  const [enduranceDrillCounter, setEnduranceDrillCounter] = useState<number>(0);
   const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
   const [showCoffeePremiumUpsell, setShowCoffeePremiumUpsell] = useState(false); // Free-user upsell when tapping skip
   const [showPreBeatRecallIntro, setShowPreBeatRecallIntro] = useState(false); // Animated intro before pre-beat recall
@@ -614,6 +670,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Set familiarity level for adaptive word hiding
     if (speechRow?.familiarity_level) {
       setFamiliarityLevel(speechRow.familiarity_level as 'beginner' | 'intermediate' | 'confident');
+    }
+
+    // Load user's preferred practice hours for predictive rescheduling.
+    // Source 1: user_learning_analytics.preferred_practice_hours (best-performing slots)
+    // Source 2: profiles.practice_start_hour (user-set window start) as fallback
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const [analyticsRes, profileRes] = await Promise.all([
+          supabase
+            .from('user_learning_analytics')
+            .select('preferred_practice_hours')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('profiles')
+            .select('practice_start_hour')
+            .eq('id', user.id)
+            .maybeSingle(),
+        ]);
+        const hours = (analyticsRes.data?.preferred_practice_hours ?? []) as number[];
+        if (Array.isArray(hours) && hours.length > 0) {
+          setPreferredPracticeHours(hours);
+        }
+        const fallback = profileRes.data?.practice_start_hour;
+        if (typeof fallback === 'number') {
+          setFallbackPracticeHour(fallback);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load preferred practice hours:', err);
     }
 
     // Determine if this is a new day (for 1 beat per day logic)
@@ -1593,7 +1680,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const wantsToClimb = currentSessionNum + 1;
           const isCappedByGraduation = wantsToClimb >= 4 && !recalledBeat.passed_in_full_speech;
           const newSessionNum = isCappedByGraduation ? Math.min(wantsToClimb, 3) : wantsToClimb;
-          const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate);
+          const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate, preferredPracticeHours, fallbackPracticeHour);
 
           const updateData: Record<string, any> = {
             last_recall_at: new Date().toISOString(),
@@ -1677,14 +1764,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           } else {
             // Done with individual recalls - check if merged recall is needed
             if (mergedRecallBeats.length >= 2) {
-              console.log('🔗 Starting merged recall of', mergedRecallBeats.length, 'beats');
-              // Create a synthetic "merged beat" that combines all mastered beats' text
+              // HYBRID ENDURANCE DRILL: alternate between full-speech and
+              // spot-reinforcement (weak beats + ending). Even counts → full
+              // pass. Odd counts (with weak beats) → focused merge.
+              const { beats: drillBeats, isFullSpeech } = selectBeatsForEnduranceDrill(
+                mergedRecallBeats,
+                enduranceDrillCounter
+              );
+              setEnduranceDrillCounter(prev => prev + 1);
+              console.log(
+                `🔗 ${isFullSpeech ? 'Full-speech' : 'Spot-reinforcement'} merge of ${drillBeats.length}/${mergedRecallBeats.length} beats`
+              );
               const mergedBeat: Beat = {
                 id: 'merged-recall',
                 beat_order: -1,
-                sentence_1_text: mergedRecallBeats.map(b => b.sentence_1_text).join(' '),
-                sentence_2_text: mergedRecallBeats.map(b => b.sentence_2_text).join(' '),
-                sentence_3_text: mergedRecallBeats.map(b => b.sentence_3_text).join(' '),
+                sentence_1_text: drillBeats.map(b => b.sentence_1_text).join(' '),
+                sentence_2_text: drillBeats.map(b => b.sentence_2_text).join(' '),
+                sentence_3_text: drillBeats.map(b => b.sentence_3_text).join(' '),
                 is_mastered: true,
                 mastered_at: null,
                 last_recall_at: null,
@@ -1692,6 +1788,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 recall_evening_at: null,
                 recall_morning_at: null,
               };
+              // Keep mergedRecallBeats as the actual beats included so
+              // `passed_in_full_speech` only flips for those that ran.
+              setMergedRecallBeats(drillBeats);
               setIsMergedRecall(true);
               setBeatsToRecall([mergedBeat]);
               setRecallIndex(0);
