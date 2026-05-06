@@ -1167,11 +1167,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
     
     // For VISIBLE words, slightly more lenient than hidden but still meaningful
-    // Short words (1-2 chars): require exact
-    if (e.length <= 2) return false;
+    // Short words (1-2 chars): require exact, OR accept if spoken contains expected as substring
+    // (handles speech recognition merging short words into neighbors, e.g. "the era" → "thera")
+    if (e.length <= 2) {
+      if (s === e) return true;
+      // Allow merged-word recovery: if expected is contained in spoken
+      if (s.length >= e.length && s.includes(e)) return true;
+      return false;
+    }
     
-    // 3-char words: allow 1 difference
+    // 3-char words: allow 1 difference, OR substring containment for merged-word cases
     if (e.length === 3) {
+      // Substring containment (e.g. "era" inside "thera" or "eraof")
+      if (s.length > e.length && s.includes(e)) return true;
       if (Math.abs(s.length - e.length) > 1) return false;
       let diff = 0;
       for (let i = 0; i < Math.max(s.length, e.length); i++) {
@@ -1181,6 +1189,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
     
     // 4+ char words: use Levenshtein with slightly more tolerance than hidden
+    // Substring containment also works here for merged words
+    if (s.length > e.length + 2 && s.includes(e)) return true;
+    
     // Don't match if lengths are too different
     if (Math.abs(s.length - e.length) > 2) return false;
     
