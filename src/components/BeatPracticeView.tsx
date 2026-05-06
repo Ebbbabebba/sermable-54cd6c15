@@ -74,7 +74,9 @@ const SPACED_REPETITION_INTERVALS = [0, 0, 2, 3, 5, 7, 7, 7]; // session 0-1 = s
 const calculateNextRecallDate = (
   sessionNumber: number, 
   lastRecallAt: Date, 
-  goalDate: Date | null
+  goalDate: Date | null,
+  preferredHours?: number[] | null,
+  fallbackHour: number = 8
 ): Date | null => {
   // Sessions 0-1 are handled by 10min/evening/morning recalls
   if (sessionNumber < 2) return null;
@@ -87,13 +89,11 @@ const calculateNextRecallDate = (
     const now = new Date();
     const totalDaysRemaining = Math.max(1, Math.ceil((goalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     
-    // Calculate total remaining interval days from this session onwards
     let totalRemainingIntervals = 0;
     for (let i = intervalIndex; i < SPACED_REPETITION_INTERVALS.length; i++) {
       totalRemainingIntervals += SPACED_REPETITION_INTERVALS[i];
     }
     
-    // If remaining intervals exceed remaining days, compress proportionally
     if (totalRemainingIntervals > 0 && totalDaysRemaining < totalRemainingIntervals) {
       const compressionRatio = totalDaysRemaining / totalRemainingIntervals;
       intervalDays = Math.max(1, Math.round(intervalDays * compressionRatio));
@@ -104,7 +104,15 @@ const calculateNextRecallDate = (
   
   const nextDate = new Date(lastRecallAt);
   nextDate.setDate(nextDate.getDate() + intervalDays);
-  nextDate.setHours(8, 0, 0, 0); // Schedule at 8 AM
+
+  // PREDICTIVE RESCHEDULING: snap to user's best practice hour.
+  // preferredHours comes from user_learning_analytics; fall back to profile's
+  // practice_start_hour, then 8 AM.
+  const validHours = (preferredHours ?? [])
+    .filter(h => Number.isFinite(h) && h >= 0 && h <= 23)
+    .sort((a, b) => a - b);
+  const targetHour = validHours[0] ?? fallbackHour;
+  nextDate.setHours(targetHour, 0, 0, 0);
   return nextDate;
 };
 
