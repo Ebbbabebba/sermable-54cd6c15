@@ -629,6 +629,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setFamiliarityLevel(speechRow.familiarity_level as 'beginner' | 'intermediate' | 'confident');
     }
 
+    // Load user's preferred practice hours for predictive rescheduling.
+    // Source 1: user_learning_analytics.preferred_practice_hours (best-performing slots)
+    // Source 2: profiles.practice_start_hour (user-set window start) as fallback
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const [analyticsRes, profileRes] = await Promise.all([
+          supabase
+            .from('user_learning_analytics')
+            .select('preferred_practice_hours')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('profiles')
+            .select('practice_start_hour')
+            .eq('id', user.id)
+            .maybeSingle(),
+        ]);
+        const hours = (analyticsRes.data?.preferred_practice_hours ?? []) as number[];
+        if (Array.isArray(hours) && hours.length > 0) {
+          setPreferredPracticeHours(hours);
+        }
+        const fallback = profileRes.data?.practice_start_hour;
+        if (typeof fallback === 'number') {
+          setFallbackPracticeHour(fallback);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load preferred practice hours:', err);
+    }
+
     // Determine if this is a new day (for 1 beat per day logic)
     const lastPractice = speechRow?.last_practice_session_at 
       ? new Date(speechRow.last_practice_session_at) 
