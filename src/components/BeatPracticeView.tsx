@@ -1637,7 +1637,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const wantsToClimb = currentSessionNum + 1;
           const isCappedByGraduation = wantsToClimb >= 4 && !recalledBeat.passed_in_full_speech;
           const newSessionNum = isCappedByGraduation ? Math.min(wantsToClimb, 3) : wantsToClimb;
-          const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate);
+          const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate, preferredPracticeHours, fallbackPracticeHour);
 
           const updateData: Record<string, any> = {
             last_recall_at: new Date().toISOString(),
