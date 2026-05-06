@@ -1764,14 +1764,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           } else {
             // Done with individual recalls - check if merged recall is needed
             if (mergedRecallBeats.length >= 2) {
-              console.log('🔗 Starting merged recall of', mergedRecallBeats.length, 'beats');
-              // Create a synthetic "merged beat" that combines all mastered beats' text
+              // HYBRID ENDURANCE DRILL: alternate between full-speech and
+              // spot-reinforcement (weak beats + ending). Even counts → full
+              // pass. Odd counts (with weak beats) → focused merge.
+              const { beats: drillBeats, isFullSpeech } = selectBeatsForEnduranceDrill(
+                mergedRecallBeats,
+                enduranceDrillCounter
+              );
+              setEnduranceDrillCounter(prev => prev + 1);
+              console.log(
+                `🔗 ${isFullSpeech ? 'Full-speech' : 'Spot-reinforcement'} merge of ${drillBeats.length}/${mergedRecallBeats.length} beats`
+              );
               const mergedBeat: Beat = {
                 id: 'merged-recall',
                 beat_order: -1,
-                sentence_1_text: mergedRecallBeats.map(b => b.sentence_1_text).join(' '),
-                sentence_2_text: mergedRecallBeats.map(b => b.sentence_2_text).join(' '),
-                sentence_3_text: mergedRecallBeats.map(b => b.sentence_3_text).join(' '),
+                sentence_1_text: drillBeats.map(b => b.sentence_1_text).join(' '),
+                sentence_2_text: drillBeats.map(b => b.sentence_2_text).join(' '),
+                sentence_3_text: drillBeats.map(b => b.sentence_3_text).join(' '),
                 is_mastered: true,
                 mastered_at: null,
                 last_recall_at: null,
@@ -1779,6 +1788,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 recall_evening_at: null,
                 recall_morning_at: null,
               };
+              // Keep mergedRecallBeats as the actual beats included so
+              // `passed_in_full_speech` only flips for those that ran.
+              setMergedRecallBeats(drillBeats);
               setIsMergedRecall(true);
               setBeatsToRecall([mergedBeat]);
               setRecallIndex(0);
