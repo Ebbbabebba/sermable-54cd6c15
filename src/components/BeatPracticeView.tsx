@@ -288,6 +288,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [isMergedRecall, setIsMergedRecall] = useState(false); // Track if current recall is a merged recall
   const [mergedRecallBeats, setMergedRecallBeats] = useState<Beat[]>([]); // Beats included in merged recall
   const [isEndOfSessionRecall, setIsEndOfSessionRecall] = useState(false); // 10-min recall before session_complete
+  // Predictive rescheduling: user's best practice hours (from analytics or profile)
+  const [preferredPracticeHours, setPreferredPracticeHours] = useState<number[]>([]);
+  const [fallbackPracticeHour, setFallbackPracticeHour] = useState<number>(8);
+  // Hybrid endurance drills: alternate full-speech vs spot-reinforcement merges
+  const [enduranceDrillCounter, setEnduranceDrillCounter] = useState<number>(0);
   const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
   const [showCoffeePremiumUpsell, setShowCoffeePremiumUpsell] = useState(false); // Free-user upsell when tapping skip
   const [showPreBeatRecallIntro, setShowPreBeatRecallIntro] = useState(false); // Animated intro before pre-beat recall
