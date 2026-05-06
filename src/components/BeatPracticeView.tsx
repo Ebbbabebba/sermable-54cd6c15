@@ -116,6 +116,49 @@ const calculateNextRecallDate = (
   return nextDate;
 };
 
+// HYBRID ENDURANCE DRILLS: select which beats merge into a "full" recall.
+// On even drill counts, run the entire speech (full endurance).
+// On odd drill counts (with ≥4 mastered beats and identifiable weak beats),
+// run a spot-reinforcement merge: weak beats + the ending. This builds
+// fluency without forcing a full slog every single time.
+const selectBeatsForEnduranceDrill = (
+  masteredBeats: Beat[],
+  drillCounter: number
+): { beats: Beat[]; isFullSpeech: boolean } => {
+  const sorted = [...masteredBeats].sort((a, b) => a.beat_order - b.beat_order);
+  if (sorted.length < 4 || drillCounter % 2 === 0) {
+    return { beats: sorted, isFullSpeech: true };
+  }
+
+  // Identify weak beats: in cooldown, recent failures, or low success count.
+  const now = Date.now();
+  const isWeak = (b: Beat) =>
+    (b.recent_failure_count ?? 0) > 0 ||
+    (b.cooldown_until && new Date(b.cooldown_until).getTime() > now) ||
+    (b.total_successful_recalls ?? 0) < 2;
+
+  const weakBeats = sorted.filter(isWeak);
+  if (weakBeats.length === 0) {
+    return { beats: sorted, isFullSpeech: true };
+  }
+
+  // Spot-reinforcement merge: weak beats + last 2 beats (ending), de-duped, ordered.
+  const endingBeats = sorted.slice(-2);
+  const idSet = new Set<string>();
+  const merged: Beat[] = [];
+  for (const b of [...weakBeats, ...endingBeats].sort((a, b) => a.beat_order - b.beat_order)) {
+    if (!idSet.has(b.id)) {
+      idSet.add(b.id);
+      merged.push(b);
+    }
+  }
+  // Safety: if we ended up with most beats anyway, just do a full pass.
+  if (merged.length >= sorted.length - 1) {
+    return { beats: sorted, isFullSpeech: true };
+  }
+  return { beats: merged, isFullSpeech: false };
+};
+
 interface BeatPracticeViewProps {
   speechId: string;
   subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
