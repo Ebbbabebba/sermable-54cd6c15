@@ -1885,7 +1885,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   const resetForNextRep = () => {
     repetitionIdRef.current += 1;
-    ignoreResultsUntilRef.current = Date.now() + 400;
+    // Minimal ignore window — just enough to discard stale tokens from the
+    // previous rep, but short enough that the user's first word is captured.
+    ignoreResultsUntilRef.current = Date.now() + 100;
 
     currentWordIndexRef.current = 0;
     setCurrentWordIndex(0);
