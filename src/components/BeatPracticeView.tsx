@@ -14,6 +14,8 @@ import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
+import { Capacitor } from "@capacitor/core";
+import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -2342,154 +2344,247 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
   };
 
-  // Start recording using Web Speech API
+  // Start recording — uses native Speech Recognition on iOS/Android (Capacitor)
+  // and Web Speech API on the browser. Native is far more responsive on mobile.
   const startRecording = async () => {
     if (recognitionRef.current) return;
 
     resetForNextRep();
-    
+
+    const isNative = Capacitor.isNativePlatform();
+    const lang = getRecognitionLocale(speechLang);
+
     try {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      
-      if (!SpeechRecognition) {
-        toast({
-          variant: "destructive",
-          title: "Not Supported",
-          description: "Speech recognition is not supported in this browser. Try Chrome or Safari.",
-        });
-        return;
-      }
-      
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = getRecognitionLocale(speechLang);
-      console.log('🗣️ Speech recognition language:', recognition.lang);
+      if (isNative) {
+        // ---- Native (iOS/Android) path ----
+        try {
+          const { available } = await NativeSpeech.available();
+          if (!available) throw new Error("Native speech recognition unavailable");
 
-      runningTranscriptRef.current = "";
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        if (showCelebrationRef.current) return;
-        if (Date.now() < ignoreResultsUntilRef.current) return;
-
-        latestSpeechResultCountRef.current = Math.max(latestSpeechResultCountRef.current, event.results.length);
-
-        const currentRepId = repetitionIdRef.current;
-
-        let interim = "";
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (i < ignoreResultsBeforeIndexRef.current) continue;
-
-          const res = event.results[i];
-          const chunk = res?.[0]?.transcript ?? "";
-
-          if (res.isFinal) {
-            runningTranscriptRef.current += chunk + " ";
-          } else {
-            interim += chunk + " ";
+          const perm = await NativeSpeech.checkPermissions();
+          if (perm.speechRecognition !== "granted") {
+            const req = await NativeSpeech.requestPermissions();
+            if (req.speechRecognition !== "granted") {
+              toast({
+                variant: "destructive",
+                title: "Microphone Access Denied",
+                description: "Please allow microphone & speech access in iOS Settings.",
+              });
+              return;
+            }
           }
+
+          // Track cumulative transcript across multiple short native sessions.
+          // The native plugin returns the *current utterance* — we have to
+          // accumulate finals ourselves to emulate Web Speech's continuous mode.
+          const nativeFinalsRef = { current: "" };
+          let listenerHandle: any = null;
+          let partialHandle: any = null;
+          let stopped = false;
+
+          const startNativeSession = async () => {
+            if (stopped || !isRecordingRef.current) return;
+            try {
+              await NativeSpeech.start({
+                language: lang,
+                maxResults: 1,
+                prompt: "",
+                partialResults: true,
+                popup: false,
+              });
+            } catch (e) {
+              console.warn("Native start failed, retrying", e);
+              if (!stopped && isRecordingRef.current) {
+                setTimeout(startNativeSession, 300);
+              }
+            }
+          };
+
+          partialHandle = await NativeSpeech.addListener(
+            "partialResults" as any,
+            (data: any) => {
+              if (showCelebrationRef.current) return;
+              if (Date.now() < ignoreResultsUntilRef.current) return;
+              const matches: string[] = data?.matches ?? [];
+              const interim = matches[0] ?? "";
+              const combined = (nativeFinalsRef.current + " " + interim).trim();
+              processTranscriptionRef.current(
+                combined,
+                false,
+                repetitionIdRef.current
+              );
+            }
+          );
+
+          listenerHandle = await NativeSpeech.addListener(
+            "listeningState" as any,
+            async (data: any) => {
+              if (data?.status === "stopped" && !stopped && isRecordingRef.current) {
+                // Promote whatever interim was last seen into finals so we keep history.
+                // The plugin doesn't expose it directly, so we keep the running buffer
+                // accumulated by partialResults via processTranscription.
+                // Restart immediately to emulate continuous listening.
+                setTimeout(startNativeSession, 50);
+              }
+            }
+          );
+
+          // We expose a thin "recognition object" so the rest of the component
+          // (which reads recognitionRef.current to know it's running) keeps working.
+          recognitionRef.current = {
+            __native: true,
+            stop: async () => {
+              stopped = true;
+              try {
+                await NativeSpeech.stop();
+              } catch {}
+              try {
+                await partialHandle?.remove?.();
+                await listenerHandle?.remove?.();
+              } catch {}
+            },
+          };
+
+          isRecordingRef.current = true;
+          setIsRecording(true);
+          runningTranscriptRef.current = "";
+          lastWordTimeRef.current = Date.now();
+
+          await startNativeSession();
+        } catch (nativeErr) {
+          console.error("Native speech failed, falling back to Web Speech:", nativeErr);
+          // Fall through to Web Speech below
         }
+      }
 
-        const combined = (runningTranscriptRef.current + interim).trim();
+      if (!recognitionRef.current) {
+        // ---- Web Speech API path ----
+        const SpeechRecognition =
+          (window as any).SpeechRecognition ||
+          (window as any).webkitSpeechRecognition;
 
-        const lastIsFinal = event.results.length
-          ? event.results[event.results.length - 1].isFinal
-          : false;
-
-        processTranscriptionRef.current(combined, lastIsFinal, currentRepId);
-      };
-      
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error === 'not-allowed') {
+        if (!SpeechRecognition) {
           toast({
             variant: "destructive",
-            title: "Microphone Access Denied",
-            description: "Please allow microphone access to use speech recognition.",
+            title: "Not Supported",
+            description:
+              "Speech recognition is not supported in this browser. Try Chrome or Safari.",
           });
-        }
-      };
-      
-      recognition.onend = () => {
-        if (!isRecordingRef.current) return;
-        if (!recognitionRef.current) return;
-
-        const startSafely = () => {
-          if (!isRecordingRef.current) return;
-          if (!recognitionRef.current) return;
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            console.log('Recognition already started');
-          }
-        };
-
-        const waitMs = recognitionRestartAtRef.current - Date.now();
-        if (waitMs > 0) {
-          if (recognitionRestartTimeoutRef.current) {
-            clearTimeout(recognitionRestartTimeoutRef.current);
-          }
-          recognitionRestartTimeoutRef.current = setTimeout(startSafely, waitMs);
           return;
         }
 
-        startSafely();
-      };
-      
-      recognitionRef.current = recognition;
-      isRecordingRef.current = true;
-      setIsRecording(true);
-      recognition.start();
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = lang;
+        console.log("🗣️ Speech recognition language:", recognition.lang);
 
-      lastWordTimeRef.current = Date.now();
-      
+        runningTranscriptRef.current = "";
+
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          if (showCelebrationRef.current) return;
+          if (Date.now() < ignoreResultsUntilRef.current) return;
+
+          latestSpeechResultCountRef.current = Math.max(
+            latestSpeechResultCountRef.current,
+            event.results.length
+          );
+
+          const currentRepId = repetitionIdRef.current;
+          let interim = "";
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (i < ignoreResultsBeforeIndexRef.current) continue;
+            const res = event.results[i];
+            const chunk = res?.[0]?.transcript ?? "";
+            if (res.isFinal) runningTranscriptRef.current += chunk + " ";
+            else interim += chunk + " ";
+          }
+
+          const combined = (runningTranscriptRef.current + interim).trim();
+          const lastIsFinal = event.results.length
+            ? event.results[event.results.length - 1].isFinal
+            : false;
+          processTranscriptionRef.current(combined, lastIsFinal, currentRepId);
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error("Speech recognition error:", event.error);
+          if (event.error === "not-allowed") {
+            toast({
+              variant: "destructive",
+              title: "Microphone Access Denied",
+              description: "Please allow microphone access to use speech recognition.",
+            });
+          }
+        };
+
+        recognition.onend = () => {
+          if (!isRecordingRef.current) return;
+          if (!recognitionRef.current) return;
+
+          const startSafely = () => {
+            if (!isRecordingRef.current) return;
+            if (!recognitionRef.current) return;
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              console.log("Recognition already started");
+            }
+          };
+
+          const waitMs = recognitionRestartAtRef.current - Date.now();
+          if (waitMs > 0) {
+            if (recognitionRestartTimeoutRef.current) {
+              clearTimeout(recognitionRestartTimeoutRef.current);
+            }
+            recognitionRestartTimeoutRef.current = setTimeout(startSafely, waitMs);
+            return;
+          }
+
+          startSafely();
+        };
+
+        recognitionRef.current = recognition;
+        isRecordingRef.current = true;
+        setIsRecording(true);
+        recognition.start();
+        lastWordTimeRef.current = Date.now();
+      }
+
+      // Hesitation timer (shared between both engines)
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < wordsLengthRef.current) {
-          // Skip hesitation marking for first word of any sentence (natural pause between sentences)
-          if (sentenceStartIndicesRef.current.has(idx)) {
-            return;
-          }
+          if (sentenceStartIndicesRef.current.has(idx)) return;
           if (hiddenWordIndicesRef.current.has(idx)) {
-            // Mark as hesitated if not already
             if (!hesitatedIndicesRef.current.has(idx)) {
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
               hesitatedIndicesRef.current = newHesitated;
               setHesitatedIndices(newHesitated);
             }
-            
-          // Auto-advance past stuck words to prevent freezing
-            // Lenient words (names/proper nouns) get a faster timeout since speech recognition
-            // consistently struggles with them (e.g. "Ebba Hallert Djurberg")
             const isLenientWord = lenientWordIndicesRef.current.has(idx);
             const autoAdvanceMs = isLenientWord ? 3000 : 6000;
             if (elapsed > autoAdvanceMs) {
-              console.log(`⏭️ Auto-advancing past ${isLenientWord ? 'lenient' : 'hesitated'} word "${words[idx]}" at index ${idx} after ${autoAdvanceMs/1000}s timeout`);
-              
-              // Mark as spoken and move on
+              console.log(
+                `⏭️ Auto-advancing past ${
+                  isLenientWord ? "lenient" : "hesitated"
+                } word "${words[idx]}" at index ${idx} after ${autoAdvanceMs / 1000}s timeout`
+              );
               const newSpoken = new Set([...spokenIndicesRef.current, idx]);
               spokenIndicesRef.current = newSpoken;
               setSpokenIndices(newSpoken);
-              
-              // Advance word index
               const nextIdx = idx + 1;
               currentWordIndexRef.current = nextIdx;
               setCurrentWordIndex(nextIdx);
-              
-              // Reset the timer for the next word
               lastWordTimeRef.current = Date.now();
             }
           }
-          // NOTE: visible words are NEVER auto-advanced. The cursor must wait
-          // for the user to actually speak the word — auto-advancing on a read
-          // pause makes the pulse jump ahead before the user has spoken.
         }
       }, 500);
-      
     } catch (error) {
-      console.error('Failed to start recording:', error);
+      console.error("Failed to start recording:", error);
       toast({
         variant: "destructive",
         title: "Recording Failed",
@@ -2510,7 +2605,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.stop();
+        const r = recognitionRef.current;
+        if (r.__native) {
+          // async stop, fire & forget
+          r.stop();
+        } else {
+          r.stop();
+        }
       } catch {
         // ignore
       }

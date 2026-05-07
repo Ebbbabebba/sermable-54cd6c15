@@ -7,6 +7,8 @@ import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Medal, GraduationCap, RotateCcw, CheckCircle2 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -279,105 +281,175 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
   // Start recording
   const startRecording = useCallback(async () => {
     if (recognitionRef.current) return;
-    
+
+    const isNative = Capacitor.isNativePlatform();
+
     try {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      
-      if (!SpeechRecognition) {
-        toast({
-          variant: "destructive",
-          title: "Not Supported",
-          description: "Speech recognition is not supported in this browser.",
-        });
-        return;
-      }
-      
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = speechLang;
-      
-      transcriptRef.current = "";
-      
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let fullTranscript = "";
-        
-        for (let i = 0; i < event.results.length; i++) {
-          const res = event.results[i];
-          fullTranscript += (res?.[0]?.transcript ?? "") + " ";
-        }
-        
-        transcriptRef.current = fullTranscript.trim();
-        processTranscription(transcriptRef.current);
-        
-        // Reset silence timer
-        lastWordTimeRef.current = Date.now();
-      };
-      
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-      };
-      
-      recognition.onend = () => {
-        if (isRecordingRef.current && recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch (e) {
-            // ignore
+      if (isNative) {
+        try {
+          const { available } = await NativeSpeech.available();
+          if (!available) throw new Error("native unavailable");
+
+          const perm = await NativeSpeech.checkPermissions();
+          if (perm.speechRecognition !== "granted") {
+            const req = await NativeSpeech.requestPermissions();
+            if (req.speechRecognition !== "granted") {
+              toast({
+                variant: "destructive",
+                title: "Microphone Access Denied",
+                description: "Please allow microphone & speech access.",
+              });
+              return;
+            }
           }
+
+          let stopped = false;
+          let partialHandle: any = null;
+          let stateHandle: any = null;
+
+          const startNativeSession = async () => {
+            if (stopped || !isRecordingRef.current) return;
+            try {
+              await NativeSpeech.start({
+                language: speechLang,
+                maxResults: 1,
+                partialResults: true,
+                popup: false,
+              });
+            } catch (e) {
+              console.warn("native start failed", e);
+              if (!stopped && isRecordingRef.current) {
+                setTimeout(startNativeSession, 300);
+              }
+            }
+          };
+
+          partialHandle = await NativeSpeech.addListener(
+            "partialResults" as any,
+            (data: any) => {
+              const matches: string[] = data?.matches ?? [];
+              const interim = matches[0] ?? "";
+              transcriptRef.current = interim;
+              processTranscription(interim);
+              lastWordTimeRef.current = Date.now();
+            }
+          );
+
+          stateHandle = await NativeSpeech.addListener(
+            "listeningState" as any,
+            (data: any) => {
+              if (data?.status === "stopped" && !stopped && isRecordingRef.current) {
+                setTimeout(startNativeSession, 50);
+              }
+            }
+          );
+
+          recognitionRef.current = {
+            __native: true,
+            stop: async () => {
+              stopped = true;
+              try { await NativeSpeech.stop(); } catch {}
+              try { await partialHandle?.remove?.(); } catch {}
+              try { await stateHandle?.remove?.(); } catch {}
+            },
+          };
+
+          isRecordingRef.current = true;
+          setIsRecording(true);
+          lastWordTimeRef.current = Date.now();
+          await startNativeSession();
+        } catch (e) {
+          console.error("Native speech failed, falling back:", e);
         }
-      };
-      
-      recognitionRef.current = recognition;
-      isRecordingRef.current = true;
-      setIsRecording(true);
-      recognition.start();
-      
-      lastWordTimeRef.current = Date.now();
-      
-      // Silence detection - trigger keyword after 3 seconds
+      }
+
+      if (!recognitionRef.current) {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+          toast({
+            variant: "destructive",
+            title: "Not Supported",
+            description: "Speech recognition is not supported in this browser.",
+          });
+          return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = speechLang;
+
+        transcriptRef.current = "";
+
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          let fullTranscript = "";
+          for (let i = 0; i < event.results.length; i++) {
+            const res = event.results[i];
+            fullTranscript += (res?.[0]?.transcript ?? "") + " ";
+          }
+          transcriptRef.current = fullTranscript.trim();
+          processTranscription(transcriptRef.current);
+          lastWordTimeRef.current = Date.now();
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+        };
+
+        recognition.onend = () => {
+          if (isRecordingRef.current && recognitionRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch {}
+          }
+        };
+
+        recognitionRef.current = recognition;
+        isRecordingRef.current = true;
+        setIsRecording(true);
+        recognition.start();
+        lastWordTimeRef.current = Date.now();
+      }
+
       silenceTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         if (elapsed > 3000 && !showKeyword) {
           triggerKeywordSupport();
         }
       }, 500);
-      
-      // Blue pacing pulse - moves through words at ~2 words/second
+
       pulseIntervalRef.current = setInterval(() => {
         setPulseIndex(prev => {
           const next = prev + 1;
-          if (next >= wordsRef.current.length) {
-            return prev; // Stop at end
-          }
+          if (next >= wordsRef.current.length) return prev;
           return next;
         });
       }, 500);
-      
     } catch (error) {
       console.error('Failed to start recording:', error);
     }
   }, [speechLang, processTranscription, showKeyword, triggerKeywordSupport, toast]);
-  
+
   // Stop recording
   const stopRecording = useCallback(() => {
     isRecordingRef.current = false;
     setIsRecording(false);
-    
+
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.stop();
-      } catch {
-        // ignore
-      }
+        const r = recognitionRef.current;
+        if (r.__native) r.stop();
+        else r.stop();
+      } catch {}
       recognitionRef.current = null;
     }
-    
+
     if (silenceTimerRef.current) {
       clearInterval(silenceTimerRef.current);
       silenceTimerRef.current = null;
     }
-    
+
     if (pulseIntervalRef.current) {
       clearInterval(pulseIntervalRef.current);
       pulseIntervalRef.current = null;
