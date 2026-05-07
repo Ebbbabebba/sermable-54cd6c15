@@ -20,7 +20,7 @@
     "haveAccount": "Jag har redan ett konto",
     "hero": {
       "title": "Lär dig ditt tal utantill med AI-hjälp",
-      "subtitle": "Förbättra dina talkunskaper med personlig feedback och smart repetition",
+      "subtitle": "Förbättra dina talkunskaper med personlig feedback och spaced repetition",
       "cta": "Börja öva"
     },
     "features": {
@@ -143,7 +143,7 @@
       },
       "learning": {
         "title": "Inlärningsläge",
-        "message": "Jag använder smart repetition – en vetenskapligt beprövad teknik – för att schemalägga dina övningar för bästa resultat. Du lär dig snabbare!"
+        "message": "Jag använder spaced repetition – en vetenskapligt beprövad teknik – för att schemalägga dina övningar för bästa resultat. Du lär dig snabbare!"
       },
       "presentation": {
         "title": "Presentationsläge",
