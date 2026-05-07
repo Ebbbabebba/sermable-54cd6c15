@@ -7,6 +7,8 @@ import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { Medal, GraduationCap, RotateCcw, CheckCircle2 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
