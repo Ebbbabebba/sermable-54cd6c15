@@ -131,7 +131,7 @@
     "steps": {
       "welcome": {
         "title": "Välkommen till Sermable!",
-        "message": "Jag hjälper dig att lära dig dina tal och presentationer utantill. Låt mig visa hur det fungerar!"
+        "message": "Sermable hjälper dig att lära dig dina tal och presentationer utantill. Låt oss visa hur det fungerar!"
       },
       "practice": {
         "title": "Talövning",
