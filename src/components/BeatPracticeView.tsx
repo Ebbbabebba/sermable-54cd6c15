@@ -2282,9 +2282,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   const resetForNextRep = () => {
     repetitionIdRef.current += 1;
-    // Minimal ignore window — just enough to discard stale tokens from the
-    // previous rep, but short enough that the user's first word is captured.
-    ignoreResultsUntilRef.current = Date.now() + 100;
+    // Minimal ignore window — but never shorten a longer pause that was set
+    // by completion/phase transitions. Shortening it lets stale final results
+    // from the previous rep immediately advance the next rep/session.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 100);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
