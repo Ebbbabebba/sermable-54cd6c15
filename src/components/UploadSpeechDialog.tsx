@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PauseSlidersList } from "@/components/PauseSlidersList";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -580,6 +581,9 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                   {t('upload.wordLimit')}
                 </span>
               )}
+            </div>
+            <div className="pt-2">
+              <PauseSlidersList text={text} onChange={handleTextChange} />
             </div>
           </div>
 
