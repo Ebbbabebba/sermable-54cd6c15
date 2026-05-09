@@ -2633,9 +2633,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < wordsLengthRef.current) {
-          if (sentenceStartIndicesRef.current.has(idx)) return;
           if (hiddenWordIndicesRef.current.has(idx)) {
-            if (!hesitatedIndicesRef.current.has(idx)) {
+            const isSentenceStart = sentenceStartIndicesRef.current.has(idx);
+            if (!isSentenceStart && !hesitatedIndicesRef.current.has(idx)) {
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
               hesitatedIndicesRef.current = newHesitated;
               setHesitatedIndices(newHesitated);
