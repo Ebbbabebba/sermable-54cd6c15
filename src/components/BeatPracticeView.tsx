@@ -657,7 +657,38 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // the abort avoids the system mic chime that plays on every restart.
   };
 
-  const replayRecentTranscriptTail = (tailWordCount = 6) => {
+  // Trigger a planned pause when the cursor reaches a `-` marker in the
+  // script. Mutes the mic for the duration so noise can't trigger advance,
+  // and shows a full-screen dim + circular countdown overlay.
+  useEffect(() => {
+    if (!isRecording) return;
+    const due = pauseMarkers.find(
+      (p) =>
+        p.afterWordIndex === currentWordIndex - 1 &&
+        !triggeredPausesRef.current.has(p.pauseIndex),
+    );
+    if (!due) return;
+    triggeredPausesRef.current.add(due.pauseIndex);
+    const totalSeconds = Math.round(due.durationMs / 1000);
+    setActivePause({ remainingSeconds: totalSeconds, totalSeconds });
+    pauseSpeechRecognition(due.durationMs + 250);
+    if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
+    const startedAt = Date.now();
+    pauseTimerRef.current = setInterval(() => {
+      const elapsedMs = Date.now() - startedAt;
+      const remainingMs = Math.max(0, due.durationMs - elapsedMs);
+      if (remainingMs <= 0) {
+        if (pauseTimerRef.current) {
+          clearInterval(pauseTimerRef.current);
+          pauseTimerRef.current = null;
+        }
+        setActivePause(null);
+      } else {
+        setActivePause({ remainingSeconds: remainingMs / 1000, totalSeconds });
+      }
+    }, 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentWordIndex, isRecording, pauseMarkers]);
     const transcript = transcriptRef.current.trim();
     if (!transcript) return;
 
