@@ -1071,6 +1071,7 @@ export type Database = {
           performance_trend: number | null
           practice_segment_end: number | null
           practice_segment_start: number | null
+          practice_strictness: string
           presentation_mode: string | null
           review_interval: number | null
           share_token: string | null
@@ -1100,6 +1101,7 @@ export type Database = {
           performance_trend?: number | null
           practice_segment_end?: number | null
           practice_segment_start?: number | null
+          practice_strictness?: string
           presentation_mode?: string | null
           review_interval?: number | null
           share_token?: string | null
@@ -1129,6 +1131,7 @@ export type Database = {
           performance_trend?: number | null
           practice_segment_end?: number | null
           practice_segment_start?: number | null
+          practice_strictness?: string
           presentation_mode?: string | null
           review_interval?: number | null
           share_token?: string | null
