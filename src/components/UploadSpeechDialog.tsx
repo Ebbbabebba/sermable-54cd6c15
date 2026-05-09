@@ -571,6 +571,9 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                 className="resize-none"
                 disabled={isScanning && !capturedImage}
               />
+              <div className="mt-2">
+                <PauseSlidersList text={text} onChange={handleTextChange} />
+              </div>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
@@ -581,9 +584,6 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                   {t('upload.wordLimit')}
                 </span>
               )}
-            </div>
-            <div className="pt-2">
-              <PauseSlidersList text={text} onChange={handleTextChange} />
             </div>
           </div>
 
