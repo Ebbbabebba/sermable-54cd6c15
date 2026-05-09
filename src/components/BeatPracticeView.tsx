@@ -1481,6 +1481,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1) {
+        // If a lenient hidden word (flow/gap/proper noun) is blocking the cursor,
+        // fail it open as soon as speech is detected and retry the same spoken token
+        // against the next word. This prevents a hidden sentence-start word from
+        // delaying visible word coloring until the timeout fires.
+        if (currentIsHidden && currentIsLenient) {
+          newSpoken.add(advancedTo);
+          advancedTo += 1;
+          rawOffset -= 1;
+          lastWordTimeRef.current = Date.now();
+          continue;
+        }
+
         // Still no match - this spoken word doesn't match expected sequence
         // Just skip it (could be filler word, cough, background noise, etc.)
         continue;
