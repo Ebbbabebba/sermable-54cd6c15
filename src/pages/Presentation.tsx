@@ -16,6 +16,7 @@ import PresentationControls from "@/components/PresentationControls";
 import { AudienceOverlay } from "@/components/audience";
 import type { ViewMode } from "@/components/WearableHUD";
 import type { Environment } from "@/components/audience/types";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface WordPerformance {
   word: string;
