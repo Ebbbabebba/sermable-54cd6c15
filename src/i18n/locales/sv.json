@@ -900,6 +900,7 @@
     "notFound": "Talet hittades inte",
     "practice": "Öva",
     "present": "Presentera",
+    "print": "Skriv ut",
     "scriptPreview": "Manus",
     "wordCount_one": "{{count}} ord",
     "wordCount_other": "{{count}} ord",
@@ -910,5 +911,18 @@
       "overview": "Översikt",
       "calendar": "Kalender"
     }
+  },
+  "beatPrint": {
+    "title": "Skriv ut manus",
+    "description": "Välj layout. Regiinstruktioner i (parenteser) skrivs ut i kursiv.",
+    "optionPerPage": "En beat per sida",
+    "optionPerPageDesc": "Stort typsnitt, luftig layout. Bra för podium/scen.",
+    "optionContinuous": "Löpande sidor",
+    "optionContinuousDesc": "Kompakt utskrift, beats efter varandra. Sparar papper.",
+    "printButton": "Skriv ut",
+    "beatLabel": "Beat",
+    "popupBlockedTitle": "Popup blockerad",
+    "popupBlockedDesc": "Tillåt popup-fönster för att skriva ut manuset.",
+    "errorTitle": "Kunde inte skapa utskrift"
   }
 }

@@ -16,6 +16,7 @@ import PresentationControls from "@/components/PresentationControls";
 import { AudienceOverlay } from "@/components/audience";
 import type { ViewMode } from "@/components/WearableHUD";
 import type { Environment } from "@/components/audience/types";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface WordPerformance {
   word: string;
@@ -452,7 +453,7 @@ const Presentation = () => {
           <div className="space-y-2">
             <h1 className="text-4xl font-bold capitalize">{speech.title}</h1>
             <p className="text-muted-foreground">
-              {t('presentation.wholeSpeechModeLabel', 'Whole Speech Mode')} • {t('presentation.wordsCount', { count: speech.text_original.split(/\s+/).length })}
+              {t('presentation.wholeSpeechModeLabel', 'Whole Speech Mode')} • {t('presentation.wordsCount', { count: stripStageDirections(speech.text_original).split(/\s+/).filter(Boolean).length })}
             </p>
           </div>
 

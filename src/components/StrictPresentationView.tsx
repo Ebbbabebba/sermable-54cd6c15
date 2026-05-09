@@ -4,6 +4,7 @@ import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface WordPerformance {
   word: string;
@@ -109,7 +110,7 @@ export const StrictPresentationView = ({
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
   
-  const words = text.split(/\s+/).filter(w => w.length > 0);
+  const words = stripStageDirections(text).split(/\s+/).filter(w => w.length > 0);
   
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;

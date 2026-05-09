@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation, Printer } from "lucide-react";
 import SpeechCalendar from "@/components/SpeechCalendar";
+import { BeatPrintDialog } from "@/components/BeatPrintDialog";
 import { differenceInDays } from "date-fns";
 
 interface Speech {
@@ -25,6 +26,7 @@ const SpeechDetail = () => {
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("overview");
+  const [printOpen, setPrintOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -78,6 +80,10 @@ const SpeechDetail = () => {
             {t("common.back")}
           </Button>
           <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setPrintOpen(true)} aria-label={t("beatPrint.title", "Skriv ut manus")}>
+              <Printer className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t("speechDetail.print", "Skriv ut")}</span>
+            </Button>
             <Button size="sm" variant="outline" onClick={() => navigate(`/presentation/${speech.id}`)}>
               <Presentation className="h-4 w-4 mr-2" />
               {t("speechDetail.present")}
@@ -141,6 +147,14 @@ const SpeechDetail = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <BeatPrintDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        speechId={speech.id}
+        speechTitle={speech.title}
+        fallbackText={speech.text_original}
+      />
     </div>
   );
 };

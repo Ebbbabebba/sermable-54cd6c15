@@ -40,6 +40,7 @@ import DayAfterRecallView from "@/components/DayAfterRecallView";
 import SegmentProgress from "@/components/SegmentProgress";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface Speech {
   id: string;
@@ -304,18 +305,23 @@ const [liveTranscription, setLiveTranscription] = useState("");
     console.log('📚 Focusing on segment:', currentSegment.segment_order + 1);
   };
 
-  // Clean bracket notation from text (keep words, remove [ and ])
+  // Clean bracket notation from text:
+  //  - `[hidden word]` → hidden words: keep the word itself, remove the brackets
+  //  - `(stage direction)` → fully removed (regi for the speaker, not for AI)
   const cleanBracketNotation = (text: string): string => {
-    return text.replace(/\[|\]/g, '');
+    return stripStageDirections(text).replace(/\[|\]/g, '');
   };
 
-  // Extract hidden word indices from segment text (words inside [...] are hidden)
+  // Extract hidden word indices from segment text (words inside [...] are hidden).
+  // Stage directions in (...) are stripped first so word indices align with the
+  // clean text the speech recognition pipeline sees.
   const extractHiddenIndices = (text: string): Set<number> => {
     const hiddenIndices = new Set<number>();
     let globalWordIndex = 0;
-    
+
+    const cleaned = stripStageDirections(text);
     // Split by bracket boundaries
-    const parts = text.split(/(\[[^\]]*\])/);
+    const parts = cleaned.split(/(\[[^\]]*\])/);
     
     for (const part of parts) {
       if (part.startsWith('[') && part.endsWith(']')) {
