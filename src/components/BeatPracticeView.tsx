@@ -399,6 +399,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
 
+  // Cooldown for "start over" voice command / swipe to avoid double-fire
+  const restartCooldownUntilRef = useRef(0);
+
   // Refs to avoid stale closures in timers / callbacks
   const currentWordIndexRef = useRef(0);
   const isRecordingRef = useRef(false);
