@@ -1136,7 +1136,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const preHidden = new Set<number>();
       const preHiddenOrder: number[] = [];
       words.forEach((w, i) => {
-        const clean = w.toLowerCase().replace(/[^\p{L}]/gu, '');
+        const clean = w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
         if (COMMON_WORDS.has(clean)) {
           preHidden.add(i);
           preHiddenOrder.push(i);
@@ -1167,13 +1167,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (nonProtectedVisible.length > 0) {
       // Priority 1: Common articles/prepositions (skip sentence-starts when possible)
       for (const idx of nonSentenceStart) {
-        const word = words[idx].toLowerCase().replace(/[^a-z]/g, '');
+        const word = words[idx].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
         if (COMMON_WORDS.has(word)) return idx;
       }
 
       // Priority 2: Short words (2-4 chars), still avoiding sentence-starts
       for (const idx of nonSentenceStart) {
-        const word = words[idx].replace(/[^a-zA-Z]/g, '');
+        const word = words[idx].normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
         if (word.length >= 2 && word.length <= 4) return idx;
       }
 
