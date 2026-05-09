@@ -19,9 +19,7 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
-  Pencil,
   Target,
-  Zap,
   Wind,
   Check,
 } from "lucide-react";
