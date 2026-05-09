@@ -385,6 +385,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const latestSpeechResultCountRef = useRef(0);
   const ignoreResultsBeforeIndexRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
+  const hasHeardSpeechRef = useRef(false);
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Guards against duplicate "sentence complete" triggers for the same repetition
@@ -2142,6 +2143,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
     ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
   };
 
