@@ -1638,10 +1638,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Current word didn't match - check NEXT word (lookahead of 1)
         // BUT: never let lookahead cross a sentence boundary, and never let it
         // skip over a strict hidden current word (only over visible/lenient words).
-        const canSkipCurrent = !currentIsHidden || currentIsLenient;
+        const hiddenRunAhead = (() => {
+          let count = 0;
+          for (let k = advancedTo; k < words.length && hiddenWordIndicesRef.current.has(k); k++) {
+            count++;
+          }
+          return count;
+        })();
+        const canSkipCurrent = !currentIsHidden || (currentIsLenient && hiddenRunAhead < 2);
         if (
           canSkipCurrent &&
           advancedTo + 1 < words.length &&
+          !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
           !crossesSentenceBoundary(advancedTo, advancedTo + 1) &&
           wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)
         ) {
@@ -1655,6 +1663,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const betweenSkippable = !betweenIsHidden || betweenIsLenient;
           if (
             betweenSkippable &&
+            !hiddenWordIndicesRef.current.has(advancedTo + 2) &&
             !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
             wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
           ) {
