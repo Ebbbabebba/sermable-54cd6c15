@@ -1479,9 +1479,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
     let lastMatchedRawIndex = startIdx - 1;
+    let failOpensThisToken = 0;
+    let lastFailOpenRawIndex = -1;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
+      if (absoluteRawIndex !== lastFailOpenRawIndex) {
+        failOpensThisToken = 0;
+      }
       if (advancedTo >= words.length) break;
 
       // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
@@ -1536,7 +1541,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // If ANY hidden word is blocking the cursor and the user is clearly speaking,
         // fail it open and retry the same spoken token against the next word.
         // Lenient/sentence-start words don't get marked as missed; other hidden words do.
-        if (currentIsHidden) {
+        if (currentIsHidden && failOpensThisToken < 1) {
           if (!currentIsLenient && !currentIsSentenceStart) {
             newMissed.add(advancedTo);
           }
@@ -1545,6 +1550,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // Count this as cursor progress in the transcript so we don't replay
           // the same failed hidden word forever.
           lastMatchedRawIndex = startIdx + rawOffset;
+          lastFailOpenRawIndex = absoluteRawIndex;
+          failOpensThisToken += 1;
           rawOffset -= 1;
           lastWordTimeRef.current = Date.now();
           continue;
