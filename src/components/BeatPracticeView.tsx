@@ -1202,6 +1202,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       .replace(/[^\p{L}\p{N}]+/gu, '');
   };
 
+  const isGapWord = (word: string): boolean => COMMON_WORDS.has(normalizeWord(word));
+
+  const isEffectivelyLenientWord = (index: number): boolean => {
+    const isHidden = hiddenWordIndicesRef.current.has(index);
+    if (!isHidden) return false;
+
+    return (
+      lenientWordIndicesRef.current.has(index) ||
+      practiceStrictness === 'flow' ||
+      isGapWord(words[index] ?? '')
+    );
+  };
+
   // Check if spoken word matches expected - STRICT matching
   // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
   const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
@@ -1230,12 +1243,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Empty after normalization
     if (!s || !e) return false;
     
-    // For LENIENT words (proper nouns/names), use visible word matching rules
-    // These are hidden but we expect speech recognition to struggle with them
+    // For LENIENT words (proper nouns/names, flow mode, and short gap words), use forgiving rules.
+    // These are hidden but should not block the user when speech recognition drops or merges them.
     if (isLenient) {
       // VERY lenient matching for names/proper nouns - speech recognition often 
       // produces completely different text for names like "Ebba Hallert Djurberg"
-      if (e.length <= 2) return s === e; // Too short, need exact
+      if (e.length <= 2) {
+        if (s === e) return true;
+        if (s.length > e.length && s.includes(e)) return true;
+        return s.length === e.length && s[0] === e[0];
+      }
       
       // Accept if first letter matches - names often get partially right
       if (s.length >= 2 && e.length >= 2 && s[0] === e[0]) return true;
