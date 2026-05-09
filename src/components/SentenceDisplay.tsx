@@ -125,13 +125,18 @@ const SentenceDisplay = ({
           ref={state.isCurrent ? currentWordRef : undefined}
           onClick={() => onWordTap?.(index)}
           layout="position"
-          transition={{ 
+          animate={state.isCurrent ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+          transition={{
             layout: { duration: 0.2, ease: "easeOut" },
+            scale: state.isCurrent
+              ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0.15 },
           }}
           className={cn(
-            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-300",
-            state.isCurrent && "ring-1 ring-primary/50 bg-primary/10",
-            !state.isCurrent && "text-muted-foreground hover:bg-muted"
+            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-200",
+            state.isCurrent &&
+              "ring-2 ring-primary bg-primary/20 text-primary font-semibold shadow-[0_0_12px_hsl(var(--primary)/0.4)]",
+            !state.isCurrent && "text-muted-foreground/60 hover:bg-muted"
           )}
         >
           {"•".repeat(dotCount)}
