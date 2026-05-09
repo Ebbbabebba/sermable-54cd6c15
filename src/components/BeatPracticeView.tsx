@@ -2267,6 +2267,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // previous rep, but short enough that the user's first word is captured.
     ignoreResultsUntilRef.current = Date.now() + 100;
 
+    // Planned pauses must run every repetition of the same sentence/beat, not
+    // only when the visible text changes between phases.
+    triggeredPausesRef.current = new Set();
+    setActivePause(null);
+    if (pauseTimerRef.current) {
+      clearInterval(pauseTimerRef.current);
+      pauseTimerRef.current = null;
+    }
+
     currentWordIndexRef.current = 0;
     setCurrentWordIndex(0);
 
