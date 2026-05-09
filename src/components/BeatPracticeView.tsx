@@ -688,7 +688,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Fetch speech language, last practice time, deadline, and familiarity level
     const { data: speechRow } = await supabase
       .from('speeches')
-      .select('speech_language, last_practice_session_at, goal_date, familiarity_level')
+      .select('speech_language, last_practice_session_at, goal_date, familiarity_level, practice_strictness')
       .eq('id', speechId)
       .single();
 
@@ -699,6 +699,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Set familiarity level for adaptive word hiding
     if (speechRow?.familiarity_level) {
       setFamiliarityLevel(speechRow.familiarity_level as 'beginner' | 'intermediate' | 'confident');
+    }
+
+    if ((speechRow as any)?.practice_strictness === 'flow') {
+      setPracticeStrictness('flow');
+    } else {
+      setPracticeStrictness('strict');
     }
 
     // Load user's preferred practice hours for predictive rescheduling.
