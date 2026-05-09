@@ -1155,26 +1155,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const nonProtectedVisible = words
       .map((_, i) => i)
       .filter(i => !currentHidden.has(i) && !protected_.has(i));
-    
+
+    // Identify sentence-start indices — these are fragile to hide because the
+    // first word of a sentence is the most error-prone for speech recognition.
+    const isSentenceStart = (i: number) =>
+      i === 0 || /[.!?]$/.test(words[i - 1] ?? '');
+    const nonSentenceStart = nonProtectedVisible.filter(i => !isSentenceStart(i));
+
     // If there are non-protected words to hide, use those first
     if (nonProtectedVisible.length > 0) {
-      // Priority 1: Common articles/prepositions
-      for (const idx of nonProtectedVisible) {
+      // Priority 1: Common articles/prepositions (skip sentence-starts when possible)
+      for (const idx of nonSentenceStart) {
         const word = words[idx].toLowerCase().replace(/[^a-z]/g, '');
         if (COMMON_WORDS.has(word)) return idx;
       }
-      
-      // Priority 2: Short words (2-4 chars)
-      for (const idx of nonProtectedVisible) {
+
+      // Priority 2: Short words (2-4 chars), still avoiding sentence-starts
+      for (const idx of nonSentenceStart) {
         const word = words[idx].replace(/[^a-zA-Z]/g, '');
         if (word.length >= 2 && word.length <= 4) return idx;
       }
-      
+
       // Priority 3: Middle words (not first or last)
-      const middleIndices = nonProtectedVisible.filter(i => i > 0 && i < words.length - 1);
+      const middleIndices = nonSentenceStart.filter(i => i > 0 && i < words.length - 1);
       if (middleIndices.length > 0) return middleIndices[0];
-      
-      // Priority 4: First visible non-protected word
+
+      // Priority 4: Any non-sentence-start word
+      if (nonSentenceStart.length > 0) return nonSentenceStart[0];
+
+      // Priority 5: Fallback — only sentence-starts left, hide them last
       return nonProtectedVisible[0];
     }
     
