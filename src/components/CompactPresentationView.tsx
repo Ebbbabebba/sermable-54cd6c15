@@ -666,54 +666,94 @@ export const CompactPresentationView = ({
                   transition={{ duration: 0.35 }}
                   className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-2xl md:text-4xl leading-relaxed font-semibold"
                 >
-                  {sentences[currentSentenceIndex]?.words.map((word, wordIdx) => {
-                    const globalIndex = sentences[currentSentenceIndex].startIndex + wordIdx;
-                    const isSpoken = globalIndex < currentWordIndex;
-                    const isCurrent = globalIndex === currentWordIndex;
+                  {(() => {
+                    const sentence = sentences[currentSentenceIndex];
+                    if (!sentence) return null;
+                    const startIndex = sentence.startIndex;
+                    const nodes: JSX.Element[] = [];
 
-                    return (
-                      <span
-                        key={globalIndex}
-                        className={cn(
-                          "inline-block transition-colors duration-700 ease-out relative",
-                          isCurrent
-                            ? "text-foreground"
-                            : isSpoken
-                              ? "text-muted-foreground/25"
-                              : "text-muted-foreground/70"
-                        )}
-                      >
-                        {/* Hesitation glow on current word — absolute so it doesn't push siblings */}
-                        {isCurrent && (isHesitating || isShowingHint) && (
-                          <motion.span
-                            className="absolute inset-0 rounded-lg pointer-events-none"
-                            animate={{
-                              boxShadow: [
-                                "0 0 8px hsl(var(--primary) / 0.2)",
-                                "0 0 20px hsl(var(--primary) / 0.5)",
-                                "0 0 8px hsl(var(--primary) / 0.2)",
-                              ],
-                            }}
-                            transition={{ duration: 1.2, repeat: Infinity }}
-                          />
-                        )}
-                        <span className="relative">
-                          {isCurrent && isShowingHint ? (
-                            <motion.span
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.2 }}
-                              className="text-primary"
-                            >
-                              {word}
-                            </motion.span>
-                          ) : (
-                            word
+                    // Direction(s) that come BEFORE the very first word of the sentence
+                    const beforeKey = startIndex === 0 ? -1 : startIndex - 1;
+                    const beforeDirections = directionsByAfterIndex.get(beforeKey);
+                    if (beforeDirections && startIndex === 0) {
+                      // Only show pre-first-word directions when at the start of the speech
+                      beforeDirections.forEach((d, i) => {
+                        nodes.push(
+                          <span
+                            key={`dir-pre-${i}`}
+                            className="text-base md:text-xl italic text-primary/70 font-normal"
+                          >
+                            ({d})
+                          </span>,
+                        );
+                      });
+                    }
+
+                    sentence.words.forEach((word, wordIdx) => {
+                      const globalIndex = startIndex + wordIdx;
+                      const isSpoken = globalIndex < currentWordIndex;
+                      const isCurrent = globalIndex === currentWordIndex;
+
+                      nodes.push(
+                        <span
+                          key={`w-${globalIndex}`}
+                          className={cn(
+                            "inline-block transition-colors duration-700 ease-out relative",
+                            isCurrent
+                              ? "text-foreground"
+                              : isSpoken
+                                ? "text-muted-foreground/25"
+                                : "text-muted-foreground/70",
                           )}
-                        </span>
-                      </span>
-                    );
-                  })}
+                        >
+                          {isCurrent && (isHesitating || isShowingHint) && (
+                            <motion.span
+                              className="absolute inset-0 rounded-lg pointer-events-none"
+                              animate={{
+                                boxShadow: [
+                                  "0 0 8px hsl(var(--primary) / 0.2)",
+                                  "0 0 20px hsl(var(--primary) / 0.5)",
+                                  "0 0 8px hsl(var(--primary) / 0.2)",
+                                ],
+                              }}
+                              transition={{ duration: 1.2, repeat: Infinity }}
+                            />
+                          )}
+                          <span className="relative">
+                            {isCurrent && isShowingHint ? (
+                              <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-primary"
+                              >
+                                {word}
+                              </motion.span>
+                            ) : (
+                              word
+                            )}
+                          </span>
+                        </span>,
+                      );
+
+                      // Stage directions that come AFTER this word
+                      const afterDirections = directionsByAfterIndex.get(globalIndex);
+                      if (afterDirections) {
+                        afterDirections.forEach((d, i) => {
+                          nodes.push(
+                            <span
+                              key={`dir-${globalIndex}-${i}`}
+                              className="text-base md:text-xl italic text-primary/70 font-normal"
+                            >
+                              ({d})
+                            </span>,
+                          );
+                        });
+                      }
+                    });
+
+                    return nodes;
+                  })()}
                 </motion.div>
               </AnimatePresence>
 
