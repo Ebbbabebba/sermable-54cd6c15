@@ -1602,14 +1602,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
     let lastMatchedRawIndex = startIdx - 1;
-    let failOpensThisToken = 0;
-    let lastFailOpenRawIndex = -1;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
-      if (absoluteRawIndex !== lastFailOpenRawIndex) {
-        failOpensThisToken = 0;
-      }
       if (advancedTo >= words.length) break;
       // If we've landed on a pause token, stop matching and let the
       // pause-trigger effect handle the countdown + auto-advance.
