@@ -923,6 +923,15 @@
     "present": "Present",
     "print": "Print",
     "scriptPreview": "Script",
+    "strictness": {
+      "title": "Grading mode",
+      "description": "How strictly should practice compare what you say to the script?",
+      "strict": "Strict",
+      "strictDesc": "Exact word order. Best when every word matters.",
+      "flow": "Flow",
+      "flowDesc": "Meaning over exactness. More natural delivery.",
+      "saved": "Saved"
+    },
     "wordCount_one": "{{count}} word",
     "wordCount_other": "{{count}} words",
     "daysLeft_one": "{{count}} day left",
