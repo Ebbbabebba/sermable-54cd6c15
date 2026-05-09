@@ -2640,7 +2640,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               hesitatedIndicesRef.current = newHesitated;
               setHesitatedIndices(newHesitated);
             }
-            const isLenientWord = lenientWordIndicesRef.current.has(idx);
+            const isLenientWord = isEffectivelyLenientWord(idx);
             const autoAdvanceMs = isLenientWord ? 3000 : 6000;
             if (elapsed > autoAdvanceMs) {
               console.log(
