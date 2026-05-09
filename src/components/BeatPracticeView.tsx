@@ -1698,6 +1698,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       advancedTo = foundIdx + 1;
       lastMatchedRawIndex = startIdx + rawOffset;
       lastWordTimeRef.current = Date.now();
+
+      // HARD sentence-boundary stop: if we just matched the final word of a
+      // sentence, do NOT keep consuming buffered transcript tokens into the
+      // next sentence within the same processing pass. The next sentence
+      // must wait for fresh recognition input. This prevents cascading skips
+      // where leftover interim text races through one or more sentences.
+      if (/[.!?]$/.test(words[foundIdx] ?? '')) {
+        break;
+      }
     }
 
     if (missedIndicesRef.current.size !== newMissed.size) {
