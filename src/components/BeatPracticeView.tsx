@@ -16,7 +16,7 @@ import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
-import { extractPauses, stripPauses, type PauseMarker } from "@/utils/pauses";
+
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 
 // Web Speech API types
