@@ -3239,7 +3239,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       </div>
 
       {/* Main content area - scrollable when text overflows */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div
+        className="flex-1 overflow-y-auto px-4 py-6"
+        onTouchStart={(e) => {
+          const t0 = e.touches[0];
+          (e.currentTarget as any)._swipeStart = { x: t0.clientX, y: t0.clientY, t: Date.now(), st: (e.currentTarget as HTMLDivElement).scrollTop };
+        }}
+        onTouchEnd={(e) => {
+          const start = (e.currentTarget as any)._swipeStart as { x: number; y: number; t: number; st: number } | undefined;
+          if (!start) return;
+          (e.currentTarget as any)._swipeStart = undefined;
+          const t1 = e.changedTouches[0];
+          const dx = t1.clientX - start.x;
+          const dy = t1.clientY - start.y;
+          const dt = Date.now() - start.t;
+          // Swipe down at top of scroll, or two-finger style horizontal back swipe → restart
+          const isSwipeDown = dy > 110 && Math.abs(dx) < 60 && dt < 700 && start.st <= 4;
+          const isSwipeRight = dx > 130 && Math.abs(dy) < 50 && dt < 600;
+          if ((isSwipeDown || isSwipeRight) && !showCelebration) {
+            restartCurrentBeatRef.current?.('swipe');
+          }
+        }}
+      >
         <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
           
           {/* Sentence dots (only in learn mode, show only unique sentences) */}
