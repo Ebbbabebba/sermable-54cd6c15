@@ -281,6 +281,8 @@ const COMMON_WORDS = new Set([
   'men', 'eller', 'så', 'när', 'där', 'här', 'inte', 'bara', 'även', 'också',
   'vi', 'jag', 'du', 'han', 'hon', 'ni', 'sin', 'sitt', 'sina',
   'min', 'mitt', 'mina', 'din', 'ditt', 'dina', 'er', 'ert', 'era', 'vår', 'vårt', 'våra',
+  // Swedish normalized without diacritics (matches normalizeWord)
+  'pa', 'ar', 'fran', 'sa', 'nar', 'dar', 'har', 'aven', 'ocksa', 'var', 'vart', 'vara',
 ]);
 
 // Check if it's a new calendar day (for 1 beat per day logic)
@@ -385,6 +387,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const latestSpeechResultCountRef = useRef(0);
   const ignoreResultsBeforeIndexRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
+  const hasHeardSpeechRef = useRef(false);
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Guards against duplicate "sentence complete" triggers for the same repetition
@@ -1135,7 +1138,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const preHidden = new Set<number>();
       const preHiddenOrder: number[] = [];
       words.forEach((w, i) => {
-        const clean = w.toLowerCase().replace(/[^\p{L}]/gu, '');
+        const clean = w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
         if (COMMON_WORDS.has(clean)) {
           preHidden.add(i);
           preHiddenOrder.push(i);
@@ -1166,13 +1169,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (nonProtectedVisible.length > 0) {
       // Priority 1: Common articles/prepositions (skip sentence-starts when possible)
       for (const idx of nonSentenceStart) {
-        const word = words[idx].toLowerCase().replace(/[^a-z]/g, '');
+        const word = words[idx].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
         if (COMMON_WORDS.has(word)) return idx;
       }
 
       // Priority 2: Short words (2-4 chars), still avoiding sentence-starts
       for (const idx of nonSentenceStart) {
-        const word = words[idx].replace(/[^a-zA-Z]/g, '');
+        const word = words[idx].normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
         if (word.length >= 2 && word.length <= 4) return idx;
       }
 
@@ -1218,6 +1221,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       practiceStrictness === 'flow' ||
       isGapWord(words[index] ?? '')
     );
+  };
+
+  const getWordDistance = (a: string, b: string): number => {
+    if (a === b) return 0;
+    if (!a) return b.length;
+    if (!b) return a.length;
+
+    const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    const curr = Array.from({ length: b.length + 1 }, () => 0);
+
+    for (let i = 1; i <= a.length; i++) {
+      curr[0] = i;
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        curr[j] = Math.min(
+          curr[j - 1] + 1,
+          prev[j] + 1,
+          prev[j - 1] + cost
+        );
+      }
+      for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
+    }
+
+    return prev[b.length];
   };
 
   // Check if spoken word matches expected - STRICT matching
@@ -1299,29 +1326,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (s.length >= e.length && s.includes(e)) return true;
       if (e.length >= 4 && e.includes(s) && s.length >= e.length - 2) return true;
 
-      // Must share first letter for hidden words (same starting sound)
-      if (s[0] !== e[0]) return false;
+      const lengthVariance = Math.abs(s.length - e.length);
+      if (lengthVariance > Math.max(2, Math.ceil(e.length * 0.35))) return false;
 
-      // 2-char hidden words: allow exact or off-by-one
-      if (e.length === 2) {
-        if (Math.abs(s.length - e.length) > 1) return false;
-        let diff = 0;
-        for (let i = 0; i < Math.max(s.length, e.length); i++) {
-          if (s[i] !== e[i]) diff++;
-        }
-        return diff <= 1;
-      }
+      const sameFirstSound = s[0] === e[0];
+      const sameSecondSound = s.length > 1 && e.length > 1 && s[1] === e[1];
+      const maxDist = e.length <= 2 ? 1 : e.length <= 5 ? 2 : Math.ceil(e.length * 0.34);
+      const dist = getWordDistance(s, e);
 
-      // 3+ char hidden words: allow up to 2 char length variance,
-      // 1 edit for 3-5 char words, 2 edits for 6+ char words.
-      if (Math.abs(s.length - e.length) > 2) return false;
-      const maxDist = e.length <= 5 ? 1 : 2;
-      let diff = 0;
-      for (let i = 0; i < Math.max(s.length, e.length); i++) {
-        if (s[i] !== e[i]) diff++;
-        if (diff > maxDist) return false;
-      }
-      return true;
+      if (sameFirstSound && dist <= maxDist) return true;
+      if (sameSecondSound && e.length >= 4 && dist <= maxDist) return true;
+      return e.length >= 6 && dist <= 2;
     }
     
     // For VISIBLE words, slightly more lenient than hidden but still meaningful
@@ -1356,14 +1371,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Must share first letter (same starting sound)
     if (s[0] !== e[0]) return false;
     
-    // Allow 1 char diff for 4-6 letter words, 2 for 7-10, 3 for 11+
+    // Allow 1 edit for 4-6 letter words, 2 for 7-10, 3 for 11+
     const maxDist = e.length <= 6 ? 1 : e.length <= 10 ? 2 : 3;
-    let diff = 0;
-    for (let i = 0; i < Math.max(s.length, e.length); i++) {
-      if (s[i] !== e[i]) diff++;
-      if (diff > maxDist) return false;
-    }
-    return true;
+    return getWordDistance(s, e) <= maxDist;
   };
 
   // Process transcription - cursor-based
@@ -1372,6 +1382,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
+
+    // Any non-empty recognition event means the user is actively speaking.
+    // Do this before tail-deduping so repeated interim results don't let the
+    // hesitation timer mark hidden words yellow while the microphone is hearing them.
+    hasHeardSpeechRef.current = true;
+    lastWordTimeRef.current = Date.now();
 
     // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
     // "empezar de nuevo" / "ricomincia" / "começar de novo". Detect on the LAST few raw tokens
@@ -1417,7 +1433,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       let tailChanged = prevCount === 0; // if we had none before, treat as changed
 
       for (let i = 1; i <= tailCheck; i++) {
-        if (rawWords[rawWords.length - i] !== prevWords[prevCount - i]) {
+        if (normalizeWord(rawWords[rawWords.length - i]) !== normalizeWord(prevWords[prevCount - i])) {
           tailChanged = true;
           break;
         }
@@ -1438,9 +1454,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // If no words to process, nothing to do
     if (newWords.length === 0) return;
 
-    // The user is actively speaking — reset the hesitation clock so a hidden
-    // word doesn't turn yellow just because recognition hasn't matched it yet.
-    lastWordTimeRef.current = Date.now();
+    const rawTokenAt = (absoluteIndex: number): string => rawWords[absoluteIndex] ?? '';
+    const tokenVariantsAt = (absoluteIndex: number): string[] => {
+      const variants = [rawTokenAt(absoluteIndex)];
+      const current = rawTokenAt(absoluteIndex);
+      const next = rawTokenAt(absoluteIndex + 1);
+      const previous = rawTokenAt(absoluteIndex - 1);
+
+      if (current && next) variants.push(`${current}${next}`, `${current} ${next}`);
+      if (previous && current) variants.push(`${previous}${current}`, `${previous} ${current}`);
+
+      return [...new Set(variants.filter(Boolean))];
+    };
+
+    const wordMatchesAnyVariant = (absoluteIndex: number, expectedIndex: number) => {
+      const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedIndex);
+      const expectedIsLenient = isEffectivelyLenientWord(expectedIndex);
+      return tokenVariantsAt(absoluteIndex).some((variant) =>
+        wordsMatch(variant, words[expectedIndex], expectedIsHidden, expectedIsLenient)
+      );
+    };
 
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
@@ -1448,7 +1481,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     let lastMatchedRawIndex = startIdx - 1;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
-      const spoken = newWords[rawOffset];
+      const absoluteRawIndex = startIdx + rawOffset;
       if (advancedTo >= words.length) break;
 
       // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
@@ -1459,16 +1492,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // STRICT: Only match the CURRENT word position - no lookahead
       // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
-      if (wordsMatch(spoken, words[advancedTo], currentIsHidden, currentIsLenient)) {
+      if (wordMatchesAnyVariant(absoluteRawIndex, advancedTo)) {
         foundIdx = advancedTo;
       }
 
       if (foundIdx === -1) {
         // Current word didn't match - check NEXT word (lookahead of 1)
         // This handles minor recognition order issues without jumping too far
-        const nextIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
-        const nextIsLenient = isEffectivelyLenientWord(advancedTo + 1);
-        if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1], nextIsHidden, nextIsLenient)) {
+        if (advancedTo + 1 < words.length && wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)) {
           // Mark current word as passed
           if (currentIsHidden) {
             // Hidden word was skipped - but check if it's a lenient word (proper noun/name)
@@ -1486,9 +1517,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
           const betweenIsLenient = isEffectivelyLenientWord(advancedTo + 1);
           if (!betweenIsHidden || betweenIsLenient) {
-            const twoAheadIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 2);
-            const twoAheadIsLenient = isEffectivelyLenientWord(advancedTo + 2);
-            if (wordsMatch(spoken, words[advancedTo + 2], twoAheadIsHidden, twoAheadIsLenient)) {
+            if (wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)) {
               // Skip current visible/lenient word and the next one (if also visible/lenient)
               newSpoken.add(advancedTo);
               const nextIdx = advancedTo + 1;
@@ -2141,7 +2170,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
-    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    // Keep listening to the next interim result immediately after a rep reset.
+    // Skipping by event result index can ignore the first new utterance in Chrome,
+    // which feels like the app waits before coloring words.
+    ignoreResultsBeforeIndexRef.current = 0;
+    hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
   };
 
@@ -2680,7 +2713,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
-        if (elapsed > 3000 && idx < wordsLengthRef.current) {
+        if (hasHeardSpeechRef.current && elapsed > 3000 && idx < wordsLengthRef.current) {
           if (hiddenWordIndicesRef.current.has(idx)) {
             if (!hesitatedIndicesRef.current.has(idx)) {
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
@@ -2701,6 +2734,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               const nextIdx = idx + 1;
               currentWordIndexRef.current = nextIdx;
               setCurrentWordIndex(nextIdx);
+              hasHeardSpeechRef.current = false;
               lastWordTimeRef.current = Date.now();
               if (nextIdx >= wordsLengthRef.current) {
                 const failedFromSignals = new Set<number>();
