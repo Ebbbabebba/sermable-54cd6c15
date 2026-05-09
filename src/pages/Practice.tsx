@@ -304,9 +304,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
     console.log('📚 Focusing on segment:', currentSegment.segment_order + 1);
   };
 
-  // Clean bracket notation from text (keep words, remove [ and ])
+  // Clean bracket notation from text:
+  //  - `[hidden word]` → hidden words: keep the word itself, remove the brackets
+  //  - `(stage direction)` → fully removed (regi for the speaker, not for AI)
   const cleanBracketNotation = (text: string): string => {
-    return text.replace(/\[|\]/g, '');
+    return stripStageDirections(text).replace(/\[|\]/g, '');
   };
 
   // Extract hidden word indices from segment text (words inside [...] are hidden)
