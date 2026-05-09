@@ -298,7 +298,7 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = subscriptionTier !== 'free';
   
