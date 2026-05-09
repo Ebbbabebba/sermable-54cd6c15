@@ -110,7 +110,7 @@ export const StrictPresentationView = ({
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
   
-  const words = text.split(/\s+/).filter(w => w.length > 0);
+  const words = stripStageDirections(text).split(/\s+/).filter(w => w.length > 0);
   
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
