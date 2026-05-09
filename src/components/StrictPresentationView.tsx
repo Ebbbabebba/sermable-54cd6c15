@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
-import { stripStageDirections } from "@/utils/stageDirections";
+import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
+import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 
 interface WordPerformance {
   word: string;
@@ -110,7 +111,22 @@ export const StrictPresentationView = ({
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
   
-  const words = stripStageDirections(text).split(/\s+/).filter(w => w.length > 0);
+  const words = useMemo(
+    () => stripStageDirections(text).split(/\s+/).filter((w) => w.length > 0),
+    [text],
+  );
+  const directionsByAfterIndex = useMemo(() => {
+    const { tokens } = tokenizeScript(text);
+    const map = new Map<number, string[]>();
+    for (const tok of tokens) {
+      if (tok.type === "direction") {
+        const list = map.get(tok.afterWordIndex) ?? [];
+        list.push(tok.text);
+        map.set(tok.afterWordIndex, list);
+      }
+    }
+    return map;
+  }, [text]);
   
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
@@ -436,6 +452,10 @@ export const StrictPresentationView = ({
 
       {/* Main Content - Clean Speak Icon */}
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
+        <StageDirectionCue
+          directions={isRecording ? getActiveDirections(directionsByAfterIndex, currentWordIndex) : null}
+          className="mb-8"
+        />
         {/* Speak Icon with Audio Level Visualization */}
         <div className="relative">
           {/* Outer ring - audio visualization */}
