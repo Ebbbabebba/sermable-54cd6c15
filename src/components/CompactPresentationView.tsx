@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { WearableHUD, type ViewMode } from "./WearableHUD";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { motion, AnimatePresence } from "framer-motion";
+import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
 
 interface WordPerformance {
   word: string;
