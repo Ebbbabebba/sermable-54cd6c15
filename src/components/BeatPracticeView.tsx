@@ -1437,7 +1437,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     // If no words to process, nothing to do
     if (newWords.length === 0) return;
-    
+
+    // The user is actively speaking — reset the hesitation clock so a hidden
+    // word doesn't turn yellow just because recognition hasn't matched it yet.
+    lastWordTimeRef.current = Date.now();
+
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
