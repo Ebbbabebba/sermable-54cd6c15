@@ -69,7 +69,7 @@ export const PauseSlidersList = ({ text, onChange }: PauseSlidersListProps) => {
                 {after && <span className="truncate max-w-[40%]">{after}…</span>}
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-muted-foreground w-3">1</span>
+                <span className="text-[10px] text-muted-foreground w-3">0</span>
                 <Slider
                   value={[seconds]}
                   min={PAUSE_MIN_SECONDS}
