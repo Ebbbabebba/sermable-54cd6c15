@@ -1432,6 +1432,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
       const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
       const currentIsLenient = isEffectivelyLenientWord(advancedTo);
+      const currentIsSentenceStart = advancedTo === 0 || /[.!?]$/.test(words[advancedTo - 1] ?? '');
       
       // STRICT: Only match the CURRENT word position - no lookahead
       // This prevents jumping to a duplicate word further in the sentence
@@ -1481,11 +1482,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1) {
-        // If a lenient hidden word (flow/gap/proper noun) is blocking the cursor,
-        // fail it open as soon as speech is detected and retry the same spoken token
-        // against the next word. This prevents a hidden sentence-start word from
-        // delaying visible word coloring until the timeout fires.
-        if (currentIsHidden && currentIsLenient) {
+        // If a lenient hidden word (flow/gap/proper noun), or the first hidden word
+        // of a sentence, is blocking the cursor, fail it open as soon as speech is
+        // detected and retry the same spoken token against the next word.
+        // This prevents a hidden sentence-start word from delaying visible word
+        // coloring until the timeout fires.
+        if (currentIsHidden && (currentIsLenient || currentIsSentenceStart)) {
+          if (!currentIsLenient) {
+            newMissed.add(advancedTo);
+          }
           newSpoken.add(advancedTo);
           advancedTo += 1;
           rawOffset -= 1;
@@ -1526,6 +1531,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       advancedTo = foundIdx + 1;
       lastMatchedRawIndex = startIdx + rawOffset;
       lastWordTimeRef.current = Date.now();
+    }
+
+    if (missedIndicesRef.current.size !== newMissed.size) {
+      missedIndicesRef.current = newMissed;
+      setMissedIndices(newMissed);
     }
 
     // Only consume transcript words up to the last word that actually advanced the cursor.
