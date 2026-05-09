@@ -26,6 +26,7 @@ const SpeechDetail = () => {
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("overview");
+  const [printOpen, setPrintOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
