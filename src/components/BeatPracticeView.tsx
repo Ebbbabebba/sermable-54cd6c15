@@ -583,22 +583,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const currentText = getCurrentText();
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
 
-  // Identify which word indices are "first word of a sentence"
-  // These should never turn yellow (hesitated) due to natural pause between sentences
-  const sentenceStartIndices = new Set<number>();
-  sentenceStartIndices.add(0); // First word of entire text is always a sentence start
-  for (let i = 0; i < words.length - 1; i++) {
-    // If current word ends with sentence-ending punctuation, next word is sentence start
-    if (/[.!?]$/.test(words[i])) {
-      sentenceStartIndices.add(i + 1);
-    }
-  }
-  const sentenceStartIndicesRef = useRef<Set<number>>(new Set());
-  
-  useEffect(() => {
-    sentenceStartIndicesRef.current = sentenceStartIndices;
-  }, [currentText]);
-
   useEffect(() => {
     wordsLengthRef.current = words.length;
     // Detect lenient words (proper nouns, difficult names) whenever text changes
