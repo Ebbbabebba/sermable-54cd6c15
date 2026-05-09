@@ -1338,7 +1338,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     return (
       lenientWordIndicesRef.current.has(index) ||
-      practiceStrictness === 'flow' ||
       isGapWord(words[index] ?? '')
     );
   };
@@ -1370,10 +1369,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Check if spoken word matches expected - STRICT matching
   // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
   const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
-    // FLOW mode: relax matching for hidden words by treating them as lenient
-    if (practiceStrictness === 'flow' && isHidden && !isLenient) {
-      isLenient = true;
-    }
+    // FLOW mode should be a little more forgiving, but not “name-level” lenient.
+    // Treating every hidden word as lenient allowed weak first-letter matches to
+    // cascade through whole sentences/sessions.
+    const isFlowRelaxedHidden = practiceStrictness === 'flow' && isHidden && !isLenient;
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
@@ -1447,11 +1446,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (e.length >= 4 && e.includes(s) && s.length >= e.length - 2) return true;
 
       const lengthVariance = Math.abs(s.length - e.length);
-      if (lengthVariance > Math.max(2, Math.ceil(e.length * 0.35))) return false;
+      const maxLengthVariance = isFlowRelaxedHidden
+        ? Math.max(2, Math.ceil(e.length * 0.45))
+        : Math.max(2, Math.ceil(e.length * 0.35));
+      if (lengthVariance > maxLengthVariance) return false;
 
       const sameFirstSound = s[0] === e[0];
       const sameSecondSound = s.length > 1 && e.length > 1 && s[1] === e[1];
-      const maxDist = e.length <= 2 ? 1 : e.length <= 5 ? 2 : Math.ceil(e.length * 0.34);
+      const baseMaxDist = e.length <= 2 ? 1 : e.length <= 5 ? 2 : Math.ceil(e.length * 0.34);
+      const maxDist = isFlowRelaxedHidden ? baseMaxDist + 1 : baseMaxDist;
       const dist = getWordDistance(s, e);
 
       if (sameFirstSound && dist <= maxDist) return true;
@@ -1599,14 +1602,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
     let lastMatchedRawIndex = startIdx - 1;
-    let failOpensThisToken = 0;
-    let lastFailOpenRawIndex = -1;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
-      if (absoluteRawIndex !== lastFailOpenRawIndex) {
-        failOpensThisToken = 0;
-      }
       if (advancedTo >= words.length) break;
       // If we've landed on a pause token, stop matching and let the
       // pause-trigger effect handle the countdown + auto-advance.
@@ -1635,10 +1633,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Current word didn't match - check NEXT word (lookahead of 1)
         // BUT: never let lookahead cross a sentence boundary, and never let it
         // skip over a strict hidden current word (only over visible/lenient words).
-        const canSkipCurrent = !currentIsHidden || currentIsLenient;
+        const hiddenRunAhead = (() => {
+          let count = 0;
+          for (let k = advancedTo; k < words.length && hiddenWordIndicesRef.current.has(k); k++) {
+            count++;
+          }
+          return count;
+        })();
+        const canSkipCurrent = !currentIsHidden || (currentIsLenient && hiddenRunAhead < 2);
         if (
           canSkipCurrent &&
           advancedTo + 1 < words.length &&
+          !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
           !crossesSentenceBoundary(advancedTo, advancedTo + 1) &&
           wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)
         ) {
@@ -1652,6 +1658,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const betweenSkippable = !betweenIsHidden || betweenIsLenient;
           if (
             betweenSkippable &&
+            !hiddenWordIndicesRef.current.has(advancedTo + 2) &&
             !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
             wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
           ) {
@@ -2275,9 +2282,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   const resetForNextRep = () => {
     repetitionIdRef.current += 1;
-    // Minimal ignore window — just enough to discard stale tokens from the
-    // previous rep, but short enough that the user's first word is captured.
-    ignoreResultsUntilRef.current = Date.now() + 100;
+    // Minimal ignore window — but never shorten a longer pause that was set
+    // by completion/phase transitions. Shortening it lets stale final results
+    // from the previous rep immediately advance the next rep/session.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 100);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
