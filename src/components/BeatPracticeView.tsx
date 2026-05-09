@@ -374,6 +374,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [lenientWordIndices, setLenientWordIndices] = useState<Set<number>>(new Set()); // Proper nouns/names - hidden but can't turn red
   const lenientWordIndicesRef = useRef<Set<number>>(new Set());
   const [consecutiveNoScriptSuccess, setConsecutiveNoScriptSuccess] = useState(0); // Track 2 successful no-script reps
+
+  // Pause markers (`-`, `-3s`) — full-screen countdown overlay state.
+  const [activePause, setActivePause] = useState<{
+    remainingSeconds: number;
+    totalSeconds: number;
+  } | null>(null);
+  const triggeredPausesRef = useRef<Set<number>>(new Set());
+  const pauseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
