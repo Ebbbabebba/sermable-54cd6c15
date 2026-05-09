@@ -452,6 +452,10 @@ export const StrictPresentationView = ({
 
       {/* Main Content - Clean Speak Icon */}
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
+        <StageDirectionCue
+          directions={isRecording ? getActiveDirections(directionsByAfterIndex, currentWordIndex) : null}
+          className="mb-8"
+        />
         {/* Speak Icon with Audio Level Visualization */}
         <div className="relative">
           {/* Outer ring - audio visualization */}
