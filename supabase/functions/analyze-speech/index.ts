@@ -144,7 +144,8 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
-    const { audio, originalText, speechId, userTier, language, skillLevel } = await req.json();
+    const { audio, originalText, speechId, userTier, language, skillLevel, strictness } = await req.json();
+    const gradingMode: 'strict' | 'flow' = strictness === 'flow' ? 'flow' : 'strict';
     
     // Verify user owns the speech they're analyzing and get familiarity level
     const { data: speech, error: speechError } = await supabase
