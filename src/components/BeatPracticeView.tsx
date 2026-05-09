@@ -1331,6 +1331,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
 
+    // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
+    // "empezar de nuevo" / "ricomincia" / "começar de novo". Detect on the LAST few raw tokens
+    // so we don't accidentally trigger on script content earlier in the transcript.
+    {
+      const tail = rawWords.slice(-4).join(' ').toLowerCase().replace(/[.,!?]/g, '');
+      const RESTART_PHRASES = [
+        'börja om', 'starta om', 'börja från början', 'om från början',
+        'start over', 'restart', 'from the top', 'start again',
+        'von vorn', 'von vorne', 'noch mal', 'nochmal',
+        'recommencer', 'on recommence', 'reprendre',
+        'empezar de nuevo', 'desde el principio', 'otra vez',
+        'ricomincia', 'da capo',
+        'começar de novo', 'recomeçar', 'do início',
+      ];
+      if (RESTART_PHRASES.some((p) => tail.includes(p))) {
+        if (Date.now() >= restartCooldownUntilRef.current) {
+          restartCurrentBeatRef.current?.('voice');
+        }
+        return;
+      }
+    }
+
     const currentIdx = currentWordIndexRef.current;
 
     if (currentIdx >= words.length) {
