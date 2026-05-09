@@ -142,7 +142,21 @@ export const CompactPresentationView = ({
   const lastProcessedInterimRef = useRef<string>("");
   const lastMatchAtRef = useRef<number>(0);
   
-  const words = text.split(/\s+/).filter(w => w.length > 0);
+  // Strip stage directions for the speech-recognition / matching pipeline,
+  // but keep them as a separate token list so we can render them inline as
+  // visual cues (italic) without consuming a word index.
+  const { words, directionsByAfterIndex } = useMemo(() => {
+    const { tokens, words: w } = tokenizeScript(text);
+    const map = new Map<number, string[]>();
+    for (const tok of tokens) {
+      if (tok.type === "direction") {
+        const list = map.get(tok.afterWordIndex) ?? [];
+        list.push(tok.text);
+        map.set(tok.afterWordIndex, list);
+      }
+    }
+    return { words: w, directionsByAfterIndex: map };
+  }, [text]);
   const progress = (currentWordIndex / words.length) * 100;
 
   // Split text into sentences for teleprompter display
@@ -167,7 +181,7 @@ export const CompactPresentationView = ({
     }
 
     return result;
-  }, [text]);
+  }, [words]);
 
   // Find which sentence the current word belongs to
   const currentSentenceIndex = useMemo(() => {
