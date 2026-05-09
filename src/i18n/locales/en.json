@@ -921,6 +921,7 @@
     "notFound": "Speech not found",
     "practice": "Practice",
     "present": "Present",
+    "print": "Print",
     "scriptPreview": "Script",
     "wordCount_one": "{{count}} word",
     "wordCount_other": "{{count}} words",
@@ -931,5 +932,18 @@
       "overview": "Overview",
       "calendar": "Calendar"
     }
+  },
+  "beatPrint": {
+    "title": "Print script",
+    "description": "Pick a layout. Stage directions in (parentheses) print in italics.",
+    "optionPerPage": "One beat per page",
+    "optionPerPageDesc": "Large type, airy layout. Great for podium/stage.",
+    "optionContinuous": "Continuous pages",
+    "optionContinuousDesc": "Compact, beats one after another. Saves paper.",
+    "printButton": "Print",
+    "beatLabel": "Beat",
+    "popupBlockedTitle": "Popup blocked",
+    "popupBlockedDesc": "Allow popups to print the script.",
+    "errorTitle": "Couldn't create printout"
   }
 }
