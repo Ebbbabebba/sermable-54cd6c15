@@ -312,13 +312,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
     return stripStageDirections(text).replace(/\[|\]/g, '');
   };
 
-  // Extract hidden word indices from segment text (words inside [...] are hidden)
+  // Extract hidden word indices from segment text (words inside [...] are hidden).
+  // Stage directions in (...) are stripped first so word indices align with the
+  // clean text the speech recognition pipeline sees.
   const extractHiddenIndices = (text: string): Set<number> => {
     const hiddenIndices = new Set<number>();
     let globalWordIndex = 0;
-    
+
+    const cleaned = stripStageDirections(text);
     // Split by bracket boundaries
-    const parts = text.split(/(\[[^\]]*\])/);
+    const parts = cleaned.split(/(\[[^\]]*\])/);
     
     for (const part of parts) {
       if (part.startsWith('[') && part.endsWith(']')) {
