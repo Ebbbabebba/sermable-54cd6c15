@@ -658,6 +658,10 @@ export const CompactPresentationView = ({
                 speaks. Spoken words are dimmed in place; the current word is
                 emphasized with weight + color only, never size. */}
             <div className="min-h-[300px] flex flex-col items-center justify-center">
+              <StageDirectionCue
+                directions={getActiveDirections(directionsByAfterIndex, currentWordIndex)}
+                className="mb-4"
+              />
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSentenceIndex}
@@ -672,23 +676,6 @@ export const CompactPresentationView = ({
                     if (!sentence) return null;
                     const startIndex = sentence.startIndex;
                     const nodes: JSX.Element[] = [];
-
-                    // Direction(s) that come BEFORE the very first word of the sentence
-                    const beforeKey = startIndex === 0 ? -1 : startIndex - 1;
-                    const beforeDirections = directionsByAfterIndex.get(beforeKey);
-                    if (beforeDirections && startIndex === 0) {
-                      // Only show pre-first-word directions when at the start of the speech
-                      beforeDirections.forEach((d, i) => {
-                        nodes.push(
-                          <span
-                            key={`dir-pre-${i}`}
-                            className="text-base md:text-xl italic text-primary/70 font-normal"
-                          >
-                            ({d})
-                          </span>,
-                        );
-                      });
-                    }
 
                     sentence.words.forEach((word, wordIdx) => {
                       const globalIndex = startIndex + wordIdx;
@@ -736,21 +723,6 @@ export const CompactPresentationView = ({
                           </span>
                         </span>,
                       );
-
-                      // Stage directions that come AFTER this word
-                      const afterDirections = directionsByAfterIndex.get(globalIndex);
-                      if (afterDirections) {
-                        afterDirections.forEach((d, i) => {
-                          nodes.push(
-                            <span
-                              key={`dir-${globalIndex}-${i}`}
-                              className="text-base md:text-xl italic text-primary/70 font-normal"
-                            >
-                              ({d})
-                            </span>,
-                          );
-                        });
-                      }
                     });
 
                     return nodes;
