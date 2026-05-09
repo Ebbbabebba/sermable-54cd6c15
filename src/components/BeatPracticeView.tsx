@@ -2168,7 +2168,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
-    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    // Keep listening to the next interim result immediately after a rep reset.
+    // Skipping by event result index can ignore the first new utterance in Chrome,
+    // which feels like the app waits before coloring words.
+    ignoreResultsBeforeIndexRef.current = 0;
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
   };
