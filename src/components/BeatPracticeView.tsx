@@ -542,6 +542,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     });
   }, []);
 
+  // Re-attach any pause tokens (`-`, `-3s`) that immediately follow a
+  // sentence in the original full speech text. Beat segmentation strips
+  // them, so we splice them back in based on string position.
+  const attachTrailingPauses = useCallback((sentence: string): string => {
+    if (!fullSpeechText) return sentence;
+    const clean = sentence.trim();
+    if (!clean) return sentence;
+    const idx = fullSpeechText.indexOf(clean);
+    if (idx < 0) return sentence;
+    const after = fullSpeechText.slice(idx + clean.length);
+    const m = after.match(/^(?:\s+-\d{0,2}s?(?=\s|$))+/);
+    return m ? `${clean}${m[0]}` : clean;
+  }, [fullSpeechText]);
+
+  const joinWithPauses = useCallback((sentences: string[]): string => {
+    return sentences.map(attachTrailingPauses).join(' ');
+  }, [attachTrailingPauses]);
+
   // Get current sentence text based on phase
   const getCurrentText = useCallback(() => {
     if (!currentBeat) return "";
@@ -551,47 +569,47 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     
     // For short speeches with only 1 unique sentence, always show that sentence
     if (uniqueCount === 1) {
-      return uniqueSentences[0];
+      return attachTrailingPauses(uniqueSentences[0]);
     }
     
     // For 2 unique sentences
     if (uniqueCount === 2) {
       // In recall mode or beat phases, show both sentences
       if (sessionMode === 'recall' || phase === 'beat_learning' || phase === 'beat_fading') {
-        return uniqueSentences.join(' ');
+        return joinWithPauses(uniqueSentences);
       }
       // Sentence 1 phases
-      if (phase.startsWith('sentence_1')) return uniqueSentences[0];
+      if (phase.startsWith('sentence_1')) return attachTrailingPauses(uniqueSentences[0]);
       // Sentence 2 phases - show only sentence 2
-      if (phase.startsWith('sentence_2')) return uniqueSentences[1];
+      if (phase.startsWith('sentence_2')) return attachTrailingPauses(uniqueSentences[1]);
       // Combining phases - show both
       if (phase.startsWith('sentences_1_2')) {
-        return uniqueSentences.join(' ');
+        return joinWithPauses(uniqueSentences);
       }
       // Sentence 3 phases - for 2 sentences, skip to full beat
-      if (phase.startsWith('sentence_3')) return uniqueSentences.join(' ');
-      return uniqueSentences.join(' ');
+      if (phase.startsWith('sentence_3')) return joinWithPauses(uniqueSentences);
+      return joinWithPauses(uniqueSentences);
     }
     
     // For 3 unique sentences (normal case)
     if (sessionMode === 'recall') {
-      return uniqueSentences.join(' ');
+      return joinWithPauses(uniqueSentences);
     }
     
     if (phase === 'beat_learning' || phase === 'beat_fading') {
-      return uniqueSentences.join(' ');
+      return joinWithPauses(uniqueSentences);
     }
     
     if (phase === 'sentences_1_2_learning' || phase === 'sentences_1_2_fading') {
-      return `${uniqueSentences[0]} ${uniqueSentences[1]}`;
+      return joinWithPauses([uniqueSentences[0], uniqueSentences[1]]);
     }
     
-    if (phase.startsWith('sentence_1')) return uniqueSentences[0];
-    if (phase.startsWith('sentence_2')) return uniqueSentences[1];
-    if (phase.startsWith('sentence_3')) return uniqueSentences[2] || uniqueSentences[1];
+    if (phase.startsWith('sentence_1')) return attachTrailingPauses(uniqueSentences[0]);
+    if (phase.startsWith('sentence_2')) return attachTrailingPauses(uniqueSentences[1]);
+    if (phase.startsWith('sentence_3')) return attachTrailingPauses(uniqueSentences[2] || uniqueSentences[1]);
     
     return "";
-  }, [currentBeat, phase, sessionMode, getUniqueSentences]);
+  }, [currentBeat, phase, sessionMode, getUniqueSentences, attachTrailingPauses, joinWithPauses]);
 
   // Keep pause markers (`-`, `-3s`) as visible tokens in the word array so
   // they appear inline in the script and turn "spoken" once their timer
