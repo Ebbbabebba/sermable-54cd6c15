@@ -633,6 +633,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // the abort avoids the system mic chime that plays on every restart.
   };
 
+  // Restart the current rep from the beginning (voice command "börja om" or swipe-down).
+  // Keeps the same phase / hidden words — just rewinds the cursor and clears the transcript.
+  const restartCurrentBeat = useCallback((reason: 'voice' | 'swipe' | 'manual' = 'manual') => {
+    if (showCelebrationRef.current) return;
+    const now = Date.now();
+    if (now < restartCooldownUntilRef.current) return;
+    restartCooldownUntilRef.current = now + 2500;
+
+    console.log(`🔄 Restart current beat (${reason})`);
+    playClick();
+    pauseSpeechRecognition(600);
+    resetForNextRep();
+    toast({
+      title: t('beat_practice.restarted_title', 'Börja om'),
+      description: t('beat_practice.restarted_desc', 'Tar det från början av denna del.'),
+    });
+  }, [t]);
+
+  const restartCurrentBeatRef = useRef(restartCurrentBeat);
+  useEffect(() => {
+    restartCurrentBeatRef.current = restartCurrentBeat;
+  }, [restartCurrentBeat]);
 
   // Get sentence number (1, 2, or 3) or combining indicator
   const getCurrentSentenceNumber = () => {
