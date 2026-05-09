@@ -8,10 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calendar, Languages, Brain, Camera, FileText, X } from "lucide-react";
+import { Loader2, Calendar, Languages, Brain, Camera, FileText, X, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { switchLanguageBasedOnText, detectTextLanguage } from "@/utils/languageDetection";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
+import { AiSpeechBuilderDialog } from "@/components/AiSpeechBuilderDialog";
 
 
 interface UploadSpeechDialogProps {
@@ -33,6 +34,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [wordLimit, setWordLimit] = useState(500);
   const [canCreateSpeech, setCanCreateSpeech] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
+  const [showAiBuilder, setShowAiBuilder] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -367,6 +369,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const minDate = format(new Date(), "yyyy-MM-dd");
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -439,7 +442,18 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                   {t('upload.autoDetectsLanguage')}
                 </span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={() => setShowAiBuilder(true)}
+                  disabled={loading || isScanning}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{t('upload.buildWithAi', 'Bygg med AI')}</span>
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -592,6 +606,16 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         </form>
       </DialogContent>
     </Dialog>
+    <AiSpeechBuilderDialog
+      open={showAiBuilder}
+      onOpenChange={setShowAiBuilder}
+      language={i18n.language}
+      onDraftReady={({ title: aiTitle, speech: aiSpeech }) => {
+        if (aiTitle && !title.trim()) setTitle(aiTitle);
+        handleTextChange(aiSpeech);
+      }}
+    />
+    </>
   );
 };
 
