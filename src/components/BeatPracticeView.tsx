@@ -619,6 +619,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     showCelebrationRef.current = showCelebration;
   }, [showCelebration]);
 
+  // Reset pause-trigger tracking whenever the active text changes (new
+  // beat / phase) — same pause should fire again on the next pass.
+  useEffect(() => {
+    triggeredPausesRef.current = new Set();
+    setActivePause(null);
+    if (pauseTimerRef.current) {
+      clearInterval(pauseTimerRef.current);
+      pauseTimerRef.current = null;
+    }
+  }, [rawCurrentText]);
+
+  // Cleanup pause timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
+    };
+  }, []);
+
   // Flush buffered transcripts WITHOUT aborting recognition. Aborting + restarting
   // the Web Speech engine triggers the iOS/Safari microphone "ding" sound on every
   // pause, which feels like a constant chime during practice. By keeping the
