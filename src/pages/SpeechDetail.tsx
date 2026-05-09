@@ -136,6 +136,51 @@ const SpeechDetail = () => {
                   {speech.text_original}
                 </p>
               </div>
+
+              <div className="rounded-xl border bg-card/60 p-4">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                  {t("speechDetail.strictness.title")}
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {t("speechDetail.strictness.description")}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["strict", "flow"] as const).map((mode) => {
+                    const active = (speech.practice_strictness ?? "strict") === mode;
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={async () => {
+                          if (active) return;
+                          const prev = speech.practice_strictness;
+                          setSpeech({ ...speech, practice_strictness: mode });
+                          const { error } = await supabase
+                            .from("speeches")
+                            .update({ practice_strictness: mode })
+                            .eq("id", speech.id);
+                          if (error) {
+                            console.error("Failed to update strictness:", error);
+                            setSpeech({ ...speech, practice_strictness: prev });
+                          }
+                        }}
+                        className={`text-left rounded-lg border p-3 transition-colors ${
+                          active
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        <div className="text-sm font-medium">
+                          {t(`speechDetail.strictness.${mode}`)}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {t(`speechDetail.strictness.${mode}Desc`)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </TabsContent>
 
