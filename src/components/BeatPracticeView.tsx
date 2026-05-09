@@ -1577,6 +1577,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         failOpensThisToken = 0;
       }
       if (advancedTo >= words.length) break;
+      // If we've landed on a pause token, stop matching and let the
+      // pause-trigger effect handle the countdown + auto-advance.
+      if (pauseWordMeta.has(advancedTo)) break;
 
       // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
       const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
