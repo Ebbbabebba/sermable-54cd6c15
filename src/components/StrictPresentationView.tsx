@@ -111,7 +111,22 @@ export const StrictPresentationView = ({
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
   
-  const words = stripStageDirections(text).split(/\s+/).filter(w => w.length > 0);
+  const words = useMemo(
+    () => stripStageDirections(text).split(/\s+/).filter((w) => w.length > 0),
+    [text],
+  );
+  const directionsByAfterIndex = useMemo(() => {
+    const { tokens } = tokenizeScript(text);
+    const map = new Map<number, string[]>();
+    for (const tok of tokens) {
+      if (tok.type === "direction") {
+        const list = map.get(tok.afterWordIndex) ?? [];
+        list.push(tok.text);
+        map.set(tok.afterWordIndex, list);
+      }
+    }
+    return map;
+  }, [text]);
   
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
