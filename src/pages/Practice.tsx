@@ -41,6 +41,7 @@ import SegmentProgress from "@/components/SegmentProgress";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
+import { PauseSlidersList } from "@/components/PauseSlidersList";
 
 interface Speech {
   id: string;
@@ -2472,6 +2473,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
             className="min-h-[300px] font-mono text-sm"
             placeholder={t('practice.enterSpeechText')}
           />
+          <div className="mt-3">
+            <PauseSlidersList
+              text={editedScriptText}
+              onChange={setEditedScriptText}
+            />
+          </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsEditingScript(false)}>
               {t('common.cancel')}

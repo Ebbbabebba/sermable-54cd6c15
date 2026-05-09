@@ -12,6 +12,8 @@
  * directions.
  */
 
+import { stripPauses } from "./pauses";
+
 const STAGE_DIRECTION_REGEX = /\(([^()]*)\)/g;
 
 export interface DirectionToken {
@@ -38,7 +40,11 @@ export type ScriptToken = WordToken | DirectionToken;
  */
 export const stripStageDirections = (text: string): string => {
   if (!text) return "";
-  return text.replace(STAGE_DIRECTION_REGEX, " ").replace(/\s+/g, " ").trim();
+  const noDirections = text.replace(STAGE_DIRECTION_REGEX, " ").replace(/\s+/g, " ").trim();
+  // Pause markers (e.g. `-`, `-3s`) are also non-spoken artefacts — strip
+  // them so AI / speech recognition / word counting stay aligned with what
+  // the user actually says.
+  return stripPauses(noDirections);
 };
 
 /**

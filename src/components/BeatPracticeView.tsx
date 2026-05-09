@@ -16,6 +16,8 @@ import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
+import { extractPauses, stripPauses, type PauseMarker } from "@/utils/pauses";
+import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -372,6 +374,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [lenientWordIndices, setLenientWordIndices] = useState<Set<number>>(new Set()); // Proper nouns/names - hidden but can't turn red
   const lenientWordIndicesRef = useRef<Set<number>>(new Set());
   const [consecutiveNoScriptSuccess, setConsecutiveNoScriptSuccess] = useState(0); // Track 2 successful no-script reps
+
+  // Pause markers (`-`, `-3s`) — full-screen countdown overlay state.
+  const [activePause, setActivePause] = useState<{
+    remainingSeconds: number;
+    totalSeconds: number;
+  } | null>(null);
+  const triggeredPausesRef = useRef<Set<number>>(new Set());
+  const pauseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -583,7 +593,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return "";
   }, [currentBeat, phase, sessionMode, getUniqueSentences]);
 
-  const currentText = getCurrentText();
+  const rawCurrentText = getCurrentText();
+  // Pause markers (`-`, `-3s`, …) live in the raw text but must NOT count
+  // as words. Strip them here so the rest of the practice loop (matching,
+  // hidden indices, SentenceDisplay) sees a clean word array.
+  const currentText = useMemo(() => stripPauses(rawCurrentText), [rawCurrentText]);
+  const pauseMarkers = useMemo<PauseMarker[]>(
+    () => extractPauses(rawCurrentText),
+    [rawCurrentText],
+  );
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
 
   useEffect(() => {
@@ -600,6 +618,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   useEffect(() => {
     showCelebrationRef.current = showCelebration;
   }, [showCelebration]);
+
+  // Reset pause-trigger tracking whenever the active text changes (new
+  // beat / phase) — same pause should fire again on the next pass.
+  useEffect(() => {
+    triggeredPausesRef.current = new Set();
+    setActivePause(null);
+    if (pauseTimerRef.current) {
+      clearInterval(pauseTimerRef.current);
+      pauseTimerRef.current = null;
+    }
+  }, [rawCurrentText]);
+
+  // Cleanup pause timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
+    };
+  }, []);
 
   // Flush buffered transcripts WITHOUT aborting recognition. Aborting + restarting
   // the Web Speech engine triggers the iOS/Safari microphone "ding" sound on every
@@ -620,6 +656,39 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // The ignoreResultsUntilRef window already discards stale tokens, and skipping
     // the abort avoids the system mic chime that plays on every restart.
   };
+
+  // Trigger a planned pause when the cursor reaches a `-` marker in the
+  // script. Mutes the mic for the duration so noise can't trigger advance,
+  // and shows a full-screen dim + circular countdown overlay.
+  useEffect(() => {
+    if (!isRecording) return;
+    const due = pauseMarkers.find(
+      (p) =>
+        p.afterWordIndex === currentWordIndex - 1 &&
+        !triggeredPausesRef.current.has(p.pauseIndex),
+    );
+    if (!due) return;
+    triggeredPausesRef.current.add(due.pauseIndex);
+    const totalSeconds = Math.round(due.durationMs / 1000);
+    setActivePause({ remainingSeconds: totalSeconds, totalSeconds });
+    pauseSpeechRecognition(due.durationMs + 250);
+    if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
+    const startedAt = Date.now();
+    pauseTimerRef.current = setInterval(() => {
+      const elapsedMs = Date.now() - startedAt;
+      const remainingMs = Math.max(0, due.durationMs - elapsedMs);
+      if (remainingMs <= 0) {
+        if (pauseTimerRef.current) {
+          clearInterval(pauseTimerRef.current);
+          pauseTimerRef.current = null;
+        }
+        setActivePause(null);
+      } else {
+        setActivePause({ remainingSeconds: remainingMs / 1000, totalSeconds });
+      }
+    }, 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentWordIndex, isRecording, pauseMarkers]);
 
   const replayRecentTranscriptTail = (tailWordCount = 6) => {
     const transcript = transcriptRef.current.trim();
@@ -3232,6 +3301,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   return (
     <div className="flex flex-col h-full bg-background">
+      <PauseCountdownOverlay
+        remainingSeconds={activePause?.remainingSeconds ?? null}
+        totalSeconds={activePause?.totalSeconds ?? 1}
+      />
       {/* Duolingo-style header with progress */}
       <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
         <div className="flex items-center gap-4 max-w-2xl mx-auto">
