@@ -151,6 +151,56 @@
     }
   },
   "upload": {
+    "interview": {
+      "back": "Back",
+      "next": "Continue",
+      "start": "Start",
+      "create": "Create speech",
+      "creating": "Crafting your speech…",
+      "creatingDesc": "Segmenting, scheduling and tuning your plan.",
+      "intro": {
+        "eyebrow": "Let's begin",
+        "title": "Create your speech, your way",
+        "subtitle": "I'll ask a few quick questions and tailor your practice. Takes less than a minute."
+      },
+      "title": {
+        "eyebrow": "First, the basics",
+        "title": "What should we call your speech?",
+        "subtitle": "A short name to help you find it later."
+      },
+      "date": {
+        "eyebrow": "Set your deadline",
+        "title": "When do you give the speech?",
+        "subtitle": "We'll plan your practice schedule around this date."
+      },
+      "text": {
+        "eyebrow": "Your speech",
+        "title": "Add your text",
+        "subtitle": "Paste, write, scan or build with AI — whichever feels easiest."
+      },
+      "familiarity": {
+        "eyebrow": "Your starting point",
+        "title": "How well do you know the text already?",
+        "subtitle": "We'll adjust the difficulty so practice feels right from day one.",
+        "beginnerDesc": "Brand new — I'm reading it for the first time.",
+        "intermediateDesc": "I've read it a few times and know the gist.",
+        "confidentDesc": "I almost know it — I just need polish."
+      },
+      "learning": {
+        "eyebrow": "Your style",
+        "title": "How do you want to learn it?",
+        "subtitle": "You can change this later."
+      },
+      "strictness": {
+        "eyebrow": "Last one",
+        "title": "How strict should practice be?",
+        "subtitle": "Strict trains exact words. Flow rewards meaning over precision.",
+        "strict": "Strict",
+        "strictDesc": "Every word matters. Best for memorization.",
+        "flow": "Flow",
+        "flowDesc": "Get the meaning across. Best for natural delivery."
+      }
+    },
     "title": "Upload New Speech",
     "description": "Add your speech text and set a goal date for when you need to have it memorized.",
     "speechTitle": "Speech Title",

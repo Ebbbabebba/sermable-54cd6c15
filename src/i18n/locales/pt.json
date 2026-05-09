@@ -149,6 +149,56 @@
     }
   },
   "upload": {
+    "interview": {
+      "back": "Voltar",
+      "next": "Continuar",
+      "start": "Começar",
+      "create": "Criar discurso",
+      "creating": "A criar o seu discurso…",
+      "creatingDesc": "Estamos a segmentar, agendar e afinar o seu plano.",
+      "intro": {
+        "eyebrow": "Vamos começar",
+        "title": "Crie o seu discurso, à sua maneira",
+        "subtitle": "Vou fazer algumas perguntas rápidas e adaptar a prática. Menos de um minuto."
+      },
+      "title": {
+        "eyebrow": "Primeiro, o básico",
+        "title": "Como vamos chamar ao seu discurso?",
+        "subtitle": "Um nome curto para o encontrar mais tarde."
+      },
+      "date": {
+        "eyebrow": "Defina o prazo",
+        "title": "Quando vai apresentar o discurso?",
+        "subtitle": "Planeamos a prática à volta desta data."
+      },
+      "text": {
+        "eyebrow": "O seu discurso",
+        "title": "Adicione o seu texto",
+        "subtitle": "Cole, escreva, digitalize ou construa com IA — o que for mais fácil."
+      },
+      "familiarity": {
+        "eyebrow": "O seu ponto de partida",
+        "title": "Quão bem já conhece o texto?",
+        "subtitle": "Vamos ajustar a dificuldade para que a prática faça sentido desde o primeiro dia.",
+        "beginnerDesc": "Totalmente novo — estou a lê-lo pela primeira vez.",
+        "intermediateDesc": "Já o li algumas vezes e conheço a ideia.",
+        "confidentDesc": "Quase o sei — só preciso de polir."
+      },
+      "learning": {
+        "eyebrow": "O seu estilo",
+        "title": "Como quer aprendê-lo?",
+        "subtitle": "Pode mudar isto depois."
+      },
+      "strictness": {
+        "eyebrow": "Última pergunta",
+        "title": "Quão rigorosa deve ser a prática?",
+        "subtitle": "Rigorosa treina palavras exatas. Flow premeia o sentido sobre a precisão.",
+        "strict": "Rigorosa",
+        "strictDesc": "Cada palavra conta. Ideal para memorizar.",
+        "flow": "Flow",
+        "flowDesc": "Transmita o sentido. Ideal para uma apresentação natural."
+      }
+    },
     "title": "Enviar novo discurso",
     "speechTitle": "Título do discurso",
     "speechText": "Texto do discurso",

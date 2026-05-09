@@ -149,6 +149,56 @@
     }
   },
   "upload": {
+    "interview": {
+      "back": "Zurück",
+      "next": "Weiter",
+      "start": "Starten",
+      "create": "Rede erstellen",
+      "creating": "Deine Rede wird erstellt…",
+      "creatingDesc": "Wir gliedern, planen und stimmen deinen Plan ab.",
+      "intro": {
+        "eyebrow": "Los geht's",
+        "title": "Erstelle deine Rede, ganz nach dir",
+        "subtitle": "Ich stelle dir ein paar kurze Fragen und passe das Üben an. Dauert weniger als eine Minute."
+      },
+      "title": {
+        "eyebrow": "Zuerst die Basics",
+        "title": "Wie soll deine Rede heißen?",
+        "subtitle": "Ein kurzer Name, damit du sie später wiederfindest."
+      },
+      "date": {
+        "eyebrow": "Setze deinen Termin",
+        "title": "Wann hältst du die Rede?",
+        "subtitle": "Wir planen dein Üben rund um dieses Datum."
+      },
+      "text": {
+        "eyebrow": "Deine Rede",
+        "title": "Füge deinen Text hinzu",
+        "subtitle": "Einfügen, schreiben, scannen oder mit KI bauen — wie es dir leichter fällt."
+      },
+      "familiarity": {
+        "eyebrow": "Dein Ausgangspunkt",
+        "title": "Wie gut kennst du den Text schon?",
+        "subtitle": "Wir passen den Schwierigkeitsgrad an, damit das Üben sich vom ersten Tag an richtig anfühlt.",
+        "beginnerDesc": "Brandneu — ich lese ihn zum ersten Mal.",
+        "intermediateDesc": "Ich habe ihn ein paar Mal gelesen und kenne das Wesentliche.",
+        "confidentDesc": "Ich kann ihn fast — brauche nur den letzten Schliff."
+      },
+      "learning": {
+        "eyebrow": "Dein Stil",
+        "title": "Wie möchtest du es lernen?",
+        "subtitle": "Das kannst du später ändern."
+      },
+      "strictness": {
+        "eyebrow": "Letzte Frage",
+        "title": "Wie streng soll geübt werden?",
+        "subtitle": "Strikt trainiert exakte Wörter. Flow belohnt Bedeutung statt Genauigkeit.",
+        "strict": "Strikt",
+        "strictDesc": "Jedes Wort zählt. Am besten zum Auswendiglernen.",
+        "flow": "Flow",
+        "flowDesc": "Bring die Botschaft rüber. Am besten für natürliches Sprechen."
+      }
+    },
     "title": "Neue Rede hochladen",
     "speechTitle": "Titel der Rede",
     "speechText": "Redetext",

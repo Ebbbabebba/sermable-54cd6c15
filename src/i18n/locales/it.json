@@ -149,6 +149,56 @@
     }
   },
   "upload": {
+    "interview": {
+      "back": "Indietro",
+      "next": "Continua",
+      "start": "Inizia",
+      "create": "Crea discorso",
+      "creating": "Stiamo creando il tuo discorso…",
+      "creatingDesc": "Segmentiamo, pianifichiamo e adattiamo il tuo piano.",
+      "intro": {
+        "eyebrow": "Iniziamo",
+        "title": "Crea il tuo discorso, a modo tuo",
+        "subtitle": "Ti faccio qualche domanda veloce e adatto la tua pratica. Meno di un minuto."
+      },
+      "title": {
+        "eyebrow": "Prima le basi",
+        "title": "Come chiamiamo il tuo discorso?",
+        "subtitle": "Un nome breve per ritrovarlo dopo."
+      },
+      "date": {
+        "eyebrow": "Imposta la scadenza",
+        "title": "Quando terrai il discorso?",
+        "subtitle": "Pianificheremo la pratica intorno a questa data."
+      },
+      "text": {
+        "eyebrow": "Il tuo discorso",
+        "title": "Aggiungi il tuo testo",
+        "subtitle": "Incolla, scrivi, scansiona o costruisci con l'IA — come preferisci."
+      },
+      "familiarity": {
+        "eyebrow": "Il tuo punto di partenza",
+        "title": "Quanto conosci già il testo?",
+        "subtitle": "Adatteremo la difficoltà perché la pratica sia giusta fin dal primo giorno.",
+        "beginnerDesc": "Nuovissimo — lo leggo per la prima volta.",
+        "intermediateDesc": "L'ho letto qualche volta e ne conosco il senso.",
+        "confidentDesc": "Lo so quasi — devo solo rifinirlo."
+      },
+      "learning": {
+        "eyebrow": "Il tuo stile",
+        "title": "Come vuoi impararlo?",
+        "subtitle": "Puoi cambiarlo dopo."
+      },
+      "strictness": {
+        "eyebrow": "Ultima domanda",
+        "title": "Quanto severa sarà la pratica?",
+        "subtitle": "Severa allena le parole esatte. Flow premia il significato sulla precisione.",
+        "strict": "Severa",
+        "strictDesc": "Ogni parola conta. Ideale per memorizzare.",
+        "flow": "Flow",
+        "flowDesc": "Trasmetti il significato. Ideale per un'esposizione naturale."
+      }
+    },
     "title": "Carica nuovo discorso",
     "speechTitle": "Titolo del discorso",
     "speechText": "Testo del discorso",
