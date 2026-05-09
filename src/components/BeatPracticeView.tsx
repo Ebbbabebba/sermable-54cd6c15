@@ -1493,7 +1493,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
       const currentIsLenient = isEffectivelyLenientWord(advancedTo);
       const currentIsSentenceStart = advancedTo === 0 || /[.!?]$/.test(words[advancedTo - 1] ?? '');
-      
+      // True if advancing past `advancedTo` would cross into a new sentence
+      const crossesSentenceBoundary = (from: number, to: number) => {
+        for (let k = from; k < to; k++) {
+          if (/[.!?]$/.test(words[k] ?? '')) return true;
+        }
+        return false;
+      };
+
       // STRICT: Only match the CURRENT word position - no lookahead
       // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
@@ -1503,36 +1510,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       if (foundIdx === -1) {
         // Current word didn't match - check NEXT word (lookahead of 1)
-        // This handles minor recognition order issues without jumping too far
-        if (advancedTo + 1 < words.length && wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)) {
-          // Mark current word as passed
-          if (currentIsHidden) {
-            // Hidden word was skipped - but check if it's a lenient word (proper noun/name)
-            // Lenient words don't turn red - they're hidden but treated like visible words
-            if (!currentIsLenient) {
-              newMissed.add(advancedTo);
-            }
-          }
-          // Always mark current word as spoken (visible words just move on)
+        // BUT: never let lookahead cross a sentence boundary, and never let it
+        // skip over a strict hidden current word (only over visible/lenient words).
+        const canSkipCurrent = !currentIsHidden || currentIsLenient;
+        if (
+          canSkipCurrent &&
+          advancedTo + 1 < words.length &&
+          !crossesSentenceBoundary(advancedTo, advancedTo + 1) &&
+          wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)
+        ) {
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
-        } else if (advancedTo + 2 < words.length) {
-          // If we're stuck, check 2 words ahead. This lets a hidden current word be skipped
-          // when the user has clearly moved on, while still preventing jumps over strict hidden words.
+        } else if (canSkipCurrent && advancedTo + 2 < words.length) {
+          // 2-word lookahead — only across visible/lenient words, never crossing
+          // a sentence boundary.
           const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
           const betweenIsLenient = isEffectivelyLenientWord(advancedTo + 1);
-          if (!betweenIsHidden || betweenIsLenient) {
-            if (wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)) {
-              // Skip current visible/lenient word and the next one (if also visible/lenient)
-              newSpoken.add(advancedTo);
-              const nextIdx = advancedTo + 1;
-              if (!betweenIsHidden || betweenIsLenient) {
-                newSpoken.add(nextIdx);
-              } else {
-                newMissed.add(nextIdx);
-              }
-              foundIdx = advancedTo + 2;
-            }
+          const betweenSkippable = !betweenIsHidden || betweenIsLenient;
+          if (
+            betweenSkippable &&
+            !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
+            wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
+          ) {
+            newSpoken.add(advancedTo);
+            newSpoken.add(advancedTo + 1);
+            foundIdx = advancedTo + 2;
           }
         }
       }
@@ -2711,6 +2713,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setHesitatedIndices(newHesitated);
             }
             const isLenientWord = isEffectivelyLenientWord(idx);
+            // Sentence-start hidden words: do NOT auto-advance on timeout —
+            // the user hasn't started speaking yet. Just keep showing the clue.
+            const isSentenceStart = idx === 0 || /[.!?]$/.test(words[idx - 1] ?? '');
+            if (isSentenceStart) {
+              return;
+            }
             const autoAdvanceMs = isLenientWord ? 3000 : 6000;
             if (elapsed > autoAdvanceMs) {
               console.log(
@@ -2726,6 +2734,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setCurrentWordIndex(nextIdx);
               hasHeardSpeechRef.current = false;
               lastWordTimeRef.current = Date.now();
+              // Clear buffered transcript so old recognition results cannot
+              // cascade-advance the next word/sentence.
+              transcriptRef.current = "";
+              transcriptWordsRef.current = [];
+              runningTranscriptRef.current = "";
+              ignoreResultsUntilRef.current = Date.now() + 400;
               if (nextIdx >= wordsLengthRef.current) {
                 const failedFromSignals = new Set<number>();
                 hiddenWordIndicesRef.current.forEach((hiddenIdx) => {
@@ -2734,9 +2748,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   }
                 });
                 checkCompletion(newSpoken, failedFromSignals);
-              } else {
-                replayRecentTranscriptTail();
               }
+              // Note: no transcript replay — that caused cascading skips.
             }
           }
         }
