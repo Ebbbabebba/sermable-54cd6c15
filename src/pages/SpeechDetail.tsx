@@ -80,6 +80,10 @@ const SpeechDetail = () => {
             {t("common.back")}
           </Button>
           <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setPrintOpen(true)} aria-label={t("beatPrint.title", "Skriv ut manus")}>
+              <Printer className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t("speechDetail.print", "Skriv ut")}</span>
+            </Button>
             <Button size="sm" variant="outline" onClick={() => navigate(`/presentation/${speech.id}`)}>
               <Presentation className="h-4 w-4 mr-2" />
               {t("speechDetail.present")}
