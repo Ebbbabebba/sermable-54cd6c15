@@ -441,7 +441,18 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
                   {t('upload.autoDetectsLanguage')}
                 </span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={() => setShowAiBuilder(true)}
+                  disabled={loading || isScanning}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{t('upload.buildWithAi', 'Bygg med AI')}</span>
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
