@@ -1460,9 +1460,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // Always mark current word as spoken (visible words just move on)
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
-        } else if ((!currentIsHidden || currentIsLenient) && advancedTo + 2 < words.length) {
-          // If current word is VISIBLE or LENIENT and we're stuck, check 2 words ahead
-          // BUT only if the word in between is also visible/lenient (prevent jumping over hidden words)
+        } else if (advancedTo + 2 < words.length) {
+          // If we're stuck, check 2 words ahead. This lets a hidden current word be skipped
+          // when the user has clearly moved on, while still preventing jumps over strict hidden words.
           const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
           const betweenIsLenient = isEffectivelyLenientWord(advancedTo + 1);
           if (!betweenIsHidden || betweenIsLenient) {
