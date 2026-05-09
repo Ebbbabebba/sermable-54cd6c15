@@ -1504,17 +1504,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1) {
-        // If a lenient hidden word (flow/gap/proper noun), or the first hidden word
-        // of a sentence, is blocking the cursor, fail it open as soon as speech is
-        // detected and retry the same spoken token against the next word.
-        // This prevents a hidden sentence-start word from delaying visible word
-        // coloring until the timeout fires.
-        if (currentIsHidden && (currentIsLenient || currentIsSentenceStart)) {
-          if (!currentIsLenient) {
+        // If ANY hidden word is blocking the cursor and the user is clearly speaking,
+        // fail it open and retry the same spoken token against the next word.
+        // Lenient/sentence-start words don't get marked as missed; other hidden words do.
+        if (currentIsHidden) {
+          if (!currentIsLenient && !currentIsSentenceStart) {
             newMissed.add(advancedTo);
           }
           newSpoken.add(advancedTo);
           advancedTo += 1;
+          // Count this as cursor progress in the transcript so we don't replay
+          // the same failed hidden word forever.
+          lastMatchedRawIndex = startIdx + rawOffset;
           rawOffset -= 1;
           lastWordTimeRef.current = Date.now();
           continue;
