@@ -3143,7 +3143,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               <span className="text-xs">{t('common.skip', 'Skip')}</span>
             </Button>
           )}
-          
+
+          {/* Edit script — exits the session and opens the inline edit dialog */}
+          {onEditScript && !showCelebration && subscriptionTier !== 'free' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                stopListening();
+                await saveCheckpoint();
+                onEditScript();
+              }}
+              className="shrink-0 rounded-full hover:bg-muted"
+              title={t('practice.editScriptTitle', 'Redigera manus')}
+            >
+              <Pencil className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          )}
           {/* Full Speech Button */}
           {fullSpeechText && (
             <Sheet open={showFullSpeechModal} onOpenChange={setShowFullSpeechModal}>
