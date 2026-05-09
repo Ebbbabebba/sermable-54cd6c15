@@ -624,7 +624,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const match = w.match(PAUSE_TOKEN_RE);
       if (match) {
         const seconds = match[1] ? parseInt(match[1], 10) : 2;
-        const clamped = Math.max(1, Math.min(10, seconds));
+        const clamped = Math.max(0, Math.min(10, seconds));
         m.set(i, clamped * 1000);
       }
     });
