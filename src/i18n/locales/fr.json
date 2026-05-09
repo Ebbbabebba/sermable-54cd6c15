@@ -149,6 +149,56 @@
     }
   },
   "upload": {
+    "interview": {
+      "back": "Retour",
+      "next": "Continuer",
+      "start": "Commencer",
+      "create": "Créer le discours",
+      "creating": "Création de votre discours…",
+      "creatingDesc": "Nous segmentons, planifions et ajustons votre plan.",
+      "intro": {
+        "eyebrow": "C'est parti",
+        "title": "Créez votre discours, à votre façon",
+        "subtitle": "Je vous pose quelques questions rapides pour adapter votre pratique. Moins d'une minute."
+      },
+      "title": {
+        "eyebrow": "D'abord, les bases",
+        "title": "Comment appellerons-nous votre discours ?",
+        "subtitle": "Un nom court pour le retrouver plus tard."
+      },
+      "date": {
+        "eyebrow": "Fixez votre échéance",
+        "title": "Quand prononcez-vous le discours ?",
+        "subtitle": "Nous planifierons votre pratique autour de cette date."
+      },
+      "text": {
+        "eyebrow": "Votre discours",
+        "title": "Ajoutez votre texte",
+        "subtitle": "Collez, écrivez, scannez ou construisez avec l'IA — comme vous préférez."
+      },
+      "familiarity": {
+        "eyebrow": "Votre point de départ",
+        "title": "À quel point connaissez-vous déjà le texte ?",
+        "subtitle": "Nous ajusterons la difficulté pour que la pratique soit adaptée dès le premier jour.",
+        "beginnerDesc": "Tout nouveau — je le lis pour la première fois.",
+        "intermediateDesc": "Je l'ai lu plusieurs fois et j'en connais l'essentiel.",
+        "confidentDesc": "Je le connais presque — il me faut juste le peaufiner."
+      },
+      "learning": {
+        "eyebrow": "Votre style",
+        "title": "Comment voulez-vous l'apprendre ?",
+        "subtitle": "Vous pouvez changer plus tard."
+      },
+      "strictness": {
+        "eyebrow": "Dernière question",
+        "title": "À quel point la pratique doit-elle être stricte ?",
+        "subtitle": "Strict entraîne les mots exacts. Flow récompense le sens plutôt que la précision.",
+        "strict": "Strict",
+        "strictDesc": "Chaque mot compte. Idéal pour la mémorisation.",
+        "flow": "Flow",
+        "flowDesc": "Faites passer le sens. Idéal pour une livraison naturelle."
+      }
+    },
     "title": "Ajouter un nouveau discours",
     "speechTitle": "Titre du discours",
     "speechText": "Texte du discours",

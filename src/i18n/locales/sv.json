@@ -152,6 +152,56 @@
     }
   },
   "upload": {
+    "interview": {
+      "back": "Tillbaka",
+      "next": "Fortsätt",
+      "start": "Starta",
+      "create": "Skapa tal",
+      "creating": "Skapar ditt tal…",
+      "creatingDesc": "Delar in, schemalägger och anpassar din plan.",
+      "intro": {
+        "eyebrow": "Vi börjar",
+        "title": "Skapa ditt tal, på ditt sätt",
+        "subtitle": "Jag ställer några snabba frågor och skräddarsyr din övning. Tar mindre än en minut."
+      },
+      "title": {
+        "eyebrow": "Först det grundläggande",
+        "title": "Vad ska vi kalla ditt tal?",
+        "subtitle": "Ett kort namn så du hittar det senare."
+      },
+      "date": {
+        "eyebrow": "Sätt din deadline",
+        "title": "När ska du hålla talet?",
+        "subtitle": "Vi planerar din övning utifrån detta datum."
+      },
+      "text": {
+        "eyebrow": "Ditt tal",
+        "title": "Lägg till din text",
+        "subtitle": "Klistra in, skriv, skanna eller bygg med AI — vad som känns enklast."
+      },
+      "familiarity": {
+        "eyebrow": "Din startpunkt",
+        "title": "Hur väl kan du texten redan?",
+        "subtitle": "Vi justerar svårighetsgraden så övningen känns rätt från dag ett.",
+        "beginnerDesc": "Helt ny — jag läser den för första gången.",
+        "intermediateDesc": "Jag har läst den några gånger och kan grovt.",
+        "confidentDesc": "Jag kan den nästan — behöver bara putsa."
+      },
+      "learning": {
+        "eyebrow": "Din stil",
+        "title": "Hur vill du lära dig det?",
+        "subtitle": "Du kan ändra detta senare."
+      },
+      "strictness": {
+        "eyebrow": "Sista frågan",
+        "title": "Hur strikt ska övningen vara?",
+        "subtitle": "Strikt tränar exakta ord. Flow belönar mening framför precision.",
+        "strict": "Strikt",
+        "strictDesc": "Varje ord räknas. Bäst för memorering.",
+        "flow": "Flow",
+        "flowDesc": "Få fram budskapet. Bäst för naturlig leverans."
+      }
+    },
     "title": "Ladda upp nytt tal",
     "description": "Lägg till din taltext och sätt ett måldatum för när du behöver kunna det utantill.",
     "speechTitle": "Titel",
