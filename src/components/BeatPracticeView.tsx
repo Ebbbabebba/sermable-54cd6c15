@@ -386,6 +386,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const runningTranscriptRef = useRef<string>("");
   const latestSpeechResultCountRef = useRef(0);
   const ignoreResultsBeforeIndexRef = useRef(0);
+  const latestRecognitionTranscriptRef = useRef("");
+  const ignoredRecognitionWordCountRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hasHeardSpeechRef = useRef(false);
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
