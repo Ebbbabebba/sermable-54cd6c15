@@ -1221,6 +1221,36 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     );
   };
 
+  const getWordDistance = (a: string, b: string): number => {
+    if (a === b) return 0;
+    if (!a) return b.length;
+    if (!b) return a.length;
+
+    const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    const curr = Array.from({ length: b.length + 1 }, () => 0);
+
+    for (let i = 1; i <= a.length; i++) {
+      curr[0] = i;
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        curr[j] = Math.min(
+          curr[j - 1] + 1,
+          prev[j] + 1,
+          prev[j - 1] + cost
+        );
+      }
+      for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
+    }
+
+    return prev[b.length];
+  };
+
+  const getNormalizedTokens = (text: string): string[] =>
+    text
+      .split(/\s+/)
+      .map(normalizeWord)
+      .filter(Boolean);
+
   // Check if spoken word matches expected - STRICT matching
   // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
   const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
@@ -1300,29 +1330,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (s.length >= e.length && s.includes(e)) return true;
       if (e.length >= 4 && e.includes(s) && s.length >= e.length - 2) return true;
 
-      // Must share first letter for hidden words (same starting sound)
-      if (s[0] !== e[0]) return false;
+      const lengthVariance = Math.abs(s.length - e.length);
+      if (lengthVariance > Math.max(2, Math.ceil(e.length * 0.35))) return false;
 
-      // 2-char hidden words: allow exact or off-by-one
-      if (e.length === 2) {
-        if (Math.abs(s.length - e.length) > 1) return false;
-        let diff = 0;
-        for (let i = 0; i < Math.max(s.length, e.length); i++) {
-          if (s[i] !== e[i]) diff++;
-        }
-        return diff <= 1;
-      }
+      const sameFirstSound = s[0] === e[0];
+      const sameSecondSound = s.length > 1 && e.length > 1 && s[1] === e[1];
+      const maxDist = e.length <= 2 ? 1 : e.length <= 5 ? 2 : Math.ceil(e.length * 0.34);
+      const dist = getWordDistance(s, e);
 
-      // 3+ char hidden words: allow up to 2 char length variance,
-      // 1 edit for 3-5 char words, 2 edits for 6+ char words.
-      if (Math.abs(s.length - e.length) > 2) return false;
-      const maxDist = e.length <= 5 ? 1 : 2;
-      let diff = 0;
-      for (let i = 0; i < Math.max(s.length, e.length); i++) {
-        if (s[i] !== e[i]) diff++;
-        if (diff > maxDist) return false;
-      }
-      return true;
+      if (sameFirstSound && dist <= maxDist) return true;
+      if (sameSecondSound && e.length >= 4 && dist <= maxDist) return true;
+      return e.length >= 6 && dist <= 2;
     }
     
     // For VISIBLE words, slightly more lenient than hidden but still meaningful
@@ -1357,14 +1375,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Must share first letter (same starting sound)
     if (s[0] !== e[0]) return false;
     
-    // Allow 1 char diff for 4-6 letter words, 2 for 7-10, 3 for 11+
+    // Allow 1 edit for 4-6 letter words, 2 for 7-10, 3 for 11+
     const maxDist = e.length <= 6 ? 1 : e.length <= 10 ? 2 : 3;
-    let diff = 0;
-    for (let i = 0; i < Math.max(s.length, e.length); i++) {
-      if (s[i] !== e[i]) diff++;
-      if (diff > maxDist) return false;
-    }
-    return true;
+    return getWordDistance(s, e) <= maxDist;
   };
 
   // Process transcription - cursor-based
