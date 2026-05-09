@@ -1289,28 +1289,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return overlapRatio >= 0.35;
     }
     
-    // For HIDDEN words (non-lenient), be stricter - need to prove they know it
+    // For HIDDEN words (non-lenient), be moderately strict — must prove they know it,
+    // but don't punish normal speech-recognition variance (vowel slips, missing endings).
     if (isHidden) {
-      // 1-2 char words require exact match
-      if (e.length <= 2) return false;
-      
-      // 3-char words: allow 1 character difference (speech recognition variance)
-      if (e.length === 3) {
+      // 1-char words require exact match
+      if (e.length <= 1) return s === e;
+
+      // Substring containment: spoken merged with neighbor (e.g. "the era" -> "thera")
+      if (s.length >= e.length && s.includes(e)) return true;
+      if (e.length >= 4 && e.includes(s) && s.length >= e.length - 2) return true;
+
+      // Must share first letter for hidden words (same starting sound)
+      if (s[0] !== e[0]) return false;
+
+      // 2-char hidden words: allow exact or off-by-one
+      if (e.length === 2) {
         if (Math.abs(s.length - e.length) > 1) return false;
         let diff = 0;
-        const maxLen = Math.max(s.length, e.length);
-        for (let i = 0; i < maxLen; i++) {
+        for (let i = 0; i < Math.max(s.length, e.length); i++) {
           if (s[i] !== e[i]) diff++;
         }
         return diff <= 1;
       }
-      
-      // 4+ char words: allow 1 char difference, similar length
-      if (Math.abs(s.length - e.length) > 1) return false;
+
+      // 3+ char hidden words: allow up to 2 char length variance,
+      // 1 edit for 3-5 char words, 2 edits for 6+ char words.
+      if (Math.abs(s.length - e.length) > 2) return false;
+      const maxDist = e.length <= 5 ? 1 : 2;
       let diff = 0;
       for (let i = 0; i < Math.max(s.length, e.length); i++) {
         if (s[i] !== e[i]) diff++;
-        if (diff > 1) return false;
+        if (diff > maxDist) return false;
       }
       return true;
     }
