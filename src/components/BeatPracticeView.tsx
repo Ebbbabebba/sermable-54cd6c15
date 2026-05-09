@@ -1338,7 +1338,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     return (
       lenientWordIndicesRef.current.has(index) ||
-      practiceStrictness === 'flow' ||
       isGapWord(words[index] ?? '')
     );
   };
@@ -1370,10 +1369,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Check if spoken word matches expected - STRICT matching
   // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
   const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
-    // FLOW mode: relax matching for hidden words by treating them as lenient
-    if (practiceStrictness === 'flow' && isHidden && !isLenient) {
-      isLenient = true;
-    }
+    // FLOW mode should be a little more forgiving, but not “name-level” lenient.
+    // Treating every hidden word as lenient allowed weak first-letter matches to
+    // cascade through whole sentences/sessions.
+    const isFlowRelaxedHidden = practiceStrictness === 'flow' && isHidden && !isLenient;
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
@@ -1447,11 +1446,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (e.length >= 4 && e.includes(s) && s.length >= e.length - 2) return true;
 
       const lengthVariance = Math.abs(s.length - e.length);
-      if (lengthVariance > Math.max(2, Math.ceil(e.length * 0.35))) return false;
+      const maxLengthVariance = isFlowRelaxedHidden
+        ? Math.max(2, Math.ceil(e.length * 0.45))
+        : Math.max(2, Math.ceil(e.length * 0.35));
+      if (lengthVariance > maxLengthVariance) return false;
 
       const sameFirstSound = s[0] === e[0];
       const sameSecondSound = s.length > 1 && e.length > 1 && s[1] === e[1];
-      const maxDist = e.length <= 2 ? 1 : e.length <= 5 ? 2 : Math.ceil(e.length * 0.34);
+      const baseMaxDist = e.length <= 2 ? 1 : e.length <= 5 ? 2 : Math.ceil(e.length * 0.34);
+      const maxDist = isFlowRelaxedHidden ? baseMaxDist + 1 : baseMaxDist;
       const dist = getWordDistance(s, e);
 
       if (sameFirstSound && dist <= maxDist) return true;
