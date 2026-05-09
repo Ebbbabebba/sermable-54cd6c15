@@ -398,6 +398,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const ignoreResultsBeforeIndexRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hasHeardSpeechRef = useRef(false);
+  // Throttles auto-advance so consecutive hidden words can't cascade — the
+  // user must produce fresh speech (or genuinely wait) between advances.
+  const lastAutoAdvanceAtRef = useRef<number>(0);
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Guards against duplicate "sentence complete" triggers for the same repetition
@@ -2297,6 +2300,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     ignoreResultsBeforeIndexRef.current = 0;
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
+    lastAutoAdvanceAtRef.current = 0;
   };
 
   const transitionToPhase = (newPhase: Phase) => {
@@ -2849,6 +2853,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               return;
             }
             const autoAdvanceMs = isLenientWord ? 3000 : 6000;
+            // Block back-to-back auto-advances within a short window. This
+            // prevents the cursor from cascading through 3 hidden words in a
+            // row when the user is briefly quiet — they get one nudge, then
+            // have to actually say something (or wait again) before the next.
+            const sinceLastAdvance = Date.now() - lastAutoAdvanceAtRef.current;
+            if (sinceLastAdvance < autoAdvanceMs) return;
             if (elapsed > autoAdvanceMs) {
               console.log(
                 `⏭️ Auto-advancing past ${
@@ -2863,6 +2873,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setCurrentWordIndex(nextIdx);
               hasHeardSpeechRef.current = false;
               lastWordTimeRef.current = Date.now();
+              lastAutoAdvanceAtRef.current = Date.now();
               // Clear buffered transcript so old recognition results cannot
               // cascade-advance the next word/sentence.
               transcriptRef.current = "";
