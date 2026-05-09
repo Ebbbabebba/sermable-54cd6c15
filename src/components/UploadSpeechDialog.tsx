@@ -754,103 +754,139 @@ const UploadSpeechDialog = ({
     }
   };
 
+  if (!open && !showAiBuilder) {
+    // unmount overlay when closed (AI builder may still need state)
+  }
+
+  const overlay = open
+    ? createPortal(
+        <AnimatePresence>
+          <motion.div
+            key="upload-overlay"
+            className="fixed inset-0 z-50 bg-background/70 backdrop-blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) onOpenChange(false);
+            }}
+          >
+            {/* Close */}
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="absolute z-20 w-10 h-10 rounded-full bg-card/70 hover:bg-card border border-border/50 flex items-center justify-center backdrop-blur-md transition"
+              style={{
+                top: "calc(env(safe-area-inset-top, 0px) + 1rem)",
+                right: "calc(env(safe-area-inset-right, 0px) + 1rem)",
+              }}
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Progress */}
+            {step !== "submitting" && (
+              <div
+                className="absolute left-1/2 -translate-x-1/2 w-[min(360px,60vw)] z-10"
+                style={{ top: "calc(env(safe-area-inset-top, 0px) + 1.4rem)" }}
+              >
+                <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-primary"
+                    initial={false}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Card scroll area */}
+            <div
+              className="absolute inset-0 overflow-y-auto"
+              style={{
+                paddingTop: "calc(env(safe-area-inset-top, 0px) + 4.5rem)",
+                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-full max-w-2xl mx-auto px-5">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="rounded-3xl bg-card/95 border border-border/60 shadow-2xl backdrop-blur-md p-6 sm:p-10"
+                  >
+                    {renderStep()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Footer nav */}
+            {step !== "submitting" && (
+              <div
+                className="absolute bottom-0 left-0 right-0 z-10 border-t border-border/50 bg-background/80 backdrop-blur-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  className="max-w-2xl mx-auto flex items-center justify-between px-5 py-4"
+                  style={{
+                    paddingBottom:
+                      "calc(1rem + env(safe-area-inset-bottom, 0px))",
+                  }}
+                >
+                  <Button
+                    variant="ghost"
+                    onClick={goBack}
+                    disabled={progressIndex === 0}
+                    className="gap-1.5"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    {t("upload.interview.back", "Back")}
+                  </Button>
+                  <Button
+                    onClick={goNext}
+                    disabled={!canAdvance() || loading}
+                    size="lg"
+                    className="gap-1.5 min-w-32"
+                  >
+                    {step === "intro" && (
+                      <>
+                        {t("upload.interview.start", "Start")}
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                    {step === "strictness" && (
+                      <>
+                        <Check className="w-4 h-4" />
+                        {t("upload.interview.create", "Create speech")}
+                      </>
+                    )}
+                    {step !== "intro" && step !== "strictness" && (
+                      <>
+                        {t("upload.interview.next", "Continue")}
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )
+    : null;
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent
-          className={cn(
-            "p-0 border-0 bg-transparent shadow-none max-w-none w-screen h-screen sm:rounded-none",
-            "flex items-center justify-center overflow-hidden"
-          )}
-          // Stronger backdrop blur via custom overlay styling
-          overlayClassName="bg-background/70 backdrop-blur-xl"
-        >
-          {/* Close */}
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            className="absolute top-5 right-5 z-20 w-10 h-10 rounded-full bg-card/70 hover:bg-card border border-border/50 flex items-center justify-center backdrop-blur-md transition"
-            aria-label="Close"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          {/* Progress */}
-          {step !== "submitting" && (
-            <div className="absolute top-5 left-1/2 -translate-x-1/2 w-[min(360px,60vw)] z-10">
-              <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
-                <motion.div
-                  className="h-full bg-primary"
-                  initial={false}
-                  animate={{ width: `${progressPct}%` }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Card */}
-          <div className="w-full max-w-2xl mx-auto px-5 pt-20 pb-24 max-h-screen overflow-y-auto">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="rounded-3xl bg-card/95 border border-border/60 shadow-2xl backdrop-blur-md p-6 sm:p-10"
-              >
-                {renderStep()}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Footer nav */}
-          {step !== "submitting" && (
-            <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-border/50 bg-background/80 backdrop-blur-xl">
-              <div
-                className="max-w-2xl mx-auto flex items-center justify-between px-5 py-4"
-                style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
-              >
-                <Button
-                  variant="ghost"
-                  onClick={goBack}
-                  disabled={progressIndex === 0}
-                  className="gap-1.5"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  {t("upload.interview.back", "Back")}
-                </Button>
-                <Button
-                  onClick={goNext}
-                  disabled={!canAdvance() || loading}
-                  size="lg"
-                  className="gap-1.5 min-w-32"
-                >
-                  {step === "intro" && (
-                    <>
-                      {t("upload.interview.start", "Start")}
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                  {step === "strictness" && (
-                    <>
-                      <Check className="w-4 h-4" />
-                      {t("upload.interview.create", "Create speech")}
-                    </>
-                  )}
-                  {step !== "intro" && step !== "strictness" && (
-                    <>
-                      {t("upload.interview.next", "Continue")}
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {overlay}
 
       <AiSpeechBuilderDialog
         open={showAiBuilder}
