@@ -593,16 +593,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return "";
   }, [currentBeat, phase, sessionMode, getUniqueSentences]);
 
-  const rawCurrentText = getCurrentText();
-  // Pause markers (`-`, `-3s`, …) live in the raw text but must NOT count
-  // as words. Strip them here so the rest of the practice loop (matching,
-  // hidden indices, SentenceDisplay) sees a clean word array.
-  const currentText = useMemo(() => stripPauses(rawCurrentText), [rawCurrentText]);
-  const pauseMarkers = useMemo<PauseMarker[]>(
-    () => extractPauses(rawCurrentText),
-    [rawCurrentText],
-  );
+  // Keep pause markers (`-`, `-3s`) as visible tokens in the word array so
+  // they appear inline in the script and turn "spoken" once their timer
+  // ends. They are skipped by speech matching (mic is muted while their
+  // countdown is running).
+  const currentText = getCurrentText();
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
+  const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+  const pauseWordMeta = useMemo<Map<number, number>>(() => {
+    const m = new Map<number, number>();
+    words.forEach((w, i) => {
+      const match = w.match(PAUSE_TOKEN_RE);
+      if (match) {
+        const seconds = match[1] ? parseInt(match[1], 10) : 2;
+        const clamped = Math.max(1, Math.min(10, seconds));
+        m.set(i, clamped * 1000);
+      }
+    });
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [words]);
 
   useEffect(() => {
     wordsLengthRef.current = words.length;
