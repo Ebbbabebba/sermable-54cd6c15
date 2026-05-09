@@ -398,6 +398,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const ignoreResultsBeforeIndexRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hasHeardSpeechRef = useRef(false);
+  // Throttles auto-advance so consecutive hidden words can't cascade — the
+  // user must produce fresh speech (or genuinely wait) between advances.
+  const lastAutoAdvanceAtRef = useRef<number>(0);
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Guards against duplicate "sentence complete" triggers for the same repetition
