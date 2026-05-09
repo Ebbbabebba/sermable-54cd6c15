@@ -144,7 +144,8 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
-    const { audio, originalText, speechId, userTier, language, skillLevel } = await req.json();
+    const { audio, originalText, speechId, userTier, language, skillLevel, strictness } = await req.json();
+    const gradingMode: 'strict' | 'flow' = strictness === 'flow' ? 'flow' : 'strict';
     
     // Verify user owns the speech they're analyzing and get familiarity level
     const { data: speech, error: speechError } = await supabase
@@ -247,12 +248,16 @@ serve(async (req) => {
     // Step 2: Use AI to analyze the speech and identify issues
     console.log('Analyzing speech patterns...');
     
+    const flowGuidance = gradingMode === 'flow'
+      ? `\n\nGRADING MODE: FLOW (semantic). Prioritize MEANING and KEY CONTENT over exact word order or phrasing. Accept paraphrasing, reordered clauses, and synonyms as long as the core message and main keywords are conveyed. Only mark as missed if a key idea or anchor word is genuinely skipped. Be MORE generous on accuracy than strict mode.`
+      : `\n\nGRADING MODE: STRICT (verbatim). Compare word-for-word. Reward exact phrasing.`;
+
     const analysisPrompt = `Analyze this speech practice session and return ONLY valid JSON.
 
 Original FULL speech text: "${originalText}"
 Spoken text: "${spokenText}"
 Language: ${audioLanguage}
-Speaker skill level: ${skillLevel || 'beginner'}
+Speaker skill level: ${skillLevel || 'beginner'}${flowGuidance}
 
 VALIDATION RULES - BALANCED APPROACH:
 

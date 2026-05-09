@@ -1333,6 +1333,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               userTier: subscriptionTier,
               language: speechLanguage,
               skillLevel: skillLevel,
+              strictness: (speech as any)?.practice_strictness ?? 'strict',
             },
             headers: {
               Authorization: `Bearer ${session.access_token}`

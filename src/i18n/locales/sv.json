@@ -902,6 +902,15 @@
     "present": "Presentera",
     "print": "Skriv ut",
     "scriptPreview": "Manus",
+    "strictness": {
+      "title": "Bedömningsläge",
+      "description": "Hur strikt ska träningen jämföra det du säger med manuset?",
+      "strict": "Strikt",
+      "strictDesc": "Exakt ordföljd. Bra när varje ord räknas.",
+      "flow": "Flöde",
+      "flowDesc": "Andemening framför exakthet. Naturligare talföring.",
+      "saved": "Sparat"
+    },
     "wordCount_one": "{{count}} ord",
     "wordCount_other": "{{count}} ord",
     "daysLeft_one": "{{count}} dag kvar",
