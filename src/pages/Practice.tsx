@@ -40,6 +40,7 @@ import DayAfterRecallView from "@/components/DayAfterRecallView";
 import SegmentProgress from "@/components/SegmentProgress";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface Speech {
   id: string;
