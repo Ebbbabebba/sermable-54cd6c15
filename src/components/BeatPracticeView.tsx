@@ -1245,12 +1245,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return prev[b.length];
   };
 
-  const getNormalizedTokens = (text: string): string[] =>
-    text
-      .split(/\s+/)
-      .map(normalizeWord)
-      .filter(Boolean);
-
   // Check if spoken word matches expected - STRICT matching
   // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
   const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
@@ -1484,7 +1478,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     let lastMatchedRawIndex = startIdx - 1;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
-      const spoken = newWords[rawOffset];
       const absoluteRawIndex = startIdx + rawOffset;
       if (advancedTo >= words.length) break;
 
@@ -1503,8 +1496,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (foundIdx === -1) {
         // Current word didn't match - check NEXT word (lookahead of 1)
         // This handles minor recognition order issues without jumping too far
-        const nextIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
-        const nextIsLenient = isEffectivelyLenientWord(advancedTo + 1);
         if (advancedTo + 1 < words.length && wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)) {
           // Mark current word as passed
           if (currentIsHidden) {
@@ -1523,8 +1514,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
           const betweenIsLenient = isEffectivelyLenientWord(advancedTo + 1);
           if (!betweenIsHidden || betweenIsLenient) {
-            const twoAheadIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 2);
-            const twoAheadIsLenient = isEffectivelyLenientWord(advancedTo + 2);
             if (wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)) {
               // Skip current visible/lenient word and the next one (if also visible/lenient)
               newSpoken.add(advancedTo);
