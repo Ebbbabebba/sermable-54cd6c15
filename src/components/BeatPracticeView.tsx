@@ -168,6 +168,7 @@ interface BeatPracticeViewProps {
   onComplete?: () => void;
   onExit?: () => void;
   onSessionLimitReached?: () => void; // Called when free user hits daily limit
+  onEditScript?: () => void; // Called when user wants to edit the script inline
 }
 
 type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
