@@ -2711,7 +2711,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
-        if (elapsed > 3000 && idx < wordsLengthRef.current) {
+        if (hasHeardSpeechRef.current && elapsed > 3000 && idx < wordsLengthRef.current) {
           if (hiddenWordIndicesRef.current.has(idx)) {
             if (!hesitatedIndicesRef.current.has(idx)) {
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
@@ -2732,6 +2732,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               const nextIdx = idx + 1;
               currentWordIndexRef.current = nextIdx;
               setCurrentWordIndex(nextIdx);
+              hasHeardSpeechRef.current = false;
               lastWordTimeRef.current = Date.now();
               if (nextIdx >= wordsLengthRef.current) {
                 const failedFromSignals = new Set<number>();
