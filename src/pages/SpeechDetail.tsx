@@ -147,6 +147,14 @@ const SpeechDetail = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <BeatPrintDialog
+        open={printOpen}
+        onOpenChange={setPrintOpen}
+        speechId={speech.id}
+        speechTitle={speech.title}
+        fallbackText={speech.text_original}
+      />
     </div>
   );
 };
