@@ -1418,7 +1418,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
 
     transcriptRef.current = transcript;
-    transcriptWordsRef.current = rawWords;
 
     const newWords = rawWords.slice(startIdx);
 
@@ -1428,8 +1427,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
+    let lastMatchedRawIndex = startIdx - 1;
 
-    for (const spoken of newWords) {
+    for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
+      const spoken = newWords[rawOffset];
       if (advancedTo >= words.length) break;
 
       // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
@@ -1515,8 +1516,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       advancedTo = foundIdx + 1;
+      lastMatchedRawIndex = startIdx + rawOffset;
       lastWordTimeRef.current = Date.now();
     }
+
+    // Only consume transcript words up to the last word that actually advanced the cursor.
+    // Hidden words are often corrected by interim speech recognition after a short delay;
+    // consuming failed attempts immediately made the app ignore the later correct version.
+    transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1));
 
     if (advancedTo >= words.length) {
       if (lastCompletionRepIdRef.current === repId) {
