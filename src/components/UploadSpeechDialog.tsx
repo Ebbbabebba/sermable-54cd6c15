@@ -605,6 +605,16 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
         </form>
       </DialogContent>
     </Dialog>
+    <AiSpeechBuilderDialog
+      open={showAiBuilder}
+      onOpenChange={setShowAiBuilder}
+      language={i18n.language}
+      onDraftReady={({ title: aiTitle, speech: aiSpeech }) => {
+        if (aiTitle && !title.trim()) setTitle(aiTitle);
+        handleTextChange(aiSpeech);
+      }}
+    />
+    </>
   );
 };
 
