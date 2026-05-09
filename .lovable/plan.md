@@ -1,24 +1,18 @@
-## Plan
+Plan:
 
-1. **Stop hiding risky first words too early**
-   - Update the word-hiding priority so the first word of the line/sentence is not selected until later.
-   - Keep the learning flow progressive, but avoid making the first spoken token the most fragile hidden token.
+1. Remove the remaining hidden-word “fail-open” behavior in `BeatPracticeView.tsx`.
+   - A hidden word should only advance when the spoken token actually matches that hidden word, or when the user clearly says the next real word via the controlled 1-word lookahead.
+   - It should not mark a hidden word as spoken just because recognition heard unrelated speech/noise.
 
-2. **Make hidden-word matching more tolerant without making practice meaningless**
-   - Replace the current strict hidden-word comparison with the same proven fuzzy matching style used elsewhere: normalized word comparison, first-letter/length guard, and small edit-distance tolerance.
-   - Keep stricter behavior for important hidden words than for visible words, but stop punishing normal speech-recognition variants.
+2. Tighten lookahead so it cannot jump through hidden words.
+   - Keep small recovery for visible/lenient words.
+   - Prevent lookahead from skipping a strict hidden current word unless the next spoken word is clearly matched and only one position ahead.
 
-3. **Do not mark hidden words yellow while the user is actively speaking**
-   - Reset the hesitation clock on every incoming transcript token, not only on matched words.
-   - This prevents hidden words from turning yellow just because recognition heard speech but did not map it perfectly yet.
+3. Keep the timeout fallback but make it non-cascading.
+   - If a hidden word times out after hesitation, advance at most one word and do not replay old transcript in a way that can immediately skip the next hidden word.
 
-4. **Recover immediately when a hidden word is missed but the next visible word is spoken**
-   - Keep the “fail open” behavior for sentence-start/lenient hidden words.
-   - Extend recovery so if the next visible word matches, the hidden word is skipped/revealed as failed and the visible word colors immediately.
-
-5. **Tighten transcript replay state**
-   - Ensure skipped hidden words count as cursor progress, so replay does not repeatedly re-process the same failed hidden word and cause a short stall loop.
-
-## Expected result
-
-Hidden words should still test recall, but they should no longer feel like they “do not listen.” If recognition misses a hidden word, the app will keep following your speech, color visible words quickly, and only mark a hidden word yellow when you actually pause/stall.
+4. Validate the behavior in the practice flow:
+   - Hidden words stay active until matched or timeout.
+   - Saying unrelated words does not advance hidden words.
+   - Visible words still react quickly.
+   - The cursor no longer jumps over multiple hidden words or entire beats.

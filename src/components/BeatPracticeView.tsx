@@ -1538,27 +1538,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1) {
-        // If ANY hidden word is blocking the cursor and the user is clearly speaking,
-        // fail it open and retry the same spoken token against the next word.
-        // Lenient/sentence-start words don't get marked as missed; other hidden words do.
-        if (currentIsHidden && failOpensThisToken < 1) {
-          if (!currentIsLenient && !currentIsSentenceStart) {
-            newMissed.add(advancedTo);
-          }
-          newSpoken.add(advancedTo);
-          advancedTo += 1;
-          // Count this as cursor progress in the transcript so we don't replay
-          // the same failed hidden word forever.
-          lastMatchedRawIndex = startIdx + rawOffset;
-          lastFailOpenRawIndex = absoluteRawIndex;
-          failOpensThisToken += 1;
-          rawOffset -= 1;
-          lastWordTimeRef.current = Date.now();
-          continue;
-        }
-
-        // Still no match - this spoken word doesn't match expected sequence
-        // Just skip it (could be filler word, cough, background noise, etc.)
+        // No match for this spoken token. Do NOT auto-advance hidden words —
+        // that caused the cursor to jump over hidden words on background speech.
+        // Hidden words advance only on a real match, the controlled lookahead above,
+        // or the hesitation timeout in the recording loop.
         continue;
       }
 
