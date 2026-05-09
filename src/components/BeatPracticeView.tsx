@@ -281,6 +281,8 @@ const COMMON_WORDS = new Set([
   'men', 'eller', 'så', 'när', 'där', 'här', 'inte', 'bara', 'även', 'också',
   'vi', 'jag', 'du', 'han', 'hon', 'ni', 'sin', 'sitt', 'sina',
   'min', 'mitt', 'mina', 'din', 'ditt', 'dina', 'er', 'ert', 'era', 'vår', 'vårt', 'våra',
+  // Swedish normalized without diacritics (matches normalizeWord)
+  'pa', 'ar', 'fran', 'sa', 'nar', 'dar', 'har', 'aven', 'ocksa', 'var', 'vart', 'vara',
 ]);
 
 // Check if it's a new calendar day (for 1 beat per day logic)
