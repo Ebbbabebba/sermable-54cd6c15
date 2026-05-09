@@ -2300,6 +2300,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     ignoreResultsBeforeIndexRef.current = 0;
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
+    lastAutoAdvanceAtRef.current = 0;
   };
 
   const transitionToPhase = (newPhase: Phase) => {
