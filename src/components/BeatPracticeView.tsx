@@ -1479,9 +1479,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
     let lastMatchedRawIndex = startIdx - 1;
+    let failOpensThisToken = 0;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
+      if (rawOffset !== (lastMatchedRawIndex - startIdx + 1) - 1) {
+        // Reset fail-open counter on each new token (not on retries)
+      }
       if (advancedTo >= words.length) break;
 
       // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
