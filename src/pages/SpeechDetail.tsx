@@ -17,6 +17,7 @@ interface Speech {
   speech_language: string | null;
   mastery_level: number | null;
   last_accuracy: number | null;
+  practice_strictness: string | null;
 }
 
 const SpeechDetail = () => {
