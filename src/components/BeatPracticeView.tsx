@@ -626,6 +626,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
 
+    // Any non-empty recognition event means the user is actively speaking.
+    // Do this before tail-deduping so repeated interim results don't let the
+    // hesitation timer mark hidden words yellow while the microphone is hearing them.
+    hasHeardSpeechRef.current = true;
+    lastWordTimeRef.current = Date.now();
+
     const replayStart = Math.max(0, rawWords.length - tailWordCount);
     transcriptWordsRef.current = rawWords.slice(0, replayStart);
     processTranscriptionRef.current(transcript, false, repetitionIdRef.current);
@@ -1445,11 +1451,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     // If no words to process, nothing to do
     if (newWords.length === 0) return;
-
-    // The user is actively speaking — reset the hesitation clock so a hidden
-    // word doesn't turn yellow just because recognition hasn't matched it yet.
-    hasHeardSpeechRef.current = true;
-    lastWordTimeRef.current = Date.now();
 
     const rawTokenAt = (absoluteIndex: number): string => rawWords[absoluteIndex] ?? '';
     const tokenVariantsAt = (absoluteIndex: number): string[] => {
