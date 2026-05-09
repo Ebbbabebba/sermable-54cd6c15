@@ -73,8 +73,45 @@ const SentenceDisplay = ({
     };
   };
 
+  const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+
   const renderWord = (index: number) => {
     const state = getWordState(index);
+
+    // Pause marker (`-` or `-3s`) — render as a soft pill that the speaker
+    // can see while they wait. Turns "spoken" (gray) once the timer ends.
+    if (PAUSE_TOKEN_RE.test(state.text)) {
+      return (
+        <motion.span
+          key={`${index}-pause`}
+          ref={state.isCurrent ? currentWordRef : undefined}
+          layout="position"
+          initial={false}
+          animate={{
+            opacity: state.isSpoken ? 0.4 : 1,
+            scale: state.isCurrent && !state.isSpoken ? [1, 1.06, 1] : 1,
+          }}
+          transition={{
+            opacity: { duration: 0.2 },
+            scale: state.isCurrent && !state.isSpoken
+              ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0.15 },
+            layout: { duration: 0.2, ease: "easeOut" },
+          }}
+          className={cn(
+            "inline-flex items-center justify-center mx-1 px-3 py-0.5 rounded-full text-base align-middle",
+            state.isCurrent && !state.isSpoken
+              ? "bg-primary/15 text-primary ring-1 ring-primary/40 font-semibold"
+              : state.isSpoken
+                ? "bg-muted/40 text-muted-foreground/60"
+                : "bg-muted/60 text-muted-foreground",
+          )}
+          aria-label="pause"
+        >
+          —
+        </motion.span>
+      );
+    }
     
     // Hidden word that was MISSED - reveal it in red so user can see what they got wrong
     if (!state.isVisible && state.isMissed) {

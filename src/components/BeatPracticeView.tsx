@@ -16,7 +16,7 @@ import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
-import { extractPauses, stripPauses, type PauseMarker } from "@/utils/pauses";
+
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 
 // Web Speech API types
@@ -593,16 +593,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return "";
   }, [currentBeat, phase, sessionMode, getUniqueSentences]);
 
-  const rawCurrentText = getCurrentText();
-  // Pause markers (`-`, `-3s`, …) live in the raw text but must NOT count
-  // as words. Strip them here so the rest of the practice loop (matching,
-  // hidden indices, SentenceDisplay) sees a clean word array.
-  const currentText = useMemo(() => stripPauses(rawCurrentText), [rawCurrentText]);
-  const pauseMarkers = useMemo<PauseMarker[]>(
-    () => extractPauses(rawCurrentText),
-    [rawCurrentText],
-  );
+  // Keep pause markers (`-`, `-3s`) as visible tokens in the word array so
+  // they appear inline in the script and turn "spoken" once their timer
+  // ends. They are skipped by speech matching (mic is muted while their
+  // countdown is running).
+  const currentText = getCurrentText();
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
+  const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+  const pauseWordMeta = useMemo<Map<number, number>>(() => {
+    const m = new Map<number, number>();
+    words.forEach((w, i) => {
+      const match = w.match(PAUSE_TOKEN_RE);
+      if (match) {
+        const seconds = match[1] ? parseInt(match[1], 10) : 2;
+        const clamped = Math.max(1, Math.min(10, seconds));
+        m.set(i, clamped * 1000);
+      }
+    });
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [words]);
 
   useEffect(() => {
     wordsLengthRef.current = words.length;
@@ -628,7 +638,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       clearInterval(pauseTimerRef.current);
       pauseTimerRef.current = null;
     }
-  }, [rawCurrentText]);
+  }, [currentText]);
 
   // Cleanup pause timer on unmount.
   useEffect(() => {
@@ -657,38 +667,48 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // the abort avoids the system mic chime that plays on every restart.
   };
 
-  // Trigger a planned pause when the cursor reaches a `-` marker in the
-  // script. Mutes the mic for the duration so noise can't trigger advance,
-  // and shows a full-screen dim + circular countdown overlay.
+  // Trigger a planned pause when the cursor lands on a `-` token. The
+  // pause IS the current "word" — we mute the mic, show a full-screen
+  // countdown, and on completion mark the dash spoken (gray) and advance
+  // the cursor by 1.
   useEffect(() => {
     if (!isRecording) return;
-    const due = pauseMarkers.find(
-      (p) =>
-        p.afterWordIndex === currentWordIndex - 1 &&
-        !triggeredPausesRef.current.has(p.pauseIndex),
-    );
-    if (!due) return;
-    triggeredPausesRef.current.add(due.pauseIndex);
-    const totalSeconds = Math.round(due.durationMs / 1000);
+    const dur = pauseWordMeta.get(currentWordIndex);
+    if (!dur) return;
+    if (triggeredPausesRef.current.has(currentWordIndex)) return;
+    triggeredPausesRef.current.add(currentWordIndex);
+    const totalSeconds = Math.round(dur / 1000);
     setActivePause({ remainingSeconds: totalSeconds, totalSeconds });
-    pauseSpeechRecognition(due.durationMs + 250);
+    pauseSpeechRecognition(dur + 250);
     if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
     const startedAt = Date.now();
+    const pauseIdx = currentWordIndex;
     pauseTimerRef.current = setInterval(() => {
       const elapsedMs = Date.now() - startedAt;
-      const remainingMs = Math.max(0, due.durationMs - elapsedMs);
+      const remainingMs = Math.max(0, dur - elapsedMs);
       if (remainingMs <= 0) {
         if (pauseTimerRef.current) {
           clearInterval(pauseTimerRef.current);
           pauseTimerRef.current = null;
         }
         setActivePause(null);
+        // Mark this dash as spoken (gray) and advance the cursor.
+        const nextSpoken = new Set(spokenIndicesRef.current);
+        nextSpoken.add(pauseIdx);
+        spokenIndicesRef.current = nextSpoken;
+        setSpokenIndices(nextSpoken);
+        const nextIdx = pauseIdx + 1;
+        currentWordIndexRef.current = nextIdx;
+        setCurrentWordIndex(nextIdx);
+        if (nextIdx >= wordsLengthRef.current) {
+          checkCompletion(nextSpoken);
+        }
       } else {
         setActivePause({ remainingSeconds: remainingMs / 1000, totalSeconds });
       }
     }, 100);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentWordIndex, isRecording, pauseMarkers]);
+  }, [currentWordIndex, isRecording, pauseWordMeta]);
 
   const replayRecentTranscriptTail = (tailWordCount = 6) => {
     const transcript = transcriptRef.current.trim();
@@ -1557,6 +1577,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         failOpensThisToken = 0;
       }
       if (advancedTo >= words.length) break;
+      // If we've landed on a pause token, stop matching and let the
+      // pause-trigger effect handle the countdown + auto-advance.
+      if (pauseWordMeta.has(advancedTo)) break;
 
       // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
       const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
