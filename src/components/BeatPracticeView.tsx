@@ -673,16 +673,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // the cursor by 1.
   useEffect(() => {
     if (!isRecording) return;
-    const dur = pauseWordMeta.get(currentWordIndex);
-    if (!dur) return;
+    if (!pauseWordMeta.has(currentWordIndex)) return;
     if (triggeredPausesRef.current.has(currentWordIndex)) return;
     triggeredPausesRef.current.add(currentWordIndex);
+    const dur = pauseWordMeta.get(currentWordIndex) ?? 0;
+    const pauseIdx = currentWordIndex;
+
+    const finishPause = () => {
+      setActivePause(null);
+      const nextSpoken = new Set(spokenIndicesRef.current);
+      nextSpoken.add(pauseIdx);
+      spokenIndicesRef.current = nextSpoken;
+      setSpokenIndices(nextSpoken);
+      const nextIdx = pauseIdx + 1;
+      currentWordIndexRef.current = nextIdx;
+      setCurrentWordIndex(nextIdx);
+      if (nextIdx >= wordsLengthRef.current) {
+        checkCompletion(nextSpoken);
+      }
+    };
+
+    // 0s pause: just a marker — skip without countdown or muting.
+    if (dur <= 0) {
+      finishPause();
+      return;
+    }
+
     const totalSeconds = Math.round(dur / 1000);
     setActivePause({ remainingSeconds: totalSeconds, totalSeconds });
     pauseSpeechRecognition(dur + 250);
     if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
     const startedAt = Date.now();
-    const pauseIdx = currentWordIndex;
     pauseTimerRef.current = setInterval(() => {
       const elapsedMs = Date.now() - startedAt;
       const remainingMs = Math.max(0, dur - elapsedMs);
@@ -691,18 +712,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           clearInterval(pauseTimerRef.current);
           pauseTimerRef.current = null;
         }
-        setActivePause(null);
-        // Mark this dash as spoken (gray) and advance the cursor.
-        const nextSpoken = new Set(spokenIndicesRef.current);
-        nextSpoken.add(pauseIdx);
-        spokenIndicesRef.current = nextSpoken;
-        setSpokenIndices(nextSpoken);
-        const nextIdx = pauseIdx + 1;
-        currentWordIndexRef.current = nextIdx;
-        setCurrentWordIndex(nextIdx);
-        if (nextIdx >= wordsLengthRef.current) {
-          checkCompletion(nextSpoken);
-        }
+        finishPause();
       } else {
         setActivePause({ remainingSeconds: remainingMs / 1000, totalSeconds });
       }

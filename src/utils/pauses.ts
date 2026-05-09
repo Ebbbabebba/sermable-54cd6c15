@@ -21,7 +21,7 @@
  */
 
 export const PAUSE_DEFAULT_SECONDS = 2;
-export const PAUSE_MIN_SECONDS = 1;
+export const PAUSE_MIN_SECONDS = 0;
 export const PAUSE_MAX_SECONDS = 10;
 
 const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
