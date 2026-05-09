@@ -1921,6 +1921,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
               loadSpeech();
               setShowPremiumUpsell(true);
             }}
+            onEditScript={() => {
+              // Exit practice and open the edit-script dialog with the latest text
+              setIsPracticing(false);
+              setIsRecording(false);
+              handleOpenEditScript();
+            }}
           />
         </div>
       </div>

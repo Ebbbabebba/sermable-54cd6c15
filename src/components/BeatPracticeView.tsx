@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -168,6 +168,7 @@ interface BeatPracticeViewProps {
   onComplete?: () => void;
   onExit?: () => void;
   onSessionLimitReached?: () => void; // Called when free user hits daily limit
+  onEditScript?: () => void; // Called when user wants to edit the script inline
 }
 
 type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning' | 'sentence_2_fading' | 'sentences_1_2_learning' | 'sentences_1_2_fading' | 'sentence_3_learning' | 'sentence_3_fading' | 'beat_learning' | 'beat_fading';
@@ -297,7 +298,7 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = subscriptionTier !== 'free';
   
@@ -397,6 +398,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
+
+  // Cooldown for "start over" voice command / swipe to avoid double-fire
+  const restartCooldownUntilRef = useRef(0);
 
   // Refs to avoid stale closures in timers / callbacks
   const currentWordIndexRef = useRef(0);
@@ -629,6 +633,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // the abort avoids the system mic chime that plays on every restart.
   };
 
+  // Restart the current rep from the beginning (voice command "börja om" or swipe-down).
+  // Keeps the same phase / hidden words — just rewinds the cursor and clears the transcript.
+  const restartCurrentBeat = useCallback((reason: 'voice' | 'swipe' | 'manual' = 'manual') => {
+    if (showCelebrationRef.current) return;
+    const now = Date.now();
+    if (now < restartCooldownUntilRef.current) return;
+    restartCooldownUntilRef.current = now + 2500;
+
+    console.log(`🔄 Restart current beat (${reason})`);
+    playClick();
+    pauseSpeechRecognition(600);
+    resetForNextRep();
+    toast({
+      title: t('beat_practice.restarted_title', 'Börja om'),
+      description: t('beat_practice.restarted_desc', 'Tar det från början av denna del.'),
+    });
+  }, [t]);
+
+  const restartCurrentBeatRef = useRef(restartCurrentBeat);
+  useEffect(() => {
+    restartCurrentBeatRef.current = restartCurrentBeat;
+  }, [restartCurrentBeat]);
 
   // Get sentence number (1, 2, or 3) or combining indicator
   const getCurrentSentenceNumber = () => {
@@ -1304,6 +1330,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
+
+    // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
+    // "empezar de nuevo" / "ricomincia" / "começar de novo". Detect on the LAST few raw tokens
+    // so we don't accidentally trigger on script content earlier in the transcript.
+    {
+      const tail = rawWords.slice(-4).join(' ').toLowerCase().replace(/[.,!?]/g, '');
+      const RESTART_PHRASES = [
+        'börja om', 'starta om', 'börja från början', 'om från början',
+        'start over', 'restart', 'from the top', 'start again',
+        'von vorn', 'von vorne', 'noch mal', 'nochmal',
+        'recommencer', 'on recommence', 'reprendre',
+        'empezar de nuevo', 'desde el principio', 'otra vez',
+        'ricomincia', 'da capo',
+        'começar de novo', 'recomeçar', 'do início',
+      ];
+      if (RESTART_PHRASES.some((p) => tail.includes(p))) {
+        if (Date.now() >= restartCooldownUntilRef.current) {
+          restartCurrentBeatRef.current?.('voice');
+        }
+        return;
+      }
+    }
 
     const currentIdx = currentWordIndexRef.current;
 
@@ -3095,7 +3143,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               <span className="text-xs">{t('common.skip', 'Skip')}</span>
             </Button>
           )}
-          
+
+          {/* Edit script — exits the session and opens the inline edit dialog */}
+          {onEditScript && !showCelebration && subscriptionTier !== 'free' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                stopListening();
+                await saveCheckpoint();
+                onEditScript();
+              }}
+              className="shrink-0 rounded-full hover:bg-muted"
+              title={t('practice.editScriptTitle', 'Redigera manus')}
+            >
+              <Pencil className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          )}
           {/* Full Speech Button */}
           {fullSpeechText && (
             <Sheet open={showFullSpeechModal} onOpenChange={setShowFullSpeechModal}>
@@ -3175,7 +3239,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       </div>
 
       {/* Main content area - scrollable when text overflows */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div
+        className="flex-1 overflow-y-auto px-4 py-6"
+        onTouchStart={(e) => {
+          const t0 = e.touches[0];
+          (e.currentTarget as any)._swipeStart = { x: t0.clientX, y: t0.clientY, t: Date.now(), st: (e.currentTarget as HTMLDivElement).scrollTop };
+        }}
+        onTouchEnd={(e) => {
+          const start = (e.currentTarget as any)._swipeStart as { x: number; y: number; t: number; st: number } | undefined;
+          if (!start) return;
+          (e.currentTarget as any)._swipeStart = undefined;
+          const t1 = e.changedTouches[0];
+          const dx = t1.clientX - start.x;
+          const dy = t1.clientY - start.y;
+          const dt = Date.now() - start.t;
+          // Swipe down at top of scroll, or two-finger style horizontal back swipe → restart
+          const isSwipeDown = dy > 110 && Math.abs(dx) < 60 && dt < 700 && start.st <= 4;
+          const isSwipeRight = dx > 130 && Math.abs(dy) < 50 && dt < 600;
+          if ((isSwipeDown || isSwipeRight) && !showCelebration) {
+            restartCurrentBeatRef.current?.('swipe');
+          }
+        }}
+      >
         <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
           
           {/* Sentence dots (only in learn mode, show only unique sentences) */}
