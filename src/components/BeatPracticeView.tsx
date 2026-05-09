@@ -2655,6 +2655,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               currentWordIndexRef.current = nextIdx;
               setCurrentWordIndex(nextIdx);
               lastWordTimeRef.current = Date.now();
+              if (nextIdx >= wordsLengthRef.current) {
+                const failedFromSignals = new Set<number>();
+                hiddenWordIndicesRef.current.forEach((hiddenIdx) => {
+                  if (hesitatedIndicesRef.current.has(hiddenIdx) || missedIndicesRef.current.has(hiddenIdx)) {
+                    failedFromSignals.add(hiddenIdx);
+                  }
+                });
+                checkCompletion(newSpoken, failedFromSignals);
+              }
             }
           }
         }
