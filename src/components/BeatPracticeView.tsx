@@ -314,6 +314,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [currentBeatIndex, setCurrentBeatIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
+  const [practiceStrictness, setPracticeStrictness] = useState<'strict' | 'flow'>('strict');
   const [familiarityLevel, setFamiliarityLevel] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
   
   // Calculate words to hide per successful repetition based on familiarity
