@@ -16,6 +16,8 @@ import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
+import { extractPauses, stripPauses, type PauseMarker } from "@/utils/pauses";
+import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -583,7 +585,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return "";
   }, [currentBeat, phase, sessionMode, getUniqueSentences]);
 
-  const currentText = getCurrentText();
+  const rawCurrentText = getCurrentText();
+  // Pause markers (`-`, `-3s`, …) live in the raw text but must NOT count
+  // as words. Strip them here so the rest of the practice loop (matching,
+  // hidden indices, SentenceDisplay) sees a clean word array.
+  const currentText = useMemo(() => stripPauses(rawCurrentText), [rawCurrentText]);
+  const pauseMarkers = useMemo<PauseMarker[]>(
+    () => extractPauses(rawCurrentText),
+    [rawCurrentText],
+  );
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
 
   useEffect(() => {
