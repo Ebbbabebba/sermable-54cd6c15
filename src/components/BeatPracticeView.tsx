@@ -1155,26 +1155,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const nonProtectedVisible = words
       .map((_, i) => i)
       .filter(i => !currentHidden.has(i) && !protected_.has(i));
-    
+
+    // Identify sentence-start indices — these are fragile to hide because the
+    // first word of a sentence is the most error-prone for speech recognition.
+    const isSentenceStart = (i: number) =>
+      i === 0 || /[.!?]$/.test(words[i - 1] ?? '');
+    const nonSentenceStart = nonProtectedVisible.filter(i => !isSentenceStart(i));
+
     // If there are non-protected words to hide, use those first
     if (nonProtectedVisible.length > 0) {
-      // Priority 1: Common articles/prepositions
-      for (const idx of nonProtectedVisible) {
+      // Priority 1: Common articles/prepositions (skip sentence-starts when possible)
+      for (const idx of nonSentenceStart) {
         const word = words[idx].toLowerCase().replace(/[^a-z]/g, '');
         if (COMMON_WORDS.has(word)) return idx;
       }
-      
-      // Priority 2: Short words (2-4 chars)
-      for (const idx of nonProtectedVisible) {
+
+      // Priority 2: Short words (2-4 chars), still avoiding sentence-starts
+      for (const idx of nonSentenceStart) {
         const word = words[idx].replace(/[^a-zA-Z]/g, '');
         if (word.length >= 2 && word.length <= 4) return idx;
       }
-      
+
       // Priority 3: Middle words (not first or last)
-      const middleIndices = nonProtectedVisible.filter(i => i > 0 && i < words.length - 1);
+      const middleIndices = nonSentenceStart.filter(i => i > 0 && i < words.length - 1);
       if (middleIndices.length > 0) return middleIndices[0];
-      
-      // Priority 4: First visible non-protected word
+
+      // Priority 4: Any non-sentence-start word
+      if (nonSentenceStart.length > 0) return nonSentenceStart[0];
+
+      // Priority 5: Fallback — only sentence-starts left, hide them last
       return nonProtectedVisible[0];
     }
     
@@ -1280,28 +1289,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return overlapRatio >= 0.35;
     }
     
-    // For HIDDEN words (non-lenient), be stricter - need to prove they know it
+    // For HIDDEN words (non-lenient), be moderately strict — must prove they know it,
+    // but don't punish normal speech-recognition variance (vowel slips, missing endings).
     if (isHidden) {
-      // 1-2 char words require exact match
-      if (e.length <= 2) return false;
-      
-      // 3-char words: allow 1 character difference (speech recognition variance)
-      if (e.length === 3) {
+      // 1-char words require exact match
+      if (e.length <= 1) return s === e;
+
+      // Substring containment: spoken merged with neighbor (e.g. "the era" -> "thera")
+      if (s.length >= e.length && s.includes(e)) return true;
+      if (e.length >= 4 && e.includes(s) && s.length >= e.length - 2) return true;
+
+      // Must share first letter for hidden words (same starting sound)
+      if (s[0] !== e[0]) return false;
+
+      // 2-char hidden words: allow exact or off-by-one
+      if (e.length === 2) {
         if (Math.abs(s.length - e.length) > 1) return false;
         let diff = 0;
-        const maxLen = Math.max(s.length, e.length);
-        for (let i = 0; i < maxLen; i++) {
+        for (let i = 0; i < Math.max(s.length, e.length); i++) {
           if (s[i] !== e[i]) diff++;
         }
         return diff <= 1;
       }
-      
-      // 4+ char words: allow 1 char difference, similar length
-      if (Math.abs(s.length - e.length) > 1) return false;
+
+      // 3+ char hidden words: allow up to 2 char length variance,
+      // 1 edit for 3-5 char words, 2 edits for 6+ char words.
+      if (Math.abs(s.length - e.length) > 2) return false;
+      const maxDist = e.length <= 5 ? 1 : 2;
       let diff = 0;
       for (let i = 0; i < Math.max(s.length, e.length); i++) {
         if (s[i] !== e[i]) diff++;
-        if (diff > 1) return false;
+        if (diff > maxDist) return false;
       }
       return true;
     }
@@ -1419,7 +1437,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     // If no words to process, nothing to do
     if (newWords.length === 0) return;
-    
+
+    // The user is actively speaking — reset the hesitation clock so a hidden
+    // word doesn't turn yellow just because recognition hasn't matched it yet.
+    lastWordTimeRef.current = Date.now();
+
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
@@ -1482,17 +1504,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1) {
-        // If a lenient hidden word (flow/gap/proper noun), or the first hidden word
-        // of a sentence, is blocking the cursor, fail it open as soon as speech is
-        // detected and retry the same spoken token against the next word.
-        // This prevents a hidden sentence-start word from delaying visible word
-        // coloring until the timeout fires.
-        if (currentIsHidden && (currentIsLenient || currentIsSentenceStart)) {
-          if (!currentIsLenient) {
+        // If ANY hidden word is blocking the cursor and the user is clearly speaking,
+        // fail it open and retry the same spoken token against the next word.
+        // Lenient/sentence-start words don't get marked as missed; other hidden words do.
+        if (currentIsHidden) {
+          if (!currentIsLenient && !currentIsSentenceStart) {
             newMissed.add(advancedTo);
           }
           newSpoken.add(advancedTo);
           advancedTo += 1;
+          // Count this as cursor progress in the transcript so we don't replay
+          // the same failed hidden word forever.
+          lastMatchedRawIndex = startIdx + rawOffset;
           rawOffset -= 1;
           lastWordTimeRef.current = Date.now();
           continue;
