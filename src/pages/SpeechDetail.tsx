@@ -34,7 +34,7 @@ const SpeechDetail = () => {
     const load = async () => {
       const { data, error } = await supabase
         .from("speeches")
-        .select("id, title, text_original, goal_date, speech_language, mastery_level, last_accuracy")
+        .select("id, title, text_original, goal_date, speech_language, mastery_level, last_accuracy, practice_strictness")
         .eq("id", id)
         .single();
       if (error) {
