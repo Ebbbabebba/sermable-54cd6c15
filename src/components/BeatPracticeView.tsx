@@ -1205,6 +1205,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Check if spoken word matches expected - STRICT matching
   // More lenient matching for visible words and lenient words (proper nouns), stricter for regular hidden words
   const wordsMatch = (spoken: string, expected: string, isHidden: boolean = false, isLenient: boolean = false): boolean => {
+    // FLOW mode: relax matching for hidden words by treating them as lenient
+    if (practiceStrictness === 'flow' && isHidden && !isLenient) {
+      isLenient = true;
+    }
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
