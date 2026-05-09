@@ -634,6 +634,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // the abort avoids the system mic chime that plays on every restart.
   };
 
+  const replayRecentTranscriptTail = (tailWordCount = 6) => {
+    const transcript = transcriptRef.current.trim();
+    if (!transcript) return;
+
+    const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
+    if (rawWords.length === 0) return;
+
+    const replayStart = Math.max(0, rawWords.length - tailWordCount);
+    transcriptWordsRef.current = rawWords.slice(0, replayStart);
+    processTranscriptionRef.current(transcript, false, repetitionIdRef.current);
+  };
+
   // Restart the current rep from the beginning (voice command "börja om" or swipe-down).
   // Keeps the same phase / hidden words — just rewinds the cursor and clears the transcript.
   const restartCurrentBeat = useCallback((reason: 'voice' | 'swipe' | 'manual' = 'manual') => {
@@ -2641,8 +2653,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const idx = currentWordIndexRef.current;
         if (elapsed > 3000 && idx < wordsLengthRef.current) {
           if (hiddenWordIndicesRef.current.has(idx)) {
-            const isSentenceStart = sentenceStartIndicesRef.current.has(idx);
-            if (!isSentenceStart && !hesitatedIndicesRef.current.has(idx)) {
+            if (!hesitatedIndicesRef.current.has(idx)) {
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
               hesitatedIndicesRef.current = newHesitated;
               setHesitatedIndices(newHesitated);
@@ -2670,6 +2681,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   }
                 });
                 checkCompletion(newSpoken, failedFromSignals);
+              } else {
+                replayRecentTranscriptTail();
               }
             }
           }
