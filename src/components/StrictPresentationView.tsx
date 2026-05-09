@@ -4,6 +4,7 @@ import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface WordPerformance {
   word: string;
