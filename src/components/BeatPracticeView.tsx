@@ -3301,6 +3301,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   return (
     <div className="flex flex-col h-full bg-background">
+      <PauseCountdownOverlay
+        remainingSeconds={activePause?.remainingSeconds ?? null}
+        totalSeconds={activePause?.totalSeconds ?? 1}
+      />
       {/* Duolingo-style header with progress */}
       <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
         <div className="flex items-center gap-4 max-w-2xl mx-auto">
