@@ -1480,11 +1480,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const newMissed = new Set(missedIndicesRef.current);
     let lastMatchedRawIndex = startIdx - 1;
     let failOpensThisToken = 0;
+    let lastFailOpenRawIndex = -1;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
-      if (rawOffset !== (lastMatchedRawIndex - startIdx + 1) - 1) {
-        // Reset fail-open counter on each new token (not on retries)
+      if (absoluteRawIndex !== lastFailOpenRawIndex) {
+        failOpensThisToken = 0;
       }
       if (advancedTo >= words.length) break;
 
