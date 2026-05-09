@@ -34,6 +34,7 @@ const UploadSpeechDialog = ({ open, onOpenChange, onSuccess }: UploadSpeechDialo
   const [wordLimit, setWordLimit] = useState(500);
   const [canCreateSpeech, setCanCreateSpeech] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
+  const [showAiBuilder, setShowAiBuilder] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
