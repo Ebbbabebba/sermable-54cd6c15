@@ -1432,9 +1432,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     for (const spoken of newWords) {
       if (advancedTo >= words.length) break;
 
-      // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name)
+      // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
       const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
-      const currentIsLenient = lenientWordIndicesRef.current.has(advancedTo);
+      const currentIsLenient = isEffectivelyLenientWord(advancedTo);
       
       // STRICT: Only match the CURRENT word position - no lookahead
       // This prevents jumping to a duplicate word further in the sentence
@@ -1447,7 +1447,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Current word didn't match - check NEXT word (lookahead of 1)
         // This handles minor recognition order issues without jumping too far
         const nextIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
-        const nextIsLenient = lenientWordIndicesRef.current.has(advancedTo + 1);
+        const nextIsLenient = isEffectivelyLenientWord(advancedTo + 1);
         if (advancedTo + 1 < words.length && wordsMatch(spoken, words[advancedTo + 1], nextIsHidden, nextIsLenient)) {
           // Mark current word as passed
           if (currentIsHidden) {
@@ -1464,10 +1464,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // If current word is VISIBLE or LENIENT and we're stuck, check 2 words ahead
           // BUT only if the word in between is also visible/lenient (prevent jumping over hidden words)
           const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
-          const betweenIsLenient = lenientWordIndicesRef.current.has(advancedTo + 1);
+          const betweenIsLenient = isEffectivelyLenientWord(advancedTo + 1);
           if (!betweenIsHidden || betweenIsLenient) {
             const twoAheadIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 2);
-            const twoAheadIsLenient = lenientWordIndicesRef.current.has(advancedTo + 2);
+            const twoAheadIsLenient = isEffectivelyLenientWord(advancedTo + 2);
             if (wordsMatch(spoken, words[advancedTo + 2], twoAheadIsHidden, twoAheadIsLenient)) {
               // Skip current visible/lenient word and the next one (if also visible/lenient)
               newSpoken.add(advancedTo);
@@ -1494,7 +1494,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // BUT: lenient words (proper nouns/names) can't turn red - they just move on
       for (let j = advancedTo; j < foundIdx; j++) {
         const isHidden = hiddenWordIndicesRef.current.has(j);
-        const isLenient = lenientWordIndicesRef.current.has(j);
+        const isLenient = isEffectivelyLenientWord(j);
         if (isHidden && !isLenient) {
           newMissed.add(j);
         }
