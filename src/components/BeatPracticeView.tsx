@@ -689,6 +689,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }, 100);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWordIndex, isRecording, pauseMarkers]);
+
+  const replayRecentTranscriptTail = (tailWordCount = 6) => {
     const transcript = transcriptRef.current.trim();
     if (!transcript) return;
 
