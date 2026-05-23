@@ -1519,14 +1519,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const tail = rawWords.slice(-4).join(' ').toLowerCase().replace(/[.,!?]/g, '');
       const RESTART_PHRASES = [
         'börja om', 'starta om', 'börja från början', 'om från början',
-        'ta om', 'ta om det', 'ta om stycket', 'ta det igen', 'ta om igen',
-        'gör om', 'gör om det', 'en gång till',
-        'start over', 'restart', 'from the top', 'start again', 'take it again', 'do it again', 'try again',
-        'von vorn', 'von vorne', 'noch mal', 'nochmal', 'noch einmal',
-        'recommencer', 'on recommence', 'reprendre', 'encore une fois',
-        'empezar de nuevo', 'desde el principio', 'otra vez', 'de nuevo',
-        'ricomincia', 'da capo', 'di nuovo',
-        'começar de novo', 'recomeçar', 'do início', 'de novo',
+        'start over', 'restart', 'from the top', 'start again',
+        'von vorn', 'von vorne', 'noch mal', 'nochmal',
+        'recommencer', 'on recommence', 'reprendre',
+        'empezar de nuevo', 'desde el principio', 'otra vez',
+        'ricomincia', 'da capo',
+        'começar de novo', 'recomeçar', 'do início',
       ];
       if (RESTART_PHRASES.some((p) => tail.includes(p))) {
         if (Date.now() >= restartCooldownUntilRef.current) {
