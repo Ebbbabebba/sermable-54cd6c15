@@ -18,6 +18,7 @@ import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
+import { scheduleNextReview } from "@/lib/scheduleNextReview";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
