@@ -207,7 +207,7 @@ export function useAdaptiveTempo(): UseAdaptiveTempoReturn {
     return Math.max(300, Math.min(5000, threshold)) + sentenceStartExtraMs;
   }, []);
   
-  const getAdaptiveHintDelays = useCallback((options: AdaptiveThresholdOptions): { initialDelay: number; stepDelay: number } => {
+  const getAdaptiveHintDelays = useCallback((options: AdaptiveThresholdOptions, masteryConfidence: number = 0): { initialDelay: number; stepDelay: number } => {
     const stats = statsRef.current;
     const threshold = getAdaptiveThreshold(options);
     
@@ -216,11 +216,15 @@ export function useAdaptiveTempo(): UseAdaptiveTempoReturn {
       ? calculateMedian(stats.wordIntervals) 
       : 500;
     
-    // Initial delay is the threshold itself
-    const initialDelay = threshold;
+    // Desirable difficulty: scale up wait time as confidence grows.
+    // 0% confidence → 1.0x, 100% confidence → 2.0x. This forces the learner
+    // to actually retrieve the word instead of being rescued instantly.
+    const difficultyMultiplier = 1 + Math.max(0, Math.min(1, masteryConfidence));
     
-    // Step delay: ~50-70% of median, clamped between 350ms and 900ms
-    const stepDelay = Math.max(350, Math.min(900, median * 0.6));
+    const initialDelay = Math.min(2500, threshold * difficultyMultiplier);
+    
+    // Step delay: ~50-70% of median, also scaled by difficulty, clamped 350–1500ms
+    const stepDelay = Math.max(350, Math.min(1500, median * 0.6 * difficultyMultiplier));
     
     return { initialDelay, stepDelay };
   }, [getAdaptiveThreshold]);
