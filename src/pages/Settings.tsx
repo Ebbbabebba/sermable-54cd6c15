@@ -443,7 +443,7 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </Row>
-                  <Row last>
+                  <Row>
                     <span className="text-sm">{t('settings.notifications.to')}</span>
                     <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
                       <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
@@ -458,11 +458,21 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </Row>
+                  <Row last>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm">{t('settings.notifications.instantDue', 'Påminn när det är dags att öva')}</span>
+                    </div>
+                    <Switch
+                      checked={instantDueNotifications}
+                      onCheckedChange={handleInstantDueToggle}
+                    />
+                  </Row>
                 </>
               )}
             </>
           )}
         </Section>
+        <SectionFooter>{t('settings.notifications.instantDueDesc', 'Du får en pushnotis direkt när vilointervallet för en repetition är slut.')}</SectionFooter>
 
         {/* Support */}
         <SectionLabel>{t('settings.support.title')}</SectionLabel>
