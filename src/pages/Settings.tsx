@@ -63,6 +63,7 @@ const Settings = () => {
   const [practiceStartHour, setPracticeStartHour] = useState(8);
   const [practiceEndHour, setPracticeEndHour] = useState(22);
   const [autoDetectTimezone, setAutoDetectTimezone] = useState(true);
+  const [instantDueNotifications, setInstantDueNotifications] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem('soundEnabled');
     return stored !== 'false';
