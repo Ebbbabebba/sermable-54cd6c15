@@ -828,10 +828,10 @@ const UploadSpeechDialog = ({
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={step}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -16 }}
-                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 0.98 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                     className="rounded-3xl bg-card/95 border border-border/60 shadow-2xl backdrop-blur-md p-6 sm:p-10"
                   >
                     {renderStep()}
