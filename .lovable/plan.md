@@ -1,105 +1,55 @@
-# Förbättringsplan: Memoriseringssystemet
+# Fas 5 — Koppla in konsumenterna
 
-Detta är ett stort arbete. Jag föreslår att vi delar upp det i **5 faser** så vi kan testa varje steg innan vi går vidare. Varje fas levererar tydligt värde på egen hand.
+Nu finns FSRS-motorn, `mastery_events`-loggen och `v_next_due`-vyn på plats. Det här steget gör att användaren faktiskt **märker** skillnaden.
 
----
+## 1. BeatPracticeView → använd FSRS
 
-## Fas 1 — Konsolidera schemakällor (löser hopp-buggen permanent)
+- Efter varje avslutad beat-session: anropa `schedule-next-review` edge-funktionen med `raw_accuracy`, `visibility_percent`, `hesitations`, `lapses`, `duration_seconds`.
+- Skriv en rad i `mastery_events` (event_type: `recall` eller `practice`).
+- Sluta skriva till gamla `schedules`-tabellen för denna beat (lämna kvar för bakåtkompatibilitet, men den är inte längre källa).
+- FSRS-funktionen uppdaterar `practice_beats.fsrs_*` och `next_scheduled_recall_at` automatiskt.
 
-**Problem:** `schedules`, `speech_calendar_events`, `practice_beats.next_scheduled_recall_at` och `speech_segments.next_review_at` lever parallellt och kommer i otakt.
+## 2. Dashboard → läs från `v_next_due`
 
-**Lösning:**
-- Ny tabell `mastery_events` (append-only logg över alla recall/practice-händelser per beat).
-- Ny vy `v_next_due` som per användare returnerar nästa beat att öva (en enda källa).
-- All UI (Dashboard, notiser, lås) byter till `v_next_due`.
-- Befintliga `next_scheduled_recall_at`-fält behålls men sätts av en enda edge-funktion `compute-next-due`.
+- Byt ut dagens "vad ska jag öva på?"-logik mot `get_top_due_beats` RPC.
+- Visa beats sorterade efter `priority_score` (deadline-pressure × (1−mastery) × overdueness).
+- "Nästa övning"-kortet visar översta beaten oavsett vilket tal den tillhör.
 
-**Leverans:** Bug med hoppade sessioner försvinner. Dashboard, notiser och praktik visar alltid samma "nästa".
+## 3. ReviewNotifications & LockCountdown
 
----
+- `ReviewNotifications.tsx` läser nästa due-tid från `v_next_due` istället för `schedules.next_review_date`.
+- `LockCountdown.tsx` använder samma källa → låsen släpper exakt när FSRS säger "due".
 
-## Fas 2 — Ersätt SM-2 med FSRS + korrigerad viktning
+## 4. SpeechCard → mastery & nästa pass
 
-**Problem:** SM-2 passar inte sekventiella beats. Viktad accuracy straffar höga råpoäng absurt (95 % → 19 %).
+- Visa aggregerad FSRS-mastery (medel av `fsrs_stability` normaliserat) per tal.
+- Visa "Nästa övning om X" baserat på tidigast `next_scheduled_recall_at` bland talets beats.
 
-**Lösning:**
-- Implementera FSRS-4.5 (öppen algoritm) i ny edge-funktion `fsrs-schedule`.
-- Per beat lagras: `stability`, `difficulty`, `last_review`, `reps`, `lapses`.
-- Visibility blir **modifier på intervallet** (`interval × visibilityFactor`), inte multiplikator på poängen.
-- Råpoäng + visibility loggas separat för analys.
-- Deadline-cap behålls från `ADAPTIVE_LEARNING_RULES.md`.
+## 5. Desirable difficulty i praktiken
 
-**Leverans:** Mer rättvisa intervall, bättre långtidsretention.
+- `useAdaptiveTempo`-skalningen är klar — anropa den med `masteryConfidence` från beatens `fsrs_stability/difficulty` i `BeatPracticeView`.
+- Lägg in "blank run" var 4:e session när beat är mastered (`fsrs_reps ≥ 3 && fsrs_stability > 7`): dölj alla ord en runda utan hjälp.
 
----
+## Påverkade filer
 
-## Fas 3 — Smartare notiser (interleaving + sömn-konsolidering + prioritet)
+**Frontend**
+- `src/pages/Dashboard.tsx` — byt schedules-query mot `get_top_due_beats`
+- `src/components/practice/BeatPracticeView.tsx` — anropa `schedule-next-review`, logga event, läs `masteryConfidence`
+- `src/components/SpeechCard.tsx` — visa FSRS-mastery + nästa pass
+- `src/components/ReviewNotifications.tsx` — läs `v_next_due`
+- `src/components/practice/LockCountdown.tsx` — läs `v_next_due`
+- `src/hooks/useNextDueBeat.ts` (ny) — wrapper kring `get_top_due_beats`
 
-**Problem:** Notiser är blockade per tal, kopplas inte till sömn, ignorerar deadline-prioritet.
+**Backend** — redan på plats, ingen migration behövs.
 
-**Lösning:**
-- `send-adaptive-notifications` skrivs om:
-  - **Morgonnotis (inom 30 min efter `practice_start_hour`)**: "5-min mix" — top-3 förfallna beats från ALLA aktiva tal (interleaving).
-  - **Kvällsnotis (30 min före `practice_end_hour`)**: kort recall av dagens mest bräckliga beat (sömnkonsolidering).
-  - **Deadline-prioritet**: `priority = urgency(deadline) × (1 − mastery) × overdueness`. Tal närmare deadline går först.
-- Dashboard sorteras enligt samma prioritet.
-- Notistexter lokaliseras till alla 7 språk.
+## Vad användaren märker
 
-**Leverans:** Forskningsbaserad notistiming, bättre retention, tydligare fokus.
+- Dashboarden visar **rätt** nästa övning, även när två tal har olika deadlines.
+- Låsen släpper när FSRS säger så (inte efter fasta intervall).
+- Hint-fördröjningen ökar gradvis när man blir bättre på en beat.
+- Morgon-/kvällsnotiser blandar beats från olika tal (interleaving).
 
----
+## Riskpunkter
 
-## Fas 4 — Desirable difficulty + lapse-tracking
-
-**Problem:** Hint-systemet hjälper för snabbt. Misslyckade ord glöms inte över tal.
-
-**Lösning:**
-- `useAdaptiveTempo`: hint-fördröjning skalas upp gradvis (400ms → 2500ms) när användaren börjar klara beats utan stöd.
-- Slumpa in en "blank run" (ingen hint, 0 % visibility) var 4:e session efter mastery.
-- `user_word_mastery.total_missed` får inverkan på `protected_word_logic` — ord med hög global misslyckandefrekvens prioriteras som hidden även i nya tal.
-
-**Leverans:** Djupare inlärning (testing effect), användaren bygger ett personligt "svårordsregister".
-
----
-
-## Fas 5 — Observability + A/B-mätning
-
-**Problem:** Inget sätt att veta om förbättringarna faktiskt fungerar.
-
-**Lösning:**
-- `mastery_events` (från Fas 1) blir grund för analys.
-- Nytt fält `presentation_sessions.predicted_accuracy` (FSRS-prediktion vid sessionstart) jämförs mot faktisk accuracy.
-- Enkel intern analytics-vy: retention-kurva per användare över 7/30/90 dagar.
-- Free tier-policy uppdateras: 1 aktivt tal, obegränsad recall på gamla tal (så SR-värdet syns).
-
-**Leverans:** Vi kan mäta att systemet faktiskt blir bättre, och free-användare upplever SR:s värde.
-
----
-
-## Tekniska detaljer
-
-**Nya/ändrade tabeller (Fas 1+2):**
-- `mastery_events` (append-only): `id, user_id, speech_id, beat_id, event_type, raw_accuracy, visibility, hesitations, lapses, created_at`
-- `practice_beats` får: `fsrs_stability, fsrs_difficulty, fsrs_reps, fsrs_lapses`
-- Vy: `v_next_due` (per user_id)
-
-**Nya/ändrade edge-funktioner:**
-- `compute-next-due` (Fas 1) — ersätter spridd logik
-- `fsrs-schedule` (Fas 2) — ersätter `update-sm2-schedule`
-- `send-adaptive-notifications` (Fas 3) — skrivs om för interleaving + prioritet
-
-**Komponenter som påverkas:**
-- `Dashboard.tsx`, `SpeechCard.tsx`, `ReviewNotifications.tsx`, `LockCountdown.tsx`, `BeatPracticeView.tsx`, `useAdaptiveTempo.ts`, `useSleepAwareTracking.ts`
-
-**Det ändras INTE:**
-- Practice-UI:t (färger, animations, hidden brackets) — bara backend för schemaläggning.
-- Speech recognition-logik.
-- Befintlig speech-data — migration är bakåtkompatibel (existerande fält fylls i parallellt).
-
----
-
-## Mitt förslag
-
-**Börja med Fas 1 nu.** Den löser den konkreta buggen du nyligen rapporterade och är en förutsättning för allt annat. Den tar ca 1 iteration och är låg risk.
-
-När Fas 1 är verifierad, säg till så kör jag Fas 2, osv. Vill du ändra ordning, hoppa över någon fas, eller köra allt på en gång?
+- Gamla `schedules`-rader finns kvar; några gamla queries kan dubbelläsa. Vi behåller dem men slutar skriva — efter 2 veckor kan vi droppa.
+- Första gången en användare öppnar appen efter uppdateringen saknas `fsrs_*`-värden → fallback till defaults (stability=1, difficulty=5).
