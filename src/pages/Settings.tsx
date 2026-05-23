@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Database } from "@/integrations/supabase/types";
+import { openMailto } from "@/lib/openMailto";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
