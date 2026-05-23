@@ -218,6 +218,20 @@ const Settings = () => {
     return `${hour.toString().padStart(2, '0')}:00`;
   };
 
+  const handleInstantDueToggle = async (checked: boolean) => {
+    setInstantDueNotifications(checked);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase
+        .from("profiles")
+        .update({ instant_due_notifications: checked })
+        .eq("id", user.id);
+    } catch (e) {
+      console.error("Error saving instant_due_notifications:", e);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-secondary/30">
       {/* iOS-style navigation bar */}
