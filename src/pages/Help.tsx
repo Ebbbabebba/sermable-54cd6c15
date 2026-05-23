@@ -175,7 +175,7 @@ const Help = () => {
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => window.location.href = 'mailto:support@sermable.com'}
+              onClick={() => openMailto('support@sermable.com')}
             >
               <Mail className="h-4 w-4 mr-2" />
               support@sermable.com
