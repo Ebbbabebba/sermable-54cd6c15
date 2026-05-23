@@ -929,18 +929,53 @@ const StepShell = ({
   wide?: boolean;
 }) => (
   <div className={cn("space-y-6", wide ? "" : "max-w-md mx-auto")}>
-    <div className="text-center space-y-2">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary/80">
+    <motion.div
+      className="text-center space-y-2"
+      initial="hidden"
+      animate="show"
+      variants={{
+        hidden: {},
+        show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+      }}
+    >
+      <motion.p
+        variants={{
+          hidden: { opacity: 0, y: 8 },
+          show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } },
+        }}
+        className="text-xs font-medium uppercase tracking-[0.18em] text-primary/80"
+      >
         {eyebrow}
-      </p>
-      <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">{title}</h2>
+      </motion.p>
+      <motion.h2
+        variants={{
+          hidden: { opacity: 0, y: 10 },
+          show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+        }}
+        className="text-2xl sm:text-3xl font-bold tracking-tight"
+      >
+        {title}
+      </motion.h2>
       {subtitle && (
-        <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
+        <motion.p
+          variants={{
+            hidden: { opacity: 0, y: 10 },
+            show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+          }}
+          className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto"
+        >
           {subtitle}
-        </p>
+        </motion.p>
       )}
-    </div>
-    <div className="space-y-4">{children}</div>
+    </motion.div>
+    <motion.div
+      className="space-y-4"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
   </div>
 );
 
@@ -957,11 +992,23 @@ const Choice = ({
   label: string;
   description: string;
 }) => (
-  <button
+  <motion.button
     type="button"
-    onClick={onClick}
+    onClick={() => {
+      try {
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+          navigator.vibrate(8);
+        }
+      } catch {}
+      onClick();
+    }}
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+    whileHover={{ scale: 1.015 }}
+    whileTap={{ scale: 0.98 }}
     className={cn(
-      "w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3",
+      "w-full text-left p-4 rounded-2xl border transition-colors flex items-start gap-3",
       active
         ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md"
         : "border-border bg-card hover:border-primary/40 hover:bg-accent/40"
@@ -970,7 +1017,7 @@ const Choice = ({
     {icon && (
       <div
         className={cn(
-          "shrink-0 w-10 h-10 rounded-xl flex items-center justify-center",
+          "shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
           active
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground"
@@ -986,9 +1033,15 @@ const Choice = ({
       </div>
     </div>
     {active && (
-      <Check className="w-5 h-5 text-primary shrink-0 mt-1" strokeWidth={3} />
+      <motion.div
+        initial={{ scale: 0, rotate: -90 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 18 }}
+      >
+        <Check className="w-5 h-5 text-primary shrink-0 mt-1" strokeWidth={3} />
+      </motion.div>
     )}
-  </button>
+  </motion.button>
 );
 
 export default UploadSpeechDialog;
