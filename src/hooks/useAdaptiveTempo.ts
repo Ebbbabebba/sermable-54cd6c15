@@ -22,8 +22,9 @@ interface UseAdaptiveTempoReturn {
   // Get adaptive hesitation threshold for current word
   getAdaptiveThreshold: (options: AdaptiveThresholdOptions) => number;
   
-  // Get adaptive hint delays (level 1, step between levels)
-  getAdaptiveHintDelays: (options: AdaptiveThresholdOptions) => { initialDelay: number; stepDelay: number };
+  // Get adaptive hint delays. Pass masteryConfidence (0..1) to apply "desirable
+  // difficulty" — higher confidence = longer wait before hints (forces retrieval).
+  getAdaptiveHintDelays: (options: AdaptiveThresholdOptions, masteryConfidence?: number) => { initialDelay: number; stepDelay: number };
   
   // Current learning phase: 'calibration' | 'learning' | 'adapted'
   phase: 'calibration' | 'learning' | 'adapted';
