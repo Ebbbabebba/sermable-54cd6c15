@@ -255,8 +255,17 @@ const UploadSpeechDialog = ({
     }
   };
 
+  const hapticTap = () => {
+    try {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate(10);
+      }
+    } catch {}
+  };
+
   const goNext = () => {
     if (!canAdvance()) return;
+    hapticTap();
     if (step === "strictness") {
       handleSubmit();
       return;
@@ -265,6 +274,7 @@ const UploadSpeechDialog = ({
     if (next) setStep(next);
   };
   const goBack = () => {
+    hapticTap();
     const prev = ORDER[ORDER.indexOf(step) - 1];
     if (prev) setStep(prev);
   };
