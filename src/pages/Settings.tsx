@@ -97,7 +97,7 @@ const Settings = () => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("practice_start_hour, practice_end_hour, timezone, subscription_tier")
+          .select("practice_start_hour, practice_end_hour, timezone, subscription_tier, instant_due_notifications")
           .eq("id", user.id)
           .single();
 
@@ -105,6 +105,7 @@ const Settings = () => {
           if (profile.practice_start_hour !== null) setPracticeStartHour(profile.practice_start_hour);
           if (profile.practice_end_hour !== null) setPracticeEndHour(profile.practice_end_hour);
           if (profile.subscription_tier) setSubscriptionTier(profile.subscription_tier);
+          if (typeof profile.instant_due_notifications === "boolean") setInstantDueNotifications(profile.instant_due_notifications);
         }
 
         // Calculate streaks
