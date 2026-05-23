@@ -18,6 +18,7 @@ import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
+import { scheduleNextReview } from "@/lib/scheduleNextReview";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -1887,6 +1888,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           .then(() => {
             console.log(`⬇️ Beat ${failedBeat.beat_order} fail (${Math.round(failRatio*100)}%) → demote ${demotionRungs} → session ${demotedSession}`);
           });
+
+        // FSRS scheduler — single source of truth for next_scheduled_recall_at
+        const visibleCount = Math.max(0, words.length - hiddenWordIndices.size);
+        scheduleNextReview({
+          beatId: failedBeat.id,
+          eventType: 'recall',
+          rawAccuracy: Math.round((1 - failRatio) * 100),
+          visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 100,
+          hesitations: hesitatedIndicesRef.current.size,
+          lapses: missedIndicesRef.current.size,
+          missedWordCount: missedIndicesRef.current.size,
+        });
       }
       
       // Get the specific word indices that failed (hesitated or missed)
@@ -1986,6 +1999,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             .then(() => {
               console.log(`📅 Beat ${recalledBeat.beat_order} → session ${newSessionNum}${isCappedByGraduation ? ' (capped: needs full-speech pass)' : ''}, next:`, nextRecallDate?.toISOString() ?? 'none');
             });
+
+          // FSRS scheduler — single source of truth for next_scheduled_recall_at
+          const visibleCount = Math.max(0, words.length - hiddenWordIndices.size);
+          scheduleNextReview({
+            beatId: recalledBeat.id,
+            eventType: 'recall',
+            rawAccuracy: 100,
+            visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 0,
+            hesitations: 0,
+            lapses: 0,
+            missedWordCount: 0,
+          });
         }
 
         // If this was a merged recall, update last_merged_recall_at AND mark all
