@@ -523,6 +523,7 @@ export type Database = {
           fsrs_stability: number | null
           id: string
           is_mastered: boolean | null
+          last_due_notification_at: string | null
           last_failure_at: string | null
           last_merged_recall_at: string | null
           last_recall_at: string | null
@@ -558,6 +559,7 @@ export type Database = {
           fsrs_stability?: number | null
           id?: string
           is_mastered?: boolean | null
+          last_due_notification_at?: string | null
           last_failure_at?: string | null
           last_merged_recall_at?: string | null
           last_recall_at?: string | null
@@ -593,6 +595,7 @@ export type Database = {
           fsrs_stability?: number | null
           id?: string
           is_mastered?: boolean | null
+          last_due_notification_at?: string | null
           last_failure_at?: string | null
           last_merged_recall_at?: string | null
           last_recall_at?: string | null
@@ -851,6 +854,7 @@ export type Database = {
           feedback_language: string | null
           full_name: string | null
           id: string
+          instant_due_notifications: boolean
           monthly_speeches_count: number
           monthly_speeches_reset_date: string
           notifications_enabled: boolean | null
@@ -869,6 +873,7 @@ export type Database = {
           feedback_language?: string | null
           full_name?: string | null
           id: string
+          instant_due_notifications?: boolean
           monthly_speeches_count?: number
           monthly_speeches_reset_date?: string
           notifications_enabled?: boolean | null
@@ -887,6 +892,7 @@ export type Database = {
           feedback_language?: string | null
           full_name?: string | null
           id?: string
+          instant_due_notifications?: boolean
           monthly_speeches_count?: number
           monthly_speeches_reset_date?: string
           notifications_enabled?: boolean | null
