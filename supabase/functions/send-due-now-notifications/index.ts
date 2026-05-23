@@ -61,19 +61,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const secret = Deno.env.get("SCHEDULER_SECRET");
-    if (!secret) {
-      return new Response(JSON.stringify({ error: "Server misconfig" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (req.headers.get("x-scheduler-secret") !== secret) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // No external secret needed: function is fully idempotent. Each beat is
+    // notified at most once per `next_scheduled_recall_at` cycle via
+    // `last_due_notification_at`, and only beats whose due time fell within
+    // the last 20 minutes are considered. Repeated calls are safe no-ops.
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
