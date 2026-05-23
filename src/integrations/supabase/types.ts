@@ -53,6 +53,13 @@ export type Database = {
             referencedRelation: "practice_beats"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "beat_progress_beat_id_fkey"
+            columns: ["beat_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["beat_id"]
+          },
         ]
       }
       freestyle_keywords: {
@@ -98,6 +105,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "freestyle_keywords_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
+          {
             foreignKeyName: "freestyle_keywords_topic_id_fkey"
             columns: ["topic_id"]
             isOneToOne: false
@@ -141,6 +155,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "freestyle_segments_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -192,6 +213,13 @@ export type Database = {
             referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "freestyle_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
         ]
       }
       freestyle_topics: {
@@ -229,6 +257,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "freestyle_topics_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -283,7 +318,65 @@ export type Database = {
             referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mastered_words_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
         ]
+      }
+      mastery_events: {
+        Row: {
+          beat_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          event_type: string
+          hesitations: number | null
+          id: string
+          lapses: number | null
+          missed_word_count: number | null
+          raw_accuracy: number | null
+          segment_id: string | null
+          speech_id: string
+          user_id: string
+          visibility_percent: number | null
+          was_overdue: boolean | null
+        }
+        Insert: {
+          beat_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type: string
+          hesitations?: number | null
+          id?: string
+          lapses?: number | null
+          missed_word_count?: number | null
+          raw_accuracy?: number | null
+          segment_id?: string | null
+          speech_id: string
+          user_id: string
+          visibility_percent?: number | null
+          was_overdue?: boolean | null
+        }
+        Update: {
+          beat_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_type?: string
+          hesitations?: number | null
+          id?: string
+          lapses?: number | null
+          missed_word_count?: number | null
+          raw_accuracy?: number | null
+          segment_id?: string | null
+          speech_id?: string
+          user_id?: string
+          visibility_percent?: number | null
+          was_overdue?: boolean | null
+        }
+        Relationships: []
       }
       overview_sessions: {
         Row: {
@@ -342,6 +435,13 @@ export type Database = {
             referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "overview_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
         ]
       }
       overview_topics: {
@@ -398,6 +498,13 @@ export type Database = {
             referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "overview_topics_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
         ]
       }
       practice_beats: {
@@ -409,6 +516,11 @@ export type Database = {
           consecutive_perfect_recalls: number | null
           cooldown_until: string | null
           created_at: string | null
+          fsrs_difficulty: number | null
+          fsrs_lapses: number | null
+          fsrs_last_review: string | null
+          fsrs_reps: number | null
+          fsrs_stability: number | null
           id: string
           is_mastered: boolean | null
           last_failure_at: string | null
@@ -439,6 +551,11 @@ export type Database = {
           consecutive_perfect_recalls?: number | null
           cooldown_until?: string | null
           created_at?: string | null
+          fsrs_difficulty?: number | null
+          fsrs_lapses?: number | null
+          fsrs_last_review?: string | null
+          fsrs_reps?: number | null
+          fsrs_stability?: number | null
           id?: string
           is_mastered?: boolean | null
           last_failure_at?: string | null
@@ -469,6 +586,11 @@ export type Database = {
           consecutive_perfect_recalls?: number | null
           cooldown_until?: string | null
           created_at?: string | null
+          fsrs_difficulty?: number | null
+          fsrs_lapses?: number | null
+          fsrs_last_review?: string | null
+          fsrs_reps?: number | null
+          fsrs_stability?: number | null
           id?: string
           is_mastered?: boolean | null
           last_failure_at?: string | null
@@ -498,6 +620,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_beats_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -564,6 +693,13 @@ export type Database = {
             referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "practice_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
         ]
       }
       presentation_sessions: {
@@ -582,6 +718,7 @@ export type Database = {
           missed_words: string[] | null
           mode: string | null
           pace_consistency: number | null
+          predicted_accuracy: number | null
           speech_id: string
           transcript: string | null
           user_id: string | null
@@ -602,6 +739,7 @@ export type Database = {
           missed_words?: string[] | null
           mode?: string | null
           pace_consistency?: number | null
+          predicted_accuracy?: number | null
           speech_id: string
           transcript?: string | null
           user_id?: string | null
@@ -622,6 +760,7 @@ export type Database = {
           missed_words?: string[] | null
           mode?: string | null
           pace_consistency?: number | null
+          predicted_accuracy?: number | null
           speech_id?: string
           transcript?: string | null
           user_id?: string | null
@@ -634,6 +773,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "presentation_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -688,6 +834,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "presentation_word_performance_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -814,6 +967,13 @@ export type Database = {
             referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "schedules_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
         ]
       }
       script_beats: {
@@ -848,6 +1008,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_beats_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -895,6 +1062,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_sessions_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -989,6 +1163,13 @@ export type Database = {
             referencedRelation: "speeches"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "speech_phrases_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
+          },
         ]
       }
       speech_segments: {
@@ -1050,6 +1231,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "speeches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "speech_segments_speech_id_fkey"
+            columns: ["speech_id"]
+            isOneToOne: false
+            referencedRelation: "v_next_due"
+            referencedColumns: ["speech_id"]
           },
         ]
       }
@@ -1303,7 +1491,32 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_next_due: {
+        Row: {
+          beat_id: string | null
+          beat_order: number | null
+          due_at: string | null
+          goal_date: string | null
+          is_mastered: boolean | null
+          mastery_gap: number | null
+          next_scheduled_recall_at: string | null
+          overdueness_score: number | null
+          priority_score: number | null
+          speech_id: string | null
+          speech_title: string | null
+          urgency_score: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speeches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       assess_memorization_feasibility: {
@@ -1505,6 +1718,18 @@ export type Database = {
           speech_id: string
           speech_title: string
           success_rate: number
+        }[]
+      }
+      get_top_due_beats: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          beat_id: string
+          beat_order: number
+          due_at: string
+          goal_date: string
+          priority_score: number
+          speech_id: string
+          speech_title: string
         }[]
       }
       get_users_with_due_reviews: {
