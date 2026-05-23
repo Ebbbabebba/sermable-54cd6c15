@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft, HelpCircle, Mic, BookOpen, Clock, BarChart3, Settings, MessageCircle, Mail, ExternalLink, Smartphone, Zap, Trophy, Shield } from "lucide-react";
+import { openMailto } from "@/lib/openMailto";
 
 const Help = () => {
   const navigate = useNavigate();
@@ -174,7 +175,7 @@ const Help = () => {
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => window.location.href = 'mailto:support@sermable.com'}
+              onClick={() => openMailto('support@sermable.com')}
             >
               <Mail className="h-4 w-4 mr-2" />
               support@sermable.com
