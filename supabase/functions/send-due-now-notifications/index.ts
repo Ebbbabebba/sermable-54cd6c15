@@ -62,13 +62,14 @@ Deno.serve(async (req) => {
 
   try {
     const secret = Deno.env.get("SCHEDULER_SECRET");
-    if (!secret) {
-      return new Response(JSON.stringify({ error: "Server misconfig" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (req.headers.get("x-scheduler-secret") !== secret) {
+    const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const authHeader = req.headers.get("authorization") ?? "";
+    const bearer = authHeader.toLowerCase().startsWith("bearer ")
+      ? authHeader.slice(7).trim()
+      : "";
+    const okScheduler = secret && req.headers.get("x-scheduler-secret") === secret;
+    const okService = serviceRole && bearer === serviceRole;
+    if (!okScheduler && !okService) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
