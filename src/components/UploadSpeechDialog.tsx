@@ -426,12 +426,16 @@ const UploadSpeechDialog = ({
             )}
           >
             <div className="flex justify-center pt-2">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl animate-pulse" />
+              <motion.div
+                className="relative"
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <div className="absolute inset-0 rounded-full bg-primary/25 blur-2xl animate-pulse" />
                 <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-2xl">
                   <Sparkles className="w-10 h-10 text-primary-foreground" />
                 </div>
-              </div>
+              </motion.div>
             </div>
           </StepShell>
         );
