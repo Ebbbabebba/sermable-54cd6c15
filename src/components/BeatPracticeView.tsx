@@ -1888,6 +1888,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           .then(() => {
             console.log(`⬇️ Beat ${failedBeat.beat_order} fail (${Math.round(failRatio*100)}%) → demote ${demotionRungs} → session ${demotedSession}`);
           });
+
+        // FSRS scheduler — single source of truth for next_scheduled_recall_at
+        const visibleCount = Math.max(0, words.length - hiddenWordIndices.size);
+        scheduleNextReview({
+          beatId: failedBeat.id,
+          eventType: 'recall',
+          rawAccuracy: Math.round((1 - failRatio) * 100),
+          visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 100,
+          hesitations: hesitatedIndicesRef.current.size,
+          lapses: missedIndicesRef.current.size,
+          missedWordCount: missedIndicesRef.current.size,
+        });
       }
       
       // Get the specific word indices that failed (hesitated or missed)
