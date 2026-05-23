@@ -73,33 +73,46 @@ const SpeechDetail = () => {
   const wordCount = speech.text_original.trim().split(/\s+/).filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card sticky top-0 z-10" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {t("common.back")}
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
+      <header
+        className="flex-shrink-0 sticky top-0 z-10 border-b bg-card/95 backdrop-blur"
+        style={{ paddingTop: "max(8px, env(safe-area-inset-top))" }}
+      >
+        <div
+          className="mx-auto w-full max-w-3xl flex items-center justify-between gap-2 py-3"
+          style={{
+            paddingLeft: "max(16px, env(safe-area-inset-left))",
+            paddingRight: "max(16px, env(safe-area-inset-right))",
+          }}
+        >
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="shrink-0">
+            <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{t("common.back")}</span>
           </Button>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 min-w-0">
             <Button size="sm" variant="ghost" onClick={() => setPrintOpen(true)} aria-label={t("beatPrint.title", "Skriv ut manus")}>
               <Printer className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">{t("speechDetail.print", "Skriv ut")}</span>
             </Button>
             <Button size="sm" variant="outline" onClick={() => navigate(`/presentation/${speech.id}`)}>
-              <Presentation className="h-4 w-4 mr-2" />
-              {t("speechDetail.present")}
+              <Presentation className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t("speechDetail.present")}</span>
             </Button>
             <Button size="sm" onClick={() => navigate(`/practice/${speech.id}`)}>
-              <Play className="h-4 w-4 mr-2" />
-              {t("speechDetail.practice")}
+              <Play className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">{t("speechDetail.practice")}</span>
             </Button>
           </div>
         </div>
       </header>
 
       <main
-        className="container mx-auto px-4 py-6 max-w-3xl space-y-6"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}
+        className="flex-1 overflow-y-auto mx-auto w-full max-w-3xl space-y-6 py-6"
+        style={{
+          paddingLeft: "max(16px, env(safe-area-inset-left))",
+          paddingRight: "max(16px, env(safe-area-inset-right))",
+          paddingBottom: "max(24px, env(safe-area-inset-bottom))",
+        }}
       >
         <div>
           <h1 className="text-3xl font-bold mb-1">{speech.title}</h1>
