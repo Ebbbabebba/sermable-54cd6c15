@@ -509,4 +509,51 @@ body {
   .word-complete-animation {
     animation: wordComplete 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
+
+  /* ===== Duolingo design tokens ===== */
+
+  /* 3D push-button — solid bottom edge that compresses on press */
+  .duo-btn {
+    box-shadow: 0 4px 0 0 hsl(var(--primary-shadow));
+    transform: translateY(0);
+    transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 150ms ease-out;
+  }
+  .duo-btn:active,
+  .duo-btn[data-pressed="true"] {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 0 hsl(var(--primary-shadow));
+  }
+  .duo-btn-destructive { box-shadow: 0 4px 0 0 hsl(var(--destructive-shadow)); }
+  .duo-btn-destructive:active { box-shadow: 0 1px 0 0 hsl(var(--destructive-shadow)); }
+  .duo-btn-warning     { box-shadow: 0 4px 0 0 hsl(var(--warning-shadow)); }
+  .duo-btn-warning:active { box-shadow: 0 1px 0 0 hsl(var(--warning-shadow)); }
+  .duo-btn-info        { box-shadow: 0 4px 0 0 hsl(var(--info-shadow)); }
+  .duo-btn-info:active { box-shadow: 0 1px 0 0 hsl(var(--info-shadow)); }
+  .duo-btn-purple      { box-shadow: 0 4px 0 0 hsl(var(--duo-purple-shadow)); }
+  .duo-btn-purple:active { box-shadow: 0 1px 0 0 hsl(var(--duo-purple-shadow)); }
+  .duo-btn-outline { box-shadow: 0 3px 0 0 hsl(var(--border)); }
+  .duo-btn-outline:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 0 hsl(var(--border));
+  }
+
+  /* Icon-in-circle — colored circle behind a lucide icon */
+  .icon-circle {
+    @apply inline-flex items-center justify-center rounded-full shrink-0;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .icon-circle-lg { width: 3.5rem; height: 3.5rem; }
+  .icon-circle-xl { width: 4.5rem; height: 4.5rem; }
+  .icon-circle-primary     { background: hsl(var(--primary) / 0.15);     color: hsl(var(--primary)); }
+  .icon-circle-info        { background: hsl(var(--info) / 0.15);        color: hsl(var(--info)); }
+  .icon-circle-warning     { background: hsl(var(--warning) / 0.15);     color: hsl(var(--warning)); }
+  .icon-circle-destructive { background: hsl(var(--destructive) / 0.15); color: hsl(var(--destructive)); }
+  .icon-circle-purple      { background: hsl(var(--duo-purple) / 0.18);  color: hsl(var(--duo-purple)); }
+  .icon-circle-yellow      { background: hsl(var(--duo-yellow) / 0.2);   color: hsl(var(--duo-yellow)); }
+  .icon-circle-solid-primary     { background: hsl(var(--primary));     color: hsl(var(--primary-foreground)); }
+  .icon-circle-solid-info        { background: hsl(var(--info));        color: hsl(var(--info-foreground)); }
+  .icon-circle-solid-warning     { background: hsl(var(--warning));     color: hsl(var(--warning-foreground)); }
+  .icon-circle-solid-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+  .icon-circle-solid-purple      { background: hsl(var(--duo-purple));  color: hsl(var(--duo-purple-foreground)); }
 }
