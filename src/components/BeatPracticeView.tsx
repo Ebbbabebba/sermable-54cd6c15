@@ -385,6 +385,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     totalSeconds: number;
   } | null>(null);
   const triggeredPausesRef = useRef<Set<number>>(new Set());
+  const postPauseNoHesitationIndicesRef = useRef<Set<number>>(new Set());
   const pauseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // Recording state
@@ -725,6 +726,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const nextIdx = pauseIdx + 1;
       currentWordIndexRef.current = nextIdx;
       setCurrentWordIndex(nextIdx);
+      if (nextIdx < wordsLengthRef.current) {
+        postPauseNoHesitationIndicesRef.current.add(nextIdx);
+      }
       // Give the word after a planned pause a fresh grace period — otherwise
       // the hesitation timer would see "elapsed since last word" = pause
       // duration (e.g. 3s) and immediately mark the next hidden word yellow.
@@ -735,7 +739,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       transcriptRef.current = "";
       transcriptWordsRef.current = [];
       runningTranscriptRef.current = "";
-      ignoreResultsUntilRef.current = Date.now() + 400;
+      ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+      ignoreResultsUntilRef.current = Date.now() + 80;
+      recognitionRestartAtRef.current = Math.min(recognitionRestartAtRef.current, Date.now() + 80);
       if (nextIdx >= wordsLengthRef.current) {
         checkCompletion(nextSpoken);
       }
@@ -749,7 +755,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     const totalSeconds = Math.round(dur / 1000);
     setActivePause({ remainingSeconds: totalSeconds, totalSeconds });
-    pauseSpeechRecognition(dur + 250);
+    pauseSpeechRecognition(dur);
     if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
     const startedAt = Date.now();
     pauseTimerRef.current = setInterval(() => {
