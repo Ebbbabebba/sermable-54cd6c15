@@ -1806,6 +1806,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
 
+      // Hard gate: in a learning phase we must have heard genuinely new speech
+      // since the last phase transition. This blocks stale buffered transcripts
+      // from auto-completing (and skipping) a sentence the user hasn't said yet.
+      if (needsFreshSpeechRef.current) {
+        console.log('🛑 Completion blocked — no fresh speech since phase transition');
+        return;
+      }
+
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
         pauseSpeechRecognition(1700);
