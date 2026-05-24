@@ -436,7 +436,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const wordsLengthRef = useRef(0);
   const showCelebrationRef = useRef(false);
   const processTranscriptionRef = useRef<
-    (transcript: string, isFinal: boolean, repId: number) => void
+    (transcript: string, isFinal: boolean, repId: number, phaseEpoch?: number) => void
   >(() => {});
 
   useEffect(() => {
