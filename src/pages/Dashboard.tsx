@@ -238,8 +238,15 @@ const Dashboard = () => {
       />
 
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
-        <div className="px-4 h-11 flex items-center justify-between">
-          <div className="w-8" />
+        <div className="px-4 h-11 flex items-center justify-between gap-2">
+          {isMobile ? (
+            <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
+              <Plus className="h-4 w-4" />
+              {t('nav.newSpeech')}
+            </Button>
+          ) : (
+            <div className="w-8" />
+          )}
           
           {/* Desktop Navigation */}
           {!isMobile && (
@@ -487,17 +494,6 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Floating Action Button - Mobile */}
-      {isMobile && (
-        <Button
-          onClick={() => setUploadDialogOpen(true)}
-          className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-apple-xl z-50"
-          variant="apple"
-          size="icon"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      )}
 
       <UploadSpeechDialog
         open={uploadDialogOpen}
