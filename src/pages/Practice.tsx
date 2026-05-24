@@ -2298,8 +2298,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </main>
 
       {/* Fixed bottom CTA - Duolingo style */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-background">
-          <div className="max-w-md mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-6 bg-background/95 backdrop-blur-md border-t border-border/40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
+          <div className="max-w-md mx-auto space-y-2">
             {todaySessionDone ? (
               <Button 
                 size="lg" 
@@ -2327,8 +2327,36 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   : t('beat_practice.start_next_session')}
             </Button>
           )}
+
+          {/* Compact secondary row: countdown + practice anyway / upgrade */}
+          {isLocked && nextReviewDate && (
+            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <LockCountdown nextReviewDate={nextReviewDate} />
+              </span>
+              {subscriptionTier === 'free' ? (
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium hover:underline"
+                >
+                  <Crown className="h-3 w-3" />
+                  {t('practice.upgradeToPremium')}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowTimingWarning(true)}
+                  className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium hover:underline"
+                >
+                  <Crown className="h-3 w-3" />
+                  {t('practice.practiceAnyway')}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
 
       {/* Premium User Timing Warning Dialog */}
       <AlertDialog open={showTimingWarning} onOpenChange={setShowTimingWarning}>
