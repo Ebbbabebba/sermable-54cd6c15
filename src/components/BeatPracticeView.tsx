@@ -1528,6 +1528,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // hesitation timer mark hidden words yellow while the microphone is hearing them.
     hasHeardSpeechRef.current = true;
     lastWordTimeRef.current = Date.now();
+    // Clear the fresh-speech gate only when this transcript is genuinely new
+    // for this phase — i.e. has more words than what we've already processed.
+    // This prevents replays of the previous sentence's tail from satisfying it.
+    if (rawWords.length > transcriptWordsRef.current.length) {
+      needsFreshSpeechRef.current = false;
+    }
 
     // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
     // "empezar de nuevo" / "ricomincia" / "começar de novo". Detect on the LAST few raw tokens
