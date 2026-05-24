@@ -494,17 +494,6 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Floating Action Button - Mobile */}
-      {isMobile && (
-        <Button
-          onClick={() => setUploadDialogOpen(true)}
-          className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-apple-xl z-50"
-          variant="apple"
-          size="icon"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      )}
 
       <UploadSpeechDialog
         open={uploadDialogOpen}
