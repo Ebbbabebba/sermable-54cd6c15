@@ -725,6 +725,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const nextIdx = pauseIdx + 1;
       currentWordIndexRef.current = nextIdx;
       setCurrentWordIndex(nextIdx);
+      // Give the word after a planned pause a fresh grace period — otherwise
+      // the hesitation timer would see "elapsed since last word" = pause
+      // duration (e.g. 3s) and immediately mark the next hidden word yellow.
+      lastWordTimeRef.current = Date.now();
+      hasHeardSpeechRef.current = false;
+      // Drop any buffered transcript so old tokens from before the pause
+      // cannot retroactively mark the word after the pause.
+      transcriptRef.current = "";
+      transcriptWordsRef.current = [];
+      runningTranscriptRef.current = "";
+      ignoreResultsUntilRef.current = Date.now() + 400;
       if (nextIdx >= wordsLengthRef.current) {
         checkCompletion(nextSpoken);
       }
