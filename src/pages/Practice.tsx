@@ -2129,91 +2129,39 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </header>
 
       {/* Main content - centered and focused */}
-      <main className="flex-1 flex flex-col items-center justify-start px-4 py-6 sm:py-8 pb-44">
-        <div className="w-full max-w-md space-y-5 sm:space-y-8">
-          
-          {/* Mascot / Icon area */}
-          <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
-            <div className="relative">
-              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <GraduationCap className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
-              </div>
+      <main className="flex-1 flex flex-col items-center justify-start px-4 pt-4 pb-32">
+        <div className="w-full max-w-md space-y-4">
+
+          {/* Compact hero — title + goal in a tight stack, no oversized mascot */}
+          {speech && (
+            <div className="text-center space-y-1 pt-1">
+              <h1 className="text-xl font-semibold tracking-tight truncate">{speech.title}</h1>
+              {speech.goal_date && (
+                <p className="text-xs text-muted-foreground">
+                  {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
+                </p>
+              )}
             </div>
-            
-            {/* Title */}
-            {speech && (
-              <div className="space-y-2">
-                <h1 className="text-2xl font-bold tracking-tight">{speech.title}</h1>
-                {speech.goal_date && (
-                  <p className="text-sm text-muted-foreground">
-                    {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
-                  </p>
-                )}
-              </div>
-            )}
+          )}
+
+          {/* Compact inline stat row — no SVG arcs, Apple-style density */}
+          <div className="flex items-center justify-center gap-6 py-1">
+            <div className="flex flex-col items-center">
+              <span className="text-xl font-semibold tabular-nums">{masteredBeats}</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('beat_practice.learned')}</span>
+            </div>
+            <div className="h-8 w-px bg-border" />
+            <div className="flex flex-col items-center">
+              <span className="text-xl font-semibold tabular-nums text-primary">{masteryPercent}%</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('beat_practice.mastery', 'Mastery')}</span>
+            </div>
+            <div className="h-8 w-px bg-border" />
+            <div className="flex flex-col items-center">
+              <span className="text-xl font-semibold tabular-nums">{totalBeats - masteredBeats}</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('beat_practice.remaining')}</span>
+            </div>
           </div>
 
-          {/* Progress stats - Duolingo style circles */}
-          <div className="flex justify-center gap-4 sm:gap-6">
-            <div className="flex flex-col items-center">
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="hsl(var(--muted))"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={`${progressPercent * 2.64} 264`}
-                    className="transition-all duration-700"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-bold">{masteredBeats}</span>
-                </div>
-              </div>
-              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.learned')}</span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="hsl(var(--muted))"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="hsl(142 71% 45%)"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={`${masteryPercent * 2.64} 264`}
-                    className="transition-all duration-700"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm sm:text-lg font-bold">{masteryPercent}%</span>
-                </div>
-              </div>
-              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.mastery', 'Mastery')}</span>
-            </div>
-            
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-sm sm:text-lg font-bold text-muted-foreground">{totalBeats - masteredBeats}</span>
-              </div>
-              <span className="text-xs text-muted-foreground mt-1">{t('beat_practice.remaining')}</span>
-            </div>
-          </div>
 
           {/* Session Card - only show for active (non-complete) sessions */}
           {!todaySessionDone && (
@@ -2344,56 +2292,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
           )}
 
+          {/* Next session info moved into the fixed bottom bar for a single-screen layout */}
 
-          {/* Next session info - only show if there's a next review date AND practice history */}
-          {nextReviewDate && practiceBeats.length > 0 && (
-            <div className={`flex flex-col gap-3 p-4 rounded-2xl ${isLocked ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-primary/5 border border-primary/20'}`}>
-              <div className="flex items-center gap-3">
-                <Clock className={`h-5 w-5 shrink-0 ${isLocked ? 'text-amber-500' : 'text-primary'}`} />
-                <div className="flex-1">
-                  <p className="text-sm font-medium mb-1">
-                    {isLocked 
-                      ? t('practice.aiRecommendsWaiting')
-                      : t('dashboard.nextPractice')}
-                  </p>
-                  <p className={`text-lg font-bold ${isLocked ? 'text-amber-600 dark:text-amber-400' : 'text-primary'}`}>
-                    <LockCountdown nextReviewDate={nextReviewDate} />
-                  </p>
-                </div>
-              </div>
-              
-              {isLocked && subscriptionTier === 'free' && (
-                <Button 
-                  variant="link" 
-                  size="sm"
-                  onClick={() => navigate("/settings")}
-                  className="text-amber-600 p-0 h-auto justify-start"
-                >
-                  <Crown className="h-3.5 w-3.5 mr-1" />
-                  {t('practice.upgradeToPremium')}
-                </Button>
-              )}
-              
-              {/* Premium Practice Anyway button */}
-              {isLocked && subscriptionTier !== 'free' && (
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowTimingWarning(true)}
-                  className="w-full border-amber-500/30 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
-                >
-                  <Crown className="h-3.5 w-3.5 mr-1.5" />
-                  {t('practice.practiceAnyway')}
-                </Button>
-              )}
-            </div>
-          )}
         </div>
       </main>
 
       {/* Fixed bottom CTA - Duolingo style */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 pb-6 bg-background">
-          <div className="max-w-md mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-6 bg-background/95 backdrop-blur-md border-t border-border/40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
+          <div className="max-w-md mx-auto space-y-2">
             {todaySessionDone ? (
               <Button 
                 size="lg" 
@@ -2421,8 +2327,36 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   : t('beat_practice.start_next_session')}
             </Button>
           )}
+
+          {/* Compact secondary row: countdown + practice anyway / upgrade */}
+          {isLocked && nextReviewDate && (
+            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <LockCountdown nextReviewDate={nextReviewDate} />
+              </span>
+              {subscriptionTier === 'free' ? (
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium hover:underline"
+                >
+                  <Crown className="h-3 w-3" />
+                  {t('practice.upgradeToPremium')}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowTimingWarning(true)}
+                  className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium hover:underline"
+                >
+                  <Crown className="h-3 w-3" />
+                  {t('practice.practiceAnyway')}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
 
       {/* Premium User Timing Warning Dialog */}
       <AlertDialog open={showTimingWarning} onOpenChange={setShowTimingWarning}>
