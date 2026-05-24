@@ -2414,9 +2414,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
     lastAutoAdvanceAtRef.current = Date.now();
-    // Long ignore window: drop any final-results that the recognition engine
-    // delivers from the previous phase's audio buffer.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 1200);
+    // Short ignore window: result-index filtering drops old buffered words,
+    // while keeping the next first word responsive if the user starts quickly.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 350);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
@@ -2440,7 +2440,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(1200);
+    pauseSpeechRecognition(350);
     resetForNextRep();
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
