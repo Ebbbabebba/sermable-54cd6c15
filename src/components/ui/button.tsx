@@ -5,21 +5,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold uppercase tracking-wide transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-apple-sm hover:shadow-apple-md",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-border bg-transparent hover:bg-accent/50 text-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent/50 text-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        gradient: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-apple-md hover:shadow-apple-glow",
-        success: "bg-success text-success-foreground hover:bg-success/90",
-        apple: "bg-primary text-primary-foreground font-semibold hover:bg-primary/90 shadow-apple-md hover:shadow-apple-lg",
-        "apple-secondary": "bg-secondary text-foreground font-medium hover:bg-secondary/80",
-        "apple-ghost": "text-primary font-medium hover:bg-primary/10",
+        default: "duo-btn bg-primary text-primary-foreground hover:brightness-105",
+        destructive: "duo-btn duo-btn-destructive bg-destructive text-destructive-foreground hover:brightness-105",
+        outline: "duo-btn duo-btn-outline border-2 border-border bg-card hover:bg-accent/50 text-foreground",
+        secondary: "duo-btn duo-btn-outline bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent/50 text-foreground normal-case font-medium tracking-normal",
+        link: "text-primary underline-offset-4 hover:underline normal-case font-medium tracking-normal",
+        gradient: "duo-btn bg-primary text-primary-foreground hover:brightness-105",
+        success: "duo-btn bg-success text-success-foreground hover:brightness-105",
+        info: "duo-btn duo-btn-info bg-[hsl(var(--info))] text-[hsl(var(--info-foreground))] hover:brightness-105",
+        warning: "duo-btn duo-btn-warning bg-warning text-warning-foreground hover:brightness-105",
+        purple: "duo-btn duo-btn-purple bg-[hsl(var(--duo-purple))] text-[hsl(var(--duo-purple-foreground))] hover:brightness-105",
+        apple: "duo-btn bg-primary text-primary-foreground hover:brightness-105",
+        "apple-secondary": "duo-btn duo-btn-outline bg-secondary text-foreground hover:bg-secondary/80 normal-case",
+        "apple-ghost": "text-primary hover:bg-primary/10 normal-case font-medium tracking-normal",
       },
       size: {
         default: "h-11 px-5 py-2.5",
