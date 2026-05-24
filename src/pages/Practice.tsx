@@ -2129,7 +2129,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </header>
 
       {/* Main content - centered and focused */}
-      <main className="flex-1 flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-8 pb-28">
+      <main className="flex-1 flex flex-col items-center justify-start sm:justify-center px-4 py-6 sm:py-8 pb-44">
         <div className="w-full max-w-md space-y-5 sm:space-y-8">
           
           {/* Mascot / Icon area */}
