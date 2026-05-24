@@ -17,9 +17,9 @@ body {
 
 @layer base {
   :root {
-    /* Dark Mode - Deep slate with teal tints */
-    --background: 220 20% 4%;
-    --foreground: 210 40% 96%;
+    /* Main brand background — Sermable teal #17C7D9 */
+    --background: 187 81% 47%;
+    --foreground: 0 0% 100%;
 
     /* Elevated surfaces - subtle teal undertone */
     --card: 215 25% 9%;
@@ -99,9 +99,9 @@ body {
   }
 
   .light {
-    /* Light Mode - Warm cream with teal accents */
-    --background: 180 15% 97%;
-    --foreground: 220 25% 12%;
+    /* Light Mode — Sermable teal background #17C7D9 */
+    --background: 187 81% 47%;
+    --foreground: 0 0% 100%;
 
     /* Pure white cards with subtle warmth */
     --card: 0 0% 100%;
