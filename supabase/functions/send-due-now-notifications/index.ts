@@ -71,10 +71,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Pull beats that JUST became due (within last 20 min) and haven't been
-    // notified yet for this cycle.
+    // Pull beats that JUST became due (within last 2 min) and haven't been
+    // notified yet for this cycle. Cron runs every minute → max delay ~60s.
     const nowIso = new Date().toISOString();
-    const windowStart = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+    const windowStart = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
     const { data: beats, error } = await supabase
       .from("practice_beats")
