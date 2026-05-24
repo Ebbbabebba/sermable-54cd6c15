@@ -671,6 +671,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // beat / phase) — same pause should fire again on the next pass.
   useEffect(() => {
     triggeredPausesRef.current = new Set();
+    postPauseNoHesitationIndicesRef.current = new Set();
     setActivePause(null);
     if (pauseTimerRef.current) {
       clearInterval(pauseTimerRef.current);
@@ -2362,6 +2363,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
     triggeredPausesRef.current = new Set();
+    postPauseNoHesitationIndicesRef.current = new Set();
     setActivePause(null);
     if (pauseTimerRef.current) {
       clearInterval(pauseTimerRef.current);
@@ -2403,6 +2405,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     spokenIndicesRef.current = new Set();
     hesitatedIndicesRef.current = new Set();
     missedIndicesRef.current = new Set();
+    postPauseNoHesitationIndicesRef.current = new Set();
     currentWordIndexRef.current = 0;
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
