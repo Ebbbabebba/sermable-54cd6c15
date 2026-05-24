@@ -385,6 +385,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     totalSeconds: number;
   } | null>(null);
   const triggeredPausesRef = useRef<Set<number>>(new Set());
+  const postPauseNoHesitationIndicesRef = useRef<Set<number>>(new Set());
   const pauseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // Recording state
@@ -670,6 +671,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // beat / phase) — same pause should fire again on the next pass.
   useEffect(() => {
     triggeredPausesRef.current = new Set();
+    postPauseNoHesitationIndicesRef.current = new Set();
     setActivePause(null);
     if (pauseTimerRef.current) {
       clearInterval(pauseTimerRef.current);
@@ -725,6 +727,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const nextIdx = pauseIdx + 1;
       currentWordIndexRef.current = nextIdx;
       setCurrentWordIndex(nextIdx);
+      if (nextIdx < wordsLengthRef.current) {
+        postPauseNoHesitationIndicesRef.current.add(nextIdx);
+      }
       // Give the word after a planned pause a fresh grace period — otherwise
       // the hesitation timer would see "elapsed since last word" = pause
       // duration (e.g. 3s) and immediately mark the next hidden word yellow.
@@ -735,7 +740,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       transcriptRef.current = "";
       transcriptWordsRef.current = [];
       runningTranscriptRef.current = "";
-      ignoreResultsUntilRef.current = Date.now() + 400;
+      ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+      ignoreResultsUntilRef.current = Date.now() + 80;
+      recognitionRestartAtRef.current = Math.min(recognitionRestartAtRef.current, Date.now() + 80);
       if (nextIdx >= wordsLengthRef.current) {
         checkCompletion(nextSpoken);
       }
@@ -749,7 +756,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     const totalSeconds = Math.round(dur / 1000);
     setActivePause({ remainingSeconds: totalSeconds, totalSeconds });
-    pauseSpeechRecognition(dur + 250);
+    pauseSpeechRecognition(dur);
     if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
     const startedAt = Date.now();
     pauseTimerRef.current = setInterval(() => {
@@ -1723,6 +1730,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newSpoken.add(j);
       }
       newSpoken.add(foundIdx);
+      postPauseNoHesitationIndicesRef.current.delete(foundIdx);
       
       // IMPORTANT: If this exact word was previously marked as missed (red), remove it
       // This prevents the flash of red when speech recognition initially mishears
@@ -2356,6 +2364,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
     triggeredPausesRef.current = new Set();
+    postPauseNoHesitationIndicesRef.current = new Set();
     setActivePause(null);
     if (pauseTimerRef.current) {
       clearInterval(pauseTimerRef.current);
@@ -2397,6 +2406,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     spokenIndicesRef.current = new Set();
     hesitatedIndicesRef.current = new Set();
     missedIndicesRef.current = new Set();
+    postPauseNoHesitationIndicesRef.current = new Set();
     currentWordIndexRef.current = 0;
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
@@ -2404,9 +2414,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
     lastAutoAdvanceAtRef.current = Date.now();
-    // Long ignore window: drop any final-results that the recognition engine
-    // delivers from the previous phase's audio buffer.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 1200);
+    // Short ignore window: result-index filtering drops old buffered words,
+    // while keeping the next first word responsive if the user starts quickly.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 350);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
@@ -2430,7 +2440,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(1200);
+    pauseSpeechRecognition(350);
     resetForNextRep();
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
@@ -2747,6 +2757,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const startRecording = async () => {
     if (recognitionRef.current) return;
 
+    latestSpeechResultCountRef.current = 0;
+    ignoreResultsBeforeIndexRef.current = 0;
     resetForNextRep();
 
     const isNative = Capacitor.isNativePlatform();
@@ -2958,6 +2970,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const idx = currentWordIndexRef.current;
         if (hasHeardSpeechRef.current && elapsed > 1500 && idx < wordsLengthRef.current) {
           if (hiddenWordIndicesRef.current.has(idx)) {
+            if (postPauseNoHesitationIndicesRef.current.has(idx)) {
+              return;
+            }
             if (!hesitatedIndicesRef.current.has(idx)) {
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
               hesitatedIndicesRef.current = newHesitated;
