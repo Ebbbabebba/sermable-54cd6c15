@@ -324,11 +324,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Calculate words to hide per successful repetition based on familiarity
   const wordsToHidePerSuccess = familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1;
-  // Only 1 read-through required before fading begins
-  // Sentence 1 = 1 rep (quick onboarding). Sentence 2+ and combined/beat
-  // phases = 2 reps so a single stray speech callback can't auto-complete
-  // the read-through and trip fading before the user has actually spoken.
-  const requiredLearningReps = phase === 'sentence_1_learning' ? 1 : 2;
+  // requiredLearningReps is computed after `phase` is declared (see below).
   
   // Session mode tracking
   const [sessionMode, setSessionMode] = useState<SessionMode>('recall');
