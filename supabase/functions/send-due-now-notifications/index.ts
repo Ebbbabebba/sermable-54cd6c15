@@ -1,5 +1,5 @@
 // Sends an instant push the moment a beat's FSRS rest interval expires.
-// Runs every 15 min via pg_cron. Idempotent: each beat is pinged at most once
+// Runs every minute via pg_cron. Idempotent: each beat is pinged at most once
 // per `next_scheduled_recall_at` cycle via `last_due_notification_at`.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
@@ -71,10 +71,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Pull beats that JUST became due (within last 20 min) and haven't been
-    // notified yet for this cycle.
+    // Pull beats that JUST became due (within last 2 min) and haven't been
+    // notified yet for this cycle. Cron runs every minute → max delay ~60s.
     const nowIso = new Date().toISOString();
-    const windowStart = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+    const windowStart = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
     const { data: beats, error } = await supabase
       .from("practice_beats")
