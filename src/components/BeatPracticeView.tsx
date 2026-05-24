@@ -426,6 +426,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // completing the new phase before the user has spoken a word.
   const phaseEpochRef = useRef(0);
 
+  // Set true on every phase transition. Cleared the first time we hear real
+  // new speech in this phase. While true, learning-phase auto-completion is
+  // blocked so a stale buffered transcript from the previous sentence cannot
+  // mark all words spoken and skip the whole sentence.
+  const needsFreshSpeechRef = useRef(false);
+
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
 
