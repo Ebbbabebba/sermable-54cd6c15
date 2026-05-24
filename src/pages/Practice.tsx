@@ -2328,31 +2328,35 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </Button>
           )}
 
-          {/* Compact secondary row: countdown + practice anyway / upgrade */}
+          {/* Secondary CTA: strong button for practice anyway / upgrade, with countdown caption */}
           {isLocked && nextReviewDate && (
-            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
+            <>
+              {subscriptionTier === 'free' ? (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate('/settings')}
+                  className="w-full h-12 rounded-2xl font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  {t('practice.upgradeToPremium')}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setShowTimingWarning(true)}
+                  className="w-full h-12 rounded-2xl font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  {t('practice.practiceAnyway')}
+                </Button>
+              )}
+              <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground pt-0.5">
                 <Clock className="h-3 w-3" />
                 <LockCountdown nextReviewDate={nextReviewDate} />
-              </span>
-              {subscriptionTier === 'free' ? (
-                <button
-                  onClick={() => navigate('/settings')}
-                  className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium hover:underline"
-                >
-                  <Crown className="h-3 w-3" />
-                  {t('practice.upgradeToPremium')}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowTimingWarning(true)}
-                  className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium hover:underline"
-                >
-                  <Crown className="h-3 w-3" />
-                  {t('practice.practiceAnyway')}
-                </button>
-              )}
-            </div>
+              </p>
+            </>
           )}
         </div>
       </div>
