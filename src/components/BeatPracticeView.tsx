@@ -417,6 +417,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
 
+  // Bumped on every phase transition. Any in-flight speech callback captures
+  // the epoch at call time and bails if it changed — this prevents a buffered
+  // sentence-1 transcript from sneaking into sentence-2 and falsely auto-
+  // completing the new phase before the user has spoken a word.
+  const phaseEpochRef = useRef(0);
+
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
 
