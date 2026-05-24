@@ -17,82 +17,85 @@ body {
 
 @layer base {
   :root {
-    /* Dark Mode - Deep slate with teal tints */
+    /* Dark Mode - Deep slate with Duolingo accents */
     --background: 220 20% 4%;
     --foreground: 210 40% 96%;
 
-    /* Elevated surfaces - subtle teal undertone */
     --card: 215 25% 9%;
     --card-foreground: 210 40% 96%;
 
     --popover: 215 25% 11%;
     --popover-foreground: 210 40% 96%;
 
-    /* Sermable Teal - distinctive primary */
-    --primary: 186 72% 46%;
-    --primary-foreground: 220 20% 4%;
+    /* Duolingo Green — primary CTA */
+    --primary: 88 96% 40%;            /* #58CC02 */
+    --primary-foreground: 0 0% 100%;
+    --primary-shadow: 88 96% 28%;     /* darker green for 3D bottom edge */
 
-    /* Indigo accent for depth */
     --secondary: 220 25% 14%;
     --secondary-foreground: 210 40% 96%;
 
-    /* Muted with slight warmth */
     --muted: 215 20% 16%;
     --muted-foreground: 215 20% 55%;
 
-    /* Accent - teal tinted */
-    --accent: 186 30% 18%;
+    --accent: 88 60% 18%;
     --accent-foreground: 210 40% 96%;
 
-    /* Success - vibrant emerald */
-    --success: 160 65% 45%;
-    --success-foreground: 220 20% 4%;
+    /* Duolingo system colors */
+    --success: 88 96% 40%;            /* same green */
+    --success-foreground: 0 0% 100%;
+    --success-shadow: 88 96% 28%;
 
-    /* Warning - warm amber */
-    --warning: 38 92% 55%;
-    --warning-foreground: 220 20% 4%;
+    --warning: 36 100% 50%;           /* #FF9600 */
+    --warning-foreground: 0 0% 100%;
+    --warning-shadow: 36 100% 38%;
 
-    /* Error - coral red */
-    --destructive: 0 72% 55%;
+    --destructive: 0 100% 64%;        /* #FF4B4B */
     --destructive-foreground: 0 0% 100%;
+    --destructive-shadow: 0 80% 48%;
 
-    /* Borders - subtle with teal hint */
+    --info: 199 92% 54%;              /* #1CB0F6 Duo blue */
+    --info-foreground: 0 0% 100%;
+    --info-shadow: 199 92% 40%;
+
+    --duo-purple: 274 100% 75%;       /* #CE82FF */
+    --duo-purple-foreground: 0 0% 100%;
+    --duo-purple-shadow: 274 60% 55%;
+
+    --duo-yellow: 49 100% 56%;        /* #FFC800 */
+    --duo-yellow-foreground: 220 25% 12%;
+
     --border: 215 20% 18%;
     --input: 215 25% 14%;
-    --ring: 186 72% 46%;
+    --ring: 88 96% 40%;
 
-    /* Radius - softer curves */
     --radius: 1rem;
 
-    /* Extended palette */
-    --success-green: 160 65% 45%;
+    /* Brand teal kept as accent for legacy components */
     --sermable-teal: 186 72% 46%;
     --sermable-indigo: 235 65% 60%;
     --sermable-cyan: 192 85% 55%;
     --sermable-mint: 168 60% 50%;
     --word-bg: 215 25% 14%;
     --word-text: 210 40% 96%;
+    --success-green: 88 96% 40%;
 
-    /* Sermable gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(186 72% 46%) 0%, hsl(192 85% 40%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(186 72% 46%) 0%, hsl(235 65% 55%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(160 65% 45%) 0%, hsl(168 60% 40%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(186 72% 46%) 0%, hsl(192 85% 50%) 40%, hsl(235 65% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(88 96% 40%) 0%, hsl(88 96% 32%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(274 100% 75%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(88 96% 40%) 0%, hsl(160 65% 40%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(88 96% 40%) 0%, hsl(199 92% 54%) 50%, hsl(274 100% 75%) 100%);
     --gradient-space: radial-gradient(ellipse at top, hsl(220 25% 10%), hsl(220 20% 4%));
-    
-    /* Background glow effect */
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(186 72% 46% / 0.08), transparent);
-    
-    /* Shadows for dark mode */
+
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(88 96% 40% / 0.08), transparent);
+
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px hsl(186 72% 46% / 0.3);
-    --shadow-teal: 0 0 30px hsl(186 72% 46% / 0.2);
+    --shadow-glow: 0 0 20px hsl(88 96% 40% / 0.3);
+    --shadow-teal: 0 0 30px hsl(88 96% 40% / 0.2);
 
-    /* Smooth transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
