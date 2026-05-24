@@ -2757,6 +2757,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const startRecording = async () => {
     if (recognitionRef.current) return;
 
+    latestSpeechResultCountRef.current = 0;
+    ignoreResultsBeforeIndexRef.current = 0;
     resetForNextRep();
 
     const isNative = Capacitor.isNativePlatform();
