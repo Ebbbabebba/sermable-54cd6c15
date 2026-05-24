@@ -92,7 +92,15 @@ const Auth = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: t('common.error'), description: error.message });
+      const msg: string = error?.message || '';
+      const isInvalidCreds =
+        /invalid login credentials/i.test(msg) ||
+        /invalid email or password/i.test(msg) ||
+        error?.status === 400;
+      const description = isLogin && isInvalidCreds
+        ? t('auth.invalidCredentials')
+        : msg;
+      toast({ variant: "destructive", title: t('common.error'), description });
     } finally {
       setLoading(false);
     }
