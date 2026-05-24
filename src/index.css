@@ -102,67 +102,71 @@ body {
   }
 
   .light {
-    /* Light Mode - Warm cream with teal accents */
+    /* Light Mode - Warm cream with Duolingo accents */
     --background: 180 15% 97%;
     --foreground: 220 25% 12%;
 
-    /* Pure white cards with subtle warmth */
     --card: 0 0% 100%;
     --card-foreground: 220 25% 12%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 12%;
 
-    /* Sermable Teal - slightly deeper for light mode contrast */
-    --primary: 186 72% 38%;
+    /* Duolingo Green */
+    --primary: 88 96% 40%;
     --primary-foreground: 0 0% 100%;
+    --primary-shadow: 88 96% 28%;
 
-    /* Light cream secondary */
     --secondary: 180 15% 95%;
     --secondary-foreground: 220 25% 12%;
 
-    /* Muted with warmth */
     --muted: 180 12% 94%;
     --muted-foreground: 220 15% 45%;
 
-    /* Subtle teal accent */
-    --accent: 186 40% 92%;
+    --accent: 88 60% 92%;
     --accent-foreground: 220 25% 12%;
 
-    /* Success - emerald */
-    --success: 160 65% 40%;
+    --success: 88 96% 40%;
     --success-foreground: 0 0% 100%;
+    --success-shadow: 88 96% 28%;
 
-    /* Warning - amber */
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 25% 12%;
+    --warning: 36 100% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-shadow: 36 100% 38%;
 
-    /* Error - coral */
-    --destructive: 0 72% 50%;
+    --destructive: 0 100% 64%;
     --destructive-foreground: 0 0% 100%;
+    --destructive-shadow: 0 80% 48%;
 
-    /* Borders - soft gray-teal */
+    --info: 199 92% 54%;
+    --info-foreground: 0 0% 100%;
+    --info-shadow: 199 92% 40%;
+
+    --duo-purple: 274 100% 75%;
+    --duo-purple-foreground: 0 0% 100%;
+    --duo-purple-shadow: 274 60% 55%;
+
+    --duo-yellow: 49 100% 56%;
+    --duo-yellow-foreground: 220 25% 12%;
+
     --border: 180 12% 88%;
     --input: 180 12% 88%;
-    --ring: 186 72% 38%;
+    --ring: 88 96% 40%;
 
-    /* Light mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(186 72% 38%) 0%, hsl(192 85% 35%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(186 72% 38%) 0%, hsl(235 65% 50%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(160 65% 40%) 0%, hsl(168 60% 35%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(186 72% 38%) 0%, hsl(192 85% 45%) 40%, hsl(235 65% 50%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(88 96% 40%) 0%, hsl(88 96% 32%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(274 100% 75%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(88 96% 40%) 0%, hsl(160 65% 40%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(88 96% 40%) 0%, hsl(199 92% 54%) 50%, hsl(274 100% 75%) 100%);
 
-    /* Background glow for light mode */
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(186 72% 46% / 0.06), transparent);
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(88 96% 40% / 0.06), transparent);
 
-    /* Shadows - subtle and elegant */
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-    --shadow-glow: 0 0 20px hsl(186 72% 46% / 0.12);
-    --shadow-teal: 0 0 30px hsl(186 72% 46% / 0.08);
+    --shadow-glow: 0 0 20px hsl(88 96% 40% / 0.18);
+    --shadow-teal: 0 0 30px hsl(88 96% 40% / 0.12);
   }
 }
 
