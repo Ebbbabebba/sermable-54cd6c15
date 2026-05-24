@@ -426,6 +426,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // completing the new phase before the user has spoken a word.
   const phaseEpochRef = useRef(0);
 
+  // Set true on every phase transition. Cleared the first time we hear real
+  // new speech in this phase. While true, learning-phase auto-completion is
+  // blocked so a stale buffered transcript from the previous sentence cannot
+  // mark all words spoken and skip the whole sentence.
+  const needsFreshSpeechRef = useRef(false);
+
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
 
@@ -1522,6 +1528,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // hesitation timer mark hidden words yellow while the microphone is hearing them.
     hasHeardSpeechRef.current = true;
     lastWordTimeRef.current = Date.now();
+    // Clear the fresh-speech gate only when this transcript is genuinely new
+    // for this phase — i.e. has more words than what we've already processed.
+    // This prevents replays of the previous sentence's tail from satisfying it.
+    if (rawWords.length > transcriptWordsRef.current.length) {
+      needsFreshSpeechRef.current = false;
+    }
 
     // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
     // "empezar de nuevo" / "ricomincia" / "começar de novo". Detect on the LAST few raw tokens
@@ -1793,6 +1805,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (phase.includes('learning')) {
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
+
+      // Hard gate: in a learning phase we must have heard genuinely new speech
+      // since the last phase transition. This blocks stale buffered transcripts
+      // from auto-completing (and skipping) a sentence the user hasn't said yet.
+      if (needsFreshSpeechRef.current) {
+        console.log('🛑 Completion blocked — no fresh speech since phase transition');
+        return;
+      }
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
@@ -2380,6 +2400,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
+    needsFreshSpeechRef.current = true;
 
     // Skip all currently buffered speech-results indices. Without this, the
     // recognizer's `event.results` array (which we deliberately never abort
