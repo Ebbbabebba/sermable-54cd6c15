@@ -1510,8 +1510,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   // Process transcription - cursor-based
-  const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number) => {
+  const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number, phaseEpoch?: number) => {
     if (repId !== repetitionIdRef.current) return;
+    if (phaseEpoch !== undefined && phaseEpoch !== phaseEpochRef.current) return;
     
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
