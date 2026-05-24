@@ -1,5 +1,5 @@
 // Sends an instant push the moment a beat's FSRS rest interval expires.
-// Runs every 15 min via pg_cron. Idempotent: each beat is pinged at most once
+// Runs every minute via pg_cron. Idempotent: each beat is pinged at most once
 // per `next_scheduled_recall_at` cycle via `last_due_notification_at`.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
