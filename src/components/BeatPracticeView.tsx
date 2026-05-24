@@ -1730,6 +1730,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newSpoken.add(j);
       }
       newSpoken.add(foundIdx);
+      postPauseNoHesitationIndicesRef.current.delete(foundIdx);
       
       // IMPORTANT: If this exact word was previously marked as missed (red), remove it
       // This prevents the flash of red when speech recognition initially mishears
@@ -2967,6 +2968,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const idx = currentWordIndexRef.current;
         if (hasHeardSpeechRef.current && elapsed > 1500 && idx < wordsLengthRef.current) {
           if (hiddenWordIndicesRef.current.has(idx)) {
+            if (postPauseNoHesitationIndicesRef.current.has(idx)) {
+              return;
+            }
             if (!hesitatedIndicesRef.current.has(idx)) {
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
               hesitatedIndicesRef.current = newHesitated;
