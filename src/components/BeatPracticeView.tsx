@@ -2377,6 +2377,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // delivers from the previous phase's audio buffer.
     ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 1200);
 
+    // Bump phase epoch so any in-flight processTranscription / hesitation
+    // callback that was captured with the previous phase exits early.
+    phaseEpochRef.current += 1;
+
+    // Skip all currently buffered speech-results indices. Without this, the
+    // recognizer's `event.results` array (which we deliberately never abort
+    // to avoid the iOS mic chime) would replay sentence-1 finals into the
+    // running transcript on the very next onresult tick, falsely matching
+    // common stop-words in sentence 2 and auto-completing the read-through.
+    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+
     setPhase(newPhase);
     setRepetitionCount(1);
     repetitionCountRef.current = 1;
