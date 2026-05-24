@@ -56,6 +56,7 @@
     "haveAccount": "¿Ya tienes cuenta? Inicia sesión",
     "loading": "Un momento...",
     "signInError": "Error al iniciar sesión",
+    "invalidCredentials": "Correo o contraseña incorrectos",
     "signUpError": "Error al registrarse",
     "passwordMismatch": "Las contraseñas no coinciden",
     "welcomeBackToast": "¡Hola de nuevo!",

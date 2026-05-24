@@ -56,6 +56,7 @@
     "haveAccount": "Bereits ein Konto? Anmelden",
     "loading": "Einen Moment...",
     "signInError": "Anmeldung fehlgeschlagen",
+    "invalidCredentials": "Falsche E-Mail oder Passwort",
     "signUpError": "Registrierung fehlgeschlagen",
     "passwordMismatch": "Die Passwörter stimmen nicht überein",
     "welcomeBackToast": "Willkommen zurück!",

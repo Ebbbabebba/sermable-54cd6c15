@@ -56,6 +56,7 @@
     "haveAccount": "Hai già un account? Accedi",
     "loading": "Un attimo...",
     "signInError": "Errore di accesso",
+    "invalidCredentials": "Email o password errati",
     "signUpError": "Errore di registrazione",
     "passwordMismatch": "Le password non corrispondono",
     "welcomeBackToast": "Bentornato!",

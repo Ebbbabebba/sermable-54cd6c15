@@ -56,6 +56,7 @@
     "haveAccount": "Already have an account? Sign in",
     "loading": "Please wait",
     "signInError": "Error signing in",
+    "invalidCredentials": "Wrong email or password",
     "signUpError": "Error signing up",
     "passwordMismatch": "Passwords do not match",
     "welcomeBackToast": "Welcome back!",
