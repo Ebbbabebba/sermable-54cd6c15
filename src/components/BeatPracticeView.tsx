@@ -2346,6 +2346,27 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   const transitionToPhase = (newPhase: Phase) => {
+    // HARD synchronous reset of all refs FIRST so any in-flight speech
+    // recognition callback / hesitation tick that fires between this call and
+    // the next React render cannot operate on stale sentence-1 indices.
+    // Without this, a buffered transcript token from the previous sentence's
+    // fading round could leak into the new sentence and (a) advance the
+    // cursor past words and (b) re-trigger hidden-word side effects.
+    hiddenWordIndicesRef.current = new Set();
+    spokenIndicesRef.current = new Set();
+    hesitatedIndicesRef.current = new Set();
+    missedIndicesRef.current = new Set();
+    currentWordIndexRef.current = 0;
+    transcriptRef.current = "";
+    transcriptWordsRef.current = [];
+    runningTranscriptRef.current = "";
+    hasHeardSpeechRef.current = false;
+    lastWordTimeRef.current = Date.now();
+    lastAutoAdvanceAtRef.current = Date.now();
+    // Long ignore window: drop any final-results that the recognition engine
+    // delivers from the previous phase's audio buffer.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 1200);
+
     setPhase(newPhase);
     setRepetitionCount(1);
     repetitionCountRef.current = 1;
@@ -2356,7 +2377,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(900);
+    pauseSpeechRecognition(1200);
     resetForNextRep();
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
