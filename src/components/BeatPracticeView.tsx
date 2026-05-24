@@ -2847,6 +2847,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           );
 
           const currentRepId = repetitionIdRef.current;
+          const currentPhaseEpoch = phaseEpochRef.current;
           let interim = "";
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -2861,7 +2862,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const lastIsFinal = event.results.length
             ? event.results[event.results.length - 1].isFinal
             : false;
-          processTranscriptionRef.current(combined, lastIsFinal, currentRepId);
+          processTranscriptionRef.current(combined, lastIsFinal, currentRepId, currentPhaseEpoch);
         };
 
         recognition.onerror = (event: any) => {
