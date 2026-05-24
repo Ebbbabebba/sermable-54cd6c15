@@ -760,7 +760,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     const replayStart = Math.max(0, rawWords.length - tailWordCount);
     transcriptWordsRef.current = rawWords.slice(0, replayStart);
-    processTranscriptionRef.current(transcript, false, repetitionIdRef.current);
+    processTranscriptionRef.current(transcript, false, repetitionIdRef.current, phaseEpochRef.current);
   };
 
   // Restart the current rep from the beginning (voice command "börja om" or swipe-down).
