@@ -2766,7 +2766,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               processTranscriptionRef.current(
                 combined,
                 false,
-                repetitionIdRef.current
+                repetitionIdRef.current,
+                phaseEpochRef.current
               );
             }
           );
