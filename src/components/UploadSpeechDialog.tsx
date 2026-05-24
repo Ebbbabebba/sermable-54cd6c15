@@ -775,36 +775,20 @@ const UploadSpeechDialog = ({
         <AnimatePresence>
           <motion.div
             key="upload-overlay"
-            className="fixed inset-0 z-50 bg-background/70 backdrop-blur-xl"
+            className="fixed inset-0 z-50 bg-background/70 backdrop-blur-xl flex flex-col"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) onOpenChange(false);
-            }}
+            style={{ height: "100dvh" }}
           >
-            {/* Close */}
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="absolute z-20 w-10 h-10 rounded-full bg-card/70 hover:bg-card border border-border/50 flex items-center justify-center backdrop-blur-md transition"
-              style={{
-                top: "calc(env(safe-area-inset-top, 0px) + 1rem)",
-                right: "calc(env(safe-area-inset-right, 0px) + 1rem)",
-              }}
-              aria-label="Close"
+            {/* Top bar: progress + close */}
+            <div
+              className="flex-shrink-0 flex items-center gap-3 px-4 pb-3"
+              style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
             >
-              <X className="h-4 w-4" />
-            </button>
-
-            {/* Progress */}
-            {step !== "submitting" && (
-              <div
-                className="absolute left-1/2 -translate-x-1/2 w-[min(360px,60vw)] z-10"
-                style={{ top: "calc(env(safe-area-inset-top, 0px) + 1.4rem)" }}
-              >
-                <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+              {step !== "submitting" ? (
+                <div className="flex-1 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                   <motion.div
                     className="h-full bg-primary"
                     initial={false}
@@ -812,19 +796,30 @@ const UploadSpeechDialog = ({
                     transition={{ duration: 0.4, ease: "easeOut" }}
                   />
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex-1" />
+              )}
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="flex-shrink-0 w-9 h-9 rounded-full bg-card/70 hover:bg-card border border-border/50 flex items-center justify-center backdrop-blur-md transition"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
             {/* Card scroll area */}
             <div
-              className="absolute inset-0 overflow-y-auto"
-              style={{
-                paddingTop: "calc(env(safe-area-inset-top, 0px) + 4.5rem)",
-                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)",
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) onOpenChange(false);
               }}
-              onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-full max-w-2xl mx-auto px-5">
+              <div
+                className="w-full max-w-2xl mx-auto px-4 sm:px-5 py-4"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={step}
@@ -832,7 +827,7 @@ const UploadSpeechDialog = ({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -12, scale: 0.98 }}
                     transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="rounded-3xl bg-card/95 border border-border/60 shadow-2xl backdrop-blur-md p-6 sm:p-10"
+                    className="rounded-3xl bg-card/95 border border-border/60 shadow-2xl backdrop-blur-md p-5 sm:p-10"
                   >
                     {renderStep()}
                   </motion.div>
@@ -842,15 +837,12 @@ const UploadSpeechDialog = ({
 
             {/* Footer nav */}
             {step !== "submitting" && (
-              <div
-                className="absolute bottom-0 left-0 right-0 z-10 border-t border-border/50 bg-background/80 backdrop-blur-xl"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="flex-shrink-0 border-t border-border/50 bg-background/80 backdrop-blur-xl">
                 <div
-                  className="max-w-2xl mx-auto flex items-center justify-between px-5 py-4"
+                  className="max-w-2xl mx-auto flex items-center justify-between gap-3 px-4 sm:px-5 pt-3"
                   style={{
                     paddingBottom:
-                      "calc(1rem + env(safe-area-inset-bottom, 0px))",
+                      "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
                   }}
                 >
                   <Button
