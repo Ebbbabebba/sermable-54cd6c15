@@ -2346,10 +2346,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
-    // Keep listening to the next interim result immediately after a rep reset.
-    // Skipping by event result index can ignore the first new utterance in Chrome,
-    // which feels like the app waits before coloring words.
-    ignoreResultsBeforeIndexRef.current = 0;
+    // NOTE: do NOT reset `ignoreResultsBeforeIndexRef` here. Between reps the
+    // `repetitionIdRef` gate is enough, and zeroing this would let stale items
+    // already buffered in `event.results` re-enter `runningTranscriptRef` on
+    // the next onresult tick. transitionToPhase bumps this ref explicitly.
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
     lastAutoAdvanceAtRef.current = 0;
