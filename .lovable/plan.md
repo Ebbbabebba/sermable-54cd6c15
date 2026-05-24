@@ -1,55 +1,28 @@
-# Fas 5 — Koppla in konsumenterna
+## What's happening
 
-Nu finns FSRS-motorn, `mastery_events`-loggen och `v_next_due`-vyn på plats. Det här steget gör att användaren faktiskt **märker** skillnaden.
+På `sentence_2_learning` syns ord redan "spoken" och meningen markeras som avklarad innan användaren hunnit prata. När jag spårar logiken hittar jag två konkreta orsaker:
 
-## 1. BeatPracticeView → använd FSRS
+1. **Resultatindex-gaten nollställs felaktigt vid fas-byte.** `resetForNextRep` sätter `ignoreResultsBeforeIndexRef.current = 0`. Speech-engine-objektet aborteras aldrig (medvetet, för att undvika iOS-mic-pinget), så `event.results`-arrayen innehåller fortfarande alla tidigare slutförda resultat från mening 1. När nästa `onresult` triggas itereras hela arrayen igen från index 0 och mening 1:s text spelas upp i `runningTranscriptRef`. Den texten råkar matcha tillräckligt många stoppord i mening 2 ("och", "att", "är", "som"…) → alla index markeras spoken → `checkCompletion` triggar.
 
-- Efter varje avslutad beat-session: anropa `schedule-next-review` edge-funktionen med `raw_accuracy`, `visibility_percent`, `hesitations`, `lapses`, `duration_seconds`.
-- Skriv en rad i `mastery_events` (event_type: `recall` eller `practice`).
-- Sluta skriva till gamla `schedules`-tabellen för denna beat (lämna kvar för bakåtkompatibilitet, men den är inte längre källa).
-- FSRS-funktionen uppdaterar `practice_beats.fsrs_*` och `next_scheduled_recall_at` automatiskt.
+2. **`requiredLearningReps = 1` ger noll marginal.** Så fort `checkCompletion` säger "alla spoken" går vi direkt till `sentence_2_fading` på nästa rep, och `handleFadingCompletion` döljer 3 ord. Det är de gömda orden användaren ser. En enda läcka räcker för att lägga vyn i fading.
 
-## 2. Dashboard → läs från `v_next_due`
+## Fix
 
-- Byt ut dagens "vad ska jag öva på?"-logik mot `get_top_due_beats` RPC.
-- Visa beats sorterade efter `priority_score` (deadline-pressure × (1−mastery) × overdueness).
-- "Nästa övning"-kortet visar översta beaten oavsett vilket tal den tillhör.
+**`src/components/BeatPracticeView.tsx`**
 
-## 3. ReviewNotifications & LockCountdown
+1. I `transitionToPhase` (efter den synkrona ref-resetten): bumpa `ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current` så att alla gamla resultat-index från mening 1 hoppas över av `onresult`-loopen. Detta är säkerhetsbältet mot återinspelning av stale `event.results`.
 
-- `ReviewNotifications.tsx` läser nästa due-tid från `v_next_due` istället för `schedules.next_review_date`.
-- `LockCountdown.tsx` använder samma källa → låsen släpper exakt när FSRS säger "due".
+2. Lägg till en `phaseEpochRef = useRef(0)` som incrementeras i `transitionToPhase`. Skicka in epoch i `processTranscription`-anropet från `recognition.onresult` (vid sidan av `repId`) och returnera tidigt om epoch inte matchar. Samma gate i `checkCompletion` (jämför mot epoch fångad vid call-entry). Detta säkerställer att ingen callback som var i flight under övergången kan röra mening 2.
 
-## 4. SpeechCard → mastery & nästa pass
+3. I `resetForNextRep`: ta bort raden `ignoreResultsBeforeIndexRef.current = 0`. Denna nolla bara behövs vid första start; mellan reps räcker `repetitionIdRef`-gaten. Att alltid nolla den är det som öppnar dörren för stale resultat.
 
-- Visa aggregerad FSRS-mastery (medel av `fsrs_stability` normaliserat) per tal.
-- Visa "Nästa övning om X" baserat på tidigast `next_scheduled_recall_at` bland talets beats.
+4. Höj `requiredLearningReps` från `1` → `2` ENBART vid övergång till andra meningen och framåt (sentence_2_learning, sentence_3_learning, sentences_1_2_learning, beat_learning). Mening 1 (allra första intrycket) behåller 1 rep så användaren snabbt kommer igång. Detta ger ett skyddsnät: även om en läcka skulle smita igenom punkterna ovan så krävs två kompletta genomläsningar innan fading kickar in — en stale-pseudo-rep ger då bara "1/2" och nästa riktiga läsning startar från noll.
 
-## 5. Desirable difficulty i praktiken
+## Verification
 
-- `useAdaptiveTempo`-skalningen är klar — anropa den med `masteryConfidence` från beatens `fsrs_stability/difficulty` i `BeatPracticeView`.
-- Lägg in "blank run" var 4:e session när beat är mastered (`fsrs_reps ≥ 3 && fsrs_stability > 7`): dölj alla ord en runda utan hjälp.
+Efter implementation: be användaren testa mening 2 igen. Förväntat:
+- När övergångs-animationen ("Now let's combine them") försvinner är hela mening 2 synlig, inga gråa ord.
+- Räknaren visar `Read aloud 1/2`. Inget händer förrän de börjar prata.
+- Efter två fullständiga genomläsningar går vi till `sentence_2_fading` och då (och först då) börjar ord döljas i grupper om 3.
 
-## Påverkade filer
-
-**Frontend**
-- `src/pages/Dashboard.tsx` — byt schedules-query mot `get_top_due_beats`
-- `src/components/practice/BeatPracticeView.tsx` — anropa `schedule-next-review`, logga event, läs `masteryConfidence`
-- `src/components/SpeechCard.tsx` — visa FSRS-mastery + nästa pass
-- `src/components/ReviewNotifications.tsx` — läs `v_next_due`
-- `src/components/practice/LockCountdown.tsx` — läs `v_next_due`
-- `src/hooks/useNextDueBeat.ts` (ny) — wrapper kring `get_top_due_beats`
-
-**Backend** — redan på plats, ingen migration behövs.
-
-## Vad användaren märker
-
-- Dashboarden visar **rätt** nästa övning, även när två tal har olika deadlines.
-- Låsen släpper när FSRS säger så (inte efter fasta intervall).
-- Hint-fördröjningen ökar gradvis när man blir bättre på en beat.
-- Morgon-/kvällsnotiser blandar beats från olika tal (interleaving).
-
-## Riskpunkter
-
-- Gamla `schedules`-rader finns kvar; några gamla queries kan dubbelläsa. Vi behåller dem men slutar skriva — efter 2 veckor kan vi droppa.
-- Första gången en användare öppnar appen efter uppdateringen saknas `fsrs_*`-värden → fallback till defaults (stability=1, difficulty=5).
+Inga ändringar i datamodell, edge functions eller andra vyer.

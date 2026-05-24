@@ -324,8 +324,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Calculate words to hide per successful repetition based on familiarity
   const wordsToHidePerSuccess = familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1;
-  // Only 1 read-through required before fading begins
-  const requiredLearningReps = 1;
+  // requiredLearningReps is computed after `phase` is declared (see below).
   
   // Session mode tracking
   const [sessionMode, setSessionMode] = useState<SessionMode>('recall');
@@ -360,6 +359,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
+  // Sentence 1 = 1 rep (quick onboarding). Sentence 2+ and combined/beat
+  // phases = 2 reps so a single stray speech callback can't auto-complete
+  // the read-through and trip fading before the user has actually spoken.
+  const requiredLearningReps = phase === 'sentence_1_learning' ? 1 : 2;
   const [repetitionCount, setRepetitionCount] = useState(1);
   const repetitionCountRef = useRef(1);
   
@@ -417,6 +420,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
 
+  // Bumped on every phase transition. Any in-flight speech callback captures
+  // the epoch at call time and bails if it changed — this prevents a buffered
+  // sentence-1 transcript from sneaking into sentence-2 and falsely auto-
+  // completing the new phase before the user has spoken a word.
+  const phaseEpochRef = useRef(0);
+
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
 
@@ -430,7 +439,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const wordsLengthRef = useRef(0);
   const showCelebrationRef = useRef(false);
   const processTranscriptionRef = useRef<
-    (transcript: string, isFinal: boolean, repId: number) => void
+    (transcript: string, isFinal: boolean, repId: number, phaseEpoch?: number) => void
   >(() => {});
 
   useEffect(() => {
@@ -751,7 +760,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     const replayStart = Math.max(0, rawWords.length - tailWordCount);
     transcriptWordsRef.current = rawWords.slice(0, replayStart);
-    processTranscriptionRef.current(transcript, false, repetitionIdRef.current);
+    processTranscriptionRef.current(transcript, false, repetitionIdRef.current, phaseEpochRef.current);
   };
 
   // Restart the current rep from the beginning (voice command "börja om" or swipe-down).
@@ -1501,8 +1510,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   // Process transcription - cursor-based
-  const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number) => {
+  const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number, phaseEpoch?: number) => {
     if (repId !== repetitionIdRef.current) return;
+    if (phaseEpoch !== undefined && phaseEpoch !== phaseEpochRef.current) return;
     
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
@@ -2336,10 +2346,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
-    // Keep listening to the next interim result immediately after a rep reset.
-    // Skipping by event result index can ignore the first new utterance in Chrome,
-    // which feels like the app waits before coloring words.
-    ignoreResultsBeforeIndexRef.current = 0;
+    // NOTE: do NOT reset `ignoreResultsBeforeIndexRef` here. Between reps the
+    // `repetitionIdRef` gate is enough, and zeroing this would let stale items
+    // already buffered in `event.results` re-enter `runningTranscriptRef` on
+    // the next onresult tick. transitionToPhase bumps this ref explicitly.
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
     lastAutoAdvanceAtRef.current = 0;
@@ -2366,6 +2376,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Long ignore window: drop any final-results that the recognition engine
     // delivers from the previous phase's audio buffer.
     ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 1200);
+
+    // Bump phase epoch so any in-flight processTranscription / hesitation
+    // callback that was captured with the previous phase exits early.
+    phaseEpochRef.current += 1;
+
+    // Skip all currently buffered speech-results indices. Without this, the
+    // recognizer's `event.results` array (which we deliberately never abort
+    // to avoid the iOS mic chime) would replay sentence-1 finals into the
+    // running transcript on the very next onresult tick, falsely matching
+    // common stop-words in sentence 2 and auto-completing the read-through.
+    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
 
     setPhase(newPhase);
     setRepetitionCount(1);
@@ -2756,7 +2777,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               processTranscriptionRef.current(
                 combined,
                 false,
-                repetitionIdRef.current
+                repetitionIdRef.current,
+                phaseEpochRef.current
               );
             }
           );
@@ -2836,6 +2858,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           );
 
           const currentRepId = repetitionIdRef.current;
+          const currentPhaseEpoch = phaseEpochRef.current;
           let interim = "";
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -2850,7 +2873,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const lastIsFinal = event.results.length
             ? event.results[event.results.length - 1].isFinal
             : false;
-          processTranscriptionRef.current(combined, lastIsFinal, currentRepId);
+          processTranscriptionRef.current(combined, lastIsFinal, currentRepId, currentPhaseEpoch);
         };
 
         recognition.onerror = (event: any) => {
