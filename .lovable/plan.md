@@ -1,29 +1,21 @@
-## Plan
-
-Jag fixar `BeatPracticeView.tsx` där sentence 2 fortfarande kan auto-kompletteras av gamla/stale speech-resultat.
+Sätt `#17C7D9` (HSL `187 81% 47%`) som app-bakgrund i båda temana via `src/index.css`.
 
 ### Ändringar
 
-1. **Gör completion epoch-säker**
-   - Låt `checkCompletion` ta emot den `phaseEpoch` som gällde när transkriberingen startade.
-   - Avbryt completion om fasen hunnit bytas eller om callbacken tillhör en gammal repetition.
-   - Uppdatera alla `checkCompletion(...)`-anrop som kommer från speech/pause/timeout/skip så de inte kan trigga fel fas.
+**`src/index.css` — `:root` (dark/default):**
+```
+--background: 187 81% 47%;
+--foreground: 0 0% 100%;
+```
 
-2. **Flytta spoken-state före completion**
-   - När `processTranscription` når slutet av sentence 2 uppdateras `spokenIndicesRef` och UI-state innan `checkCompletion` körs.
-   - Det tar bort race där completion körs på en lokal `Set` medan ref/UI fortfarande ligger i föregående state.
+**`src/index.css` — `.light`:**
+```
+--background: 187 81% 47%;
+--foreground: 0 0% 100%;
+```
 
-3. **Rensa Web Speech-buffer hårdare vid fasbyte**
-   - I `transitionToPhase`, efter `resetForNextRep`, nollställ `ignoreResultsBeforeIndexRef` till senast kända `event.results.length` igen.
-   - Detta behövs eftersom `resetForNextRep` höjer `repetitionId` men Web Speech kan ändå leverera gamla final/interim chunks i nästa tick.
+### Notering
 
-4. **Blockera första auto-completion i sentence 2 tills ny speech faktiskt hörts**
-   - Introducera en ref som kräver fresh speech efter varje fasbyte innan en learning-phase får räknas som komplett.
-   - Det betyder: sentence 2 kan inte gå från helt synlig till färdig bara av gamla transcript tokens.
+Stark turkos som hela appens bakgrund gör att vita kort/komponenter får mycket kontrast, men text direkt mot bakgrunden kommer behöva vit färg. Vi sätter därför `--foreground` till vit i båda lägena. Övriga tokens (cards, primary, etc.) lämnas orörda — `--card` är fortfarande vit/mörk så innehåll förblir läsbart.
 
-### Förväntat resultat
-
-- Vid sentence 2 startar alla ord synliga.
-- Den hoppar inte över hela meningen innan du pratar.
-- Efter första riktiga genomläsningen visar den `1/2`.
-- Först efter andra riktiga genomläsningen går den vidare till fading.
+Om du senare vill mjuka upp det (t.ex. ljus turkos `#E5F8FB` som bakgrund och `#17C7D9` som primary istället) säg till så byter vi.
