@@ -359,6 +359,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
+  // Sentence 1 = 1 rep (quick onboarding). Sentence 2+ and combined/beat
+  // phases = 2 reps so a single stray speech callback can't auto-complete
+  // the read-through and trip fading before the user has actually spoken.
+  const requiredLearningReps = phase === 'sentence_1_learning' ? 1 : 2;
   const [repetitionCount, setRepetitionCount] = useState(1);
   const repetitionCountRef = useRef(1);
   
