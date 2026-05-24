@@ -2400,6 +2400,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
+    needsFreshSpeechRef.current = true;
 
     // Skip all currently buffered speech-results indices. Without this, the
     // recognizer's `event.results` array (which we deliberately never abort
