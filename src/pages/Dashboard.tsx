@@ -22,6 +22,7 @@ import StreakCelebration from "@/components/StreakCelebration";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
 import SleepAwareScheduling from "@/components/SleepAwareScheduling";
 import { useTheme } from "@/contexts/ThemeContext";
+import { waitForStableSession } from "@/lib/authSession";
 
 interface Speech {
   id: string;
@@ -52,12 +53,17 @@ const Dashboard = () => {
   const { theme } = useTheme();
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = await waitForStableSession();
+      if (cancelled) return;
+
       if (!session) {
-        navigate("/auth");
+        navigate("/auth", { replace: true });
         return;
       }
+
       setUser(session.user);
       loadSpeeches();
       checkStreak();
@@ -70,11 +76,14 @@ const Dashboard = () => {
       // Only navigate away on explicit sign-out — transient null sessions
       // from token refreshes or network glitches should not kick the user out.
       if (event === "SIGNED_OUT") {
-        navigate("/auth");
+        navigate("/auth", { replace: true });
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const checkStreak = async () => {
