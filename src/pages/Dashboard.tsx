@@ -65,9 +65,11 @@ const Dashboard = () => {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      if (!session) {
+      // Only navigate away on explicit sign-out — transient null sessions
+      // from token refreshes or network glitches should not kick the user out.
+      if (event === "SIGNED_OUT") {
         navigate("/auth");
       }
     });
