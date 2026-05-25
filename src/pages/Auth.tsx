@@ -69,9 +69,9 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        const session = await waitForStableSession();
+        const session = data.session ?? await waitForStableSession();
         if (!session) throw new Error(t('auth.loading'));
         toast({ title: t('auth.welcomeBackToast'), description: t('auth.signInSuccess') });
         const pendingToken = sessionStorage.getItem('pending-share-token');
