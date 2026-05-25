@@ -138,8 +138,8 @@ export const AiSpeechBuilderDialog = ({
   return (
     <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogContent
-        overlayClassName="bg-background/70 backdrop-blur-xl"
-        className="left-1/2 top-1/2 inset-auto w-[calc(100%-2rem)] max-w-2xl max-h-[min(86dvh,720px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border-border/60 bg-card/95 p-5 shadow-2xl backdrop-blur-md sm:p-6"
+        overlayClassName="z-[60] bg-background/70 backdrop-blur-xl"
+        className="z-[70] left-1/2 top-1/2 inset-auto w-[calc(100%-2rem)] max-w-2xl max-h-[min(86dvh,720px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border-border/60 bg-card p-5 shadow-2xl sm:p-6"
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
