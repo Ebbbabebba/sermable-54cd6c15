@@ -390,6 +390,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
+  const [isSpeechReady, setIsSpeechReady] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   const { toast } = useToast();
@@ -417,6 +418,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // When we intentionally abort recognition (to flush stale results), don't restart until this time
   const recognitionRestartAtRef = useRef(0);
   const recognitionRestartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speechReadyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
