@@ -322,9 +322,9 @@ serve(async (req) => {
     });
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await authClient.auth.getUser(token);
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token);
 
-    if (claimsError || !claimsData?.user) {
+    if (claimsError || !claimsData?.claims) {
       console.error('Auth error:', claimsError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -332,7 +332,7 @@ serve(async (req) => {
       );
     }
 
-    const user = claimsData.user;
+    const user = { id: claimsData.claims.sub, email: claimsData.claims.email };
 
     // Create service role client for database operations
     const supabase = createClient(supabaseUrl, serviceRoleKey);
