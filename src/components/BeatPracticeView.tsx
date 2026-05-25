@@ -2822,6 +2822,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             (data: any) => {
               if (showCelebrationRef.current) return;
               if (Date.now() < ignoreResultsUntilRef.current) return;
+              setIsSpeechReady(true);
               const matches: string[] = data?.matches ?? [];
               const interim = matches[0] ?? "";
               const combined = (nativeFinalsRef.current + " " + interim).trim();
@@ -2872,7 +2873,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           lastWordTimeRef.current = Date.now();
 
           await startNativeSession();
-          speechReadyTimeoutRef.current = setTimeout(() => setIsSpeechReady(true), 450);
+          speechReadyTimeoutRef.current = setTimeout(() => {
+            if (isRecordingRef.current) setIsSpeechReady(true);
+          }, 450);
         } catch (nativeErr) {
           console.error("Native speech failed, falling back to Web Speech:", nativeErr);
           // Fall through to Web Speech below
@@ -2975,7 +2978,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         isRecordingRef.current = true;
         setIsRecording(true);
         recognition.onstart = () => {
-          speechReadyTimeoutRef.current = setTimeout(() => setIsSpeechReady(true), 250);
+          speechReadyTimeoutRef.current = setTimeout(() => {
+            if (isRecordingRef.current) setIsSpeechReady(true);
+          }, 250);
         };
         recognition.start();
         lastWordTimeRef.current = Date.now();
