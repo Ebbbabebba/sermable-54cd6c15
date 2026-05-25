@@ -237,7 +237,8 @@ const ScriptPracticeView = ({
           setPhase('results');
 
           // Save session to database
-          const { data: { user } } = await supabase.auth.getUser();
+          const { data: { session } } = await supabase.auth.getSession();
+          const user = session?.user;
           if (user) {
             await supabase.from('script_sessions').insert({
               speech_id: speechId,

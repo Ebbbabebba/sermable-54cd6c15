@@ -106,8 +106,9 @@ const UploadSpeechDialog = ({
     (async () => {
       try {
         const {
-          data: { user },
-        } = await supabase.auth.getUser();
+          data: { session },
+        } = await supabase.auth.getSession();
+        const user = session?.user;
         if (!user) return;
         const { data: profile } = await supabase
           .from("profiles")
@@ -306,8 +307,9 @@ const UploadSpeechDialog = ({
     setStep("submitting");
     try {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) throw new Error("Not authenticated");
       const detectedLanguage = detectTextLanguage(text) || "en";
 

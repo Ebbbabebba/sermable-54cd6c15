@@ -866,7 +866,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Source 1: user_learning_analytics.preferred_practice_hours (best-performing slots)
     // Source 2: profiles.practice_start_hour (user-set window start) as fallback
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (user) {
         const [analyticsRes, profileRes] = await Promise.all([
           supabase
