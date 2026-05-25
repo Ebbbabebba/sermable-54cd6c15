@@ -137,7 +137,10 @@ export const AiSpeechBuilderDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={closeAndReset}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        overlayClassName="bg-background/70 backdrop-blur-xl"
+        className="left-1/2 top-1/2 inset-auto w-[calc(100%-2rem)] max-w-2xl max-h-[min(86dvh,720px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border-border/60 bg-card/95 p-5 shadow-2xl backdrop-blur-md sm:p-6"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -228,8 +231,8 @@ export const AiSpeechBuilderDialog = ({
                 id="draft-speech"
                 value={draftSpeech}
                 onChange={(e) => setDraftSpeech(e.target.value)}
-                rows={14}
-                className="resize-none font-serif leading-relaxed"
+                rows={10}
+                className="max-h-[34dvh] resize-none overflow-y-auto font-serif leading-relaxed"
               />
               <p className="text-xs text-muted-foreground">
                 {draftSpeech.split(/\s+/).filter(Boolean).length}{" "}
