@@ -175,8 +175,29 @@ const UploadSpeechDialog = ({
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async (ev) =>
-      processImageDirectly(ev.target?.result as string);
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target?.result as string;
+      // Normalize to JPEG so Gemini reliably accepts the data URL (handles HEIC, PNG, webp, etc.)
+      try {
+        const img = new Image();
+        img.src = dataUrl;
+        await new Promise((res, rej) => {
+          img.onload = () => res(null);
+          img.onerror = rej;
+        });
+        const canvas = document.createElement("canvas");
+        const maxDim = 2000;
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("no ctx");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        await processImageDirectly(canvas.toDataURL("image/jpeg", 0.85));
+      } catch {
+        await processImageDirectly(dataUrl);
+      }
+    };
     reader.readAsDataURL(file);
   };
   const processImageDirectly = async (imageData: string) => {
