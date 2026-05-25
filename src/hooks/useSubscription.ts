@@ -9,9 +9,13 @@ export const useSubscription = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const loadSubscription = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
         if (!user) {
           setLoading(false);
           return;
@@ -26,6 +30,26 @@ export const useSubscription = () => {
         if (profile?.subscription_tier) {
           setTier(profile.subscription_tier);
         }
+
+        if (cancelled) return;
+
+        channel = supabase
+          .channel(`subscription-changes-${user.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'profiles',
+              filter: `id=eq.${user.id}`,
+            },
+            (payload) => {
+              if (payload.new?.subscription_tier) {
+                setTier(payload.new.subscription_tier as SubscriptionTier);
+              }
+            }
+          )
+          .subscribe();
       } catch (error) {
         console.error('Error loading subscription:', error);
       } finally {
@@ -35,25 +59,9 @@ export const useSubscription = () => {
 
     loadSubscription();
 
-    const channel = supabase
-      .channel('subscription-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-        },
-        (payload) => {
-          if (payload.new?.subscription_tier) {
-            setTier(payload.new.subscription_tier as SubscriptionTier);
-          }
-        }
-      )
-      .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
