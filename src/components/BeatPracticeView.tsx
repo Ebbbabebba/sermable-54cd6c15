@@ -2759,6 +2759,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const startRecording = async () => {
     if (recognitionRef.current) return;
 
+    setIsSpeechReady(false);
+    if (speechReadyTimeoutRef.current) {
+      clearTimeout(speechReadyTimeoutRef.current);
+      speechReadyTimeoutRef.current = null;
+    }
     latestSpeechResultCountRef.current = 0;
     ignoreResultsBeforeIndexRef.current = 0;
     resetForNextRep();
@@ -2832,6 +2837,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           listenerHandle = await NativeSpeech.addListener(
             "listeningState" as any,
             async (data: any) => {
+              if (data?.status === "started" || data?.status === "listening") {
+                setIsSpeechReady(true);
+              }
               if (data?.status === "stopped" && !stopped && isRecordingRef.current) {
                 // Promote whatever interim was last seen into finals so we keep history.
                 // The plugin doesn't expose it directly, so we keep the running buffer
@@ -2864,6 +2872,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           lastWordTimeRef.current = Date.now();
 
           await startNativeSession();
+          speechReadyTimeoutRef.current = setTimeout(() => setIsSpeechReady(true), 450);
         } catch (nativeErr) {
           console.error("Native speech failed, falling back to Web Speech:", nativeErr);
           // Fall through to Web Speech below
@@ -2897,6 +2906,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           if (showCelebrationRef.current) return;
           if (Date.now() < ignoreResultsUntilRef.current) return;
+          setIsSpeechReady(true);
 
           latestSpeechResultCountRef.current = Math.max(
             latestSpeechResultCountRef.current,
@@ -2924,6 +2934,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         recognition.onerror = (event: any) => {
           console.error("Speech recognition error:", event.error);
+          setIsSpeechReady(false);
           if (event.error === "not-allowed") {
             toast({
               variant: "destructive",
@@ -2934,6 +2945,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         };
 
         recognition.onend = () => {
+          setIsSpeechReady(false);
           if (!isRecordingRef.current) return;
           if (!recognitionRef.current) return;
 
@@ -2962,6 +2974,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recognitionRef.current = recognition;
         isRecordingRef.current = true;
         setIsRecording(true);
+        recognition.onstart = () => {
+          speechReadyTimeoutRef.current = setTimeout(() => setIsSpeechReady(true), 250);
+        };
         recognition.start();
         lastWordTimeRef.current = Date.now();
       }
