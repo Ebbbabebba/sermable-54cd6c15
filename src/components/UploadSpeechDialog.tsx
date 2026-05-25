@@ -841,8 +841,10 @@ const UploadSpeechDialog = ({
                     {renderStep()}
                   </motion.div>
                 </AnimatePresence>
+                </div>
               </div>
             </div>
+
 
             {/* Footer nav */}
             {step !== "submitting" && (
