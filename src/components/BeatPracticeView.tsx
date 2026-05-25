@@ -3062,11 +3062,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const stopListening = useCallback(() => {
     isRecordingRef.current = false;
     setIsRecording(false);
+    setIsSpeechReady(false);
 
     recognitionRestartAtRef.current = 0;
     if (recognitionRestartTimeoutRef.current) {
       clearTimeout(recognitionRestartTimeoutRef.current);
       recognitionRestartTimeoutRef.current = null;
+    }
+    if (speechReadyTimeoutRef.current) {
+      clearTimeout(speechReadyTimeoutRef.current);
+      speechReadyTimeoutRef.current = null;
     }
 
     if (recognitionRef.current) {
