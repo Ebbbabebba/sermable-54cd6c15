@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { waitForStableSession } from "@/lib/authSession";
 
 
 const Auth = () => {
@@ -70,13 +71,15 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        const session = await waitForStableSession();
+        if (!session) throw new Error(t('auth.loading'));
         toast({ title: t('auth.welcomeBackToast'), description: t('auth.signInSuccess') });
         const pendingToken = sessionStorage.getItem('pending-share-token');
         if (pendingToken) {
           sessionStorage.removeItem('pending-share-token');
-          navigate(`/share/${pendingToken}`);
+          navigate(`/share/${pendingToken}`, { replace: true });
         } else {
-          navigate("/dashboard");
+          navigate("/dashboard", { replace: true });
         }
       } else {
         const { error } = await supabase.auth.signUp({
@@ -88,8 +91,9 @@ const Auth = () => {
           },
         });
         if (error) throw error;
+        await waitForStableSession();
         toast({ title: t('auth.accountCreated'), description: t('auth.welcomeToSermable') });
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }
     } catch (error: any) {
       const msg: string = error?.message || '';
