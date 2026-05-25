@@ -811,7 +811,7 @@ const UploadSpeechDialog = ({
               </button>
             </div>
 
-            {/* Card scroll area */}
+            {/* Card scroll area — center the card vertically when it fits */}
             <div
               className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
               onClick={(e) => {
@@ -819,9 +819,16 @@ const UploadSpeechDialog = ({
               }}
             >
               <div
-                className="w-full max-w-2xl mx-auto px-4 sm:px-5 py-4"
-                onClick={(e) => e.stopPropagation()}
+                className="min-h-full w-full flex items-center justify-center px-4 sm:px-5 py-4"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) onOpenChange(false);
+                }}
               >
+                <div
+                  className="w-full max-w-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={step}
@@ -834,8 +841,10 @@ const UploadSpeechDialog = ({
                     {renderStep()}
                   </motion.div>
                 </AnimatePresence>
+                </div>
               </div>
             </div>
+
 
             {/* Footer nav */}
             {step !== "submitting" && (
