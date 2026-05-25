@@ -390,6 +390,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
+  const [isSpeechReady, setIsSpeechReady] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   const { toast } = useToast();
@@ -417,6 +418,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // When we intentionally abort recognition (to flush stale results), don't restart until this time
   const recognitionRestartAtRef = useRef(0);
   const recognitionRestartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speechReadyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
@@ -2757,9 +2759,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const startRecording = async () => {
     if (recognitionRef.current) return;
 
+    setIsSpeechReady(false);
+    if (speechReadyTimeoutRef.current) {
+      clearTimeout(speechReadyTimeoutRef.current);
+      speechReadyTimeoutRef.current = null;
+    }
     latestSpeechResultCountRef.current = 0;
     ignoreResultsBeforeIndexRef.current = 0;
     resetForNextRep();
+    // A fresh recording has no stale recognizer results yet. Keeping the normal
+    // transition debounce here can swallow the user's first word if they start
+    // speaking immediately after tapping the mic.
+    ignoreResultsUntilRef.current = 0;
 
     const isNative = Capacitor.isNativePlatform();
     const lang = getRecognitionLocale(speechLang);
@@ -2788,6 +2799,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // The native plugin returns the *current utterance* — we have to
           // accumulate finals ourselves to emulate Web Speech's continuous mode.
           const nativeFinalsRef = { current: "" };
+          let lastNativeInterim = "";
           let listenerHandle: any = null;
           let partialHandle: any = null;
           let stopped = false;
@@ -2815,8 +2827,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             (data: any) => {
               if (showCelebrationRef.current) return;
               if (Date.now() < ignoreResultsUntilRef.current) return;
+              setIsSpeechReady(true);
               const matches: string[] = data?.matches ?? [];
               const interim = matches[0] ?? "";
+              lastNativeInterim = interim;
               const combined = (nativeFinalsRef.current + " " + interim).trim();
               processTranscriptionRef.current(
                 combined,
@@ -2830,10 +2844,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           listenerHandle = await NativeSpeech.addListener(
             "listeningState" as any,
             async (data: any) => {
+              if (data?.status === "started" || data?.status === "listening") {
+                setIsSpeechReady(true);
+              }
               if (data?.status === "stopped" && !stopped && isRecordingRef.current) {
                 // Promote whatever interim was last seen into finals so we keep history.
-                // The plugin doesn't expose it directly, so we keep the running buffer
-                // accumulated by partialResults via processTranscription.
+                if (lastNativeInterim.trim()) {
+                  nativeFinalsRef.current = (nativeFinalsRef.current + " " + lastNativeInterim).trim();
+                  lastNativeInterim = "";
+                }
                 // Restart immediately to emulate continuous listening.
                 setTimeout(startNativeSession, 50);
               }
@@ -2862,6 +2881,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           lastWordTimeRef.current = Date.now();
 
           await startNativeSession();
+          if (isRecordingRef.current) setIsSpeechReady(true);
+          speechReadyTimeoutRef.current = setTimeout(() => {
+            if (isRecordingRef.current) setIsSpeechReady(true);
+          }, 450);
         } catch (nativeErr) {
           console.error("Native speech failed, falling back to Web Speech:", nativeErr);
           // Fall through to Web Speech below
@@ -2895,6 +2918,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           if (showCelebrationRef.current) return;
           if (Date.now() < ignoreResultsUntilRef.current) return;
+          setIsSpeechReady(true);
 
           latestSpeechResultCountRef.current = Math.max(
             latestSpeechResultCountRef.current,
@@ -2922,6 +2946,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         recognition.onerror = (event: any) => {
           console.error("Speech recognition error:", event.error);
+          setIsSpeechReady(false);
           if (event.error === "not-allowed") {
             toast({
               variant: "destructive",
@@ -2932,6 +2957,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         };
 
         recognition.onend = () => {
+          setIsSpeechReady(false);
           if (!isRecordingRef.current) return;
           if (!recognitionRef.current) return;
 
@@ -2960,6 +2986,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recognitionRef.current = recognition;
         isRecordingRef.current = true;
         setIsRecording(true);
+        recognition.onstart = () => {
+          speechReadyTimeoutRef.current = setTimeout(() => {
+            if (isRecordingRef.current) setIsSpeechReady(true);
+          }, 250);
+        };
         recognition.start();
         lastWordTimeRef.current = Date.now();
       }
@@ -3040,11 +3071,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const stopListening = useCallback(() => {
     isRecordingRef.current = false;
     setIsRecording(false);
+    setIsSpeechReady(false);
 
     recognitionRestartAtRef.current = 0;
     if (recognitionRestartTimeoutRef.current) {
       clearTimeout(recognitionRestartTimeoutRef.current);
       recognitionRestartTimeoutRef.current = null;
+    }
+    if (speechReadyTimeoutRef.current) {
+      clearTimeout(speechReadyTimeoutRef.current);
+      speechReadyTimeoutRef.current = null;
     }
 
     if (recognitionRef.current) {
@@ -3662,6 +3698,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }}
       >
         <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
+          {isRecording && !isSpeechReady && !showCelebration && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary ring-1 ring-primary/20">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                {t('beat_practice.listening_starting', 'Preparing microphone...')}
+              </span>
+            </motion.div>
+          )}
+          {isRecording && isSpeechReady && !showCelebration && (
+            <span className="sr-only" aria-live="polite">
+              {t('beat_practice.listening_ready', 'Listening')}
+            </span>
+          )}
           
           {/* Sentence dots (only in learn mode, show only unique sentences) */}
           {sessionMode === 'learn' && !phase.includes('beat') && (() => {
