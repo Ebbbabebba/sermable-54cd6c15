@@ -2767,6 +2767,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     latestSpeechResultCountRef.current = 0;
     ignoreResultsBeforeIndexRef.current = 0;
     resetForNextRep();
+    // A fresh recording has no stale recognizer results yet. Keeping the normal
+    // transition debounce here can swallow the user's first word if they start
+    // speaking immediately after tapping the mic.
+    ignoreResultsUntilRef.current = 0;
 
     const isNative = Capacitor.isNativePlatform();
     const lang = getRecognitionLocale(speechLang);
@@ -2795,6 +2799,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // The native plugin returns the *current utterance* — we have to
           // accumulate finals ourselves to emulate Web Speech's continuous mode.
           const nativeFinalsRef = { current: "" };
+          let lastNativeInterim = "";
           let listenerHandle: any = null;
           let partialHandle: any = null;
           let stopped = false;
@@ -2825,6 +2830,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setIsSpeechReady(true);
               const matches: string[] = data?.matches ?? [];
               const interim = matches[0] ?? "";
+              lastNativeInterim = interim;
               const combined = (nativeFinalsRef.current + " " + interim).trim();
               processTranscriptionRef.current(
                 combined,
@@ -2843,8 +2849,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               }
               if (data?.status === "stopped" && !stopped && isRecordingRef.current) {
                 // Promote whatever interim was last seen into finals so we keep history.
-                // The plugin doesn't expose it directly, so we keep the running buffer
-                // accumulated by partialResults via processTranscription.
+                if (lastNativeInterim.trim()) {
+                  nativeFinalsRef.current = (nativeFinalsRef.current + " " + lastNativeInterim).trim();
+                  lastNativeInterim = "";
+                }
                 // Restart immediately to emulate continuous listening.
                 setTimeout(startNativeSession, 50);
               }
@@ -2873,6 +2881,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           lastWordTimeRef.current = Date.now();
 
           await startNativeSession();
+          if (isRecordingRef.current) setIsSpeechReady(true);
           speechReadyTimeoutRef.current = setTimeout(() => {
             if (isRecordingRef.current) setIsSpeechReady(true);
           }, 450);
