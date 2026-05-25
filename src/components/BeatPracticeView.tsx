@@ -3689,6 +3689,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }}
       >
         <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
+          {isRecording && !isSpeechReady && !showCelebration && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary ring-1 ring-primary/20">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                {t('beat_practice.listening_starting', 'Preparing microphone...')}
+              </span>
+            </motion.div>
+          )}
+          {isRecording && isSpeechReady && !showCelebration && (
+            <span className="sr-only" aria-live="polite">
+              {t('beat_practice.listening_ready', 'Listening')}
+            </span>
+          )}
           
           {/* Sentence dots (only in learn mode, show only unique sentences) */}
           {sessionMode === 'learn' && !phase.includes('beat') && (() => {
