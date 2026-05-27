@@ -203,6 +203,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
         if (profile) {
           setSubscriptionTier(profile.subscription_tier);
+          try { localStorage.setItem('sermable.subscription_tier', profile.subscription_tier); } catch {}
           setSkillLevel((profile.skill_level || 'beginner') as 'beginner' | 'intermediate' | 'advanced');
         }
       } catch (error) {
