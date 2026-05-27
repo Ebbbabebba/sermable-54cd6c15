@@ -41,9 +41,12 @@ const FACTOR = Math.pow(0.9, 1 / DECAY) - 1;
 
 type Rating = 1 | 2 | 3 | 4; // 1=Again, 2=Hard, 3=Good, 4=Easy
 
-function ratingFromAccuracy(rawAcc: number, hesitations: number): Rating {
+function ratingFromAccuracy(rawAcc: number, _hesitations: number): Rating {
+  // NOTE: rawAcc already reflects hesitations via the client's failRatio
+  // (hesitated indices count as failures). Do NOT also branch on the
+  // hesitations argument here — that would double-penalise the rating.
   if (rawAcc < 50) return 1;            // Again
-  if (rawAcc < 70 || hesitations > 4) return 2; // Hard
+  if (rawAcc < 70) return 2;            // Hard
   if (rawAcc < 90) return 3;            // Good
   return 4;                              // Easy
 }

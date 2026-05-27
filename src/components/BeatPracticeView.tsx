@@ -362,7 +362,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Sentence 1 = 1 rep (quick onboarding). Sentence 2+ and combined/beat
   // phases = 2 reps so a single stray speech callback can't auto-complete
   // the read-through and trip fading before the user has actually spoken.
-  const requiredLearningReps = phase === 'sentence_1_learning' ? 1 : 2;
+  // Always require 2 read-throughs before fading begins (desirable difficulty —
+  // one pass is not enough to consider a sentence learned). Previously
+  // sentence_1 was special-cased to 1 rep, which let fading start prematurely
+  // and was a likely cause of "sentence 2 skipped over" complaints.
+  const requiredLearningReps = 2;
   const [repetitionCount, setRepetitionCount] = useState(1);
   const repetitionCountRef = useRef(1);
   
@@ -434,6 +438,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // blocked so a stale buffered transcript from the previous sentence cannot
   // mark all words spoken and skip the whole sentence.
   const needsFreshSpeechRef = useRef(false);
+  // Timestamp of the most recent phase transition. Used together with
+  // needsFreshSpeechRef so a stale buffered transcript can never satisfy the
+  // fresh-speech gate within the first 500ms after a phase change.
+  const phaseTransitionAtRef = useRef(0);
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
@@ -1549,10 +1557,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // hesitation timer mark hidden words yellow while the microphone is hearing them.
     hasHeardSpeechRef.current = true;
     lastWordTimeRef.current = Date.now();
-    // Clear the fresh-speech gate only when this transcript is genuinely new
-    // for this phase — i.e. has more words than what we've already processed.
-    // This prevents replays of the previous sentence's tail from satisfying it.
-    if (rawWords.length > transcriptWordsRef.current.length) {
+    // Clear the fresh-speech gate only when ALL of the following hold:
+    //  • The transcript is genuinely longer than what we've already processed
+    //  • It contains tokens past the buffer-skip cutoff (i.e. not a stale replay
+    //    of the previous sentence's finals that the recognizer is still holding)
+    //  • At least 500ms has elapsed since the phase transition, so an in-flight
+    //    interim event can't satisfy the gate in the same tick as the swap.
+    if (
+      rawWords.length > transcriptWordsRef.current.length &&
+      rawWords.length > ignoreResultsBeforeIndexRef.current &&
+      Date.now() - phaseTransitionAtRef.current > 500
+    ) {
       needsFreshSpeechRef.current = false;
     }
 
@@ -1894,7 +1909,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Plus FAILURE CLUSTERING: 2 fails within 48h → cooldown for 24h (still merged-eligible).
       const failedBeat = beatsToRecall[recallIndex];
       if (failedBeat && !isMergedRecall) {
-        const totalFailed = hesitatedIndicesRef.current.size + missedIndicesRef.current.size;
+        // Union (not sum) — a word that both hesitated AND was later missed
+        // must count once, not twice. Summing inflated failRatio and caused
+        // unwarranted 2-rung demotions.
+        const failedUnion = new Set<number>([
+          ...hesitatedIndicesRef.current,
+          ...missedIndicesRef.current,
+        ]);
+        const totalFailed = failedUnion.size;
         const failRatio = words.length > 0 ? totalFailed / words.length : 0;
 
         let demotionRungs = 0;
@@ -1941,17 +1963,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             console.log(`⬇️ Beat ${failedBeat.beat_order} fail (${Math.round(failRatio*100)}%) → demote ${demotionRungs} → session ${demotedSession}`);
           });
 
-        // FSRS scheduler — single source of truth for next_scheduled_recall_at
-        const visibleCount = Math.max(0, words.length - hiddenWordIndices.size);
-        scheduleNextReview({
-          beatId: failedBeat.id,
-          eventType: 'recall',
-          rawAccuracy: Math.round((1 - failRatio) * 100),
-          visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 100,
-          hesitations: hesitatedIndicesRef.current.size,
-          lapses: missedIndicesRef.current.size,
-          missedWordCount: missedIndicesRef.current.size,
-        });
+        // FSRS scheduler — only kicks in once the beat has graduated past the
+        // short-cycle (10-min / evening / morning) ladder. Otherwise FSRS's
+        // multi-day initial intervals pre-empt the early consolidation reps
+        // that Ebbinghaus / Pimsleur research depend on.
+        if ((failedBeat.recall_session_number ?? 0) >= 2) {
+          const visibleCount = Math.max(0, words.length - hiddenWordIndicesRef.current.size);
+          scheduleNextReview({
+            beatId: failedBeat.id,
+            eventType: 'recall',
+            rawAccuracy: Math.round((1 - failRatio) * 100),
+            visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 100,
+            hesitations: hesitatedIndicesRef.current.size,
+            lapses: missedIndicesRef.current.size,
+            missedWordCount: missedIndicesRef.current.size,
+          });
+        }
       }
       
       // Get the specific word indices that failed (hesitated or missed)
@@ -2033,6 +2060,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const newSessionNum = isCappedByGraduation ? Math.min(wantsToClimb, 3) : wantsToClimb;
           const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate, preferredPracticeHours, fallbackPracticeHour);
 
+          // SCHEDULING OWNERSHIP:
+          //   • Sessions 0–1: the ladder (calculateNextRecallDate) owns
+          //     next_scheduled_recall_at — the short 10-min/evening/morning
+          //     cycle must run untouched (Pimsleur graduated interval recall).
+          //   • Sessions 2+: FSRS becomes the single source of truth and the
+          //     ladder no longer writes next_scheduled_recall_at to avoid the
+          //     race where both fire and the slower call wins arbitrarily.
+          const useFsrs = newSessionNum >= 2;
+
           const updateData: Record<string, any> = {
             last_recall_at: new Date().toISOString(),
             recall_session_number: newSessionNum,
@@ -2040,7 +2076,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             cooldown_until: null,
             total_successful_recalls: (recalledBeat.total_successful_recalls ?? 0) + 1,
           };
-          if (nextRecallDate) {
+          if (!useFsrs && nextRecallDate) {
             updateData.next_scheduled_recall_at = nextRecallDate.toISOString();
           }
 
@@ -2049,20 +2085,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             .update(updateData)
             .eq('id', recalledBeat.id)
             .then(() => {
-              console.log(`📅 Beat ${recalledBeat.beat_order} → session ${newSessionNum}${isCappedByGraduation ? ' (capped: needs full-speech pass)' : ''}, next:`, nextRecallDate?.toISOString() ?? 'none');
+              console.log(`📅 Beat ${recalledBeat.beat_order} → session ${newSessionNum}${isCappedByGraduation ? ' (capped: needs full-speech pass)' : ''}, ${useFsrs ? 'FSRS will schedule' : `next: ${nextRecallDate?.toISOString() ?? 'none'}`}`);
             });
 
-          // FSRS scheduler — single source of truth for next_scheduled_recall_at
-          const visibleCount = Math.max(0, words.length - hiddenWordIndices.size);
-          scheduleNextReview({
-            beatId: recalledBeat.id,
-            eventType: 'recall',
-            rawAccuracy: 100,
-            visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 0,
-            hesitations: 0,
-            lapses: 0,
-            missedWordCount: 0,
-          });
+          if (useFsrs) {
+            // FSRS scheduler — single source of truth for next_scheduled_recall_at
+            // once the beat has cleared the short-cycle ladder.
+            const visibleCount = Math.max(0, words.length - hiddenWordIndicesRef.current.size);
+            scheduleNextReview({
+              beatId: recalledBeat.id,
+              eventType: 'recall',
+              rawAccuracy: 100,
+              visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 0,
+              hesitations: 0,
+              lapses: 0,
+              missedWordCount: 0,
+            });
+          }
         }
 
         // If this was a merged recall, update last_merged_recall_at AND mark all
@@ -2425,6 +2464,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
     needsFreshSpeechRef.current = true;
+    phaseTransitionAtRef.current = Date.now();
 
     // Skip all currently buffered speech-results indices. Without this, the
     // recognizer's `event.results` array (which we deliberately never abort
@@ -2547,12 +2587,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const eveningTarget = new Date(now);
       eveningTarget.setHours(20, 0, 0, 0); // 8 PM today
       let recallEveningAt: Date;
-      if (now.getHours() >= 18) {
-        // Mastered after 6 PM - schedule 2 hours from now
+      if (now.getHours() >= 20) {
+        // Already past 8 PM — skip evening, let morning recall take over
+        recallEveningAt = eveningTarget; // in the past, won't trigger
+      } else if (now.getHours() >= 18) {
+        // Mastered between 6 PM and 8 PM — schedule 2 hours from now
         recallEveningAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-      } else if (now.getHours() >= 20) {
-        // Already past 8 PM - schedule for tomorrow morning instead (skip evening)
-        recallEveningAt = eveningTarget; // Will be in the past, won't trigger
       } else {
         recallEveningAt = eveningTarget;
       }
@@ -2604,45 +2644,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       console.log('✅ Beat marked as mastered successfully, 10min recall at:', recall10minAt.toISOString());
       
-      // Update schedule's next_review_date based on spaced repetition
-      // For beat-based learning: next review in 4-24 hours depending on deadline
-      const hoursUntilNextReview = daysUntilDeadline <= 1 ? 4 : daysUntilDeadline <= 3 ? 8 : daysUntilDeadline <= 7 ? 12 : 24;
-      const nextReviewDate = new Date(Date.now() + hoursUntilNextReview * 60 * 60 * 1000);
-      
-      // Update or insert schedule for this speech
-      const { data: existingSchedule } = await supabase
-        .from('schedules')
-        .select('id')
-        .eq('speech_id', speechId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      if (existingSchedule) {
-        await supabase
-          .from('schedules')
-          .update({ 
-            next_review_date: nextReviewDate.toISOString(),
-            last_reviewed_at: new Date().toISOString(),
-          })
-          .eq('id', existingSchedule.id);
-      } else {
-        await supabase
-          .from('schedules')
-          .insert({
-            speech_id: speechId,
-            session_date: new Date().toISOString().split('T')[0],
-            next_review_date: nextReviewDate.toISOString(),
-            last_reviewed_at: new Date().toISOString(),
-            completed: true,
-          });
-      }
-      
-      // Also update the speech's next_review_date directly
-      await supabase
-        .from('speeches')
-        .update({ next_review_date: nextReviewDate.toISOString() })
-        .eq('id', speechId);
+      // NOTE: legacy SM-2 `schedules` / `speeches.next_review_date` writes
+      // were removed here. The beat flow uses `practice_beats.recall_*_at`
+      // (short cycle) and FSRS (`next_scheduled_recall_at`) exclusively.
+      // Writing to `schedules` was overwriting FSRS's interval with a flat
+      // 4–24h fallback and causing spurious locks in Practice.tsx.
       
       // Update local state so the completion screen shows correct count
       const updatedBeats = beats.map(b => 
