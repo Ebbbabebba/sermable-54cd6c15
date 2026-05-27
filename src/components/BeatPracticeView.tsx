@@ -438,6 +438,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // blocked so a stale buffered transcript from the previous sentence cannot
   // mark all words spoken and skip the whole sentence.
   const needsFreshSpeechRef = useRef(false);
+  // Timestamp of the most recent phase transition. Used together with
+  // needsFreshSpeechRef so a stale buffered transcript can never satisfy the
+  // fresh-speech gate within the first 500ms after a phase change.
+  const phaseTransitionAtRef = useRef(0);
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
