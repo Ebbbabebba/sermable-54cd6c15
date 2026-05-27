@@ -362,7 +362,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Sentence 1 = 1 rep (quick onboarding). Sentence 2+ and combined/beat
   // phases = 2 reps so a single stray speech callback can't auto-complete
   // the read-through and trip fading before the user has actually spoken.
-  const requiredLearningReps = phase === 'sentence_1_learning' ? 1 : 2;
+  // Always require 2 read-throughs before fading begins (desirable difficulty —
+  // one pass is not enough to consider a sentence learned). Previously
+  // sentence_1 was special-cased to 1 rep, which let fading start prematurely
+  // and was a likely cause of "sentence 2 skipped over" complaints.
+  const requiredLearningReps = 2;
   const [repetitionCount, setRepetitionCount] = useState(1);
   const repetitionCountRef = useRef(1);
   
