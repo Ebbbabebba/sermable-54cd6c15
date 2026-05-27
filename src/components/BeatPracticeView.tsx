@@ -1963,17 +1963,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             console.log(`⬇️ Beat ${failedBeat.beat_order} fail (${Math.round(failRatio*100)}%) → demote ${demotionRungs} → session ${demotedSession}`);
           });
 
-        // FSRS scheduler — single source of truth for next_scheduled_recall_at
-        const visibleCount = Math.max(0, words.length - hiddenWordIndices.size);
-        scheduleNextReview({
-          beatId: failedBeat.id,
-          eventType: 'recall',
-          rawAccuracy: Math.round((1 - failRatio) * 100),
-          visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 100,
-          hesitations: hesitatedIndicesRef.current.size,
-          lapses: missedIndicesRef.current.size,
-          missedWordCount: missedIndicesRef.current.size,
-        });
+        // FSRS scheduler — only kicks in once the beat has graduated past the
+        // short-cycle (10-min / evening / morning) ladder. Otherwise FSRS's
+        // multi-day initial intervals pre-empt the early consolidation reps
+        // that Ebbinghaus / Pimsleur research depend on.
+        if ((failedBeat.recall_session_number ?? 0) >= 2) {
+          const visibleCount = Math.max(0, words.length - hiddenWordIndicesRef.current.size);
+          scheduleNextReview({
+            beatId: failedBeat.id,
+            eventType: 'recall',
+            rawAccuracy: Math.round((1 - failRatio) * 100),
+            visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 100,
+            hesitations: hesitatedIndicesRef.current.size,
+            lapses: missedIndicesRef.current.size,
+            missedWordCount: missedIndicesRef.current.size,
+          });
+        }
       }
       
       // Get the specific word indices that failed (hesitated or missed)
