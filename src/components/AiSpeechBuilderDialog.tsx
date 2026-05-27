@@ -41,6 +41,7 @@ export const AiSpeechBuilderDialog = ({
 
   const [step, setStep] = useState<Step>("prompt");
   const [prompt, setPrompt] = useState("");
+  const [targetMinutes, setTargetMinutes] = useState<number>(3);
   const [qa, setQa] = useState<QA[]>([]);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftSpeech, setDraftSpeech] = useState("");
@@ -49,11 +50,14 @@ export const AiSpeechBuilderDialog = ({
   const reset = () => {
     setStep("prompt");
     setPrompt("");
+    setTargetMinutes(3);
     setQa([]);
     setDraftTitle("");
     setDraftSpeech("");
     setLoading(false);
   };
+
+  const lengthOptions = [1, 2, 3, 5, 7, 10];
 
   const closeAndReset = (next: boolean) => {
     if (!next) reset();
