@@ -2870,6 +2870,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // (which reads recognitionRef.current to know it's running) keeps working.
           recognitionRef.current = {
             __native: true,
+            clearBuffer: () => {
+              nativeFinalsRef.current = "";
+              lastNativeInterim = "";
+            },
             stop: async () => {
               stopped = true;
               try {
