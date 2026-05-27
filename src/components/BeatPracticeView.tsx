@@ -2937,6 +2937,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             },
             stop: async () => {
               stopped = true;
+              clearInterval(watchdog);
               try {
                 await NativeSpeech.stop();
               } catch {}
@@ -2945,6 +2946,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 await listenerHandle?.remove?.();
               } catch {}
             },
+
           };
 
           isRecordingRef.current = true;
