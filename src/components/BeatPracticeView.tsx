@@ -2351,16 +2351,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [fadingSuccessCount, setFadingSuccessCount] = useState(0);
   
   // Handle fading phase completion logic
-  // Key behavior: ALWAYS continue hiding words, even on errors
+  // Key behavior: only hide more words after a clean repetition.
   // Failed words stay visible and become "protected" - they disappear LAST
   function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
     const allHidden = hiddenWordIndices.size >= words.length;
 
-    // Always hide words progressively, even with errors
     if (!allHidden) {
-      // On error: still hide 3 words (base amount). On success: progressive 3 → 4 → 5
-      const wordsToHide = hadErrors ? 3 : Math.min(3 + fadingSuccessCount, 5);
-      
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
       let newProtected = new Set(protectedWordIndices);
@@ -2382,11 +2378,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setProtectedWordIndices(newProtected);
         setFadingSuccessCount(0); // Reset progression on error (back to 3 words)
         setConsecutiveNoScriptSuccess(0);
+        setHiddenWordIndices(newHidden);
+        setHiddenWordOrder(newOrder);
+        setFailedWordIndices(new Set());
+        resetForNextRep();
+        return;
       } else {
         setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
       }
       
-      // ALWAYS hide more words (continue progression even on failure)
+      const wordsToHide = Math.min(3 + fadingSuccessCount, 5);
       for (let i = 0; i < wordsToHide; i++) {
         // Pass the updated protected set to prioritize hiding non-protected words
         const nextToHide = getNextWordToHide(newHidden, newProtected);
