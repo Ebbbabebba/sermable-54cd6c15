@@ -58,8 +58,10 @@ export const useSubscription = () => {
               filter: `id=eq.${user.id}`,
             },
             (payload) => {
-              if (payload.new?.subscription_tier) {
-                setTier(payload.new.subscription_tier as SubscriptionTier);
+              const t = (payload.new as any)?.subscription_tier;
+              if (t) {
+                setTier(t as SubscriptionTier);
+                try { localStorage.setItem(TIER_CACHE_KEY, t); } catch {}
               }
             }
           )
