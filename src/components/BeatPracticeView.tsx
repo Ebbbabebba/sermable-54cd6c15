@@ -2644,45 +2644,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       console.log('✅ Beat marked as mastered successfully, 10min recall at:', recall10minAt.toISOString());
       
-      // Update schedule's next_review_date based on spaced repetition
-      // For beat-based learning: next review in 4-24 hours depending on deadline
-      const hoursUntilNextReview = daysUntilDeadline <= 1 ? 4 : daysUntilDeadline <= 3 ? 8 : daysUntilDeadline <= 7 ? 12 : 24;
-      const nextReviewDate = new Date(Date.now() + hoursUntilNextReview * 60 * 60 * 1000);
-      
-      // Update or insert schedule for this speech
-      const { data: existingSchedule } = await supabase
-        .from('schedules')
-        .select('id')
-        .eq('speech_id', speechId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      if (existingSchedule) {
-        await supabase
-          .from('schedules')
-          .update({ 
-            next_review_date: nextReviewDate.toISOString(),
-            last_reviewed_at: new Date().toISOString(),
-          })
-          .eq('id', existingSchedule.id);
-      } else {
-        await supabase
-          .from('schedules')
-          .insert({
-            speech_id: speechId,
-            session_date: new Date().toISOString().split('T')[0],
-            next_review_date: nextReviewDate.toISOString(),
-            last_reviewed_at: new Date().toISOString(),
-            completed: true,
-          });
-      }
-      
-      // Also update the speech's next_review_date directly
-      await supabase
-        .from('speeches')
-        .update({ next_review_date: nextReviewDate.toISOString() })
-        .eq('id', speechId);
+      // NOTE: legacy SM-2 `schedules` / `speeches.next_review_date` writes
+      // were removed here. The beat flow uses `practice_beats.recall_*_at`
+      // (short cycle) and FSRS (`next_scheduled_recall_at`) exclusively.
+      // Writing to `schedules` was overwriting FSRS's interval with a flat
+      // 4–24h fallback and causing spurious locks in Practice.tsx.
       
       // Update local state so the completion screen shows correct count
       const updatedBeats = beats.map(b => 
