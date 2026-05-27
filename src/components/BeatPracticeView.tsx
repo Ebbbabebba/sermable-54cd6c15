@@ -1732,16 +1732,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       if (foundIdx === -1) {
         // Current word didn't match - check NEXT word (lookahead of 1)
-        // BUT: never let lookahead cross a sentence boundary, and never let it
-        // skip over a strict hidden current word (only over visible/lenient words).
-        const hiddenRunAhead = (() => {
-          let count = 0;
-          for (let k = advancedTo; k < words.length && hiddenWordIndicesRef.current.has(k); k++) {
-            count++;
-          }
-          return count;
-        })();
-        const canSkipCurrent = !currentIsHidden || (currentIsLenient && hiddenRunAhead < 2);
+        // STRICT RULE: lookahead may ONLY skip over visible (non-hidden) words.
+        // We never silently skip a hidden word via lookahead — even if it's
+        // "lenient" — because that marks the hidden word as completed without
+        // the user actually saying it. Hidden words must be matched directly,
+        // hesitated (yellow → auto-advance), or genuinely missed.
+        const canSkipCurrent = !currentIsHidden;
         if (
           canSkipCurrent &&
           advancedTo + 1 < words.length &&
@@ -1752,13 +1748,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
         } else if (canSkipCurrent && advancedTo + 2 < words.length) {
-          // 2-word lookahead — only across visible/lenient words, never crossing
-          // a sentence boundary.
+          // 2-word lookahead — only across visible words, never crossing
+          // a sentence boundary, never over a hidden word.
           const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
-          const betweenIsLenient = isEffectivelyLenientWord(advancedTo + 1);
-          const betweenSkippable = !betweenIsHidden || betweenIsLenient;
           if (
-            betweenSkippable &&
+            !betweenIsHidden &&
             !hiddenWordIndicesRef.current.has(advancedTo + 2) &&
             !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
             wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
