@@ -1909,7 +1909,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Plus FAILURE CLUSTERING: 2 fails within 48h → cooldown for 24h (still merged-eligible).
       const failedBeat = beatsToRecall[recallIndex];
       if (failedBeat && !isMergedRecall) {
-        const totalFailed = hesitatedIndicesRef.current.size + missedIndicesRef.current.size;
+        // Union (not sum) — a word that both hesitated AND was later missed
+        // must count once, not twice. Summing inflated failRatio and caused
+        // unwarranted 2-rung demotions.
+        const failedUnion = new Set<number>([
+          ...hesitatedIndicesRef.current,
+          ...missedIndicesRef.current,
+        ]);
+        const totalFailed = failedUnion.size;
         const failRatio = words.length > 0 ? totalFailed / words.length : 0;
 
         let demotionRungs = 0;
