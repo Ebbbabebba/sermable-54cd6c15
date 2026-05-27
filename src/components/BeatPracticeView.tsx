@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, SkipForward, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -1934,8 +1934,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allHidden = hiddenWordIndices.size >= words.length;
 
     if (hadErrors) {
-      // Failed recall - reveal ONLY the words that were missed/hesitated, but still hide 3 new words
-      // Reset success count back to 0 (next success will hide 3 words again)
+      // Failed recall: reveal missed/hesitated words and retry the same visibility.
+      // Never hide new words after an errored round — otherwise the system can
+      // progress even though the user has not completed the repetition.
       setRecallSuccessCount(0);
 
       // FAILURE SEVERITY WEIGHTING:
@@ -2031,17 +2032,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newOrder = newOrder.filter(idx => !failedIndices.has(idx));
       }
       
-      // Still hide 3 NEW words (base amount) even on failure
-      const wordsToHideOnFailure = 3;
-      for (let i = 0; i < wordsToHideOnFailure; i++) {
-        const nextToHide = getNextWordToHide(newHidden);
-        if (nextToHide !== null && !failedIndices.has(nextToHide)) {
-          newHidden.add(nextToHide);
-          newOrder.push(nextToHide);
-        }
-      }
-      
-      setCelebrationMessage("Try again");
+      setCelebrationMessage(t('common.try_again', 'Try again'));
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -2277,7 +2268,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allHidden = hiddenWordIndices.size >= words.length;
 
     if (hadErrors) {
-      // Failed - reveal failed words, reset progress, try again
+      // Failed: reveal failed words, reset progress, retry same visibility.
+      // Do not hide any new words after an errored round.
       setPreBeatRecallSuccessCount(0);
       
       const failedIndices = new Set<number>();
@@ -2292,16 +2284,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newOrder = newOrder.filter(idx => !failedIndices.has(idx));
       }
       
-      // Still hide 3 new words even on failure (base amount)
-      for (let i = 0; i < 3; i++) {
-        const nextToHide = getNextWordToHide(newHidden);
-        if (nextToHide !== null && !failedIndices.has(nextToHide)) {
-          newHidden.add(nextToHide);
-          newOrder.push(nextToHide);
-        }
-      }
-      
-      setCelebrationMessage("Try again");
+      setCelebrationMessage(t('common.try_again', 'Try again'));
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -2368,16 +2351,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [fadingSuccessCount, setFadingSuccessCount] = useState(0);
   
   // Handle fading phase completion logic
-  // Key behavior: ALWAYS continue hiding words, even on errors
+  // Key behavior: only hide more words after a clean repetition.
   // Failed words stay visible and become "protected" - they disappear LAST
   function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
     const allHidden = hiddenWordIndices.size >= words.length;
 
-    // Always hide words progressively, even with errors
     if (!allHidden) {
-      // On error: still hide 3 words (base amount). On success: progressive 3 → 4 → 5
-      const wordsToHide = hadErrors ? 3 : Math.min(3 + fadingSuccessCount, 5);
-      
       let newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
       let newProtected = new Set(protectedWordIndices);
@@ -2399,11 +2378,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setProtectedWordIndices(newProtected);
         setFadingSuccessCount(0); // Reset progression on error (back to 3 words)
         setConsecutiveNoScriptSuccess(0);
+        setHiddenWordIndices(newHidden);
+        setHiddenWordOrder(newOrder);
+        setFailedWordIndices(new Set());
+        resetForNextRep();
+        return;
       } else {
         setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
       }
       
-      // ALWAYS hide more words (continue progression even on failure)
+      const wordsToHide = Math.min(3 + fadingSuccessCount, 5);
       for (let i = 0; i < wordsToHide; i++) {
         // Pass the updated protected set to prioritize hiding non-protected words
         const nextToHide = getNextWordToHide(newHidden, newProtected);
@@ -3630,24 +3614,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             <X className="h-5 w-5 text-muted-foreground" />
           </Button>
           
-          {/* Skip/Continue button - subtle, in header */}
-          {!showCelebration && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                playClick();
-                const allIndices = new Set<number>(words.map((_, i) => i));
-                pauseSpeechRecognition(900);
-                checkCompletion(allIndices, failedWordIndices);
-              }}
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-            >
-              <SkipForward className="h-4 w-4 mr-1" />
-              <span className="text-xs">{t('common.skip', 'Skip')}</span>
-            </Button>
-          )}
-
           {/* Edit script — exits the session and opens the inline edit dialog */}
           {onEditScript && !showCelebration && subscriptionTier !== 'free' && (
             <Button
