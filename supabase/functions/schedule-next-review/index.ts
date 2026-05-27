@@ -41,14 +41,19 @@ const FACTOR = Math.pow(0.9, 1 / DECAY) - 1;
 
 type Rating = 1 | 2 | 3 | 4; // 1=Again, 2=Hard, 3=Good, 4=Easy
 
-function ratingFromAccuracy(rawAcc: number, _hesitations: number): Rating {
-  // NOTE: rawAcc already reflects hesitations via the client's failRatio
-  // (hesitated indices count as failures). Do NOT also branch on the
-  // hesitations argument here — that would double-penalise the rating.
-  if (rawAcc < 50) return 1;            // Again
-  if (rawAcc < 70) return 2;            // Hard
-  if (rawAcc < 90) return 3;            // Good
-  return 4;                              // Easy
+function ratingFromAccuracy(
+  rawAcc: number,
+  _hesitations: number,
+  visibilityPercent: number = 100,
+): Rating {
+  // rawAcc already reflects hesitations via the client's failRatio.
+  // Easy is reserved for runs that were both highly accurate AND mostly
+  // from memory (script <30% visible) — otherwise FSRS would expand intervals
+  // for users still reading the script.
+  if (rawAcc < 50) return 1;                            // Again
+  if (rawAcc < 70) return 2;                            // Hard
+  if (rawAcc < 95 || visibilityPercent > 30) return 3;  // Good
+  return 4;                                              // Easy
 }
 
 function initialStability(rating: Rating): number {
@@ -207,7 +212,7 @@ serve(async (req) => {
       });
     }
 
-    const rating = ratingFromAccuracy(rawAccuracy, hesitations);
+    const rating = ratingFromAccuracy(rawAccuracy, hesitations, visibilityPercent);
     const reps = (beat.fsrs_reps ?? 0) + 1;
     const wasOverdue = beat.next_scheduled_recall_at
       ? new Date(beat.next_scheduled_recall_at).getTime() < Date.now()

@@ -2853,6 +2853,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           let partialHandle: any = null;
           let stopped = false;
 
+          // Watchdog: if no partial result arrives within 15s, force restart.
+          // Some Android builds silently stop listening without firing the
+          // "stopped" status — this keeps recognition alive.
+          let lastActivityAt = Date.now();
+          const watchdog = setInterval(() => {
+            if (stopped || !isRecordingRef.current) return;
+            if (Date.now() - lastActivityAt > 15000) {
+              lastActivityAt = Date.now();
+              NativeSpeech.stop().catch(() => {});
+              setTimeout(() => {
+                if (!stopped && isRecordingRef.current) startNativeSession();
+              }, 120);
+            }
+          }, 3000);
+
           const startNativeSession = async () => {
             if (stopped || !isRecordingRef.current) return;
             try {
@@ -2863,6 +2878,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 partialResults: true,
                 popup: false,
               });
+              lastActivityAt = Date.now();
             } catch (e) {
               console.warn("Native start failed, retrying", e);
               if (!stopped && isRecordingRef.current) {
@@ -2871,12 +2887,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             }
           };
 
+
           partialHandle = await NativeSpeech.addListener(
             "partialResults" as any,
             (data: any) => {
               if (showCelebrationRef.current) return;
               if (Date.now() < ignoreResultsUntilRef.current) return;
+              lastActivityAt = Date.now();
               setIsSpeechReady(true);
+
               const matches: string[] = data?.matches ?? [];
               const interim = matches[0] ?? "";
               lastNativeInterim = interim;
@@ -2918,6 +2937,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             },
             stop: async () => {
               stopped = true;
+              clearInterval(watchdog);
               try {
                 await NativeSpeech.stop();
               } catch {}
@@ -2926,6 +2946,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 await listenerHandle?.remove?.();
               } catch {}
             },
+
           };
 
           isRecordingRef.current = true;
