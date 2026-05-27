@@ -710,6 +710,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     runningTranscriptRef.current = "";
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
+    // Clear native plugin's cumulative finals buffer so old tokens can't
+    // leak into the next utterance after the pause window.
+    try { (recognitionRef.current as any)?.clearBuffer?.(); } catch {}
 
     // NOTE: intentionally NOT calling recognitionRef.current.abort() here.
     // The ignoreResultsUntilRef window already discards stale tokens, and skipping
@@ -2870,6 +2873,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // (which reads recognitionRef.current to know it's running) keeps working.
           recognitionRef.current = {
             __native: true,
+            clearBuffer: () => {
+              nativeFinalsRef.current = "";
+              lastNativeInterim = "";
+            },
             stop: async () => {
               stopped = true;
               try {

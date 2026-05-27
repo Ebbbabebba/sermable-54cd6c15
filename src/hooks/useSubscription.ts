@@ -4,8 +4,21 @@ import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
+const TIER_CACHE_KEY = 'sermable.subscription_tier';
+
+const readCachedTier = (): SubscriptionTier => {
+  try {
+    const v = localStorage.getItem(TIER_CACHE_KEY);
+    if (v === 'free' || v === 'student' || v === 'regular' || v === 'enterprise') {
+      return v as SubscriptionTier;
+    }
+  } catch {}
+  return 'free';
+};
+
 export const useSubscription = () => {
-  const [tier, setTier] = useState<SubscriptionTier>('free');
+  // Seed from localStorage to avoid a brief "free" flash that locks premium users
+  const [tier, setTier] = useState<SubscriptionTier>(() => readCachedTier());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +42,7 @@ export const useSubscription = () => {
 
         if (profile?.subscription_tier) {
           setTier(profile.subscription_tier);
+          try { localStorage.setItem(TIER_CACHE_KEY, profile.subscription_tier); } catch {}
         }
 
         if (cancelled) return;
@@ -44,8 +58,10 @@ export const useSubscription = () => {
               filter: `id=eq.${user.id}`,
             },
             (payload) => {
-              if (payload.new?.subscription_tier) {
-                setTier(payload.new.subscription_tier as SubscriptionTier);
+              const t = (payload.new as any)?.subscription_tier;
+              if (t) {
+                setTier(t as SubscriptionTier);
+                try { localStorage.setItem(TIER_CACHE_KEY, t); } catch {}
               }
             }
           )
