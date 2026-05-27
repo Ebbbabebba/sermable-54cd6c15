@@ -113,6 +113,7 @@ export const AiSpeechBuilderDialog = ({
           prompt: promptOverride ?? prompt,
           language,
           answers,
+          targetMinutes,
         },
       });
       if (error) throw error;
