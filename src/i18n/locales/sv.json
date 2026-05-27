@@ -136,15 +136,15 @@
       },
       "practice": {
         "title": "Talövning",
-        "message": "Klistra in din text och öva på att säga den högt. Jag följer med i realtid och markerar ord du missar eller tvekar på."
+        "message": "Klistra in din text och öva på att säga den högt. Sermable följer med i realtid och markerar ord du missar eller tvekar på."
       },
       "adaptive": {
         "title": "Smarta ledtrådar",
-        "message": "När du blir bättre döljer jag gradvis fler ord för att utmana ditt minne. Kör du fast? Då visar jag dem igen. Som en smart teleprompter!"
+        "message": "När du blir bättre döljer Sermable gradvis fler ord för att utmana ditt minne. Kör du fast? Då visas de igen. Som en smart teleprompter!"
       },
       "learning": {
         "title": "Inlärningsläge",
-        "message": "Jag använder spaced repetition – en vetenskapligt beprövad teknik – för att schemalägga dina övningar för bästa resultat. Du lär dig snabbare!"
+        "message": "Sermable använder spaced repetition – en vetenskapligt beprövad teknik – för att schemalägga dina övningar för bästa resultat. Du lär dig snabbare!"
       },
       "presentation": {
         "title": "Presentationsläge",
