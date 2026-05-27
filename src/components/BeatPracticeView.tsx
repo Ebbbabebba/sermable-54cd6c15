@@ -271,7 +271,9 @@ const getRecognitionLocale = (lang: string): string => {
   return localeMap[lang] || lang || 'en-US';
 };
 
-// Gap/filler words that are ALWAYS hidden from the start (EN + SV)
+// Gap/filler words that are ALWAYS hidden from the start.
+// Covers EN, SV, DE, FR, ES, IT, PT — entries are pre-normalized
+// (lowercased, diacritics stripped) so they match normalizeWord() output.
 const COMMON_WORDS = new Set([
   // English
   'the', 'a', 'an', 'to', 'in', 'of', 'and', 'is', 'it', 'that', 'for', 'on', 'with',
@@ -279,13 +281,50 @@ const COMMON_WORDS = new Set([
   'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can',
   'or', 'but', 'so', 'if', 'not', 'no', 'yes', 'up', 'out', 'from',
   // Swedish
-  'och', 'i', 'på', 'att', 'en', 'ett', 'av', 'för', 'med', 'som', 'är', 'var',
-  'den', 'det', 'de', 'om', 'till', 'från', 'har', 'kan', 'ska', 'vill',
-  'men', 'eller', 'så', 'när', 'där', 'här', 'inte', 'bara', 'även', 'också',
+  'och', 'i', 'pa', 'att', 'en', 'ett', 'av', 'for', 'med', 'som', 'ar', 'var',
+  'den', 'det', 'de', 'om', 'till', 'fran', 'har', 'kan', 'ska', 'vill',
+  'men', 'eller', 'sa', 'nar', 'dar', 'har', 'inte', 'bara', 'aven', 'ocksa',
   'vi', 'jag', 'du', 'han', 'hon', 'ni', 'sin', 'sitt', 'sina',
-  'min', 'mitt', 'mina', 'din', 'ditt', 'dina', 'er', 'ert', 'era', 'vår', 'vårt', 'våra',
-  // Swedish normalized without diacritics (matches normalizeWord)
-  'pa', 'ar', 'fran', 'sa', 'nar', 'dar', 'har', 'aven', 'ocksa', 'var', 'vart', 'vara',
+  'min', 'mitt', 'mina', 'din', 'ditt', 'dina', 'er', 'ert', 'era', 'var', 'vart', 'vara',
+  // German
+  'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'einem', 'einer', 'eines',
+  'und', 'oder', 'aber', 'doch', 'denn', 'weil', 'wenn', 'als', 'wie', 'wo', 'da',
+  'ist', 'sind', 'war', 'waren', 'sein', 'hat', 'haben', 'hatte', 'wird', 'werden',
+  'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'mich', 'dich', 'sich', 'mir', 'dir',
+  'mit', 'von', 'zu', 'zum', 'zur', 'auf', 'in', 'im', 'an', 'am', 'bei', 'fur', 'uber', 'unter',
+  'nicht', 'nur', 'auch', 'noch', 'schon', 'sehr', 'mehr',
+  // French
+  'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux',
+  'et', 'ou', 'mais', 'donc', 'car', 'si', 'que', 'qui', 'quoi', 'ou', 'quand',
+  'est', 'sont', 'etait', 'etaient', 'etre', 'a', 'ont', 'avoir', 'avait',
+  'je', 'tu', 'il', 'elle', 'on', 'nous', 'vous', 'ils', 'elles', 'me', 'te', 'se',
+  'mon', 'ton', 'son', 'ma', 'ta', 'sa', 'mes', 'tes', 'ses', 'notre', 'votre', 'leur',
+  'ce', 'cet', 'cette', 'ces', 'dans', 'sur', 'sous', 'par', 'pour', 'avec', 'sans',
+  'ne', 'pas', 'plus', 'tres', 'aussi', 'encore', 'deja',
+  // Spanish
+  'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'del', 'al',
+  'y', 'o', 'pero', 'porque', 'si', 'que', 'cuando', 'donde', 'como',
+  'es', 'son', 'era', 'eran', 'ser', 'esta', 'estan', 'estaba', 'ha', 'han', 'habia',
+  'yo', 'tu', 'el', 'ella', 'nosotros', 'vosotros', 'ellos', 'ellas', 'me', 'te', 'se',
+  'mi', 'tu', 'su', 'sus', 'nuestro', 'vuestro',
+  'en', 'con', 'sin', 'por', 'para', 'sobre', 'entre', 'hasta', 'desde',
+  'no', 'si', 'mas', 'muy', 'tambien', 'tan', 'ya',
+  // Italian
+  'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'uno', 'una', 'del', 'della', 'dei', 'delle',
+  'e', 'o', 'ma', 'pero', 'perche', 'se', 'che', 'chi', 'quando', 'dove', 'come',
+  'e', 'sono', 'era', 'erano', 'essere', 'ha', 'hanno', 'aveva', 'avere',
+  'io', 'tu', 'lui', 'lei', 'noi', 'voi', 'loro', 'mi', 'ti', 'si', 'ci', 'vi',
+  'mio', 'tuo', 'suo', 'nostro', 'vostro',
+  'in', 'con', 'su', 'per', 'tra', 'fra', 'da', 'a',
+  'non', 'si', 'piu', 'molto', 'anche', 'gia', 'ancora',
+  // Portuguese
+  'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas', 'de', 'do', 'da', 'dos', 'das',
+  'e', 'ou', 'mas', 'porque', 'se', 'que', 'quem', 'quando', 'onde', 'como',
+  'e', 'sao', 'era', 'eram', 'ser', 'esta', 'estao', 'tem', 'tinha', 'ter',
+  'eu', 'tu', 'ele', 'ela', 'nos', 'vos', 'eles', 'elas', 'me', 'te', 'se',
+  'meu', 'teu', 'seu', 'nosso', 'vosso',
+  'em', 'no', 'na', 'com', 'sem', 'por', 'para', 'sobre',
+  'nao', 'sim', 'mais', 'muito', 'tambem', 'ja', 'ainda',
 ]);
 
 // Check if it's a new calendar day (for 1 beat per day logic)
