@@ -3614,24 +3614,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             <X className="h-5 w-5 text-muted-foreground" />
           </Button>
           
-          {/* Skip/Continue button - subtle, in header */}
-          {!showCelebration && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                playClick();
-                const allIndices = new Set<number>(words.map((_, i) => i));
-                pauseSpeechRecognition(900);
-                checkCompletion(allIndices, failedWordIndices);
-              }}
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-            >
-              <SkipForward className="h-4 w-4 mr-1" />
-              <span className="text-xs">{t('common.skip', 'Skip')}</span>
-            </Button>
-          )}
-
           {/* Edit script — exits the session and opens the inline edit dialog */}
           {onEditScript && !showCelebration && subscriptionTier !== 'free' && (
             <Button
