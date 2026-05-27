@@ -1934,8 +1934,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allHidden = hiddenWordIndices.size >= words.length;
 
     if (hadErrors) {
-      // Failed recall - reveal ONLY the words that were missed/hesitated, but still hide 3 new words
-      // Reset success count back to 0 (next success will hide 3 words again)
+      // Failed recall: reveal missed/hesitated words and retry the same visibility.
+      // Never hide new words after an errored round — otherwise the system can
+      // progress even though the user has not completed the repetition.
       setRecallSuccessCount(0);
 
       // FAILURE SEVERITY WEIGHTING:
@@ -2031,17 +2032,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newOrder = newOrder.filter(idx => !failedIndices.has(idx));
       }
       
-      // Still hide 3 NEW words (base amount) even on failure
-      const wordsToHideOnFailure = 3;
-      for (let i = 0; i < wordsToHideOnFailure; i++) {
-        const nextToHide = getNextWordToHide(newHidden);
-        if (nextToHide !== null && !failedIndices.has(nextToHide)) {
-          newHidden.add(nextToHide);
-          newOrder.push(nextToHide);
-        }
-      }
-      
-      setCelebrationMessage("Try again");
+      setCelebrationMessage(t('common.try_again', 'Try again'));
       setShowCelebration(true);
       
       setTimeout(() => {
@@ -2277,7 +2268,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allHidden = hiddenWordIndices.size >= words.length;
 
     if (hadErrors) {
-      // Failed - reveal failed words, reset progress, try again
+      // Failed: reveal failed words, reset progress, retry same visibility.
+      // Do not hide any new words after an errored round.
       setPreBeatRecallSuccessCount(0);
       
       const failedIndices = new Set<number>();
@@ -2292,16 +2284,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newOrder = newOrder.filter(idx => !failedIndices.has(idx));
       }
       
-      // Still hide 3 new words even on failure (base amount)
-      for (let i = 0; i < 3; i++) {
-        const nextToHide = getNextWordToHide(newHidden);
-        if (nextToHide !== null && !failedIndices.has(nextToHide)) {
-          newHidden.add(nextToHide);
-          newOrder.push(nextToHide);
-        }
-      }
-      
-      setCelebrationMessage("Try again");
+      setCelebrationMessage(t('common.try_again', 'Try again'));
       setShowCelebration(true);
       
       setTimeout(() => {
