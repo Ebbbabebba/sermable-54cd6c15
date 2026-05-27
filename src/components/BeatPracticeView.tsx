@@ -1557,10 +1557,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // hesitation timer mark hidden words yellow while the microphone is hearing them.
     hasHeardSpeechRef.current = true;
     lastWordTimeRef.current = Date.now();
-    // Clear the fresh-speech gate only when this transcript is genuinely new
-    // for this phase — i.e. has more words than what we've already processed.
-    // This prevents replays of the previous sentence's tail from satisfying it.
-    if (rawWords.length > transcriptWordsRef.current.length) {
+    // Clear the fresh-speech gate only when ALL of the following hold:
+    //  • The transcript is genuinely longer than what we've already processed
+    //  • It contains tokens past the buffer-skip cutoff (i.e. not a stale replay
+    //    of the previous sentence's finals that the recognizer is still holding)
+    //  • At least 500ms has elapsed since the phase transition, so an in-flight
+    //    interim event can't satisfy the gate in the same tick as the swap.
+    if (
+      rawWords.length > transcriptWordsRef.current.length &&
+      rawWords.length > ignoreResultsBeforeIndexRef.current &&
+      Date.now() - phaseTransitionAtRef.current > 500
+    ) {
       needsFreshSpeechRef.current = false;
     }
 
