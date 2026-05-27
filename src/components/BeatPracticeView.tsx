@@ -2060,6 +2060,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           const newSessionNum = isCappedByGraduation ? Math.min(wantsToClimb, 3) : wantsToClimb;
           const nextRecallDate = calculateNextRecallDate(newSessionNum, new Date(), goalDate, preferredPracticeHours, fallbackPracticeHour);
 
+          // SCHEDULING OWNERSHIP:
+          //   • Sessions 0–1: the ladder (calculateNextRecallDate) owns
+          //     next_scheduled_recall_at — the short 10-min/evening/morning
+          //     cycle must run untouched (Pimsleur graduated interval recall).
+          //   • Sessions 2+: FSRS becomes the single source of truth and the
+          //     ladder no longer writes next_scheduled_recall_at to avoid the
+          //     race where both fire and the slower call wins arbitrarily.
+          const useFsrs = newSessionNum >= 2;
+
           const updateData: Record<string, any> = {
             last_recall_at: new Date().toISOString(),
             recall_session_number: newSessionNum,
@@ -2067,7 +2076,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             cooldown_until: null,
             total_successful_recalls: (recalledBeat.total_successful_recalls ?? 0) + 1,
           };
-          if (nextRecallDate) {
+          if (!useFsrs && nextRecallDate) {
             updateData.next_scheduled_recall_at = nextRecallDate.toISOString();
           }
 
@@ -2076,20 +2085,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             .update(updateData)
             .eq('id', recalledBeat.id)
             .then(() => {
-              console.log(`📅 Beat ${recalledBeat.beat_order} → session ${newSessionNum}${isCappedByGraduation ? ' (capped: needs full-speech pass)' : ''}, next:`, nextRecallDate?.toISOString() ?? 'none');
+              console.log(`📅 Beat ${recalledBeat.beat_order} → session ${newSessionNum}${isCappedByGraduation ? ' (capped: needs full-speech pass)' : ''}, ${useFsrs ? 'FSRS will schedule' : `next: ${nextRecallDate?.toISOString() ?? 'none'}`}`);
             });
 
-          // FSRS scheduler — single source of truth for next_scheduled_recall_at
-          const visibleCount = Math.max(0, words.length - hiddenWordIndices.size);
-          scheduleNextReview({
-            beatId: recalledBeat.id,
-            eventType: 'recall',
-            rawAccuracy: 100,
-            visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 0,
-            hesitations: 0,
-            lapses: 0,
-            missedWordCount: 0,
-          });
+          if (useFsrs) {
+            // FSRS scheduler — single source of truth for next_scheduled_recall_at
+            // once the beat has cleared the short-cycle ladder.
+            const visibleCount = Math.max(0, words.length - hiddenWordIndicesRef.current.size);
+            scheduleNextReview({
+              beatId: recalledBeat.id,
+              eventType: 'recall',
+              rawAccuracy: 100,
+              visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 0,
+              hesitations: 0,
+              lapses: 0,
+              missedWordCount: 0,
+            });
+          }
         }
 
         // If this was a merged recall, update last_merged_recall_at AND mark all
