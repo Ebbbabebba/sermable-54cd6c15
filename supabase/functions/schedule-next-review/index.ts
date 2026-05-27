@@ -212,7 +212,7 @@ serve(async (req) => {
       });
     }
 
-    const rating = ratingFromAccuracy(rawAccuracy, hesitations);
+    const rating = ratingFromAccuracy(rawAccuracy, hesitations, visibilityPercent);
     const reps = (beat.fsrs_reps ?? 0) + 1;
     const wasOverdue = beat.next_scheduled_recall_at
       ? new Date(beat.next_scheduled_recall_at).getTime() < Date.now()
