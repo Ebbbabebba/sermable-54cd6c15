@@ -2893,7 +2893,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             (data: any) => {
               if (showCelebrationRef.current) return;
               if (Date.now() < ignoreResultsUntilRef.current) return;
+              lastActivityAt = Date.now();
               setIsSpeechReady(true);
+
               const matches: string[] = data?.matches ?? [];
               const interim = matches[0] ?? "";
               lastNativeInterim = interim;
