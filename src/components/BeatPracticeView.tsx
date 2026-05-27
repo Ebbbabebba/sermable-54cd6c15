@@ -2440,6 +2440,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
     needsFreshSpeechRef.current = true;
+    phaseTransitionAtRef.current = Date.now();
 
     // Skip all currently buffered speech-results indices. Without this, the
     // recognizer's `event.results` array (which we deliberately never abort
