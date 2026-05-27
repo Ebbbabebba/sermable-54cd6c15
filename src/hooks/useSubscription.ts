@@ -4,8 +4,21 @@ import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
+const TIER_CACHE_KEY = 'sermable.subscription_tier';
+
+const readCachedTier = (): SubscriptionTier => {
+  try {
+    const v = localStorage.getItem(TIER_CACHE_KEY);
+    if (v === 'free' || v === 'student' || v === 'regular' || v === 'enterprise') {
+      return v as SubscriptionTier;
+    }
+  } catch {}
+  return 'free';
+};
+
 export const useSubscription = () => {
-  const [tier, setTier] = useState<SubscriptionTier>('free');
+  // Seed from localStorage to avoid a brief "free" flash that locks premium users
+  const [tier, setTier] = useState<SubscriptionTier>(() => readCachedTier());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
