@@ -2587,12 +2587,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const eveningTarget = new Date(now);
       eveningTarget.setHours(20, 0, 0, 0); // 8 PM today
       let recallEveningAt: Date;
-      if (now.getHours() >= 18) {
-        // Mastered after 6 PM - schedule 2 hours from now
+      if (now.getHours() >= 20) {
+        // Already past 8 PM — skip evening, let morning recall take over
+        recallEveningAt = eveningTarget; // in the past, won't trigger
+      } else if (now.getHours() >= 18) {
+        // Mastered between 6 PM and 8 PM — schedule 2 hours from now
         recallEveningAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-      } else if (now.getHours() >= 20) {
-        // Already past 8 PM - schedule for tomorrow morning instead (skip evening)
-        recallEveningAt = eveningTarget; // Will be in the past, won't trigger
       } else {
         recallEveningAt = eveningTarget;
       }
