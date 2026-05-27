@@ -105,7 +105,13 @@ const Practice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>(() => {
+    try {
+      const v = localStorage.getItem('sermable.subscription_tier');
+      if (v === 'free' || v === 'student' || v === 'regular' || v === 'enterprise') return v;
+    } catch {}
+    return 'free';
+  });
   const [skillLevel, setSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   const [isLocked, setIsLocked] = useState(false);
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
