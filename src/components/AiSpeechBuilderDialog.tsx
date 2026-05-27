@@ -187,6 +187,28 @@ export const AiSpeechBuilderDialog = ({
               className="resize-none"
               disabled={loading}
             />
+            <div className="space-y-2 pt-2">
+              <Label>
+                {t("aiBuilder.lengthLabel", "Ungefärlig längd")}
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {lengthOptions.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setTargetMinutes(m)}
+                    disabled={loading}
+                    className={`px-3 py-1.5 rounded-full border text-sm transition ${
+                      targetMinutes === m
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border hover:bg-muted"
+                    }`}
+                  >
+                    {m} {t("aiBuilder.minutesShort", "min")}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
