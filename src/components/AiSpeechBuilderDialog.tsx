@@ -41,6 +41,7 @@ export const AiSpeechBuilderDialog = ({
 
   const [step, setStep] = useState<Step>("prompt");
   const [prompt, setPrompt] = useState("");
+  const [targetMinutes, setTargetMinutes] = useState<number>(3);
   const [qa, setQa] = useState<QA[]>([]);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftSpeech, setDraftSpeech] = useState("");
@@ -49,11 +50,14 @@ export const AiSpeechBuilderDialog = ({
   const reset = () => {
     setStep("prompt");
     setPrompt("");
+    setTargetMinutes(3);
     setQa([]);
     setDraftTitle("");
     setDraftSpeech("");
     setLoading(false);
   };
+
+  const lengthOptions = [1, 2, 3, 5, 7, 10];
 
   const closeAndReset = (next: boolean) => {
     if (!next) reset();
@@ -109,6 +113,7 @@ export const AiSpeechBuilderDialog = ({
           prompt: promptOverride ?? prompt,
           language,
           answers,
+          targetMinutes,
         },
       });
       if (error) throw error;
@@ -182,6 +187,28 @@ export const AiSpeechBuilderDialog = ({
               className="resize-none"
               disabled={loading}
             />
+            <div className="space-y-2 pt-2">
+              <Label>
+                {t("aiBuilder.lengthLabel", "Ungefärlig längd")}
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {lengthOptions.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setTargetMinutes(m)}
+                    disabled={loading}
+                    className={`px-3 py-1.5 rounded-full border text-sm transition ${
+                      targetMinutes === m
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background border-border hover:bg-muted"
+                    }`}
+                  >
+                    {m} {t("aiBuilder.minutesShort", "min")}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
