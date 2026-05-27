@@ -42,6 +42,7 @@ export const useSubscription = () => {
 
         if (profile?.subscription_tier) {
           setTier(profile.subscription_tier);
+          try { localStorage.setItem(TIER_CACHE_KEY, profile.subscription_tier); } catch {}
         }
 
         if (cancelled) return;
