@@ -466,6 +466,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
   const lastResetAtRef = useRef(Date.now());
+  const staleReplayGuardUntilRef = useRef(0);
 
   // Bumped on every phase transition. Any in-flight speech callback captures
   // the epoch at call time and bails if it changed — this prevents a buffered
@@ -1602,7 +1603,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       transcriptWordsRef.current.length === 0 &&
       currentWordIndexRef.current === 0 &&
       rawWords.length > 2 &&
-      Date.now() - lastResetAtRef.current < 700
+      Date.now() < staleReplayGuardUntilRef.current
     ) {
       hasHeardSpeechRef.current = false;
       return;
@@ -1831,6 +1832,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1));
 
     if (advancedTo >= words.length) {
+      if (phase.includes('learning') && needsFreshSpeechRef.current && !matchedFreshSpeech) {
+        console.log('🛑 Completion blocked — stale transcript reached sentence end');
+        return;
+      }
+
       if (matchedFreshSpeech) {
         needsFreshSpeechRef.current = false;
       }
@@ -2434,8 +2440,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   const resetForNextRep = () => {
     const now = Date.now();
+    const hadActiveRecognizer = Boolean(recognitionRef.current);
     repetitionIdRef.current += 1;
     lastResetAtRef.current = now;
+    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 700 : 0;
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
