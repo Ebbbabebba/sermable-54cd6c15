@@ -1595,11 +1595,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
 
-    // Any non-empty recognition event means the user is actively speaking.
-    // Do this before tail-deduping so repeated interim results don't let the
-    // hesitation timer mark hidden words yellow while the microphone is hearing them.
-    hasHeardSpeechRef.current = true;
-    lastWordTimeRef.current = Date.now();
     // Immediately after a reset the Web/Native recognizers can replay a chunk
     // from the previous rep. Never let a bulk replay from an empty local buffer
     // drive the cursor through the new sentence.
@@ -1609,8 +1604,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       rawWords.length > 2 &&
       Date.now() - lastResetAtRef.current < 700
     ) {
+      hasHeardSpeechRef.current = false;
       return;
     }
+
+    // Any non-empty recognition event means the user is actively speaking.
+    // Do this before tail-deduping so repeated interim results don't let the
+    // hesitation timer mark hidden words yellow while the microphone is hearing them.
+    hasHeardSpeechRef.current = true;
+    lastWordTimeRef.current = Date.now();
 
     // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
     // "empezar de nuevo" / "ricomincia" / "começar de novo". Detect on the LAST few raw tokens
@@ -1802,7 +1804,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       lastMatchedRawIndex = startIdx + rawOffset;
       if (
         rawWords.length > prevCount &&
-        rawWords.length > ignoreResultsBeforeIndexRef.current &&
         Date.now() - phaseTransitionAtRef.current > 500
       ) {
         matchedFreshSpeech = true;
@@ -1830,6 +1831,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1));
 
     if (advancedTo >= words.length) {
+      if (matchedFreshSpeech) {
+        needsFreshSpeechRef.current = false;
+      }
+
       if (lastCompletionRepIdRef.current === repId) {
         return;
       }
