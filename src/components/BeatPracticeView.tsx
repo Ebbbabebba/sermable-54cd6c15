@@ -753,7 +753,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptWordsRef.current = [];
     // Clear native plugin's cumulative finals buffer so old tokens can't
     // leak into the next utterance after the pause window.
-    try { (recognitionRef.current as any)?.clearBuffer?.(); } catch {}
+    try {
+      (recognitionRef.current as { clearBuffer?: () => void } | null)?.clearBuffer?.();
+    } catch {
+      // Ignore buffer-clear failures; the debounce window still protects us.
+    }
 
     // NOTE: intentionally NOT calling recognitionRef.current.abort() here.
     // The ignoreResultsUntilRef window already discards stale tokens, and skipping
@@ -2478,7 +2482,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // sentence that just completed can replay into the next repetition and be
     // counted as if the user had spoken it again, which made words fade too early.
     ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
-    try { (recognitionRef.current as any)?.clearBuffer?.(); } catch {}
+    try {
+      (recognitionRef.current as { clearBuffer?: () => void } | null)?.clearBuffer?.();
+    } catch {
+      // Ignore buffer-clear failures; the result-index guard still protects us.
+    }
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = now;
     lastAutoAdvanceAtRef.current = 0;
