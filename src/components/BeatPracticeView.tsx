@@ -465,6 +465,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   // Track the repetition number so we can ignore old transcript data after reset
   const repetitionIdRef = useRef(0);
+  const lastResetAtRef = useRef(Date.now());
 
   // Bumped on every phase transition. Any in-flight speech callback captures
   // the epoch at call time and bails if it changed — this prevents a buffered
@@ -1599,18 +1600,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // hesitation timer mark hidden words yellow while the microphone is hearing them.
     hasHeardSpeechRef.current = true;
     lastWordTimeRef.current = Date.now();
-    // Clear the fresh-speech gate only when ALL of the following hold:
-    //  • The transcript is genuinely longer than what we've already processed
-    //  • It contains tokens past the buffer-skip cutoff (i.e. not a stale replay
-    //    of the previous sentence's finals that the recognizer is still holding)
-    //  • At least 500ms has elapsed since the phase transition, so an in-flight
-    //    interim event can't satisfy the gate in the same tick as the swap.
+    // Immediately after a reset the Web/Native recognizers can replay a chunk
+    // from the previous rep. Never let a bulk replay from an empty local buffer
+    // drive the cursor through the new sentence.
     if (
-      rawWords.length > transcriptWordsRef.current.length &&
-      rawWords.length > ignoreResultsBeforeIndexRef.current &&
-      Date.now() - phaseTransitionAtRef.current > 500
+      transcriptWordsRef.current.length === 0 &&
+      currentWordIndexRef.current === 0 &&
+      rawWords.length > 2 &&
+      Date.now() - lastResetAtRef.current < 700
     ) {
-      needsFreshSpeechRef.current = false;
+      return;
     }
 
     // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
@@ -1703,6 +1702,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
     let lastMatchedRawIndex = startIdx - 1;
+    let matchedFreshSpeech = false;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
@@ -1800,6 +1800,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       advancedTo = foundIdx + 1;
       lastMatchedRawIndex = startIdx + rawOffset;
+      if (
+        rawWords.length > prevCount &&
+        rawWords.length > ignoreResultsBeforeIndexRef.current &&
+        Date.now() - phaseTransitionAtRef.current > 500
+      ) {
+        matchedFreshSpeech = true;
+      }
       lastWordTimeRef.current = Date.now();
 
       // HARD sentence-boundary stop: if we just matched the final word of a
@@ -1841,6 +1848,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
 
     if (advancedTo > currentIdx) {
+      if (matchedFreshSpeech) {
+        needsFreshSpeechRef.current = false;
+      }
+
       currentWordIndexRef.current = advancedTo;
       setCurrentWordIndex(advancedTo);
 
@@ -2417,11 +2428,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }
 
   const resetForNextRep = () => {
+    const now = Date.now();
     repetitionIdRef.current += 1;
+    lastResetAtRef.current = now;
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 100);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 250);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
@@ -2448,12 +2461,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
-    // NOTE: do NOT reset `ignoreResultsBeforeIndexRef` here. Between reps the
-    // `repetitionIdRef` gate is enough, and zeroing this would let stale items
-    // already buffered in `event.results` re-enter `runningTranscriptRef` on
-    // the next onresult tick. transitionToPhase bumps this ref explicitly.
+    // Skip everything the recognizer has already buffered. Otherwise the same
+    // sentence that just completed can replay into the next repetition and be
+    // counted as if the user had spoken it again, which made words fade too early.
+    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    try { (recognitionRef.current as any)?.clearBuffer?.(); } catch {}
     hasHeardSpeechRef.current = false;
-    lastWordTimeRef.current = Date.now();
+    lastWordTimeRef.current = now;
     lastAutoAdvanceAtRef.current = 0;
   };
 
