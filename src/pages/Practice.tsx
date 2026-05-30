@@ -41,6 +41,13 @@ import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
 import { PauseSlidersList } from "@/components/PauseSlidersList";
+import { Slider } from "@/components/ui/slider";
+import {
+  getHesitationThresholdMs,
+  setHesitationThresholdMs,
+  MIN_HESITATION_MS,
+  MAX_HESITATION_MS,
+} from "@/lib/practicePrefs";
 
 interface Speech {
   id: string;
@@ -2115,8 +2122,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     <Settings className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div
+                    className="px-2 py-2"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <HesitationSliderControl />
+                  </div>
                   <DropdownMenuSeparator />
                   {subscriptionTier !== 'free' && (
                     <DropdownMenuItem onClick={handleOpenEditScript}>
@@ -2650,4 +2665,37 @@ const [liveTranscription, setLiveTranscription] = useState("");
   );
 };
 
+
+// Inline control: lets the speaker tune how long they get before a hidden
+// word is marked as a hesitation. Persisted via localStorage so the
+// preference survives reloads and applies to every speech.
+const HesitationSliderControl = () => {
+  const { t } = useTranslation();
+  const [valueMs, setValueMs] = useState<number>(() => getHesitationThresholdMs());
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-medium text-foreground">
+          {t('practice.settings.hesitationTime', 'Hesitation time')}
+        </span>
+        <span className="tabular-nums text-muted-foreground">
+          {(valueMs / 1000).toFixed(1)}s
+        </span>
+      </div>
+      <Slider
+        min={MIN_HESITATION_MS}
+        max={MAX_HESITATION_MS}
+        step={250}
+        value={[valueMs]}
+        onValueChange={([v]) => {
+          setValueMs(v);
+          setHesitationThresholdMs(v);
+        }}
+      />
+    </div>
+  );
+};
+
 export default Practice;
+

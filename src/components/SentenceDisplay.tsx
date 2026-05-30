@@ -44,7 +44,18 @@ const SentenceDisplay = ({
     setDisplayedIndex(currentWordIndex);
   }, [currentWordIndex]);
   
-  // Auto-scroll to current word with smooth behavior
+  // The blue pulse advances past words that are already revealed as
+  // hesitated/missed so the user's eye is drawn to what's next, even
+  // while the matcher is still waiting on the revealed word.
+  let pulseIndex = displayedIndex;
+  while (
+    pulseIndex < words.length &&
+    (hesitatedIndices.has(pulseIndex) || missedIndices.has(pulseIndex))
+  ) {
+    pulseIndex++;
+  }
+
+  // Auto-scroll to the pulsing word with smooth behavior
   useEffect(() => {
     if (currentWordRef.current && containerRef.current) {
       currentWordRef.current.scrollIntoView({
@@ -53,13 +64,17 @@ const SentenceDisplay = ({
         inline: 'center',
       });
     }
-  }, [displayedIndex]);
+  }, [pulseIndex]);
+
 
   const getWordState = (index: number): WordState => {
     const word = words[index];
     const isVisible = !hiddenWordIndices.has(index);
     const isSpoken = spokenIndices.has(index);
-    const isCurrent = index === displayedIndex;
+    // `isCurrent` drives the blue pulse / ring. We point it at the next
+    // not-yet-resolved word so the cursor visibly advances when the
+    // current word gets marked yellow (hesitated) or red (missed).
+    const isCurrent = index === pulseIndex;
     const isHesitated = hesitatedIndices.has(index);
     const isMissed = missedIndices.has(index);
 
@@ -72,6 +87,7 @@ const SentenceDisplay = ({
       isMissed,
     };
   };
+
 
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
 
