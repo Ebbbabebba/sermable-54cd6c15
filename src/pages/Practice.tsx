@@ -41,6 +41,13 @@ import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
 import { PauseSlidersList } from "@/components/PauseSlidersList";
+import { Slider } from "@/components/ui/slider";
+import {
+  getHesitationThresholdMs,
+  setHesitationThresholdMs,
+  MIN_HESITATION_MS,
+  MAX_HESITATION_MS,
+} from "@/lib/practicePrefs";
 
 interface Speech {
   id: string;
