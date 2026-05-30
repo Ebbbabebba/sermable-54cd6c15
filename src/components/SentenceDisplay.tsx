@@ -55,13 +55,25 @@ const SentenceDisplay = ({
     }
   }, [displayedIndex]);
 
-  const getWordState = (index: number): WordState => {
+  // The blue pulse advances past words that are already revealed as
+  // hesitated/missed so the user's eye is drawn to what's next, even
+  // while the matcher is still waiting on the revealed word.
+  let pulseIndex = displayedIndex;
+  while (
+    pulseIndex < words.length &&
+    (hesitatedIndices.has(pulseIndex) || missedIndices.has(pulseIndex))
+  ) {
+    pulseIndex++;
+  }
+
+  const getWordState = (index: number): WordState & { isPulse: boolean } => {
     const word = words[index];
     const isVisible = !hiddenWordIndices.has(index);
     const isSpoken = spokenIndices.has(index);
     const isCurrent = index === displayedIndex;
     const isHesitated = hesitatedIndices.has(index);
     const isMissed = missedIndices.has(index);
+    const isPulse = index === pulseIndex;
 
     return {
       text: word,
@@ -70,8 +82,10 @@ const SentenceDisplay = ({
       isCurrent,
       isHesitated,
       isMissed,
+      isPulse,
     };
   };
+
 
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
 
