@@ -506,14 +506,14 @@ const UploadSpeechDialog = ({
             )}
           >
             <div className="relative">
-              <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
               <Input
                 autoFocus
                 type="date"
                 min={minDate}
                 value={goalDate}
                 onChange={(e) => setGoalDate(e.target.value)}
-                className="pl-12 h-14 text-lg"
+                className="pl-12 pr-4 h-14 text-lg bg-background text-foreground border-border rounded-xl w-full appearance-none [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-date-and-time-value]:text-left"
               />
             </div>
           </StepShell>
