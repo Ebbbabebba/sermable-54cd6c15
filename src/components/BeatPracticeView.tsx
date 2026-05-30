@@ -19,6 +19,7 @@ import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-r
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 import { scheduleNextReview } from "@/lib/scheduleNextReview";
+import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
