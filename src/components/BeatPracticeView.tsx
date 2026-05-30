@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil } from "lucide-react";
+import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil, FastForward } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -2442,6 +2442,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
   }
 
+  // User-triggered: hide a chunk more words right now to skip ahead in the
+  // fading progression. Useful when the user already knows the beat and wants
+  // to jump to fewer visible words without grinding through every rep.
+  const jumpHideAhead = useCallback(() => {
+    if (showCelebration) return;
+    let newHidden = new Set(hiddenWordIndicesRef.current);
+    const newOrder = [...hiddenWordOrder];
+    const jumpSize = 5;
+    let added = 0;
+    for (let i = 0; i < jumpSize; i++) {
+      const nextToHide = getNextWordToHide(newHidden, protectedWordIndices);
+      if (nextToHide === null) break;
+      newHidden.add(nextToHide);
+      newOrder.push(nextToHide);
+      added++;
+    }
+    if (added === 0) return;
+    setHiddenWordIndices(newHidden);
+    setHiddenWordOrder(newOrder);
+    setFailedWordIndices(new Set());
+    setFadingSuccessCount(prev => Math.min(prev + 1, 2));
+    resetForNextRep();
+  }, [hiddenWordOrder, protectedWordIndices, getNextWordToHide, showCelebration]);
+
   const resetForNextRep = () => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
@@ -3850,7 +3874,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           )}
 
           {/* Phase pill */}
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center gap-2">
             <span className={cn(
               "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
               sessionMode === 'pre_beat_recall' && "bg-purple-500/10 text-purple-500",
@@ -3877,7 +3901,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 'Combining sentences'
               )}
             </span>
+            {sessionMode !== 'pre_beat_recall' && getPhaseType() === 'fading' && hiddenWordIndices.size < words.length && (
+              <button
+                type="button"
+                onClick={jumpHideAhead}
+                disabled={showCelebration}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+                title={t('beat_practice.skip_hide_ahead', 'Hide more words now')}
+              >
+                <FastForward className="h-3.5 w-3.5" />
+                {t('beat_practice.skip_hide_ahead', 'Skip ahead')}
+              </button>
+            )}
           </div>
+
 
           {/* Explanation for hidden words during recall */}
           {(sessionMode === 'recall' || sessionMode === 'pre_beat_recall') && hiddenWordIndices.size > 0 && (
