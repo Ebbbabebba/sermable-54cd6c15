@@ -66,14 +66,16 @@ const SentenceDisplay = ({
     pulseIndex++;
   }
 
-  const getWordState = (index: number): WordState & { isPulse: boolean } => {
+  const getWordState = (index: number): WordState => {
     const word = words[index];
     const isVisible = !hiddenWordIndices.has(index);
     const isSpoken = spokenIndices.has(index);
-    const isCurrent = index === displayedIndex;
+    // `isCurrent` drives the blue pulse / ring. We point it at the next
+    // not-yet-resolved word so the cursor visibly advances when the
+    // current word gets marked yellow (hesitated) or red (missed).
+    const isCurrent = index === pulseIndex;
     const isHesitated = hesitatedIndices.has(index);
     const isMissed = missedIndices.has(index);
-    const isPulse = index === pulseIndex;
 
     return {
       text: word,
@@ -82,7 +84,6 @@ const SentenceDisplay = ({
       isCurrent,
       isHesitated,
       isMissed,
-      isPulse,
     };
   };
 
