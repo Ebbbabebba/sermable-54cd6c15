@@ -44,17 +44,6 @@ const SentenceDisplay = ({
     setDisplayedIndex(currentWordIndex);
   }, [currentWordIndex]);
   
-  // Auto-scroll to current word with smooth behavior
-  useEffect(() => {
-    if (currentWordRef.current && containerRef.current) {
-      currentWordRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center',
-      });
-    }
-  }, [displayedIndex]);
-
   // The blue pulse advances past words that are already revealed as
   // hesitated/missed so the user's eye is drawn to what's next, even
   // while the matcher is still waiting on the revealed word.
@@ -65,6 +54,18 @@ const SentenceDisplay = ({
   ) {
     pulseIndex++;
   }
+
+  // Auto-scroll to the pulsing word with smooth behavior
+  useEffect(() => {
+    if (currentWordRef.current && containerRef.current) {
+      currentWordRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center',
+      });
+    }
+  }, [pulseIndex]);
+
 
   const getWordState = (index: number): WordState => {
     const word = words[index];
