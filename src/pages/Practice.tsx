@@ -2122,8 +2122,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     <Settings className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div
+                    className="px-2 py-2"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <HesitationSliderControl />
+                  </div>
                   <DropdownMenuSeparator />
                   {subscriptionTier !== 'free' && (
                     <DropdownMenuItem onClick={handleOpenEditScript}>
