@@ -2442,6 +2442,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
   }
 
+  // User-triggered: hide a chunk more words right now to skip ahead in the
+  // fading progression. Useful when the user already knows the beat and wants
+  // to jump to fewer visible words without grinding through every rep.
+  const jumpHideAhead = useCallback(() => {
+    if (showCelebration) return;
+    let newHidden = new Set(hiddenWordIndicesRef.current);
+    const newOrder = [...hiddenWordOrder];
+    const jumpSize = 5;
+    let added = 0;
+    for (let i = 0; i < jumpSize; i++) {
+      const nextToHide = getNextWordToHide(newHidden, protectedWordIndices);
+      if (nextToHide === null) break;
+      newHidden.add(nextToHide);
+      newOrder.push(nextToHide);
+      added++;
+    }
+    if (added === 0) return;
+    setHiddenWordIndices(newHidden);
+    setHiddenWordOrder(newOrder);
+    setFailedWordIndices(new Set());
+    setFadingSuccessCount(prev => Math.min(prev + 1, 2));
+    resetForNextRep();
+  }, [hiddenWordOrder, protectedWordIndices, getNextWordToHide, showCelebration]);
+
   const resetForNextRep = () => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
