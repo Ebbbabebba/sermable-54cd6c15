@@ -3906,13 +3906,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 'Combining sentences'
               )}
             </span>
-            {sessionMode !== 'pre_beat_recall' && getPhaseType() === 'fading' && hiddenWordIndices.size < words.length && (
+            {sessionMode !== 'pre_beat_recall' && sessionMode !== 'recall' && hiddenWordIndices.size < words.length && (
               <button
                 type="button"
                 onClick={jumpHideAhead}
                 disabled={showCelebration}
                 className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
-                title={t('beat_practice.skip_hide_ahead', 'Hide more words now')}
+                aria-label={t('beat_practice.skip_hide_ahead', 'Skip ahead')}
+                title={t('beat_practice.skip_hide_ahead_tooltip', 'Hide more words now')}
               >
                 <FastForward className="h-3.5 w-3.5" />
                 {t('beat_practice.skip_hide_ahead', 'Skip ahead')}
