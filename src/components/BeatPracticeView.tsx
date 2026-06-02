@@ -2570,6 +2570,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastCompletionRepIdRef.current = -1;
     pauseSpeechRecognition(350);
     resetForNextRep();
+    // Force the native recognizer to begin a fresh listening session for the
+    // new sentence. Without this, iOS sometimes stays in a half-stopped state
+    // after the celebration overlay and the user has to wait several seconds
+    // before sentence 2 starts being heard.
+    try {
+      (recognitionRef.current as { restart?: () => void } | null)?.restart?.();
+    } catch {}
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
     if (currentBeat) {
@@ -2896,20 +2903,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           let partialHandle: any = null;
           let stopped = false;
 
-          // Watchdog: if no partial result arrives within 15s, force restart.
-          // Some Android builds silently stop listening without firing the
-          // "stopped" status — this keeps recognition alive.
+          // Watchdog: if no partial result arrives within 6s, force restart.
+          // iOS/Android sometimes silently stop listening (e.g. after silence
+          // during sentence transitions) without firing the "stopped" status,
+          // which caused the recognizer to feel "dead" entering sentence 2.
           let lastActivityAt = Date.now();
           const watchdog = setInterval(() => {
             if (stopped || !isRecordingRef.current) return;
-            if (Date.now() - lastActivityAt > 15000) {
+            // Skip watchdog while celebration/transition is intentionally muting input.
+            if (showCelebrationRef.current) {
+              lastActivityAt = Date.now();
+              return;
+            }
+            if (Date.now() - lastActivityAt > 6000) {
               lastActivityAt = Date.now();
               NativeSpeech.stop().catch(() => {});
               setTimeout(() => {
                 if (!stopped && isRecordingRef.current) startNativeSession();
               }, 120);
             }
-          }, 3000);
+          }, 1500);
 
           const startNativeSession = async () => {
             if (stopped || !isRecordingRef.current) return;
@@ -2989,8 +3002,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 await listenerHandle?.remove?.();
               } catch {}
             },
-
+            restart: async () => {
+              if (stopped || !isRecordingRef.current) return;
+              nativeFinalsRef.current = "";
+              lastNativeInterim = "";
+              try {
+                await NativeSpeech.stop();
+              } catch {}
+              // Brief delay lets iOS release the recognition task before we
+              // start a fresh one (avoids "already running" errors).
+              setTimeout(() => {
+                if (!stopped && isRecordingRef.current) startNativeSession();
+              }, 120);
+            },
           };
+
+
 
           isRecordingRef.current = true;
           setIsRecording(true);
