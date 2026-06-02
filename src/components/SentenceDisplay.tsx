@@ -117,10 +117,10 @@ const SentenceDisplay = ({
           className={cn(
             "inline-flex items-center justify-center mx-1 px-3 py-0.5 rounded-full text-base align-middle",
             state.isCurrent && !state.isSpoken
-              ? "bg-primary/15 text-primary ring-1 ring-primary/40 font-semibold"
+              ? "bg-blue-500/15 text-blue-600 ring-1 ring-blue-400/40 font-semibold"
               : state.isSpoken
-                ? "bg-muted/40 text-muted-foreground/60"
-                : "bg-muted/60 text-muted-foreground",
+                ? "bg-blue-100/40 text-blue-400/60"
+                : "bg-blue-100/60 text-blue-500",
           )}
           aria-label="pause"
         >
@@ -129,7 +129,7 @@ const SentenceDisplay = ({
       );
     }
     
-    // Hidden word that was MISSED - reveal it in red so user can see what they got wrong
+    // Hidden word that was MISSED - reveal it in dark blue so user can see what they got wrong
     if (!state.isVisible && state.isMissed) {
       return (
         <motion.span
@@ -141,7 +141,7 @@ const SentenceDisplay = ({
           transition={smoothTransition}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
-            "bg-destructive/20 text-destructive font-medium ring-1 ring-destructive/40"
+            "bg-blue-900/20 text-blue-800 font-medium ring-1 ring-blue-700/40"
           )}
         >
           {state.text}
@@ -149,7 +149,7 @@ const SentenceDisplay = ({
       );
     }
     
-    // Hidden word that was HESITATED - reveal it in yellow/warning
+    // Hidden word that was HESITATED - reveal it in medium blue
     if (!state.isVisible && state.isHesitated) {
       return (
         <motion.span
@@ -161,7 +161,7 @@ const SentenceDisplay = ({
           transition={smoothTransition}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
-            "bg-warning/20 text-warning font-medium ring-1 ring-warning/40"
+            "bg-blue-400/20 text-blue-600 font-medium ring-1 ring-blue-500/40"
           )}
         >
           {state.text}
@@ -188,8 +188,8 @@ const SentenceDisplay = ({
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-200",
             state.isCurrent &&
-              "ring-2 ring-primary bg-primary/20 text-primary font-semibold shadow-[0_0_12px_hsl(var(--primary)/0.4)]",
-            !state.isCurrent && "text-muted-foreground/60 hover:bg-muted"
+              "ring-2 ring-blue-500 bg-blue-500/20 text-blue-600 font-semibold shadow-[0_0_12px_hsl(217_91%_60%/0.4)]",
+            !state.isCurrent && "text-blue-400/60 hover:bg-blue-100"
           )}
         >
           {"•".repeat(dotCount)}
@@ -217,20 +217,20 @@ const SentenceDisplay = ({
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
           // Subtle marker for current word
-          state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60",
+          state.isCurrent && !state.isSpoken && "relative text-blue-600 font-medium bg-blue-500/10 border-b-2 border-blue-400/60",
           // Spoken word gets muted styling
-          state.isSpoken && "text-muted-foreground/50",
+          state.isSpoken && "text-blue-400/50",
           // Missed visible word (not hidden)
-          state.isMissed && "bg-destructive/20 text-destructive",
+          state.isMissed && "bg-blue-900/20 text-blue-800",
           // Hesitated visible word (not hidden)
-          state.isHesitated && !state.isMissed && "bg-warning/20 text-warning",
+          state.isHesitated && !state.isMissed && "bg-blue-400/20 text-blue-600",
         )}
       >
         {state.text}
         {/* Subtle pulse indicator for current word */}
         {state.isCurrent && !state.isSpoken && (
           <motion.span
-            className="absolute -bottom-2 left-1/2 w-1.5 h-1.5 rounded-full bg-primary"
+            className="absolute -bottom-2 left-1/2 w-1.5 h-1.5 rounded-full bg-blue-500"
             initial={{ opacity: 0.6, scale: 0.8 }}
             animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
