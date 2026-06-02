@@ -1818,6 +1818,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // must wait for fresh recognition input. This prevents cascading skips
       // where leftover interim text races through one or more sentences.
       if (/[.!?]$/.test(words[foundIdx] ?? '')) {
+        hasHeardSpeechRef.current = false;
+        lastWordTimeRef.current = Date.now();
         break;
       }
     }
@@ -3138,30 +3140,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
               hesitatedIndicesRef.current = newHesitated;
               setHesitatedIndices(newHesitated);
-            }
-            const isLenientWord = isEffectivelyLenientWord(idx);
-            // Sentence-start hidden words: do NOT auto-advance on timeout —
-            // the user hasn't started speaking yet. Just keep showing the clue.
-            const isSentenceStart = idx === 0 || /[.!?]$/.test(words[idx - 1] ?? '');
-            if (isSentenceStart) {
-              return;
-            }
-            const autoAdvanceMs = isLenientWord ? 3000 : 6000;
-            // Block back-to-back auto-advances within a short window. This
-            // prevents the cursor from cascading through 3 hidden words in a
-            // row when the user is briefly quiet — they get one nudge, then
-            // have to actually say something (or wait again) before the next.
-            const sinceLastAdvance = Date.now() - lastAutoAdvanceAtRef.current;
-            if (sinceLastAdvance < autoAdvanceMs) return;
-            if (elapsed > autoAdvanceMs) {
+
               console.log(
-                `⏭️ Auto-advancing past ${
-                  isLenientWord ? "lenient" : "hesitated"
-                } word "${words[idx]}" at index ${idx} after ${autoAdvanceMs / 1000}s timeout`
+                `⏭️ Revealing and advancing past hesitated word "${words[idx]}" at index ${idx} after ${hesitationMs / 1000}s`
               );
               const newSpoken = new Set([...spokenIndicesRef.current, idx]);
               spokenIndicesRef.current = newSpoken;
               setSpokenIndices(newSpoken);
+              postPauseNoHesitationIndicesRef.current.delete(idx);
               const nextIdx = idx + 1;
               currentWordIndexRef.current = nextIdx;
               setCurrentWordIndex(nextIdx);
