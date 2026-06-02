@@ -3469,6 +3469,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const startCoffeeBreakRecall = () => {
       setRestUntilTime(null);
       setRestMinutes(0);
+
+      // Between-beats: continue into the pre-beat recall flow we queued.
+      if (!isEndOfSessionRecall && beatToRecallBeforeNext) {
+        setShowPreBeatRecallIntro(true);
+        setPreBeatRecallSuccessCount(0);
+        setHiddenWordIndices(new Set());
+        setHiddenWordOrder([]);
+        setProtectedWordIndices(new Set());
+        setPhase('beat_fading');
+        const idx = beats.findIndex(b => b.id === beatToRecallBeforeNext.id);
+        if (idx >= 0) setCurrentBeatIndex(idx);
+        setSessionMode('pre_beat_recall');
+        return;
+      }
+
+      // End-of-session: 10-min recall of the just-mastered beat.
       setIs10MinRecall(true);
       setRecallIndex(0);
       setRecallSuccessCount(0);
