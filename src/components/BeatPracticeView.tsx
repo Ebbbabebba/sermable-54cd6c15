@@ -2571,7 +2571,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(350);
+    pauseSpeechRecognition(120);
     resetForNextRep();
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
