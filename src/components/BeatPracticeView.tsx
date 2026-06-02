@@ -1614,7 +1614,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Do this before tail-deduping so repeated interim results don't let the
     // hesitation timer mark hidden words yellow while the microphone is hearing them.
     hasHeardSpeechRef.current = true;
-    lastWordTimeRef.current = Date.now();
+    // IMPORTANT: do NOT reset lastWordTimeRef on every interim result. If the
+    // recognizer keeps emitting fragments that never match the expected hidden
+    // word (e.g. "har"/"harmod"/"fahar" while we expect "man"), resetting the
+    // clock here prevents the 2s hesitation auto-advance from ever firing and
+    // the cursor freezes. lastWordTimeRef is reset on real matches (line ~1813)
+    // and on sentence boundaries / phase transitions, which is sufficient.
 
     // Voice command: "börja om" / "start over" / "starta om" / "von vorn(e)" / "recommencer" /
     // "empezar de nuevo" / "ricomincia" / "começar de novo". Detect on the LAST few raw tokens
