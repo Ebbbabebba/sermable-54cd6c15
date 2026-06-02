@@ -3078,6 +3078,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           if (!isRecordingRef.current) return;
           if (!recognitionRef.current) return;
 
+          // The Web Speech engine restarts with a fresh `event.results` array
+          // (indices reset to 0). Any leftover `ignoreResultsBeforeIndexRef`
+          // value from the previous session (set by resetForNextRep / pauses
+          // to the cumulative final-count) would now filter out ALL incoming
+          // results until the new index caught up — which felt like the mic
+          // suddenly going deaf mid-sentence after ~10 spoken words.
+          latestSpeechResultCountRef.current = 0;
+          ignoreResultsBeforeIndexRef.current = 0;
+
           const startSafely = () => {
             if (!isRecordingRef.current) return;
             if (!recognitionRef.current) return;
