@@ -1741,28 +1741,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       if (foundIdx === -1) {
         // Current word didn't match - check NEXT word (lookahead of 1)
-        // STRICT RULE: lookahead may ONLY skip over visible (non-hidden) words.
-        // We never silently skip a hidden word via lookahead — even if it's
-        // "lenient" — because that marks the hidden word as completed without
-        // the user actually saying it. Hidden words must be matched directly,
-        // hesitated (yellow → auto-advance), or genuinely missed.
-        const canSkipCurrent = !currentIsHidden;
+        // STRICT RULE: lookahead may ONLY skip over visible (non-hidden) words,
+        // EXCEPT hidden gap words (att, och, i, på, som, en, ett, det, ...).
+        // Gap words are interchangeable filler — if the user substitutes or
+        // omits one when the whole sentence is hidden, that should not freeze
+        // the cursor or count against them.
+        const isHiddenGap = (i: number) =>
+          hiddenWordIndicesRef.current.has(i) && isGapWord(words[i] ?? '');
+        const canSkipWord = (i: number) =>
+          !hiddenWordIndicesRef.current.has(i) || isHiddenGap(i);
+        const canSkipCurrent = canSkipWord(advancedTo);
+
         if (
           canSkipCurrent &&
           advancedTo + 1 < words.length &&
-          !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
           !crossesSentenceBoundary(advancedTo, advancedTo + 1) &&
           wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)
         ) {
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
         } else if (canSkipCurrent && advancedTo + 2 < words.length) {
-          // 2-word lookahead — only across visible words, never crossing
-          // a sentence boundary, never over a hidden word.
-          const betweenIsHidden = hiddenWordIndicesRef.current.has(advancedTo + 1);
+          // 2-word lookahead — visible words or hidden gap words only,
+          // never crossing a sentence boundary.
           if (
-            !betweenIsHidden &&
-            !hiddenWordIndicesRef.current.has(advancedTo + 2) &&
+            canSkipWord(advancedTo + 1) &&
             !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
             wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
           ) {
@@ -1772,6 +1774,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         }
       }
+
 
       if (foundIdx === -1) {
         // No match for this spoken token. Do NOT auto-advance hidden words —
