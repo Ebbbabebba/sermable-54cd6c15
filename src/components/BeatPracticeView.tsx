@@ -399,14 +399,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
-  // Sentence 1 = 1 rep (quick onboarding). Sentence 2+ and combined/beat
-  // phases = 2 reps so a single stray speech callback can't auto-complete
-  // the read-through and trip fading before the user has actually spoken.
-  // Always require 2 read-throughs before fading begins (desirable difficulty —
-  // one pass is not enough to consider a sentence learned). Previously
-  // sentence_1 was special-cased to 1 rep, which let fading start prematurely
-  // and was a likely cause of "sentence 2 skipped over" complaints.
-  const requiredLearningReps = 2;
+  // One clean read-through before fading begins. Fresh-speech gates and hard
+  // recognizer restarts protect phase transitions, so we don't need to make the
+  // user repeat the same sentence twice just to avoid stale callbacks.
+  const requiredLearningReps = 1;
   const [repetitionCount, setRepetitionCount] = useState(1);
   const repetitionCountRef = useRef(1);
   
@@ -605,11 +601,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const getUniqueSentences = useCallback((beat: Beat | null): string[] => {
     if (!beat) return [];
     const sentences = [beat.sentence_1_text, beat.sentence_2_text, beat.sentence_3_text];
-    // Filter unique sentences while preserving order
+    // Filter unique sentences while preserving order. Normalize the comparison
+    // so the same sentence is not repeated just because whitespace/casing differs.
     const seen = new Set<string>();
     return sentences.filter(s => {
-      if (!s || seen.has(s)) return false;
-      seen.add(s);
+      const key = (s ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
       return true;
     });
   }, []);
@@ -2523,9 +2521,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // user would speak immediately and the first ~700ms of words were dropped.
     staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 250 : 0;
     // Minimal ignore window — but never shorten a longer pause that was set
-    // by completion/phase transitions. Shortening it lets stale final results
-    // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 150);
+    // by completion/phase transitions. Keep this very short so the next real
+    // first word is not swallowed after a reset.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 80);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
@@ -2589,7 +2587,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // protects us from sentence-1 replay, so we only need a tiny mute here to
     // cover the restart gap. Keeping this short is what makes the first word
     // of the new sentence feel responsive.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 150);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 80);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
@@ -2610,7 +2608,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(150);
+    pauseSpeechRecognition(80);
     resetForNextRep();
     // resetForNextRep arms a 250ms stale-replay guard intended for same-phase
     // reps. Across phases we instead force a fresh recognizer session, so the
