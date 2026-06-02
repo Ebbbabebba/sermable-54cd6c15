@@ -2528,7 +2528,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 75);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 40);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
@@ -2590,7 +2590,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastAutoAdvanceAtRef.current = Date.now();
     // Short ignore window: result-index filtering drops old buffered words,
     // while keeping the next first word responsive if the user starts quickly.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 150);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 60);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
@@ -2598,12 +2598,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     needsFreshSpeechRef.current = true;
     phaseTransitionAtRef.current = Date.now();
 
-    // Skip all currently buffered speech-results indices. Without this, the
-    // recognizer's `event.results` array (which we deliberately never abort
-    // to avoid the iOS mic chime) would replay sentence-1 finals into the
-    // running transcript on the very next onresult tick, falsely matching
-    // common stop-words in sentence 2 and auto-completing the read-through.
-    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    // Reset filter to 0. The native plugin already gets clearBuffer() via
+    // pauseSpeechRecognition, and Web Speech's onend→onstart cycle resets
+    // event.results indices to 0. Holding a non-zero cutoff here was
+    // swallowing the first word of the new phase.
+    ignoreResultsBeforeIndexRef.current = 0;
 
     setPhase(newPhase);
     setRepetitionCount(1);
@@ -2615,7 +2614,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(350);
+    pauseSpeechRecognition(200);
     resetForNextRep();
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
@@ -3058,9 +3057,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
           await startNativeSession();
           if (isRecordingRef.current) setIsSpeechReady(true);
-          speechReadyTimeoutRef.current = setTimeout(() => {
-            if (isRecordingRef.current) setIsSpeechReady(true);
-          }, 450);
         } catch (nativeErr) {
           console.error("Native speech failed, falling back to Web Speech:", nativeErr);
           // Fall through to Web Speech below
@@ -3179,9 +3175,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         isRecordingRef.current = true;
         setIsRecording(true);
         recognition.onstart = () => {
-          speechReadyTimeoutRef.current = setTimeout(() => {
-            if (isRecordingRef.current) setIsSpeechReady(true);
-          }, 250);
+          if (isRecordingRef.current) setIsSpeechReady(true);
         };
         recognition.start();
         lastWordTimeRef.current = Date.now();

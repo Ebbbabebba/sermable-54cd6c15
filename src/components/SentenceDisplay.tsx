@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
@@ -22,7 +22,7 @@ interface SentenceDisplayProps {
 }
 
 // Snappy easing for responsive feel
-const smoothTransition = { duration: 0.25, ease: "easeOut" as const };
+const smoothTransition = { duration: 0.18, ease: "easeOut" as const };
 
 const SentenceDisplay = ({
   text,
@@ -35,19 +35,13 @@ const SentenceDisplay = ({
 }: SentenceDisplayProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentWordRef = useRef<HTMLSpanElement>(null);
-  const [displayedIndex, setDisplayedIndex] = useState(currentWordIndex);
-  
+
   const words = text.split(/\s+/).filter(w => w.trim());
-  
-  // Immediate transition for current word - no delay
-  useEffect(() => {
-    setDisplayedIndex(currentWordIndex);
-  }, [currentWordIndex]);
-  
+
   // The blue pulse advances past words that are already revealed as
   // hesitated/missed so the user's eye is drawn to what's next, even
   // while the matcher is still waiting on the revealed word.
-  let pulseIndex = displayedIndex;
+  let pulseIndex = currentWordIndex;
   while (
     pulseIndex < words.length &&
     (hesitatedIndices.has(pulseIndex) || missedIndices.has(pulseIndex))
@@ -108,11 +102,11 @@ const SentenceDisplay = ({
             scale: state.isCurrent && !state.isSpoken ? [1, 1.06, 1] : 1,
           }}
           transition={{
-            opacity: { duration: 0.2 },
+            opacity: { duration: 0.15 },
             scale: state.isCurrent && !state.isSpoken
-              ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+              ? { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.15 },
-            layout: { duration: 0.2, ease: "easeOut" },
+            layout: { duration: 0.15, ease: "easeOut" },
           }}
           className={cn(
             "inline-flex items-center justify-center mx-1 px-3 py-0.5 rounded-full text-base align-middle",
@@ -180,9 +174,9 @@ const SentenceDisplay = ({
           layout="position"
           animate={state.isCurrent ? { scale: [1, 1.08, 1] } : { scale: 1 }}
           transition={{
-            layout: { duration: 0.2, ease: "easeOut" },
+            layout: { duration: 0.15, ease: "easeOut" },
             scale: state.isCurrent
-              ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+              ? { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.15 },
           }}
           className={cn(
@@ -210,9 +204,9 @@ const SentenceDisplay = ({
           y: 0,
         }}
         transition={{
-          opacity: { duration: 0.2, ease: "easeOut" },
+          opacity: { duration: 0.15, ease: "easeOut" },
           scale: { duration: 0.15, ease: "easeOut" },
-          layout: { duration: 0.2, ease: "easeOut" },
+          layout: { duration: 0.15, ease: "easeOut" },
         }}
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
@@ -233,7 +227,7 @@ const SentenceDisplay = ({
             className="absolute -bottom-2 left-1/2 w-1.5 h-1.5 rounded-full bg-primary"
             initial={{ opacity: 0.6, scale: 0.8 }}
             animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
             style={{ transform: 'translateX(-50%)' }}
           />
         )}

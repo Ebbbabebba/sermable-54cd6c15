@@ -1,57 +1,53 @@
-## Mål
-Eliminera de återkommande klagomålen ("sentence 2 hoppar över", "ord markeras inte", "låst trots att FSRS frisläppt") och rätta den vetenskapliga miss-aligneringen där FSRS pre-emptar de korta 10-min/kväll/morgon-cyklerna.
+# Goal
 
-## Fas A — En schemaläggare, inte tre
+Make the practice screen feel "instant" — pulse advances the moment a word is matched, no perceptible blackout between reps/phases, no hidden swallowing of the first spoken word.
 
-**1. Gör FSRS villkorlig på recall_session_number ≥ 2** — `src/components/BeatPracticeView.tsx`
-- I de två call-platserna för `scheduleNextReview()` (efter beat-mastery och efter merged-recall success): skippa anropet om `recall_session_number < 2`. Korta cykeln (10-min/kväll/morgon) får leva orörd.
+# Findings
 
-**2. Ta bort dubbelskrivning av `next_scheduled_recall_at`** — `BeatPracticeView.tsx:2036-2065`
-- Behåll stege-skrivningen (`calculateNextRecallDate`) för sessions 0–1.
-- För sessions ≥ 2: skriv INTE fältet direkt; låt enbart FSRS äga det.
+After auditing `BeatPracticeView.tsx` and `SentenceDisplay.tsx`, the lag the user perceives comes from three overlapping sources:
 
-**3. Ta bort död `schedules`-skrivning** — `BeatPracticeView.tsx:2609-2638` (`showBeatCelebration`)
-- Ta bort hela SM-2-blocket som skriver `schedules`-tabellen. Beat-flödet använder inte den tabellen.
+1. **Speech-result filtering that silently drops the user's next first word**
+   - `transitionToPhase` (line 2606) still sets `ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current`. On Web Speech the recognizer is continuous, so the next interim result reuses the previous slot and gets skipped — exactly the "stuck on first word" pattern, just at phase boundaries.
+   - Multiple `ignoreResultsUntilRef` extensions stack: `resetForNextRep` (+75ms) + `transitionToPhase` (+150ms) + `pauseSpeechRecognition(350)` ⇒ up to ~350ms of mic-deafness right when the user starts the new rep.
 
-**4. Uppdatera lock-check** — `src/pages/Practice.tsx:~396`
-- Läs lock-status från `practice_beats.next_scheduled_recall_at` (min över beats) istället för `schedules.next_review_date` när läget är beat-baserat.
+2. **Unnecessary "speech ready" delays**
+   - Web Speech `onstart` waits 250ms before `setIsSpeechReady(true)`.
+   - Native path schedules a redundant 450ms `speechReadyTimeoutRef` even though `isSpeechReady` is already set true on `startNativeSession` resolve.
+   - Result: the pulse/UI briefly looks idle even though recognition is live.
 
-**5. Använd refs istället för stale state i FSRS-payload** — `BeatPracticeView.tsx:1945-1954, 2056-2065`
-- Byt `hiddenWordIndices` → `hiddenWordIndicesRef.current` inuti deferred callbacks så `visibilityPercent` är aktuell.
+3. **Animation timings on `SentenceDisplay` that visibly trail the matcher**
+   - Current-word pulse uses `duration: 1.2s` / `1.5s` — feels sluggish.
+   - `displayedIndex` is mirrored from `currentWordIndex` via `useState` + `useEffect`, adding one render tick before the pulse moves.
+   - `layout` and `opacity` transitions run at 0.2–0.25s; can be tightened to ~0.15s without looking jumpy.
 
-## Fas B — Markeringslogik
+# Plan
 
-**6. Fixa sentence-2 auto-complete på riktigt** — `BeatPracticeView.tsx`
-- Lägg till `phaseTransitionAtRef` (timestamp) i `transitionToPhase`.
-- I `processTranscription`: rensa `needsFreshSpeechRef` endast om båda:
-  - `rawWords.length > ignoreResultsBeforeIndexRef.current` (genuint nytt tal, inte recyclad buffer)
-  - `Date.now() - phaseTransitionAtRef.current > 500` (minst 500ms sedan fas-byte)
+## 1. Fix phase-transition first-word swallow (`BeatPracticeView.tsx`)
 
-**7. Union istället för summa för failRatio** — `BeatPracticeView.tsx:1897-1898`
-```ts
-const failed = new Set([...hesitatedIndicesRef.current, ...missedIndicesRef.current]);
-const failRatio = failed.size / Math.max(1, words.length);
-```
+- Line 2606: replace `ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current` with `ignoreResultsBeforeIndexRef.current = 0`. The native plugin already gets `clearBuffer()`, and Web Speech's `onend → onstart` cycle resets `event.results` indices to 0, so a 0 cutoff is correct in both engines.
+- Reduce stacked blackout in `transitionToPhase`: drop the `+150ms` extension on `ignoreResultsUntilRef` (the `pauseSpeechRecognition(350)` already covers debounce) and trim `pauseSpeechRecognition(350)` → `pauseSpeechRecognition(200)`.
+- In `resetForNextRep`, lower the `+75ms` ignore window to `+40ms`.
 
-**8. Sluta dubbelstraffa hesitations i FSRS** — `supabase/functions/schedule-next-review/index.ts:44-49`
-- Ta bort `|| hesitations > 4` i `ratingFromAccuracy`. `rawAccuracy` reflekterar redan hesitations via fail-ratio.
+## 2. Remove "speech ready" delays
 
-**9. Höj `requiredLearningReps` för sentence_1 till 2** — `BeatPracticeView.tsx:365`
-- Matchar sentence_2/3. Förhindrar att fading börjar efter en enda läsning ("desirable difficulty"-fix som RemNote/Bjork-litteraturen pekar på).
+- `recognition.onstart`: set `isSpeechReady` synchronously (drop the 250ms timeout).
+- Native path: remove the 450ms `speechReadyTimeoutRef` (it's already set true immediately after `startNativeSession`).
 
-**10. Evening-branch order-fix** — `BeatPracticeView.tsx:2552-2556`
-- Swap så `>= 20` testas före `>= 18`. Förhindrar evening-recall i det förflutna.
+## 3. Snappier pulse on `SentenceDisplay.tsx`
 
-## Teknisk not (för utvecklare)
+- Delete the `displayedIndex` `useState`/`useEffect` indirection and use `currentWordIndex` directly when computing `pulseIndex`. Saves one render frame.
+- Pulse animation: change `scale: { duration: 1.2, repeat: Infinity }` → `0.8s` for current-word and hidden-dot variants; change the indicator dot's `duration: 1.5` → `0.9`.
+- Reduce `smoothTransition` from `0.25` → `0.18`, and `layout`/`opacity` transitions from `0.2` → `0.15`.
 
-- Inga schema-ändringar krävs. Endast kodjusteringar i `BeatPracticeView.tsx`, `Practice.tsx` och en enda edge function (`schedule-next-review`).
-- `update-adaptive-learning` / `update-sm2-schedule` / `schedules`-tabellen lämnas orörda — de tjänar fortfarande det legacy segment-flödet. Detta är ett separat sanerings-jobb för framtiden.
-- Fas C (UTC-normalisering av morgon-recall, premium-init, COMMON_WORDS språkfilter, dead `practice_stage`) lämnas till en separat omgång — inte blockerande för dagens problem.
+## 4. Verify
 
-## Förväntat resultat
+- Run typecheck.
+- Confirm in the preview that:
+  - Starting a fresh rep, the very first spoken word turns gray immediately.
+  - The blue pulse moves to the next word with no visible lag.
+  - Phase transitions (sentence_1 → sentence_2, beat merges) do not swallow the first word of the new phase.
 
-- Inga fler "sentence 2 hoppar över"-incidenter.
-- Inga felaktiga låsningar för premium efter FSRS-skrivning.
-- Tidiga korta cykler (10-min/kväll/morgon) respekteras alltid → matchar Pimsleur graduated interval recall + Ebbinghaus.
-- FSRS tar över först vid session 2+, vilket är när dess långsiktiga modell faktiskt är meningsfull.
-- failRatio och rating blir korrekta → mindre felaktig demotion.
+# Out of scope
+
+- Matching logic, hesitation thresholds, hidden-word selection, scoring, and AI calls are not touched.
+- No color/theme changes — only timing constants and the one filter-index bug.
