@@ -3175,9 +3175,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         isRecordingRef.current = true;
         setIsRecording(true);
         recognition.onstart = () => {
-          speechReadyTimeoutRef.current = setTimeout(() => {
-            if (isRecordingRef.current) setIsSpeechReady(true);
-          }, 250);
+          if (isRecordingRef.current) setIsSpeechReady(true);
         };
         recognition.start();
         lastWordTimeRef.current = Date.now();
