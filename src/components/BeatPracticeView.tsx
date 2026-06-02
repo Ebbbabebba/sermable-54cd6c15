@@ -3131,8 +3131,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
         const hesitationMs = getHesitationThresholdMs();
-        if (hasHeardSpeechRef.current && elapsed > hesitationMs && idx < wordsLengthRef.current) {
-          if (hiddenWordIndicesRef.current.has(idx)) {
+        const currentIsHidden = hiddenWordIndicesRef.current.has(idx);
+        if ((hasHeardSpeechRef.current || currentIsHidden) && elapsed > hesitationMs && idx < wordsLengthRef.current) {
+          if (currentIsHidden) {
             if (postPauseNoHesitationIndicesRef.current.has(idx)) {
               return;
             }
