@@ -479,12 +479,24 @@ const [liveTranscription, setLiveTranscription] = useState("");
         setTodaySessionDone(hasBeats && (allMasteredAndNothingDue || (beatsLearnedToday > 0 && hasFutureLock && hasUnmasteredBeats)));
       }
     } catch (error: any) {
+      // Don't kick the user back to the dashboard on transient network errors
+      // (e.g. iOS Safari "Load failed"). Show a toast and let the page retry
+      // or the user tap again — staying on /practice/:id avoids losing context.
+      const msg = String(error?.message ?? error ?? '');
+      const isTransient =
+        msg.includes('Load failed') ||
+        msg.includes('Failed to fetch') ||
+        msg.includes('NetworkError') ||
+        msg.includes('network');
+      console.error('loadSpeech failed:', error);
       toast({
         variant: "destructive",
         title: t('common.error'),
-        description: error.message,
+        description: msg,
       });
-      navigate("/dashboard");
+      if (!isTransient) {
+        navigate("/dashboard");
+      }
     } finally {
       setLoading(false);
     }
