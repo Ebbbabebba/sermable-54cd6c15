@@ -2477,11 +2477,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // only need a brief safety window here. A long guard (was 700ms) made the
     // recognizer feel unresponsive when entering sentence 2 / new phases — the
     // user would speak immediately and the first ~700ms of words were dropped.
-    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 250 : 0;
+    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 120 : 0;
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 150);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 80);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
