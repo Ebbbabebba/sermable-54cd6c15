@@ -2543,7 +2543,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastAutoAdvanceAtRef.current = Date.now();
     // Short ignore window: result-index filtering drops old buffered words,
     // while keeping the next first word responsive if the user starts quickly.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 350);
+    // Kept very short (was 350ms) so the first word of a new sentence — e.g.
+    // when transitioning into sentence 2 — is picked up immediately instead
+    // of being dropped while the user is already speaking.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 120);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
