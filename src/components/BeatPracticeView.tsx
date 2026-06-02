@@ -1751,6 +1751,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const canSkipWord = (i: number) =>
           !hiddenWordIndicesRef.current.has(i) || isHiddenGap(i);
         const canSkipCurrent = canSkipWord(advancedTo);
+        const canSkipConsecutiveGapWords = (from: number, toExclusive: number) => {
+          for (let i = from; i < toExclusive; i++) {
+            if (!isGapWord(words[i] ?? '')) return false;
+          }
+          return true;
+        };
 
         if (
           canSkipCurrent &&
@@ -1771,6 +1777,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             newSpoken.add(advancedTo);
             newSpoken.add(advancedTo + 1);
             foundIdx = advancedTo + 2;
+          }
+        }
+
+        if (foundIdx === -1 && isGapWord(words[advancedTo] ?? '')) {
+          // Fast-start recovery: if recognition misses one or more tiny gap
+          // words at the beginning (att/och/i/på...), let the first real
+          // content word pull the cursor forward instead of waiting seconds.
+          const maxGapLookahead = Math.min(words.length - 1, advancedTo + 4);
+          for (let lookahead = advancedTo + 1; lookahead <= maxGapLookahead; lookahead++) {
+            if (crossesSentenceBoundary(advancedTo, lookahead)) break;
+            if (!canSkipConsecutiveGapWords(advancedTo, lookahead)) break;
+            if (wordMatchesAnyVariant(absoluteRawIndex, lookahead)) {
+              for (let skipped = advancedTo; skipped < lookahead; skipped++) {
+                newSpoken.add(skipped);
+              }
+              foundIdx = lookahead;
+              break;
+            }
           }
         }
       }
@@ -2495,16 +2519,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const hadActiveRecognizer = Boolean(recognitionRef.current);
     repetitionIdRef.current += 1;
     lastResetAtRef.current = now;
-    // Stale-replay guard: the native/Web Speech buffer was already cleared by
-    // pauseSpeechRecognition (clearBuffer + ignoreResultsBeforeIndexRef), so we
-    // only need a brief safety window here. A long guard (was 700ms) made the
-    // recognizer feel unresponsive when entering sentence 2 / new phases — the
-    // user would speak immediately and the first ~700ms of words were dropped.
-    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 250 : 0;
+    // Stale-replay guard: keep this extremely short. Native recognition can
+    // emit a whole first phrase as one partial result; a longer guard drops it
+    // and makes the blue cursor feel like it starts reacting late.
+    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 80 : 0;
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 150);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 75);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
@@ -2566,7 +2588,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastAutoAdvanceAtRef.current = Date.now();
     // Short ignore window: result-index filtering drops old buffered words,
     // while keeping the next first word responsive if the user starts quickly.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 350);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 150);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
