@@ -1748,9 +1748,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // the cursor or count against them.
         const isHiddenGap = (i: number) =>
           hiddenWordIndicesRef.current.has(i) && isGapWord(words[i] ?? '');
-        const canSkipWord = (i: number) =>
+      const canSkipWord = (i: number) =>
           !hiddenWordIndicesRef.current.has(i) || isHiddenGap(i);
         const canSkipCurrent = canSkipWord(advancedTo);
+        const canSkipConsecutiveGapWords = (from: number, toExclusive: number) => {
+          for (let i = from; i < toExclusive; i++) {
+            if (!isGapWord(words[i] ?? '')) return false;
+          }
+          return true;
+        };
 
         if (
           canSkipCurrent &&
@@ -1771,6 +1777,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             newSpoken.add(advancedTo);
             newSpoken.add(advancedTo + 1);
             foundIdx = advancedTo + 2;
+          }
+        } else if (isGapWord(words[advancedTo] ?? '')) {
+          // Fast-start recovery: if recognition misses one or more tiny gap
+          // words at the beginning (att/och/i/på...), let the first real
+          // content word pull the cursor forward instead of waiting seconds.
+          const maxGapLookahead = Math.min(words.length - 1, advancedTo + 4);
+          for (let lookahead = advancedTo + 1; lookahead <= maxGapLookahead; lookahead++) {
+            if (crossesSentenceBoundary(advancedTo, lookahead)) break;
+            if (!canSkipConsecutiveGapWords(advancedTo, lookahead)) break;
+            if (wordMatchesAnyVariant(absoluteRawIndex, lookahead)) {
+              for (let skipped = advancedTo; skipped < lookahead; skipped++) {
+                newSpoken.add(skipped);
+              }
+              foundIdx = lookahead;
+              break;
+            }
           }
         }
       }
