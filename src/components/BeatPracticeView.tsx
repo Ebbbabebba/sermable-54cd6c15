@@ -3008,6 +3008,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 if (!stopped && isRecordingRef.current) startNativeSession();
               }, 120);
             },
+          };
+
+
 
           isRecordingRef.current = true;
           setIsRecording(true);
