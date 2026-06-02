@@ -1751,11 +1751,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const canSkipWord = (i: number) =>
           !hiddenWordIndicesRef.current.has(i) || isHiddenGap(i);
         const canSkipCurrent = canSkipWord(advancedTo);
-        if (
-          canSkipCurrent &&
-          advancedTo + 1 < words.length &&
-          canSkipWord(advancedTo + 1) === false ? false : true
-        ) { /* no-op guard, real checks below */ }
+
         if (
           canSkipCurrent &&
           advancedTo + 1 < words.length &&
