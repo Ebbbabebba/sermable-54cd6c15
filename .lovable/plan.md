@@ -1,57 +1,44 @@
-## Mål
-Eliminera de återkommande klagomålen ("sentence 2 hoppar över", "ord markeras inte", "låst trots att FSRS frisläppt") och rätta den vetenskapliga miss-aligneringen där FSRS pre-emptar de korta 10-min/kväll/morgon-cyklerna.
+## Bug
 
-## Fas A — En schemaläggare, inte tre
+When moving from sentence 1 → sentence 2 (or any phase change) in `BeatPracticeView`, the blue pulse stays stuck on the first word for several seconds and the recognizer ignores what the user says.
 
-**1. Gör FSRS villkorlig på recall_session_number ≥ 2** — `src/components/BeatPracticeView.tsx`
-- I de två call-platserna för `scheduleNextReview()` (efter beat-mastery och efter merged-recall success): skippa anropet om `recall_session_number < 2`. Korta cykeln (10-min/kväll/morgon) får leva orörd.
+## Root cause
 
-**2. Ta bort dubbelskrivning av `next_scheduled_recall_at`** — `BeatPracticeView.tsx:2036-2065`
-- Behåll stege-skrivningen (`calculateNextRecallDate`) för sessions 0–1.
-- För sessions ≥ 2: skriv INTE fältet direkt; låt enbart FSRS äga det.
+On iOS the Capacitor native speech plugin (and Web Speech on Safari) returns a **cumulative** transcript for the current recognition session. When `transitionToPhase()` runs we currently only:
 
-**3. Ta bort död `schedules`-skrivning** — `BeatPracticeView.tsx:2609-2638` (`showBeatCelebration`)
-- Ta bort hela SM-2-blocket som skriver `schedules`-tabellen. Beat-flödet använder inte den tabellen.
+- clear our local mirrors (`nativeFinalsRef`, `lastNativeInterim`, `transcriptWordsRef`)
+- set `ignoreResultsUntilRef` to drop events for ~350 ms
+- set `staleReplayGuardUntilRef` to drop any first event containing >2 words for ~250 ms
 
-**4. Uppdatera lock-check** — `src/pages/Practice.tsx:~396`
-- Läs lock-status från `practice_beats.next_scheduled_recall_at` (min över beats) istället för `schedules.next_review_date` när läget är beat-baserat.
+We intentionally do **not** abort the underlying recognizer (to avoid the iOS mic "ding"). The problem: the very next `partialResults` event from iOS still contains the entire sentence-1 transcription inside `matches[0]`. After the 250 ms stale-replay window expires the matcher sees `["sentence", "one", "old", "words", "...", "new"]` against sentence-2's word 0, the tokens don't line up, nothing advances, and the pulse appears frozen until the user keeps talking long enough for the new word to finally land in a matchable position.
 
-**5. Använd refs istället för stale state i FSRS-payload** — `BeatPracticeView.tsx:1945-1954, 2056-2065`
-- Byt `hiddenWordIndices` → `hiddenWordIndicesRef.current` inuti deferred callbacks så `visibilityPercent` är aktuell.
+Clearing `nativeFinalsRef` does not help — the cumulative content lives inside iOS's recognition session, not in our buffer.
 
-## Fas B — Markeringslogik
+## Fix
 
-**6. Fixa sentence-2 auto-complete på riktigt** — `BeatPracticeView.tsx`
-- Lägg till `phaseTransitionAtRef` (timestamp) i `transitionToPhase`.
-- I `processTranscription`: rensa `needsFreshSpeechRef` endast om båda:
-  - `rawWords.length > ignoreResultsBeforeIndexRef.current` (genuint nytt tal, inte recyclad buffer)
-  - `Date.now() - phaseTransitionAtRef.current > 500` (minst 500ms sedan fas-byte)
+On phase transitions, fully restart the recognizer so the new session starts with a truly empty transcript. The mic "ding" concern that motivated the no-abort behaviour does not apply on the native iOS path (Capacitor plugin is silent on stop/start), and for Web Speech a single chime at a sentence boundary is acceptable compared to losing the first word.
 
-**7. Union istället för summa för failRatio** — `BeatPracticeView.tsx:1897-1898`
-```ts
-const failed = new Set([...hesitatedIndicesRef.current, ...missedIndicesRef.current]);
-const failRatio = failed.size / Math.max(1, words.length);
-```
+### Changes (all in `src/components/BeatPracticeView.tsx`)
 
-**8. Sluta dubbelstraffa hesitations i FSRS** — `supabase/functions/schedule-next-review/index.ts:44-49`
-- Ta bort `|| hesitations > 4` i `ratingFromAccuracy`. `rawAccuracy` reflekterar redan hesitations via fail-ratio.
+1. Add a helper `hardRestartRecognition()` that:
+   - For the native path: calls `NativeSpeech.stop()` — the existing `listeningState === "stopped"` handler already auto-restarts a fresh session after 50 ms, which is what we want.
+   - For the Web Speech path: calls `recognitionRef.current.abort()` — the existing `onend` handler restarts it, gated by `recognitionRestartAtRef`.
+   - Clears `nativeFinalsRef`, resets `lastNativeInterim` via the exposed `clearBuffer()`, and bumps `ignoreResultsBeforeIndexRef` to the current result count.
 
-**9. Höj `requiredLearningReps` för sentence_1 till 2** — `BeatPracticeView.tsx:365`
-- Matchar sentence_2/3. Förhindrar att fading börjar efter en enda läsning ("desirable difficulty"-fix som RemNote/Bjork-litteraturen pekar på).
+2. Call `hardRestartRecognition()` from inside `transitionToPhase()` (after the existing ref resets, before `pauseSpeechRecognition(350)`).
 
-**10. Evening-branch order-fix** — `BeatPracticeView.tsx:2552-2556`
-- Swap så `>= 20` testas före `>= 18`. Förhindrar evening-recall i det förflutna.
+3. Shorten `ignoreResultsUntilRef` window in `transitionToPhase` from 350 ms back down to ~150 ms once the hard restart is in place — the restart itself, not a timed mute, is now what protects us from replay. This is the user-visible win: the first word of sentence 2 becomes responsive again.
 
-## Teknisk not (för utvecklare)
+4. Remove (or relax) the `staleReplayGuardUntilRef` check at lines 1607–1615 for the case where the recognizer was hard-restarted — it was a workaround for the cumulative-buffer issue and is what currently swallows the first real utterance on sentence 2. Keep the guard for the `resetForNextRep` path inside the same phase (where we still don't restart).
 
-- Inga schema-ändringar krävs. Endast kodjusteringar i `BeatPracticeView.tsx`, `Practice.tsx` och en enda edge function (`schedule-next-review`).
-- `update-adaptive-learning` / `update-sm2-schedule` / `schedules`-tabellen lämnas orörda — de tjänar fortfarande det legacy segment-flödet. Detta är ett separat sanerings-jobb för framtiden.
-- Fas C (UTC-normalisering av morgon-recall, premium-init, COMMON_WORDS språkfilter, dead `practice_stage`) lämnas till en separat omgång — inte blockerande för dagens problem.
+### Out of scope
 
-## Förväntat resultat
+- No change to matcher leniency, hesitation timing, or hidden-word logic.
+- No change to `resetForNextRep` (mid-phase reps still keep the recognizer alive — only phase boundaries get the hard restart).
+- No backend / business-logic changes.
 
-- Inga fler "sentence 2 hoppar över"-incidenter.
-- Inga felaktiga låsningar för premium efter FSRS-skrivning.
-- Tidiga korta cykler (10-min/kväll/morgon) respekteras alltid → matchar Pimsleur graduated interval recall + Ebbinghaus.
-- FSRS tar över först vid session 2+, vilket är när dess långsiktiga modell faktiskt är meningsfull.
-- failRatio och rating blir korrekta → mindre felaktig demotion.
+## Verification
+
+- Practise a beat with 3 sentences; confirm the blue pulse moves to sentence-2 word 0 immediately and reacts on the first spoken word.
+- Confirm sentence-1 ending words do not retroactively mark sentence-2 words as spoken.
+- Confirm no regression in single-sentence reps (no extra chime, no stale-replay regressions inside the same phase).
