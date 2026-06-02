@@ -2762,24 +2762,36 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const shouldContinueToday = nextUnmastered && beatsLearnedToday < beatsPerDay;
       
       if (shouldContinueToday && nextUnmastered) {
-        // Go directly to pre-beat recall intro (no 10-min wait between beats)
+        // Always take a 10-min coffee break before the pre-beat recall.
         const justMasteredBeat = currentBeat;
         setNextBeatQueued(nextUnmastered);
         setBeatToRecallBeforeNext(justMasteredBeat);
-        
-        setCelebrationMessage(t('beat_practice.beat_complete_rest', "Beat complete! Quick recall first."));
+
+        setCelebrationMessage(t('beat_practice.beat_complete', "Beat complete! Coffee break time."));
         setShowCelebration(true);
-        
+
         setTimeout(() => {
           setShowCelebration(false);
-          setShowPreBeatRecallIntro(true);
-          setPreBeatRecallSuccessCount(0);
-          setHiddenWordIndices(new Set());
-          setHiddenWordOrder([]);
-          setProtectedWordIndices(new Set());
-          setPhase('beat_fading');
-          setCurrentBeatIndex(updatedBeats.findIndex(b => b.id === justMasteredBeat.id));
-          setSessionMode('pre_beat_recall');
+          if (justMasteredBeat) {
+            console.log('☕ Starting 10-min coffee break before next beat:', justMasteredBeat.id);
+            setIsEndOfSessionRecall(false);
+            setBeatsToRecall([justMasteredBeat]);
+            setRestUntilTime(new Date(Date.now() + 10 * 60 * 1000));
+            setRestMinutes(10);
+            setShowSkipWarning(false);
+            setSessionMode('coffee_break');
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+              setTimeout(() => {
+                new Notification('Coffee break is over!', {
+                  body: 'Time for your quick recall session. Come back and practice!',
+                  icon: '/favicon.ico',
+                });
+              }, 10 * 60 * 1000);
+            } else if ('Notification' in window && Notification.permission === 'default') {
+              Notification.requestPermission();
+            }
+          }
         }, 2000);
       } else {
         // Session ending: show coffee break with 10-min timer, then recall
@@ -3457,6 +3469,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const startCoffeeBreakRecall = () => {
       setRestUntilTime(null);
       setRestMinutes(0);
+
+      // Between-beats: continue into the pre-beat recall flow we queued.
+      if (!isEndOfSessionRecall && beatToRecallBeforeNext) {
+        setShowPreBeatRecallIntro(true);
+        setPreBeatRecallSuccessCount(0);
+        setHiddenWordIndices(new Set());
+        setHiddenWordOrder([]);
+        setProtectedWordIndices(new Set());
+        setPhase('beat_fading');
+        const idx = beats.findIndex(b => b.id === beatToRecallBeforeNext.id);
+        if (idx >= 0) setCurrentBeatIndex(idx);
+        setSessionMode('pre_beat_recall');
+        return;
+      }
+
+      // End-of-session: 10-min recall of the just-mastered beat.
       setIs10MinRecall(true);
       setRecallIndex(0);
       setRecallSuccessCount(0);
