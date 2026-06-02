@@ -117,10 +117,10 @@ const SentenceDisplay = ({
           className={cn(
             "inline-flex items-center justify-center mx-1 px-3 py-0.5 rounded-full text-base align-middle",
             state.isCurrent && !state.isSpoken
-              ? "bg-primary/15 text-primary ring-1 ring-primary/40 font-semibold"
+              ? "bg-blue-500/15 text-blue-600 ring-1 ring-blue-400/40 font-semibold"
               : state.isSpoken
-                ? "bg-muted/40 text-muted-foreground/60"
-                : "bg-muted/60 text-muted-foreground",
+                ? "bg-blue-100/40 text-blue-400/60"
+                : "bg-blue-100/60 text-blue-500",
           )}
           aria-label="pause"
         >
