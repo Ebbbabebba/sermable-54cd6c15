@@ -149,7 +149,7 @@ const SentenceDisplay = ({
       );
     }
     
-    // Hidden word that was HESITATED - reveal it in yellow/warning
+    // Hidden word that was HESITATED - reveal it in medium blue
     if (!state.isVisible && state.isHesitated) {
       return (
         <motion.span
@@ -161,7 +161,7 @@ const SentenceDisplay = ({
           transition={smoothTransition}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
-            "bg-warning/20 text-warning font-medium ring-1 ring-warning/40"
+            "bg-blue-400/20 text-blue-600 font-medium ring-1 ring-blue-500/40"
           )}
         >
           {state.text}
