@@ -2528,7 +2528,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 75);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 40);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
