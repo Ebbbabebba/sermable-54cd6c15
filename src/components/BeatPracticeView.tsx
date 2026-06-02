@@ -2896,20 +2896,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           let partialHandle: any = null;
           let stopped = false;
 
-          // Watchdog: if no partial result arrives within 15s, force restart.
-          // Some Android builds silently stop listening without firing the
-          // "stopped" status — this keeps recognition alive.
+          // Watchdog: if no partial result arrives within 6s, force restart.
+          // iOS/Android sometimes silently stop listening (e.g. after silence
+          // during sentence transitions) without firing the "stopped" status,
+          // which caused the recognizer to feel "dead" entering sentence 2.
           let lastActivityAt = Date.now();
           const watchdog = setInterval(() => {
             if (stopped || !isRecordingRef.current) return;
-            if (Date.now() - lastActivityAt > 15000) {
+            // Skip watchdog while celebration/transition is intentionally muting input.
+            if (showCelebrationRef.current) {
+              lastActivityAt = Date.now();
+              return;
+            }
+            if (Date.now() - lastActivityAt > 6000) {
               lastActivityAt = Date.now();
               NativeSpeech.stop().catch(() => {});
               setTimeout(() => {
                 if (!stopped && isRecordingRef.current) startNativeSession();
               }, 120);
             }
-          }, 3000);
+          }, 1500);
 
           const startNativeSession = async () => {
             if (stopped || !isRecordingRef.current) return;
