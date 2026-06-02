@@ -129,7 +129,7 @@ const SentenceDisplay = ({
       );
     }
     
-    // Hidden word that was MISSED - reveal it in red so user can see what they got wrong
+    // Hidden word that was MISSED - reveal it in dark blue so user can see what they got wrong
     if (!state.isVisible && state.isMissed) {
       return (
         <motion.span
@@ -141,7 +141,7 @@ const SentenceDisplay = ({
           transition={smoothTransition}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
-            "bg-destructive/20 text-destructive font-medium ring-1 ring-destructive/40"
+            "bg-blue-900/20 text-blue-800 font-medium ring-1 ring-blue-700/40"
           )}
         >
           {state.text}
