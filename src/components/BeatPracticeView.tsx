@@ -3189,6 +3189,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               }
               // Note: no transcript replay — that caused cascading skips.
             }
+          } else {
+            // VISIBLE word safety net: if the matcher has failed to advance a
+            // visible word for ~6s while the user is clearly speaking, advance
+            // it silently. Without this the blue cursor could stay frozen on a
+            // visible word forever (e.g. speech recognition mishears "Ladies").
+            const VISIBLE_STUCK_MS = 6000;
+            if (
+              hasHeardSpeechRef.current &&
+              elapsed > VISIBLE_STUCK_MS &&
+              !postPauseNoHesitationIndicesRef.current.has(idx)
+            ) {
+              console.log(
+                `⏭️ Visible word "${words[idx]}" at index ${idx} stuck for ${(elapsed / 1000).toFixed(1)}s — auto-advancing`
+              );
+              const newSpoken = new Set([...spokenIndicesRef.current, idx]);
+              spokenIndicesRef.current = newSpoken;
+              setSpokenIndices(newSpoken);
+              const nextIdx = idx + 1;
+              currentWordIndexRef.current = nextIdx;
+              setCurrentWordIndex(nextIdx);
+              hasHeardSpeechRef.current = false;
+              lastWordTimeRef.current = Date.now();
+              lastAutoAdvanceAtRef.current = Date.now();
+              transcriptRef.current = "";
+              transcriptWordsRef.current = [];
+              runningTranscriptRef.current = "";
+              ignoreResultsUntilRef.current = Date.now() + 400;
+              if (nextIdx >= wordsLengthRef.current) {
+                checkCompletion(newSpoken);
+              }
+            }
           }
         }
       }, 500);
