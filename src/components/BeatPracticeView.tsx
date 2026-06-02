@@ -2570,6 +2570,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastCompletionRepIdRef.current = -1;
     pauseSpeechRecognition(350);
     resetForNextRep();
+    // Force the native recognizer to begin a fresh listening session for the
+    // new sentence. Without this, iOS sometimes stays in a half-stopped state
+    // after the celebration overlay and the user has to wait several seconds
+    // before sentence 2 starts being heard.
+    try {
+      (recognitionRef.current as { restart?: () => void } | null)?.restart?.();
+    } catch {}
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
     if (currentBeat) {
