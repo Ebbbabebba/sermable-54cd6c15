@@ -3057,9 +3057,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
           await startNativeSession();
           if (isRecordingRef.current) setIsSpeechReady(true);
-          speechReadyTimeoutRef.current = setTimeout(() => {
-            if (isRecordingRef.current) setIsSpeechReady(true);
-          }, 450);
         } catch (nativeErr) {
           console.error("Native speech failed, falling back to Web Speech:", nativeErr);
           // Fall through to Web Speech below
