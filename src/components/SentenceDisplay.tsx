@@ -217,20 +217,20 @@ const SentenceDisplay = ({
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
           // Subtle marker for current word
-          state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60",
+          state.isCurrent && !state.isSpoken && "relative text-blue-600 font-medium bg-blue-500/10 border-b-2 border-blue-400/60",
           // Spoken word gets muted styling
-          state.isSpoken && "text-muted-foreground/50",
+          state.isSpoken && "text-blue-400/50",
           // Missed visible word (not hidden)
-          state.isMissed && "bg-destructive/20 text-destructive",
+          state.isMissed && "bg-blue-900/20 text-blue-800",
           // Hesitated visible word (not hidden)
-          state.isHesitated && !state.isMissed && "bg-warning/20 text-warning",
+          state.isHesitated && !state.isMissed && "bg-blue-400/20 text-blue-600",
         )}
       >
         {state.text}
         {/* Subtle pulse indicator for current word */}
         {state.isCurrent && !state.isSpoken && (
           <motion.span
-            className="absolute -bottom-2 left-1/2 w-1.5 h-1.5 rounded-full bg-primary"
+            className="absolute -bottom-2 left-1/2 w-1.5 h-1.5 rounded-full bg-blue-500"
             initial={{ opacity: 0.6, scale: 0.8 }}
             animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
