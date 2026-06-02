@@ -2477,11 +2477,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // only need a brief safety window here. A long guard (was 700ms) made the
     // recognizer feel unresponsive when entering sentence 2 / new phases — the
     // user would speak immediately and the first ~700ms of words were dropped.
-    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 250 : 0;
+    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 120 : 0;
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 150);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 80);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
@@ -2543,7 +2543,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastAutoAdvanceAtRef.current = Date.now();
     // Short ignore window: result-index filtering drops old buffered words,
     // while keeping the next first word responsive if the user starts quickly.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 350);
+    // Kept very short (was 350ms) so the first word of a new sentence — e.g.
+    // when transitioning into sentence 2 — is picked up immediately instead
+    // of being dropped while the user is already speaking.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 120);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
@@ -2568,7 +2571,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(350);
+    pauseSpeechRecognition(120);
     resetForNextRep();
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
