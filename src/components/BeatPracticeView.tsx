@@ -2519,9 +2519,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // user would speak immediately and the first ~700ms of words were dropped.
     staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 250 : 0;
     // Minimal ignore window — but never shorten a longer pause that was set
-    // by completion/phase transitions. Shortening it lets stale final results
-    // from the previous rep immediately advance the next rep/session.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 150);
+    // by completion/phase transitions. Keep this very short so the next real
+    // first word is not swallowed after a reset.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 80);
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
@@ -2585,7 +2585,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // protects us from sentence-1 replay, so we only need a tiny mute here to
     // cover the restart gap. Keeping this short is what makes the first word
     // of the new sentence feel responsive.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 150);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 80);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
@@ -2606,7 +2606,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(150);
+    pauseSpeechRecognition(80);
     resetForNextRep();
     // resetForNextRep arms a 250ms stale-replay guard intended for same-phase
     // reps. Across phases we instead force a fresh recognizer session, so the
