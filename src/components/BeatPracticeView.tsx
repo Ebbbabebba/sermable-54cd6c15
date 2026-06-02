@@ -399,14 +399,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
-  // Sentence 1 = 1 rep (quick onboarding). Sentence 2+ and combined/beat
-  // phases = 2 reps so a single stray speech callback can't auto-complete
-  // the read-through and trip fading before the user has actually spoken.
-  // Always require 2 read-throughs before fading begins (desirable difficulty —
-  // one pass is not enough to consider a sentence learned). Previously
-  // sentence_1 was special-cased to 1 rep, which let fading start prematurely
-  // and was a likely cause of "sentence 2 skipped over" complaints.
-  const requiredLearningReps = 2;
+  // One clean read-through before fading begins. Fresh-speech gates and hard
+  // recognizer restarts protect phase transitions, so we don't need to make the
+  // user repeat the same sentence twice just to avoid stale callbacks.
+  const requiredLearningReps = 1;
   const [repetitionCount, setRepetitionCount] = useState(1);
   const repetitionCountRef = useRef(1);
   
