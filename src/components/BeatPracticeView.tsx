@@ -2995,8 +2995,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 await listenerHandle?.remove?.();
               } catch {}
             },
-
-          };
+            restart: async () => {
+              if (stopped || !isRecordingRef.current) return;
+              nativeFinalsRef.current = "";
+              lastNativeInterim = "";
+              try {
+                await NativeSpeech.stop();
+              } catch {}
+              // Brief delay lets iOS release the recognition task before we
+              // start a fresh one (avoids "already running" errors).
+              setTimeout(() => {
+                if (!stopped && isRecordingRef.current) startNativeSession();
+              }, 120);
+            },
 
           isRecordingRef.current = true;
           setIsRecording(true);
