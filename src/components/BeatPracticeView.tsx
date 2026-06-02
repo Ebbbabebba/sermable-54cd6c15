@@ -3082,6 +3082,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // suddenly going deaf mid-sentence after ~10 spoken words.
           latestSpeechResultCountRef.current = 0;
           ignoreResultsBeforeIndexRef.current = 0;
+          // Also drop the running transcript: the previous session's finals
+          // were already consumed by the matcher. Keeping them around would
+          // cause the freshly restarted engine to re-feed stale text into
+          // processTranscription and freeze the cursor mid-sentence after a
+          // silence-triggered restart (the classic "workflow stops after a
+          // few words disappear" symptom in fading rounds).
+          runningTranscriptRef.current = "";
 
           const startSafely = () => {
             if (!isRecordingRef.current) return;
