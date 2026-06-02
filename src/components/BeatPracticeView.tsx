@@ -2470,6 +2470,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     resetForNextRep();
   }, [hiddenWordOrder, protectedWordIndices, getNextWordToHide, showCelebration]);
 
+  // Recall variant: hide ALL remaining words so the user has to recite the
+  // entire beat from memory in one go. This is the "jump over" button during
+  // recall — it does NOT auto-complete; the user still has to say every word.
+  const jumpHideAllRecall = useCallback(() => {
+    if (showCelebration) return;
+    const allHidden = new Set<number>();
+    const newOrder = [...hiddenWordOrder];
+    for (let i = 0; i < words.length; i++) {
+      allHidden.add(i);
+      if (!hiddenWordIndicesRef.current.has(i)) newOrder.push(i);
+    }
+    setHiddenWordIndices(allHidden);
+    setHiddenWordOrder(newOrder);
+    setFailedWordIndices(new Set());
+    resetForNextRep();
+  }, [hiddenWordOrder, words.length, showCelebration]);
+
   const resetForNextRep = () => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
