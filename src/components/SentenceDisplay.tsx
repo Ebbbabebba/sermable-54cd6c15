@@ -188,8 +188,8 @@ const SentenceDisplay = ({
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-200",
             state.isCurrent &&
-              "ring-2 ring-primary bg-primary/20 text-primary font-semibold shadow-[0_0_12px_hsl(var(--primary)/0.4)]",
-            !state.isCurrent && "text-muted-foreground/60 hover:bg-muted"
+              "ring-2 ring-blue-500 bg-blue-500/20 text-blue-600 font-semibold shadow-[0_0_12px_hsl(217_91%_60%/0.4)]",
+            !state.isCurrent && "text-blue-400/60 hover:bg-blue-100"
           )}
         >
           {"•".repeat(dotCount)}
