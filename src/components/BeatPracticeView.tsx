@@ -4001,7 +4001,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 {t('beat_practice.skip_hide_ahead', 'Skip ahead')}
               </button>
             )}
+            {(sessionMode === 'pre_beat_recall' || sessionMode === 'recall') && hiddenWordIndices.size < words.length && (
+              <button
+                type="button"
+                onClick={jumpHideAllRecall}
+                disabled={showCelebration}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+                aria-label={t('beat_practice.recall_hide_all', 'Hide all & test')}
+                title={t('beat_practice.recall_hide_all_tooltip', 'Hide every word — recite the whole beat from memory')}
+              >
+                <FastForward className="h-3.5 w-3.5" />
+                {t('beat_practice.recall_hide_all', 'Hide all & test')}
+              </button>
+            )}
           </div>
+
 
 
           {/* Explanation for hidden words during recall */}
