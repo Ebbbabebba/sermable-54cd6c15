@@ -601,11 +601,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const getUniqueSentences = useCallback((beat: Beat | null): string[] => {
     if (!beat) return [];
     const sentences = [beat.sentence_1_text, beat.sentence_2_text, beat.sentence_3_text];
-    // Filter unique sentences while preserving order
+    // Filter unique sentences while preserving order. Normalize the comparison
+    // so the same sentence is not repeated just because whitespace/casing differs.
     const seen = new Set<string>();
     return sentences.filter(s => {
-      if (!s || seen.has(s)) return false;
-      seen.add(s);
+      const key = (s ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
       return true;
     });
   }, []);
