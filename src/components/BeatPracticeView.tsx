@@ -790,12 +790,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // duration (e.g. 3s) and immediately mark the next hidden word yellow.
       lastWordTimeRef.current = Date.now();
       hasHeardSpeechRef.current = false;
-      // Drop any buffered transcript so old tokens from before the pause
-      // cannot retroactively mark the word after the pause.
+      // Drop buffered transcript so the next word after the pause can be
+      // heard immediately. Do not keep an event-index cutoff here: Web Speech
+      // often reuses the same interim result slot, which made that next/first
+      // word look ignored and left the cursor stuck.
       transcriptRef.current = "";
       transcriptWordsRef.current = [];
       runningTranscriptRef.current = "";
-      ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+      ignoreResultsBeforeIndexRef.current = 0;
       ignoreResultsUntilRef.current = Date.now() + 80;
       recognitionRestartAtRef.current = Math.min(recognitionRestartAtRef.current, Date.now() + 80);
       if (nextIdx >= wordsLengthRef.current) {
@@ -2553,10 +2555,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
-    // Skip everything the recognizer has already buffered. Otherwise the same
-    // sentence that just completed can replay into the next repetition and be
-    // counted as if the user had spoken it again, which made words fade too early.
-    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    // Do not keep an event-index cutoff after reset. Web Speech can reuse the
+    // same interim result slot for the user's new first word; filtering by the
+    // previous result count made the blue cursor stay stuck at word 1.
+    ignoreResultsBeforeIndexRef.current = 0;
     try {
       (recognitionRef.current as { clearBuffer?: () => void } | null)?.clearBuffer?.();
     } catch {
