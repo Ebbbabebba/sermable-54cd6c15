@@ -22,7 +22,7 @@ interface SentenceDisplayProps {
 }
 
 // Snappy easing for responsive feel
-const smoothTransition = { duration: 0.25, ease: "easeOut" as const };
+const smoothTransition = { duration: 0.18, ease: "easeOut" as const };
 
 const SentenceDisplay = ({
   text,
@@ -35,19 +35,13 @@ const SentenceDisplay = ({
 }: SentenceDisplayProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentWordRef = useRef<HTMLSpanElement>(null);
-  const [displayedIndex, setDisplayedIndex] = useState(currentWordIndex);
-  
+
   const words = text.split(/\s+/).filter(w => w.trim());
-  
-  // Immediate transition for current word - no delay
-  useEffect(() => {
-    setDisplayedIndex(currentWordIndex);
-  }, [currentWordIndex]);
-  
+
   // The blue pulse advances past words that are already revealed as
   // hesitated/missed so the user's eye is drawn to what's next, even
   // while the matcher is still waiting on the revealed word.
-  let pulseIndex = displayedIndex;
+  let pulseIndex = currentWordIndex;
   while (
     pulseIndex < words.length &&
     (hesitatedIndices.has(pulseIndex) || missedIndices.has(pulseIndex))
