@@ -765,6 +765,50 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // the abort avoids the system mic chime that plays on every restart.
   };
 
+  // Hard-restart the speech recognizer. On iOS native and Web Speech the
+  // recognition session keeps a cumulative transcript — clearing our local
+  // mirrors is not enough, because the next `partialResults`/`onresult`
+  // event still contains every word the user said in the previous sentence.
+  // That stale replay made sentence 2 appear "frozen" on its first word
+  // until the user kept talking long enough to push the new word out of
+  // the matcher's stale-replay guard. Restarting the underlying session
+  // guarantees the next event starts from an empty transcript.
+  const hardRestartRecognition = () => {
+    const rec = recognitionRef.current as
+      | { __native?: boolean; clearBuffer?: () => void; abort?: () => void }
+      | null;
+    if (!rec) return;
+
+    // Drop any tokens the recognizer has already buffered locally.
+    try {
+      rec.clearBuffer?.();
+    } catch {
+      /* ignore */
+    }
+    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    runningTranscriptRef.current = "";
+    transcriptRef.current = "";
+    transcriptWordsRef.current = [];
+
+    if (rec.__native) {
+      // Stopping the native session triggers the `listeningState === "stopped"`
+      // handler, which auto-restarts a fresh session ~50ms later. The Capacitor
+      // plugin does not play the iOS mic "ding" on stop/start, so this is silent.
+      NativeSpeech.stop().catch(() => {
+        /* ignore */
+      });
+    } else {
+      // Web Speech: abort() triggers onend, which restarts via
+      // recognitionRestartAtRef.
+      try {
+        rec.abort?.();
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+
   // Trigger a planned pause when the cursor lands on a `-` token. The
   // pause IS the current "word" — we mute the mic, show a full-screen
   // countdown, and on completion mark the dash spoken (gray) and advance
@@ -2541,9 +2585,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = Date.now();
     lastAutoAdvanceAtRef.current = Date.now();
-    // Short ignore window: result-index filtering drops old buffered words,
-    // while keeping the next first word responsive if the user starts quickly.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 350);
+    // Short ignore window: the hard recognizer restart below is what really
+    // protects us from sentence-1 replay, so we only need a tiny mute here to
+    // cover the restart gap. Keeping this short is what makes the first word
+    // of the new sentence feel responsive.
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 150);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
@@ -2551,11 +2597,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     needsFreshSpeechRef.current = true;
     phaseTransitionAtRef.current = Date.now();
 
-    // Skip all currently buffered speech-results indices. Without this, the
-    // recognizer's `event.results` array (which we deliberately never abort
-    // to avoid the iOS mic chime) would replay sentence-1 finals into the
-    // running transcript on the very next onresult tick, falsely matching
-    // common stop-words in sentence 2 and auto-completing the read-through.
+    // Skip all currently buffered speech-results indices.
     ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
 
     setPhase(newPhase);
@@ -2568,8 +2610,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(350);
+    pauseSpeechRecognition(150);
     resetForNextRep();
+    // resetForNextRep arms a 250ms stale-replay guard intended for same-phase
+    // reps. Across phases we instead force a fresh recognizer session, so the
+    // guard would only swallow the user's first real word of the new sentence.
+    staleReplayGuardUntilRef.current = 0;
+    // Force the underlying speech session to restart so its cumulative
+    // transcript starts empty on the next event.
+    hardRestartRecognition();
+
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
     if (currentBeat) {
