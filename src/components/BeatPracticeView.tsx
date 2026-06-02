@@ -765,6 +765,50 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // the abort avoids the system mic chime that plays on every restart.
   };
 
+  // Hard-restart the speech recognizer. On iOS native and Web Speech the
+  // recognition session keeps a cumulative transcript — clearing our local
+  // mirrors is not enough, because the next `partialResults`/`onresult`
+  // event still contains every word the user said in the previous sentence.
+  // That stale replay made sentence 2 appear "frozen" on its first word
+  // until the user kept talking long enough to push the new word out of
+  // the matcher's stale-replay guard. Restarting the underlying session
+  // guarantees the next event starts from an empty transcript.
+  const hardRestartRecognition = () => {
+    const rec = recognitionRef.current as
+      | { __native?: boolean; clearBuffer?: () => void; abort?: () => void }
+      | null;
+    if (!rec) return;
+
+    // Drop any tokens the recognizer has already buffered locally.
+    try {
+      rec.clearBuffer?.();
+    } catch {
+      /* ignore */
+    }
+    ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    runningTranscriptRef.current = "";
+    transcriptRef.current = "";
+    transcriptWordsRef.current = [];
+
+    if (rec.__native) {
+      // Stopping the native session triggers the `listeningState === "stopped"`
+      // handler, which auto-restarts a fresh session ~50ms later. The Capacitor
+      // plugin does not play the iOS mic "ding" on stop/start, so this is silent.
+      NativeSpeech.stop().catch(() => {
+        /* ignore */
+      });
+    } else {
+      // Web Speech: abort() triggers onend, which restarts via
+      // recognitionRestartAtRef.
+      try {
+        rec.abort?.();
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+
   // Trigger a planned pause when the cursor lands on a `-` token. The
   // pause IS the current "word" — we mute the mic, show a full-screen
   // countdown, and on completion mark the dash spoken (gray) and advance
