@@ -1701,10 +1701,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const tokenVariantsAt = (absoluteIndex: number): string[] => {
       const variants = [rawTokenAt(absoluteIndex)];
       const current = rawTokenAt(absoluteIndex);
-      const next = rawTokenAt(absoluteIndex + 1);
       const previous = rawTokenAt(absoluteIndex - 1);
 
-      if (current && next) variants.push(`${current}${next}`, `${current} ${next}`);
       if (previous && current) variants.push(`${previous}${current}`, `${previous} ${current}`);
 
       return [...new Set(variants.filter(Boolean))];
@@ -2604,6 +2602,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   const transitionToPhase = (newPhase: Phase) => {
+    phaseTransitionPendingRenderRef.current = true;
     // HARD synchronous reset of all refs FIRST so any in-flight speech
     // recognition callback / hesitation tick that fires between this call and
     // the next React render cannot operate on stale sentence-1 indices.
