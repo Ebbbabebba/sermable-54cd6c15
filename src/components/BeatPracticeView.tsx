@@ -863,7 +863,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     console.log(`🔄 Restart current beat (${reason})`);
     playClick();
     pauseSpeechRecognition(600);
-    resetForNextRep();
+    resetForNextRep(false);
     toast({
       title: t('beat_practice.restarted_title', 'Börja om'),
       description: t('beat_practice.restarted_desc', 'Tar det från början av denna del.'),
