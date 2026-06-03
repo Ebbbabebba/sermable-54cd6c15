@@ -21,8 +21,9 @@ interface SentenceDisplayProps {
   onWordTap?: (index: number) => void;
 }
 
-// Snappy easing for responsive feel
-const smoothTransition = { duration: 0.18, ease: "easeOut" as const };
+// Smooth easing for a calmer, gliding pulse feel
+const smoothTransition = { duration: 0.28, ease: "easeInOut" as const };
+const layoutTransition = { duration: 0.32, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
 
 const SentenceDisplay = ({
   text,
