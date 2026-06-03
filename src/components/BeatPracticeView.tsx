@@ -2542,7 +2542,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordIndices(allHidden);
     setHiddenWordOrder(newOrder);
     setFailedWordIndices(new Set());
-    resetForNextRep(false);
+    resetForNextRep();
   }, [hiddenWordOrder, words.length, showCelebration]);
 
   const resetForNextRep = (releaseCompletionLock = true) => {
@@ -2656,7 +2656,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // pause used to land AFTER that one expired, briefly muting the mic
     // just as the user started the new phase — the "freeze" at sentence
     // start. Skip it; resetForNextRep arms the recognizer immediately.
-    resetForNextRep();
+    resetForNextRep(false);
 
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
