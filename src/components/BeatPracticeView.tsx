@@ -747,11 +747,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // pause, which feels like a constant chime during practice. By keeping the
   // recognizer running and just ignoring incoming results for `pauseMs`, we get
   // the same de-bounce behavior silently.
-  const pauseSpeechRecognition = (pauseMs: number) => {
+  const pauseSpeechRecognition = (pauseMs: number, discardExistingResults = false) => {
     const until = Date.now() + pauseMs;
 
     ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, until);
     recognitionRestartAtRef.current = Math.max(recognitionRestartAtRef.current, until);
+    if (discardExistingResults) {
+      ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+    }
 
     runningTranscriptRef.current = "";
     transcriptRef.current = "";
