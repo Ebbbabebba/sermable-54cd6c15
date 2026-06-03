@@ -1666,26 +1666,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     let startIdx: number;
 
     if (rawWords.length > prevCount) {
-      // New words appended
+      // New words appended. Failed/corrected tail words are intentionally not
+      // consumed, so a same-length correction still lands here on the next event.
       startIdx = prevCount;
     } else {
-      // No new words appended; only reprocess if the tail changed (last 1-2 words)
-      const tailCheck = Math.min(2, rawWords.length, prevCount);
-      let tailChanged = prevCount === 0; // if we had none before, treat as changed
-
-      for (let i = 1; i <= tailCheck; i++) {
-        if (normalizeWord(rawWords[rawWords.length - i]) !== normalizeWord(prevWords[prevCount - i])) {
-          tailChanged = true;
-          break;
-        }
-      }
-
-      if (tailChanged) {
-        // Reprocess the last couple of words to pick up corrections
-        startIdx = Math.max(0, rawWords.length - 2);
-      } else {
-        return;
-      }
+      // Never reuse already-consumed transcript tokens. Reprocessing the last
+      // 1-2 consumed words let duplicate hidden words ("and", "in", "my")
+      // match repeatedly and cascade through the sentence without fresh speech.
+      return;
     }
 
     transcriptRef.current = transcript;
