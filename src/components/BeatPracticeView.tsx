@@ -362,8 +362,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [practiceStrictness, setPracticeStrictness] = useState<'strict' | 'flow'>('strict');
   const [familiarityLevel, setFamiliarityLevel] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
   
-  // Calculate words to hide per successful repetition based on familiarity
-  const wordsToHidePerSuccess = familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1;
   // requiredLearningReps is computed after `phase` is declared (see below).
   
   // Session mode tracking
