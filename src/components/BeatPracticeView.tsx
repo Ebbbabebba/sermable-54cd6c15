@@ -691,6 +691,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   useLayoutEffect(() => {
     phaseTransitionPendingRenderRef.current = false;
+    phaseCompletionLockRef.current = false;
   }, [phase, currentText]);
 
   const pauseWordMeta = useMemo<Map<number, number>>(() => {
@@ -1965,7 +1966,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
         pauseSpeechRecognition(900);
-        resetForNextRep();
+        resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
 
         setTimeout(() => {
@@ -2524,7 +2525,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordOrder(newOrder);
     setFailedWordIndices(new Set());
     setFadingSuccessCount(prev => Math.min(prev + 1, 2));
-    resetForNextRep();
+    resetForNextRep(false);
   }, [hiddenWordOrder, protectedWordIndices, getNextWordToHide, showCelebration]);
 
   // Recall variant: hide ALL remaining words so the user has to recite the
@@ -2544,7 +2545,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     resetForNextRep();
   }, [hiddenWordOrder, words.length, showCelebration]);
 
-  const resetForNextRep = () => {
+  const resetForNextRep = (releaseCompletionLock = true) => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
     // Only guard against stale replay if the recognizer has actually
@@ -2599,6 +2600,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = now;
     lastAutoAdvanceAtRef.current = 0;
+    if (releaseCompletionLock) {
+      phaseCompletionLockRef.current = false;
+    }
   };
 
   const transitionToPhase = (newPhase: Phase) => {
