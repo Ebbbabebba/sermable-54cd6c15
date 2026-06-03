@@ -1849,11 +1849,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       lastCompletionRepIdRef.current = repId;
 
       const failedFromSignals = new Set<number>();
-      hiddenWordIndicesRef.current.forEach((idx) => {
-        if (hesitatedIndicesRef.current.has(idx) || missedIndicesRef.current.has(idx)) {
-          failedFromSignals.add(idx);
-        }
-      });
+      // Include every hesitated/missed word — even visible ones — so they
+      // are protected next round and won't be re-hidden until the user
+      // says them cleanly without hesitation.
+      hesitatedIndicesRef.current.forEach((idx) => failedFromSignals.add(idx));
+      missedIndicesRef.current.forEach((idx) => failedFromSignals.add(idx));
 
       checkCompletion(newSpoken, failedFromSignals);
       return;
@@ -2384,24 +2384,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       let newOrder = [...hiddenWordOrder];
       let newProtected = new Set(protectedWordIndices);
       
-      // If there were errors, reveal ONLY the first failed hidden word in
-      // reading order — the one the user actually got stuck on. The rest
-      // are simply marked protected so they stay hidden and bubble up to
-      // be re-hidden last. This prevents the "every word becomes visible
-      // again mid-round" flash the user was seeing.
+      // If there were errors, reveal EVERY word the user hesitated on or
+      // missed this round (not just the first). They become "protected" so
+      // they bubble up to be re-hidden last, and they stay visible until the
+      // user says them cleanly without hesitation.
       if (hadErrors) {
         const sortedFailed = [...failedSet].sort((a, b) => a - b);
-        const firstFailed = sortedFailed[0];
         sortedFailed.forEach((idx) => {
           newProtected.add(idx);
-        });
-        if (firstFailed !== undefined) {
-          newHidden.delete(firstFailed);
-          const orderIdx = newOrder.indexOf(firstFailed);
-          if (orderIdx !== -1) {
-            newOrder.splice(orderIdx, 1);
+          if (newHidden.has(idx)) {
+            newHidden.delete(idx);
+            const orderIdx = newOrder.indexOf(idx);
+            if (orderIdx !== -1) {
+              newOrder.splice(orderIdx, 1);
+            }
           }
-        }
+        });
         setProtectedWordIndices(newProtected);
         // Decrement progression by 1 instead of nuking it — a single miss
         // shouldn't drop the user from 5-word chunks all the way back to 3.
