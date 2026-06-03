@@ -1436,10 +1436,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const isHidden = hiddenWordIndicesRef.current.has(index);
     if (!isHidden) return false;
 
-    return (
-      lenientWordIndicesRef.current.has(index) ||
-      isGapWord(words[index] ?? '')
-    );
+    return lenientWordIndicesRef.current.has(index);
   };
 
   const getWordDistance = (a: string, b: string): number => {
