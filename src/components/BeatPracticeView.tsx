@@ -1919,13 +1919,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         pauseSpeechRecognition(900, true);
         resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
-        transitionToPhase(currentPhase.replace('learning', 'fading') as Phase);
+        const nextPhase = currentPhase.replace('learning', 'fading') as Phase;
 
         setTimeout(() => {
+          showCelebrationRef.current = true;
           setShowCelebration(true);
 
           setTimeout(() => {
+            showCelebrationRef.current = false;
             setShowCelebration(false);
+            transitionToPhase(nextPhase);
           }, 900);
         }, 150);
       } else {
