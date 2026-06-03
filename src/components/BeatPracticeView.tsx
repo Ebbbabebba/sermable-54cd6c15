@@ -2414,7 +2414,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       
-      const wordsToHide = Math.min(3 + fadingSuccessCount, 5);
+      // Hide at most one *new* word after each clean repetition. Using 3→5 word
+      // chunks here made the first successful hidden-word round feel like the
+      // app was deleting the whole sentence before those words were mastered.
+      const wordsToHide = wordsToHidePerSuccess;
       for (let i = 0; i < wordsToHide; i++) {
         // Pass the updated protected set to prioritize hiding non-protected words
         const nextToHide = getNextWordToHide(newHidden, newProtected);
