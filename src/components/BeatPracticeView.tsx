@@ -1913,7 +1913,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (phase.includes('learning')) {
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
-      const epochAtCompletion = phaseEpochRef.current;
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
