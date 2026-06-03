@@ -2984,6 +2984,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             (data: any) => {
               if (showCelebrationRef.current) return;
               if (Date.now() < ignoreResultsUntilRef.current) return;
+              if (Date.now() >= ignoreResultIndexCutoffUntilRef.current) {
+                ignoreResultIndexCutoffUntilRef.current = 0;
+              }
               lastActivityAt = Date.now();
               setIsSpeechReady(true);
 
@@ -3080,6 +3083,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           if (showCelebrationRef.current) return;
           if (Date.now() < ignoreResultsUntilRef.current) return;
+          if (
+            ignoreResultsBeforeIndexRef.current > 0 &&
+            Date.now() >= ignoreResultIndexCutoffUntilRef.current &&
+            event.results.length <= ignoreResultsBeforeIndexRef.current
+          ) {
+            ignoreResultsBeforeIndexRef.current = 0;
+            ignoreResultIndexCutoffUntilRef.current = 0;
+          }
           setIsSpeechReady(true);
 
           latestSpeechResultCountRef.current = Math.max(
