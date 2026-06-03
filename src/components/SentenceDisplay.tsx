@@ -38,16 +38,21 @@ const SentenceDisplay = ({
 
   const words = text.split(/\s+/).filter(w => w.trim());
 
-  // The blue pulse advances past words that are already revealed as
-  // hesitated/missed so the user's eye is drawn to what's next, even
-  // while the matcher is still waiting on the revealed word.
+  // The blue pulse may step past at most ONE already-resolved word so the
+  // cursor doesn't look frozen on a word that's already turned red. We
+  // deliberately do NOT skip past hesitated (yellow) words — those are
+  // exactly the words the user is still actively trying to say, and the
+  // cursor needs to stay on them. We also cap at +1 to avoid the
+  // "the cursor raced two words ahead before I finished speaking" feel.
   let pulseIndex = currentWordIndex;
-  while (
+  if (
     pulseIndex < words.length &&
-    (hesitatedIndices.has(pulseIndex) || missedIndices.has(pulseIndex))
+    missedIndices.has(pulseIndex) &&
+    !hesitatedIndices.has(pulseIndex)
   ) {
     pulseIndex++;
   }
+
 
   // Auto-scroll to the pulsing word with smooth behavior
   useEffect(() => {

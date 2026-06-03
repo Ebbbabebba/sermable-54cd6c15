@@ -1769,10 +1769,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
         } else if (canSkipCurrent && advancedTo + 2 < words.length) {
-          // 2-word lookahead — visible words or hidden gap words only,
-          // never crossing a sentence boundary.
+          // 2-word lookahead — STRICT: the intermediate word must be
+          // visible (not hidden). Allowing hidden gap words in this slot
+          // caused the pulse to leap two positions ahead on a single
+          // spoken word, which felt like the system was racing ahead.
           if (
-            canSkipWord(advancedTo + 1) &&
+            !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
             !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
             wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
           ) {
@@ -1783,10 +1785,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }
 
         if (foundIdx === -1 && isGapWord(words[advancedTo] ?? '')) {
-          // Fast-start recovery: if recognition misses one or more tiny gap
-          // words at the beginning (att/och/i/på...), let the first real
-          // content word pull the cursor forward instead of waiting seconds.
-          const maxGapLookahead = Math.min(words.length - 1, advancedTo + 4);
+          // Fast-start recovery: if recognition misses a tiny gap word at
+          // the beginning (att/och/i/på...), let the next content word pull
+          // the cursor forward. Capped at 2 consecutive gap-word skips so
+          // we never blow past half a sentence in one match.
+          const maxGapLookahead = Math.min(words.length - 1, advancedTo + 2);
           for (let lookahead = advancedTo + 1; lookahead <= maxGapLookahead; lookahead++) {
             if (crossesSentenceBoundary(advancedTo, lookahead)) break;
             if (!canSkipConsecutiveGapWords(advancedTo, lookahead)) break;
@@ -1800,6 +1803,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         }
       }
+
 
 
       if (foundIdx === -1) {
@@ -1919,6 +1923,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     if (!allSpoken) return;
 
+    // Hard guard: if a celebration is already on screen, a follow-up
+    // transcript must not retrigger the learning→fading transition.
+    if (showCelebrationRef.current) return;
+
     const failedSet = failed ?? failedWordIndices;
     const hadErrors = failedSet.size > 0;
 
@@ -1937,6 +1945,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (phase.includes('learning')) {
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
+      const epochAtCompletion = phaseEpochRef.current;
 
       // Hard gate: in a learning phase we must have heard genuinely new speech
       // since the last phase transition. This blocks stale buffered transcripts
@@ -1948,14 +1957,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
-        pauseSpeechRecognition(1700);
+        pauseSpeechRecognition(900);
         resetForNextRep();
         setCelebrationMessage(t('beat_practice.great_start_fading'));
 
         setTimeout(() => {
+          // Phase may have already moved on (e.g. user exited, or a parallel
+          // path advanced) — bail out so we don't re-fire the transition.
+          if (phaseEpochRef.current !== epochAtCompletion) return;
           setShowCelebration(true);
 
           setTimeout(() => {
+            if (phaseEpochRef.current !== epochAtCompletion) return;
             setShowCelebration(false);
             let nextPhase: Phase;
             if (currentPhase === 'sentence_1_learning') nextPhase = 'sentence_1_fading';
@@ -1966,7 +1979,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             else nextPhase = currentPhase.replace('learning', 'fading') as Phase;
 
             transitionToPhase(nextPhase);
-          }, 1500);
+          }, 900);
         }, 150);
       } else {
         repetitionCountRef.current = currentRep + 1;
@@ -1978,6 +1991,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           setShowCelebration(false);
           setRepetitionCount(repetitionCountRef.current);
           resetForNextRep();
+
         }, 800);
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
@@ -2420,22 +2434,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       let newOrder = [...hiddenWordOrder];
       let newProtected = new Set(protectedWordIndices);
       
-      // If there were errors, add failed words to protected set (they'll disappear last)
-      // AND reveal them (make visible) so user can see what they missed
+      // If there were errors, reveal ONLY the first failed hidden word in
+      // reading order — the one the user actually got stuck on. The rest
+      // are simply marked protected so they stay hidden and bubble up to
+      // be re-hidden last. This prevents the "every word becomes visible
+      // again mid-round" flash the user was seeing.
       if (hadErrors) {
-        failedSet.forEach((idx) => {
-          // Add to protected set - these words will be hidden LAST
+        const sortedFailed = [...failedSet].sort((a, b) => a - b);
+        const firstFailed = sortedFailed[0];
+        sortedFailed.forEach((idx) => {
           newProtected.add(idx);
-          // Reveal the word (make visible)
-          newHidden.delete(idx);
-          // Remove from order if present
-          const orderIdx = newOrder.indexOf(idx);
+        });
+        if (firstFailed !== undefined) {
+          newHidden.delete(firstFailed);
+          const orderIdx = newOrder.indexOf(firstFailed);
           if (orderIdx !== -1) {
             newOrder.splice(orderIdx, 1);
           }
-        });
+        }
         setProtectedWordIndices(newProtected);
-        setFadingSuccessCount(0); // Reset progression on error (back to 3 words)
+        // Decrement progression by 1 instead of nuking it — a single miss
+        // shouldn't drop the user from 5-word chunks all the way back to 3.
+        setFadingSuccessCount(prev => Math.max(0, prev - 1));
         setConsecutiveNoScriptSuccess(0);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
@@ -2445,6 +2465,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       } else {
         setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
       }
+
       
       const wordsToHide = Math.min(3 + fadingSuccessCount, 5);
       for (let i = 0; i < wordsToHide; i++) {
@@ -2519,16 +2540,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const resetForNextRep = () => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
+    // Only guard against stale replay if the recognizer has actually
+    // produced a result in the very recent past. Otherwise we'd swallow
+    // the user's first word at the top of a brand-new phase and the
+    // cursor would sit frozen for ~80ms while we ignored real speech.
+    const recentlyActive =
+      hadActiveRecognizer && now - lastWordTimeRef.current < 300;
     repetitionIdRef.current += 1;
     lastResetAtRef.current = now;
-    // Stale-replay guard: keep this extremely short. Native recognition can
-    // emit a whole first phrase as one partial result; a longer guard drops it
-    // and makes the blue cursor feel like it starts reacting late.
-    staleReplayGuardUntilRef.current = hadActiveRecognizer ? now + 80 : 0;
+    staleReplayGuardUntilRef.current = recentlyActive ? now + 80 : 0;
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
     ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 40);
+
 
     // Planned pauses must run every repetition of the same sentence/beat, not
     // only when the visible text changes between phases.
@@ -2614,8 +2639,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
     lastCompletionRepIdRef.current = -1;
-    pauseSpeechRecognition(200);
+    // The completion path that called us has already issued its own
+    // pauseSpeechRecognition (900ms). Doubling up here with another 200ms
+    // pause used to land AFTER that one expired, briefly muting the mic
+    // just as the user started the new phase — the "freeze" at sentence
+    // start. Skip it; resetForNextRep arms the recognizer immediately.
     resetForNextRep();
+
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
     if (currentBeat) {
