@@ -1907,7 +1907,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
-        pauseSpeechRecognition(900);
+        pauseSpeechRecognition(900, true);
         resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
 
@@ -1933,7 +1933,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 150);
       } else {
         repetitionCountRef.current = currentRep + 1;
-        pauseSpeechRecognition(900);
+        pauseSpeechRecognition(900, true);
         setCelebrationMessage(`${currentRep}/${requiredLearningReps}`);
         setShowCelebration(true);
 
@@ -1945,7 +1945,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 800);
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
-      pauseSpeechRecognition(750);
+      pauseSpeechRecognition(750, true);
       handleFadingCompletion(hadErrors, failedSet);
     }
   }
