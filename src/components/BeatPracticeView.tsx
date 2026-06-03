@@ -471,6 +471,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // completing the new phase before the user has spoken a word.
   const phaseEpochRef = useRef(0);
   const phaseTransitionPendingRenderRef = useRef(false);
+  const phaseCompletionLockRef = useRef(false);
 
   // Set true on every phase transition. Cleared the first time we hear real
   // new speech in this phase. While true, learning-phase auto-completion is
