@@ -1436,10 +1436,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const isHidden = hiddenWordIndicesRef.current.has(index);
     if (!isHidden) return false;
 
-    return (
-      lenientWordIndicesRef.current.has(index) ||
-      isGapWord(words[index] ?? '')
-    );
+    return lenientWordIndicesRef.current.has(index);
   };
 
   const getWordDistance = (a: string, b: string): number => {
@@ -1699,22 +1696,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (newWords.length === 0) return;
 
     const rawTokenAt = (absoluteIndex: number): string => rawWords[absoluteIndex] ?? '';
-    const tokenVariantsAt = (absoluteIndex: number): string[] => {
-      const variants = [rawTokenAt(absoluteIndex)];
-      const current = rawTokenAt(absoluteIndex);
-      const previous = rawTokenAt(absoluteIndex - 1);
-
-      if (previous && current) variants.push(`${previous}${current}`, `${previous} ${current}`);
-
-      return [...new Set(variants.filter(Boolean))];
-    };
-
     const wordMatchesAnyVariant = (absoluteIndex: number, expectedIndex: number) => {
       const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedIndex);
       const expectedIsLenient = isEffectivelyLenientWord(expectedIndex);
-      return tokenVariantsAt(absoluteIndex).some((variant) =>
-        wordsMatch(variant, words[expectedIndex], expectedIsHidden, expectedIsLenient)
-      );
+      return wordsMatch(rawTokenAt(absoluteIndex), words[expectedIndex], expectedIsHidden, expectedIsLenient);
     };
 
     let advancedTo = currentIdx;
@@ -1730,10 +1715,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // pause-trigger effect handle the countdown + auto-advance.
       if (pauseWordMeta.has(advancedTo)) break;
 
-      // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
-      const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
-      const currentIsLenient = isEffectivelyLenientWord(advancedTo);
-      const currentIsSentenceStart = advancedTo === 0 || /[.!?]$/.test(words[advancedTo - 1] ?? '');
       // True if advancing past `advancedTo` would cross into a new sentence
       const crossesSentenceBoundary = (from: number, to: number) => {
         for (let k = from; k < to; k++) {
@@ -1750,23 +1731,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1) {
-        // Current word didn't match - check NEXT word (lookahead of 1)
-        // STRICT RULE: lookahead may ONLY skip over visible (non-hidden) words,
-        // EXCEPT hidden gap words (att, och, i, på, som, en, ett, det, ...).
-        // Gap words are interchangeable filler — if the user substitutes or
-        // omits one when the whole sentence is hidden, that should not freeze
-        // the cursor or count against them.
-        const isHiddenGap = (i: number) =>
-          hiddenWordIndicesRef.current.has(i) && isGapWord(words[i] ?? '');
-        const canSkipWord = (i: number) =>
-          !hiddenWordIndicesRef.current.has(i) || isHiddenGap(i);
-        const canSkipCurrent = canSkipWord(advancedTo);
-        const canSkipConsecutiveGapWords = (from: number, toExclusive: number) => {
-          for (let i = from; i < toExclusive; i++) {
-            if (!isGapWord(words[i] ?? '')) return false;
-          }
-          return true;
-        };
+        // Current word didn't match - optionally check the next word, but ONLY
+        // when the skipped word is visible. Hidden words (including tiny gap
+        // words like "my", "a", "I") must be spoken or revealed by the
+        // hesitation timer; otherwise the app can mark an unmastered hidden
+        // word as complete and start fading too early.
+        const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
 
         if (
           canSkipCurrent &&
@@ -1789,25 +1759,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             newSpoken.add(advancedTo);
             newSpoken.add(advancedTo + 1);
             foundIdx = advancedTo + 2;
-          }
-        }
-
-        if (foundIdx === -1 && isGapWord(words[advancedTo] ?? '')) {
-          // Fast-start recovery: if recognition misses a tiny gap word at
-          // the beginning (att/och/i/på...), let the next content word pull
-          // the cursor forward. Capped at 2 consecutive gap-word skips so
-          // we never blow past half a sentence in one match.
-          const maxGapLookahead = Math.min(words.length - 1, advancedTo + 2);
-          for (let lookahead = advancedTo + 1; lookahead <= maxGapLookahead; lookahead++) {
-            if (crossesSentenceBoundary(advancedTo, lookahead)) break;
-            if (!canSkipConsecutiveGapWords(advancedTo, lookahead)) break;
-            if (wordMatchesAnyVariant(absoluteRawIndex, lookahead)) {
-              for (let skipped = advancedTo; skipped < lookahead; skipped++) {
-                newSpoken.add(skipped);
-              }
-              foundIdx = lookahead;
-              break;
-            }
           }
         }
       }
