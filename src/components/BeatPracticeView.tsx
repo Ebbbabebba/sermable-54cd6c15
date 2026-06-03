@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -470,6 +470,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // sentence-1 transcript from sneaking into sentence-2 and falsely auto-
   // completing the new phase before the user has spoken a word.
   const phaseEpochRef = useRef(0);
+  const phaseTransitionPendingRenderRef = useRef(false);
+  const phaseCompletionLockRef = useRef(false);
 
   // Set true on every phase transition. Cleared the first time we hear real
   // new speech in this phase. While true, learning-phase auto-completion is
@@ -686,6 +688,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const currentText = getCurrentText();
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+
+  useLayoutEffect(() => {
+    phaseTransitionPendingRenderRef.current = false;
+    phaseCompletionLockRef.current = false;
+  }, [phase, currentText]);
+
   const pauseWordMeta = useMemo<Map<number, number>>(() => {
     const m = new Map<number, number>();
     words.forEach((w, i) => {
@@ -1595,6 +1603,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number, phaseEpoch?: number) => {
     if (repId !== repetitionIdRef.current) return;
     if (phaseEpoch !== undefined && phaseEpoch !== phaseEpochRef.current) return;
+    if (phaseTransitionPendingRenderRef.current) return;
+    if (phaseCompletionLockRef.current) return;
     
     const rawWords = transcript.split(/\s+/).filter((w) => w.trim());
     if (rawWords.length === 0) return;
@@ -1692,10 +1702,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const tokenVariantsAt = (absoluteIndex: number): string[] => {
       const variants = [rawTokenAt(absoluteIndex)];
       const current = rawTokenAt(absoluteIndex);
-      const next = rawTokenAt(absoluteIndex + 1);
       const previous = rawTokenAt(absoluteIndex - 1);
 
-      if (current && next) variants.push(`${current}${next}`, `${current} ${next}`);
       if (previous && current) variants.push(`${previous}${current}`, `${previous} ${current}`);
 
       return [...new Set(variants.filter(Boolean))];
@@ -1926,6 +1934,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Hard guard: if a celebration is already on screen, a follow-up
     // transcript must not retrigger the learning→fading transition.
     if (showCelebrationRef.current) return;
+    if (phaseCompletionLockRef.current) return;
+
+    if (phase.includes('learning') && needsFreshSpeechRef.current) {
+      console.log('🛑 Completion blocked — no fresh speech since phase transition');
+      return;
+    }
+
+    phaseCompletionLockRef.current = true;
 
     const failedSet = failed ?? failedWordIndices;
     const hadErrors = failedSet.size > 0;
@@ -1947,18 +1963,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const currentRep = repetitionCountRef.current;
       const epochAtCompletion = phaseEpochRef.current;
 
-      // Hard gate: in a learning phase we must have heard genuinely new speech
-      // since the last phase transition. This blocks stale buffered transcripts
-      // from auto-completing (and skipping) a sentence the user hasn't said yet.
-      if (needsFreshSpeechRef.current) {
-        console.log('🛑 Completion blocked — no fresh speech since phase transition');
-        return;
-      }
-
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
         pauseSpeechRecognition(900);
-        resetForNextRep();
+        resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
 
         setTimeout(() => {
@@ -2537,7 +2545,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     resetForNextRep();
   }, [hiddenWordOrder, words.length, showCelebration]);
 
-  const resetForNextRep = () => {
+  const resetForNextRep = (releaseCompletionLock = true) => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
     // Only guard against stale replay if the recognizer has actually
@@ -2592,9 +2600,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = now;
     lastAutoAdvanceAtRef.current = 0;
+    if (releaseCompletionLock) {
+      phaseCompletionLockRef.current = false;
+    }
   };
 
   const transitionToPhase = (newPhase: Phase) => {
+    phaseTransitionPendingRenderRef.current = true;
     // HARD synchronous reset of all refs FIRST so any in-flight speech
     // recognition callback / hesitation tick that fires between this call and
     // the next React render cannot operate on stale sentence-1 indices.
@@ -2644,7 +2656,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // pause used to land AFTER that one expired, briefly muting the mic
     // just as the user started the new phase — the "freeze" at sentence
     // start. Skip it; resetForNextRep arms the recognizer immediately.
-    resetForNextRep();
+    resetForNextRep(false);
 
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
@@ -2688,7 +2700,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const currentPhase = phase;
     const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
     
-    resetForNextRep();
+    resetForNextRep(false);
 
     let message = t('beat_practice.excellent_next');
     if (currentPhase === 'sentence_2_fading') {

@@ -38,20 +38,10 @@ const SentenceDisplay = ({
 
   const words = text.split(/\s+/).filter(w => w.trim());
 
-  // The blue pulse may step past at most ONE already-resolved word so the
-  // cursor doesn't look frozen on a word that's already turned red. We
-  // deliberately do NOT skip past hesitated (yellow) words — those are
-  // exactly the words the user is still actively trying to say, and the
-  // cursor needs to stay on them. We also cap at +1 to avoid the
-  // "the cursor raced two words ahead before I finished speaking" feel.
-  let pulseIndex = currentWordIndex;
-  if (
-    pulseIndex < words.length &&
-    missedIndices.has(pulseIndex) &&
-    !hesitatedIndices.has(pulseIndex)
-  ) {
-    pulseIndex++;
-  }
+  // The blue pulse must reflect the actual cursor position only. Any visual
+  // lookahead makes it feel like the app has moved to words the speaker has
+  // not reached yet, especially when recognition emits delayed chunks.
+  const pulseIndex = currentWordIndex;
 
 
   // Auto-scroll to the pulsing word with smooth behavior
