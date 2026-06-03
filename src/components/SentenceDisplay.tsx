@@ -98,11 +98,11 @@ const SentenceDisplay = ({
             scale: state.isCurrent && !state.isSpoken ? [1, 1.06, 1] : 1,
           }}
           transition={{
-            opacity: { duration: 0.15 },
+            opacity: { duration: 0.25 },
             scale: state.isCurrent && !state.isSpoken
-              ? { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
-              : { duration: 0.15 },
-            layout: { duration: 0.15, ease: "easeOut" },
+              ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0.25 },
+            layout: { duration: 0.3, ease: "easeInOut" },
           }}
           className={cn(
             "inline-flex items-center justify-center mx-1 px-3 py-0.5 rounded-full text-base align-middle",
@@ -170,10 +170,10 @@ const SentenceDisplay = ({
           layout="position"
           animate={state.isCurrent ? { scale: [1, 1.08, 1] } : { scale: 1 }}
           transition={{
-            layout: { duration: 0.15, ease: "easeOut" },
+            layout: { duration: 0.3, ease: "easeInOut" },
             scale: state.isCurrent
-              ? { duration: 0.8, repeat: Infinity, ease: "easeInOut" }
-              : { duration: 0.15 },
+              ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0.25 },
           }}
           className={cn(
             "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-200",
@@ -200,9 +200,9 @@ const SentenceDisplay = ({
           y: 0,
         }}
         transition={{
-          opacity: { duration: 0.15, ease: "easeOut" },
-          scale: { duration: 0.15, ease: "easeOut" },
-          layout: { duration: 0.15, ease: "easeOut" },
+          opacity: { duration: 0.3, ease: "easeInOut" },
+          scale: { duration: 0.3, ease: "easeInOut" },
+          layout: { duration: 0.3, ease: "easeInOut" },
         }}
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
