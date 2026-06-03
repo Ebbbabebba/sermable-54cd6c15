@@ -863,7 +863,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     console.log(`🔄 Restart current beat (${reason})`);
     playClick();
     pauseSpeechRecognition(600);
-    resetForNextRep(false);
+    resetForNextRep();
     toast({
       title: t('beat_practice.restarted_title', 'Börja om'),
       description: t('beat_practice.restarted_desc', 'Tar det från början av denna del.'),
@@ -2700,7 +2700,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const currentPhase = phase;
     const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
     
-    resetForNextRep();
+    resetForNextRep(false);
 
     let message = t('beat_practice.excellent_next');
     if (currentPhase === 'sentence_2_fading') {
