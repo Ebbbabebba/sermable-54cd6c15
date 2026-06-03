@@ -688,6 +688,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const currentText = getCurrentText();
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+
+  useLayoutEffect(() => {
+    phaseTransitionPendingRenderRef.current = false;
+  }, [phase, currentText]);
+
   const pauseWordMeta = useMemo<Map<number, number>>(() => {
     const m = new Map<number, number>();
     words.forEach((w, i) => {
