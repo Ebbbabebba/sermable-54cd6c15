@@ -1696,22 +1696,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (newWords.length === 0) return;
 
     const rawTokenAt = (absoluteIndex: number): string => rawWords[absoluteIndex] ?? '';
-    const tokenVariantsAt = (absoluteIndex: number): string[] => {
-      const variants = [rawTokenAt(absoluteIndex)];
-      const current = rawTokenAt(absoluteIndex);
-      const previous = rawTokenAt(absoluteIndex - 1);
-
-      if (previous && current) variants.push(`${previous}${current}`, `${previous} ${current}`);
-
-      return [...new Set(variants.filter(Boolean))];
-    };
-
     const wordMatchesAnyVariant = (absoluteIndex: number, expectedIndex: number) => {
       const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedIndex);
       const expectedIsLenient = isEffectivelyLenientWord(expectedIndex);
-      return tokenVariantsAt(absoluteIndex).some((variant) =>
-        wordsMatch(variant, words[expectedIndex], expectedIsHidden, expectedIsLenient)
-      );
+      return wordsMatch(rawTokenAt(absoluteIndex), words[expectedIndex], expectedIsHidden, expectedIsLenient);
     };
 
     let advancedTo = currentIdx;
