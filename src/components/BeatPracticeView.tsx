@@ -1933,6 +1933,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Hard guard: if a celebration is already on screen, a follow-up
     // transcript must not retrigger the learning→fading transition.
     if (showCelebrationRef.current) return;
+    if (phaseCompletionLockRef.current) return;
+
+    if (phase.includes('learning') && needsFreshSpeechRef.current) {
+      console.log('🛑 Completion blocked — no fresh speech since phase transition');
+      return;
+    }
+
+    phaseCompletionLockRef.current = true;
 
     const failedSet = failed ?? failedWordIndices;
     const hadErrors = failedSet.size > 0;
@@ -1953,14 +1961,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
       const epochAtCompletion = phaseEpochRef.current;
-
-      // Hard gate: in a learning phase we must have heard genuinely new speech
-      // since the last phase transition. This blocks stale buffered transcripts
-      // from auto-completing (and skipping) a sentence the user hasn't said yet.
-      if (needsFreshSpeechRef.current) {
-        console.log('🛑 Completion blocked — no fresh speech since phase transition');
-        return;
-      }
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
