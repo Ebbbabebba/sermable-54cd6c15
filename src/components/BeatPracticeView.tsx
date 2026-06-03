@@ -442,6 +442,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const runningTranscriptRef = useRef<string>("");
   const latestSpeechResultCountRef = useRef(0);
   const ignoreResultsBeforeIndexRef = useRef(0);
+  const ignoreResultIndexCutoffUntilRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hasHeardSpeechRef = useRef(false);
   // Throttles auto-advance so consecutive hidden words can't cascade — the
@@ -754,6 +755,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     recognitionRestartAtRef.current = Math.max(recognitionRestartAtRef.current, until);
     if (discardExistingResults) {
       ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+      ignoreResultIndexCutoffUntilRef.current = until;
     }
 
     runningTranscriptRef.current = "";
@@ -2536,7 +2538,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Do not keep an event-index cutoff after reset. Web Speech can reuse the
     // same interim result slot for the user's new first word; filtering by the
     // previous result count made the blue cursor stay stuck at word 1.
-    ignoreResultsBeforeIndexRef.current = 0;
+    if (now >= ignoreResultIndexCutoffUntilRef.current) {
+      ignoreResultsBeforeIndexRef.current = 0;
+      ignoreResultIndexCutoffUntilRef.current = 0;
+    }
     try {
       (recognitionRef.current as { clearBuffer?: () => void } | null)?.clearBuffer?.();
     } catch {
