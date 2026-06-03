@@ -754,6 +754,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (discardExistingResults) {
       ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
       ignoreResultIndexCutoffUntilRef.current = until;
+      staleReplayGuardUntilRef.current = Math.max(staleReplayGuardUntilRef.current, until + 300);
     }
 
     runningTranscriptRef.current = "";
@@ -767,9 +768,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Ignore buffer-clear failures; the debounce window still protects us.
     }
 
-    // NOTE: intentionally NOT calling recognitionRef.current.abort() here.
-    // The ignoreResultsUntilRef window already discards stale tokens, and skipping
-    // the abort avoids the system mic chime that plays on every restart.
+    // For completion/phase transitions we must force Web Speech to start a
+    // fresh result array. Otherwise the browser can keep the previous full
+    // sentence in `event.results`, and after the pause it gets replayed as a
+    // brand-new repetition — which jumps the blue pulse from word 1 to the end.
+    if (discardExistingResults && recognitionRef.current && !recognitionRef.current.__native) {
+      try {
+        recognitionRef.current.abort?.();
+        setIsSpeechReady(false);
+      } catch {
+        // Ignore abort failures; the ignore windows above still protect us.
+      }
+    }
   };
 
   // Trigger a planned pause when the cursor lands on a `-` token. The
@@ -1903,32 +1913,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (phase.includes('learning')) {
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
-      const epochAtCompletion = phaseEpochRef.current;
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
         pauseSpeechRecognition(900, true);
         resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
+        transitionToPhase(currentPhase.replace('learning', 'fading') as Phase);
 
         setTimeout(() => {
-          // Phase may have already moved on (e.g. user exited, or a parallel
-          // path advanced) — bail out so we don't re-fire the transition.
-          if (phaseEpochRef.current !== epochAtCompletion) return;
           setShowCelebration(true);
 
           setTimeout(() => {
-            if (phaseEpochRef.current !== epochAtCompletion) return;
             setShowCelebration(false);
-            let nextPhase: Phase;
-            if (currentPhase === 'sentence_1_learning') nextPhase = 'sentence_1_fading';
-            else if (currentPhase === 'sentence_2_learning') nextPhase = 'sentence_2_fading';
-            else if (currentPhase === 'sentences_1_2_learning') nextPhase = 'sentences_1_2_fading';
-            else if (currentPhase === 'sentence_3_learning') nextPhase = 'sentence_3_fading';
-            else if (currentPhase === 'beat_learning') nextPhase = 'beat_fading';
-            else nextPhase = currentPhase.replace('learning', 'fading') as Phase;
-
-            transitionToPhase(nextPhase);
           }, 900);
         }, 150);
       } else {
@@ -2501,7 +2498,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hadActiveRecognizer && now - lastWordTimeRef.current < 300;
     repetitionIdRef.current += 1;
     lastResetAtRef.current = now;
-    staleReplayGuardUntilRef.current = recentlyActive ? now + 80 : 0;
+    staleReplayGuardUntilRef.current = Math.max(
+      staleReplayGuardUntilRef.current,
+      recentlyActive ? now + 80 : 0
+    );
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
