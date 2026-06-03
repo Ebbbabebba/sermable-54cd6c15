@@ -2499,7 +2499,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hadActiveRecognizer && now - lastWordTimeRef.current < 300;
     repetitionIdRef.current += 1;
     lastResetAtRef.current = now;
-    staleReplayGuardUntilRef.current = recentlyActive ? now + 80 : 0;
+    staleReplayGuardUntilRef.current = Math.max(
+      staleReplayGuardUntilRef.current,
+      recentlyActive ? now + 80 : 0
+    );
     // Minimal ignore window — but never shorten a longer pause that was set
     // by completion/phase transitions. Shortening it lets stale final results
     // from the previous rep immediately advance the next rep/session.
