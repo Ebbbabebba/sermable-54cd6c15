@@ -2525,7 +2525,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordOrder(newOrder);
     setFailedWordIndices(new Set());
     setFadingSuccessCount(prev => Math.min(prev + 1, 2));
-    resetForNextRep(false);
+    resetForNextRep();
   }, [hiddenWordOrder, protectedWordIndices, getNextWordToHide, showCelebration]);
 
   // Recall variant: hide ALL remaining words so the user has to recite the
@@ -2542,7 +2542,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordIndices(allHidden);
     setHiddenWordOrder(newOrder);
     setFailedWordIndices(new Set());
-    resetForNextRep();
+    resetForNextRep(false);
   }, [hiddenWordOrder, words.length, showCelebration]);
 
   const resetForNextRep = (releaseCompletionLock = true) => {
