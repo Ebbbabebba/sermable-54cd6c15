@@ -362,8 +362,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [practiceStrictness, setPracticeStrictness] = useState<'strict' | 'flow'>('strict');
   const [familiarityLevel, setFamiliarityLevel] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
   
-  // Calculate words to hide per successful repetition based on familiarity
-  const wordsToHidePerSuccess = familiarityLevel === 'confident' ? 3 : familiarityLevel === 'intermediate' ? 2 : 1;
   // requiredLearningReps is computed after `phase` is declared (see below).
   
   // Session mode tracking
@@ -442,6 +440,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const runningTranscriptRef = useRef<string>("");
   const latestSpeechResultCountRef = useRef(0);
   const ignoreResultsBeforeIndexRef = useRef(0);
+  const ignoreResultIndexCutoffUntilRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hasHeardSpeechRef = useRef(false);
   // Throttles auto-advance so consecutive hidden words can't cascade — the
@@ -747,11 +746,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // pause, which feels like a constant chime during practice. By keeping the
   // recognizer running and just ignoring incoming results for `pauseMs`, we get
   // the same de-bounce behavior silently.
-  const pauseSpeechRecognition = (pauseMs: number) => {
+  const pauseSpeechRecognition = (pauseMs: number, discardExistingResults = false) => {
     const until = Date.now() + pauseMs;
 
     ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, until);
     recognitionRestartAtRef.current = Math.max(recognitionRestartAtRef.current, until);
+    if (discardExistingResults) {
+      ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
+      ignoreResultIndexCutoffUntilRef.current = until;
+    }
 
     runningTranscriptRef.current = "";
     transcriptRef.current = "";
@@ -1666,26 +1669,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     let startIdx: number;
 
     if (rawWords.length > prevCount) {
-      // New words appended
+      // New words appended. Failed/corrected tail words are intentionally not
+      // consumed, so a same-length correction still lands here on the next event.
       startIdx = prevCount;
     } else {
-      // No new words appended; only reprocess if the tail changed (last 1-2 words)
-      const tailCheck = Math.min(2, rawWords.length, prevCount);
-      let tailChanged = prevCount === 0; // if we had none before, treat as changed
-
-      for (let i = 1; i <= tailCheck; i++) {
-        if (normalizeWord(rawWords[rawWords.length - i]) !== normalizeWord(prevWords[prevCount - i])) {
-          tailChanged = true;
-          break;
-        }
-      }
-
-      if (tailChanged) {
-        // Reprocess the last couple of words to pick up corrections
-        startIdx = Math.max(0, rawWords.length - 2);
-      } else {
-        return;
-      }
+      // Never reuse already-consumed transcript tokens. Reprocessing the last
+      // 1-2 consumed words let duplicate hidden words ("and", "in", "my")
+      // match repeatedly and cascade through the sentence without fresh speech.
+      return;
     }
 
     transcriptRef.current = transcript;
@@ -1916,7 +1907,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
-        pauseSpeechRecognition(900);
+        pauseSpeechRecognition(900, true);
         resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
 
@@ -1942,7 +1933,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 150);
       } else {
         repetitionCountRef.current = currentRep + 1;
-        pauseSpeechRecognition(900);
+        pauseSpeechRecognition(900, true);
         setCelebrationMessage(`${currentRep}/${requiredLearningReps}`);
         setShowCelebration(true);
 
@@ -1954,7 +1945,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 800);
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
-      pauseSpeechRecognition(750);
+      pauseSpeechRecognition(750, true);
       handleFadingCompletion(hadErrors, failedSet);
     }
   }
@@ -2426,7 +2417,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       
-      const wordsToHide = Math.min(3 + fadingSuccessCount, 5);
+      // Hide exactly one *new* word after each clean repetition. This keeps the
+      // sentence progression word-by-word instead of deleting big chunks before
+      // the user has proven the newly hidden word.
+      const wordsToHide = 1;
       for (let i = 0; i < wordsToHide; i++) {
         // Pass the updated protected set to prioritize hiding non-protected words
         const nextToHide = getNextWordToHide(newHidden, newProtected);
@@ -2542,7 +2536,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Do not keep an event-index cutoff after reset. Web Speech can reuse the
     // same interim result slot for the user's new first word; filtering by the
     // previous result count made the blue cursor stay stuck at word 1.
-    ignoreResultsBeforeIndexRef.current = 0;
+    if (now >= ignoreResultIndexCutoffUntilRef.current) {
+      ignoreResultsBeforeIndexRef.current = 0;
+      ignoreResultIndexCutoffUntilRef.current = 0;
+    }
     try {
       (recognitionRef.current as { clearBuffer?: () => void } | null)?.clearBuffer?.();
     } catch {
@@ -2987,6 +2984,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             (data: any) => {
               if (showCelebrationRef.current) return;
               if (Date.now() < ignoreResultsUntilRef.current) return;
+              if (Date.now() >= ignoreResultIndexCutoffUntilRef.current) {
+                ignoreResultIndexCutoffUntilRef.current = 0;
+              }
               lastActivityAt = Date.now();
               setIsSpeechReady(true);
 
@@ -3083,6 +3083,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           if (showCelebrationRef.current) return;
           if (Date.now() < ignoreResultsUntilRef.current) return;
+          if (
+            ignoreResultsBeforeIndexRef.current > 0 &&
+            event.results.length <= ignoreResultsBeforeIndexRef.current
+          ) {
+            if (Date.now() < ignoreResultIndexCutoffUntilRef.current) return;
+            ignoreResultsBeforeIndexRef.current = 0;
+            ignoreResultIndexCutoffUntilRef.current = 0;
+          }
+          if (Date.now() >= ignoreResultIndexCutoffUntilRef.current) {
+            ignoreResultIndexCutoffUntilRef.current = 0;
+          }
           setIsSpeechReady(true);
 
           latestSpeechResultCountRef.current = Math.max(
