@@ -2648,8 +2648,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const showSentenceCelebration = () => {
     const currentPhase = phase;
     const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
-    
+
     resetForNextRep(false);
+
+    // If this is the final fade for the beat (single-sentence beat, or last
+    // sentence of a multi-sentence beat), skip the "next sentence" message
+    // and go straight to the beat-complete celebration.
+    const isLastFade =
+      uniqueCount === 1 ||
+      (uniqueCount === 2 && (currentPhase === 'sentence_2_fading' || currentPhase === 'sentences_1_2_fading')) ||
+      (uniqueCount === 3 && currentPhase === 'sentence_3_fading');
+
+    if (isLastFade) {
+      showBeatCelebration();
+      return;
+    }
 
     let message = t('beat_practice.excellent_next');
     if (currentPhase === 'sentence_2_fading') {
@@ -2665,22 +2678,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setTimeout(() => {
         setShowCelebration(false);
 
-        // For short speeches with fewer unique sentences, skip to beat phase sooner
-        if (uniqueCount === 1) {
-          // Only 1 sentence - the beat IS that sentence, mark mastered immediately
-          // so we go directly to the 10-min coffee break.
-          showBeatCelebration();
-          return;
-        } else if (uniqueCount === 2) {
-          // 2 sentences - practice each alone, then combine (1+2 IS the whole beat)
+        if (uniqueCount === 2) {
           if (currentPhase === 'sentence_1_fading') {
             transitionToPhase('sentence_2_learning');
-          } else if (currentPhase === 'sentence_2_fading') {
-            transitionToPhase('sentences_1_2_learning');
-          } else if (currentPhase === 'sentences_1_2_fading') {
-            // For 2 sentences, combined 1+2 IS the full beat - mark as mastered
-            showBeatCelebration();
-            return;
           }
         } else {
           // 3 sentences - normal flow
@@ -2690,8 +2690,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             transitionToPhase('sentences_1_2_learning');
           } else if (currentPhase === 'sentences_1_2_fading') {
             transitionToPhase('sentence_3_learning');
-          } else if (currentPhase === 'sentence_3_fading') {
-            transitionToPhase('beat_learning');
           }
         }
       }, 2000);
