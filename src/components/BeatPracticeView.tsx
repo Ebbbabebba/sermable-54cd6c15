@@ -703,7 +703,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   useEffect(() => {
     wordsLengthRef.current = words.length;
-    renderedPhaseEpochRef.current = phaseEpochRef.current;
     // Detect lenient words (proper nouns, difficult names) whenever text changes
     const detected = detectLenientWords(words);
     setLenientWordIndices(detected);
