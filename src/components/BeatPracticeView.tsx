@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -470,7 +470,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // sentence-1 transcript from sneaking into sentence-2 and falsely auto-
   // completing the new phase before the user has spoken a word.
   const phaseEpochRef = useRef(0);
-  const renderedPhaseEpochRef = useRef(0);
   const phaseCompletionLockRef = useRef(false);
 
   // Set true on every phase transition. Cleared the first time we hear real
