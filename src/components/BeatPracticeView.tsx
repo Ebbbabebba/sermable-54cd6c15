@@ -3087,7 +3087,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             ignoreResultsBeforeIndexRef.current > 0 &&
             event.results.length <= ignoreResultsBeforeIndexRef.current
           ) {
-            return;
+            if (Date.now() < ignoreResultIndexCutoffUntilRef.current) return;
+            ignoreResultsBeforeIndexRef.current = 0;
+            ignoreResultIndexCutoffUntilRef.current = 0;
           }
           if (Date.now() >= ignoreResultIndexCutoffUntilRef.current) {
             ignoreResultIndexCutoffUntilRef.current = 0;
