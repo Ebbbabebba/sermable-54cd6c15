@@ -1715,10 +1715,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // pause-trigger effect handle the countdown + auto-advance.
       if (pauseWordMeta.has(advancedTo)) break;
 
-      // Check if current word is hidden (needs stricter matching) and if it's lenient (proper noun/name/gap word/flow)
-      const currentIsHidden = hiddenWordIndicesRef.current.has(advancedTo);
-      const currentIsLenient = isEffectivelyLenientWord(advancedTo);
-      const currentIsSentenceStart = advancedTo === 0 || /[.!?]$/.test(words[advancedTo - 1] ?? '');
       // True if advancing past `advancedTo` would cross into a new sentence
       const crossesSentenceBoundary = (from: number, to: number) => {
         for (let k = from; k < to; k++) {
