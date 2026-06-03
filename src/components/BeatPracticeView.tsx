@@ -1920,25 +1920,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         pauseSpeechRecognition(900, true);
         resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
+        transitionToPhase(currentPhase.replace('learning', 'fading') as Phase);
 
         setTimeout(() => {
-          // Phase may have already moved on (e.g. user exited, or a parallel
-          // path advanced) — bail out so we don't re-fire the transition.
-          if (phaseEpochRef.current !== epochAtCompletion) return;
           setShowCelebration(true);
 
           setTimeout(() => {
-            if (phaseEpochRef.current !== epochAtCompletion) return;
             setShowCelebration(false);
-            let nextPhase: Phase;
-            if (currentPhase === 'sentence_1_learning') nextPhase = 'sentence_1_fading';
-            else if (currentPhase === 'sentence_2_learning') nextPhase = 'sentence_2_fading';
-            else if (currentPhase === 'sentences_1_2_learning') nextPhase = 'sentences_1_2_fading';
-            else if (currentPhase === 'sentence_3_learning') nextPhase = 'sentence_3_fading';
-            else if (currentPhase === 'beat_learning') nextPhase = 'beat_fading';
-            else nextPhase = currentPhase.replace('learning', 'fading') as Phase;
-
-            transitionToPhase(nextPhase);
           }, 900);
         }, 150);
       } else {
