@@ -754,6 +754,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (discardExistingResults) {
       ignoreResultsBeforeIndexRef.current = latestSpeechResultCountRef.current;
       ignoreResultIndexCutoffUntilRef.current = until;
+      staleReplayGuardUntilRef.current = Math.max(staleReplayGuardUntilRef.current, until + 300);
     }
 
     runningTranscriptRef.current = "";
@@ -767,9 +768,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Ignore buffer-clear failures; the debounce window still protects us.
     }
 
-    // NOTE: intentionally NOT calling recognitionRef.current.abort() here.
-    // The ignoreResultsUntilRef window already discards stale tokens, and skipping
-    // the abort avoids the system mic chime that plays on every restart.
+    // For completion/phase transitions we must force Web Speech to start a
+    // fresh result array. Otherwise the browser can keep the previous full
+    // sentence in `event.results`, and after the pause it gets replayed as a
+    // brand-new repetition — which jumps the blue pulse from word 1 to the end.
+    if (discardExistingResults && recognitionRef.current && !recognitionRef.current.__native) {
+      try {
+        recognitionRef.current.abort?.();
+        setIsSpeechReady(false);
+      } catch {
+        // Ignore abort failures; the ignore windows above still protect us.
+      }
+    }
   };
 
   // Trigger a planned pause when the cursor lands on a `-` token. The
