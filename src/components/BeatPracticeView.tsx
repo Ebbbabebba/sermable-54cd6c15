@@ -2667,8 +2667,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         // For short speeches with fewer unique sentences, skip to beat phase sooner
         if (uniqueCount === 1) {
-          // Only 1 sentence - go straight to beat fading after sentence 1
-          transitionToPhase('beat_learning');
+          // Only 1 sentence - the beat IS that sentence, mark mastered immediately
+          // so we go directly to the 10-min coffee break.
+          showBeatCelebration();
+          return;
         } else if (uniqueCount === 2) {
           // 2 sentences - practice each alone, then combine (1+2 IS the whole beat)
           if (currentPhase === 'sentence_1_fading') {
