@@ -1849,11 +1849,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       lastCompletionRepIdRef.current = repId;
 
       const failedFromSignals = new Set<number>();
-      hiddenWordIndicesRef.current.forEach((idx) => {
-        if (hesitatedIndicesRef.current.has(idx) || missedIndicesRef.current.has(idx)) {
-          failedFromSignals.add(idx);
-        }
-      });
+      // Include every hesitated/missed word — even visible ones — so they
+      // are protected next round and won't be re-hidden until the user
+      // says them cleanly without hesitation.
+      hesitatedIndicesRef.current.forEach((idx) => failedFromSignals.add(idx));
+      missedIndicesRef.current.forEach((idx) => failedFromSignals.add(idx));
 
       checkCompletion(newSpoken, failedFromSignals);
       return;
