@@ -492,6 +492,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // small fresh speech packet. This rejects replayed full-sentence buffers
   // that were completing the new round before the user could practise it.
   const roundNeedsFreshStartRef = useRef(false);
+  const sentenceBoundaryHoldRawCountRef = useRef(0);
   const BULK_REPLAY_GUARD_MS = 2200;
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
@@ -1704,10 +1705,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     let startIdx: number;
 
+    const boundaryHoldCount = sentenceBoundaryHoldRawCountRef.current;
+
+    if (boundaryHoldCount > 0 && rawWords.length <= boundaryHoldCount) {
+      transcriptRef.current = transcript;
+      transcriptWordsRef.current = rawWords.slice(0, boundaryHoldCount);
+      return;
+    }
+
     if (rawWords.length > prevCount) {
       // New words appended. Failed/corrected tail words are intentionally not
       // consumed, so a same-length correction still lands here on the next event.
-      startIdx = prevCount;
+      startIdx = Math.max(prevCount, boundaryHoldCount);
+      if (rawWords.length > boundaryHoldCount) {
+        sentenceBoundaryHoldRawCountRef.current = 0;
+      }
     } else {
       // Never reuse already-consumed transcript tokens. Reprocessing the last
       // 1-2 consumed words let duplicate hidden words ("and", "in", "my")
@@ -1841,6 +1853,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // must wait for fresh recognition input. This prevents cascading skips
       // where leftover interim text races through one or more sentences.
       if (/[.!?]$/.test(words[foundIdx] ?? '')) {
+        sentenceBoundaryHoldRawCountRef.current = rawWords.length;
         hasHeardSpeechRef.current = false;
         lastWordTimeRef.current = Date.now();
         break;
@@ -1856,7 +1869,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Only consume transcript words up to the last word that actually advanced the cursor.
     // Hidden words are often corrected by interim speech recognition after a short delay;
     // consuming failed attempts immediately made the app ignore the later correct version.
-    transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1));
+    transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1, sentenceBoundaryHoldRawCountRef.current));
 
     if (advancedTo >= words.length) {
       if (phase.includes('learning') && needsFreshSpeechRef.current && !matchedFreshSpeech) {
