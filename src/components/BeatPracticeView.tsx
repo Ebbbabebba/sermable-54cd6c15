@@ -1691,12 +1691,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       currentIdx === 0
     ) {
       const sinceReset = Date.now() - lastResetAtRef.current;
-      const looksLikeWholeRoundReplay = rawWords.length > 2 && rawWords.length >= Math.min(words.length, 3);
+      const replayThreshold = Math.max(1, Math.min(words.length, Math.max(3, Math.ceil(words.length * 0.8))));
+      const looksLikeWholeRoundReplay = rawWords.length >= replayThreshold;
       if (looksLikeWholeRoundReplay && sinceReset < 2500) {
         hasHeardSpeechRef.current = false;
         return;
       }
-      roundNeedsFreshStartRef.current = false;
     }
 
     // Speech recognition often *updates* the last word (same word count) as it becomes final.
@@ -1867,6 +1867,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (matchedFreshSpeech) {
+        roundNeedsFreshStartRef.current = false;
         needsFreshSpeechRef.current = false;
       }
 
@@ -1889,6 +1890,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     if (advancedTo > currentIdx) {
       if (matchedFreshSpeech) {
+        roundNeedsFreshStartRef.current = false;
         needsFreshSpeechRef.current = false;
       }
 
