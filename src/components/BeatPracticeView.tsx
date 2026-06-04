@@ -1860,11 +1860,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1));
 
     if (advancedTo >= words.length) {
-      currentWordIndexRef.current = advancedTo;
-      setCurrentWordIndex(advancedTo);
-      spokenIndicesRef.current = newSpoken;
-      setSpokenIndices(newSpoken);
-
       if (phase.includes('learning') && needsFreshSpeechRef.current && !matchedFreshSpeech) {
         console.log('🛑 Completion blocked — stale transcript reached sentence end');
         return;
