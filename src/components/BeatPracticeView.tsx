@@ -491,6 +491,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Used to swallow back-to-back completions caused by stale buffered
   // transcripts firing immediately after a rep resets.
   const lastCompletionAtRef = useRef(0);
+  // After a visibility/progress change, the next round must begin from a
+  // small fresh speech packet. This rejects replayed full-sentence buffers
+  // that were completing the new round before the user could practise it.
+  const roundNeedsFreshStartRef = useRef(false);
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
@@ -1681,6 +1685,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return;
     }
 
+    if (
+      roundNeedsFreshStartRef.current &&
+      transcriptWordsRef.current.length === 0 &&
+      currentIdx === 0
+    ) {
+      const sinceReset = Date.now() - lastResetAtRef.current;
+      if (rawWords.length > 2 && sinceReset < 2500) {
+        hasHeardSpeechRef.current = false;
+        return;
+      }
+      roundNeedsFreshStartRef.current = false;
+    }
+
     // Speech recognition often *updates* the last word (same word count) as it becomes final.
     // If we only process appended words, we can get stuck (especially on the final word).
     const prevWords = transcriptWordsRef.current;
@@ -1843,6 +1860,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1));
 
     if (advancedTo >= words.length) {
+      currentWordIndexRef.current = advancedTo;
+      setCurrentWordIndex(advancedTo);
+      spokenIndicesRef.current = newSpoken;
+      setSpokenIndices(newSpoken);
+
       if (phase.includes('learning') && needsFreshSpeechRef.current && !matchedFreshSpeech) {
         console.log('🛑 Completion blocked — stale transcript reached sentence end');
         return;
