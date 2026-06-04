@@ -2547,7 +2547,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     resetForNextRep();
   }, [hiddenWordOrder, words.length, showCelebration]);
 
-  const resetForNextRep = (releaseCompletionLock = true) => {
+  const resetForNextRep = (releaseCompletionLock = true, requireFreshStart = false) => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
     // Only guard against stale replay if the recognizer has actually
@@ -2558,6 +2558,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hadActiveRecognizer && now - lastWordTimeRef.current < 300;
     repetitionIdRef.current += 1;
     freshMatchesThisRepRef.current = 0;
+    roundNeedsFreshStartRef.current = requireFreshStart;
     lastResetAtRef.current = now;
     staleReplayGuardUntilRef.current = Math.max(
       staleReplayGuardUntilRef.current,
