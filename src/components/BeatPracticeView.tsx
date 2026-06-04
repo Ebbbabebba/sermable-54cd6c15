@@ -1899,6 +1899,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return;
     }
 
+    // Hard gate: during learning/fading phases, require that at least 60%
+    // of the words in this sentence were matched from FRESH speech this rep.
+    // This prevents lookahead skip-fills + hesitation auto-advance from
+    // flipping the whole sentence to "spoken" before the user actually
+    // finished saying it.
+    if ((phase.includes('learning') || phase.includes('fading')) && sessionMode !== 'recall' && sessionMode !== 'pre_beat_recall') {
+      const required = Math.max(1, Math.ceil(words.length * 0.6));
+      if (freshMatchesThisRepRef.current < required) {
+        console.log(`🛑 Completion blocked — only ${freshMatchesThisRepRef.current}/${required} fresh matches this rep`);
+        return;
+      }
+    }
+
+
     phaseCompletionLockRef.current = true;
 
     const failedSet = failed ?? failedWordIndices;
