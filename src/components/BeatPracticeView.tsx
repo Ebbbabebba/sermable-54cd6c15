@@ -492,6 +492,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // small fresh speech packet. This rejects replayed full-sentence buffers
   // that were completing the new round before the user could practise it.
   const roundNeedsFreshStartRef = useRef(false);
+  const sentenceBoundaryHoldRawCountRef = useRef(0);
+  const BULK_REPLAY_GUARD_MS = 2200;
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
@@ -771,6 +773,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     runningTranscriptRef.current = "";
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
+    sentenceBoundaryHoldRawCountRef.current = 0;
     // Clear native plugin's cumulative finals buffer so old tokens can't
     // leak into the next utterance after the pause window.
     try {
@@ -829,6 +832,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       transcriptRef.current = "";
       transcriptWordsRef.current = [];
       runningTranscriptRef.current = "";
+      sentenceBoundaryHoldRawCountRef.current = 0;
       ignoreResultsBeforeIndexRef.current = 0;
       ignoreResultsUntilRef.current = Date.now() + 80;
       recognitionRestartAtRef.current = Math.min(recognitionRestartAtRef.current, Date.now() + 80);
@@ -1690,7 +1694,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const sinceReset = Date.now() - lastResetAtRef.current;
       const replayThreshold = Math.max(1, words.length);
       const looksLikeWholeRoundReplay = rawWords.length > 2 && rawWords.length >= replayThreshold;
-      if (looksLikeWholeRoundReplay && sinceReset < 700) {
+      if (looksLikeWholeRoundReplay && sinceReset < BULK_REPLAY_GUARD_MS) {
         hasHeardSpeechRef.current = false;
         return;
       }
@@ -1699,14 +1703,29 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Speech recognition often *updates* the last word (same word count) as it becomes final.
     // If we only process appended words, we can get stuck (especially on the final word).
     const prevWords = transcriptWordsRef.current;
-    const prevCount = prevWords.length;
+    let prevCount = prevWords.length;
 
     let startIdx: number;
+
+    const boundaryHoldCount = sentenceBoundaryHoldRawCountRef.current;
+
+    if (boundaryHoldCount > 0 && rawWords.length < boundaryHoldCount) {
+      sentenceBoundaryHoldRawCountRef.current = 0;
+      transcriptWordsRef.current = [];
+      prevCount = 0;
+    } else if (boundaryHoldCount > 0 && rawWords.length === boundaryHoldCount) {
+      transcriptRef.current = transcript;
+      transcriptWordsRef.current = rawWords.slice(0, boundaryHoldCount);
+      return;
+    }
 
     if (rawWords.length > prevCount) {
       // New words appended. Failed/corrected tail words are intentionally not
       // consumed, so a same-length correction still lands here on the next event.
-      startIdx = prevCount;
+      startIdx = Math.max(prevCount, boundaryHoldCount);
+      if (rawWords.length > boundaryHoldCount) {
+        sentenceBoundaryHoldRawCountRef.current = 0;
+      }
     } else {
       // Never reuse already-consumed transcript tokens. Reprocessing the last
       // 1-2 consumed words let duplicate hidden words ("and", "in", "my")
@@ -1840,6 +1859,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // must wait for fresh recognition input. This prevents cascading skips
       // where leftover interim text races through one or more sentences.
       if (/[.!?]$/.test(words[foundIdx] ?? '')) {
+        sentenceBoundaryHoldRawCountRef.current = rawWords.length;
         hasHeardSpeechRef.current = false;
         lastWordTimeRef.current = Date.now();
         break;
@@ -1855,7 +1875,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Only consume transcript words up to the last word that actually advanced the cursor.
     // Hidden words are often corrected by interim speech recognition after a short delay;
     // consuming failed attempts immediately made the app ignore the later correct version.
-    transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1));
+    transcriptWordsRef.current = rawWords.slice(0, Math.max(0, lastMatchedRawIndex + 1, sentenceBoundaryHoldRawCountRef.current));
 
     if (advancedTo >= words.length) {
       if (phase.includes('learning') && needsFreshSpeechRef.current && !matchedFreshSpeech) {
@@ -2590,6 +2610,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
+    sentenceBoundaryHoldRawCountRef.current = 0;
     // Do not keep an event-index cutoff after reset. Web Speech can reuse the
     // same interim result slot for the user's new first word; filtering by the
     // previous result count made the blue cursor stay stuck at word 1.
@@ -2611,6 +2632,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   const transitionToPhase = (newPhase: Phase) => {
+    const now = Date.now();
     phaseTransitionPendingRenderRef.current = true;
     // HARD synchronous reset of all refs FIRST so any in-flight speech
     // recognition callback / hesitation tick that fires between this call and
@@ -2627,19 +2649,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
+    sentenceBoundaryHoldRawCountRef.current = 0;
     hasHeardSpeechRef.current = false;
-    lastWordTimeRef.current = Date.now();
-    lastAutoAdvanceAtRef.current = Date.now();
+    lastWordTimeRef.current = now;
+    lastAutoAdvanceAtRef.current = now;
     // Short ignore window: result-index filtering drops old buffered words,
     // while keeping the next first word responsive if the user starts quickly.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 60);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 60);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
     freshMatchesThisRepRef.current = 0;
+    roundNeedsFreshStartRef.current = true;
     needsFreshSpeechRef.current = true;
-    phaseTransitionAtRef.current = Date.now();
+    phaseTransitionAtRef.current = now;
+    lastResetAtRef.current = now;
+    staleReplayGuardUntilRef.current = Math.max(staleReplayGuardUntilRef.current, now + BULK_REPLAY_GUARD_MS);
 
     // Reset filter to 0. The native plugin already gets clearBuffer() via
     // pauseSpeechRecognition, and Web Speech's onend→onstart cycle resets
@@ -2661,7 +2687,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // pause used to land AFTER that one expired, briefly muting the mic
     // just as the user started the new phase — the "freeze" at sentence
     // start. Skip it; resetForNextRep arms the recognizer immediately.
-    resetForNextRep(false);
+    resetForNextRep(false, true);
 
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
@@ -3209,6 +3235,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // silence-triggered restart (the classic "workflow stops after a
           // few words disappear" symptom in fading rounds).
           runningTranscriptRef.current = "";
+          sentenceBoundaryHoldRawCountRef.current = 0;
 
           const startSafely = () => {
             if (!isRecordingRef.current) return;
@@ -3264,6 +3291,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               console.log(
                 `⏭️ Revealing and advancing past hesitated word "${words[idx]}" at index ${idx} after ${hesitationMs / 1000}s`
               );
+              const isSentenceEndingWord = /[.!?]$/.test(words[idx] ?? '');
+              const isFinalWord = idx >= wordsLengthRef.current - 1;
+              if (isSentenceEndingWord || isFinalWord) {
+                hasHeardSpeechRef.current = false;
+                lastWordTimeRef.current = Date.now();
+                lastAutoAdvanceAtRef.current = Date.now();
+                return;
+              }
+
               const newSpoken = new Set([...spokenIndicesRef.current, idx]);
               spokenIndicesRef.current = newSpoken;
               setSpokenIndices(newSpoken);
@@ -3279,6 +3315,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               transcriptRef.current = "";
               transcriptWordsRef.current = [];
               runningTranscriptRef.current = "";
+              sentenceBoundaryHoldRawCountRef.current = 0;
               ignoreResultsUntilRef.current = Date.now() + 400;
               if (nextIdx >= wordsLengthRef.current) {
                 const failedFromSignals = new Set<number>();
@@ -3300,7 +3337,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             if (
               hasHeardSpeechRef.current &&
               elapsed > VISIBLE_STUCK_MS &&
-              !postPauseNoHesitationIndicesRef.current.has(idx)
+              !postPauseNoHesitationIndicesRef.current.has(idx) &&
+              idx < wordsLengthRef.current - 1 &&
+              !/[.!?]$/.test(words[idx] ?? '')
             ) {
               console.log(
                 `⏭️ Visible word "${words[idx]}" at index ${idx} stuck for ${(elapsed / 1000).toFixed(1)}s — auto-advancing`
@@ -3317,6 +3356,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               transcriptRef.current = "";
               transcriptWordsRef.current = [];
               runningTranscriptRef.current = "";
+              sentenceBoundaryHoldRawCountRef.current = 0;
               ignoreResultsUntilRef.current = Date.now() + 400;
               if (nextIdx >= wordsLengthRef.current) {
                 checkCompletion(newSpoken);
