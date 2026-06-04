@@ -2336,7 +2336,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         
         setTimeout(() => {
           setShowCelebration(false);
-          resetForNextRep();
+          resetForNextRep(true, true);
         }, 800);
       }
     }
@@ -2373,7 +2373,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 1200);
     } else if (!allHidden) {
       // Success but not all hidden yet - hide more words progressively 3 → 4 → 5
@@ -2402,7 +2402,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 800);
     } else {
       // All hidden and success! Pre-beat recall complete - now show the new beat preview
