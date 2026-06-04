@@ -3269,6 +3269,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               console.log(
                 `⏭️ Revealing and advancing past hesitated word "${words[idx]}" at index ${idx} after ${hesitationMs / 1000}s`
               );
+              const isSentenceEndingWord = /[.!?]$/.test(words[idx] ?? '');
+              const isFinalWord = idx >= wordsLengthRef.current - 1;
+              if (isSentenceEndingWord || isFinalWord) {
+                hasHeardSpeechRef.current = false;
+                lastWordTimeRef.current = Date.now();
+                lastAutoAdvanceAtRef.current = Date.now();
+                return;
+              }
+
               const newSpoken = new Set([...spokenIndicesRef.current, idx]);
               spokenIndicesRef.current = newSpoken;
               setSpokenIndices(newSpoken);
@@ -3305,7 +3314,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             if (
               hasHeardSpeechRef.current &&
               elapsed > VISIBLE_STUCK_MS &&
-              !postPauseNoHesitationIndicesRef.current.has(idx)
+              !postPauseNoHesitationIndicesRef.current.has(idx) &&
+              idx < wordsLengthRef.current - 1 &&
+              !/[.!?]$/.test(words[idx] ?? '')
             ) {
               console.log(
                 `⏭️ Visible word "${words[idx]}" at index ${idx} stuck for ${(elapsed / 1000).toFixed(1)}s — auto-advancing`
