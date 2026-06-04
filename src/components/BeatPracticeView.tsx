@@ -1691,7 +1691,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       currentIdx === 0
     ) {
       const sinceReset = Date.now() - lastResetAtRef.current;
-      if (rawWords.length > 2 && sinceReset < 2500) {
+      const looksLikeWholeRoundReplay = rawWords.length >= Math.min(words.length, 3);
+      if (looksLikeWholeRoundReplay && sinceReset < 2500) {
         hasHeardSpeechRef.current = false;
         return;
       }
