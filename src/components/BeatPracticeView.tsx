@@ -1692,7 +1692,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     ) {
       const sinceReset = Date.now() - lastResetAtRef.current;
       const replayThreshold = Math.max(1, Math.min(words.length, Math.max(3, Math.ceil(words.length * 0.8))));
-      const looksLikeWholeRoundReplay = rawWords.length >= replayThreshold;
+      const looksLikeWholeRoundReplay = rawWords.length > 2 && rawWords.length >= replayThreshold;
       if (looksLikeWholeRoundReplay && sinceReset < 2500) {
         hasHeardSpeechRef.current = false;
         return;
