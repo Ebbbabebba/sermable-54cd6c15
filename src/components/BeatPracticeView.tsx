@@ -2602,6 +2602,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
+    freshMatchesThisRepRef.current = 0;
     needsFreshSpeechRef.current = true;
     phaseTransitionAtRef.current = Date.now();
 
