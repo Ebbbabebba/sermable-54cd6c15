@@ -1688,9 +1688,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       currentIdx === 0
     ) {
       const sinceReset = Date.now() - lastResetAtRef.current;
-      const replayThreshold = Math.max(1, Math.min(words.length, Math.max(3, Math.ceil(words.length * 0.8))));
+      const replayThreshold = Math.max(1, words.length);
       const looksLikeWholeRoundReplay = rawWords.length > 2 && rawWords.length >= replayThreshold;
-      if (looksLikeWholeRoundReplay && sinceReset < 2500) {
+      if (looksLikeWholeRoundReplay && sinceReset < 700) {
         hasHeardSpeechRef.current = false;
         return;
       }
@@ -1874,6 +1874,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // says them cleanly without hesitation.
       hesitatedIndicesRef.current.forEach((idx) => failedFromSignals.add(idx));
       missedIndicesRef.current.forEach((idx) => failedFromSignals.add(idx));
+
+      currentWordIndexRef.current = advancedTo;
+      setCurrentWordIndex(advancedTo);
+
+      spokenIndicesRef.current = newSpoken;
+      setSpokenIndices(newSpoken);
 
       checkCompletion(newSpoken, failedFromSignals);
       return;
