@@ -492,6 +492,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // small fresh speech packet. This rejects replayed full-sentence buffers
   // that were completing the new round before the user could practise it.
   const roundNeedsFreshStartRef = useRef(false);
+  const BULK_REPLAY_GUARD_MS = 2200;
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
@@ -1690,7 +1691,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const sinceReset = Date.now() - lastResetAtRef.current;
       const replayThreshold = Math.max(1, words.length);
       const looksLikeWholeRoundReplay = rawWords.length > 2 && rawWords.length >= replayThreshold;
-      if (looksLikeWholeRoundReplay && sinceReset < 700) {
+      if (looksLikeWholeRoundReplay && sinceReset < BULK_REPLAY_GUARD_MS) {
         hasHeardSpeechRef.current = false;
         return;
       }
