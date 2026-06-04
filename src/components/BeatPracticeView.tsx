@@ -2612,6 +2612,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   const transitionToPhase = (newPhase: Phase) => {
+    const now = Date.now();
     phaseTransitionPendingRenderRef.current = true;
     // HARD synchronous reset of all refs FIRST so any in-flight speech
     // recognition callback / hesitation tick that fires between this call and
@@ -2629,11 +2630,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
     hasHeardSpeechRef.current = false;
-    lastWordTimeRef.current = Date.now();
-    lastAutoAdvanceAtRef.current = Date.now();
+    lastWordTimeRef.current = now;
+    lastAutoAdvanceAtRef.current = now;
     // Short ignore window: result-index filtering drops old buffered words,
     // while keeping the next first word responsive if the user starts quickly.
-    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, Date.now() + 60);
+    ignoreResultsUntilRef.current = Math.max(ignoreResultsUntilRef.current, now + 60);
 
     // Bump phase epoch so any in-flight processTranscription / hesitation
     // callback that was captured with the previous phase exits early.
