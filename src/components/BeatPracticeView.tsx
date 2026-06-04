@@ -1999,7 +1999,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setTimeout(() => {
           setShowCelebration(false);
           setRepetitionCount(repetitionCountRef.current);
-          resetForNextRep();
+          resetForNextRep(true, true);
 
         }, 800);
       }
@@ -2121,7 +2121,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 1200);
     } else if (!allHidden) {
       // Success - hide progressively more words: 3 → 4 → 5
@@ -2150,7 +2150,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 800);
     } else {
       // All hidden and success! Count towards 2 perfect recalls
