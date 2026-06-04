@@ -2639,8 +2639,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
     freshMatchesThisRepRef.current = 0;
+    roundNeedsFreshStartRef.current = true;
     needsFreshSpeechRef.current = true;
-    phaseTransitionAtRef.current = Date.now();
+    phaseTransitionAtRef.current = now;
+    lastResetAtRef.current = now;
+    staleReplayGuardUntilRef.current = Math.max(staleReplayGuardUntilRef.current, now + BULK_REPLAY_GUARD_MS);
 
     // Reset filter to 0. The native plugin already gets clearBuffer() via
     // pauseSpeechRecognition, and Web Speech's onend→onstart cycle resets
@@ -2662,7 +2665,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // pause used to land AFTER that one expired, briefly muting the mic
     // just as the user started the new phase — the "freeze" at sentence
     // start. Skip it; resetForNextRep arms the recognizer immediately.
-    resetForNextRep(false);
+    resetForNextRep(false, true);
 
     
     // Clear checkpoint when transitioning to a new sentence/phase (user made progress)
