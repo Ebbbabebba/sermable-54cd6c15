@@ -397,12 +397,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
-  // One clean read-through is enough before fading begins. Stale speech
-  // callbacks are blocked separately by the phase epoch + fresh-speech gate,
-  // so we don't need to repeat the exact same sentence back-to-back.
-  const requiredLearningReps = 1;
+  // For brand-new sentence-learning phases, require 2 clean read-throughs
+  // before fading begins so the user actually finishes the sentence twice.
+  // beat_learning / combining phases reuse already-practiced parts and need
+  // only one rep.
+  const requiredLearningReps =
+    phase === 'beat_learning' || phase === 'sentences_1_2_learning' ? 1 : 2;
   const [repetitionCount, setRepetitionCount] = useState(1);
   const repetitionCountRef = useRef(1);
+  // Counts matches in the current rep that were driven by FRESH speech
+  // (not lookahead skip-fills, not hesitation auto-advance). Used as a hard
+  // gate against premature sentence completion.
+  const freshMatchesThisRepRef = useRef(0);
   
   // Word tracking
   const [hiddenWordIndices, setHiddenWordIndices] = useState<Set<number>>(new Set());
