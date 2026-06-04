@@ -2467,7 +2467,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
         setFailedWordIndices(new Set());
-        resetForNextRep();
+        resetForNextRep(true, true);
         return;
       } else {
         setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
@@ -2492,7 +2492,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setHiddenWordIndices(newHidden);
       setHiddenWordOrder(newOrder);
       setFailedWordIndices(new Set());
-      resetForNextRep();
+      resetForNextRep(true, true);
     } else {
       // All words hidden - SUCCESS! 
       // Mark beat as mastered immediately after ONE successful no-script run
