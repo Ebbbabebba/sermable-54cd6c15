@@ -454,9 +454,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const lastAutoAdvanceAtRef = useRef<number>(0);
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Guards against duplicate "sentence complete" triggers for the same repetition
-  const lastCompletionRepIdRef = useRef<number>(-1);
-
   // Ignore speech results briefly right after we reset / during transitions
   const ignoreResultsUntilRef = useRef(0);
 
@@ -491,6 +488,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Used to swallow back-to-back completions caused by stale buffered
   // transcripts firing immediately after a rep resets.
   const lastCompletionAtRef = useRef(0);
+  // After a visibility/progress change, the next round must begin from a
+  // small fresh speech packet. This rejects replayed full-sentence buffers
+  // that were completing the new round before the user could practise it.
+  const roundNeedsFreshStartRef = useRef(false);
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
@@ -1681,6 +1682,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return;
     }
 
+    if (
+      roundNeedsFreshStartRef.current &&
+      transcriptWordsRef.current.length === 0 &&
+      currentIdx === 0
+    ) {
+      const sinceReset = Date.now() - lastResetAtRef.current;
+      const replayThreshold = Math.max(1, Math.min(words.length, Math.max(3, Math.ceil(words.length * 0.8))));
+      const looksLikeWholeRoundReplay = rawWords.length > 2 && rawWords.length >= replayThreshold;
+      if (looksLikeWholeRoundReplay && sinceReset < 2500) {
+        hasHeardSpeechRef.current = false;
+        return;
+      }
+    }
+
     // Speech recognition often *updates* the last word (same word count) as it becomes final.
     // If we only process appended words, we can get stuck (especially on the final word).
     const prevWords = transcriptWordsRef.current;
@@ -1849,14 +1864,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (matchedFreshSpeech) {
+        roundNeedsFreshStartRef.current = false;
         needsFreshSpeechRef.current = false;
       }
-
-      if (lastCompletionRepIdRef.current === repId) {
-        return;
-      }
-
-      lastCompletionRepIdRef.current = repId;
 
       const failedFromSignals = new Set<number>();
       // Include every hesitated/missed word — even visible ones — so they
@@ -1871,6 +1881,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     if (advancedTo > currentIdx) {
       if (matchedFreshSpeech) {
+        roundNeedsFreshStartRef.current = false;
         needsFreshSpeechRef.current = false;
       }
 
@@ -1977,7 +1988,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setTimeout(() => {
           setShowCelebration(false);
           setRepetitionCount(repetitionCountRef.current);
-          resetForNextRep();
+          resetForNextRep(true, true);
 
         }, 800);
       }
@@ -2099,7 +2110,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 1200);
     } else if (!allHidden) {
       // Success - hide progressively more words: 3 → 4 → 5
@@ -2128,7 +2139,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 800);
     } else {
       // All hidden and success! Count towards 2 perfect recalls
@@ -2314,7 +2325,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         
         setTimeout(() => {
           setShowCelebration(false);
-          resetForNextRep();
+          resetForNextRep(true, true);
         }, 800);
       }
     }
@@ -2351,7 +2362,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 1200);
     } else if (!allHidden) {
       // Success but not all hidden yet - hide more words progressively 3 → 4 → 5
@@ -2380,7 +2391,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setShowCelebration(false);
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
-        resetForNextRep();
+        resetForNextRep(true, true);
       }, 800);
     } else {
       // All hidden and success! Pre-beat recall complete - now show the new beat preview
@@ -2445,7 +2456,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
         setFailedWordIndices(new Set());
-        resetForNextRep();
+        resetForNextRep(true, true);
         return;
       } else {
         setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
@@ -2470,7 +2481,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setHiddenWordIndices(newHidden);
       setHiddenWordOrder(newOrder);
       setFailedWordIndices(new Set());
-      resetForNextRep();
+      resetForNextRep(true, true);
     } else {
       // All words hidden - SUCCESS! 
       // Mark beat as mastered immediately after ONE successful no-script run
@@ -2525,7 +2536,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     resetForNextRep();
   }, [hiddenWordOrder, words.length, showCelebration]);
 
-  const resetForNextRep = (releaseCompletionLock = true) => {
+  const resetForNextRep = (releaseCompletionLock = true, requireFreshStart = false) => {
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
     // Only guard against stale replay if the recognizer has actually
@@ -2536,6 +2547,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hadActiveRecognizer && now - lastWordTimeRef.current < 300;
     repetitionIdRef.current += 1;
     freshMatchesThisRepRef.current = 0;
+    roundNeedsFreshStartRef.current = requireFreshStart;
     lastResetAtRef.current = now;
     staleReplayGuardUntilRef.current = Math.max(
       staleReplayGuardUntilRef.current,
@@ -2638,7 +2650,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setConsecutiveNoScriptSuccess(0);
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
-    lastCompletionRepIdRef.current = -1;
     // The completion path that called us has already issued its own
     // pauseSpeechRecognition (900ms). Doubling up here with another 200ms
     // pause used to land AFTER that one expired, briefly muting the mic
@@ -3231,8 +3242,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const idx = currentWordIndexRef.current;
         const hesitationMs = getHesitationThresholdMs();
         const currentIsHidden = hiddenWordIndicesRef.current.has(idx);
-        if ((hasHeardSpeechRef.current || currentIsHidden) && elapsed > hesitationMs && idx < wordsLengthRef.current) {
+        if (elapsed > hesitationMs && idx < wordsLengthRef.current) {
           if (currentIsHidden) {
+            if (!hasHeardSpeechRef.current && spokenIndicesRef.current.size === 0) {
+              return;
+            }
             if (postPauseNoHesitationIndicesRef.current.has(idx)) {
               return;
             }
