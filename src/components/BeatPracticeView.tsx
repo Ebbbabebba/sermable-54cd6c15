@@ -1898,6 +1898,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (showCelebrationRef.current) return;
     if (phaseCompletionLockRef.current) return;
 
+    // Hard debounce — two completions within 1.2s for the same phase are
+    // almost certainly the same rep firing twice (stale buffered transcript
+    // + hesitation auto-advance racing past the lock release).
+    if (Date.now() - lastCompletionAtRef.current < 1200) {
+      console.log('🛑 Completion blocked — debounce (too soon after previous completion)');
+      return;
+    }
+
     if (phase.includes('learning') && needsFreshSpeechRef.current) {
       console.log('🛑 Completion blocked — no fresh speech since phase transition');
       return;
