@@ -1714,6 +1714,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const newMissed = new Set(missedIndicesRef.current);
     let lastMatchedRawIndex = startIdx - 1;
     let matchedFreshSpeech = false;
+    // Cap: at most ONE visible-word skip-fill per processing pass so a
+    // single recognized token can never advance the cursor by more than
+    // two positions. This kills the "pulse jumped over a word" feel.
+    let skipFillUsed = false;
 
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
@@ -1733,11 +1737,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // STRICT: Only match the CURRENT word position - no lookahead
       // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
+      let usedSkipFill = false;
       if (wordMatchesAnyVariant(absoluteRawIndex, advancedTo)) {
         foundIdx = advancedTo;
       }
 
-      if (foundIdx === -1) {
+      if (foundIdx === -1 && !skipFillUsed) {
         // Current word didn't match - optionally check the next word, but ONLY
         // when the skipped word is visible. Hidden words (including tiny gap
         // words like "my", "a", "I") must be spoken or revealed by the
@@ -1753,31 +1758,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         ) {
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
-        } else if (canSkipCurrent && advancedTo + 2 < words.length) {
-          // 2-word lookahead — STRICT: the intermediate word must be
-          // visible (not hidden). Allowing hidden gap words in this slot
-          // caused the pulse to leap two positions ahead on a single
-          // spoken word, which felt like the system was racing ahead.
-          if (
-            !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
-            !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
-            wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
-          ) {
-            newSpoken.add(advancedTo);
-            newSpoken.add(advancedTo + 1);
-            foundIdx = advancedTo + 2;
-          }
+          usedSkipFill = true;
         }
+        // Removed 2-word visible lookahead — a single spoken token must
+        // never advance the cursor by more than two positions in one pass.
       }
-
-
 
       if (foundIdx === -1) {
         // No match for this spoken token. Do NOT auto-advance hidden words —
         // that caused the cursor to jump over hidden words on background speech.
-        // Hidden words advance only on a real match, the controlled lookahead above,
-        // or the hesitation timeout in the recording loop.
+        // Hidden words advance only on a real match or the hesitation timeout.
         continue;
+      }
+
+      if (usedSkipFill) {
+        skipFillUsed = true;
       }
 
       // Found a match at current position or nearby - mark all words up to match as spoken
@@ -1813,6 +1808,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         Date.now() - phaseTransitionAtRef.current > 500
       ) {
         matchedFreshSpeech = true;
+        // Count fresh, real matches (not skip-fills) for the completion gate.
+        if (!usedSkipFill) {
+          freshMatchesThisRepRef.current += 1;
+        }
       }
       lastWordTimeRef.current = Date.now();
 
@@ -1827,6 +1826,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         break;
       }
     }
+
 
     if (missedIndicesRef.current.size !== newMissed.size) {
       missedIndicesRef.current = newMissed;
