@@ -1,49 +1,50 @@
 ## Problem
 
-While practicing a beat, three issues stack on top of each other:
+Two related issues during beat practice:
 
-1. **The blue cursor jumps ahead before you've spoken the current word** — feels like the system is racing past you.
-2. **The first 1–2 seconds of a new sentence/round freeze** — recognition isn't listening yet, so the cursor sits stuck until you repeat yourself.
-3. **The "start hiding" / "let's start fading" banner can fire several times for the same sentence, and previously-hidden words suddenly become fully visible mid-round** — instead of words disappearing smoothly one chunk at a time.
+1. **The blue pulse jumps over words.** While the user is mid-sentence, the cursor leaps past one or more visible words it hasn't heard yet.
+2. **Words start hiding before the sentence has actually been finished.** Fading begins even though the user hasn't said the full sentence cleanly yet.
 
-All three live in `BeatPracticeView.tsx` (matching loop, phase transitions, fading completion) and `SentenceDisplay.tsx` (pulse positioning).
+Both bugs trace to three places in `src/components/BeatPracticeView.tsx`:
 
-## Fixes
+- The matcher's visible 2-word lookahead in `processTranscription` (lines ~1742–1764) can mark two visible words as "spoken" on a single recognized token.
+- The hesitation auto-advance loop (lines ~3190–3232) flips hidden words to "spoken" on a 2 s timeout and, combined with the lookahead, can race the cursor to the end of the sentence.
+- `requiredLearningReps = 1` (line 403), so as soon as `checkCompletion` sees every word marked spoken — even via lookahead + hesitation auto-advance — fading starts. There is no "you've actually read this whole sentence" gate.
 
-### 1. Stop the pulse from jumping ahead (`SentenceDisplay.tsx` + matcher)
+## Fix
 
-- In `SentenceDisplay`, `pulseIndex` currently walks past any word marked `hesitated` or `missed`. Combined with the matcher's 2-word lookahead, when a hidden gap word gets auto-marked the pulse skips two positions at once. Tighten it:
-  - Only advance `pulseIndex` past *missed* words (red), not *hesitated* (yellow) ones, so the user always sees the cursor on the word they're actively trying to say.
-  - Cap the skip at 1 position max per render.
-- In `processTranscription` (BeatPracticeView), the 2-word lookahead currently allows skipping over a *hidden gap word + another word* in the same matching pass. Restrict the 2-word lookahead to **visible** intermediate words only (keep the 1-word gap-skip, drop the 2-word gap-skip). This kills the "I said one word and it jumped two ahead" feel.
-- Remove the implicit fast-start gap-word lookahead of up to 4 words (`maxGapLookahead`). Replace with max 2 consecutive gap-word skips, only when the matched word is visible.
+### 1. Stop the pulse from skipping (matcher)
 
-### 2. Eliminate the start-of-sentence freeze
+In `processTranscription`:
 
-Currently the celebration is 1500 ms but `pauseSpeechRecognition(1700)` is fired before it — so the mic is still muted ~200 ms into the new sentence, and `resetForNextRep` then sets another 80 ms stale-replay guard plus a 40 ms ignore window. On native (iOS) the plugin restart adds another ~200 ms. Net effect: ~400–600 ms of silence at every sentence start.
+- Remove the 2-word visible-lookahead branch entirely (the `else if (canSkipCurrent && advancedTo + 2 < words.length)` block). Keep only the 1-word lookahead so a single recognized token can never advance the cursor by more than two positions in one pass.
+- Cap auto-advance per processing pass: at most one "skipped visible word" per call. If the matcher already consumed a lookahead skip in this pass, force subsequent tokens to match `advancedTo` exactly.
+- In `SentenceDisplay.tsx`, the pulse already follows `currentWordIndex` directly — leave it. But add an internal clamp so the rendered pulse can advance by at most 1 position per React commit (track previous `pulseIndex` in a ref and step toward target). This kills any residual visual leap when state batches multiple advances.
 
-- Shorten the post-completion mic pause from `1700` to `900` ms and align the celebration duration so the mic is live the moment the celebration banner fades.
-- In `transitionToPhase`, drop `pauseSpeechRecognition(200)` (it duplicates the pause already issued by `checkCompletion`) and call `resetForNextRep` immediately so the recognizer is armed before the phase render.
-- In `resetForNextRep`, only set `staleReplayGuardUntilRef` when the recognizer was actively producing results in the last 300 ms — otherwise leave it at 0 so the user's first word lands instantly.
-- Make sure native (`SpeechRecognition.start`) is re-invoked on phase transition rather than waiting for the next `onend` cycle.
+### 2. Require a real read-through before fading starts
 
-### 3. Stop "start hiding" from firing twice and stop hidden words from reappearing in bulk
+In `checkCompletion` / state setup:
 
-- Add a guard in `checkCompletion`: bail out if `phase` has already changed since the rep started (compare against `phaseEpochRef.current` captured at the top of the function). Today, a stale buffered transcript can re-enter `checkCompletion` after the phase already moved to fading, retriggering the "great_start_fading" celebration and re-running the learning→fading transition.
-- In `handleFadingCompletion`, when `hadErrors` is true:
-  - Do **not** un-hide every failed word at once. Instead, reveal only the *first* failed hidden word in the round (the one the user actually got stuck on) and mark the rest as protected (they'll just stay hidden and bubble up later). This stops the "all words suddenly visible again" flash.
-  - Don't reset `fadingSuccessCount` to 0 on a single miss — decrement by 1 (min 0) so progress doesn't collapse.
-- Debounce `showCelebration` so two rapid completions can't stack: ignore any new celebration request while one is already in flight.
+- Bump `requiredLearningReps` from `1` to `2` for the **first** time a sentence is seen (`sentence_*_learning`), so the user reads it fully twice before words begin to fade. Keep `1` for `beat_learning` / combining phases where the user has already practiced the parts.
+- Add a "fresh-speech word count" counter `freshMatchesThisRepRef`. Increment it every time `processTranscription` records a match that was driven by `matchedFreshSpeech` (not by hesitation auto-advance or lookahead skip-fills).
+- In `checkCompletion`, reject completion if `freshMatchesThisRepRef.current < Math.ceil(words.length * 0.6)`. If rejected, log it, do NOT advance phase, just reset for the next rep so the user can finish saying the sentence. This is the hard gate against "fading kicked in before I finished speaking."
+
+### 3. Tame hesitation auto-advance during learning
+
+In the hesitation interval (lines 3190–3232):
+
+- During any `*_learning` phase, do not auto-complete the sentence from a hesitation tick. If `nextIdx >= wordsLengthRef.current` and the phase is learning, skip the `checkCompletion(...)` call — let the user finish naturally. (Auto-advance through individual hidden gap words mid-sentence is still fine.)
+- Increase the hesitation threshold by ~500 ms for the **last word** of a sentence so the user gets a moment to land the final word before it's marked yellow and skipped.
 
 ### 4. Verification
 
-- After edits, exercise: start a fresh beat → speak sentence 1 once → confirm exactly one "start hiding" banner → speak the fading rounds → confirm chunks of 3→4→5 words disappear progressively without prior hidden words reappearing.
-- Speak slowly with deliberate pauses to confirm the pulse stops on the current word until that word is actually spoken (or hesitation timeout fires).
-- Restart a sentence (phase transition) and confirm the first word is accepted with no perceptible mic-dead window.
+- Speak slowly through a fresh sentence with deliberate pauses: confirm the pulse stops on the current word until that word is actually spoken, never jumping two positions on a single utterance.
+- Read a brand-new sentence once: confirm fading does NOT start ("let's start hiding" banner does not appear). Read it a second time cleanly: fading starts.
+- Pause halfway through a sentence: confirm `checkCompletion` does not trigger fading until the user actually finishes the remaining words.
 
 ## Files touched
 
-- `src/components/BeatPracticeView.tsx` — matcher lookahead rules, `checkCompletion` epoch guard, `handleFadingCompletion` reveal/decrement logic, `transitionToPhase`/`resetForNextRep` timing, celebration debounce.
-- `src/components/SentenceDisplay.tsx` — `pulseIndex` rule (skip missed only, max 1).
+- `src/components/BeatPracticeView.tsx` — matcher lookahead trimmed; fresh-match counter + completion gate; `requiredLearningReps` per-phase logic; hesitation tick learning-phase guard.
+- `src/components/SentenceDisplay.tsx` — pulse step-clamp so cursor visually advances at most one position per render.
 
-No backend, schema, or API changes.
+No backend, schema, API, or copy changes.
