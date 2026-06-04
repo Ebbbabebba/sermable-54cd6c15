@@ -3231,6 +3231,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // silence-triggered restart (the classic "workflow stops after a
           // few words disappear" symptom in fading rounds).
           runningTranscriptRef.current = "";
+          sentenceBoundaryHoldRawCountRef.current = 0;
 
           const startSafely = () => {
             if (!isRecordingRef.current) return;
