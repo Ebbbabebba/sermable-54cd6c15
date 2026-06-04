@@ -773,6 +773,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     runningTranscriptRef.current = "";
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
+    sentenceBoundaryHoldRawCountRef.current = 0;
     // Clear native plugin's cumulative finals buffer so old tokens can't
     // leak into the next utterance after the pause window.
     try {
@@ -831,6 +832,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       transcriptRef.current = "";
       transcriptWordsRef.current = [];
       runningTranscriptRef.current = "";
+      sentenceBoundaryHoldRawCountRef.current = 0;
       ignoreResultsBeforeIndexRef.current = 0;
       ignoreResultsUntilRef.current = Date.now() + 80;
       recognitionRestartAtRef.current = Math.min(recognitionRestartAtRef.current, Date.now() + 80);
@@ -3308,6 +3310,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               transcriptRef.current = "";
               transcriptWordsRef.current = [];
               runningTranscriptRef.current = "";
+              sentenceBoundaryHoldRawCountRef.current = 0;
               ignoreResultsUntilRef.current = Date.now() + 400;
               if (nextIdx >= wordsLengthRef.current) {
                 const failedFromSignals = new Set<number>();
@@ -3348,6 +3351,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               transcriptRef.current = "";
               transcriptWordsRef.current = [];
               runningTranscriptRef.current = "";
+              sentenceBoundaryHoldRawCountRef.current = 0;
               ignoreResultsUntilRef.current = Date.now() + 400;
               if (nextIdx >= wordsLengthRef.current) {
                 checkCompletion(newSpoken);
