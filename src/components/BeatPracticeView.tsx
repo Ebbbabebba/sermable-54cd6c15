@@ -2604,6 +2604,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
+    sentenceBoundaryHoldRawCountRef.current = 0;
     // Do not keep an event-index cutoff after reset. Web Speech can reuse the
     // same interim result slot for the user's new first word; filtering by the
     // previous result count made the blue cursor stay stuck at word 1.
@@ -2642,6 +2643,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
     runningTranscriptRef.current = "";
+    sentenceBoundaryHoldRawCountRef.current = 0;
     hasHeardSpeechRef.current = false;
     lastWordTimeRef.current = now;
     lastAutoAdvanceAtRef.current = now;
