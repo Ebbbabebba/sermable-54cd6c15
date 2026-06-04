@@ -454,9 +454,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const lastAutoAdvanceAtRef = useRef<number>(0);
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Guards against duplicate "sentence complete" triggers for the same repetition
-  const lastCompletionRepIdRef = useRef<number>(-1);
-
   // Ignore speech results briefly right after we reset / during transitions
   const ignoreResultsUntilRef = useRef(0);
 
@@ -1871,12 +1868,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         needsFreshSpeechRef.current = false;
       }
 
-      if (lastCompletionRepIdRef.current === repId) {
-        return;
-      }
-
-      lastCompletionRepIdRef.current = repId;
-
       const failedFromSignals = new Set<number>();
       // Include every hesitated/missed word — even visible ones — so they
       // are protected next round and won't be re-hidden until the user
@@ -2659,7 +2650,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setConsecutiveNoScriptSuccess(0);
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
 
-    lastCompletionRepIdRef.current = -1;
     // The completion path that called us has already issued its own
     // pauseSpeechRecognition (900ms). Doubling up here with another 200ms
     // pause used to land AFTER that one expired, briefly muting the mic
