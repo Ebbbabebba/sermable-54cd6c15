@@ -487,6 +487,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // needsFreshSpeechRef so a stale buffered transcript can never satisfy the
   // fresh-speech gate within the first 500ms after a phase change.
   const phaseTransitionAtRef = useRef(0);
+  // Hard debounce: timestamp of the most recent successful checkCompletion.
+  // Used to swallow back-to-back completions caused by stale buffered
+  // transcripts firing immediately after a rep resets.
+  const lastCompletionAtRef = useRef(0);
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
