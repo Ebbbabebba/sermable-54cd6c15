@@ -1930,6 +1930,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
 
     phaseCompletionLockRef.current = true;
+    lastCompletionAtRef.current = Date.now();
 
     const failedSet = failed ?? failedWordIndices;
     const hadErrors = failedSet.size > 0;
