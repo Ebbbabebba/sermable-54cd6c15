@@ -1703,13 +1703,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Speech recognition often *updates* the last word (same word count) as it becomes final.
     // If we only process appended words, we can get stuck (especially on the final word).
     const prevWords = transcriptWordsRef.current;
-    const prevCount = prevWords.length;
+    let prevCount = prevWords.length;
 
     let startIdx: number;
 
     const boundaryHoldCount = sentenceBoundaryHoldRawCountRef.current;
 
-    if (boundaryHoldCount > 0 && rawWords.length <= boundaryHoldCount) {
+    if (boundaryHoldCount > 0 && rawWords.length < boundaryHoldCount) {
+      sentenceBoundaryHoldRawCountRef.current = 0;
+      transcriptWordsRef.current = [];
+      prevCount = 0;
+    } else if (boundaryHoldCount > 0 && rawWords.length === boundaryHoldCount) {
       transcriptRef.current = transcript;
       transcriptWordsRef.current = rawWords.slice(0, boundaryHoldCount);
       return;
