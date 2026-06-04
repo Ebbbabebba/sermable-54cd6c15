@@ -2518,6 +2518,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const recentlyActive =
       hadActiveRecognizer && now - lastWordTimeRef.current < 300;
     repetitionIdRef.current += 1;
+    freshMatchesThisRepRef.current = 0;
     lastResetAtRef.current = now;
     staleReplayGuardUntilRef.current = Math.max(
       staleReplayGuardUntilRef.current,
