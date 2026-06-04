@@ -487,6 +487,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // needsFreshSpeechRef so a stale buffered transcript can never satisfy the
   // fresh-speech gate within the first 500ms after a phase change.
   const phaseTransitionAtRef = useRef(0);
+  // Hard debounce: timestamp of the most recent successful checkCompletion.
+  // Used to swallow back-to-back completions caused by stale buffered
+  // transcripts firing immediately after a rep resets.
+  const lastCompletionAtRef = useRef(0);
 
   // Cooldown for "start over" voice command / swipe to avoid double-fire
   const restartCooldownUntilRef = useRef(0);
@@ -1894,28 +1898,39 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (showCelebrationRef.current) return;
     if (phaseCompletionLockRef.current) return;
 
+    // Hard debounce — two completions within 1.2s for the same phase are
+    // almost certainly the same rep firing twice (stale buffered transcript
+    // + hesitation auto-advance racing past the lock release).
+    if (Date.now() - lastCompletionAtRef.current < 1200) {
+      console.log('🛑 Completion blocked — debounce (too soon after previous completion)');
+      return;
+    }
+
     if (phase.includes('learning') && needsFreshSpeechRef.current) {
       console.log('🛑 Completion blocked — no fresh speech since phase transition');
       return;
     }
 
-    // Hard gate: during learning phases, require that at least 60%
-    // of the words in this sentence were matched from FRESH speech this rep.
-    // This prevents lookahead skip-fills + hesitation auto-advance from
-    // flipping the whole sentence to "spoken" before the user actually
-    // finished saying it. Fading phases skip this gate — hidden words are
-    // expected to advance via hesitation timeout there.
-    if (phase.includes('learning') && sessionMode !== 'recall' && sessionMode !== 'pre_beat_recall') {
-      const required = Math.max(1, Math.ceil(words.length * 0.6));
+    // Hard gate: require that a meaningful share of words in this rep were
+    // matched from FRESH speech. Otherwise lookahead skip-fills + hesitation
+    // auto-advance can flip the whole sentence to "spoken" and trigger a
+    // back-to-back fading completion without the user actually saying it.
+    // Learning: 60% (strict — must read sentence). Fading: 40% (more lenient
+    // because hidden words may be auto-advanced).
+    if ((phase.includes('learning') || phase.includes('fading')) && sessionMode !== 'recall' && sessionMode !== 'pre_beat_recall') {
+      const ratio = phase.includes('learning') ? 0.6 : 0.4;
+      const required = Math.max(1, Math.ceil(words.length * ratio));
       if (freshMatchesThisRepRef.current < required) {
-        console.log(`🛑 Completion blocked — only ${freshMatchesThisRepRef.current}/${required} fresh matches this rep`);
+        console.log(`🛑 Completion blocked — only ${freshMatchesThisRepRef.current}/${required} fresh matches this rep (${phase})`);
         return;
       }
     }
 
 
 
+
     phaseCompletionLockRef.current = true;
+    lastCompletionAtRef.current = Date.now();
 
     const failedSet = failed ?? failedWordIndices;
     const hadErrors = failedSet.size > 0;
