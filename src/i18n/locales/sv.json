@@ -40,7 +40,7 @@
       "title": "Pauser med ett bindestreck",
       "body": "Skriv ett ensamt `-` för en 2-sekunders paus, eller `-5s` för annan längd. Övningen dimmar skärmen och räknar ner åt dig."
     },
-    "done2": {
+    "complete": {
       "title": "Du är redo",
       "body": "Du kan blanda dessa markeringar fritt och redigera dem i manuset senare."
     }
