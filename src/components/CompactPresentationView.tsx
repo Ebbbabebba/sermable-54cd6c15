@@ -663,7 +663,11 @@ export const CompactPresentationView = ({
             <div className="min-h-[300px] flex flex-col items-center justify-center">
               <StageDirectionCue
                 directions={getActiveDirections(directionsByAfterIndex, currentWordIndex)}
-                className="mb-4"
+                className="mb-2"
+              />
+              <PropCueOverlay
+                cue={getActivePropCue(propCues, currentWordIndex)}
+                className="mb-2"
               />
               <AnimatePresence mode="wait">
                 <motion.div
