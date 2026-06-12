@@ -3312,12 +3312,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               );
               const isSentenceEndingWord = /[.!?]$/.test(words[idx] ?? '');
               const isFinalWord = idx >= wordsLengthRef.current - 1;
-              if (isSentenceEndingWord || isFinalWord) {
-                hasHeardSpeechRef.current = false;
-                lastWordTimeRef.current = Date.now();
-                lastAutoAdvanceAtRef.current = Date.now();
-                return;
-              }
+              // Previously: sentence-ending / final hidden words just revealed
+              // and returned, waiting forever for the user to speak. After many
+              // hesitations earlier in the beat this stalled the blue cursor
+              // (the classic "Hej alla unga aktiesparare!" freeze). Now we
+              // advance like any other hidden word so the practice keeps
+              // flowing — the user still sees the revealed word and can read
+              // it on the next rep.
+              void isSentenceEndingWord;
+              void isFinalWord;
 
               const newSpoken = new Set([...spokenIndicesRef.current, idx]);
               spokenIndicesRef.current = newSpoken;
