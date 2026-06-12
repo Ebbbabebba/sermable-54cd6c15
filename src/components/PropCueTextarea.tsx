@@ -6,7 +6,7 @@ import { Sparkle, X, Check, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { extractPropCues, stripPropCueMarkers } from "@/utils/propCues";
+import { extractPropCues } from "@/utils/propCues";
 import { stripStageDirections } from "@/utils/stageDirections";
 
 interface PropCueTextareaProps {
