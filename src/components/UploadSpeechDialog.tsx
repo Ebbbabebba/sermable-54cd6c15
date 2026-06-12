@@ -925,6 +925,8 @@ const UploadSpeechDialog = ({
     <>
       {overlay}
 
+      {open && <FirstTimeCreateTour />}
+
       <AiSpeechBuilderDialog
         open={showAiBuilder}
         onOpenChange={setShowAiBuilder}
