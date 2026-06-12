@@ -542,7 +542,7 @@ const UploadSpeechDialog = ({
                 disabled={loading || isScanning}
                 className="gap-1.5"
               >
-                <Sparkles className="h-4 w-4" />
+                <Wand2 className="h-4 w-4" />
                 {t("upload.buildWithAi", "Build with AI")}
               </Button>
               <Button
