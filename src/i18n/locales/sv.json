@@ -25,12 +25,8 @@
       "body": "Sermable har några små markeringar du kan strö in i ditt manus för att göra övning och presentation levande. Tar 20 sekunder."
     },
     "direction": {
-      "title": "Scenanvisningar i [hakparentes]",
-      "body": "Skriv [paus], [drick vatten], [nästa bild] inom hakparentes. De visas som kursiva noteringar men ignoreras av röstigenkänningen."
-    },
-    "cue": {
-      "title": "Rekvisita: markera och få cue ovanför",
-      "body": "Markera valfria ord i editorn och lägg till en rekvisita som ”le” eller ”skratta”. Orden får en mjuk färg, och rekvisitan dyker upp ovanför manus medan du läser dem."
+      "title": "Scenanvisningar",
+      "body": "Markera valfria ord i editorn och skriv vad du ska göra, t.ex. ”le” eller ”höj handen”. Orden får en mjuk färg, och anvisningen dyker upp ovanför manus i en egen färg medan du läser dem — i både övning och presentation."
     },
     "pause": {
       "title": "Pauser med ett bindestreck",
@@ -251,10 +247,10 @@
     "wordLimitUpgrade": "Uppgradera till premium för upp till 5000 ord.",
     "pasteText": "Klistra in din taltext här...",
     "propCue": {
-      "tip": "Pro-tips: markera valfri text för att lägga till en rekvisita (le, skratta, höj handen). Den dyker upp ovanför manus medan du läser den.",
-      "addButton": "Lägg till rekvisita",
+      "tip": "Pro-tips: markera valfri text för att lägga till en scenanvisning (le, skratta, höj handen). Den dyker upp ovanför manus medan du läser den.",
+      "addButton": "Lägg till scenanvisning",
       "placeholder": "t.ex. le, skratta, höj handen…",
-      "previewLabel": "Förhandsvisning av rekvisita"
+      "previewLabel": "Förhandsvisning av scenanvisning"
     },
     "autoDetectsLanguage": "Upptäcker språk automatiskt",
     "analyzingImage": "Analyserar bild...",

@@ -161,24 +161,10 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
     {
       id: "direction",
       titleKey: "tour.direction.title",
-      titleFallback: "Stage directions in [brackets]",
+      titleFallback: "Stage directions",
       bodyKey: "tour.direction.body",
       bodyFallback:
-        "Write [pause], [drink water], [next slide] in square brackets. They show up as italic notes but are ignored by speech recognition.",
-      demo: () => (
-        <ScriptDemo
-          text="Welcome [smile at the crowd] — it's great to be here."
-          highlight="direction"
-        />
-      ),
-    },
-    {
-      id: "cue",
-      titleKey: "tour.cue.title",
-      titleFallback: "Prop cues: highlight + float above",
-      bodyKey: "tour.cue.body",
-      bodyFallback:
-        "Select any sequence of words in the editor and add a prop cue like “smile” or “laugh”. The words get a soft highlight, and the cue floats above your script while you're reading them.",
+        "Select any words in the editor and write what to do — like “smile” or “raise hand”. The words get a soft highlight, and the direction floats above your script in its own color while you read it.",
       demo: () => (
         <ScriptDemo
           text="Tack alla {{smile}}för att ni kom hit{{/}} ikväll."
