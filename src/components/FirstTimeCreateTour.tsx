@@ -159,29 +159,15 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       ),
     },
     {
-      id: "hidden",
-      titleKey: "tour.hidden.title",
-      titleFallback: "Hide words to memorise",
-      bodyKey: "tour.hidden.body",
-      bodyFallback:
-        "Wrap any word in [brackets] to hide it during practice. You have to recall it from memory — it fades back in if you say it correctly.",
-      demo: () => (
-        <ScriptDemo
-          text="Thank you all for [coming] here tonight."
-          highlight="hidden"
-        />
-      ),
-    },
-    {
       id: "direction",
       titleKey: "tour.direction.title",
-      titleFallback: "Stage directions (in parens)",
+      titleFallback: "Stage directions in [brackets]",
       bodyKey: "tour.direction.body",
       bodyFallback:
-        "Write (pause), (drink water), (next slide) in parens. They show up as italic notes but are ignored by speech recognition.",
+        "Write [pause], [drink water], [next slide] in square brackets. They show up as italic notes but are ignored by speech recognition.",
       demo: () => (
         <ScriptDemo
-          text="Welcome (smile at the crowd) — it's great to be here."
+          text="Welcome [smile at the crowd] — it's great to be here."
           highlight="direction"
         />
       ),
