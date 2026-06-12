@@ -4188,6 +4188,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   exit={{ opacity: 0, y: -20 }}
                   className="w-full flex flex-col items-center"
                 >
+                  <PropCueOverlay
+                    cue={getActivePropCue(propCues, currentWordIndex)}
+                    className="mb-2"
+                  />
                   <SentenceDisplay
                     text={currentText}
                     hiddenWordIndices={hiddenWordIndices}
@@ -4195,6 +4199,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                     spokenIndices={spokenIndices}
                     hesitatedIndices={hesitatedIndices}
                     missedIndices={missedIndices}
+                    propCueIndices={propCueIndices}
                     onWordTap={(idx) => {
                       if (hiddenWordIndices.has(idx)) {
                         setHiddenWordIndices(prev => {
