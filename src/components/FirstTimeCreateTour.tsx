@@ -164,7 +164,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       titleFallback: "Stage directions",
       bodyKey: "tour.direction.body",
       bodyFallback:
-        "Select any words in the editor and write what to do — like “smile” or “raise hand”. The words get a soft highlight, and the direction floats above your script in its own color while you read it.",
+        "Select any words in the editor and write what to do — like “smile” or “raise hand”. The direction appears above your script while you present.",
       demo: () => (
         <ScriptDemo
           text="Tack alla {{smile}}för att ni kom hit{{/}} ikväll."
