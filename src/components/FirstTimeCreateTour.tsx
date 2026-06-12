@@ -154,7 +154,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
         "Sermable has a handful of small marks you can sprinkle in your script to make practice and presentation feel alive. Takes 20 seconds.",
       demo: () => (
         <div className="flex items-center justify-center">
-          <Sparkle className="h-16 w-16 text-primary animate-pulse" />
+          <Lightbulb className="h-16 w-16 text-primary animate-pulse" />
         </div>
       ),
     },
