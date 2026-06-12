@@ -10,21 +10,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-scheduler-secret",
 };
 
-const STRINGS: Record<string, { title: string; body: string }> = {
-  en: { title: "⏰ Time to rehearse", body: 'Rest interval is over for "{title}". Tap to practice now.' },
-  sv: { title: "⏰ Dags att repetera", body: 'Vilointervallet är slut för "{title}". Tryck för att öva nu.' },
-  de: { title: "⏰ Zeit zu üben", body: 'Die Pause ist vorbei für "{title}". Jetzt antippen.' },
-  fr: { title: "⏰ À répéter", body: 'L\'intervalle de repos est terminé pour "{title}". Appuyez pour pratiquer.' },
-  es: { title: "⏰ Hora de practicar", body: 'El intervalo de descanso terminó para "{title}". Toca para practicar.' },
-  it: { title: "⏰ È ora di esercitarsi", body: 'L\'intervallo di riposo è finito per "{title}". Tocca per esercitarti.' },
-  pt: { title: "⏰ Hora de praticar", body: 'O intervalo de descanso acabou para "{title}". Toque para praticar.' },
+const STRINGS: Record<string, { title: string; body: string; breakTitle: string; breakBody: string }> = {
+  en: { title: "⏰ Time to rehearse", body: 'Rest interval is over for "{title}". Tap to practice now.', breakTitle: "☕ Break is over", breakBody: 'Coffee break done — time for a quick recall of "{title}".' },
+  sv: { title: "⏰ Dags att repetera", body: 'Vilointervallet är slut för "{title}". Tryck för att öva nu.', breakTitle: "☕ Kaffepausen är slut", breakBody: 'Dags för en snabb repetition av "{title}".' },
+  de: { title: "⏰ Zeit zu üben", body: 'Die Pause ist vorbei für "{title}". Jetzt antippen.', breakTitle: "☕ Pause vorbei", breakBody: 'Zeit für eine schnelle Wiederholung von "{title}".' },
+  fr: { title: "⏰ À répéter", body: 'L\'intervalle de repos est terminé pour "{title}". Appuyez pour pratiquer.', breakTitle: "☕ Pause terminée", breakBody: 'Une rapide révision de "{title}" t\'attend.' },
+  es: { title: "⏰ Hora de practicar", body: 'El intervalo de descanso terminó para "{title}". Toca para practicar.', breakTitle: "☕ Pausa terminada", breakBody: 'Es hora de un repaso rápido de "{title}".' },
+  it: { title: "⏰ È ora di esercitarsi", body: 'L\'intervallo di riposo è finito per "{title}". Tocca per esercitarti.', breakTitle: "☕ Pausa finita", breakBody: 'È ora di un ripasso rapido di "{title}".' },
+  pt: { title: "⏰ Hora de praticar", body: 'O intervalo de descanso acabou para "{title}". Toque para praticar.', breakTitle: "☕ Pausa terminou", breakBody: 'Hora de uma rápida revisão de "{title}".' },
 };
 
-function tr(lang: string, title: string) {
+function tr(lang: string, title: string, kind: "break" | "due") {
   const k = (lang || "en").split("-")[0];
   const s = STRINGS[k] ?? STRINGS.en;
+  if (kind === "break") return { title: s.breakTitle, body: s.breakBody.replace("{title}", title) };
   return { title: s.title, body: s.body.replace("{title}", title) };
 }
+
 
 function getLocalHour(tz: string) {
   try {
