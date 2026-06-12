@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, X, Check, Sparkle } from "lucide-react";
+import { ArrowRight, ArrowLeft, X, Check, Lightbulb } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
@@ -154,7 +154,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
         "Sermable has a handful of small marks you can sprinkle in your script to make practice and presentation feel alive. Takes 20 seconds.",
       demo: () => (
         <div className="flex items-center justify-center">
-          <Sparkle className="h-16 w-16 text-primary animate-pulse" />
+          <Lightbulb className="h-16 w-16 text-primary animate-pulse" />
         </div>
       ),
     },
