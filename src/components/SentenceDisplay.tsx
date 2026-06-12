@@ -27,6 +27,9 @@ interface SentenceDisplayProps {
   onWordTap?: (index: number) => void;
 }
 
+// Smooth easing for a calmer, gliding pulse feel
+const smoothTransition = { duration: 0.28, ease: "easeInOut" as const };
+
 const SentenceDisplay = ({
   text,
   hiddenWordIndices,
