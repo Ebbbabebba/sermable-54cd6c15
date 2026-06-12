@@ -213,6 +213,8 @@ const SentenceDisplay = ({
         }}
         className={cn(
           "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
+          // Prop-cue background — soft warm highlight on the wrapped sequence
+          propCueIndices?.has(index + wordIndexOffset) && "bg-[hsl(var(--prop-cue-bg))]",
           // Subtle marker for current word (blue pulse)
           state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60",
           // Spoken word gets muted styling (gray)
