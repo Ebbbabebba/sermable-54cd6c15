@@ -1,50 +1,124 @@
-## Problem
+## Vad vi bygger
 
-Two related issues during beat practice:
+En ny "rekvisita-cue"-funktion: markera valfri textsekvens i ditt manus → liten popup där du skriver in cue (t.ex. "le", "skratta") → markerad text får en svag bakgrundsfärg. Under practice, när du läser den sekvensen, dyker cue:n upp ovanför manus i sin egen färg och försvinner när du passerat sekvensens slut.
 
-1. **The blue pulse jumps over words.** While the user is mid-sentence, the cursor leaps past one or more visible words it hasn't heard yet.
-2. **Words start hiding before the sentence has actually been finished.** Fading begins even though the user hasn't said the full sentence cleanly yet.
+Plus: en interaktiv guidad tour första gången användaren skapar/redigerar ett tal på enheten, som visar alla detaljer (standalone-app, markering med rekvisita, hidden words m.m.).
 
-Both bugs trace to three places in `src/components/BeatPracticeView.tsx`:
+---
 
-- The matcher's visible 2-word lookahead in `processTranscription` (lines ~1742–1764) can mark two visible words as "spoken" on a single recognized token.
-- The hesitation auto-advance loop (lines ~3190–3232) flips hidden words to "spoken" on a 2 s timeout and, combined with the lookahead, can race the cursor to the end of the sentence.
-- `requiredLearningReps = 1` (line 403), so as soon as `checkCompletion` sees every word marked spoken — even via lookahead + hesitation auto-advance — fading starts. There is no "you've actually read this whole sentence" gate.
+## 1. Syntax & datamodell
 
-## Fix
+Vi inför en ny inline-syntax som lever bredvid `[brackets]`, `(parens)` och `-pause-`:
 
-### 1. Stop the pulse from skipping (matcher)
+```
+Tack alla {{le}}för att ni kom hit{{/}} ikväll.
+```
 
-In `processTranscription`:
+- `{{cue}}…{{/}}` omsluter sekvensen som cue:n gäller för.
+- Cue:n (`le`) visas ovanför manus medan ord-index ligger inom range.
+- Den omslutna texten får en svag bakgrundsfärg i editor + practice (förstärks vid hover/klick i editorn).
+- AI, röstigenkänning och rendering ignorerar markörerna (precis som stage directions).
 
-- Remove the 2-word visible-lookahead branch entirely (the `else if (canSkipCurrent && advancedTo + 2 < words.length)` block). Keep only the 1-word lookahead so a single recognized token can never advance the cursor by more than two positions in one pass.
-- Cap auto-advance per processing pass: at most one "skipped visible word" per call. If the matcher already consumed a lookahead skip in this pass, force subsequent tokens to match `advancedTo` exactly.
-- In `SentenceDisplay.tsx`, the pulse already follows `currentWordIndex` directly — leave it. But add an internal clamp so the rendered pulse can advance by at most 1 position per React commit (track previous `pulseIndex` in a ref and step toward target). This kills any residual visual leap when state batches multiple advances.
+Varför inline-tokens istället för separat metadata: håller manuset portabelt (kan kopieras, delas, redigeras manuellt), följer samma mönster som befintliga `[ ]` / `( )` / `-`.
 
-### 2. Require a real read-through before fading starts
+---
 
-In `checkCompletion` / state setup:
+## 2. Editor-upplevelse
 
-- Bump `requiredLearningReps` from `1` to `2` for the **first** time a sentence is seen (`sentence_*_learning`), so the user reads it fully twice before words begin to fade. Keep `1` for `beat_learning` / combining phases where the user has already practiced the parts.
-- Add a "fresh-speech word count" counter `freshMatchesThisRepRef`. Increment it every time `processTranscription` records a match that was driven by `matchedFreshSpeech` (not by hesitation auto-advance or lookahead skip-fills).
-- In `checkCompletion`, reject completion if `freshMatchesThisRepRef.current < Math.ceil(words.length * 0.6)`. If rejected, log it, do NOT advance phase, just reset for the next rep so the user can finish saying the sentence. This is the hard gate against "fading kicked in before I finished speaking."
+I `UploadSpeechDialog` (skapa) och `SpeechDetail`/edit-textarea (redigera):
 
-### 3. Tame hesitation auto-advance during learning
+- Byt `<textarea>` mot en lättviktig `contenteditable`-yta som visar:
+  - Vanlig text
+  - `[hidden]` med subtil bracket-styling
+  - `(direction)` italic
+  - **NY:** `{{cue}}…{{/}}` med svag färgad bakgrund + liten cue-badge i marginalen
+- När användaren markerar text (mouse/touch) visas en flytande knapp: "+ Lägg till rekvisita". Klick → popover med textfält → spara → omsluter selection med `{{cue}}…{{/}}`.
+- Klick på en befintlig cue-highlight → bakgrunden förstärks + popover för redigera/ta bort. Dubbelklick = direktredigering.
+- Pro-tip-bubbla visas alltid över editor-rutan: "💡 Tips: markera text för att lägga till rekvisita (le, skratta, paus…)".
 
-In the hesitation interval (lines 3190–3232):
+---
 
-- During any `*_learning` phase, do not auto-complete the sentence from a hesitation tick. If `nextIdx >= wordsLengthRef.current` and the phase is learning, skip the `checkCompletion(...)` call — let the user finish naturally. (Auto-advance through individual hidden gap words mid-sentence is still fine.)
-- Increase the hesitation threshold by ~500 ms for the **last word** of a sentence so the user gets a moment to land the final word before it's marked yellow and skipped.
+## 3. Practice-upplevelse
 
-### 4. Verification
+I `BeatPracticeView` (och `StrictPresentationView`):
 
-- Speak slowly through a fresh sentence with deliberate pauses: confirm the pulse stops on the current word until that word is actually spoken, never jumping two positions on a single utterance.
-- Read a brand-new sentence once: confirm fading does NOT start ("let's start hiding" banner does not appear). Read it a second time cleanly: fading starts.
-- Pause halfway through a sentence: confirm `checkCompletion` does not trigger fading until the user actually finishes the remaining words.
+- Parse cues till `Map<wordIndex, { cue, startIdx, endIdx, color }>`.
+- Den omslutna textsekvensen renderas med svag bakgrundsfärg (samma som i editorn) så användaren ser var cue:n är aktiv.
+- När `currentWordIndex` är inom `[startIdx, endIdx]` → visa cue ovanför manus i en distinkt färg (t.ex. accent/orange, skiljd från stage-direction-primary). Fade ut när index passerar `endIdx`.
+- Återanvänder `StageDirectionCue`-komponenten med en ny variant (`type: "prop"`) som styr färg.
 
-## Files touched
+Färger (semantiska tokens i `index.css`):
+- `--prop-cue-bg`: mycket svag varm färg (ca 8% opacity)
+- `--prop-cue-bg-strong`: vid hover/aktiv (ca 20%)
+- `--prop-cue-fg`: cue-badge ovanför manus
 
-- `src/components/BeatPracticeView.tsx` — matcher lookahead trimmed; fresh-match counter + completion gate; `requiredLearningReps` per-phase logic; hesitation tick learning-phase guard.
-- `src/components/SentenceDisplay.tsx` — pulse step-clamp so cursor visually advances at most one position per render.
+---
 
-No backend, schema, API, or copy changes.
+## 4. Parser-uppdateringar
+
+`src/utils/stageDirections.ts` (eller ny `src/utils/propCues.ts`):
+
+- `tokenizeScript` lär sig `{{…}}…{{/}}`.
+- `stripStageDirections` strippar även cue-markörerna men behåller den omslutna texten (så ord-index = visningsindex).
+- Ny export: `extractPropCues(text) → { plainText, cues: Array<{cue, startWordIndex, endWordIndex}> }`.
+- Befintliga konsumenter (`BeatPracticeView`, `StrictPresentationView`, AI-prompts, print) får cue-info gratis och kan välja att rendera eller ignorera.
+
+---
+
+## 5. Interaktiv första-gångs-tour
+
+Ny komponent `FirstTimeCreateTour.tsx` som triggas första gången användaren öppnar editorn (kontrollerat via `localStorage.getItem("sermable.tour.create.v1")`):
+
+Steg (klick "Nästa" mellan varje):
+1. **Välkommen** – kort intro, "Här är några knep som gör Sermable kraftfullt."
+2. **Hidden words `[ ]`** – animerar in `[exempel]` i ett demo-manus och visar hur det göms i practice.
+3. **Stage directions `( )`** – animerar `(le)` italic ovanför.
+4. **Rekvisita-cue (NY)** – animerar markering av text → popover → bakgrunden tonar in → cue dyker upp över manus.
+5. **Pauser `-` / `-3s`** – mini-countdown-animation.
+6. **Standalone-app** – kort om "lägg till på hemskärm för bästa upplevelse" (visas bara om inte redan installerad).
+7. **Klart!** – CTA "Börja skapa ditt tal".
+
+Tekniskt: full-screen modal med vänster: animerat demo-manus (egen mini-renderer), höger: text + Föregående/Nästa/Hoppa över. Spara `v1` i localStorage så framtida uppdateringar kan tvinga ny tour.
+
+Lokaliseras till alla 7 språk.
+
+---
+
+## 6. Filer som ändras / skapas
+
+**Nya:**
+- `src/utils/propCues.ts` – parser + extraktion
+- `src/components/PropCuePopover.tsx` – flytande "lägg till/redigera"-popover
+- `src/components/RichScriptEditor.tsx` – contenteditable med highlight för `[ ]`, `( )`, `{{ }}`
+- `src/components/FirstTimeCreateTour.tsx` – guidad tour
+- `src/components/PropCueOverlay.tsx` – cue-badge ovanför manus (kan också byggas in i StageDirectionCue)
+
+**Ändras:**
+- `src/utils/stageDirections.ts` – samexistens med cues
+- `src/components/BeatPracticeView.tsx` – rendera bakgrundsfärg + active prop cue
+- `src/components/StrictPresentationView.tsx` – samma
+- `src/components/UploadSpeechDialog.tsx` – byt textarea → RichScriptEditor, trigga tour
+- `src/pages/SpeechDetail.tsx` – samma i edit-läge
+- `src/index.css` – nya färgtokens
+- `src/i18n/locales/*.json` – nya nycklar (tour-steg, pro-tip, popover-knappar)
+
+**AI/edge functions:** ingen ändring – `stripStageDirections` strippar redan cue-markörerna innan text går till AI.
+
+---
+
+## 7. Validering
+
+- Bygget grönt
+- Manuell test: skapa tal → markera "för att ni kom" → skriv "le" → highlight syns → practice → cue "le" dyker upp ovanför manus när du läser sekvensen, försvinner efter
+- Tour visas en gång, går att hoppa över, dyker inte upp igen
+- Befintliga `[ ]`, `( )`, `-` fortsätter fungera oförändrat
+
+---
+
+## 8. Frågor innan jag bygger
+
+Är ovan OK? Specifikt:
+1. Syntax-valet `{{cue}}…{{/}}` — ok, eller vill du ha annat (t.ex. `«cue»…«»`)?
+2. Tour-trigger: första gången editorn öppnas (mitt förslag) — eller hellre direkt efter onboarding innan första talet skapas?
+
+Säg "kör" så bygger jag.
