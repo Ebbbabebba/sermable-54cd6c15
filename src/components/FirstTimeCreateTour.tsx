@@ -173,20 +173,6 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       ),
     },
     {
-      id: "cue",
-      titleKey: "tour.cue.title",
-      titleFallback: "Prop cues: highlight + float above",
-      bodyKey: "tour.cue.body",
-      bodyFallback:
-        "Select any sequence of words in the editor and add a prop cue like “smile” or “laugh”. The words get a soft highlight, and the cue floats above your script while you're reading them.",
-      demo: () => (
-        <ScriptDemo
-          text="Tack alla {{smile}}för att ni kom hit{{/}} ikväll."
-          highlight="cue"
-        />
-      ),
-    },
-    {
       id: "pause",
       titleKey: "tour.pause.title",
       titleFallback: "Pauses with a single dash",
