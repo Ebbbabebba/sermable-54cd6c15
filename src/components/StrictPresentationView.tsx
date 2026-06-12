@@ -129,6 +129,7 @@ export const StrictPresentationView = ({
     }
     return map;
   }, [text]);
+  const propCues = useMemo(() => extractPropCues(text).cues, [text]);
   
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
