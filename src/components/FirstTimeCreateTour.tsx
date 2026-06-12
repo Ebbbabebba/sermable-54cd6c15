@@ -215,10 +215,10 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       ),
     },
     {
-      id: "done",
-      titleKey: "tour.done.title",
+      id: "complete",
+      titleKey: "tour.complete.title",
       titleFallback: "You're set",
-      bodyKey: "tour.done.body",
+      bodyKey: "tour.complete.body",
       bodyFallback:
         "Mix any of these marks freely. You can edit them later in the script too.",
       demo: () => (
