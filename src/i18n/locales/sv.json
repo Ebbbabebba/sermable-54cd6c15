@@ -227,6 +227,7 @@
     "autoDetectsLanguage": "Upptäcker språk automatiskt",
     "analyzingImage": "Analyserar bild...",
     "languageDetected": "Språk upptäckt – gränssnittet uppdaterat",
+    "buildWithAi": "Skapa med AI",
     "scanDocument": "Skanna",
     "uploadImage": "Foto",
     "retake": "Ta om",

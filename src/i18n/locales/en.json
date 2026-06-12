@@ -226,6 +226,7 @@
     "autoDetectsLanguage": "Auto-detects language",
     "analyzingImage": "Analyzing image...",
     "languageDetected": "Language detected and UI updated",
+    "buildWithAi": "Build with AI",
     "scanDocument": "Scan",
     "uploadImage": "Photo",
     "retake": "Retake",

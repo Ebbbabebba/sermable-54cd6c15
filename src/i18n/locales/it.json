@@ -214,7 +214,8 @@
     "monthlyLimit": "Limite mensile di discorsi",
     "limitReached": "Limite raggiunto",
     "pasteText": "Incolla qui il testo del tuo discorso...",
-    "languageDetected": "Lingua rilevata e interfaccia aggiornata"
+    "languageDetected": "Lingua rilevata e interfaccia aggiornata",
+    "buildWithAi": "Crea con l'IA"
   },
   "practice": {
     "title": "Sessione di esercitazione",
