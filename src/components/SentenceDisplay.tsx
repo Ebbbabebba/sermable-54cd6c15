@@ -18,12 +18,14 @@ interface SentenceDisplayProps {
   spokenIndices: Set<number>;
   hesitatedIndices: Set<number>;
   missedIndices: Set<number>;
+  /** Word indices that fall inside a {{cue}}…{{/}} prop-cue range. */
+  propCueIndices?: Set<number>;
+  /** Word index offset: the first word in `text` corresponds to this clean
+   *  word index in the source script. Used to align prop-cue ranges that
+   *  were extracted from the full script. Defaults to 0. */
+  wordIndexOffset?: number;
   onWordTap?: (index: number) => void;
 }
-
-// Smooth easing for a calmer, gliding pulse feel
-const smoothTransition = { duration: 0.28, ease: "easeInOut" as const };
-const layoutTransition = { duration: 0.32, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
 
 const SentenceDisplay = ({
   text,
@@ -32,6 +34,8 @@ const SentenceDisplay = ({
   spokenIndices,
   hesitatedIndices,
   missedIndices,
+  propCueIndices,
+  wordIndexOffset = 0,
   onWordTap,
 }: SentenceDisplayProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
