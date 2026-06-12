@@ -273,7 +273,9 @@ const PropCueTextarea = ({
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
             {t("upload.propCue.previewLabel", "Prop cue preview")}
           </p>
-          <div className="text-sm leading-loose">{preview}</div>
+          <div className="text-sm leading-loose max-h-32 overflow-y-auto">
+            {preview}
+          </div>
         </div>
       )}
 
