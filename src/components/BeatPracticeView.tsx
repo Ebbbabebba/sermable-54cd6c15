@@ -1384,11 +1384,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordOrder([]);
   };
 
-  // Progressive words to hide: 3 → 4 → 5 (minimum 3, increases with streak)
+  // Streak-based hiding: 1st success hides 1 word, 2 in a row → 2 words,
+  // 3 in a row → 3, 4 in a row → 4, ... capped at 8. Starts with small/common
+  // words first (see getNextWordToHide priority order) so the practice
+  // accelerates instead of dragging at a fixed 3-words-per-rep pace.
   const getWordsToHideCount = useCallback((successCount: number): number => {
-    // Always hide minimum 3 words, then 4, then 5 (max) with success streak
-    // 0 successes = 3 words, 1 success = 4 words, 2+ successes = 5 words
-    return Math.min(3 + successCount, 5);
+    return Math.min(1 + successCount, 8);
   }, []);
 
   // Effect to reset hidden words when changing recall beat
