@@ -165,25 +165,35 @@ const Onboarding = () => {
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center text-center max-w-sm w-full"
           >
-            {/* Big bouncy icon */}
-            <motion.div
-              className={`relative w-40 h-40 rounded-full ${step.accent} flex items-center justify-center mb-10 shadow-2xl`}
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              {/* Pulse ring */}
+            {/* Big bouncy icon (omitted on welcome step for a typographic intro) */}
+            {Icon && (
               <motion.div
-                className="absolute inset-0 rounded-full bg-white/20"
-                animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
-              />
-              <Icon className={`w-20 h-20 ${step.text}`} strokeWidth={2.2} />
-            </motion.div>
+                className={`relative w-40 h-40 rounded-full ${step.accent} flex items-center justify-center mb-10 shadow-2xl`}
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {/* Pulse ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-white/20"
+                  animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
+                />
+                <Icon className={`w-20 h-20 ${step.text}`} strokeWidth={2.2} />
+              </motion.div>
+            )}
 
-            <h2 className={`text-3xl md:text-4xl font-extrabold tracking-tight mb-4 ${step.text}`}>
+            <h2
+              className={`font-extrabold tracking-tight mb-4 ${step.text} ${
+                Icon ? "text-3xl md:text-4xl" : "text-5xl md:text-7xl leading-[1.05]"
+              }`}
+            >
               {t(`onboarding.steps.${step.key}.title`)}
             </h2>
-            <p className={`text-base md:text-lg leading-relaxed ${step.subtext}`}>
+            <p
+              className={`leading-relaxed ${step.subtext} ${
+                Icon ? "text-base md:text-lg" : "text-lg md:text-2xl mt-2"
+              }`}
+            >
               {t(`onboarding.steps.${step.key}.message`)}
             </p>
           </motion.div>
