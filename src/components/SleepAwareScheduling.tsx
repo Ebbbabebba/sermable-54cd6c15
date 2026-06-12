@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, Brain, Sparkles, Clock, ChevronRight } from "lucide-react";
+import { Moon, Sun, Brain, Lightbulb, Clock, ChevronRight } from "lucide-react";
 
 interface SleepAwareSuggestion {
   type: 'evening_practice' | 'morning_recall' | 'optimal_time' | 'none';
@@ -151,7 +151,7 @@ const SleepAwareScheduling = () => {
       case 'clock':
         return <Clock className="h-5 w-5 text-blue-400" />;
       default:
-        return <Sparkles className="h-5 w-5 text-primary" />;
+        return <Lightbulb className="h-5 w-5 text-primary" />;
     }
   };
 

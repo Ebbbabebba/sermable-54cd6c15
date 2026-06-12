@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Sparkles, Zap } from "lucide-react";
+import { Flame, Zap, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 
@@ -42,7 +42,7 @@ const FullSpeechRecallCelebration = ({ onStart, totalWords }: FullSpeechRecallCe
                 ease: "easeOut",
               }}
             >
-              <Sparkles className="w-full h-full text-orange-400/60" />
+              <Trophy className="w-full h-full text-orange-400/60" />
             </motion.div>
           ))}
         </div>

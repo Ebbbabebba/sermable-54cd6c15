@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { Loader2, Wand2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -148,7 +148,7 @@ export const AiSpeechBuilderDialog = ({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <Wand2 className="h-5 w-5 text-primary" />
             {t("aiBuilder.title", "Bygg tal med AI")}
           </DialogTitle>
           <DialogDescription>
@@ -283,7 +283,7 @@ export const AiSpeechBuilderDialog = ({
                 {loading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
+                  <Wand2 className="h-4 w-4 mr-2" />
                 )}
                 {t("aiBuilder.getQuestions", "Fortsätt")}
               </Button>
