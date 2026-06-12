@@ -151,7 +151,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       titleFallback: "A few tricks before you start",
       bodyKey: "tour.welcome.body",
       bodyFallback:
-        "Sermable has a handful of small marks you can sprinkle in your script to make practice and presentation feel alive. Takes 20 seconds.",
+        "Learn Sermable's text features to make your practice and presentation come alive.",
       demo: () => (
         <div className="flex items-center justify-center">
           <Lightbulb className="h-16 w-16 text-primary animate-pulse" />
@@ -164,7 +164,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       titleFallback: "Stage directions",
       bodyKey: "tour.direction.body",
       bodyFallback:
-        "Select any words in the editor and write what to do — like “smile” or “raise hand”. The words get a soft highlight, and the direction floats above your script in its own color while you read it.",
+        "Select any words in the editor and write what to do — like “smile” or “raise hand”. The direction appears above your script while you present.",
       demo: () => (
         <ScriptDemo
           text="Tack alla {{smile}}för att ni kom hit{{/}} ikväll."

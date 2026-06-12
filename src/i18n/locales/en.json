@@ -15,6 +15,28 @@
     "upgrade": "Upgrade",
     "upgradeToPremium": "Upgrade to Premium"
   },
+  "tour": {
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "done": "Got it",
+    "welcome": {
+      "title": "A few tricks before you start",
+      "body": "Learn Sermable's text features to make your practice and presentation come alive."
+    },
+    "direction": {
+      "title": "Stage directions",
+      "body": "Select any words in the editor and write what to do — like “smile” or “raise hand”. The direction appears above your script while you present."
+    },
+    "pause": {
+      "title": "Pauses with a dash",
+      "body": "Add a standalone `-` for a 2-second pause, or `-5s` for a custom length. Practice will dim the screen and count down for you."
+    },
+    "complete": {
+      "title": "You're set",
+      "body": "Mix any of these marks freely. You can edit them later in the script too."
+    }
+  },
   "home": {
     "getStarted": "Get Started",
     "haveAccount": "I already have an account",

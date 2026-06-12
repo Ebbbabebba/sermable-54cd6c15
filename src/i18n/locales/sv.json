@@ -26,7 +26,7 @@
     },
     "direction": {
       "title": "Scenanvisningar",
-      "body": "Markera valfria ord i editorn och skriv vad du ska göra, t.ex. ”le” eller ”höj handen”. Orden får en mjuk färg, och anvisningen dyker upp ovanför manus i en egen färg medan du läser dem — i både övning och presentation."
+      "body": "Markera valfria ord i editorn och skriv vad du ska göra, t.ex. ”le” eller ”höj handen”. Anvisningen dyker upp ovanför manus medan du presenterar."
     },
     "pause": {
       "title": "Pauser med ett bindestreck",
