@@ -214,7 +214,8 @@
     "monthlyLimit": "Límite mensual de discursos",
     "limitReached": "Límite alcanzado",
     "pasteText": "Pega aquí el texto de tu discurso...",
-    "languageDetected": "Idioma detectado y ajustes actualizados"
+    "languageDetected": "Idioma detectado y ajustes actualizados",
+    "buildWithAi": "Crear con IA"
   },
   "practice": {
     "title": "Sesión de práctica",

@@ -214,7 +214,8 @@
     "monthlyLimit": "Monatliches Redenlimit",
     "limitReached": "Limit erreicht",
     "pasteText": "Füge hier deinen Redetext ein...",
-    "languageDetected": "Sprache erkannt und Oberfläche angepasst"
+    "languageDetected": "Sprache erkannt und Oberfläche angepasst",
+    "buildWithAi": "Mit KI erstellen"
   },
   "practice": {
     "title": "Übungssitzung",

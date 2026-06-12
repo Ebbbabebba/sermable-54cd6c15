@@ -214,7 +214,8 @@
     "monthlyLimit": "Limite mensuelle de discours",
     "limitReached": "Limite atteinte",
     "pasteText": "Collez le texte de votre discours ici...",
-    "languageDetected": "Langue détectée et interface mise à jour"
+    "languageDetected": "Langue détectée et interface mise à jour",
+    "buildWithAi": "Créer avec l'IA"
   },
   "practice": {
     "title": "Séance d'entraînement",
