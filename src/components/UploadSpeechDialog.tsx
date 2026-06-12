@@ -16,7 +16,7 @@ import {
   Camera,
   FileText,
   X,
-  Sparkles,
+  Wand2,
   ArrowRight,
   ArrowLeft,
   Target,
@@ -456,7 +456,7 @@ const UploadSpeechDialog = ({
               >
                 <div className="absolute inset-0 rounded-full bg-primary/25 blur-2xl animate-pulse" />
                 <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-2xl">
-                  <Sparkles className="w-10 h-10 text-primary-foreground" />
+                  <Wand2 className="w-10 h-10 text-primary-foreground" />
                 </div>
               </motion.div>
             </div>
@@ -542,7 +542,7 @@ const UploadSpeechDialog = ({
                 disabled={loading || isScanning}
                 className="gap-1.5"
               >
-                <Sparkles className="h-4 w-4" />
+                <Wand2 className="h-4 w-4" />
                 {t("upload.buildWithAi", "Build with AI")}
               </Button>
               <Button

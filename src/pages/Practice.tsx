@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Sparkles, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2589,7 +2589,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 <span className="text-sm">{t('practice.premiumFeature2', 'AI-optimized scheduling')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <InfinityIcon className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.premiumFeature3', 'Unlimited speeches')}</span>
               </div>
             </div>

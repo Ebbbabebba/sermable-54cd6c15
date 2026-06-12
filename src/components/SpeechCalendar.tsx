@@ -4,7 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Play, Mic, Sparkles, Target, Trophy } from "lucide-react";
+import { Loader2, Play, Mic, RotateCcw, Target, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { format, isAfter, startOfDay } from "date-fns";
@@ -28,7 +28,7 @@ interface SpeechCalendarProps {
 
 const EVENT_ICONS: Record<EventType, typeof Mic> = {
   practice: Mic,
-  recall: Sparkles,
+  recall: RotateCcw,
   test: Target,
   presentation: Trophy,
 };

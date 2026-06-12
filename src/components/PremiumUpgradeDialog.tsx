@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Infinity, Zap, Users, Brain } from "lucide-react";
+import { Check, Crown, Infinity, Zap, Users, Brain } from "lucide-react";
 
 interface PremiumUpgradeDialogProps {
   open: boolean;
@@ -37,7 +37,7 @@ export const PremiumUpgradeDialog = ({
       benefits: [
         { icon: Infinity, text: "Unlimited speeches per month" },
         { icon: Zap, text: "Up to 5000 words per speech" },
-        { icon: Sparkles, text: "Priority AI feedback" },
+        { icon: Crown, text: "Priority AI feedback" },
       ],
     },
     audience_mode: {
@@ -46,7 +46,7 @@ export const PremiumUpgradeDialog = ({
       benefits: [
         { icon: Users, text: "Animated audience with unique personalities" },
         { icon: Brain, text: "Real-time reactions to hesitations & energy" },
-        { icon: Sparkles, text: "Multiple environments (office, classroom, conference)" },
+        { icon: Crown, text: "Multiple environments (office, classroom, conference)" },
       ],
     },
     advanced_analytics: {
@@ -55,7 +55,7 @@ export const PremiumUpgradeDialog = ({
       benefits: [
         { icon: Brain, text: "Word-level mastery tracking" },
         { icon: Zap, text: "Fluency timeline analysis" },
-        { icon: Sparkles, text: "AI coaching recommendations" },
+        { icon: Brain, text: "AI coaching recommendations" },
       ],
     },
   };
@@ -70,7 +70,7 @@ export const PremiumUpgradeDialog = ({
             {feature === 'audience_mode' ? (
               <Users className="w-8 h-8 text-amber-500" />
             ) : (
-              <Sparkles className="w-8 h-8 text-amber-500" />
+              <Crown className="w-8 h-8 text-amber-500" />
             )}
           </div>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">

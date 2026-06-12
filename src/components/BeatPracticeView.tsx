@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Sparkles, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil, FastForward } from "lucide-react";
+import { RotateCcw, PartyPopper, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil, FastForward } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -4165,7 +4165,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   exit={{ scale: 0.5, opacity: 0 }}
                   className="flex flex-col items-center gap-6 py-8"
                 >
-                  <Sparkles className="h-16 w-16 text-primary animate-pulse" />
+                  <PartyPopper className="h-16 w-16 text-primary animate-pulse" />
                   <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
                 </motion.div>
               ) : (
@@ -4205,7 +4205,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                       className="mt-4 flex items-center justify-center"
                     >
                       <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
-                        <Sparkles className="h-4 w-4" />
+                        <CheckCircle2 className="h-4 w-4" />
                         {t('beat_practice.one_more_time', 'Great! One more to lock it in')}
                       </span>
                     </motion.div>
