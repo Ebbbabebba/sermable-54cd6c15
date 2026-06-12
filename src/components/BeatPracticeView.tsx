@@ -2751,7 +2751,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const isLastFade =
       uniqueCount === 1 ||
       (uniqueCount === 2 && (currentPhase === 'sentence_2_fading' || currentPhase === 'sentences_1_2_fading')) ||
-      (uniqueCount === 3 && currentPhase === 'sentence_3_fading');
+      (uniqueCount === 3 && currentPhase === 'beat_fading');
 
     if (isLastFade) {
       showBeatCelebration();
@@ -2761,6 +2761,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     let message = t('beat_practice.excellent_next');
     if (currentPhase === 'sentence_2_fading') {
       message = t('beat_practice.lets_combine', "Let's combine them!");
+    } else if (currentPhase === 'sentences_1_2_fading') {
+      message = t('beat_practice.next_sentence', "Now the next sentence!");
     } else if (currentPhase === 'sentence_3_fading') {
       message = t('beat_practice.final_combine', "Now all together!");
     }
@@ -2784,11 +2786,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             transitionToPhase('sentences_1_2_learning');
           } else if (currentPhase === 'sentences_1_2_fading') {
             transitionToPhase('sentence_3_learning');
+          } else if (currentPhase === 'sentence_3_fading') {
+            // Final pass: combine all 3 sentences one last time before coffee break
+            transitionToPhase('beat_learning');
           }
         }
       }, 2000);
     }, 150);
   };
+
 
   const showBeatCelebration = async () => {
     // Mark beat as mastered with timestamp and advance to next practice stage

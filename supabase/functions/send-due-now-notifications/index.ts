@@ -10,21 +10,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-scheduler-secret",
 };
 
-const STRINGS: Record<string, { title: string; body: string }> = {
-  en: { title: "⏰ Time to rehearse", body: 'Rest interval is over for "{title}". Tap to practice now.' },
-  sv: { title: "⏰ Dags att repetera", body: 'Vilointervallet är slut för "{title}". Tryck för att öva nu.' },
-  de: { title: "⏰ Zeit zu üben", body: 'Die Pause ist vorbei für "{title}". Jetzt antippen.' },
-  fr: { title: "⏰ À répéter", body: 'L\'intervalle de repos est terminé pour "{title}". Appuyez pour pratiquer.' },
-  es: { title: "⏰ Hora de practicar", body: 'El intervalo de descanso terminó para "{title}". Toca para practicar.' },
-  it: { title: "⏰ È ora di esercitarsi", body: 'L\'intervallo di riposo è finito per "{title}". Tocca per esercitarti.' },
-  pt: { title: "⏰ Hora de praticar", body: 'O intervalo de descanso acabou para "{title}". Toque para praticar.' },
+const STRINGS: Record<string, { title: string; body: string; breakTitle: string; breakBody: string }> = {
+  en: { title: "⏰ Time to rehearse", body: 'Rest interval is over for "{title}". Tap to practice now.', breakTitle: "☕ Break is over", breakBody: 'Coffee break done — time for a quick recall of "{title}".' },
+  sv: { title: "⏰ Dags att repetera", body: 'Vilointervallet är slut för "{title}". Tryck för att öva nu.', breakTitle: "☕ Kaffepausen är slut", breakBody: 'Dags för en snabb repetition av "{title}".' },
+  de: { title: "⏰ Zeit zu üben", body: 'Die Pause ist vorbei für "{title}". Jetzt antippen.', breakTitle: "☕ Pause vorbei", breakBody: 'Zeit für eine schnelle Wiederholung von "{title}".' },
+  fr: { title: "⏰ À répéter", body: 'L\'intervalle de repos est terminé pour "{title}". Appuyez pour pratiquer.', breakTitle: "☕ Pause terminée", breakBody: 'Une rapide révision de "{title}" t\'attend.' },
+  es: { title: "⏰ Hora de practicar", body: 'El intervalo de descanso terminó para "{title}". Toca para practicar.', breakTitle: "☕ Pausa terminada", breakBody: 'Es hora de un repaso rápido de "{title}".' },
+  it: { title: "⏰ È ora di esercitarsi", body: 'L\'intervallo di riposo è finito per "{title}". Tocca per esercitarti.', breakTitle: "☕ Pausa finita", breakBody: 'È ora di un ripasso rapido di "{title}".' },
+  pt: { title: "⏰ Hora de praticar", body: 'O intervalo de descanso acabou para "{title}". Toque para praticar.', breakTitle: "☕ Pausa terminou", breakBody: 'Hora de uma rápida revisão de "{title}".' },
 };
 
-function tr(lang: string, title: string) {
+function tr(lang: string, title: string, kind: "break" | "due") {
   const k = (lang || "en").split("-")[0];
   const s = STRINGS[k] ?? STRINGS.en;
+  if (kind === "break") return { title: s.breakTitle, body: s.breakBody.replace("{title}", title) };
   return { title: s.title, body: s.body.replace("{title}", title) };
 }
+
 
 function getLocalHour(tz: string) {
   try {
@@ -74,16 +76,23 @@ Deno.serve(async (req) => {
     // Pull beats that JUST became due (within last 2 min) and haven't been
     // notified yet for this cycle. Cron runs every minute → max delay ~60s.
     const nowIso = new Date().toISOString();
-    const windowStart = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const windowStartIso = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+
+    // Pull beats whose ANY recall timestamp just became due (within the last 2 min).
+    // Covers: short-cycle (10-min coffee break, evening, morning) AND FSRS schedule.
+    const orFilter = [
+      `and(next_scheduled_recall_at.gte.${windowStartIso},next_scheduled_recall_at.lte.${nowIso})`,
+      `and(recall_10min_at.gte.${windowStartIso},recall_10min_at.lte.${nowIso})`,
+      `and(recall_evening_at.gte.${windowStartIso},recall_evening_at.lte.${nowIso})`,
+      `and(recall_morning_at.gte.${windowStartIso},recall_morning_at.lte.${nowIso})`,
+    ].join(",");
 
     const { data: beats, error } = await supabase
       .from("practice_beats")
       .select(
-        "id, speech_id, beat_order, next_scheduled_recall_at, last_due_notification_at, speeches!inner(id, title, user_id, profiles:user_id(id, push_token, notifications_enabled, instant_due_notifications, practice_start_hour, practice_end_hour, timezone, feedback_language))",
+        "id, speech_id, beat_order, next_scheduled_recall_at, recall_10min_at, recall_evening_at, recall_morning_at, last_due_notification_at, speeches!inner(id, title, user_id, profiles:user_id(id, push_token, notifications_enabled, instant_due_notifications, practice_start_hour, practice_end_hour, timezone, feedback_language))",
       )
-      .lte("next_scheduled_recall_at", nowIso)
-      .gte("next_scheduled_recall_at", windowStart)
-      .not("next_scheduled_recall_at", "is", null);
+      .or(orFilter);
 
     if (error) throw error;
     if (!beats?.length) {
@@ -94,6 +103,8 @@ Deno.serve(async (req) => {
 
     let sent = 0;
     let skipped = 0;
+    const nowMs = Date.now();
+    const windowStartMs = nowMs - 2 * 60 * 1000;
 
     for (const b of beats as any[]) {
       const speech = b.speeches;
@@ -102,11 +113,24 @@ Deno.serve(async (req) => {
       if (profile.notifications_enabled === false) { skipped++; continue; }
       if (profile.instant_due_notifications === false) { skipped++; continue; }
 
-      // Idempotency: skip if already notified for this due cycle
-      if (
-        b.last_due_notification_at &&
-        new Date(b.last_due_notification_at) >= new Date(b.next_scheduled_recall_at)
-      ) {
+      // Find the most recent recall timestamp that just became due
+      type Candidate = { ts: string; ms: number; kind: "break" | "due" };
+      const candidates: Candidate[] = [];
+      const add = (raw: string | null, kind: "break" | "due") => {
+        if (!raw) return;
+        const ms = new Date(raw).getTime();
+        if (ms >= windowStartMs && ms <= nowMs) candidates.push({ ts: raw, ms, kind });
+      };
+      add(b.recall_10min_at, "break");
+      add(b.recall_evening_at, "due");
+      add(b.recall_morning_at, "due");
+      add(b.next_scheduled_recall_at, "due");
+      if (!candidates.length) { skipped++; continue; }
+      candidates.sort((a, c) => c.ms - a.ms);
+      const due = candidates[0];
+
+      // Idempotency: skip if we've already notified at/after this due time
+      if (b.last_due_notification_at && new Date(b.last_due_notification_at).getTime() >= due.ms) {
         skipped++; continue;
       }
 
@@ -117,9 +141,9 @@ Deno.serve(async (req) => {
       const endH = profile.practice_end_hour ?? 22;
       if (h < startH || h >= endH) { skipped++; continue; }
 
-      const { title, body } = tr(profile.feedback_language || "en", speech.title);
+      const { title, body } = tr(profile.feedback_language || "en", speech.title, due.kind);
       const r = await sendFCM(profile.push_token, title, body, {
-        type: "due_now",
+        type: due.kind === "break" ? "coffee_break_over" : "due_now",
         speech_id: speech.id,
         beat_id: b.id,
       });
@@ -134,6 +158,7 @@ Deno.serve(async (req) => {
         skipped++;
       }
     }
+
 
     return new Response(
       JSON.stringify({ sent, skipped, candidates: beats.length }),
