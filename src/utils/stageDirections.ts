@@ -40,7 +40,14 @@ export type ScriptToken = WordToken | DirectionToken;
  */
 export const stripStageDirections = (text: string): string => {
   if (!text) return "";
-  const noDirections = text.replace(STAGE_DIRECTION_REGEX, " ").replace(/\s+/g, " ").trim();
+  // Strip prop-cue markers `{{cue}}…{{/}}` while keeping the inner words.
+  const noCueMarkers = text
+    .replace(/\{\{\/\}\}/g, "")
+    .replace(/\{\{[^{}]+\}\}/g, "");
+  const noDirections = noCueMarkers
+    .replace(STAGE_DIRECTION_REGEX, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   // Pause markers (e.g. `-`, `-3s`) are also non-spoken artefacts — strip
   // them so AI / speech recognition / word counting stay aligned with what
   // the user actually says.
