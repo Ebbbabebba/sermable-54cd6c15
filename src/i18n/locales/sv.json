@@ -15,6 +15,36 @@
     "upgrade": "Uppgradera",
     "upgradeToPremium": "Skaffa Premium"
   },
+  "tour": {
+    "back": "Tillbaka",
+    "next": "Nästa",
+    "skip": "Hoppa över",
+    "done": "Klart",
+    "welcome": {
+      "title": "Några knep innan du börjar",
+      "body": "Sermable har några små markeringar du kan strö in i ditt manus för att göra övning och presentation levande. Tar 20 sekunder."
+    },
+    "hidden": {
+      "title": "Göm ord för att memorera",
+      "body": "Skriv [hakparenteser] runt ord för att gömma dem under övning. Du måste minnas dem själv — de tonas in igen när du säger dem rätt."
+    },
+    "direction": {
+      "title": "Scenanvisningar (i parentes)",
+      "body": "Skriv (paus), (drick vatten), (nästa bild) inom parentes. De visas som kursiva noteringar men ignoreras av röstigenkänningen."
+    },
+    "cue": {
+      "title": "Rekvisita: markera och få cue ovanför",
+      "body": "Markera valfria ord i editorn och lägg till en rekvisita som ”le” eller ”skratta”. Orden får en mjuk färg, och rekvisitan dyker upp ovanför manus medan du läser dem."
+    },
+    "pause": {
+      "title": "Pauser med ett bindestreck",
+      "body": "Skriv ett ensamt `-` för en 2-sekunders paus, eller `-5s` för annan längd. Övningen dimmar skärmen och räknar ner åt dig."
+    },
+    "complete": {
+      "title": "Du är redo",
+      "body": "Du kan blanda dessa markeringar fritt och redigera dem i manuset senare."
+    }
+  },
   "home": {
     "getStarted": "Kom igång",
     "haveAccount": "Jag har redan ett konto",
@@ -224,6 +254,12 @@
     "wordLimitExceeded": "Ditt tal har {{count}} ord. Din plan tillåter max {{limit}} ord.",
     "wordLimitUpgrade": "Uppgradera till premium för upp till 5000 ord.",
     "pasteText": "Klistra in din taltext här...",
+    "propCue": {
+      "tip": "Pro-tips: markera valfri text för att lägga till en rekvisita (le, skratta, höj handen). Den dyker upp ovanför manus medan du läser den.",
+      "addButton": "Lägg till rekvisita",
+      "placeholder": "t.ex. le, skratta, höj handen…",
+      "previewLabel": "Förhandsvisning av rekvisita"
+    },
     "autoDetectsLanguage": "Upptäcker språk automatiskt",
     "analyzingImage": "Analyserar bild...",
     "languageDetected": "Språk upptäckt – gränssnittet uppdaterat",

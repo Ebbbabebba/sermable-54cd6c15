@@ -18,6 +18,8 @@ import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
+import PropCueOverlay from "./PropCueOverlay";
+import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/propCues";
 import { scheduleNextReview } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 
@@ -697,7 +699,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // they appear inline in the script and turn "spoken" once their timer
   // ends. They are skipped by speech matching (mic is muted while their
   // countdown is running).
-  const currentText = getCurrentText();
+  const rawCurrentText = getCurrentText();
+  // Strip prop-cue markers ({{cue}}...{{/}}) so they don't render as garbage
+  // words. Cue ranges are still computed from the raw text so we can show
+  // the overlay + background highlight.
+  const currentText = useMemo(() => stripPropCueMarkers(rawCurrentText), [rawCurrentText]);
+  const propCues = useMemo(() => extractPropCues(rawCurrentText).cues, [rawCurrentText]);
+  const propCueIndices = useMemo(() => {
+    const s = new Set<number>();
+    for (const r of propCues) for (let i = r.startWordIndex; i <= r.endWordIndex; i++) s.add(i);
+    return s;
+  }, [propCues]);
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
 
@@ -4176,6 +4188,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   exit={{ opacity: 0, y: -20 }}
                   className="w-full flex flex-col items-center"
                 >
+                  <PropCueOverlay
+                    cue={getActivePropCue(propCues, currentWordIndex)}
+                    className="mb-2"
+                  />
                   <SentenceDisplay
                     text={currentText}
                     hiddenWordIndices={hiddenWordIndices}
@@ -4183,6 +4199,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                     spokenIndices={spokenIndices}
                     hesitatedIndices={hesitatedIndices}
                     missedIndices={missedIndices}
+                    propCueIndices={propCueIndices}
                     onWordTap={(idx) => {
                       if (hiddenWordIndices.has(idx)) {
                         setHiddenWordIndices(prev => {
