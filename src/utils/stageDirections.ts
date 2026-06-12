@@ -13,7 +13,9 @@
 
 import { stripPauses } from "./pauses";
 
-const STAGE_DIRECTION_REGEX = /\[([^\[\]]*)\]|\(([^()]*)\)/g;
+// Legacy inline syntax (kept only for back-compat with older scripts).
+// New scripts attach directions via the selection-driven {{cue}}…{{/}} markers.
+const STAGE_DIRECTION_REGEX = /\(([^()]*)\)/g;
 
 export interface DirectionToken {
   type: "direction";
@@ -65,17 +67,17 @@ export const tokenizeScript = (
   const words: string[] = [];
   if (!text) return { tokens, words };
 
-  // Split text into segments alternating between content and direction tokens
-  // (brackets are the canonical syntax; parens kept for back-compat).
-  const parts = text.split(/(\[[^\[\]]*\]|\([^()]*\))/g);
+  // Split text into segments alternating between non-paren and paren parts.
+  // Parens are legacy direction syntax — new scripts use selection cues.
+  const parts = text.split(/(\([^()]*\))/g);
   let wordIndex = 0;
   let lastWordIndex = -1;
 
   for (const part of parts) {
     if (!part) continue;
-    const directionMatch = part.match(/^\[([^\[\]]*)\]$|^\(([^()]*)\)$/);
+    const directionMatch = part.match(/^\(([^()]*)\)$/);
     if (directionMatch) {
-      const inner = (directionMatch[1] ?? directionMatch[2] ?? "").trim();
+      const inner = directionMatch[1].trim();
       if (inner.length > 0) {
         tokens.push({
           type: "direction",
