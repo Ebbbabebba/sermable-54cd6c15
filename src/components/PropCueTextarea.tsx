@@ -155,24 +155,6 @@ const PropCueTextarea = ({
 
   return (
     <div className="space-y-3">
-      {/* Pro-tip */}
-      <div
-        className="flex items-start gap-2 text-xs rounded-lg px-3 py-2 border"
-        style={{
-          backgroundColor: "hsl(var(--prop-cue-bg))",
-          borderColor: "hsl(var(--prop-cue-fg) / 0.3)",
-          color: "hsl(var(--prop-cue-fg))",
-        }}
-      >
-        <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
-        <p>
-          {t(
-            "upload.propCue.tip",
-            "Pro-tip: select any words to attach a prop cue (smile, laugh, raise hand). It floats above your script while you read it.",
-          )}
-        </p>
-      </div>
-
       <div className="relative">
         <Textarea
           ref={taRef}
@@ -294,6 +276,24 @@ const PropCueTextarea = ({
           <div className="text-sm leading-loose">{preview}</div>
         </div>
       )}
+
+      {/* Pro-tip */}
+      <div
+        className="flex items-start gap-2 text-xs rounded-lg px-3 py-2 border"
+        style={{
+          backgroundColor: "hsl(var(--prop-cue-bg))",
+          borderColor: "hsl(var(--prop-cue-fg) / 0.3)",
+          color: "hsl(var(--prop-cue-fg))",
+        }}
+      >
+        <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <p>
+          {t(
+            "upload.propCue.tip",
+            "Pro-tip: select any words to attach a prop cue (smile, laugh, raise hand). It floats above your script while you read it.",
+          )}
+        </p>
+      </div>
     </div>
   );
 };
