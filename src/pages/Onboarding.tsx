@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, MessageCircle, GraduationCap, TrendingUp, Theater, Sparkles } from "lucide-react";
+import { ChevronRight, MessageCircle, GraduationCap, TrendingUp, Theater } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 
 type StepTheme = {
   key: string;
-  icon: typeof Sparkles;
+  icon: typeof MessageCircle | null;
   // Full vibrant background gradient
   bg: string;
   // Accent circle behind icon
@@ -23,7 +23,7 @@ type StepTheme = {
 const ONBOARDING_STEPS: StepTheme[] = [
   {
     key: "welcome",
-    icon: Sparkles,
+    icon: null,
     bg: "bg-gradient-to-br from-[#60A5FA] via-[#3B82F6] to-[#2563EB]",
     accent: "bg-white/15",
     buttonBg: "bg-white hover:bg-white/95",
