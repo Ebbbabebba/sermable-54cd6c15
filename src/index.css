@@ -69,6 +69,11 @@ body {
     --input: 215 25% 14%;
     --ring: 199 92% 54%;
 
+    /* Prop cue (text-selection rekvisita) — warm amber, distinct from primary */
+    --prop-cue-bg: 32 95% 60% / 0.12;
+    --prop-cue-bg-strong: 32 95% 60% / 0.28;
+    --prop-cue-fg: 32 95% 62%;
+
     --radius: 1rem;
 
     /* Brand teal kept as accent for legacy components */
@@ -152,6 +157,11 @@ body {
     --border: 180 12% 88%;
     --input: 180 12% 88%;
     --ring: 199 92% 54%;
+
+    /* Prop cue (text-selection rekvisita) — warm amber for light theme */
+    --prop-cue-bg: 28 95% 55% / 0.14;
+    --prop-cue-bg-strong: 28 95% 55% / 0.32;
+    --prop-cue-fg: 24 90% 42%;
 
     --gradient-primary: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(199 92% 45%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(274 100% 75%) 100%);
