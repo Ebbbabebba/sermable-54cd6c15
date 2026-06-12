@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
+import PropCueOverlay from "@/components/PropCueOverlay";
+import { extractPropCues, getActivePropCue } from "@/utils/propCues";
 
 interface WordPerformance {
   word: string;
