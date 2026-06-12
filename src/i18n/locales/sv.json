@@ -224,6 +224,12 @@
     "wordLimitExceeded": "Ditt tal har {{count}} ord. Din plan tillåter max {{limit}} ord.",
     "wordLimitUpgrade": "Uppgradera till premium för upp till 5000 ord.",
     "pasteText": "Klistra in din taltext här...",
+    "propCue": {
+      "tip": "Pro-tips: markera valfri text för att lägga till en rekvisita (le, skratta, höj handen). Den dyker upp ovanför manus medan du läser den.",
+      "addButton": "Lägg till rekvisita",
+      "placeholder": "t.ex. le, skratta, höj handen…",
+      "previewLabel": "Förhandsvisning av rekvisita"
+    },
     "autoDetectsLanguage": "Upptäcker språk automatiskt",
     "analyzingImage": "Analyserar bild...",
     "languageDetected": "Språk upptäckt – gränssnittet uppdaterat",
