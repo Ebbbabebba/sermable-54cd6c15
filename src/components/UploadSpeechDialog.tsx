@@ -30,6 +30,8 @@ import {
   detectTextLanguage,
 } from "@/utils/languageDetection";
 import { AiSpeechBuilderDialog } from "@/components/AiSpeechBuilderDialog";
+import PropCueTextarea from "@/components/PropCueTextarea";
+import FirstTimeCreateTour from "@/components/FirstTimeCreateTour";
 
 interface UploadSpeechDialogProps {
   open: boolean;
@@ -612,12 +614,11 @@ const UploadSpeechDialog = ({
                   <p className="text-sm font-medium">{t("upload.extracting")}</p>
                 </div>
               )}
-              <Textarea
+              <PropCueTextarea
                 value={text}
-                onChange={(e) => handleTextChange(e.target.value)}
+                onChange={handleTextChange}
                 placeholder={t("upload.pasteText")}
                 rows={8}
-                className="resize-none text-base"
                 disabled={isScanning}
               />
               <PauseSlidersList text={text} onChange={handleTextChange} />
