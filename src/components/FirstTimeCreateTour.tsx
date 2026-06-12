@@ -151,7 +151,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       titleFallback: "A few tricks before you start",
       bodyKey: "tour.welcome.body",
       bodyFallback:
-        "Sermable has a handful of small marks you can sprinkle in your script to make practice and presentation feel alive. Takes 20 seconds.",
+        "Learn Sermable's text features to make your practice and presentation come alive.",
       demo: () => (
         <div className="flex items-center justify-center">
           <Lightbulb className="h-16 w-16 text-primary animate-pulse" />
