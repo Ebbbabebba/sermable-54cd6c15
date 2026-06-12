@@ -8,6 +8,8 @@ import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { motion, AnimatePresence } from "framer-motion";
 import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
+import PropCueOverlay from "@/components/PropCueOverlay";
+import { extractPropCues, getActivePropCue } from "@/utils/propCues";
 
 interface WordPerformance {
   word: string;
@@ -146,7 +148,7 @@ export const CompactPresentationView = ({
   // Strip stage directions for the speech-recognition / matching pipeline,
   // but keep them as a separate token list so we can render them inline as
   // visual cues (italic) without consuming a word index.
-  const { words, directionsByAfterIndex } = useMemo(() => {
+  const { words, directionsByAfterIndex, propCues } = useMemo(() => {
     const { tokens, words: w } = tokenizeScript(text);
     const map = new Map<number, string[]>();
     for (const tok of tokens) {
@@ -156,7 +158,8 @@ export const CompactPresentationView = ({
         map.set(tok.afterWordIndex, list);
       }
     }
-    return { words: w, directionsByAfterIndex: map };
+    const { cues } = extractPropCues(text);
+    return { words: w, directionsByAfterIndex: map, propCues: cues };
   }, [text]);
   const progress = (currentWordIndex / words.length) * 100;
 
