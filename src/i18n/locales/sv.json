@@ -24,13 +24,9 @@
       "title": "Några knep innan du börjar",
       "body": "Sermable har några små markeringar du kan strö in i ditt manus för att göra övning och presentation levande. Tar 20 sekunder."
     },
-    "hidden": {
-      "title": "Göm ord för att memorera",
-      "body": "Skriv [hakparenteser] runt ord för att gömma dem under övning. Du måste minnas dem själv — de tonas in igen när du säger dem rätt."
-    },
     "direction": {
-      "title": "Scenanvisningar (i parentes)",
-      "body": "Skriv (paus), (drick vatten), (nästa bild) inom parentes. De visas som kursiva noteringar men ignoreras av röstigenkänningen."
+      "title": "Scenanvisningar i [hakparentes]",
+      "body": "Skriv [paus], [drick vatten], [nästa bild] inom hakparentes. De visas som kursiva noteringar men ignoreras av röstigenkänningen."
     },
     "cue": {
       "title": "Rekvisita: markera och få cue ovanför",

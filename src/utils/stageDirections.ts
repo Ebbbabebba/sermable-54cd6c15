@@ -1,20 +1,19 @@
 /**
  * Stage directions parser
  *
- * Convention: Anything wrapped in plain parentheses `(...)` is treated as a
- * stage direction (e.g. "(byt slide)", "(paus)", "(drick vatten)"). Stage
+ * Convention: Anything wrapped in square brackets `[...]` is treated as a
+ * stage direction (e.g. "[byt slide]", "[paus]", "[drick vatten]"). Stage
  * directions are:
  *   - IGNORED by speech recognition, AI analysis and word-hiding mechanics.
  *   - VISIBLE in presentation/teleprompter views as a visual cue.
  *
- * NOTE: The square-bracket syntax `[...]` is reserved for the learning
- * system's "hidden words" feature in Practice.tsx — do NOT reuse it for
- * directions.
+ * For backwards compatibility the legacy `(...)` syntax is still parsed
+ * as a stage direction. New UI and onboarding only teaches brackets.
  */
 
 import { stripPauses } from "./pauses";
 
-const STAGE_DIRECTION_REGEX = /\(([^()]*)\)/g;
+const STAGE_DIRECTION_REGEX = /\[([^\[\]]*)\]|\(([^()]*)\)/g;
 
 export interface DirectionToken {
   type: "direction";
@@ -66,16 +65,17 @@ export const tokenizeScript = (
   const words: string[] = [];
   if (!text) return { tokens, words };
 
-  // Split text into segments alternating between non-paren and paren parts.
-  const parts = text.split(/(\([^()]*\))/g);
+  // Split text into segments alternating between content and direction tokens
+  // (brackets are the canonical syntax; parens kept for back-compat).
+  const parts = text.split(/(\[[^\[\]]*\]|\([^()]*\))/g);
   let wordIndex = 0;
   let lastWordIndex = -1;
 
   for (const part of parts) {
     if (!part) continue;
-    const directionMatch = part.match(/^\(([^()]*)\)$/);
+    const directionMatch = part.match(/^\[([^\[\]]*)\]$|^\(([^()]*)\)$/);
     if (directionMatch) {
-      const inner = directionMatch[1].trim();
+      const inner = (directionMatch[1] ?? directionMatch[2] ?? "").trim();
       if (inner.length > 0) {
         tokens.push({
           type: "direction",
