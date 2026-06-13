@@ -2072,10 +2072,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
     : segments.filter(s => s.is_mastered).length;
   const totalBeats = practiceBeats.length > 0 ? practiceBeats.length : segments.length;
   const progressPercent = totalBeats > 0 ? (masteredBeats / totalBeats) * 100 : 0;
-  // Mastery = how much of the script is memorized (hidden from view)
-  // 100% visibility = 0% mastery, 0% visibility = 100% mastery
-  const masteryPercent = segments.length > 0
-    ? Math.round(segments.reduce((sum, s) => sum + (100 - (s.visibility_percent ?? 100)), 0) / segments.length)
+  // Mastery = % of beats that have been mastered at least once (clean rep with all words hidden).
+  // This is achievable even when speech recognition mishears individual word tokens.
+  const masteryPercent = totalBeats > 0
+    ? Math.round((masteredBeats / totalBeats) * 100)
     : 0;
   const nextBeatNumber = masteredBeats + 1;
   const hasBeats = totalBeats > 0;
