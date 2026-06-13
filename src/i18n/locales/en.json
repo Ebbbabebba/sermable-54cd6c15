@@ -535,7 +535,8 @@
       "description": "Customize how Sermable looks",
       "theme": "Theme",
       "darkTheme": "Dark",
-      "lightTheme": "Light"
+      "lightTheme": "Light",
+      "sounds": "Sound effects"
     },
     "language": {
       "title": "Language",
