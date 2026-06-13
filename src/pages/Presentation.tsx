@@ -332,20 +332,41 @@ const Presentation = () => {
     setStage('live');
   };
 
-  const handleFullScriptComplete = (durationSeconds: number) => {
-    // Simple completion - no analysis, just show success
+  const handleFullScriptComplete = (result: {
+    durationSeconds: number;
+    accuracy: number;
+    hesitations: number;
+    missedWords: string[];
+    matchedCount: number;
+    totalWords: number;
+  }) => {
+    const { accuracy, durationSeconds, hesitations, missedWords, matchedCount, totalWords } = result;
     setElapsedTime(durationSeconds);
+
+    const summaryKey =
+      accuracy >= 90 ? 'presentationSummary.excellentSubtitle' :
+      accuracy >= 75 ? 'presentationSummary.goodJobSubtitle' :
+      accuracy >= 50 ? 'presentationSummary.keepPracticingSubtitle' :
+      'presentationSummary.keepPracticingSubtitle';
+
     setSessionResults({
-      accuracy: 100,
+      accuracy,
       durationSeconds,
-      hesitations: 0,
-      missedWords: [],
-      feedbackSummary: "Great practice session!",
-      feedbackAdvice: "Keep practicing to build your confidence and fluency.",
-      feedbackNextStep: "Try Strict Mode next to test your memorization."
+      hesitations,
+      missedWords,
+      feedbackSummary: t('listenMode.feedbackSummary', {
+        matched: matchedCount,
+        total: totalWords,
+        defaultValue: `You followed along with {{matched}} of {{total}} words.`,
+      }),
+      feedbackAdvice: t(summaryKey, ''),
+      feedbackNextStep: accuracy >= 75
+        ? t('listenMode.nextStepStrict', 'Try Whole Speech Mode to test your memorization.')
+        : t('listenMode.nextStepReview', 'Review the script and run Listen Mode again.'),
     });
     setStage('summary');
   };
+
 
   if (loading) {
     return (

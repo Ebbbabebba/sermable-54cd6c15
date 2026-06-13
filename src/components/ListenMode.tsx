@@ -6,12 +6,22 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 
+interface ListenSessionResult {
+  durationSeconds: number;
+  accuracy: number;
+  hesitations: number;
+  missedWords: string[];
+  matchedCount: number;
+  totalWords: number;
+}
+
 interface ListenModeProps {
   text: string;
   speechLanguage: string;
   onExit: () => void;
-  onComplete?: (durationSeconds: number) => void;
+  onComplete?: (result: ListenSessionResult) => void;
 }
+
 
 const getRecognitionLanguage = (lang: string): string => {
   if (!lang) return "en-US";
@@ -41,10 +51,15 @@ const getWordSimilarity = (w1: string, w2: string): number => {
   return matches / maxLen;
 };
 
-// Tighter matching so wrong sentences don't race the cursor forward.
-const SIMILARITY_THRESHOLD = 0.72;
-const LOOKAHEAD_THRESHOLD = 0.78;
-const LOOKAHEAD_WORDS = 2;
+// Tighter matching so wrong sentences don't race the cursor forward, but
+// lenient enough that recognition mishears don't keep stalling the user.
+const SIMILARITY_THRESHOLD = 0.65;
+const LOOKAHEAD_THRESHOLD = 0.72;
+const LOOKAHEAD_WORDS = 3;
+// After this many ms of being stuck on the same word while the user is still
+// talking, advance the cursor automatically so the session keeps moving.
+const STALL_AUTO_ADVANCE_MS = 5000;
+
 
 // Hint escalation thresholds
 const HINT_STAGE_1_MS = 2000; // show next 3 words
@@ -67,6 +82,12 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
   const startTimeRef = useRef<number>(0);
   const restartAttemptsRef = useRef(0);
 
+  // Scoring refs
+  const matchedCountRef = useRef(0); // words advanced by real recognition match
+  const missedIndicesRef = useRef<Set<number>>(new Set()); // word indices the user skipped over
+  const hesitationsRef = useRef(0); // times any hint stage was shown
+  const lastProgressAtRef = useRef<number>(Date.now()); // last cursor advance (for stall detection)
+
   // Sync ref
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
 
@@ -75,6 +96,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     const tokens = spoken.toLowerCase().trim().split(/\s+/).filter(Boolean);
     let idx = currentIndexRef.current;
     let progressed = false;
+    let matchedDelta = 0;
 
     for (const tok of tokens) {
       if (idx >= words.length) break;
@@ -84,16 +106,20 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
 
       if (sim >= SIMILARITY_THRESHOLD) {
         idx++;
+        matchedDelta++;
         progressed = true;
         continue;
       }
-      // Tight lookahead — only allow jumping over 1-2 words and require a high match.
+      // Lookahead — allow jumping over a few words on a strong match.
       let jumped = false;
       for (let i = 1; i <= LOOKAHEAD_WORDS && idx + i < words.length; i++) {
         const aheadHard = isHardToRecognizeWord(words[idx + i]);
         const aheadSim = aheadHard ? 1.0 : getWordSimilarity(tok, words[idx + i]);
         if (aheadSim >= LOOKAHEAD_THRESHOLD) {
+          // Words that were skipped over count as missed.
+          for (let j = 0; j < i; j++) missedIndicesRef.current.add(idx + j);
           idx = idx + i + 1;
+          matchedDelta++;
           progressed = true;
           jumped = true;
           break;
@@ -109,8 +135,11 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       setCurrentIndex(idx);
       setHintStage(0);
       lastSpeechAtRef.current = Date.now();
+      lastProgressAtRef.current = Date.now();
+      matchedCountRef.current += matchedDelta;
     }
   }, [words]);
+
 
   // Speech recognition setup
   useEffect(() => {
@@ -185,22 +214,53 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     };
   }, [isRecording, speechLanguage, processSpoken]);
 
-  // Silence detector → escalate hint stage as silence grows
+  // Silence + stall detector → escalate hint, and auto-advance if the user
+  // is talking but recognition can't catch up (cursor stuck on same word).
   useEffect(() => {
     if (!isRecording) return;
     const interval = setInterval(() => {
       if (currentIndexRef.current >= words.length) return;
-      const silence = Date.now() - lastSpeechAtRef.current;
+      const now = Date.now();
+      const silence = now - lastSpeechAtRef.current;
+      const sinceProgress = now - lastProgressAtRef.current;
 
       let nextStage: 0 | 1 | 2 | 3 = 0;
       if (silence >= HINT_STAGE_3_MS) nextStage = 3;
       else if (silence >= HINT_STAGE_2_MS) nextStage = 2;
       else if (silence >= HINT_STAGE_1_MS) nextStage = 1;
 
+      // If the user IS speaking (silence is low) but the cursor hasn't moved
+      // for a while, still surface a hint so they aren't stranded.
+      if (nextStage === 0 && sinceProgress >= HINT_STAGE_1_MS + 1000) {
+        nextStage = 1;
+      }
+
       setHintStage(prev => (prev !== nextStage ? nextStage : prev));
+
+      // Stall auto-advance: if we've been stuck on the same word too long,
+      // bump the cursor forward and count the word as missed.
+      if (sinceProgress >= STALL_AUTO_ADVANCE_MS) {
+        const idx = currentIndexRef.current;
+        if (idx < words.length) {
+          missedIndicesRef.current.add(idx);
+          const next = idx + 1;
+          currentIndexRef.current = next;
+          setCurrentIndex(next);
+          lastProgressAtRef.current = now;
+        }
+      }
     }, 200);
     return () => clearInterval(interval);
   }, [isRecording, words.length]);
+
+  // Count hesitations whenever a hint becomes visible
+  const prevHintRef = useRef<0 | 1 | 2 | 3>(0);
+  useEffect(() => {
+    if (hintStage > 0 && prevHintRef.current === 0) {
+      hesitationsRef.current += 1;
+    }
+    prevHintRef.current = hintStage;
+  }, [hintStage]);
 
   // Reset hint when index advances
   useEffect(() => {
@@ -222,7 +282,12 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     setCurrentIndex(0);
     currentIndexRef.current = 0;
     lastSpeechAtRef.current = Date.now();
+    lastProgressAtRef.current = Date.now();
     lastProcessedInterimRef.current = "";
+    matchedCountRef.current = 0;
+    missedIndicesRef.current = new Set();
+    hesitationsRef.current = 0;
+    prevHintRef.current = 0;
     setHintStage(0);
     setIsRecording(true);
   };
@@ -233,7 +298,28 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       try { recognitionRef.current.stop(); } catch {}
       recognitionRef.current = null;
     }
-    onComplete?.(elapsed);
+
+    // Words from current cursor to end of script were never reached → missed.
+    for (let i = currentIndexRef.current; i < words.length; i++) {
+      missedIndicesRef.current.add(i);
+    }
+
+    const total = words.length;
+    const matched = matchedCountRef.current;
+    const accuracy = total > 0 ? Math.round((matched / total) * 1000) / 10 : 0;
+    const missedWords = Array.from(missedIndicesRef.current)
+      .sort((a, b) => a - b)
+      .map((i) => words[i])
+      .filter(Boolean);
+
+    onComplete?.({
+      durationSeconds: elapsed,
+      accuracy,
+      hesitations: hesitationsRef.current,
+      missedWords,
+      matchedCount: matched,
+      totalWords: total,
+    });
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
