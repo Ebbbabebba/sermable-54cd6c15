@@ -122,7 +122,11 @@
     "deleted": "Rede gelöscht",
     "deletedDesc": "Die Rede wurde dauerhaft entfernt.",
     "daysLeftPlural": "Noch {{count}} Tage",
-    "daysOverduePlural": "{{count}} Tage überfällig"
+    "daysOverduePlural": "{{count}} Tage überfällig",
+    "dueForPractice": "Bereit zum Üben",
+    "dueForPracticeDescription": "Diese Abschnitte sind jetzt optimal zum Üben",
+    "beat": "Abschnitt",
+    "inTime": "in"
   },
   "onboarding": {
     "skip": "Überspringen",
@@ -812,11 +816,13 @@
     },
     "direction": {
       "title": "Bühnenanweisungen",
-      "body": "Wähle beliebige Wörter im Editor aus und schreibe, was zu tun ist – wie „lächeln“ oder „Hand heben“. Die Anweisung erscheint während deiner Präsentation über deinem Skript."
+      "body": "Wähle beliebige Wörter im Editor aus und schreibe, was zu tun ist – wie „lächeln“ oder „Hand heben“. Die Anweisung erscheint während deiner Präsentation über deinem Skript.",
+      "demoText": "Danke euch allen {{smile}}fürs Kommen{{/}} heute Abend."
     },
     "pause": {
       "title": "Pausen mit einem Bindestrich",
-      "body": "Füge ein eigenständiges `-` für eine 2-Sekunden-Pause hinzu oder `-5s` für eine benutzerdefinierte Länge. Das Training dimmt den Bildschirm und zählt für dich herunter."
+      "body": "Füge ein eigenständiges `-` für eine 2-Sekunden-Pause hinzu oder `-5s` für eine benutzerdefinierte Länge. Das Training dimmt den Bildschirm und zählt für dich herunter.",
+      "demoText": "Ich möchte euch etwas fragen. -3 Seid ihr bereit?"
     },
     "complete": {
       "title": "Du bist bereit",

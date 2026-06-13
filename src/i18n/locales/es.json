@@ -122,7 +122,11 @@
     "deleted": "Discurso eliminado",
     "deletedDesc": "El discurso se ha eliminado permanentemente.",
     "daysLeftPlural": "Faltan {count} días",
-    "daysOverduePlural": "{count} días de retraso"
+    "daysOverduePlural": "{count} días de retraso",
+    "dueForPractice": "Listo para practicar",
+    "dueForPracticeDescription": "Estos segmentos son óptimos para practicar ahora",
+    "beat": "Segmento",
+    "inTime": "en"
   },
   "onboarding": {
     "skip": "Saltar",
@@ -812,11 +816,13 @@
     },
     "direction": {
       "title": "Instrucciones de escena",
-      "body": "Selecciona cualquier palabra en el editor y escribe qué hacer, como \"sonreír\" o \"levantar la mano\". La instrucción aparece encima de tu guion mientras presentas."
+      "body": "Selecciona cualquier palabra en el editor y escribe qué hacer, como \"sonreír\" o \"levantar la mano\". La instrucción aparece encima de tu guion mientras presentas.",
+      "demoText": "Gracias a todos {{smile}}por venir{{/}} esta noche."
     },
     "pause": {
       "title": "Pausas con un guion",
-      "body": "Añade un `-` solo para una pausa de 2 segundos, o `-5s` para una duración personalizada. La práctica atenuará la pantalla y hará una cuenta atrás para ti."
+      "body": "Añade un `-` solo para una pausa de 2 segundos, o `-5s` para una duración personalizada. La práctica atenuará la pantalla y hará una cuenta atrás para ti.",
+      "demoText": "Quiero preguntaros algo. -3 ¿Estáis listos?"
     },
     "complete": {
       "title": "Estás listo",

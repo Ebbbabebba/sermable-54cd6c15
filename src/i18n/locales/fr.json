@@ -122,7 +122,11 @@
     "deleted": "Discours supprimé",
     "deletedDesc": "Le discours a été supprimé définitivement.",
     "daysLeftPlural": "Il reste {{count}} jours",
-    "daysOverduePlural": "{{count}} jours de retard"
+    "daysOverduePlural": "{{count}} jours de retard",
+    "dueForPractice": "Prêt à pratiquer",
+    "dueForPracticeDescription": "Ces segments sont parfaits à pratiquer maintenant",
+    "beat": "Segment",
+    "inTime": "dans"
   },
   "onboarding": {
     "skip": "Passer",
@@ -812,11 +816,13 @@
     },
     "direction": {
       "title": "Didacticiel : indications scéniques",
-      "body": "Sélectionnez des mots dans l'éditeur et écrivez ce qu'il faut faire, comme « sourire » ou « lever la main ». L'indication apparaît au-dessus de votre script pendant que vous présentez."
+      "body": "Sélectionnez des mots dans l'éditeur et écrivez ce qu'il faut faire, comme « sourire » ou « lever la main ». L'indication apparaît au-dessus de votre script pendant que vous présentez.",
+      "demoText": "Merci à tous {{smile}}d'être venus{{/}} ce soir."
     },
     "pause": {
       "title": "Didacticiel : pauses avec \"-\"",
-      "body": "Ajoutez un « - » isolé pour une pause de 2 secondes, ou « -5s » pour une durée personnalisée. La pratique assombrira l'écran et comptera à rebours pour vous."
+      "body": "Ajoutez un « - » isolé pour une pause de 2 secondes, ou « -5s » pour une durée personnalisée. La pratique assombrira l'écran et comptera à rebours pour vous.",
+      "demoText": "Je veux vous demander quelque chose. -3 Êtes-vous prêts ?"
     },
     "complete": {
       "title": "Vous êtes prêt",

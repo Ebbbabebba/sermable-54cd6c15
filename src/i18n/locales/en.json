@@ -26,11 +26,13 @@
     },
     "direction": {
       "title": "Stage directions",
-      "body": "Select any words in the editor and write what to do — like “smile” or “raise hand”. The direction appears above your script while you present."
+      "body": "Select any words in the editor and write what to do — like “smile” or “raise hand”. The direction appears above your script while you present.",
+      "demoText": "Thank you all {{smile}}for coming{{/}} tonight."
     },
     "pause": {
       "title": "Pauses with a dash",
-      "body": "Add a standalone `-` for a 2-second pause, or `-5s` for a custom length. Practice will dim the screen and count down for you."
+      "body": "Add a standalone `-` for a 2-second pause, or `-5s` for a custom length. Practice will dim the screen and count down for you.",
+      "demoText": "I want to ask you something. -3 Are you ready?"
     },
     "complete": {
       "title": "You're set",
@@ -144,7 +146,11 @@
     "deleteSpeech": "Delete Speech?",
     "deleteSpeechDesc": "This will permanently delete \"{{title}}\" and all associated practice sessions. This action cannot be undone.",
     "deleted": "Speech deleted",
-    "deletedDesc": "The speech has been removed."
+    "deletedDesc": "The speech has been removed.",
+    "dueForPractice": "Ready to practice",
+    "dueForPracticeDescription": "These segments are optimal to practice right now",
+    "beat": "Segment",
+    "inTime": "in"
   },
   "onboarding": {
     "skip": "Skip",
