@@ -51,10 +51,15 @@ const getWordSimilarity = (w1: string, w2: string): number => {
   return matches / maxLen;
 };
 
-// Tighter matching so wrong sentences don't race the cursor forward.
-const SIMILARITY_THRESHOLD = 0.72;
-const LOOKAHEAD_THRESHOLD = 0.78;
-const LOOKAHEAD_WORDS = 2;
+// Tighter matching so wrong sentences don't race the cursor forward, but
+// lenient enough that recognition mishears don't keep stalling the user.
+const SIMILARITY_THRESHOLD = 0.65;
+const LOOKAHEAD_THRESHOLD = 0.72;
+const LOOKAHEAD_WORDS = 3;
+// After this many ms of being stuck on the same word while the user is still
+// talking, advance the cursor automatically so the session keeps moving.
+const STALL_AUTO_ADVANCE_MS = 5000;
+
 
 // Hint escalation thresholds
 const HINT_STAGE_1_MS = 2000; // show next 3 words
