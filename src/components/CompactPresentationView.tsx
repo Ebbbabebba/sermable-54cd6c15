@@ -198,6 +198,22 @@ export const CompactPresentationView = ({
     return sentences.length - 1;
   }, [currentWordIndex, sentences]);
 
+  // Debounce sentence transitions so the next sentence doesn't pop in instantly
+  // when the user crosses a boundary — gives ~700ms of breathing room.
+  const [displayedSentenceIndex, setDisplayedSentenceIndex] = useState(0);
+  useEffect(() => {
+    if (currentSentenceIndex === displayedSentenceIndex) return;
+    // Advance forward with a small delay; jump backwards immediately (manual nav)
+    if (currentSentenceIndex < displayedSentenceIndex) {
+      setDisplayedSentenceIndex(currentSentenceIndex);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDisplayedSentenceIndex(currentSentenceIndex);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [currentSentenceIndex, displayedSentenceIndex]);
+
   // Track recently spoken words for staggered fade-out
   const [fadingWords, setFadingWords] = useState<Set<number>>(new Set());
 
