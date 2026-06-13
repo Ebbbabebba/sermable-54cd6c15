@@ -464,15 +464,11 @@ export const CompactPresentationView = ({
         setStatus('success');
         setTimeout(() => setStatus('speaking'), 200);
       } else {
-        // Tighter lookahead: only 2 words ahead, higher bar — prevents stray
-        // tokens from leapfrogging entire phrases and falsely marking them skipped.
-        // BUT if the speaker is clearly stuck on the current word (multiple wrong
-        // attempts or stuck for >2.5s), widen the window so we can leapfrog and
-        // catch up to where they actually are.
-        const isStuck =
-          wrongAttempts.current.length >= STUCK_ATTEMPTS_THRESHOLD ||
-          Date.now() - wordStartTimeRef.current > STUCK_TIME_MS;
-        const maxLookahead = isStuck ? STUCK_LOOKAHEAD_WORDS : LOOKAHEAD_WORDS;
+        // Whole Speech Mode is non-punitive: always use the wide lookahead
+        // window so the teleprompter can leapfrog forward to wherever the
+        // speaker actually is. Skipped words are marked as "correct" (not
+        // "skipped") to avoid any red/error treatment downstream.
+        const maxLookahead = STUCK_LOOKAHEAD_WORDS;
 
         let foundAhead = false;
         for (let i = 1; i <= maxLookahead && localIndex + i < words.length; i++) {
@@ -485,7 +481,7 @@ export const CompactPresentationView = ({
               setWordPerformance(prev => [...prev, {
                 word: skippedWord,
                 index: localIndex + j,
-                status: "skipped",
+                status: "correct",
                 wasPrompted: false,
               }]);
             }
@@ -512,15 +508,13 @@ export const CompactPresentationView = ({
         }
 
         if (!foundAhead) {
+          // Track the wrong attempt for retry logic, but never surface an
+          // error state — the UI stays calm and keeps listening.
           wrongAttempts.current.push(spokenWord);
           lastProgressTime.current = Date.now();
-          // Only signal error after a couple of wrong attempts so a single
-          // misrecognition doesn't flash red constantly.
-          if (wrongAttempts.current.length >= 2) {
-            setStatus('error');
-          }
         }
       }
+
     }
   }, [words, showHint, haptics]);
 
