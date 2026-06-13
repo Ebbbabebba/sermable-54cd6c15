@@ -88,8 +88,8 @@ const PaymentSettings = () => {
           setPurchaseState('success');
           setPurchaseError(null);
           toast({
-            title: "✅ Welcome to Premium!",
-            description: "Your subscription is now active.",
+            title: t('paymentSettings.welcomePremium'),
+            description: t('paymentSettings.subActive'),
           });
         } else {
           // Backend says verified but profile not yet updated — retry once
@@ -99,15 +99,15 @@ const PaymentSettings = () => {
             setPurchaseState('success');
           } else {
             setPurchaseState('error');
-            setPurchaseError("Payment received but account not yet upgraded. Please tap 'Restore purchases'.");
+            setPurchaseError(t('paymentSettings.payReceivedNotUpgraded'));
           }
         }
       } else {
         setPurchaseState('error');
-        setPurchaseError(result.error ?? "Verification failed. Please try again or contact support.");
+        setPurchaseError(result.error ?? t('paymentSettings.verifyFailedGeneric'));
         toast({
-          title: "Purchase verification failed",
-          description: result.error ?? "Please try again or contact support.",
+          title: t('paymentSettings.verificationFailed'),
+          description: result.error ?? t('paymentSettings.tryAgainContact'),
           variant: "destructive",
         });
       }
@@ -119,10 +119,10 @@ const PaymentSettings = () => {
         return;
       }
       setPurchaseState('error');
-      setPurchaseError(detail?.reason ?? "Please try again.");
+      setPurchaseError(detail?.reason ?? t('paymentSettings.tryAgain'));
       toast({
-        title: "Purchase failed",
-        description: detail?.reason ?? "Please try again.",
+        title: t('paymentSettings.purchaseFailed'),
+        description: detail?.reason ?? t('paymentSettings.tryAgain'),
         variant: "destructive",
       });
     };
@@ -131,7 +131,7 @@ const PaymentSettings = () => {
       cleanup();
       window.removeEventListener('iap-purchase-failed', onFail);
     };
-  }, [isIOS, toast]);
+  }, [isIOS, toast, t]);
 
   const handleUpgrade = () => {
     if (isIOS) {
@@ -142,8 +142,8 @@ const PaymentSettings = () => {
     }
 
     toast({
-      title: "Upgrade in the iOS app",
-      description: "Premium subscriptions are available through the Sermable iOS app on the App Store.",
+      title: t('paymentSettings.upgradeIniOS'),
+      description: t('paymentSettings.subsInApp'),
     });
   };
 
@@ -151,13 +151,13 @@ const PaymentSettings = () => {
     if (!isIOS) return;
     setPurchaseState('verifying');
     triggerNativeIAP('restorePurchases');
-    toast({ title: "Restoring purchases…" });
+    toast({ title: t('paymentSettings.restoring') });
     // After 4s, fall back to checking subscription directly from backend
     setTimeout(async () => {
       const isPrem = await checkSubscriptionStatus();
       if (isPrem) {
         setPurchaseState('success');
-        toast({ title: "✅ Premium restored!" });
+        toast({ title: t('paymentSettings.premiumRestored') });
       } else {
         setPurchaseState('idle');
       }
