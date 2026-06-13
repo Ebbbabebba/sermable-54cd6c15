@@ -1384,12 +1384,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordOrder([]);
   };
 
-  // Streak-based hiding: 1st success hides 1 word, 2 in a row → 2 words,
-  // 3 in a row → 3, 4 in a row → 4, ... capped at 8. Starts with small/common
-  // words first (see getNextWordToHide priority order) so the practice
-  // accelerates instead of dragging at a fixed 3-words-per-rep pace.
+  // HYBRID streak-based hiding:
+  //   • Per repetition: clean rep → hide MORE next time (accelerating curve
+  //     1 → 2 → 3 → 5 → 7 → 9 → 11 → 13, capped at 14).
+  //   • Per word: missed (red) or hesitated (yellow) words reset the streak
+  //     to 0 AND are marked "protected" so they stay visible until the user
+  //     says them cleanly (see protectedWordIndices + getNextWordToHide).
+  // This rewards strong sections with fast progression while making weak
+  // words stick around longer instead of being hidden prematurely.
   const getWordsToHideCount = useCallback((successCount: number): number => {
-    return Math.min(1 + successCount, 8);
+    const curve = [1, 2, 3, 5, 7, 9, 11, 13, 14];
+    return curve[Math.min(successCount, curve.length - 1)];
   }, []);
 
   // Effect to reset hidden words when changing recall beat
