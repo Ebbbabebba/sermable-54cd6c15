@@ -662,13 +662,13 @@ const ScriptPracticeView = ({
               >
                 <div className="space-y-5">
                   <div className="flex items-center justify-center gap-2">
-                    {beats.map((beat) => (
+                    {beats.map((beat, beatPosition) => (
                       <span
-                        key={beat.beat_index}
+                        key={`${beat.beat_index}-${beatPosition}`}
                         className={`h-2.5 rounded-full transition-all ${
-                          beat.beat_index === liveBeatIndex
+                          beatPosition === liveBeatIndex
                             ? 'w-8 bg-primary'
-                            : coveredBeatIndexes.has(beat.beat_index)
+                            : coveredBeatIndexes.has(beatPosition)
                               ? 'w-2.5 bg-primary/45'
                               : 'w-2.5 bg-muted'
                         }`}
@@ -736,7 +736,7 @@ const ScriptPracticeView = ({
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={() => markBeatCovered(liveBeatIndex)}
+                    onClick={() => moveLiveCursor(liveBeatIndex + 1)}
                     aria-label={t('script.nextKeyword', 'Next')}
                   >
                     <ChevronRight className="h-5 w-5" />
