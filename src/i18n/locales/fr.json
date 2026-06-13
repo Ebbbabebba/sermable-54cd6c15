@@ -759,6 +759,13 @@
     "ownWordsStyle": "Racontez avec vos propres mots",
     "selectGeneral": "Sélectionner Mode Script"
   },
+  "script": {
+    "currentKeyword": "Mot-clé actuel",
+    "nextKeyword": "Suivant",
+    "speakingNowLive": "Parlez naturellement — les mots-clés avancent quand vous les mentionnez.",
+    "keywordsCovered": "{{covered}} sur {{total}} mots-clés",
+    "tooLittleSpeechFeedback": "Trop peu de parole a été reconnue pour compter cela comme un excellent passage."
+  },
   "calendar": {
     "practice": "Pratique",
     "recall": "Rappel",
