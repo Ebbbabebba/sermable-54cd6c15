@@ -1794,11 +1794,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1 && !skipFillUsed) {
-        // Current word didn't match - optionally check the next word, but ONLY
-        // when the skipped word is visible. Hidden words (including tiny gap
-        // words like "my", "a", "I") must be spoken or revealed by the
-        // hesitation timer; otherwise the app can mark an unmastered hidden
-        // word as complete and start fading too early.
+        // Current word didn't match - optionally check the next 1-2 words, but ONLY
+        // when the skipped words are visible. Hidden words must be spoken or
+        // revealed by the hesitation timer.
         const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
 
         if (
@@ -1810,9 +1808,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
           usedSkipFill = true;
+        } else if (
+          canSkipCurrent &&
+          advancedTo + 2 < words.length &&
+          !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
+          !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
+          wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
+        ) {
+          // Two visible words skipped — user kept speaking past a mis-recognized
+          // stretch (e.g. looked away from the screen). Catch the cursor up so
+          // it doesn't freeze on stale words.
+          newSpoken.add(advancedTo);
+          newSpoken.add(advancedTo + 1);
+          foundIdx = advancedTo + 2;
+          usedSkipFill = true;
         }
-        // Removed 2-word visible lookahead — a single spoken token must
-        // never advance the cursor by more than two positions in one pass.
       }
 
       if (foundIdx === -1) {
