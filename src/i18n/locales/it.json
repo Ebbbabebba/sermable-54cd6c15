@@ -196,7 +196,7 @@
         "subtitle": "Severa allena le parole esatte. Flow premia il significato sulla precisione.",
         "strict": "Severa",
         "strictDesc": "Ogni parola conta. Ideale per memorizzare.",
-        "flow": "Flow",
+        "flow": "Fluidità",
         "flowDesc": "Trasmetti il significato. Ideale per un'esposizione naturale."
       }
     },
@@ -563,7 +563,7 @@
   },
   "calendar": {
     "practice": "Pratica",
-    "recall": "Recall",
+    "recall": "Richiamo",
     "test": "Esecuzione",
     "presentationDay": "Giorno della presentazione",
     "completed": "Completato",

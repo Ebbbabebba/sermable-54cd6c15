@@ -196,7 +196,7 @@
         "subtitle": "Rigorosa treina palavras exatas. Flow premeia o sentido sobre a precisão.",
         "strict": "Rigorosa",
         "strictDesc": "Cada palavra conta. Ideal para memorizar.",
-        "flow": "Flow",
+        "flow": "Fluxo",
         "flowDesc": "Transmita o sentido. Ideal para uma apresentação natural."
       }
     },
@@ -533,7 +533,7 @@
   },
   "subscription": {
     "premium": "Premium",
-    "enterprise": "Enterprise",
+    "enterprise": "Empresa",
     "student": "Estudante",
     "free": "Grátis"
   },
@@ -563,7 +563,7 @@
   },
   "calendar": {
     "practice": "Prática",
-    "recall": "Recall",
+    "recall": "Lembrete",
     "test": "Execução completa",
     "presentationDay": "Dia da apresentação",
     "completed": "Concluído",

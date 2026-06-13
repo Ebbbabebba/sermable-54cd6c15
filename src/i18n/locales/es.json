@@ -196,7 +196,7 @@
         "subtitle": "Estricta entrena palabras exactas. Flow premia el significado sobre la precisión.",
         "strict": "Estricta",
         "strictDesc": "Cada palabra cuenta. Ideal para memorizar.",
-        "flow": "Flow",
+        "flow": "Fluidez",
         "flowDesc": "Transmite el significado. Ideal para una entrega natural."
       }
     },
@@ -529,7 +529,7 @@
   },
   "subscription": {
     "premium": "Premium",
-    "enterprise": "Enterprise",
+    "enterprise": "Empresarial",
     "student": "Estudiante",
     "free": "Gratis"
   },
@@ -559,7 +559,7 @@
   },
   "calendar": {
     "practice": "Práctica",
-    "recall": "Recall",
+    "recall": "Recordar",
     "test": "Pasada completa",
     "presentationDay": "Día de la presentación",
     "completed": "Completado",

@@ -194,9 +194,9 @@
         "eyebrow": "Dernière question",
         "title": "À quel point la pratique doit-elle être stricte ?",
         "subtitle": "Strict entraîne les mots exacts. Flow récompense le sens plutôt que la précision.",
-        "strict": "Strict",
+        "strict": "Stricte",
         "strictDesc": "Chaque mot compte. Idéal pour la mémorisation.",
-        "flow": "Flow",
+        "flow": "Fluide",
         "flowDesc": "Faites passer le sens. Idéal pour une livraison naturelle."
       }
     },
@@ -327,7 +327,7 @@
     "segments": {
       "learningProgress": "Progression d'apprentissage",
       "segment": "Partie",
-      "active": "Active",
+      "active": "Actif",
       "due": "À réviser",
       "visibility": "Visibilité",
       "hidden": "masqué",
@@ -533,7 +533,7 @@
   },
   "subscription": {
     "premium": "Premium",
-    "enterprise": "Enterprise",
+    "enterprise": "Entreprise",
     "student": "Étudiant",
     "free": "Gratuit"
   },
@@ -563,7 +563,7 @@
   },
   "calendar": {
     "practice": "Pratique",
-    "recall": "Recall",
+    "recall": "Rappel",
     "test": "Test complet",
     "presentationDay": "Jour J",
     "completed": "Terminé",
