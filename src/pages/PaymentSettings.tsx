@@ -178,9 +178,9 @@ const PaymentSettings = () => {
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="space-y-6">
           <div className="animate-fade-in">
-            <h1 className="text-4xl font-bold mb-2">Sermable Premium</h1>
+            <h1 className="text-4xl font-bold mb-2">{t('paymentSettings.pageTitle')}</h1>
             <p className="text-muted-foreground">
-              Unlock the full Sermable experience.
+              {t('paymentSettings.pageSubtitle')}
             </p>
           </div>
 
@@ -192,9 +192,9 @@ const PaymentSettings = () => {
                     <Crown className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle>You are Premium</CardTitle>
+                    <CardTitle>{t('paymentSettings.youArePremium')}</CardTitle>
                     <CardDescription>
-                      Manage or cancel your subscription in your Apple ID settings.
+                      {t('paymentSettings.manageInApple')}
                     </CardDescription>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ const PaymentSettings = () => {
                   }}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Manage subscription in App Store
+                  {t('paymentSettings.manageInAppStore')}
                 </Button>
               </CardContent>
             </Card>
@@ -222,9 +222,9 @@ const PaymentSettings = () => {
                     <Crown className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl">Upgrade to Premium</CardTitle>
+                    <CardTitle className="text-xl">{t('paymentSettings.upgradeTitle')}</CardTitle>
                     <CardDescription className="text-xs">
-                      Everything you need to memorize any speech.
+                      {t('paymentSettings.upgradeDesc')}
                     </CardDescription>
                   </div>
                 </div>
@@ -236,25 +236,25 @@ const PaymentSettings = () => {
                     <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
                       <FileStack className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="text-sm font-medium">Unlimited speeches</p>
+                    <p className="text-sm font-medium">{t('paymentSettings.featUnlimited')}</p>
                   </div>
                   <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
                     <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
                       <Presentation className="h-4 w-4 text-accent-foreground" />
                     </div>
-                    <p className="text-sm font-medium">Presentation mode</p>
+                    <p className="text-sm font-medium">{t('paymentSettings.featPresentation')}</p>
                   </div>
                   <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
                     <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
                       <Zap className="h-4 w-4 text-primary" />
                     </div>
-                    <p className="text-sm font-medium">Practice anytime</p>
+                    <p className="text-sm font-medium">{t('paymentSettings.featAnytime')}</p>
                   </div>
                   <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
                     <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
                       <BarChart3 className="h-4 w-4 text-accent-foreground" />
                     </div>
-                    <p className="text-sm font-medium">Advanced analytics</p>
+                    <p className="text-sm font-medium">{t('paymentSettings.featAnalytics')}</p>
                   </div>
                 </div>
 
@@ -270,12 +270,12 @@ const PaymentSettings = () => {
                     <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
                       selectedPlan === 'yearly' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
                     }`}>
-                      Best value
+                      {t('paymentSettings.bestValue')}
                     </div>
-                    <p className="text-sm font-medium opacity-80">Yearly</p>
+                    <p className="text-sm font-medium opacity-80">{t('paymentSettings.yearly')}</p>
                     <div className="flex items-baseline gap-2 mt-1">
                       <p className="text-3xl font-bold">{prices.yearly ?? fallbackPrices.yearly}</p>
-                      <p className="text-sm opacity-70">/year</p>
+                      <p className="text-sm opacity-70">{t('paymentSettings.perYear')}</p>
                     </div>
                   </button>
 
@@ -287,10 +287,10 @@ const PaymentSettings = () => {
                         : 'bg-card border-2 border-border hover:border-primary/50'
                     }`}
                   >
-                    <p className="text-sm font-medium opacity-80">Monthly</p>
+                    <p className="text-sm font-medium opacity-80">{t('paymentSettings.monthly')}</p>
                     <div className="flex items-baseline gap-2 mt-1">
                       <p className="text-3xl font-bold">{prices.monthly ?? fallbackPrices.monthly}</p>
-                      <p className="text-sm opacity-70">/month</p>
+                      <p className="text-sm opacity-70">{t('paymentSettings.perMonth')}</p>
                     </div>
                   </button>
                 </div>
@@ -304,12 +304,12 @@ const PaymentSettings = () => {
                   {purchaseState === 'processing' || purchaseState === 'verifying' ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {purchaseState === 'verifying' ? 'Verifying purchase…' : 'Processing…'}
+                      {purchaseState === 'verifying' ? t('paymentSettings.verifying') : t('paymentSettings.processing')}
                     </>
                   ) : (
                     <>
                       <Crown className="h-4 w-4 mr-2" />
-                      {isIOS ? 'Subscribe' : 'Get Premium'}
+                      {isIOS ? t('paymentSettings.subscribe') : t('paymentSettings.getPremium')}
                     </>
                   )}
                 </Button>
@@ -329,30 +329,27 @@ const PaymentSettings = () => {
                     onClick={handleRestore}
                     disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
                   >
-                    Restore purchases
+                    {t('paymentSettings.restore')}
                   </Button>
                 )}
 
 
                 {!isIOS && (
                   <p className="text-xs text-center text-muted-foreground">
-                    Premium subscriptions are available in the Sermable iOS app on the App Store.
+                    {t('paymentSettings.subsInAppShort')}
                   </p>
                 )}
 
                 <div className="space-y-1.5 pt-2 text-xs text-muted-foreground">
                   <p>
-                    Payment will be charged to your Apple ID account at confirmation of purchase.
-                    Subscription automatically renews unless auto-renew is turned off at least 24 hours
-                    before the end of the current period. Manage or cancel anytime in your Apple ID
-                    account settings.
+                    {t('paymentSettings.legalDisclosure')}
                   </p>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
                     <Link to="/terms" className="underline hover:text-foreground">
-                      Terms of Use (EULA)
+                      {t('paymentSettings.termsEula')}
                     </Link>
                     <Link to="/privacy" className="underline hover:text-foreground">
-                      Privacy Policy
+                      {t('paymentSettings.privacyPolicy')}
                     </Link>
                   </div>
                 </div>
