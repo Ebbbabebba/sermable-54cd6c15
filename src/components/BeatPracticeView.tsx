@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
-import BeatProgress from "./BeatProgress";
+
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
