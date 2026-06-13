@@ -198,6 +198,22 @@ export const CompactPresentationView = ({
     return sentences.length - 1;
   }, [currentWordIndex, sentences]);
 
+  // Debounce sentence transitions so the next sentence doesn't pop in instantly
+  // when the user crosses a boundary — gives ~700ms of breathing room.
+  const [displayedSentenceIndex, setDisplayedSentenceIndex] = useState(0);
+  useEffect(() => {
+    if (currentSentenceIndex === displayedSentenceIndex) return;
+    // Advance forward with a small delay; jump backwards immediately (manual nav)
+    if (currentSentenceIndex < displayedSentenceIndex) {
+      setDisplayedSentenceIndex(currentSentenceIndex);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDisplayedSentenceIndex(currentSentenceIndex);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [currentSentenceIndex, displayedSentenceIndex]);
+
   // Track recently spoken words for staggered fade-out
   const [fadingWords, setFadingWords] = useState<Set<number>>(new Set());
 
@@ -700,7 +716,7 @@ export const CompactPresentationView = ({
               />
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
-                  key={currentSentenceIndex}
+                  key={displayedSentenceIndex}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -708,7 +724,7 @@ export const CompactPresentationView = ({
                   className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-2xl md:text-4xl leading-relaxed font-semibold"
                 >
                   {(() => {
-                    const sentence = sentences[currentSentenceIndex];
+                    const sentence = sentences[displayedSentenceIndex];
                     if (!sentence) return null;
                     const startIndex = sentence.startIndex;
                     const nodes: JSX.Element[] = [];
