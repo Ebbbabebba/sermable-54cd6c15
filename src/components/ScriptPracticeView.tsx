@@ -168,7 +168,7 @@ const ScriptPracticeView = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const speechRecognitionRef = useRef<any>(null);
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const isRecordingRef = useRef(false);
   const liveBeatIndexRef = useRef(0);
   const recordingRangeRef = useRef<[number, number]>([0, 0]);
@@ -224,12 +224,12 @@ const ScriptPracticeView = ({
 
       await supabase.from('script_beats').delete().eq('speech_id', speechId);
       await supabase.from('script_beats').insert(beatsToInsert);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error extracting beats:", err);
       toast({
         variant: "destructive",
         title: t('common.error', 'Error'),
-        description: err.message || "Failed to process text",
+        description: getErrorMessage(err, "Failed to process text"),
       });
     }
   };
@@ -290,14 +290,14 @@ const ScriptPracticeView = ({
 
   const stopLiveKeywordRecognition = () => {
     if (speechRecognitionRef.current) {
-      try { speechRecognitionRef.current.onend = null; speechRecognitionRef.current.stop(); } catch {}
+      try { speechRecognitionRef.current.onend = null; speechRecognitionRef.current.stop(); } catch { speechRecognitionRef.current = null; }
       speechRecognitionRef.current = null;
     }
     lastInterimRef.current = "";
   };
 
   const startLiveKeywordRecognition = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = getSpeechRecognitionConstructor();
     if (!SpeechRecognition) return;
 
     stopLiveKeywordRecognition();
@@ -307,7 +307,7 @@ const ScriptPracticeView = ({
     recognition.lang = getRecognitionLanguage(speechLanguage);
     recognition.maxAlternatives = 3;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEventLike) => {
       let finalText = "";
       let interimText = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -332,7 +332,7 @@ const ScriptPracticeView = ({
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorLike) => {
       if (event.error !== "no-speech" && event.error !== "aborted") {
         console.warn("Script mode speech recognition error:", event.error);
       }
@@ -341,13 +341,13 @@ const ScriptPracticeView = ({
     recognition.onend = () => {
       if (isRecordingRef.current && speechRecognitionRef.current === recognition) {
         setTimeout(() => {
-          try { recognition.start(); } catch {}
+          try { recognition.start(); } catch { speechRecognitionRef.current = null; }
         }, 250);
       }
     };
 
     speechRecognitionRef.current = recognition;
-    try { recognition.start(); } catch {}
+    try { recognition.start(); } catch { speechRecognitionRef.current = null; }
   };
 
   const handleStartRecording = async () => {
