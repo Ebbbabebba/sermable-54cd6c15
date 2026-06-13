@@ -659,12 +659,42 @@ const ScriptPracticeView = ({
                 exit={{ opacity: 0 }}
                 className="space-y-8 text-center"
               >
-                <div className="space-y-4">
-                  {currentReferenceWords.map((word, i) => (
-                    <span key={i} className="inline-block text-3xl font-bold text-primary/60 px-4 py-2">
-                      {word}
-                    </span>
-                  ))}
+                <div className="space-y-5">
+                  <div className="flex items-center justify-center gap-2">
+                    {beats.map((beat) => (
+                      <span
+                        key={beat.beat_index}
+                        className={`h-2.5 rounded-full transition-all ${
+                          beat.beat_index === liveBeatIndex
+                            ? 'w-8 bg-primary'
+                            : coveredBeatIndexes.has(beat.beat_index)
+                              ? 'w-2.5 bg-primary/45'
+                              : 'w-2.5 bg-muted'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium uppercase text-muted-foreground">
+                      {t('script.currentKeyword', 'Current keyword')}
+                    </p>
+                    <motion.div
+                      key={activeBeat?.beat_index ?? 'none'}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="inline-flex min-h-24 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 px-8 py-5"
+                    >
+                      <span className="text-5xl md:text-6xl font-bold text-primary">
+                        {activeBeat?.reference_word || currentReferenceWords[0]}
+                      </span>
+                    </motion.div>
+                    {nextBeat && (
+                      <p className="text-sm text-muted-foreground">
+                        {t('script.nextKeyword', 'Next')}: {nextBeat.reference_word}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <motion.div
@@ -675,19 +705,42 @@ const ScriptPracticeView = ({
                   <Mic className="h-10 w-10 text-destructive" />
                 </motion.div>
 
-                <p className="text-muted-foreground">
-                  {t('script.speakingNow', 'Retell the beat from memory...')}
-                </p>
+                <div className="space-y-2">
+                  <p className="text-muted-foreground">
+                    {t('script.speakingNowLive', 'Speak naturally — keywords advance as you mention them.')}
+                  </p>
+                  {liveTranscript && (
+                    <p className="mx-auto max-w-xl truncate text-xs italic text-muted-foreground/80">
+                      “{liveTranscript}”
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {t('script.keywordsCovered', '{{covered}} of {{total}} keywords', {
+                      covered: coveredCount,
+                      total: totalBeats,
+                    })}
+                  </p>
+                </div>
 
-                <Button
-                  size="lg"
-                  variant="destructive"
-                  className="w-full gap-3"
-                  onClick={handleStopRecording}
-                >
-                  <Square className="h-5 w-5" />
-                  {t('script.stopRecording', 'Done speaking')}
-                </Button>
+                <div className="grid grid-cols-[1fr_auto] gap-3">
+                  <Button
+                    size="lg"
+                    variant="destructive"
+                    className="gap-3"
+                    onClick={handleStopRecording}
+                  >
+                    <Square className="h-5 w-5" />
+                    {t('script.stopRecording', 'Done speaking')}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => markBeatCovered(liveBeatIndex)}
+                    aria-label={t('script.nextKeyword', 'Next')}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
               </motion.div>
             )}
 
