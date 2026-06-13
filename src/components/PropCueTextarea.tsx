@@ -183,26 +183,24 @@ const PropCueTextarea = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="fixed z-50"
-              style={{
-                top: Math.max(8, pos.top),
-                left: pos.left,
-                transform: "translateX(-50%)",
-              }}
+              className="fixed z-50 left-0 right-0 flex justify-center pointer-events-none px-3"
+              style={{ top: Math.max(8, pos.top) }}
             >
               <Button
                 type="button"
                 size="sm"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setEditing(true)}
-                className="gap-1.5 shadow-lg"
+                className="gap-1.5 shadow-lg max-w-full pointer-events-auto whitespace-nowrap"
                 style={{
                   backgroundColor: "hsl(var(--prop-cue-fg))",
                   color: "hsl(var(--background))",
                 }}
               >
-                <Sparkle className="h-3.5 w-3.5" />
-                {t("upload.propCue.addButton", "Add prop cue")}
+                <Sparkle className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">
+                  {t("upload.propCue.addButton", "Add prop cue")}
+                </span>
               </Button>
             </motion.div>
           )}
