@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  ArrowLeft, Play, Square, RotateCcw, ChevronRight, 
+  ArrowLeft, Square, RotateCcw, ChevronRight, 
   Loader2, BookOpen, KeyRound, Mic, Merge, Split,
   CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, Trophy
 } from "lucide-react";
@@ -126,6 +126,7 @@ const ScriptPracticeView = ({
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const speechRecognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef(false);
   const liveBeatIndexRef = useRef(0);
   const recordingRangeRef = useRef<[number, number]>([0, 0]);
   const coveredBeatIndexesRef = useRef<Set<number>>(new Set());
@@ -195,6 +196,9 @@ const ScriptPracticeView = ({
   const currentReferenceWords = currentBeats.map(b => b.reference_word);
   const totalBeats = beats.length;
   const progressPercent = totalBeats > 0 ? ((aggregatedRange[1] + 1) / totalBeats) * 100 : 0;
+  const activeBeat = beats[liveBeatIndex];
+  const nextBeat = liveBeatIndex + 1 < totalBeats ? beats[liveBeatIndex + 1] : null;
+  const coveredCount = coveredBeatIndexes.size;
 
   const handleContinueToReference = () => {
     setPhase('reference');
@@ -292,7 +296,7 @@ const ScriptPracticeView = ({
     };
 
     recognition.onend = () => {
-      if (isRecording && speechRecognitionRef.current === recognition) {
+      if (isRecordingRef.current && speechRecognitionRef.current === recognition) {
         setTimeout(() => {
           try { recognition.start(); } catch {}
         }, 250);
@@ -349,6 +353,7 @@ const ScriptPracticeView = ({
 
       mediaRecorder.start(200);
       mediaRecorderRef.current = mediaRecorder;
+      isRecordingRef.current = true;
       setIsRecording(true);
       setPhase('recording');
       startLiveKeywordRecognition();
@@ -362,6 +367,7 @@ const ScriptPracticeView = ({
   };
 
   const handleStopRecording = () => {
+    isRecordingRef.current = false;
     stopLiveKeywordRecognition();
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
@@ -369,6 +375,17 @@ const ScriptPracticeView = ({
     }
     setIsRecording(false);
   };
+
+  useEffect(() => {
+    return () => {
+      isRecordingRef.current = false;
+      stopLiveKeywordRecognition();
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
 
   const handleRecordingDone = async (audioBlob: Blob) => {
     setPhase('analyzing');
