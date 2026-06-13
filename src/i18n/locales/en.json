@@ -1034,5 +1034,58 @@
     "popupBlockedTitle": "Popup blocked",
     "popupBlockedDesc": "Allow popups to print the script.",
     "errorTitle": "Couldn't create printout"
+  },
+  "footer": {
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "refundPolicy": "Refund Policy"
+  },
+  "notFound": {
+    "title": "Oops! Page not found",
+    "back": "Return to Home"
+  },
+  "presentationSummary": {
+    "excellent": "Excellent!",
+    "excellentSubtitle": "Outstanding performance!",
+    "goodJob": "Good Job!",
+    "goodJobSubtitle": "Here's how you did",
+    "keepPracticing": "Keep Practicing!",
+    "keepPracticingSubtitle": "Every attempt makes you better",
+    "performanceSummary": "Performance Summary",
+    "badgeExcellent": "Excellent",
+    "badgeGood": "Good",
+    "badgeNeedsWork": "Needs Work",
+    "accuracy": "Accuracy",
+    "duration": "Duration",
+    "hesitations": "Hesitations",
+    "missedWords": "Missed Words",
+    "more": "more",
+    "coachsFeedback": "Coach's Feedback",
+    "coachsFeedbackDesc": "Personalized suggestions for improvement",
+    "summary": "Summary",
+    "advice": "Advice",
+    "nextStep": "Next Step",
+    "backToDashboard": "Back to Dashboard"
+  },
+  "aiBuilder": {
+    "title": "Build speech with AI",
+    "promptDesc": "Describe what kind of speech you want. AI will ask a few short questions and write a draft for you.",
+    "questionsDesc": "Answer in as much or as little detail as you like — you can skip questions.",
+    "previewDesc": "Edit the draft freely. When you're happy, tap Use.",
+    "promptLabel": "What kind of speech is it?",
+    "promptPlaceholder": "Write a speech for my brother's wedding. He's 32, I've known him my whole life. Make it warm and a bit funny.",
+    "lengthLabel": "Approximate length",
+    "minutesShort": "min",
+    "skipPlaceholder": "Leave empty to skip",
+    "draftTitleLabel": "Title",
+    "draftSpeechLabel": "The speech",
+    "getQuestions": "Continue",
+    "writeSpeech": "Write the speech",
+    "regenerate": "Change answers",
+    "useDraft": "Use",
+    "tooShortTitle": "Tell me a bit more",
+    "tooShortDesc": "Write a short sentence about what kind of speech it is.",
+    "errorTitle": "AI didn't respond"
   }
 }
+

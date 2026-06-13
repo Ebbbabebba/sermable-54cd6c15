@@ -24,19 +24,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAdaptiveTempo } from "@/hooks/useAdaptiveTempo";
 import { format } from "date-fns";
-import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
-import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
-import EnhancedWordTracker from "@/components/EnhancedWordTracker";
 import BracketedTextDisplay from "@/components/BracketedTextDisplay";
-// PracticeSettings removed - not used in new beat-based system
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
 import DayAfterRecallView from "@/components/DayAfterRecallView";
-
-
-import SegmentProgress from "@/components/SegmentProgress";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
@@ -189,7 +182,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   } | null>(null);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const audioRecorderRef = useRef<AudioRecorderHandle>(null);
+  
   const transcriptionIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastProcessedChunkIndex = useRef(0);
   const recognitionRef = useRef<any>(null);
@@ -1102,7 +1095,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               // Check if we've reached the last word
               if (currentIdx >= allExpectedWords.length) {
                 console.log('🎉 Last word spoken! Auto-stopping recording...');
-                setTimeout(() => { audioRecorderRef.current?.stopRecording(); }, 500);
+                // audio recorder removed in beat-based system
               } else {
                 startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
               }

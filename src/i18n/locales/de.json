@@ -120,7 +120,9 @@
     "deleteSpeech": "Rede löschen?",
     "deleteSpeechDesc": "Diese Rede und der gesamte Fortschritt werden unwiderruflich gelöscht.",
     "deleted": "Rede gelöscht",
-    "deletedDesc": "Die Rede wurde dauerhaft entfernt."
+    "deletedDesc": "Die Rede wurde dauerhaft entfernt.",
+    "daysLeftPlural": "Noch {{count}} Tage",
+    "daysOverduePlural": "{{count}} Tage überfällig"
   },
   "onboarding": {
     "skip": "Überspringen",
@@ -196,7 +198,7 @@
         "subtitle": "Strikt trainiert exakte Wörter. Flow belohnt Bedeutung statt Genauigkeit.",
         "strict": "Strikt",
         "strictDesc": "Jedes Wort zählt. Am besten zum Auswendiglernen.",
-        "flow": "Flow",
+        "flow": "Fluss",
         "flowDesc": "Bring die Botschaft rüber. Am besten für natürliches Sprechen."
       }
     },
@@ -215,7 +217,64 @@
     "limitReached": "Limit erreicht",
     "pasteText": "Füge hier deinen Redetext ein...",
     "languageDetected": "Sprache erkannt und Oberfläche angepasst",
-    "buildWithAi": "Mit KI erstellen"
+    "buildWithAi": "Mit KI erstellen",
+    "description": "Füge deinen Redetext hinzu und lege ein Zieldatum fest, bis zu dem du ihn auswendig gelernt haben musst.",
+    "speechTitlePlaceholder": "z.B. Vierteljährlicher Geschäftsbericht",
+    "goalDateHint": "Wann musst du diese Rede halten?",
+    "successDesc": "Deine Rede wurde gespeichert. Es ist Zeit, mit dem Üben zu beginnen!",
+    "limitReachedDesc": "Du hast dein monatliches Reden-Limit erreicht. Upgrade auf Premium für unbegrenzte Reden.",
+    "wordLimitExceeded": "Deine Rede hat {{count}} Wörter. Dein Plan erlaubt bis zu {{limit}} Wörter.",
+    "wordLimitUpgrade": "Upgrade auf Premium für bis zu 5000 Wörter.",
+    "propCue": {
+      "tip": "Profi-Tipp: Wähle beliebige Wörter aus, um eine Bühnenanweisung hinzuzufügen (lächeln, lachen, Hand heben). Sie schwebt über deinem Skript, während du es liest.",
+      "addButton": "Bühnenanweisung hinzufügen",
+      "placeholder": "z.B. lächeln, lachen, Hand heben…",
+      "previewLabel": "Vorschau Bühnenanweisung"
+    },
+    "autoDetectsLanguage": "Sprache wird automatisch erkannt",
+    "analyzingImage": "Bild wird analysiert...",
+    "scanDocument": "Scannen",
+    "uploadImage": "Foto",
+    "retake": "Neu aufnehmen",
+    "extractText": "Text extrahieren",
+    "extracting": "Wird extrahiert...",
+    "scanSuccess": "Text extrahiert",
+    "scanSuccessDesc": "Der Text wurde deiner Rede hinzugefügt.",
+    "scanError": "Scan fehlgeschlagen",
+    "scanErrorDesc": "Text konnte nicht aus dem Bild extrahiert werden. Versuche es erneut mit einem klareren Foto.",
+    "cameraError": "Kamerafehler",
+    "cameraErrorDesc": "Es konnte nicht auf die Kamera zugegriffen werden. Bitte überprüfe die Berechtigungen.",
+    "familiarity": {
+      "label": "Wie gut kennst du diesen Text?",
+      "hint": "Dies hilft uns, den Schwierigkeitsgrad für deine Übungseinheiten anzupassen",
+      "beginner": "Ich kenne sie gar nicht",
+      "intermediate": "Ich kenne Teile",
+      "confident": "Ich kenne sie sehr gut"
+    },
+    "speechType": {
+      "label": "Wofür ist diese Rede?",
+      "hint": "Dies hilft, eine realistische Übungsumgebung mit Publikumsreaktionen zu schaffen",
+      "office_meeting": "Büro-Meeting",
+      "school_presentation": "Schule/Universität",
+      "conference": "Konferenz",
+      "wedding": "Hochzeit/Feier",
+      "interview": "Vorstellungsgespräch",
+      "general": "Allgemein"
+    },
+    "deadlineWarning": {
+      "critical": "⚠️ Warnung: knappe Frist",
+      "challenging": "Intensive Übung erforderlich",
+      "tight": "⏰ Bleib dran"
+    },
+    "learningMode": {
+      "title": "Wie möchten Sie lernen?",
+      "wordByWord": "Wort für Wort",
+      "wordByWordDesc": "Merken Sie sich den genauen Wortlaut durch progressives Ausblenden von Wörtern",
+      "generalOverview": "Überblick",
+      "generalOverviewDesc": "Lernen Sie Inhalt und Fluss anhand von Schlüsselwörtern, Zahlen und Phrasen",
+      "wordByWordHelp": "Sie üben, den genauen Wortlaut Ihrer Rede auswendig zu lernen. Wörter werden schrittweise ausgeblendet, sobald Sie sie beherrschen, bis Sie den gesamten Text aus dem Gedächtnis wiedergeben können.",
+      "generalOverviewHelp": "Sie üben, sich die Hauptthemen und die Struktur Ihrer Rede zu merken. Sie müssen keine genauen Wörter auswendig lernen – lediglich in der Lage sein, alle wichtigen Punkte in eigenen Worten wiederzugeben."
+    }
   },
   "practice": {
     "title": "Übungssitzung",
@@ -322,7 +381,9 @@
       "supportWordDelay": "Verzögerung der Hilfsanzeige",
       "supportWordDelayDesc": "Wartezeit, bevor das Hilfswort erscheint",
       "hesitationTime": "Zögerungszeit (erstes Wort)",
-      "hesitationTimeDesc": "Erstes Wort gelb markieren, wenn du so lange pausierst"
+      "hesitationTimeDesc": "Erstes Wort gelb markieren, wenn du so lange pausierst",
+      "sentenceStartDelay": "Zusätzliche Zeit nach Punkt",
+      "sentenceStartDelayDesc": "Zusätzliche Verzögerung, bevor das erste Wort nach einem Punkt gelb markiert wird"
     },
     "segments": {
       "learningProgress": "Lernfortschritt",
@@ -353,7 +414,27 @@
       "inMinutes": "in {{minutes}} Minute",
       "inMinutesPlural": "in {{minutes}} Minuten",
       "inLessThanMinute": "in weniger als einer Minute"
-    }
+    },
+    "segmentMastered": "Segment gemeistert!",
+    "nextSegmentUnlocked": "100% Genauigkeit mit minimalem Skript! Weiter zum nächsten Segment.",
+    "practiceTogetherNow": "Beide Segmente gemeistert! Übe sie jetzt zusammen.",
+    "spacedRepetitionInfoShort": "Ihr Gehirn braucht Zeit, um das Gelernte zu festigen.",
+    "practiceAnywayWarning": "Zu frühes Üben kann die langfristige Behaltensleistung reduzieren. Verwenden Sie dies sparsam für beste Ergebnisse.",
+    "spacedRepetitionTitle": "Spaced Repetition Lernen",
+    "spacedRepetitionExplain": "Diese App verwendet Spaced Repetition – eine wissenschaftlich erprobte Methode, die Ihre Gedächtnisleistung optimiert.",
+    "spacedBenefit1": "Wiederholungen werden in optimalen Intervallen für das Langzeitgedächtnis geplant",
+    "spacedBenefit2": "Zu frühes Üben kann die Effektivität der Speicherung reduzieren",
+    "spacedBenefit3": "Vertrauen Sie der KI-Planung für beste Ergebnisse",
+    "spacedWarning": "Zu frühes Wiederaufrufen stört den Gedächtniskonsolidierungsprozess und kann die langfristige Speicherung schwächen.",
+    "iUnderstandContinue": "Ich verstehe, weiter",
+    "unlockFlexibility": "Flexibilität freischalten",
+    "premiumBypassDesc": "Premium-Mitglieder können die Spaced-Repetition-Zeitplanung bei Bedarf umgehen.",
+    "premiumFeature1": "Jederzeit üben",
+    "premiumFeature2": "KI-optimierte Planung",
+    "premiumFeature3": "Unbegrenzte Reden",
+    "sessionCompleteTitle": "Heutige Sitzung abgeschlossen!",
+    "sessionCompleteDesc": "Großartige Arbeit! Ihr Gehirn braucht Zeit, um das Gelernte zu festigen. Kommen Sie später wieder, um eine bessere Behaltensleistung zu erzielen.",
+    "restHelpsMemory": "Ruhe hilft der Gedächtniskonsolidierung"
   },
   "settings": {
     "title": "Einstellungen",
@@ -388,7 +469,34 @@
       "continueWith": "Weiter mit",
       "plan": "Plan",
       "comingSoon": "Bald verfügbar!",
-      "comingSoonDesc": "Premium-Abonnement wird in Kürze verfügbar sein."
+      "comingSoonDesc": "Premium-Abonnement wird in Kürze verfügbar sein.",
+      "manageSub": "Verwalten Sie Ihr Abonnement und Ihre Zahlungen",
+      "youArePremium": "Sie sind Premium!",
+      "premiumDesc": "Sie haben Zugriff auf alle Premium-Funktionen",
+      "paymentHistory": "Zahlungshistorie",
+      "lastPayment": "Letzte Zahlung",
+      "nextPayment": "Nächste Zahlung",
+      "viewAllPayments": "Alle Zahlungen anzeigen",
+      "viewAllPaymentsDesc": "Zahlungshistorie kommt bald",
+      "manageSubscription": "Abonnement verwalten",
+      "cancelSubscription": "Abonnement kündigen",
+      "cancelConfirmTitle": "Abonnement kündigen?",
+      "cancelConfirmDesc": "Sind Sie sicher, dass Sie Ihr Abonnement kündigen möchten? Sie verlieren am Ende Ihres aktuellen Abrechnungszeitraums den Zugriff auf alle Premium-Funktionen.",
+      "confirmCancel": "Ja, Abonnement kündigen",
+      "cancelDesc": "Kündigungsfunktion kommt bald",
+      "cancelNote": "Sie können jederzeit kündigen. Der Zugang bleibt bis zum Ende des Abrechnungszeitraums bestehen.",
+      "noLimits": "Keine monatlichen Limits",
+      "presentationMode": "Präsentationsmodus",
+      "fullRunthrough": "Vollständiger Durchlauf mit KI-Feedback",
+      "practiceAnytime": "Wartezeit überspringen",
+      "deepInsights": "Jedes Detail verfolgen",
+      "month": "Monat",
+      "mostPopular": "Am beliebtesten",
+      "bestValue": "Bestes Preis-Leistungs-Verhältnis",
+      "upgradeCta": "Auf Premium upgraden",
+      "cancelAnytime": "Jederzeit kündbar",
+      "securePayment": "Sichere Zahlung",
+      "upgradeToPremium": "Auf Premium upgraden"
     },
     "appearance": {
       "title": "Erscheinungsbild",
@@ -416,7 +524,21 @@
       "title": "Konto",
       "description": "Verwalte deine Kontoeinstellungen",
       "personalizedLearning": "Personalisiertes Lernen",
-      "personalizedLearningDesc": "Dein Übungsplan wird automatisch an deine Leistung und Termine angepasst."
+      "personalizedLearningDesc": "Dein Übungsplan wird automatisch an deine Leistung und Termine angepasst.",
+      "manageAccount": "Konto verwalten",
+      "dataPrivacy": "Daten & Datenschutz",
+      "dataPrivacyDesc": "Ihre Daten werden sicher gespeichert und niemals an Dritte weitergegeben",
+      "dataInfo": "Alle Ihre Reden, Übungseinheiten und Fortschritte werden verschlüsselt und sicher gespeichert. Sie können Ihr Konto jederzeit löschen, um alle Daten zu entfernen.",
+      "dangerZone": "Kontomaßnahmen",
+      "dangerZoneDesc": "Permanente Kontoänderungen",
+      "deleteAccount": "Konto löschen",
+      "deleteConfirmTitle": "Konto löschen?",
+      "deleteConfirmDesc": "Dies löscht Ihr Konto und alle Daten einschließlich Reden, Übungsverlauf und Fortschritt dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmDelete": "Ja, mein Konto löschen",
+      "deleted": "Konto gelöscht",
+      "deletedDesc": "Ihr Konto wurde dauerhaft gelöscht.",
+      "deleteFailed": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+      "notLoggedIn": "Sie müssen angemeldet sein, um Ihr Konto zu löschen."
     },
     "practiceHours": {
       "title": "Übungszeiten",
@@ -436,21 +558,45 @@
       "nativeRequiredDesc": "Push-Benachrichtigungen auf dem Sperrbildschirm gibt es nur in der nativen App. Installiere die App, um Benachrichtigungen auf deinem iPhone oder Android zu erhalten.",
       "pushNotifications": "Push-Benachrichtigungen",
       "pushNotificationsDesc": "Erhalte Erinnerungen auf deinem Sperrbildschirm",
-      "enabled": "Du erhältst Benachrichtigungen, wenn Reden basierend auf deinem Fortschritt zur Wiederholung anstehen."
+      "enabled": "Du erhältst Benachrichtigungen, wenn Reden basierend auf deinem Fortschritt zur Wiederholung anstehen.",
+      "notificationWindow": "Benachrichtigungszeitfenster",
+      "notificationWindowDesc": "Sie erhalten nur Benachrichtigungen zwischen diesen Zeiten",
+      "from": "Von",
+      "to": "Bis",
+      "windowPreview": "Benachrichtigungen werden zwischen {{start}} und {{end}} gesendet"
     },
     "legal": {
       "termsTitle": "Rechtliches",
       "termsDescription": "Lies unsere rechtlichen Vereinbarungen",
       "termsOfService": "Nutzungsbedingungen",
-      "privacyPolicy": "Datenschutzrichtlinie"
+      "privacyPolicy": "Datenschutzrichtlinie",
+      "cookiePolicy": "Cookie-Richtlinie"
     },
     "support": {
       "title": "Support",
       "description": "Hilfe erhalten und Feedback geben",
       "contactSupport": "Support kontaktieren",
-      "contactSupportDesc": "Fragen oder Hilfe benötigt? Kontaktiere uns."
+      "contactSupportDesc": "Fragen oder Hilfe benötigt? Kontaktiere uns.",
+      "helpCenter": "Hilfe-Center",
+      "joinCommunity": "Community beitreten",
+      "emailSupport": "E-Mail-Support",
+      "needHelp": "Brauchen Sie Hilfe?",
+      "needHelpDesc": "Unser Support-Team antwortet normalerweise innerhalb von 24 Stunden. Bei dringenden Problemen senden Sie uns bitte direkt eine E-Mail an support@sermable.com"
     },
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "payment": {
+      "title": "Zahlung",
+      "subtitle": "Verwalten Sie Ihr Abonnement und Ihre Abrechnung",
+      "managePlan": "Verwalten Sie Ihr Abo und Ihre Abrechnung",
+      "viewPlans": "Preispläne ansehen",
+      "viewPayments": "Ihre Zahlungshistorie und bevorstehende Abbuchungen ansehen",
+      "paymentMethod": "Zahlungsmethode",
+      "expires": "Läuft ab",
+      "update": "Aktualisieren",
+      "updateCardDesc": "Kartenaktualisierung kommt bald",
+      "moreOptions": "Mehr Optionen",
+      "cancelInfo": "Wenn Sie Ihr Abonnement beenden möchten, können Sie dies unten tun. Ihr Zugang bleibt bis zum Ende Ihres aktuellen Abrechnungszeitraums bestehen."
+    }
   },
   "common": {
     "later": "Später",
@@ -491,7 +637,33 @@
     "skip_rest": "Trotzdem jetzt starten",
     "beats_remaining": "{{count}} Beat heute übrig",
     "beats_remaining_plural": "{{count}} Beats heute übrig",
-    "beat_complete_rest": "Beat gemeistert! Mach eine kurze Pause."
+    "beat_complete_rest": "Beat gemeistert! Mach eine kurze Pause.",
+    "beat_x_of_y": "Takt {{current}} von {{total}}",
+    "done_for_now": "Fürs Erste erledigt!",
+    "sentence_x": "Satz {{number}}",
+    "read_x_of_3": "Gelesen {{current}}/3",
+    "read_aloud_x_of_3": "Laut gelesen {{current}}/3",
+    "fading_x_left": "{{count}} Wörter sichtbar",
+    "excellent_next": "Ausgezeichnet! Nächster Satz...",
+    "great_start_fading": "Super! Beginnen wir jetzt mit dem Ausblenden...",
+    "beat_complete": "Takt abgeschlossen!",
+    "beat_complete_next": "Takt abgeschlossen! Lade nächsten...",
+    "combining_sentences": "Alle Sätze werden kombiniert...",
+    "next_beat": "Nächster Takt",
+    "mastered": "Abgeschlossen",
+    "start_session": "Sitzung starten",
+    "ready_to_practice": "Bereit zum Üben!",
+    "all_mastered": "Alle Takte abgeschlossen!",
+    "all_completed": "Alle Takte abgeschlossen!",
+    "all_completed_desc": "Super gemacht! Übe später erneut, um deine Erinnerung zu festigen.",
+    "poem_memorized": "Super gemacht! Übe später erneut, um deine Erinnerung zu festigen.",
+    "come_back": "Du hast {{current}}/{{total}} Takte abgeschlossen. Komm später zurück, um den nächsten zu lernen!",
+    "science_tip": "Schlaf stärkt Erinnerungen mehr als Wiederholung",
+    "morning_tip": "Morgenrückruf = Gedächtniskonsolidierungsschub",
+    "full_recall_subtitle": "Kein Skript. Reine Erinnerung.",
+    "full_recall_desc": "Du hast alle Takte gemeistert! Rufe jetzt die gesamte Rede aus dem Gedächtnis ab.",
+    "begin_recall": "Vollständigen Abruf starten",
+    "hint_available": "Hinweise werden angezeigt, wenn du 3+ Sekunden pausierst"
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",
@@ -559,11 +731,29 @@
     "multipleEnvironments": "Mehrere Umgebungen",
     "startWithAudience": "Mit Publikum starten",
     "unlockPremium": "Premium freischalten",
-    "switchModes": "Du kannst den Modus jederzeit vor Beginn deiner Präsentation wechseln"
+    "switchModes": "Du kannst den Modus jederzeit vor Beginn deiner Präsentation wechseln",
+    "wholeSpeechMode": "Ganze Rede Modus",
+    "wholeSpeechModeDesc": "Auswendiglernen Wort für Wort mit Hinweisen",
+    "selectWholeSpeech": "Ganze Rede auswählen",
+    "listenMode": "Zuhörmodus",
+    "listenModeDesc": "Sprechen Sie frei. Nach 2 Sekunden Pause werden die nächsten Wörter angezeigt.",
+    "noFollowAlong": "Keine Begleitung – leerer Bildschirm",
+    "hintOnPause": "Zeigt Wörter an, wenn Sie zögern",
+    "selectListen": "Zuhörmodus auswählen",
+    "scriptMode": "Skript-Modus",
+    "scriptModeDesc": "Takte lesen, dann von einem Referenzwort aus nacherzählen",
+    "referenceWordAnchors": "Referenzwort-Anker",
+    "retellFromMemory": "Aus dem Gedächtnis nacherzählen",
+    "selectScript": "Skript auswählen",
+    "generalMode": "Skript-Modus",
+    "generalModeDesc": "Lernen Sie über Referenzwörter – lesen, erinnern, nacherzählen",
+    "keyWordsAnchors": "KI wählt ein Referenzwort pro Takt",
+    "ownWordsStyle": "In eigenen Worten nacherzählen",
+    "selectGeneral": "Skript-Modus auswählen"
   },
   "calendar": {
     "practice": "Übung",
-    "recall": "Recall",
+    "recall": "Abrufen",
     "test": "Komplett",
     "presentationDay": "Präsentationstag",
     "completed": "Erledigt",
@@ -598,6 +788,320 @@
     "tabs": {
       "overview": "Übersicht",
       "calendar": "Kalender"
+    },
+    "print": "Drucken",
+    "strictness": {
+      "title": "Bewertungsmodus",
+      "description": "Wie streng soll das Üben Ihre Aussprache mit dem Skript vergleichen?",
+      "strict": "Streng",
+      "strictDesc": "Genaue Wortreihenfolge. Am besten, wenn jedes Wort zählt.",
+      "flow": "Flüssig",
+      "flowDesc": "Bedeutung über Genauigkeit. Natürlichere Darbietung.",
+      "saved": "Gespeichert"
     }
+  },
+  "tour": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "done": "Verstanden",
+    "welcome": {
+      "title": "Ein paar Tricks, bevor du anfängst",
+      "body": "Lerne die Textfunktionen von Sermable kennen, um deine Übung und Präsentation zum Leben zu erwecken."
+    },
+    "direction": {
+      "title": "Bühnenanweisungen",
+      "body": "Wähle beliebige Wörter im Editor aus und schreibe, was zu tun ist – wie „lächeln“ oder „Hand heben“. Die Anweisung erscheint während deiner Präsentation über deinem Skript."
+    },
+    "pause": {
+      "title": "Pausen mit einem Bindestrich",
+      "body": "Füge ein eigenständiges `-` für eine 2-Sekunden-Pause hinzu oder `-5s` für eine benutzerdefinierte Länge. Das Training dimmt den Bildschirm und zählt für dich herunter."
+    },
+    "complete": {
+      "title": "Du bist bereit",
+      "body": "Mische diese Markierungen beliebig. Du kannst sie später auch im Skript bearbeiten."
+    }
+  },
+  "help": {
+    "title": "Hilfe-Center",
+    "subtitle": "FAQ & Fehlerbehebung",
+    "needMoreHelp": "Brauchen Sie weitere Hilfe?",
+    "contactDescription": "Unser Team hilft Ihnen gerne weiter",
+    "emailSupport": "E-Mail-Support",
+    "frequentlyAsked": "Häufig gestellte Fragen",
+    "troubleshootingTitle": "Fehlerbehebung",
+    "madeWithLove": "Mit ❤️ für Redner überall gemacht",
+    "categories": {
+      "gettingStarted": "Erste Schritte",
+      "practice": "Übungsmodus",
+      "spacedRepetition": "Spaced Repetition",
+      "presentation": "Präsentationsmodus",
+      "streaks": "Serien & Fortschritt",
+      "account": "Konto & Einstellungen"
+    },
+    "faq": {
+      "howToAddSpeech": {
+        "question": "Wie füge ich eine neue Rede hinzu?",
+        "answer": "Tippe auf deinem Dashboard auf das +-Symbol, füge deinen Redetext ein, gib ihm einen Titel und lege optional ein Zieldatum fest. Die KI unterteilt ihn automatisch in lernbare Abschnitte."
+      },
+      "whatIsBeat": {
+        "question": "Was ist ein „Beat“?",
+        "answer": "Ein Beat ist ein kleiner Abschnitt deiner Rede (normalerweise 2-4 Sätze), den die App dir hilft, einzeln auswendig zu lernen. Sobald du einen Beat beherrschst, kombinierst du ihn mit anderen."
+      },
+      "howManySpeeches": {
+        "question": "Wie viele Reden kann ich haben?",
+        "answer": "Kostenlose Nutzer können 1 aktive Rede pro Monat haben. Premium-Nutzer haben unbegrenzt Reden."
+      },
+      "howPracticeWorks": {
+        "question": "Wie funktioniert der Übungsmodus?",
+        "answer": "Der Übungsmodus zeigt deinen Redetext, wobei einige Wörter als Hinweise sichtbar sind. Sprich deine Rede laut – die App verfolgt deine Wörter in Echtzeit und hebt deinen Fortschritt hervor. Wörter, die du gut kennst, werden allmählich ausgeblendet."
+      },
+      "whyWordsHidden": {
+        "question": "Warum sind manche Wörter ausgeblendet?",
+        "answer": "Die App verwendet adaptives Lernen, um Wörter auszublenden, die du beherrschst. Das fordert dein Gedächtnis heraus und hilft dir, wirklich auswendig zu lernen, anstatt nur vorzulesen. Tippe auf ausgeblendete Wörter, wenn du einen Hinweis benötigst."
+      },
+      "micNotWorking": {
+        "question": "Mein Mikrofon funktioniert nicht",
+        "answer": "Stelle sicher, dass du Mikrofonberechtigungen in deinen Browser-/Geräteeinstellungen erteilt hast. Versuche, Chrome oder Safari für beste Kompatibilität zu verwenden. Wenn Probleme weiterhin bestehen, versuche, die Seite zu aktualisieren."
+      },
+      "whatIsSpacedRepetition": {
+        "question": "Was ist Spaced Repetition?",
+        "answer": "Spaced Repetition ist eine wissenschaftlich erwiesene Lerntechnik. Anstatt zu pauken, wiederholst du Material in optimalen Intervallen – genau dann, wenn du es fast vergessen hast. Das schafft stärkere, länger anhaltende Erinnerungen."
+      },
+      "whyWait": {
+        "question": "Warum muss ich mit dem Üben warten?",
+        "answer": "Warten ist Teil des Lernprozesses! Dein Gehirn festigt Erinnerungen während der Ruhephasen. Zu frühes Üben kann diesen Prozess sogar stören. Vertraue der KI-Planung für beste Ergebnisse."
+      },
+      "canPracticeEarly": {
+        "question": "Kann ich früher üben, wenn ich möchte?",
+        "answer": "Premium-Nutzer können die Wartezeit mit der Schaltfläche „Trotzdem üben“ umgehen. Für ein optimales Auswendiglernen empfehlen wir jedoch, die geplanten Zeiten einzuhalten."
+      },
+      "whatIsPresentation": {
+        "question": "Was ist der Präsentationsmodus?",
+        "answer": "Der Präsentationsmodus ist ein kompletter Durchlauf deiner Rede ohne sichtbares Skript. Er simuliert das reale Erlebnis. Nachdem du fertig bist, erhältst du detailliertes KI-Feedback zu Genauigkeit, verpassten Wörtern und verbesserungswürdigen Bereichen."
+      },
+      "whenUsePresentation": {
+        "question": "Wann sollte ich den Präsentationsmodus verwenden?",
+        "answer": "Verwende ihn, wenn du dich mit deiner Rede sicher fühlst und dich selbst testen möchtest. Er ist ideal für die letzte Vorbereitung vor dem Ernstfall!"
+      },
+      "howStreaksWork": {
+        "question": "Wie funktionieren Streaks?",
+        "answer": "Übe mindestens einmal pro Tag, um deine Streak aufrechtzuerhalten. Der Streak-Zähler zeigt an, wie viele aufeinanderfolgende Tage du geübt hast. Er wird zurückgesetzt, wenn du einen Tag verpasst."
+      },
+      "streakReset": {
+        "question": "Was passiert, wenn meine Streak zurückgesetzt wird?",
+        "answer": "Keine Sorge! Dein Fortschritt geht nicht verloren, nur der Streak-Zähler. Übe weiter und baue ihn wieder auf. Beständigkeit ist wichtiger als jede einzelne Zahl."
+      },
+      "howDeleteAccount": {
+        "question": "Wie lösche ich mein Konto?",
+        "answer": "Gehe zu Einstellungen → Scrolle nach unten → Tippe auf „Konto löschen“. Dadurch werden alle deine Daten dauerhaft entfernt, einschließlich Reden, Fortschritt und Kontoinformationen."
+      },
+      "changeLanguage": {
+        "question": "Wie ändere ich die App-Sprache?",
+        "answer": "Gehe zu Einstellungen → Sprache → wähle deine bevorzugte Sprache. Die App unterstützt Englisch, Schwedisch, Spanisch, Französisch, Deutsch, Italienisch und Portugiesisch."
+      }
+    },
+    "troubleshooting": {
+      "micIssues": {
+        "title": "Mikrofon funktioniert nicht",
+        "step1": "Berechtigungen des Browsers prüfen – suche nach einem Mikrofonsymbol in der Adressleiste",
+        "step2": "Versuche, Chrome oder Safari für beste Kompatibilität zu verwenden",
+        "step3": "Stelle sicher, dass keine andere App das Mikrofon verwendet",
+        "step4": "Aktualisiere die Seite und versuche es erneut"
+      },
+      "slowPerformance": {
+        "title": "App läuft langsam",
+        "step1": "Schließe andere Browser-Tabs und Apps",
+        "step2": "Lösche den Cache deines Browsers",
+        "step3": "Versuche, die native mobile App für bessere Leistung zu verwenden"
+      },
+      "appNotLoading": {
+        "title": "App lädt nicht",
+        "step1": "Überprüfe deine Internetverbindung",
+        "step2": "Versuche, die Seite zu aktualisieren",
+        "step3": "Leere Browser-Cache und Cookies"
+      }
+    }
+  },
+  "day_after_recall": {
+    "title": "Rückruf am nächsten Tag",
+    "card_desc": "Teste dein Gedächtnis ohne Skript. Erhalte Stichwort-Hinweise nur bei Bedarf.",
+    "no_script": "Kein sichtbares Skript",
+    "pacing_pulse": "Blauer Pacing-Puls",
+    "no_mastered_beats": "Keine gemeisterten Takte",
+    "learn_first": "Meistere zuerst einige Takte, bevor du den Rückruf am nächsten Tag verwendest.",
+    "attempt": "Versuch",
+    "keywords_shown": "Angezeigte Stichwörter",
+    "words": "Wörter",
+    "tap_hint": "Tippe irgendwo für Stichwort-Hinweis",
+    "attempt_complete": "Gut! Versuchen wir es noch einmal",
+    "fewer_stops": "Du benötigtest {{count}} Schlüsselwort(e). Versuche, dieses Mal weniger zu benötigen.",
+    "stable": "Rede ist stabil!",
+    "stable_desc": "Du hast die gesamte Rede ohne Schlüsselwort-Unterstützung gemeistert. Dein Gedächtnis ist gefestigt!",
+    "attempts": "In {{count}} Versuch(en) abgeschlossen"
+  },
+  "freestyle": {
+    "keywordMode": "Schlüsselwort-Modus",
+    "covered": "abgedeckt",
+    "mustMention": "Muss erwähnt werden",
+    "shouldMention": "Sollte erwähnt werden",
+    "niceToHave": "Wäre gut zu haben",
+    "startSpeaking": "Sprechen starten",
+    "stopFinish": "Stoppen & Beenden",
+    "speakNaturally": "Sprich natürlich – Schlüsselwörter werden hervorgehoben, sobald du sie erwähnst",
+    "analyzed": "Rede analysiert!",
+    "keywordsExtracted": "{{count}} Schlüsselwörter extrahiert",
+    "topicsExtracted": "{{count}} Themen mit Schlüsselwörtern extrahiert",
+    "analysisFailed": "Analyse fehlgeschlagen",
+    "currentTopic": "Aktuell",
+    "nextUp": "Als Nächstes",
+    "showHint": "Hinweis",
+    "showFullText": "Text anzeigen",
+    "skipTopic": "Überspringen",
+    "topicOf": "Thema {{current}} von {{total}}",
+    "keywords": "Schlüsselwörter",
+    "numbersStats": "Zahlen & Statistiken",
+    "keyConCepts": "Schlüsselkonzepte",
+    "dates": "Daten & Zeiten",
+    "names": "Namen",
+    "actions": "Aktionen",
+    "topicsCovered": "{{covered}} von {{total}} Themen abgedeckt",
+    "finish": "Beenden"
+  },
+  "progressive": {
+    "beat_mastered": "Beat gemeistert!",
+    "all_complete": "Rede auswendig gelernt!",
+    "session_done": "Sitzung abgeschlossen!",
+    "come_back_tomorrow": "Komm morgen zurück, um dein Gedächtnis zu festigen!",
+    "progress": "{{mastered}}/{{total}} Beats abgeschlossen. Ruhe dich aus und kehre später zurück!",
+    "sleep_tip": "Schlaf festigt Erinnerungen besser als Wiederholung",
+    "no_beats": "Keine Beats gefunden",
+    "try_again": "Erneut versuchen",
+    "hesitation_detected": "Übe weiter!",
+    "recite_from_memory": "Rezitiere aus dem Gedächtnis. Tippe, wenn du hängenbleibst.",
+    "perfect_needed": "Benötige 2 perfekte Abrufe",
+    "day1_desc": "Sätze lernen",
+    "day2_desc": "Beat-Level-Übung",
+    "day3_desc": "Übung der gesamten Rede",
+    "day4_desc": "Gedächtnisabruf"
+  },
+  "overviewMode": {
+    "generalOverview": "Allgemeiner Übersichtsmodus",
+    "loadingTopics": "Themen werden geladen...",
+    "extractingTopics": "Themen werden extrahiert",
+    "pleaseWait": "Die KI analysiert Ihre Rede, um Schlüsselthemen zu identifizieren...",
+    "topicsExtracted": "Themen extrahiert",
+    "topicsExtractedDesc": "Es wurden {count} Hauptthemen in Ihrer Rede gefunden",
+    "failedToLoadTopics": "Themen konnten nicht geladen werden",
+    "failedToExtract": "Themen konnten nicht aus Ihrer Rede extrahiert werden",
+    "readThrough": "Lesen Sie Ihre Rede durch",
+    "readThroughDesc": "Machen Sie sich mit dem Inhalt vertraut, bevor Sie üben",
+    "imReady": "Ich bin bereit zu üben",
+    "speakAboutTopics": "Sprechen Sie über jedes Thema in Ihren eigenen Worten",
+    "fullHints": "Volle Hinweise",
+    "titlesOnly": "Nur Titel",
+    "numbersOnly": "Nur Zahlen",
+    "analyzing": "Ihre Rede wird analysiert...",
+    "noSpeechDetected": "Keine Rede erkannt",
+    "tryAgainLouder": "Bitte sprechen Sie lauter und versuchen Sie es erneut",
+    "processingFailed": "Ihre Aufnahme konnte nicht verarbeitet werden",
+    "contentCoverage": "Inhaltsabdeckung",
+    "topicCoverage": "Themenabdeckung",
+    "covered": "Abgedeckt",
+    "partiallyCovered": "Teilweise abgedeckt",
+    "missed": "Verpasst",
+    "aiFeedback": "KI-Feedback",
+    "tryAgain": "Erneut versuchen",
+    "section": "Abschnitt",
+    "keyWords": "Schlüsselwörter",
+    "keyNumbers": "Schlüsselzahlen",
+    "keyPhrases": "Schlüsselphrasen",
+    "explainSection": "Erklären Sie diesen Abschnitt in Ihren eigenen Worten",
+    "explainThisSection": "Diesen Abschnitt erklären",
+    "nextSection": "Nächster Abschnitt",
+    "viewResults": "Ergebnisse anzeigen",
+    "mainIdea": "Hauptidee erfasst",
+    "missedKeywords": "Verpasste Stichwörter",
+    "missedNumbers": "Verpasste Zahlen",
+    "missedPhrases": "Fehlende Phrasen",
+    "allKeywordsCovered": "Alle Stichwörter abgedeckt"
+  },
+  "sleepScheduling": {
+    "morningRecall": "Morgendlicher Gedächtnistest",
+    "morningRecallDesc": "Ihr Gehirn hat über Nacht Erinnerungen gefestigt. Testen Sie jetzt Ihr Erinnerungsvermögen an „{{title}}“ für maximale Behaltensleistung!",
+    "eveningPractice": "Übung vor dem Schlafengehen",
+    "eveningPracticeDesc": "Üben Sie jetzt und schlafen Sie darauf! Ihr Gehirn festigt Erinnerungen im Schlaf, was die heutige Übung besonders wirkungsvoll macht.",
+    "optimalMorning": "Frischer Geist Übung",
+    "optimalMorningDesc": "Ihr Gehirn ist am Morgen am aufnahmefähigsten. Eine großartige Zeit, um neues Material zu lernen!",
+    "practiceReminder": "Zeit zum Üben",
+    "practiceReminderDesc": "Versuchen Sie, heute Abend vor 22 Uhr zu üben, um eine optimale Gedächtniskonsolidierung im Schlaf zu erreichen.",
+    "scienceBacked": "Wissenschaftlich fundiert",
+    "testRecall": "Erinnerung testen",
+    "practiceNow": "Jetzt üben"
+  },
+  "beatPrint": {
+    "title": "Skript drucken",
+    "description": "Wählen Sie ein Layout. Regieanweisungen in (Klammern) werden kursiv gedruckt.",
+    "optionPerPage": "Ein Beat pro Seite",
+    "optionPerPageDesc": "Große Schrift, luftiges Layout. Ideal für Podium/Bühne.",
+    "optionContinuous": "Fortlaufende Seiten",
+    "optionContinuousDesc": "Kompakt, Beats hintereinander. Spart Papier.",
+    "printButton": "Drucken",
+    "beatLabel": "Beat",
+    "popupBlockedTitle": "Pop-up blockiert",
+    "popupBlockedDesc": "Erlauben Sie Pop-ups, um das Skript zu drucken.",
+    "errorTitle": "Druck konnte nicht erstellt werden"
+  },
+  "footer": {
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutz",
+    "refundPolicy": "Rückgaberichtlinien"
+  },
+  "notFound": {
+    "title": "Hoppla! Seite nicht gefunden",
+    "back": "Zurück zur Startseite"
+  },
+  "presentationSummary": {
+    "excellent": "Ausgezeichnet!",
+    "excellentSubtitle": "Hervorragende Leistung!",
+    "goodJob": "Gut gemacht!",
+    "goodJobSubtitle": "Das ist Ihr Ergebnis",
+    "keepPracticing": "Weiter üben!",
+    "keepPracticingSubtitle": "Jeder Versuch macht Sie besser",
+    "performanceSummary": "Leistungsübersicht",
+    "badgeExcellent": "Ausgezeichnet",
+    "badgeGood": "Gut",
+    "badgeNeedsWork": "Überarbeitungsbedürftig",
+    "accuracy": "Genauigkeit",
+    "duration": "Dauer",
+    "hesitations": "Zögerlichkeiten",
+    "missedWords": "Verpasste Wörter",
+    "more": "mehr",
+    "coachsFeedback": "Feedback vom Coach",
+    "coachsFeedbackDesc": "Personalisierte Verbesserungsvorschläge",
+    "summary": "Zusammenfassung",
+    "advice": "Ratschläge",
+    "nextStep": "Nächster Schritt",
+    "backToDashboard": "Zurück zum Dashboard"
+  },
+  "aiBuilder": {
+    "title": "Rede mit KI erstellen",
+    "promptDesc": "Beschreiben Sie, welche Art von Rede Sie wünschen. Die KI wird Ihnen einige kurze Fragen stellen und einen Entwurf für Sie erstellen.",
+    "questionsDesc": "Antworte so ausführlich oder prägnant, wie du möchtest – du kannst Fragen überspringen.",
+    "previewDesc": "Bearbeite den Entwurf frei. Wenn du zufrieden bist, tippe auf „Verwenden“.",
+    "promptLabel": "Um welche Art von Rede handelt es sich?",
+    "promptPlaceholder": "Schreibe eine Rede für die Hochzeit meines Bruders. Er ist 32, ich kenne ihn mein ganzes Leben lang. Mach sie herzlich und ein bisschen lustig.",
+    "lengthLabel": "Ungefähre Länge",
+    "minutesShort": "Min.",
+    "skipPlaceholder": "Zum Überspringen leer lassen",
+    "draftTitleLabel": "Titel",
+    "draftSpeechLabel": "Die Rede",
+    "getQuestions": "Weiter",
+    "writeSpeech": "Rede schreiben",
+    "regenerate": "Antworten ändern",
+    "useDraft": "Verwenden",
+    "tooShortTitle": "Erzähl mir ein bisschen mehr",
+    "tooShortDesc": "Schreibe einen kurzen Satz darüber, um welche Art von Rede es sich handelt.",
+    "errorTitle": "KI hat nicht geantwortet"
   }
 }
