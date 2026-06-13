@@ -61,15 +61,21 @@ const PropCueTextarea = ({
     }
     setSel({ start, end });
     // Position the floating button just above the textarea, aligned roughly
-    // with the selection's vertical position.
+    // with the selection's vertical position — clamped to viewport so it
+    // never sticks out on narrow (mobile / iPhone) screens.
     const rect = el.getBoundingClientRect();
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight || "20");
-    // Approx line index by counting newlines before selection start
     const before = value.slice(0, start);
     const lineIdx = (before.match(/\n/g) || []).length;
     const scrollTop = el.scrollTop;
     const top = rect.top + lineIdx * lineHeight - scrollTop - 40;
-    setPos({ top, left: rect.left + rect.width / 2 });
+    const approxButtonHalfWidth = 90; // button + padding
+    const viewportPadding = 12;
+    const minLeft = approxButtonHalfWidth + viewportPadding;
+    const maxLeft = window.innerWidth - approxButtonHalfWidth - viewportPadding;
+    const rawLeft = rect.left + rect.width / 2;
+    const left = Math.max(minLeft, Math.min(maxLeft, rawLeft));
+    setPos({ top, left });
   };
 
   useEffect(() => {
