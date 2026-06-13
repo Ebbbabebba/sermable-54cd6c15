@@ -1794,11 +1794,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       if (foundIdx === -1 && !skipFillUsed) {
-        // Current word didn't match - optionally check the next word, but ONLY
-        // when the skipped word is visible. Hidden words (including tiny gap
-        // words like "my", "a", "I") must be spoken or revealed by the
-        // hesitation timer; otherwise the app can mark an unmastered hidden
-        // word as complete and start fading too early.
+        // Current word didn't match - optionally check the next 1-2 words, but ONLY
+        // when the skipped words are visible. Hidden words must be spoken or
+        // revealed by the hesitation timer.
         const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
 
         if (
@@ -1810,9 +1808,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
           usedSkipFill = true;
+        } else if (
+          canSkipCurrent &&
+          advancedTo + 2 < words.length &&
+          !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
+          !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
+          wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
+        ) {
+          // Two visible words skipped — user kept speaking past a mis-recognized
+          // stretch (e.g. looked away from the screen). Catch the cursor up so
+          // it doesn't freeze on stale words.
+          newSpoken.add(advancedTo);
+          newSpoken.add(advancedTo + 1);
+          foundIdx = advancedTo + 2;
+          usedSkipFill = true;
         }
-        // Removed 2-word visible lookahead — a single spoken token must
-        // never advance the cursor by more than two positions in one pass.
       }
 
       if (foundIdx === -1) {
@@ -3174,6 +3184,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           return;
         }
 
+        // Prewarm mic with constraints tuned for speaking from a distance:
+        // auto gain + noise suppression help when the user steps away from
+        // the device. Web Speech API will reuse this stream on most browsers.
+        try {
+          if (navigator.mediaDevices?.getUserMedia) {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1,
+              },
+            });
+            // Release immediately — Web Speech will open its own handle, but
+            // the browser remembers permission + applied processing.
+            stream.getTracks().forEach((t) => t.stop());
+          }
+        } catch (micErr) {
+          console.warn("Mic prewarm failed (continuing anyway):", micErr);
+        }
+
+
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
@@ -3355,7 +3387,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             // visible word for ~6s while the user is clearly speaking, advance
             // it silently. Without this the blue cursor could stay frozen on a
             // visible word forever (e.g. speech recognition mishears "Ladies").
-            const VISIBLE_STUCK_MS = 6000;
+            // Hard-to-recognize visible words (SpaceX, NATO, COVID-19, years)
+            // get a much shorter timeout — the engine often can't transcribe
+            // them at all, so we shouldn't make the user wait 6s.
+            const isHardWord = isHardToRecognizeWord(words[idx] ?? '');
+            const VISIBLE_STUCK_MS = isHardWord ? 2500 : 6000;
             if (
               hasHeardSpeechRef.current &&
               elapsed > VISIBLE_STUCK_MS &&
