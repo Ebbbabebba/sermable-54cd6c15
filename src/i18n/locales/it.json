@@ -81,8 +81,8 @@
     "invalidResetLink": "Questo link non è valido o è scaduto."
   },
   "dashboard": {
-    "shareTitleFmt": "__SHARETITLE__",
-    "shareTextFmt": "__SHARETEXT__",
+    "shareTitleFmt": "Un discorso è stato condiviso con te su Sermable",
+    "shareTextFmt": "Ciao! Ho condiviso il discorso "{{title}}" con te su Sermable. Apri il link per aggiungerlo al tuo account e iniziare a esercitarti:",
     "title": "I miei discorsi",
     "welcomeBack": "Bentornato",
     "goodMorning": "Buongiorno",

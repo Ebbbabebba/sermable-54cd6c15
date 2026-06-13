@@ -105,8 +105,8 @@
     "invalidResetLink": "This password reset link is invalid or has expired."
   },
   "dashboard": {
-    "shareTitleFmt": "__SHARETITLE__",
-    "shareTextFmt": "__SHARETEXT__",
+    "shareTitleFmt": "A speech has been shared with you on Sermable",
+    "shareTextFmt": "Hi! I shared the speech "{{title}}" with you on Sermable. Open the link to add it to your account and start practicing:",
     "title": "My Speeches",
     "welcomeBack": "Welcome back",
     "goodMorning": "Good morning",

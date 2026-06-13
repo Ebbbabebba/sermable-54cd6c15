@@ -81,8 +81,8 @@
     "invalidResetLink": "Este enlace es inválido o ha expirado."
   },
   "dashboard": {
-    "shareTitleFmt": "__SHARETITLE__",
-    "shareTextFmt": "__SHARETEXT__",
+    "shareTitleFmt": "Se ha compartido un discurso contigo en Sermable",
+    "shareTextFmt": "¡Hola! He compartido el discurso "{{title}}" contigo en Sermable. Abre el enlace para añadirlo a tu cuenta y empezar a practicar:",
     "title": "Mis discursos",
     "welcomeBack": "¡Hola de nuevo!",
     "goodMorning": "Buenos días",

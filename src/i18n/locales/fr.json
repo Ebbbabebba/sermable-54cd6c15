@@ -81,8 +81,8 @@
     "invalidResetLink": "Ce lien est invalide ou a expiré."
   },
   "dashboard": {
-    "shareTitleFmt": "__SHARETITLE__",
-    "shareTextFmt": "__SHARETEXT__",
+    "shareTitleFmt": "Un discours a été partagé avec vous sur Sermable",
+    "shareTextFmt": "Salut ! Jai partagé le discours "{{title}}" avec vous sur Sermable. Ouvrez le lien pour lajouter à votre compte et commencer à vous entraîner :",
     "title": "Mes discours",
     "welcomeBack": "Bon retour",
     "goodMorning": "Bonjour",
