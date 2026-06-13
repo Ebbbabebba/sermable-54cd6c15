@@ -817,6 +817,7 @@ export const CompactPresentationView = ({
             prevWordIndexRef.current = target;
             currentWordIndexRef.current = target;
             setCurrentWordIndex(target);
+            setDisplayedSentenceIndex(targetSentence);
             setShowHint(null);
           }}
           disabled={currentSentenceIndex === 0}
