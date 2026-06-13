@@ -503,14 +503,14 @@ const ScriptPracticeView = ({
             content_coverage: resultWithTranscript.content_coverage,
             order_accuracy: analysisData.order_accuracy,
           }]);
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("Analysis error:", err);
-          toast({ variant: "destructive", title: "Analysis failed", description: err.message });
+          toast({ variant: "destructive", title: "Analysis failed", description: getErrorMessage(err, "Could not analyze recording") });
           setPhase('reference');
         }
       };
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Error", description: err.message });
+    } catch (err: unknown) {
+      toast({ variant: "destructive", title: "Error", description: getErrorMessage(err, "Could not process recording") });
       setPhase('reference');
     }
   };
