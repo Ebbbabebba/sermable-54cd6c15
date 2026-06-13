@@ -3184,6 +3184,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           return;
         }
 
+        // Prewarm mic with constraints tuned for speaking from a distance:
+        // auto gain + noise suppression help when the user steps away from
+        // the device. Web Speech API will reuse this stream on most browsers.
+        try {
+          if (navigator.mediaDevices?.getUserMedia) {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1,
+              },
+            });
+            // Release immediately — Web Speech will open its own handle, but
+            // the browser remembers permission + applied processing.
+            stream.getTracks().forEach((t) => t.stop());
+          }
+        } catch (micErr) {
+          console.warn("Mic prewarm failed (continuing anyway):", micErr);
+        }
+
+
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
