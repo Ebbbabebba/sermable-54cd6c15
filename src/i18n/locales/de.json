@@ -759,6 +759,13 @@
     "ownWordsStyle": "In eigenen Worten nacherzählen",
     "selectGeneral": "Skript-Modus auswählen"
   },
+  "script": {
+    "currentKeyword": "Aktuelles Schlüsselwort",
+    "nextKeyword": "Weiter",
+    "speakingNowLive": "Sprechen Sie natürlich — die Schlüsselwörter springen weiter, wenn Sie sie nennen.",
+    "keywordsCovered": "{{covered}} von {{total}} Schlüsselwörtern",
+    "tooLittleSpeechFeedback": "Es wurde zu wenig Sprache erkannt, um dies als ausgezeichneten Durchlauf zu werten."
+  },
   "calendar": {
     "practice": "Übung",
     "recall": "Abrufen",

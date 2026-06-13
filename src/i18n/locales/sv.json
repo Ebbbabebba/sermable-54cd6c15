@@ -863,6 +863,13 @@
     "ownWordsStyle": "Återberätta med egna ord",
     "selectGeneral": "Välj Skriptläge"
   },
+  "script": {
+    "currentKeyword": "Aktuellt nyckelord",
+    "nextKeyword": "Nästa",
+    "speakingNowLive": "Tala naturligt — nyckelorden går vidare när du nämner dem.",
+    "keywordsCovered": "{{covered}} av {{total}} nyckelord",
+    "tooLittleSpeechFeedback": "För lite tal uppfattades för att räknas som en utmärkt runda."
+  },
   "common": {
     "later": "Senare",
     "done": "Klar",
