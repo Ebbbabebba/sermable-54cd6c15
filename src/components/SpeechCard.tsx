@@ -258,9 +258,11 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
       }
 
       const shareUrl = `${window.location.origin}/share/${token}`;
+      const shareTitle = t('dashboard.shareTitleFmt', 'A speech has been shared with you on Sermable');
+      const shareText = t('dashboard.shareTextFmt', 'Hi! I shared the speech "{{title}}" with you on Sermable. Open the link to add it to your account and start practicing:', { title: speech.title });
       const shareData = {
-        title: speech.title,
-        text: `Practice "${speech.title}" on Sermable`,
+        title: shareTitle,
+        text: shareText,
         url: shareUrl,
       };
       

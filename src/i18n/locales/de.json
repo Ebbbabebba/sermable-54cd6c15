@@ -81,6 +81,8 @@
     "invalidResetLink": "Dieser Link ist ungültig oder abgelaufen."
   },
   "dashboard": {
+    "shareTitleFmt": "Eine Rede wurde mit dir auf Sermable geteilt",
+    "shareTextFmt": "Hi! Ich habe die Rede \"{{title}}\" mit dir auf Sermable geteilt. Öffne den Link, um sie deinem Konto hinzuzufügen und mit dem Üben zu beginnen:",
     "title": "Meine Reden",
     "welcomeBack": "Willkommen zurück",
     "goodMorning": "Guten Morgen",
