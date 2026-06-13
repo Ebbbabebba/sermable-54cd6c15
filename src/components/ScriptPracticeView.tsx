@@ -343,6 +343,7 @@ const ScriptPracticeView = ({
       };
 
       mediaRecorder.onstop = () => {
+        isRecordingRef.current = false;
         const audioBlob = new Blob(chunksRef.current, { type: mimeType });
         handleRecordingDone(audioBlob);
         if (streamRef.current) {
