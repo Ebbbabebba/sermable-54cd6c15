@@ -717,11 +717,14 @@ const ScriptPracticeView = ({
                 className="space-y-8 text-center"
               >
                 <div className="space-y-5">
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
                     {beats.map((beat, beatPosition) => (
-                      <span
+                      <button
                         key={`${beat.beat_index}-${beatPosition}`}
-                        className={`h-2.5 rounded-full transition-all ${
+                        type="button"
+                        onClick={() => moveLiveCursor(beatPosition)}
+                        aria-label={`${t('script.nextKeyword', 'Next')}: ${beat.reference_word}`}
+                        className={`h-2.5 rounded-full transition-all cursor-pointer hover:opacity-80 ${
                           beatPosition === liveBeatIndex
                             ? 'w-8 bg-primary'
                             : coveredBeatIndexes.has(beatPosition)
@@ -736,20 +739,27 @@ const ScriptPracticeView = ({
                     <p className="text-xs font-medium uppercase text-muted-foreground">
                       {t('script.currentKeyword', 'Current keyword')}
                     </p>
-                    <motion.div
+                    <motion.button
+                      type="button"
                       key={activeBeat?.beat_index ?? 'none'}
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="inline-flex min-h-24 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 px-8 py-5"
+                      onClick={() => moveLiveCursor(liveBeatIndex + 1)}
+                      className="inline-flex min-h-24 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 px-8 py-5 transition hover:bg-primary/15 active:scale-[0.98] cursor-pointer"
+                      aria-label={t('script.tapToAdvance', 'Tap to advance')}
                     >
                       <span className="text-5xl md:text-6xl font-bold text-primary">
                         {activeBeat?.reference_word || currentReferenceWords[0]}
                       </span>
-                    </motion.div>
+                    </motion.button>
                     {nextBeat && (
-                      <p className="text-sm text-muted-foreground">
-                        {t('script.nextKeyword', 'Next')}: {nextBeat.reference_word}
-                      </p>
+                      <button
+                        type="button"
+                        onClick={() => moveLiveCursor(liveBeatIndex + 1)}
+                        className="text-sm text-muted-foreground hover:text-foreground transition"
+                      >
+                        {t('script.nextKeyword', 'Next')}: {nextBeat.reference_word} →
+                      </button>
                     )}
                   </div>
                 </div>
