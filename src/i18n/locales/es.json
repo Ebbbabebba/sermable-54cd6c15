@@ -120,7 +120,9 @@
     "deleteSpeech": "¿Eliminar este discurso?",
     "deleteSpeechDesc": "Se eliminará el discurso y todo tu progreso. Esta acción no se puede deshacer.",
     "deleted": "Discurso eliminado",
-    "deletedDesc": "El discurso se ha eliminado permanentemente."
+    "deletedDesc": "El discurso se ha eliminado permanentemente.",
+    "daysLeftPlural": "Faltan {count} días",
+    "daysOverduePlural": "{count} días de retraso"
   },
   "onboarding": {
     "skip": "Saltar",
@@ -215,7 +217,64 @@
     "limitReached": "Límite alcanzado",
     "pasteText": "Pega aquí el texto de tu discurso...",
     "languageDetected": "Idioma detectado y ajustes actualizados",
-    "buildWithAi": "Crear con IA"
+    "buildWithAi": "Crear con IA",
+    "description": "Añade el texto de tu discurso y establece una fecha objetivo para cuando necesites tenerlo memorizado.",
+    "speechTitlePlaceholder": "Ej., Informe Trimestral de Negocios",
+    "goalDateHint": "¿Cuándo necesitas presentar este discurso?",
+    "successDesc": "Tu discurso ha sido guardado. ¡Es hora de empezar a practicar!",
+    "limitReachedDesc": "Has alcanzado tu límite mensual de discursos. Actualiza a premium para discursos ilimitados.",
+    "wordLimitExceeded": "Tu discurso tiene {count} palabras. Tu plan permite hasta {limit} palabras.",
+    "wordLimitUpgrade": "Actualiza a premium para hasta 5000 palabras.",
+    "propCue": {
+      "tip": "Consejo profesional: selecciona cualquier palabra para adjuntar una instrucción de escena (sonreír, reír, levantar la mano). Flotará sobre tu guion mientras lo lees.",
+      "addButton": "Añadir instrucción de escena",
+      "placeholder": "Ej. sonreír, reír, levantar la mano…",
+      "previewLabel": "Vista previa de la instrucción de escena"
+    },
+    "autoDetectsLanguage": "Detecta el idioma automáticamente",
+    "analyzingImage": "Analizando imagen...",
+    "scanDocument": "Escanear",
+    "uploadImage": "Foto",
+    "retake": "Volver a tomar",
+    "extractText": "Extraer texto",
+    "extracting": "Extrayendo...",
+    "scanSuccess": "Texto Extraído",
+    "scanSuccessDesc": "El texto ha sido añadido a tu discurso.",
+    "scanError": "Error de Escaneo",
+    "scanErrorDesc": "No se pudo extraer el texto de la imagen. Intenta de nuevo con una foto más clara.",
+    "cameraError": "Error de Cámara",
+    "cameraErrorDesc": "No se pudo acceder a la cámara. Por favor, verifica los permisos.",
+    "familiarity": {
+      "label": "¿Qué tan bien conoces este texto?",
+      "hint": "Esto nos ayuda a ajustar el nivel de dificultad para tus sesiones de práctica",
+      "beginner": "No lo conozco en absoluto",
+      "intermediate": "Conozco algunas partes",
+      "confident": "Lo conozco muy bien"
+    },
+    "speechType": {
+      "label": "¿Para qué es este discurso?",
+      "hint": "Esto ayuda a crear un entorno de práctica realista con reacciones del público",
+      "office_meeting": "Reunión de oficina",
+      "school_presentation": "Escuela/Universidad",
+      "conference": "Conferencia",
+      "wedding": "Boda/Celebración",
+      "interview": "Entrevista",
+      "general": "General"
+    },
+    "deadlineWarning": {
+      "critical": "⚠️ Advertencia: Fecha límite ajustada",
+      "challenging": "Se requiere práctica intensiva",
+      "tight": "⏰ Mantente constante"
+    },
+    "learningMode": {
+      "title": "¿Cómo quieres aprender?",
+      "wordByWord": "Palabra por palabra",
+      "wordByWordDesc": "Memoriza la redacción exacta con ocultación progresiva de palabras",
+      "generalOverview": "Visión general",
+      "generalOverviewDesc": "Aprende el contenido y el flujo usando palabras clave, números y frases",
+      "wordByWordHelp": "Practicas la memorización de las palabras exactas de tu discurso. Las palabras se ocultan progresivamente a medida que las dominas, hasta que puedes recitar el texto completo de memoria.",
+      "generalOverviewHelp": "Practicas recordar los temas clave y la estructura de tu discurso. No necesitas memorizar las palabras exactas, solo ser capaz de cubrir todos los puntos principales con tus propias palabras."
+    }
   },
   "practice": {
     "title": "Sesión de práctica",
@@ -322,7 +381,9 @@
       "supportWordDelay": "Retraso de la palabra de ayuda",
       "supportWordDelayDesc": "Tiempo antes de que aparezca la palabra de ayuda",
       "hesitationTime": "Tiempo de duda (primera palabra)",
-      "hesitationTimeDesc": "Marcar la primera palabra en amarillo si pausas tanto tiempo"
+      "hesitationTimeDesc": "Marcar la primera palabra en amarillo si pausas tanto tiempo",
+      "sentenceStartDelay": "Tiempo extra después de un punto",
+      "sentenceStartDelayDesc": "Retraso adicional antes de que la primera palabra después de un punto se marque en amarillo"
     },
     "segments": {
       "learningProgress": "Progreso de aprendizaje",
@@ -353,7 +414,27 @@
       "inMinutes": "en {{minutes}} minuto",
       "inMinutesPlural": "en {{minutes}} minutos",
       "inLessThanMinute": "en menos de un minuto"
-    }
+    },
+    "segmentMastered": "¡Segmento dominado!",
+    "nextSegmentUnlocked": "¡100% de precisión con el guion mínimo! Pasando al siguiente segmento.",
+    "practiceTogetherNow": "¡Ambos segmentos dominados! Ahora practícalos juntos.",
+    "spacedRepetitionInfoShort": "Tu cerebro necesita tiempo para consolidar lo que has aprendido.",
+    "practiceAnywayWarning": "Practicar demasiado pronto puede reducir la retención a largo plazo. Úsalo con moderación para obtener mejores resultados.",
+    "spacedRepetitionTitle": "Aprendizaje con repetición espaciada",
+    "spacedRepetitionExplain": "Esta aplicación utiliza la repetición espaciada, un método científicamente probado que optimiza la retención de tu memoria.",
+    "spacedBenefit1": "Las revisiones se programan en intervalos óptimos para la memoria a largo plazo",
+    "spacedBenefit2": "Practicar demasiado pronto puede reducir la eficacia de la retención",
+    "spacedBenefit3": "Confía en la programación de la IA para obtener mejores resultados",
+    "spacedWarning": "Recordar demasiado pronto interrumpe el proceso de consolidación de la memoria y puede debilitar la retención a largo plazo.",
+    "iUnderstandContinue": "Entiendo, continuar",
+    "unlockFlexibility": "Desbloquear flexibilidad",
+    "premiumBypassDesc": "Los miembros Premium pueden omitir el tiempo de repetición espaciada cuando sea necesario.",
+    "premiumFeature1": "Practica cuando quieras",
+    "premiumFeature2": "Programación optimizada por IA",
+    "premiumFeature3": "Discursos ilimitados",
+    "sessionCompleteTitle": "¡Sesión de hoy completada!",
+    "sessionCompleteDesc": "¡Buen trabajo! Tu cerebro necesita tiempo para consolidar lo que has aprendido. Vuelve más tarde para una mejor retención.",
+    "restHelpsMemory": "El descanso ayuda a la consolidación de la memoria"
   },
   "settings": {
     "title": "Ajustes",
@@ -388,7 +469,34 @@
       "continueWith": "Continuar con",
       "plan": "Plan",
       "comingSoon": "¡Próximamente!",
-      "comingSoonDesc": "La suscripción premium estará disponible pronto."
+      "comingSoonDesc": "La suscripción premium estará disponible pronto.",
+      "manageSub": "Gestiona tu suscripción y pagos",
+      "youArePremium": "¡Eres Premium!",
+      "premiumDesc": "Tienes acceso a todas las funciones premium",
+      "paymentHistory": "Historial de pagos",
+      "lastPayment": "Último pago",
+      "nextPayment": "Próximo pago",
+      "viewAllPayments": "Ver todos los pagos",
+      "viewAllPaymentsDesc": "Historial de pagos disponible próximamente",
+      "manageSubscription": "Gestionar suscripción",
+      "cancelSubscription": "Cancelar suscripción",
+      "cancelConfirmTitle": "¿Cancelar suscripción?",
+      "cancelConfirmDesc": "¿Estás seguro de que quieres cancelar tu suscripción? Perderás el acceso a todas las funciones premium al final de tu período de facturación actual.",
+      "confirmCancel": "Sí, cancelar suscripción",
+      "cancelDesc": "Función de cancelación disponible próximamente",
+      "cancelNote": "Puedes cancelar en cualquier momento. El acceso continúa hasta el final del período de facturación.",
+      "noLimits": "Sin límites mensuales",
+      "presentationMode": "Modo Presentación",
+      "fullRunthrough": "Ensayo completo con feedback de IA",
+      "practiceAnytime": "Sáltate la espera",
+      "deepInsights": "Rastrea cada detalle",
+      "month": "mes",
+      "mostPopular": "Más popular",
+      "bestValue": "Mejor valor",
+      "upgradeCta": "Actualizar a Premium",
+      "cancelAnytime": "Cancela en cualquier momento",
+      "securePayment": "Pago seguro",
+      "upgradeToPremium": "Actualizar a Premium"
     },
     "appearance": {
       "title": "Apariencia",
@@ -416,7 +524,21 @@
       "title": "Cuenta",
       "description": "Gestiona los ajustes de tu cuenta",
       "personalizedLearning": "Aprendizaje personalizado",
-      "personalizedLearningDesc": "Tu horario de práctica se ajusta automáticamente según tu rendimiento y fechas límite."
+      "personalizedLearningDesc": "Tu horario de práctica se ajusta automáticamente según tu rendimiento y fechas límite.",
+      "manageAccount": "Gestionar Cuenta",
+      "dataPrivacy": "Datos y Privacidad",
+      "dataPrivacyDesc": "Tus datos se almacenan de forma segura y nunca se comparten con terceros",
+      "dataInfo": "Todos tus discursos, sesiones de práctica y progreso están cifrados y almacenados de forma segura. Puedes eliminar tu cuenta en cualquier momento para borrar todos los datos.",
+      "dangerZone": "Acciones de la Cuenta",
+      "dangerZoneDesc": "Cambios permanentes en la cuenta",
+      "deleteAccount": "Eliminar Cuenta",
+      "deleteConfirmTitle": "¿Eliminar tu cuenta?",
+      "deleteConfirmDesc": "Esto eliminará permanentemente tu cuenta y todos los datos, incluidos discursos, historial de práctica y progreso. Esta acción no se puede deshacer.",
+      "confirmDelete": "Sí, eliminar mi cuenta",
+      "deleted": "Cuenta eliminada",
+      "deletedDesc": "Tu cuenta ha sido eliminada permanentemente.",
+      "deleteFailed": "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
+      "notLoggedIn": "Debes iniciar sesión para eliminar tu cuenta."
     },
     "practiceHours": {
       "title": "Horario de práctica",
@@ -436,21 +558,45 @@
       "nativeRequiredDesc": "Las notificaciones push en la pantalla de bloqueo solo están disponibles en la app móvil nativa. Instálala para recibir notificaciones en tu iPhone o Android.",
       "pushNotifications": "Notificaciones push",
       "pushNotificationsDesc": "Recibe recordatorios en tu pantalla de bloqueo",
-      "enabled": "Recibirás notificaciones cuando toque repasar según tu progreso."
+      "enabled": "Recibirás notificaciones cuando toque repasar según tu progreso.",
+      "notificationWindow": "Ventana de tiempo de notificación",
+      "notificationWindowDesc": "Solo recibirás notificaciones entre estas horas",
+      "from": "Desde",
+      "to": "Hasta",
+      "windowPreview": "Las notificaciones se enviarán entre las {{start}} y las {{end}}"
     },
     "legal": {
       "termsTitle": "Legal",
       "termsDescription": "Lee nuestros acuerdos legales",
       "termsOfService": "Términos de servicio",
-      "privacyPolicy": "Política de privacidad"
+      "privacyPolicy": "Política de privacidad",
+      "cookiePolicy": "Política de Cookies"
     },
     "support": {
       "title": "Soporte",
       "description": "Obtén ayuda y envía comentarios",
       "contactSupport": "Contactar soporte",
-      "contactSupportDesc": "¿Tienes preguntas o necesitas ayuda? Escríbenos."
+      "contactSupportDesc": "¿Tienes preguntas o necesitas ayuda? Escríbenos.",
+      "helpCenter": "Centro de Ayuda",
+      "joinCommunity": "Unirse a la Comunidad",
+      "emailSupport": "Soporte por Correo Electrónico",
+      "needHelp": "¿Necesitas ayuda?",
+      "needHelpDesc": "Nuestro equipo de soporte suele responder en 24 horas. Para problemas urgentes, envíanos un correo electrónico directamente a support@sermable.com"
     },
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "payment": {
+      "title": "Pago",
+      "subtitle": "Gestiona tu suscripción y facturación",
+      "managePlan": "Gestiona tu plan y facturación",
+      "viewPlans": "Ver planes de precios",
+      "viewPayments": "Ver tu historial de pagos y cargos próximos",
+      "paymentMethod": "Método de pago",
+      "expires": "Expira",
+      "update": "Actualizar",
+      "updateCardDesc": "Actualización de tarjeta disponible próximamente",
+      "moreOptions": "Más opciones",
+      "cancelInfo": "Si deseas cancelar tu suscripción, puedes hacerlo a continuación. Tu acceso continuará hasta el final de tu ciclo de facturación actual."
+    }
   },
   "common": {
     "later": "Más tarde",
@@ -487,7 +633,37 @@
     "skip_rest": "Empezar ahora de todos modos",
     "beats_remaining": "{{count}} beat restante hoy",
     "beats_remaining_plural": "{{count}} beats restantes hoy",
-    "beat_complete_rest": "¡Beat dominado! Toma un breve descanso."
+    "beat_complete_rest": "¡Beat dominado! Toma un breve descanso.",
+    "beat_x_of_y": "Beat {{current}} de {{total}}",
+    "progress": "{{mastered}}/{{total}} beats completados",
+    "done_for_today": "¡Listo por hoy!",
+    "done_for_now": "¡Listo por ahora!",
+    "coming_up": "Próximamente",
+    "come_back_in": "Vuelve en {{time}}",
+    "sentence_x": "Oración {{number}}",
+    "read_x_of_3": "Leer {{current}}/3",
+    "read_aloud_x_of_3": "Leer en voz alta {{current}}/3",
+    "fading_x_left": "{{count}} palabras visibles",
+    "excellent_next": "¡Excelente! Siguiente oración...",
+    "great_start_fading": "¡Genial! Ahora empecemos a desvanecer...",
+    "beat_complete": "¡Beat completado!",
+    "beat_complete_next": "¡Beat completado! Cargando el siguiente...",
+    "combining_sentences": "Combinando todas las oraciones...",
+    "next_beat": "Siguiente Beat",
+    "mastered": "Completado",
+    "start_session": "Iniciar Sesión",
+    "ready_to_practice": "¡Listo para practicar!",
+    "all_mastered": "¡Todos los beats completados!",
+    "all_completed": "¡Todos los beats completados!",
+    "all_completed_desc": "¡Buen trabajo! Practica de nuevo más tarde para reforzar tu memoria.",
+    "poem_memorized": "¡Buen trabajo! Practica de nuevo más tarde para reforzar tu memoria.",
+    "come_back": "Has completado {{current}}/{{total}} beats. ¡Vuelve más tarde para aprender el siguiente!",
+    "science_tip": "El sueño fortalece los recuerdos más que la repetición",
+    "morning_tip": "Recordar por la mañana = impulso a la consolidación de la memoria",
+    "full_recall_subtitle": "Sin guion. Pura memoria.",
+    "full_recall_desc": "¡Has dominado todos los beats! Ahora, recuerda el discurso completo de memoria.",
+    "begin_recall": "Comenzar Recuerdo Completo",
+    "hint_available": "Las pistas aparecerán si pausas por más de 3 segundos"
   },
   "presentation": {
     "settings": "Configuración de presentación",
@@ -555,7 +731,25 @@
     "multipleEnvironments": "Múltiples entornos",
     "startWithAudience": "Empezar con audiencia",
     "unlockPremium": "Desbloquear Premium",
-    "switchModes": "Puedes cambiar de modo en cualquier momento antes de empezar"
+    "switchModes": "Puedes cambiar de modo en cualquier momento antes de empezar",
+    "wholeSpeechMode": "Modo Discurso Completo",
+    "wholeSpeechModeDesc": "Memoriza palabra por palabra con sugerencias",
+    "selectWholeSpeech": "Seleccionar Discurso Completo",
+    "listenMode": "Modo Escucha",
+    "listenModeDesc": "Habla libremente. Haz una pausa de 2s para ver las siguientes palabras.",
+    "noFollowAlong": "Sin seguimiento — pantalla vacía",
+    "hintOnPause": "Revela palabras cuando dudas",
+    "selectListen": "Seleccionar Modo Escucha",
+    "scriptMode": "Modo Guion",
+    "scriptModeDesc": "Lee frases, luego recuenta a partir de una palabra clave",
+    "referenceWordAnchors": "Anclajes de palabras clave",
+    "retellFromMemory": "Recuenta de memoria",
+    "selectScript": "Seleccionar Guion",
+    "generalMode": "Modo Guion",
+    "generalModeDesc": "Aprende a través de palabras de referencia — lee, recuerda, recuenta",
+    "keyWordsAnchors": "La IA elige una palabra de referencia por frase",
+    "ownWordsStyle": "Recuenta con tus propias palabras",
+    "selectGeneral": "Seleccionar Modo Guion"
   },
   "calendar": {
     "practice": "Práctica",
@@ -594,6 +788,320 @@
     "tabs": {
       "overview": "Resumen",
       "calendar": "Calendario"
+    },
+    "print": "Imprimir",
+    "strictness": {
+      "title": "Modo de calificación",
+      "description": "¿Con qué rigor debe comparar la práctica lo que dices con el guion?",
+      "strict": "Estricto",
+      "strictDesc": "Orden exacto de las palabras. Ideal cuando cada palabra importa.",
+      "flow": "Fluido",
+      "flowDesc": "El significado por encima de la exactitud. Entrega más natural.",
+      "saved": "Guardado"
     }
+  },
+  "tour": {
+    "back": "Atrás",
+    "next": "Siguiente",
+    "skip": "Saltar",
+    "done": "Entendido",
+    "welcome": {
+      "title": "Unos trucos antes de empezar",
+      "body": "Aprende las funciones de texto de Sermable para que tu práctica y presentación cobren vida."
+    },
+    "direction": {
+      "title": "Instrucciones de escena",
+      "body": "Selecciona cualquier palabra en el editor y escribe qué hacer, como \"sonreír\" o \"levantar la mano\". La instrucción aparece encima de tu guion mientras presentas."
+    },
+    "pause": {
+      "title": "Pausas con un guion",
+      "body": "Añade un `-` solo para una pausa de 2 segundos, o `-5s` para una duración personalizada. La práctica atenuará la pantalla y hará una cuenta atrás para ti."
+    },
+    "complete": {
+      "title": "Estás listo",
+      "body": "Mezcla cualquiera de estas marcas libremente. También puedes editarlas más tarde en el guion."
+    }
+  },
+  "help": {
+    "title": "Centro de Ayuda",
+    "subtitle": "Preguntas Frecuentes y Solución de Problemas",
+    "needMoreHelp": "¿Necesitas más ayuda?",
+    "contactDescription": "Nuestro equipo está aquí para ayudarte a tener éxito",
+    "emailSupport": "Soporte por Correo Electrónico",
+    "frequentlyAsked": "Preguntas Frecuentes",
+    "troubleshootingTitle": "Solución de Problemas",
+    "madeWithLove": "Hecho con ❤️ para oradores de todo el mundo",
+    "categories": {
+      "gettingStarted": "Primeros Pasos",
+      "practice": "Modo de Práctica",
+      "spacedRepetition": "Repetición Espaciada",
+      "presentation": "Modo de Presentación",
+      "streaks": "Rachas y Progreso",
+      "account": "Cuenta y Configuraciones"
+    },
+    "faq": {
+      "howToAddSpeech": {
+        "question": "¿Cómo añado un nuevo discurso?",
+        "answer": "Toca el botón + en tu panel de control, pega el texto de tu discurso, dale un título y, opcionalmente, establece una fecha objetivo. La IA lo dividirá automáticamente en segmentos fáciles de aprender."
+      },
+      "whatIsBeat": {
+        "question": "¿Qué es un 'segmento'?",
+        "answer": "Un segmento es una pequeña sección de tu discurso (normalmente 2-4 frases) que la app te ayuda a memorizar de una en una. Una vez que domines un segmento, lo combinarás con otros."
+      },
+      "howManySpeeches": {
+        "question": "¿Cuántos discursos puedo tener?",
+        "answer": "Los usuarios gratuitos pueden tener 1 discurso activo al mes. Los usuarios Premium tienen discursos ilimitados."
+      },
+      "howPracticeWorks": {
+        "question": "¿Cómo funciona el modo práctica?",
+        "answer": "El modo práctica muestra el texto de tu discurso con algunas palabras visibles como pistas. Pronuncia tu discurso en voz alta: la aplicación sigue tus palabras en tiempo real y destaca tu progreso. Las palabras que conoces bien se desvanecen gradualmente."
+      },
+      "whyWordsHidden": {
+        "question": "¿Por qué algunas palabras están ocultas?",
+        "answer": "La app utiliza el aprendizaje adaptativo para ocultar las palabras que has dominado. Esto desafía tu memoria y te ayuda a memorizar de verdad en lugar de solo leer. Toca las palabras ocultas si necesitas una pista."
+      },
+      "micNotWorking": {
+        "question": "Mi micrófono no funciona",
+        "answer": "Asegúrate de haber otorgado permisos de micrófono en la configuración de tu navegador/dispositivo. Intenta usar Chrome o Safari para una mejor compatibilidad. Si los problemas persisten, intenta actualizar la página."
+      },
+      "whatIsSpacedRepetition": {
+        "question": "¿Qué es la repetición espaciada?",
+        "answer": "La repetición espaciada es una técnica de aprendizaje científicamente probada. En lugar de estudiar de golpe, revisas el material en intervalos óptimos, justo cuando estás a punto de olvidarlo. Esto crea recuerdos más fuertes y duraderos."
+      },
+      "whyWait": {
+        "question": "¿Por qué tengo que esperar para practicar?",
+        "answer": "¡Esperar es parte del proceso de aprendizaje! Tu cerebro consolida los recuerdos durante el descanso. Practicar demasiado pronto puede interferir con este proceso. Confía en la programación de la IA para obtener los mejores resultados."
+      },
+      "canPracticeEarly": {
+        "question": "¿Puedo practicar antes si quiero?",
+        "answer": "Los usuarios Premium pueden saltarse el período de espera con el botón 'Practicar de todos modos'. Sin embargo, para una memorización óptima, recomendamos seguir los tiempos programados."
+      },
+      "whatIsPresentation": {
+        "question": "¿Qué es el modo presentación?",
+        "answer": "El modo presentación es una ejecución completa de tu discurso sin ningún guion visible. Simula la experiencia real. Después de terminar, obtendrás comentarios detallados de IA sobre precisión, palabras omitidas y áreas a mejorar."
+      },
+      "whenUsePresentation": {
+        "question": "¿Cuándo debo usar el modo presentación?",
+        "answer": "Úsalo cuando te sientas seguro con tu discurso y quieras ponerte a prueba. ¡Es genial para la preparación final antes del evento real!"
+      },
+      "howStreaksWork": {
+        "question": "¿Cómo funcionan las rachas?",
+        "answer": "Practica al menos una vez al día para mantener tu racha. El contador de rachas muestra cuántos días consecutivos has practicado. Se reinicia si te saltas un día."
+      },
+      "streakReset": {
+        "question": "¿Qué pasa si mi racha se reinicia?",
+        "answer": "¡No te preocupes! Tu progreso no se pierde, solo el contador de rachas. Sigue practicando y vuelve a construirla. La consistencia es más importante que cualquier número."
+      },
+      "howDeleteAccount": {
+        "question": "¿Cómo elimino mi cuenta?",
+        "answer": "Ve a Configuración → desplázate hacia abajo → toca 'Eliminar cuenta'. Esto eliminará permanentemente todos tus datos, incluidos discursos, progreso e información de la cuenta."
+      },
+      "changeLanguage": {
+        "question": "¿Cómo cambio el idioma de la aplicación?",
+        "answer": "Ve a Configuración → Idioma → selecciona tu idioma preferido. La aplicación es compatible con inglés, sueco, español, francés, alemán, italiano y portugués."
+      }
+    },
+    "troubleshooting": {
+      "micIssues": {
+        "title": "Micrófono no funciona",
+        "step1": "Verifica los permisos del navegador: busca un ícono de micrófono en la barra de direcciones",
+        "step2": "Intenta usar Chrome o Safari para una mejor compatibilidad",
+        "step3": "Asegúrate de que ninguna otra aplicación esté usando el micrófono",
+        "step4": "Actualiza la página y vuelve a intentarlo"
+      },
+      "slowPerformance": {
+        "title": "La aplicación funciona lentamente",
+        "step1": "Cierra otras pestañas del navegador y aplicaciones",
+        "step2": "Borra la caché de tu navegador",
+        "step3": "Intenta usar la aplicación móvil nativa para un mejor rendimiento"
+      },
+      "appNotLoading": {
+        "title": "La aplicación no carga",
+        "step1": "Comprueba tu conexión a internet",
+        "step2": "Intenta actualizar la página",
+        "step3": "Borra la caché y las cookies del navegador"
+      }
+    }
+  },
+  "day_after_recall": {
+    "title": "Recuerdo al Día Siguiente",
+    "card_desc": "Pon a prueba tu memoria sin guion. Obtén pistas de palabras clave solo cuando sea necesario.",
+    "no_script": "Sin guion visible",
+    "pacing_pulse": "Pulso rítmico azul",
+    "no_mastered_beats": "No hay beats dominados",
+    "learn_first": "Primero domina algunos beats antes de usar el Recuerdo al Día Siguiente.",
+    "attempt": "Intento",
+    "keywords_shown": "Palabras clave mostradas",
+    "words": "palabras",
+    "tap_hint": "Toca en cualquier lugar para ver la palabra clave",
+    "attempt_complete": "¡Bien! Intentémoslo de nuevo",
+    "fewer_stops": "Necesitaste {{count}} palabra(s) clave. Intenta necesitar menos esta vez.",
+    "stable": "¡Discurso estable!",
+    "stable_desc": "Completaste todo el discurso sin necesitar ningún apoyo de palabras clave. ¡Tu memoria está consolidada!",
+    "attempts": "Completado en {{count}} intento(s)"
+  },
+  "freestyle": {
+    "keywordMode": "Modo de palabras clave",
+    "covered": "cubierto",
+    "mustMention": "Debe mencionarse",
+    "shouldMention": "Debería mencionarse",
+    "niceToHave": "Sería bueno tener",
+    "startSpeaking": "Empezar a hablar",
+    "stopFinish": "Detener y finalizar",
+    "speakNaturally": "Habla con naturalidad: las palabras clave se resaltarán a medida que las menciones",
+    "analyzed": "¡Discurso analizado!",
+    "keywordsExtracted": "{{count}} palabras clave extraídas",
+    "topicsExtracted": "{{count}} temas con palabras clave extraídas",
+    "analysisFailed": "Análisis fallido",
+    "currentTopic": "Actual",
+    "nextUp": "Siguiente",
+    "showHint": "Pista",
+    "showFullText": "Mostrar texto completo",
+    "skipTopic": "Saltar",
+    "topicOf": "Tema {{current}} de {{total}}",
+    "keywords": "palabras clave",
+    "numbersStats": "Números y estadísticas",
+    "keyConCepts": "Conceptos clave",
+    "dates": "Fechas y horas",
+    "names": "Nombres",
+    "actions": "Acciones",
+    "topicsCovered": "{{covered}} de {{total}} temas cubiertos",
+    "finish": "Finalizar"
+  },
+  "progressive": {
+    "beat_mastered": "¡Ritmo dominado!",
+    "all_complete": "¡Discurso memorizado!",
+    "session_done": "¡Sesión completada!",
+    "come_back_tomorrow": "¡Vuelve mañana para reforzar tu memoria!",
+    "progress": "{{mastered}}/{{total}} ritmos completados. ¡Descansa y regresa más tarde!",
+    "sleep_tip": "Dormir consolida mejor los recuerdos que la repetición",
+    "no_beats": "No se encontraron pausas",
+    "try_again": "Inténtalo de nuevo",
+    "hesitation_detected": "¡Sigue practicando!",
+    "recite_from_memory": "Recita de memoria. Toca si te atascas.",
+    "perfect_needed": "Necesitas 2 memorizaciones perfectas",
+    "day1_desc": "Aprendiendo frases",
+    "day2_desc": "Práctica a nivel de pausa",
+    "day3_desc": "Práctica de discurso completo",
+    "day4_desc": "Recuerdo de memoria"
+  },
+  "overviewMode": {
+    "generalOverview": "Modo de Vista General",
+    "loadingTopics": "Cargando temas...",
+    "extractingTopics": "Extrayendo temas",
+    "pleaseWait": "La IA está analizando tu discurso para identificar los temas clave...",
+    "topicsExtracted": "Temas Extraídos",
+    "topicsExtractedDesc": "Se encontraron {{count}} temas principales en tu discurso",
+    "failedToLoadTopics": "Error al cargar los temas",
+    "failedToExtract": "Error al extraer temas de tu discurso",
+    "readThrough": "Lee tu discurso",
+    "readThroughDesc": "Familiarízate con el contenido antes de practicar",
+    "imReady": "Estoy listo para practicar",
+    "speakAboutTopics": "Habla sobre cada tema con tus propias palabras",
+    "fullHints": "Pistas completas",
+    "titlesOnly": "Solo títulos",
+    "numbersOnly": "Solo números",
+    "analyzing": "Analizando tu discurso...",
+    "noSpeechDetected": "No se detectó discurso",
+    "tryAgainLouder": "Por favor, habla más alto e inténtalo de nuevo",
+    "processingFailed": "Error al procesar tu grabación",
+    "contentCoverage": "Cobertura de Contenido",
+    "topicCoverage": "Cobertura de Tema",
+    "covered": "Cubierto",
+    "partiallyCovered": "Parcialmente Cubierto",
+    "missed": "Perdido",
+    "aiFeedback": "Comentarios de la IA",
+    "tryAgain": "Intentar de Nuevo",
+    "section": "Sección",
+    "keyWords": "Palabras Clave",
+    "keyNumbers": "Números Clave",
+    "keyPhrases": "Frases Clave",
+    "explainSection": "Explica esta sección con tus propias palabras",
+    "explainThisSection": "Explicar esta sección",
+    "nextSection": "Siguiente sección",
+    "viewResults": "Ver resultados",
+    "mainIdea": "Idea principal capturada",
+    "missedKeywords": "Palabras clave perdidas",
+    "missedNumbers": "Números perdidos",
+    "missedPhrases": "Frases que faltan",
+    "allKeywordsCovered": "Todas las palabras clave cubiertas"
+  },
+  "sleepScheduling": {
+    "morningRecall": "Prueba de Memoria Matutina",
+    "morningRecallDesc": "Tu cerebro consolidó los recuerdos durante la noche. ¡Prueba tu recuerdo de \"{{title}}\" ahora para una máxima retención!",
+    "eveningPractice": "Práctica Antes de Dormir",
+    "eveningPracticeDesc": "¡Practica ahora y duerme! Tu cerebro consolida los recuerdos durante el sueño, haciendo que la práctica de esta noche sea extra potente.",
+    "optimalMorning": "Práctica con la Mente Fresca",
+    "optimalMorningDesc": "Tu cerebro es más receptivo por la mañana. ¡Gran momento para aprender material nuevo!",
+    "practiceReminder": "Hora de Practicar",
+    "practiceReminderDesc": "Intenta practicar antes de las 10 PM de esta noche para una consolidación óptima de la memoria durante el sueño.",
+    "scienceBacked": "Respaldado por la ciencia",
+    "testRecall": "Probar Recuerdo",
+    "practiceNow": "Practicar Ahora"
+  },
+  "beatPrint": {
+    "title": "Imprimir guion",
+    "description": "Elige un diseño. Las acotaciones entre (paréntesis) se imprimen en cursiva.",
+    "optionPerPage": "Un ritmo por página",
+    "optionPerPageDesc": "Tipografía grande, diseño espacioso. Ideal para podio/escenario.",
+    "optionContinuous": "Páginas continuas",
+    "optionContinuousDesc": "Compacto, los ritmos uno tras otro. Ahorra papel.",
+    "printButton": "Imprimir",
+    "beatLabel": "Ritmo",
+    "popupBlockedTitle": "Ventana emergente bloqueada",
+    "popupBlockedDesc": "Permite las ventanas emergentes para imprimir el guion.",
+    "errorTitle": "No se pudo crear la impresión"
+  },
+  "footer": {
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "refundPolicy": "Política de reembolso"
+  },
+  "notFound": {
+    "title": "¡Vaya! Página no encontrada",
+    "back": "Volver a Inicio"
+  },
+  "presentationSummary": {
+    "excellent": "¡Excelente!",
+    "excellentSubtitle": "¡Actuación sobresaliente!",
+    "goodJob": "¡Buen trabajo!",
+    "goodJobSubtitle": "Así te fue",
+    "keepPracticing": "¡Sigue practicando!",
+    "keepPracticingSubtitle": "Cada intento te hace mejorar",
+    "performanceSummary": "Resumen de la Presentación",
+    "badgeExcellent": "Excelente",
+    "badgeGood": "Bueno",
+    "badgeNeedsWork": "Necesita mejorar",
+    "accuracy": "Precisión",
+    "duration": "Duración",
+    "hesitations": "Vacilaciones",
+    "missedWords": "Palabras omitidas",
+    "more": "más",
+    "coachsFeedback": "Comentarios del Coach",
+    "coachsFeedbackDesc": "Sugerencias personalizadas para mejorar",
+    "summary": "Resumen",
+    "advice": "Consejo",
+    "nextStep": "Siguiente paso",
+    "backToDashboard": "Volver al inicio"
+  },
+  "aiBuilder": {
+    "title": "Crea un discurso con IA",
+    "promptDesc": "Describe el tipo de discurso que deseas. La IA te hará unas preguntas y luego escribirá un borrador.",
+    "questionsDesc": "Responde con tanto o tan poco detalle como quieras, puedes saltarte preguntas.",
+    "previewDesc": "Edita el borrador libremente. Cuando estés satisfecho, pulsa Usar.",
+    "promptLabel": "¿De qué tipo de discurso se trata?",
+    "promptPlaceholder": "Escribe un discurso para la boda de mi hermano. Tiene 32 años, lo conozco de toda la vida. Que sea cálido y un poco divertido.",
+    "lengthLabel": "Duración aproximada",
+    "minutesShort": "min",
+    "skipPlaceholder": "Dejar vacío para saltar",
+    "draftTitleLabel": "Título",
+    "draftSpeechLabel": "El discurso",
+    "getQuestions": "Continuar",
+    "writeSpeech": "Escribir el discurso",
+    "regenerate": "Cambiar respuestas",
+    "useDraft": "Usar",
+    "tooShortTitle": "Cuéntame un poco más",
+    "tooShortDesc": "Escribe una frase corta sobre el tipo de discurso que es.",
+    "errorTitle": "La IA no respondió"
   }
 }
