@@ -106,7 +106,7 @@
   },
   "dashboard": {
     "shareTitleFmt": "Ett tal har delats med dig på Sermable",
-    "shareTextFmt": "Hej! Jag har delat talet "{{title}}" med dig på Sermable. Öppna länken för att lägga till det i ditt konto och börja öva:",
+    "shareTextFmt": "Hej! Jag har delat talet \"{{title}}\" med dig på Sermable. Öppna länken för att lägga till det i ditt konto och börja öva:",
     "title": "Mina tal",
     "welcomeBack": "Välkommen tillbaka",
     "goodMorning": "God morgon",
