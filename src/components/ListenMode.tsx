@@ -214,22 +214,53 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     };
   }, [isRecording, speechLanguage, processSpoken]);
 
-  // Silence detector → escalate hint stage as silence grows
+  // Silence + stall detector → escalate hint, and auto-advance if the user
+  // is talking but recognition can't catch up (cursor stuck on same word).
   useEffect(() => {
     if (!isRecording) return;
     const interval = setInterval(() => {
       if (currentIndexRef.current >= words.length) return;
-      const silence = Date.now() - lastSpeechAtRef.current;
+      const now = Date.now();
+      const silence = now - lastSpeechAtRef.current;
+      const sinceProgress = now - lastProgressAtRef.current;
 
       let nextStage: 0 | 1 | 2 | 3 = 0;
       if (silence >= HINT_STAGE_3_MS) nextStage = 3;
       else if (silence >= HINT_STAGE_2_MS) nextStage = 2;
       else if (silence >= HINT_STAGE_1_MS) nextStage = 1;
 
+      // If the user IS speaking (silence is low) but the cursor hasn't moved
+      // for a while, still surface a hint so they aren't stranded.
+      if (nextStage === 0 && sinceProgress >= HINT_STAGE_1_MS + 1000) {
+        nextStage = 1;
+      }
+
       setHintStage(prev => (prev !== nextStage ? nextStage : prev));
+
+      // Stall auto-advance: if we've been stuck on the same word too long,
+      // bump the cursor forward and count the word as missed.
+      if (sinceProgress >= STALL_AUTO_ADVANCE_MS) {
+        const idx = currentIndexRef.current;
+        if (idx < words.length) {
+          missedIndicesRef.current.add(idx);
+          const next = idx + 1;
+          currentIndexRef.current = next;
+          setCurrentIndex(next);
+          lastProgressAtRef.current = now;
+        }
+      }
     }, 200);
     return () => clearInterval(interval);
   }, [isRecording, words.length]);
+
+  // Count hesitations whenever a hint becomes visible
+  const prevHintRef = useRef<0 | 1 | 2 | 3>(0);
+  useEffect(() => {
+    if (hintStage > 0 && prevHintRef.current === 0) {
+      hesitationsRef.current += 1;
+    }
+    prevHintRef.current = hintStage;
+  }, [hintStage]);
 
   // Reset hint when index advances
   useEffect(() => {
@@ -251,7 +282,12 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     setCurrentIndex(0);
     currentIndexRef.current = 0;
     lastSpeechAtRef.current = Date.now();
+    lastProgressAtRef.current = Date.now();
     lastProcessedInterimRef.current = "";
+    matchedCountRef.current = 0;
+    missedIndicesRef.current = new Set();
+    hesitationsRef.current = 0;
+    prevHintRef.current = 0;
     setHintStage(0);
     setIsRecording(true);
   };
@@ -262,7 +298,28 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       try { recognitionRef.current.stop(); } catch {}
       recognitionRef.current = null;
     }
-    onComplete?.(elapsed);
+
+    // Words from current cursor to end of script were never reached → missed.
+    for (let i = currentIndexRef.current; i < words.length; i++) {
+      missedIndicesRef.current.add(i);
+    }
+
+    const total = words.length;
+    const matched = matchedCountRef.current;
+    const accuracy = total > 0 ? Math.round((matched / total) * 1000) / 10 : 0;
+    const missedWords = Array.from(missedIndicesRef.current)
+      .sort((a, b) => a - b)
+      .map((i) => words[i])
+      .filter(Boolean);
+
+    onComplete?.({
+      durationSeconds: elapsed,
+      accuracy,
+      hesitations: hesitationsRef.current,
+      missedWords,
+      matchedCount: matched,
+      totalWords: total,
+    });
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
