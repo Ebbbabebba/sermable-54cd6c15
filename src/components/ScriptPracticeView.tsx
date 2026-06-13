@@ -286,7 +286,8 @@ const ScriptPracticeView = ({
     for (const spokenWord of spokenWords) {
       const current = liveBeatIndexRef.current;
       let matchedBeat = -1;
-      for (let offset = 0; offset <= 3 && current + offset < beats.length; offset++) {
+      // Wider lookahead — speakers often skip or compress beats
+      for (let offset = 0; offset <= 6 && current + offset < beats.length; offset++) {
         if (keywordMatches(spokenWord, beats[current + offset].reference_word)) {
           matchedBeat = current + offset;
           break;
@@ -321,21 +322,25 @@ const ScriptPracticeView = ({
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0]?.transcript || "";
         if (event.results[i].isFinal) finalText += `${transcript} `;
-        else interimText += transcript;
+        else interimText += `${transcript} `;
       }
 
-      const visibleTranscript = `${finalText || ""}${interimText || ""}`.trim();
+      const visibleTranscript = `${finalText}${interimText}`.trim();
       if (visibleTranscript) setLiveTranscript(visibleTranscript);
 
-      if (interimText && interimText !== lastInterimRef.current) {
-        const prev = lastInterimRef.current.trim().split(/\s+/).filter(Boolean);
-        const current = interimText.trim().split(/\s+/).filter(Boolean);
-        if (current.length > prev.length) processLiveWords(current.slice(prev.length).join(" "));
+      // Process final text immediately
+      if (finalText.trim()) {
+        processLiveWords(finalText);
+      }
+
+      // For interim: re-scan the entire interim segment every update.
+      // markBeatCovered is idempotent so re-processing already-matched words is safe.
+      if (interimText.trim() && interimText !== lastInterimRef.current) {
+        processLiveWords(interimText);
         lastInterimRef.current = interimText;
       }
 
       if (finalText) {
-        processLiveWords(finalText);
         lastInterimRef.current = "";
       }
     };
