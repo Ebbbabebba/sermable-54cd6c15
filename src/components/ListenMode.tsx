@@ -36,29 +36,45 @@ const getRecognitionLanguage = (lang: string): string => {
 const normalizeWord = (text: string): string =>
   text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]/gu, "");
 
+const getWordDistance = (a: string, b: string): number => {
+  if (a === b) return 1.0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const curr = Array.from({ length: b.length + 1 }, () => 0);
+
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
+  }
+
+  return prev[b.length];
+};
+
 const getWordSimilarity = (w1: string, w2: string): number => {
   const a = normalizeWord(w1);
   const b = normalizeWord(w2);
   if (a === b) return 1.0;
+  if (!a || !b) return 0.0;
   if (a.length <= 2 || b.length <= 2) return a === b ? 1.0 : 0.0;
+  if (a.length >= b.length + 2 && a.includes(b)) return 0.9;
+  if (b.length >= a.length + 2 && b.includes(a) && a.length >= Math.max(3, b.length - 2)) return 0.86;
+  if (a[0] !== b[0] && a[1] !== b[1]) return 0.0;
+
   const maxLen = Math.max(a.length, b.length);
-  const minLen = Math.min(a.length, b.length);
-  if (minLen / maxLen >= 0.7 && (a.startsWith(b) || b.startsWith(a))) return 0.85;
-  let matches = 0;
-  for (let i = 0; i < Math.min(a.length, b.length); i++) {
-    if (a[i] === b[i]) matches++;
-  }
-  return matches / maxLen;
+  const distance = getWordDistance(a, b);
+  return Math.max(0, 1 - distance / maxLen);
 };
 
-// Tighter matching so wrong sentences don't race the cursor forward, but
-// lenient enough that recognition mishears don't keep stalling the user.
-const SIMILARITY_THRESHOLD = 0.65;
-const LOOKAHEAD_THRESHOLD = 0.72;
-const LOOKAHEAD_WORDS = 3;
-// After this many ms of being stuck on the same word while the user is still
-// talking, advance the cursor automatically so the session keeps moving.
-const STALL_AUTO_ADVANCE_MS = 5000;
+const SIMILARITY_THRESHOLD = 0.7;
+const LOOKAHEAD_THRESHOLD = 0.82;
+const LOOKAHEAD_WORDS = 6;
+const STALL_AUTO_ADVANCE_MS = 4500;
 
 
 // Hint escalation thresholds
@@ -83,10 +99,11 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
   const restartAttemptsRef = useRef(0);
 
   // Scoring refs
-  const matchedCountRef = useRef(0); // words advanced by real recognition match
+  const matchedIndicesRef = useRef<Set<number>>(new Set()); // words actually matched by recognition
   const missedIndicesRef = useRef<Set<number>>(new Set()); // word indices the user skipped over
   const hesitationsRef = useRef(0); // times any hint stage was shown
   const lastProgressAtRef = useRef<number>(Date.now()); // last cursor advance (for stall detection)
+  const hasSpeechSinceProgressRef = useRef(false);
 
   // Sync ref
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
@@ -96,7 +113,6 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     const tokens = spoken.toLowerCase().trim().split(/\s+/).filter(Boolean);
     let idx = currentIndexRef.current;
     let progressed = false;
-    let matchedDelta = 0;
 
     for (const tok of tokens) {
       if (idx >= words.length) break;
@@ -105,8 +121,8 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       const sim = hard ? 1.0 : getWordSimilarity(tok, target);
 
       if (sim >= SIMILARITY_THRESHOLD) {
+        if (!hard) matchedIndicesRef.current.add(idx);
         idx++;
-        matchedDelta++;
         progressed = true;
         continue;
       }
@@ -114,12 +130,12 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       let jumped = false;
       for (let i = 1; i <= LOOKAHEAD_WORDS && idx + i < words.length; i++) {
         const aheadHard = isHardToRecognizeWord(words[idx + i]);
-        const aheadSim = aheadHard ? 1.0 : getWordSimilarity(tok, words[idx + i]);
+        const aheadSim = aheadHard ? 0 : getWordSimilarity(tok, words[idx + i]);
         if (aheadSim >= LOOKAHEAD_THRESHOLD) {
           // Words that were skipped over count as missed.
           for (let j = 0; j < i; j++) missedIndicesRef.current.add(idx + j);
+          matchedIndicesRef.current.add(idx + i);
           idx = idx + i + 1;
-          matchedDelta++;
           progressed = true;
           jumped = true;
           break;
@@ -136,7 +152,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       setHintStage(0);
       lastSpeechAtRef.current = Date.now();
       lastProgressAtRef.current = Date.now();
-      matchedCountRef.current += matchedDelta;
+      hasSpeechSinceProgressRef.current = false;
     }
   }, [words]);
 
