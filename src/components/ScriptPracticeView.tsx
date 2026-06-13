@@ -117,11 +117,19 @@ const keywordMatches = (spoken: string, keyword: string): boolean => {
   const b = normalizeKeyword(keyword);
   if (!a || !b) return false;
   if (a === b) return true;
-  if (b.length <= 3) return false;
-  if (a.includes(b) || b.includes(a)) return Math.min(a.length, b.length) >= Math.max(4, b.length - 2);
-  if (a[0] !== b[0]) return false;
+  if (b.length <= 2) return false;
+  // Substring (handles inflections / compound words)
+  if (a.includes(b) || b.includes(a)) return Math.min(a.length, b.length) >= 3;
+  // Shared stem prefix — catches inflected forms (presenterar vs presentation)
+  const stemLen = Math.min(a.length, b.length, b.length >= 6 ? 5 : 4);
+  if (stemLen >= 4 && a.slice(0, stemLen) === b.slice(0, stemLen)) return true;
   const similarity = 1 - getKeywordDistance(a, b) / Math.max(a.length, b.length);
-  return similarity >= 0.76;
+  // Loosen threshold; require first letter for short words only
+  if (b.length <= 5) {
+    if (a[0] !== b[0]) return false;
+    return similarity >= 0.6;
+  }
+  return similarity >= 0.55;
 };
 
 const getCleanWordCount = (text: string): number =>
@@ -278,7 +286,8 @@ const ScriptPracticeView = ({
     for (const spokenWord of spokenWords) {
       const current = liveBeatIndexRef.current;
       let matchedBeat = -1;
-      for (let offset = 0; offset <= 3 && current + offset < beats.length; offset++) {
+      // Wider lookahead — speakers often skip or compress beats
+      for (let offset = 0; offset <= 6 && current + offset < beats.length; offset++) {
         if (keywordMatches(spokenWord, beats[current + offset].reference_word)) {
           matchedBeat = current + offset;
           break;
@@ -313,21 +322,25 @@ const ScriptPracticeView = ({
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0]?.transcript || "";
         if (event.results[i].isFinal) finalText += `${transcript} `;
-        else interimText += transcript;
+        else interimText += `${transcript} `;
       }
 
-      const visibleTranscript = `${finalText || ""}${interimText || ""}`.trim();
+      const visibleTranscript = `${finalText}${interimText}`.trim();
       if (visibleTranscript) setLiveTranscript(visibleTranscript);
 
-      if (interimText && interimText !== lastInterimRef.current) {
-        const prev = lastInterimRef.current.trim().split(/\s+/).filter(Boolean);
-        const current = interimText.trim().split(/\s+/).filter(Boolean);
-        if (current.length > prev.length) processLiveWords(current.slice(prev.length).join(" "));
+      // Process final text immediately
+      if (finalText.trim()) {
+        processLiveWords(finalText);
+      }
+
+      // For interim: re-scan the entire interim segment every update.
+      // markBeatCovered is idempotent so re-processing already-matched words is safe.
+      if (interimText.trim() && interimText !== lastInterimRef.current) {
+        processLiveWords(interimText);
         lastInterimRef.current = interimText;
       }
 
       if (finalText) {
-        processLiveWords(finalText);
         lastInterimRef.current = "";
       }
     };
