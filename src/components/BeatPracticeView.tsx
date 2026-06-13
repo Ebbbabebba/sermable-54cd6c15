@@ -1798,11 +1798,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // when the skipped words are visible. Hidden words must be spoken or
         // revealed by the hesitation timer.
         const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
+        // Never jump over a planned pause — the pause overlay must fire.
+        const pauseInRange = (from: number, to: number) => {
+          for (let k = from; k <= to; k++) if (pauseWordMeta.has(k)) return true;
+          return false;
+        };
 
         if (
           canSkipCurrent &&
           advancedTo + 1 < words.length &&
           !crossesSentenceBoundary(advancedTo, advancedTo + 1) &&
+          !pauseInRange(advancedTo, advancedTo + 1) &&
           wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)
         ) {
           newSpoken.add(advancedTo);
@@ -1813,6 +1819,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           advancedTo + 2 < words.length &&
           !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
           !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
+          !pauseInRange(advancedTo, advancedTo + 2) &&
           wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
         ) {
           // Two visible words skipped — user kept speaking past a mis-recognized

@@ -9,6 +9,10 @@
  * since the speech recognition engine typically cannot reproduce them accurately.
  */
 export const isHardToRecognizeWord = (word: string): boolean => {
+  // Pause tokens (`-`, `-3`, `-5s`) are not real words — never auto-accept them
+  // as speech, or the pause overlay/mic-mute never triggers.
+  if (/^-(\d{1,2})?s?$/.test(word.trim())) return false;
+
   const cleaned = word.replace(/[()[\]{}"']/g, "").trim();
   if (!cleaned) return true; // Pure punctuation — skip
 
