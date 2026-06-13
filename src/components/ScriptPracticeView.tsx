@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { requestMicrophoneAccess } from "@/utils/microphone";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -175,12 +175,7 @@ const ScriptPracticeView = ({
   const coveredBeatIndexesRef = useRef<Set<number>>(new Set());
   const lastInterimRef = useRef("");
 
-  // Load beats on mount - try cache first
-  useEffect(() => {
-    loadOrExtractBeats();
-  }, []);
-
-  const loadOrExtractBeats = async () => {
+  const loadOrExtractBeats = useCallback(async () => {
     setPhase('loading');
     try {
       // Try loading cached beats first
@@ -232,7 +227,12 @@ const ScriptPracticeView = ({
         description: getErrorMessage(err, "Failed to process text"),
       });
     }
-  };
+  }, [speechId, speechText, speechLanguage, t, toast]);
+
+  // Load beats on mount - try cache first
+  useEffect(() => {
+    loadOrExtractBeats();
+  }, [loadOrExtractBeats]);
 
   const currentBeats = beats.slice(aggregatedRange[0], aggregatedRange[1] + 1);
   const currentText = currentBeats.map(b => b.text).join(' ');
