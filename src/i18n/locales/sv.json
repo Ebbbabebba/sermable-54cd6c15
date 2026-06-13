@@ -26,11 +26,13 @@
     },
     "direction": {
       "title": "Scenanvisningar",
-      "body": "Markera valfria ord i editorn och skriv vad du ska göra, t.ex. ”le” eller ”höj handen”. Anvisningen dyker upp ovanför manus medan du presenterar."
+      "body": "Markera valfria ord i editorn och skriv vad du ska göra, t.ex. ”le” eller ”höj handen”. Anvisningen dyker upp ovanför manus medan du presenterar.",
+      "demoText": "Tack alla {{smile}}för att ni kom hit{{/}} ikväll."
     },
     "pause": {
       "title": "Pauser med ett bindestreck",
-      "body": "Skriv ett ensamt `-` för en 2-sekunders paus, eller `-5s` för annan längd. Övningen dimmar skärmen och räknar ner åt dig."
+      "body": "Skriv ett ensamt `-` för en 2-sekunders paus, eller `-5s` för annan längd. Övningen dimmar skärmen och räknar ner åt dig.",
+      "demoText": "Jag vill fråga er en sak. -3 Är ni redo?"
     },
     "complete": {
       "title": "Du är redo",
@@ -145,7 +147,11 @@
     "deleteSpeech": "Ta bort tal?",
     "deleteSpeechDesc": "Detta tar bort \"{{title}}\" permanent och alla tillhörande övningspass. Kan inte ångras.",
     "deleted": "Tal borttaget",
-    "deletedDesc": "Talet har tagits bort."
+    "deletedDesc": "Talet har tagits bort.",
+    "dueForPractice": "Redo att öva",
+    "dueForPracticeDescription": "Dessa moment är optimala att öva på just nu",
+    "beat": "Moment",
+    "inTime": "om"
   },
   "onboarding": {
     "skip": "Hoppa över",

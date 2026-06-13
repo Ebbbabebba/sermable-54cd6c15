@@ -167,7 +167,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
         "Select any words in the editor and write what to do — like “smile” or “raise hand”. The direction appears above your script while you present.",
       demo: () => (
         <ScriptDemo
-          text="Tack alla {{smile}}för att ni kom hit{{/}} ikväll."
+          text={t("tour.direction.demoText", "Tack alla {{smile}}för att ni kom hit{{/}} ikväll.")}
           highlight="cue"
         />
       ),
@@ -181,7 +181,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
         "Add a standalone `-` for a 2-second pause, or `-5s` for a custom length. Practice will dim the screen and count down for you.",
       demo: () => (
         <ScriptDemo
-          text="I want to ask you something. -3 Are you ready?"
+          text={t("tour.pause.demoText", "I want to ask you something. -3 Are you ready?")}
           highlight="pause"
         />
       ),

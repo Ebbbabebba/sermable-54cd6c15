@@ -122,7 +122,11 @@
     "deleted": "Discurso excluído",
     "deletedDesc": "O discurso foi excluído permanentemente.",
     "daysLeftPlural": "{{count}} dias restantes",
-    "daysOverduePlural": "{{count}} dias de atraso"
+    "daysOverduePlural": "{{count}} dias de atraso",
+    "dueForPractice": "Pronto para praticar",
+    "dueForPracticeDescription": "Estes segmentos são ideais para praticar agora",
+    "beat": "Segmento",
+    "inTime": "em"
   },
   "onboarding": {
     "skip": "Pular",
@@ -812,11 +816,13 @@
     },
     "direction": {
       "title": "Direções de palco",
-      "body": "Selecione quaisquer palavras no editor e escreva o que fazer — como “sorrir” ou “levantar a mão”. A direção aparece acima do seu roteiro enquanto você apresenta."
+      "body": "Selecione quaisquer palavras no editor e escreva o que fazer — como “sorrir” ou “levantar a mão”. A direção aparece acima do seu roteiro enquanto você apresenta.",
+      "demoText": "Obrigado a todos {{smile}}por terem vindo{{/}} esta noite."
     },
     "pause": {
       "title": "Pausas com um traço",
-      "body": "Adicione um hífen `-` sozinho para uma pausa de 2 segundos, ou `-5s` para uma duração personalizada. A prática escurecerá a tela e fará a contagem regressiva para você."
+      "body": "Adicione um hífen `-` sozinho para uma pausa de 2 segundos, ou `-5s` para uma duração personalizada. A prática escurecerá a tela e fará a contagem regressiva para você.",
+      "demoText": "Quero perguntar-vos uma coisa. -3 Estão prontos?"
     },
     "complete": {
       "title": "Você está pronto",

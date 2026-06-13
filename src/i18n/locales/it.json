@@ -122,7 +122,11 @@
     "deleted": "Discorso eliminato",
     "deletedDesc": "Il discorso è stato eliminato definitivamente.",
     "daysLeftPlural": "{{count}} giorni rimasti",
-    "daysOverduePlural": "{{count}} giorni di ritardo"
+    "daysOverduePlural": "{{count}} giorni di ritardo",
+    "dueForPractice": "Pronto per esercitarsi",
+    "dueForPracticeDescription": "Questi segmenti sono ottimali da esercitare adesso",
+    "beat": "Segmento",
+    "inTime": "tra"
   },
   "onboarding": {
     "skip": "Salta",
@@ -812,11 +816,13 @@
     },
     "direction": {
       "title": "Indicazioni sceniche",
-      "body": "Seleziona qualsiasi parola nell'editor e scrivi cosa fare — come “sorridi” o “alza la mano”. L'indicazione apparirà sopra il tuo copione mentre presenti."
+      "body": "Seleziona qualsiasi parola nell'editor e scrivi cosa fare — come “sorridi” o “alza la mano”. L'indicazione apparirà sopra il tuo copione mentre presenti.",
+      "demoText": "Grazie a tutti {{smile}}per essere venuti{{/}} stasera."
     },
     "pause": {
       "title": "Pause con un trattino",
-      "body": "Aggiungi un singolo `-` per una pausa di 2 secondi, o `-5s` per una durata personalizzata. La pratica oscurerà lo schermo e farà un conto alla rovescia per te."
+      "body": "Aggiungi un singolo `-` per una pausa di 2 secondi, o `-5s` per una durata personalizzata. La pratica oscurerà lo schermo e farà un conto alla rovescia per te.",
+      "demoText": "Voglio chiedervi una cosa. -3 Siete pronti?"
     },
     "complete": {
       "title": "Sei pronto",
