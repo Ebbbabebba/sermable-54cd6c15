@@ -82,6 +82,12 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
   const startTimeRef = useRef<number>(0);
   const restartAttemptsRef = useRef(0);
 
+  // Scoring refs
+  const matchedCountRef = useRef(0); // words advanced by real recognition match
+  const missedIndicesRef = useRef<Set<number>>(new Set()); // word indices the user skipped over
+  const hesitationsRef = useRef(0); // times any hint stage was shown
+  const lastProgressAtRef = useRef<number>(Date.now()); // last cursor advance (for stall detection)
+
   // Sync ref
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
 
@@ -90,6 +96,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     const tokens = spoken.toLowerCase().trim().split(/\s+/).filter(Boolean);
     let idx = currentIndexRef.current;
     let progressed = false;
+    let matchedDelta = 0;
 
     for (const tok of tokens) {
       if (idx >= words.length) break;
@@ -99,16 +106,20 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
 
       if (sim >= SIMILARITY_THRESHOLD) {
         idx++;
+        matchedDelta++;
         progressed = true;
         continue;
       }
-      // Tight lookahead — only allow jumping over 1-2 words and require a high match.
+      // Lookahead — allow jumping over a few words on a strong match.
       let jumped = false;
       for (let i = 1; i <= LOOKAHEAD_WORDS && idx + i < words.length; i++) {
         const aheadHard = isHardToRecognizeWord(words[idx + i]);
         const aheadSim = aheadHard ? 1.0 : getWordSimilarity(tok, words[idx + i]);
         if (aheadSim >= LOOKAHEAD_THRESHOLD) {
+          // Words that were skipped over count as missed.
+          for (let j = 0; j < i; j++) missedIndicesRef.current.add(idx + j);
           idx = idx + i + 1;
+          matchedDelta++;
           progressed = true;
           jumped = true;
           break;
@@ -124,8 +135,11 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
       setCurrentIndex(idx);
       setHintStage(0);
       lastSpeechAtRef.current = Date.now();
+      lastProgressAtRef.current = Date.now();
+      matchedCountRef.current += matchedDelta;
     }
   }, [words]);
+
 
   // Speech recognition setup
   useEffect(() => {
