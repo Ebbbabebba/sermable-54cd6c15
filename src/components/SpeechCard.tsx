@@ -96,15 +96,28 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   useEffect(() => {
     const fetchMastery = async () => {
       try {
-        // Use segment visibility to match Practice page mastery calculation
+        // Mastery = % of beats mastered (clean rep with all words hidden).
+        // Prefer practice_beats; fall back to speech_segments. This matches Practice page logic
+        // and is achievable even when speech recognition mishears individual words.
+        const { data: beats } = await supabase
+          .from("practice_beats")
+          .select("is_mastered")
+          .eq("speech_id", speech.id);
+
+        if (beats && beats.length > 0) {
+          const mastered = beats.filter(b => b.is_mastered).length;
+          setMasteryPercent(Math.round((mastered / beats.length) * 100));
+          return;
+        }
+
         const { data: segments } = await supabase
           .from("speech_segments")
-          .select("visibility_percent")
+          .select("is_mastered")
           .eq("speech_id", speech.id);
-        
+
         if (segments && segments.length > 0) {
-          const avg = segments.reduce((sum, s) => sum + (100 - (s.visibility_percent ?? 100)), 0) / segments.length;
-          setMasteryPercent(Math.round(avg));
+          const mastered = segments.filter(s => s.is_mastered).length;
+          setMasteryPercent(Math.round((mastered / segments.length) * 100));
         }
       } catch (error) {
         console.error('Error fetching mastery:', error);
