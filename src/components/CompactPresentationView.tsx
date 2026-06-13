@@ -301,10 +301,11 @@ export const CompactPresentationView = ({
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        setStatus('error');
-      }
+      // Whole Speech Mode is non-punitive — never surface an 'error' state to
+      // the UI. Recognition glitches are silent; the auto-restart below keeps
+      // us listening.
     };
+
 
     recognition.onend = () => {
       if (isRecording && restartAttemptsRef.current < maxRestartAttempts) {
@@ -342,26 +343,31 @@ export const CompactPresentationView = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Silence detection
+  // Silence detection + safety auto-advance.
+  // Whole Speech Mode must NEVER get stuck on a word. After the hint has been
+  // shown for a while with no recognition match, we silently bump the cursor
+  // forward so the teleprompter keeps following the speaker.
   useEffect(() => {
     if (!isRecording || currentWordIndex >= words.length) return;
 
     const checkSilence = () => {
       const silenceDuration = Date.now() - lastProgressTime.current;
+      const wordDuration = Date.now() - wordStartTimeRef.current;
       const currentWord = words[currentWordIndex];
-      
+
       // Detect if this is the first word of a sentence
       const isSentenceStart = currentWordIndex === 0 || /[.!?]$/.test(words[currentWordIndex - 1]);
       const effectiveDelay = isSentenceStart ? sentenceStartDelay : hintDelay;
-      
+
       // Show "try" prompt at 60% of the delay
       const tryDelay = Math.round(effectiveDelay * 0.6);
-      
+
       if (silenceDuration >= tryDelay && !showHint) {
         setShowHint({ word: currentWord, phase: "trying" });
+        // Never surface an error state — just a soft "silence" cue.
         setStatus('silence');
       }
-      
+
       const showWordDelay = wrongAttempts.current.length > 0 ? Math.round(effectiveDelay * 0.5) : effectiveDelay;
       if (silenceDuration >= showWordDelay && showHint?.phase === "trying") {
         setShowHint({ word: currentWord, phase: "showing" });
@@ -373,11 +379,40 @@ export const CompactPresentationView = ({
           return prev;
         });
       }
+
+      // Safety auto-advance: if we've been stuck on this word for too long
+      // (hint shown + extra grace), move the teleprompter forward by one word
+      // so the script keeps following the speaker. Mark as hesitated, never
+      // as skipped/missed — Whole Speech Mode is non-punitive.
+      const AUTO_ADVANCE_AFTER = effectiveDelay + 2500;
+      if (wordDuration >= AUTO_ADVANCE_AFTER) {
+        const wasPrompted = showHint?.phase === "showing";
+        setWordPerformance(prev => {
+          if (prev.some(p => p.index === currentWordIndex)) return prev;
+          return [...prev, {
+            word: currentWord,
+            index: currentWordIndex,
+            status: "hesitated",
+            timeToSpeak: wordDuration,
+            wasPrompted,
+          }];
+        });
+        const next = currentWordIndex + 1;
+        currentWordIndexRef.current = next;
+        setCurrentWordIndex(next);
+        setShowHint(null);
+        wrongAttempts.current = [];
+        wordStartTimeRef.current = Date.now();
+        lastProgressTime.current = Date.now();
+        lastMatchAtRef.current = Date.now();
+        setStatus('speaking');
+      }
     };
 
     const interval = setInterval(checkSilence, 200);
     return () => clearInterval(interval);
-  }, [isRecording, currentWordIndex, showHint, words]);
+  }, [isRecording, currentWordIndex, showHint, words, hintDelay, sentenceStartDelay]);
+
 
   // Process transcript and match words
   const processTranscript = useCallback((newTranscript: string) => {
@@ -429,15 +464,11 @@ export const CompactPresentationView = ({
         setStatus('success');
         setTimeout(() => setStatus('speaking'), 200);
       } else {
-        // Tighter lookahead: only 2 words ahead, higher bar — prevents stray
-        // tokens from leapfrogging entire phrases and falsely marking them skipped.
-        // BUT if the speaker is clearly stuck on the current word (multiple wrong
-        // attempts or stuck for >2.5s), widen the window so we can leapfrog and
-        // catch up to where they actually are.
-        const isStuck =
-          wrongAttempts.current.length >= STUCK_ATTEMPTS_THRESHOLD ||
-          Date.now() - wordStartTimeRef.current > STUCK_TIME_MS;
-        const maxLookahead = isStuck ? STUCK_LOOKAHEAD_WORDS : LOOKAHEAD_WORDS;
+        // Whole Speech Mode is non-punitive: always use the wide lookahead
+        // window so the teleprompter can leapfrog forward to wherever the
+        // speaker actually is. Skipped words are marked as "correct" (not
+        // "skipped") to avoid any red/error treatment downstream.
+        const maxLookahead = STUCK_LOOKAHEAD_WORDS;
 
         let foundAhead = false;
         for (let i = 1; i <= maxLookahead && localIndex + i < words.length; i++) {
@@ -450,7 +481,7 @@ export const CompactPresentationView = ({
               setWordPerformance(prev => [...prev, {
                 word: skippedWord,
                 index: localIndex + j,
-                status: "skipped",
+                status: "correct",
                 wasPrompted: false,
               }]);
             }
@@ -477,15 +508,13 @@ export const CompactPresentationView = ({
         }
 
         if (!foundAhead) {
+          // Track the wrong attempt for retry logic, but never surface an
+          // error state — the UI stays calm and keeps listening.
           wrongAttempts.current.push(spokenWord);
           lastProgressTime.current = Date.now();
-          // Only signal error after a couple of wrong attempts so a single
-          // misrecognition doesn't flash red constantly.
-          if (wrongAttempts.current.length >= 2) {
-            setStatus('error');
-          }
         }
       }
+
     }
   }, [words, showHint, haptics]);
 
