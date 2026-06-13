@@ -1814,22 +1814,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           newSpoken.add(advancedTo);
           foundIdx = advancedTo + 1;
           usedSkipFill = true;
-        } else if (
-          canSkipCurrent &&
-          advancedTo + 2 < words.length &&
-          !hiddenWordIndicesRef.current.has(advancedTo + 1) &&
-          !crossesSentenceBoundary(advancedTo, advancedTo + 2) &&
-          !pauseInRange(advancedTo, advancedTo + 2) &&
-          wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 2)
-        ) {
-          // Two visible words skipped — user kept speaking past a mis-recognized
-          // stretch (e.g. looked away from the screen). Catch the cursor up so
-          // it doesn't freeze on stale words.
-          newSpoken.add(advancedTo);
-          newSpoken.add(advancedTo + 1);
-          foundIdx = advancedTo + 2;
-          usedSkipFill = true;
         }
+
       }
 
       if (foundIdx === -1) {
