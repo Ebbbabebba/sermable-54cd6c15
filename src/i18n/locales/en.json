@@ -596,7 +596,8 @@
       "termsDescription": "Review our policies and legal information",
       "termsOfService": "Terms of Service",
       "privacyPolicy": "Privacy Policy",
-      "cookiePolicy": "Cookie Policy"
+      "cookiePolicy": "Cookie Policy",
+      "refundPolicy": "Refund Policy"
     },
     "support": {
       "title": "Contact Support",
@@ -1086,6 +1087,45 @@
     "tooShortTitle": "Tell me a bit more",
     "tooShortDesc": "Write a short sentence about what kind of speech it is.",
     "errorTitle": "AI didn't respond"
+  },
+  "paymentSettings": {
+    "pageTitle": "Sermable Premium",
+    "pageSubtitle": "Unlock the full Sermable experience.",
+    "youArePremium": "You are Premium",
+    "manageInApple": "Manage or cancel your subscription in your Apple ID settings.",
+    "manageInAppStore": "Manage subscription in App Store",
+    "upgradeTitle": "Upgrade to Premium",
+    "upgradeDesc": "Everything you need to memorize any speech.",
+    "featUnlimited": "Unlimited speeches",
+    "featPresentation": "Presentation mode",
+    "featAnytime": "Practice anytime",
+    "featAnalytics": "Advanced analytics",
+    "bestValue": "Best value",
+    "yearly": "Yearly",
+    "perYear": "/year",
+    "monthly": "Monthly",
+    "perMonth": "/month",
+    "verifying": "Verifying purchase…",
+    "processing": "Processing…",
+    "subscribe": "Subscribe",
+    "getPremium": "Get Premium",
+    "restore": "Restore purchases",
+    "restoring": "Restoring purchases…",
+    "premiumRestored": "✅ Premium restored!",
+    "welcomePremium": "✅ Welcome to Premium!",
+    "subActive": "Your subscription is now active.",
+    "payReceivedNotUpgraded": "Payment received but account not yet upgraded. Please tap 'Restore purchases'.",
+    "verificationFailed": "Purchase verification failed",
+    "tryAgainContact": "Please try again or contact support.",
+    "verifyFailedGeneric": "Verification failed. Please try again or contact support.",
+    "purchaseFailed": "Purchase failed",
+    "tryAgain": "Please try again.",
+    "upgradeIniOS": "Upgrade in the iOS app",
+    "subsInApp": "Premium subscriptions are available through the Sermable iOS app on the App Store.",
+    "subsInAppShort": "Premium subscriptions are available in the Sermable iOS app on the App Store.",
+    "legalDisclosure": "Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24 hours before the end of the current period. Manage or cancel anytime in your Apple ID account settings.",
+    "termsEula": "Terms of Use (EULA)",
+    "privacyPolicy": "Privacy Policy",
+    "refundPolicy": "Refund Policy"
   }
 }
-
