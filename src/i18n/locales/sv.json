@@ -221,7 +221,7 @@
         "subtitle": "Strikt tränar exakta ord. Flow belönar mening framför precision.",
         "strict": "Strikt",
         "strictDesc": "Varje ord räknas. Bäst för memorering.",
-        "flow": "Flow",
+        "flow": "Flöde",
         "flowDesc": "Få fram budskapet. Bäst för naturlig leverans."
       }
     },
@@ -954,7 +954,7 @@
   },
   "calendar": {
     "practice": "Övning",
-    "recall": "Recall",
+    "recall": "Återkalla",
     "test": "Helkörning",
     "presentationDay": "Presentationsdag",
     "completed": "Avklarad",
@@ -1009,7 +1009,7 @@
     "optionContinuous": "Löpande sidor",
     "optionContinuousDesc": "Kompakt utskrift, beats efter varandra. Sparar papper.",
     "printButton": "Skriv ut",
-    "beatLabel": "Beat",
+    "beatLabel": "Takt",
     "popupBlockedTitle": "Popup blockerad",
     "popupBlockedDesc": "Tillåt popup-fönster för att skriva ut manuset.",
     "errorTitle": "Kunde inte skapa utskrift"

@@ -196,7 +196,7 @@
         "subtitle": "Strikt trainiert exakte Wörter. Flow belohnt Bedeutung statt Genauigkeit.",
         "strict": "Strikt",
         "strictDesc": "Jedes Wort zählt. Am besten zum Auswendiglernen.",
-        "flow": "Flow",
+        "flow": "Fluss",
         "flowDesc": "Bring die Botschaft rüber. Am besten für natürliches Sprechen."
       }
     },
@@ -563,7 +563,7 @@
   },
   "calendar": {
     "practice": "Übung",
-    "recall": "Recall",
+    "recall": "Abrufen",
     "test": "Komplett",
     "presentationDay": "Präsentationstag",
     "completed": "Erledigt",
