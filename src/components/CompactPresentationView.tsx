@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, X } from "lucide-react";
+import { Mic, Square, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WearableHUD, type ViewMode } from "./WearableHUD";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
@@ -807,7 +807,24 @@ export const CompactPresentationView = ({
       </div>
 
       {/* Bottom Controls */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4">
+        <Button
+          size="lg"
+          variant="outline"
+          onClick={() => {
+            const targetSentence = Math.max(0, currentSentenceIndex - 1);
+            const target = sentences[targetSentence]?.startIndex ?? 0;
+            prevWordIndexRef.current = target;
+            currentWordIndexRef.current = target;
+            setCurrentWordIndex(target);
+            setShowHint(null);
+          }}
+          disabled={currentSentenceIndex === 0}
+          className="rounded-full h-12 w-12 p-0 shadow-md"
+          aria-label={t('common.previous', 'Previous')}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
         <Button
           size="lg"
           variant={isRecording ? "destructive" : "default"}
@@ -816,6 +833,23 @@ export const CompactPresentationView = ({
           className="rounded-full h-16 w-16 p-0 shadow-lg"
         >
           {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          onClick={() => {
+            const targetSentence = Math.min(sentences.length - 1, currentSentenceIndex + 1);
+            const target = sentences[targetSentence]?.startIndex ?? currentWordIndex;
+            prevWordIndexRef.current = target;
+            currentWordIndexRef.current = target;
+            setCurrentWordIndex(target);
+            setShowHint(null);
+          }}
+          disabled={currentSentenceIndex >= sentences.length - 1}
+          className="rounded-full h-12 w-12 p-0 shadow-md"
+          aria-label={t('common.next', 'Next')}
+        >
+          <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
 
