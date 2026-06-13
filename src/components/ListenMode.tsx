@@ -172,7 +172,10 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     rec.onstart = () => { restartAttemptsRef.current = 0; };
     // Only mark "speech detected" when the engine signals real speech onset —
     // NOT on every interim result (which fire continuously and would mask silence).
-    rec.onspeechstart = () => { lastSpeechAtRef.current = Date.now(); };
+    rec.onspeechstart = () => {
+      lastSpeechAtRef.current = Date.now();
+      hasSpeechSinceProgressRef.current = true;
+    };
 
     rec.onresult = (event: any) => {
       let finalT = "";
@@ -182,6 +185,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
         if (event.results[i].isFinal) finalT += tr + " ";
         else interimT += tr;
       }
+      if (finalT || interimT) hasSpeechSinceProgressRef.current = true;
 
       // Process only the new tail of interim transcripts.
       if (interimT && interimT !== lastProcessedInterimRef.current) {
@@ -253,9 +257,9 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
 
       setHintStage(prev => (prev !== nextStage ? nextStage : prev));
 
-      // Stall auto-advance: if we've been stuck on the same word too long,
-      // bump the cursor forward and count the word as missed.
-      if (sinceProgress >= STALL_AUTO_ADVANCE_MS) {
+      // Stall auto-advance only after actual speech. Silence should reveal hints,
+      // not move the cursor by itself.
+      if (hasSpeechSinceProgressRef.current && sinceProgress >= STALL_AUTO_ADVANCE_MS) {
         const idx = currentIndexRef.current;
         if (idx < words.length) {
           missedIndicesRef.current.add(idx);
@@ -263,6 +267,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
           currentIndexRef.current = next;
           setCurrentIndex(next);
           lastProgressAtRef.current = now;
+          hasSpeechSinceProgressRef.current = false;
         }
       }
     }, 200);
@@ -300,10 +305,11 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     lastSpeechAtRef.current = Date.now();
     lastProgressAtRef.current = Date.now();
     lastProcessedInterimRef.current = "";
-    matchedCountRef.current = 0;
+    matchedIndicesRef.current = new Set();
     missedIndicesRef.current = new Set();
     hesitationsRef.current = 0;
     prevHintRef.current = 0;
+    hasSpeechSinceProgressRef.current = false;
     setHintStage(0);
     setIsRecording(true);
   };
@@ -321,7 +327,7 @@ const ListenMode = ({ text, speechLanguage, onExit, onComplete }: ListenModeProp
     }
 
     const total = words.length;
-    const matched = matchedCountRef.current;
+    const matched = matchedIndicesRef.current.size;
     const accuracy = total > 0 ? Math.round((matched / total) * 1000) / 10 : 0;
     const missedWords = Array.from(missedIndicesRef.current)
       .sort((a, b) => a - b)
