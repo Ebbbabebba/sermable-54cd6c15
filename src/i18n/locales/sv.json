@@ -561,7 +561,8 @@
       "description": "Välj hur appen ska se ut",
       "theme": "Tema",
       "darkTheme": "Mörkt",
-      "lightTheme": "Ljust"
+      "lightTheme": "Ljust",
+      "sounds": "Ljudeffekter"
     },
     "language": {
       "title": "Språk",

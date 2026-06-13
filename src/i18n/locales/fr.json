@@ -507,7 +507,8 @@
       "description": "Personnalisez l'apparence de Sermable",
       "theme": "Thème",
       "darkTheme": "Sombre",
-      "lightTheme": "Clair"
+      "lightTheme": "Clair",
+      "sounds": "Effets sonores"
     },
     "language": {
       "title": "Langue",

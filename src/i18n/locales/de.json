@@ -507,7 +507,8 @@
       "description": "Passe das Aussehen von Sermable an",
       "theme": "Design",
       "darkTheme": "Dunkel",
-      "lightTheme": "Hell"
+      "lightTheme": "Hell",
+      "sounds": "Soundeffekte"
     },
     "language": {
       "title": "Sprache",
