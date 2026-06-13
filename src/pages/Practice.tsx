@@ -1095,7 +1095,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               // Check if we've reached the last word
               if (currentIdx >= allExpectedWords.length) {
                 console.log('🎉 Last word spoken! Auto-stopping recording...');
-                setTimeout(() => { audioRecorderRef.current?.stopRecording(); }, 500);
+                // audio recorder removed in beat-based system
               } else {
                 startProgressiveHints(currentIdx, allExpectedWords, allExpectedWordsRaw);
               }
