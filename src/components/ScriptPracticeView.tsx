@@ -13,6 +13,7 @@ import {
   CheckCircle2, XCircle, AlertCircle, Eye, EyeOff, Trophy
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface Beat {
   beat_index: number;
@@ -39,6 +40,49 @@ interface BeatSessionResult {
 }
 
 type Phase = 'loading' | 'reading' | 'reference' | 'recording' | 'analyzing' | 'results' | 'summary';
+
+const getRecognitionLanguage = (lang: string): string => {
+  if (!lang) return "en-US";
+  if (lang.includes("-") || lang.includes("_")) return lang.replace("_", "-");
+  const map: Record<string, string> = {
+    en: "en-US", sv: "sv-SE", de: "de-DE", fr: "fr-FR",
+    es: "es-ES", it: "it-IT", pt: "pt-PT",
+  };
+  return map[lang.toLowerCase()] || `${lang}-${lang.toUpperCase()}`;
+};
+
+const normalizeKeyword = (text: string): string =>
+  text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]/gu, "");
+
+const getKeywordDistance = (a: string, b: string): number => {
+  if (a === b) return 0;
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const curr = Array.from({ length: b.length + 1 }, () => 0);
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
+  }
+  return prev[b.length];
+};
+
+const keywordMatches = (spoken: string, keyword: string): boolean => {
+  const a = normalizeKeyword(spoken);
+  const b = normalizeKeyword(keyword);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (b.length <= 3) return false;
+  if (a.includes(b) || b.includes(a)) return Math.min(a.length, b.length) >= Math.max(4, b.length - 2);
+  if (a[0] !== b[0]) return false;
+  const similarity = 1 - getKeywordDistance(a, b) / Math.max(a.length, b.length);
+  return similarity >= 0.76;
+};
+
+const getCleanWordCount = (text: string): number =>
+  stripStageDirections(text).split(/\s+/).map(normalizeKeyword).filter(Boolean).length;
 
 interface ScriptPracticeViewProps {
   speechId: string;
@@ -75,9 +119,17 @@ const ScriptPracticeView = ({
 
   // Recording
   const [isRecording, setIsRecording] = useState(false);
+  const [liveBeatIndex, setLiveBeatIndex] = useState(0);
+  const [coveredBeatIndexes, setCoveredBeatIndexes] = useState<Set<number>>(new Set());
+  const [liveTranscript, setLiveTranscript] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const speechRecognitionRef = useRef<any>(null);
+  const liveBeatIndexRef = useRef(0);
+  const recordingRangeRef = useRef<[number, number]>([0, 0]);
+  const coveredBeatIndexesRef = useRef<Set<number>>(new Set());
+  const lastInterimRef = useRef("");
 
   // Load beats on mount - try cache first
   useEffect(() => {
@@ -148,8 +200,120 @@ const ScriptPracticeView = ({
     setPhase('reference');
   };
 
+  const moveLiveCursor = (beatIndex: number) => {
+    if (totalBeats === 0) return;
+    const next = Math.max(0, Math.min(beatIndex, totalBeats - 1));
+    liveBeatIndexRef.current = next;
+    setLiveBeatIndex(next);
+    recordingRangeRef.current = [recordingRangeRef.current[0], Math.max(recordingRangeRef.current[1], next)];
+    setAggregatedRange([recordingRangeRef.current[0], Math.max(recordingRangeRef.current[1], next)]);
+  };
+
+  const markBeatCovered = (beatIndex: number) => {
+    if (beatIndex < 0 || beatIndex >= totalBeats) return;
+    if (!coveredBeatIndexesRef.current.has(beatIndex)) {
+      const nextCovered = new Set(coveredBeatIndexesRef.current);
+      nextCovered.add(beatIndex);
+      coveredBeatIndexesRef.current = nextCovered;
+      setCoveredBeatIndexes(nextCovered);
+    }
+    if (beatIndex >= liveBeatIndexRef.current && beatIndex < totalBeats - 1) {
+      moveLiveCursor(beatIndex + 1);
+    } else {
+      moveLiveCursor(beatIndex);
+    }
+  };
+
+  const processLiveWords = (spoken: string) => {
+    const spokenWords = spoken.split(/\s+/).filter(Boolean);
+    if (spokenWords.length === 0 || beats.length === 0) return;
+
+    for (const spokenWord of spokenWords) {
+      const current = liveBeatIndexRef.current;
+      let matchedBeat = -1;
+      for (let offset = 0; offset <= 3 && current + offset < beats.length; offset++) {
+        if (keywordMatches(spokenWord, beats[current + offset].reference_word)) {
+          matchedBeat = current + offset;
+          break;
+        }
+      }
+      if (matchedBeat !== -1) markBeatCovered(matchedBeat);
+    }
+  };
+
+  const stopLiveKeywordRecognition = () => {
+    if (speechRecognitionRef.current) {
+      try { speechRecognitionRef.current.onend = null; speechRecognitionRef.current.stop(); } catch {}
+      speechRecognitionRef.current = null;
+    }
+    lastInterimRef.current = "";
+  };
+
+  const startLiveKeywordRecognition = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    stopLiveKeywordRecognition();
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = getRecognitionLanguage(speechLanguage);
+    recognition.maxAlternatives = 3;
+
+    recognition.onresult = (event: any) => {
+      let finalText = "";
+      let interimText = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0]?.transcript || "";
+        if (event.results[i].isFinal) finalText += `${transcript} `;
+        else interimText += transcript;
+      }
+
+      const visibleTranscript = `${finalText || ""}${interimText || ""}`.trim();
+      if (visibleTranscript) setLiveTranscript(visibleTranscript);
+
+      if (interimText && interimText !== lastInterimRef.current) {
+        const prev = lastInterimRef.current.trim().split(/\s+/).filter(Boolean);
+        const current = interimText.trim().split(/\s+/).filter(Boolean);
+        if (current.length > prev.length) processLiveWords(current.slice(prev.length).join(" "));
+        lastInterimRef.current = interimText;
+      }
+
+      if (finalText) {
+        processLiveWords(finalText);
+        lastInterimRef.current = "";
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== "no-speech" && event.error !== "aborted") {
+        console.warn("Script mode speech recognition error:", event.error);
+      }
+    };
+
+    recognition.onend = () => {
+      if (isRecording && speechRecognitionRef.current === recognition) {
+        setTimeout(() => {
+          try { recognition.start(); } catch {}
+        }, 250);
+      }
+    };
+
+    speechRecognitionRef.current = recognition;
+    try { recognition.start(); } catch {}
+  };
+
   const handleStartRecording = async () => {
     try {
+      const startIndex = aggregatedRange[0];
+      recordingRangeRef.current = [startIndex, startIndex];
+      liveBeatIndexRef.current = startIndex;
+      coveredBeatIndexesRef.current = new Set();
+      setLiveBeatIndex(startIndex);
+      setCoveredBeatIndexes(new Set());
+      setLiveTranscript("");
+      lastInterimRef.current = "";
+
       const stream = await requestMicrophoneAccess({
         sampleRate: 24000,
         channelCount: 1,
@@ -187,6 +351,7 @@ const ScriptPracticeView = ({
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
       setPhase('recording');
+      startLiveKeywordRecognition();
     } catch (err) {
       toast({
         variant: "destructive",
@@ -197,6 +362,7 @@ const ScriptPracticeView = ({
   };
 
   const handleStopRecording = () => {
+    stopLiveKeywordRecognition();
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current = null;
@@ -206,6 +372,8 @@ const ScriptPracticeView = ({
 
   const handleRecordingDone = async (audioBlob: Blob) => {
     setPhase('analyzing');
+    const [analysisStart, analysisEnd] = recordingRangeRef.current;
+    const analysisText = beats.slice(analysisStart, analysisEnd + 1).map(b => b.text).join(' ') || currentText;
 
     try {
       const reader = new FileReader();
@@ -225,14 +393,28 @@ const ScriptPracticeView = ({
 
           const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-retelling', {
             body: {
-              originalText: currentText,
+              originalText: analysisText,
               transcript,
               language: speechLanguage,
             }
           });
           if (analysisError) throw analysisError;
 
-          const resultWithTranscript = { ...analysisData, transcript };
+          const originalWordCount = getCleanWordCount(analysisText);
+          const transcriptWordCount = getCleanWordCount(transcript);
+          const spokenRatio = originalWordCount > 0 ? transcriptWordCount / originalWordCount : 0;
+          const tooLittleSpeech = transcriptWordCount < Math.max(3, Math.ceil(originalWordCount * 0.18));
+          const cappedScore = tooLittleSpeech ? Math.min(analysisData.score ?? 0, spokenRatio <= 0.05 ? 15 : 40) : analysisData.score;
+          const cappedCoverage = tooLittleSpeech ? Math.min(analysisData.content_coverage ?? 0, spokenRatio <= 0.05 ? 10 : 35) : analysisData.content_coverage;
+          const resultWithTranscript = {
+            ...analysisData,
+            score: cappedScore,
+            content_coverage: cappedCoverage,
+            feedback: tooLittleSpeech
+              ? t('script.tooLittleSpeechFeedback', 'Too little speech was recognized to count this as an excellent run.')
+              : analysisData.feedback,
+            transcript,
+          };
           setResult(resultWithTranscript);
           setPhase('results');
 
@@ -243,10 +425,10 @@ const ScriptPracticeView = ({
             await supabase.from('script_sessions').insert({
               speech_id: speechId,
               user_id: user.id,
-              beat_start: aggregatedRange[0],
-              beat_end: aggregatedRange[1],
-              score: analysisData.score,
-              content_coverage: analysisData.content_coverage,
+              beat_start: analysisStart,
+              beat_end: analysisEnd,
+              score: resultWithTranscript.score,
+              content_coverage: resultWithTranscript.content_coverage,
               order_accuracy: analysisData.order_accuracy,
               transcript,
             });
@@ -254,10 +436,10 @@ const ScriptPracticeView = ({
 
           // Track for summary
           setSessionResults(prev => [...prev, {
-            beatStart: aggregatedRange[0],
-            beatEnd: aggregatedRange[1],
-            score: analysisData.score,
-            content_coverage: analysisData.content_coverage,
+            beatStart: analysisStart,
+            beatEnd: analysisEnd,
+            score: resultWithTranscript.score,
+            content_coverage: resultWithTranscript.content_coverage,
             order_accuracy: analysisData.order_accuracy,
           }]);
         } catch (err: any) {
