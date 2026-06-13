@@ -24,19 +24,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAdaptiveTempo } from "@/hooks/useAdaptiveTempo";
 import { format } from "date-fns";
-import AudioRecorder, { AudioRecorderHandle } from "@/components/AudioRecorder";
-import WordHighlighter from "@/components/WordHighlighter";
 import PracticeResults from "@/components/PracticeResults";
-import EnhancedWordTracker from "@/components/EnhancedWordTracker";
 import BracketedTextDisplay from "@/components/BracketedTextDisplay";
-// PracticeSettings removed - not used in new beat-based system
 import LoadingOverlay from "@/components/LoadingOverlay";
 import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
 import DayAfterRecallView from "@/components/DayAfterRecallView";
-
-
-import SegmentProgress from "@/components/SegmentProgress";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
