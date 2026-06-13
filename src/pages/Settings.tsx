@@ -508,7 +508,7 @@ const Settings = () => {
             <ExternalLink className="h-4 w-4 text-muted-foreground" />
           </Row>
           <Row onClick={() => window.open('/refund-policy', '_blank')} last>
-            <span className="text-sm ml-10">Refund Policy</span>
+            <span className="text-sm ml-10">{t('settings.legal.refundPolicy')}</span>
             <ExternalLink className="h-4 w-4 text-muted-foreground" />
           </Row>
         </Section>
