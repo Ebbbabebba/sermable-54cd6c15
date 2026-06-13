@@ -3365,7 +3365,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             // visible word for ~6s while the user is clearly speaking, advance
             // it silently. Without this the blue cursor could stay frozen on a
             // visible word forever (e.g. speech recognition mishears "Ladies").
-            const VISIBLE_STUCK_MS = 6000;
+            // Hard-to-recognize visible words (SpaceX, NATO, COVID-19, years)
+            // get a much shorter timeout — the engine often can't transcribe
+            // them at all, so we shouldn't make the user wait 6s.
+            const isHardWord = isHardToRecognizeWord(words[idx] ?? '');
+            const VISIBLE_STUCK_MS = isHardWord ? 2500 : 6000;
             if (
               hasHeardSpeechRef.current &&
               elapsed > VISIBLE_STUCK_MS &&
