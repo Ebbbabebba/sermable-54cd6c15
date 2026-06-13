@@ -182,7 +182,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   } | null>(null);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hesitationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const audioRecorderRef = useRef<AudioRecorderHandle>(null);
+  
   const transcriptionIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastProcessedChunkIndex = useRef(0);
   const recognitionRef = useRef<any>(null);
