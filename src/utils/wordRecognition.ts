@@ -28,12 +28,11 @@ export const isHardToRecognizeWord = (word: string): boolean => {
   // All-caps abbreviations 2-4 chars: "NATO", "EU", "UN"
   if (/^[A-Z]{2,4}$/.test(cleaned)) return true;
 
-  // Short 2-3 letter tokens are very likely initials/acronyms ("UA", "ua",
-  // "JFK", "wp") that speech engines almost never transcribe correctly —
-  // the user typically spells them out ("U A"). Auto-accept on any speech.
-  // Common short function words ("to", "of", "in") are usually hidden gap
-  // words during practice so this won't let users coast past them.
-  if (/^[A-Za-z]{2,3}$/.test(cleaned)) return true;
+  // Short tokens that look like initials/acronyms: contain an uppercase letter
+  // ("UA", "Wp", "JFK") OR are wrapped in periods ("u.a"). Plain lowercase
+  // short words (the/och/är/and) are NOT auto-accepted — they're real words
+  // the user must actually say.
+  if (/^[A-Za-z]{2,3}$/.test(cleaned) && /[A-Z]/.test(cleaned)) return true;
 
   return false;
 };
