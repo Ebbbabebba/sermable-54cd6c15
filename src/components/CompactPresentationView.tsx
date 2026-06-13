@@ -301,10 +301,11 @@ export const CompactPresentationView = ({
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        setStatus('error');
-      }
+      // Whole Speech Mode is non-punitive — never surface an 'error' state to
+      // the UI. Recognition glitches are silent; the auto-restart below keeps
+      // us listening.
     };
+
 
     recognition.onend = () => {
       if (isRecording && restartAttemptsRef.current < maxRestartAttempts) {
