@@ -81,6 +81,8 @@
     "invalidResetLink": "Ce lien est invalide ou a expiré."
   },
   "dashboard": {
+    "shareTitleFmt": "__SHARETITLE__",
+    "shareTextFmt": "__SHARETEXT__",
     "title": "Mes discours",
     "welcomeBack": "Bon retour",
     "goodMorning": "Bonjour",

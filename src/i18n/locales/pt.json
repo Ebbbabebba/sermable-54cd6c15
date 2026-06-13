@@ -81,6 +81,8 @@
     "invalidResetLink": "Este link é inválido ou expirou."
   },
   "dashboard": {
+    "shareTitleFmt": "__SHARETITLE__",
+    "shareTextFmt": "__SHARETEXT__",
     "title": "Meus discursos",
     "welcomeBack": "Bem-vindo de volta",
     "goodMorning": "Bom dia",

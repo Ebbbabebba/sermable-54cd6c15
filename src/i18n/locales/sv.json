@@ -105,6 +105,8 @@
     "invalidResetLink": "Denna återställningslänk är ogiltig eller har gått ut."
   },
   "dashboard": {
+    "shareTitleFmt": "__SHARETITLE__",
+    "shareTextFmt": "__SHARETEXT__",
     "title": "Mina tal",
     "welcomeBack": "Välkommen tillbaka",
     "goodMorning": "God morgon",

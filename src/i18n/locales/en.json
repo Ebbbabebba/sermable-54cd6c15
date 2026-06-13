@@ -105,6 +105,8 @@
     "invalidResetLink": "This password reset link is invalid or has expired."
   },
   "dashboard": {
+    "shareTitleFmt": "__SHARETITLE__",
+    "shareTextFmt": "__SHARETEXT__",
     "title": "My Speeches",
     "welcomeBack": "Welcome back",
     "goodMorning": "Good morning",

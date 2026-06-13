@@ -81,6 +81,8 @@
     "invalidResetLink": "Dieser Link ist ungültig oder abgelaufen."
   },
   "dashboard": {
+    "shareTitleFmt": "__SHARETITLE__",
+    "shareTextFmt": "__SHARETEXT__",
     "title": "Meine Reden",
     "welcomeBack": "Willkommen zurück",
     "goodMorning": "Guten Morgen",
