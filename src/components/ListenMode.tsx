@@ -6,12 +6,22 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 
+interface ListenSessionResult {
+  durationSeconds: number;
+  accuracy: number;
+  hesitations: number;
+  missedWords: string[];
+  matchedCount: number;
+  totalWords: number;
+}
+
 interface ListenModeProps {
   text: string;
   speechLanguage: string;
   onExit: () => void;
-  onComplete?: (durationSeconds: number) => void;
+  onComplete?: (result: ListenSessionResult) => void;
 }
+
 
 const getRecognitionLanguage = (lang: string): string => {
   if (!lang) return "en-US";
