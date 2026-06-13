@@ -310,7 +310,7 @@ const ScriptPracticeView = ({
   const handleStartRecording = async () => {
     try {
       const startIndex = aggregatedRange[0];
-      recordingRangeRef.current = [startIndex, startIndex];
+      recordingRangeRef.current = [startIndex, aggregatedRange[1]];
       liveBeatIndexRef.current = startIndex;
       coveredBeatIndexesRef.current = new Set();
       setLiveBeatIndex(startIndex);
