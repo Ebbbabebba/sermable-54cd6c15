@@ -759,6 +759,13 @@
     "ownWordsStyle": "Reconte com suas próprias palavras",
     "selectGeneral": "Selecionar Modo Roteiro"
   },
+  "script": {
+    "currentKeyword": "Palavra-chave atual",
+    "nextKeyword": "Próxima",
+    "speakingNowLive": "Fale naturalmente — as palavras-chave avançam quando você as menciona.",
+    "keywordsCovered": "{{covered}} de {{total}} palavras-chave",
+    "tooLittleSpeechFeedback": "Foi reconhecida fala insuficiente para contar isto como uma apresentação excelente."
+  },
   "calendar": {
     "practice": "Prática",
     "recall": "Lembrete",

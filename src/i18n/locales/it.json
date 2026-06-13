@@ -759,6 +759,13 @@
     "ownWordsStyle": "Ripeti con le tue parole",
     "selectGeneral": "Seleziona Modalità Script"
   },
+  "script": {
+    "currentKeyword": "Parola chiave attuale",
+    "nextKeyword": "Avanti",
+    "speakingNowLive": "Parla naturalmente — le parole chiave avanzano quando le menzioni.",
+    "keywordsCovered": "{{covered}} di {{total}} parole chiave",
+    "tooLittleSpeechFeedback": "È stato riconosciuto troppo poco parlato per considerarlo un'esecuzione eccellente."
+  },
   "calendar": {
     "practice": "Pratica",
     "recall": "Richiamo",

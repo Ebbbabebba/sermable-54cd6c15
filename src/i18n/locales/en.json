@@ -912,6 +912,13 @@
     "ownWordsStyle": "Retell in your own words",
     "selectGeneral": "Select Script Mode"
   },
+  "script": {
+    "currentKeyword": "Current keyword",
+    "nextKeyword": "Next",
+    "speakingNowLive": "Speak naturally — keywords advance as you mention them.",
+    "keywordsCovered": "{{covered}} of {{total}} keywords",
+    "tooLittleSpeechFeedback": "Too little speech was recognized to count this as an excellent run."
+  },
   "common": {
     "later": "Later",
     "done": "Done",

@@ -759,6 +759,13 @@
     "ownWordsStyle": "Recuenta con tus propias palabras",
     "selectGeneral": "Seleccionar Modo Guion"
   },
+  "script": {
+    "currentKeyword": "Palabra clave actual",
+    "nextKeyword": "Siguiente",
+    "speakingNowLive": "Habla con naturalidad — las palabras clave avanzan cuando las mencionas.",
+    "keywordsCovered": "{{covered}} de {{total}} palabras clave",
+    "tooLittleSpeechFeedback": "Se reconoció muy poco discurso para contar esto como una ejecución excelente."
+  },
   "calendar": {
     "practice": "Práctica",
     "recall": "Recordar",
