@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { isHardToRecognizeWord, isStrongSpeechFragmentMatch } from "@/utils/wordRecognition";
+import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1525,10 +1525,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       console.log(`🔢 Auto-accepting hard-to-recognize word: "${expected}" (heard: "${s}")`);
       return true;
     }
-
-    // Accept substantial fragments of long words/proper nouns immediately.
-    // Examples: "aktie" → "aktiesparare", any recognized speech near "SpaceX".
-    if (isStrongSpeechFragmentMatch(s, expected)) return true;
     
     // Debug logging for troubleshooting
     if (isHidden && !isLenient) {
@@ -3393,7 +3389,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             // get a much shorter timeout — the engine often can't transcribe
             // them at all, so we shouldn't make the user wait 6s.
             const isHardWord = isHardToRecognizeWord(words[idx] ?? '');
-            const VISIBLE_STUCK_MS = isHardWord ? 1200 : 6000;
+            const VISIBLE_STUCK_MS = isHardWord ? 2500 : 6000;
             if (
               hasHeardSpeechRef.current &&
               elapsed > VISIBLE_STUCK_MS &&
