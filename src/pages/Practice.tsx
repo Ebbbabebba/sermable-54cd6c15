@@ -41,6 +41,7 @@ import {
   MIN_HESITATION_MS,
   MAX_HESITATION_MS,
 } from "@/lib/practicePrefs";
+import { isHardToRecognizeWord, isStrongSpeechFragmentMatch } from "@/utils/wordRecognition";
 
 interface Speech {
   id: string;
@@ -973,6 +974,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
             // Exact match
             if (spoken === expected) return true;
 
+            // Accept hard/proper-noun words and substantial opening fragments.
+            // This handles cases like "aktie" → "aktiesparare" and any short
+            // speech near "SpaceX" without waiting for repeated attempts.
+            if (isStrongSpeechFragmentMatch(spoken, expected)) return true;
+            if (opts?.lenient && isHardToRecognizeWord(expected) && spoken.length > 0) return true;
+
             // Prefix match (either direction). Handles "demo" → "demokrati"
             // and "demokratin" → "demokrati" style cuts from the recognizer.
             // Need at least 2 chars of overlap (3 for very long expected words).
@@ -1002,6 +1009,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const isLooseVisibleMatch = (spoken: string, expected: string): boolean => {
             if (!spoken || !expected) return false;
             if (areWordsSimilar(spoken, expected, { lenient: true })) return true;
+            if (isStrongSpeechFragmentMatch(spoken, expected)) return true;
             // Share first char + at least 1 more char overlap anywhere in start
             if (spoken[0] === expected[0] && spoken.length >= 2) return true;
             return false;

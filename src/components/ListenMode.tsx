@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Mic, Square, X, Ear } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { isHardToRecognizeWord, isStrongSpeechFragmentMatch } from "@/utils/wordRecognition";
 
 interface ListenSessionResult {
   durationSeconds: number;
@@ -57,6 +57,7 @@ const getWordDistance = (a: string, b: string): number => {
 };
 
 const getWordSimilarity = (w1: string, w2: string): number => {
+  if (isStrongSpeechFragmentMatch(w1, w2)) return 1.0;
   const a = normalizeWord(w1);
   const b = normalizeWord(w2);
   if (a === b) return 1.0;
