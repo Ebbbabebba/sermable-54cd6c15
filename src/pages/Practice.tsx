@@ -1034,8 +1034,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
             
             console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', currentIdx);
             
-            // Check if spoken word matches expected word
-            if (areWordsSimilar(cleanSpokenWord, cleanExpectedWord)) {
+            // Check if spoken word matches expected word.
+            // Visible words use a looser match so the recognizer doesn't stall
+            // — if the user even starts saying the word it counts as spoken.
+            const isVisibleWord = !currentHiddenIndices.has(currentIdx);
+            const matched = isVisibleWord
+              ? isLooseVisibleMatch(cleanSpokenWord, cleanExpectedWord)
+              : areWordsSimilar(cleanSpokenWord, cleanExpectedWord);
+            if (matched) {
               // Track timing FIRST to detect hesitation
               const currentTime = Date.now();
               const timeSinceLastWord = currentTime - lastWordTimeRef.current;
