@@ -1124,7 +1124,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
               
               let matchFound = false;
-              const maxLookAhead = 5;
+              const maxLookAhead = 8;
               
               for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
