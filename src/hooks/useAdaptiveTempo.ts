@@ -65,8 +65,8 @@ const calculatePercentile = (arr: number[], percentile: number): number => {
 };
 
 // Phase thresholds
-const CALIBRATION_WORDS = 10;  // First 10 words: use generous defaults
-const LEARNING_WORDS = 30;     // 10-30 words: blend defaults with statistics
+const CALIBRATION_WORDS = 5;   // First 5 words: use generous defaults (faster adaptation)
+const LEARNING_WORDS = 20;     // 5-20 words: blend defaults with statistics
 const SLIDING_WINDOW = 50;     // Keep last 50 intervals for adaptive calculation
 
 // Default generous thresholds (used during calibration)
