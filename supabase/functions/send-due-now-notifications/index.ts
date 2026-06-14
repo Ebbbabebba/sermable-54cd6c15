@@ -124,11 +124,18 @@ Deno.serve(async (req) => {
       if (h < startH || h >= endH) { skipped++; continue; }
 
       const { title, body } = tr(profile.feedback_language || "en", speech.title, due.kind);
-      const r = await sendFCM(profile.push_token, title, body, {
-        type: due.kind === "break" ? "coffee_break_over" : "due_now",
-        speech_id: speech.id,
-        beat_id: b.id,
+      const r = await sendPush({
+        token: profile.push_token,
+        platform: profile.push_platform as "ios" | "android" | null,
+        title,
+        body,
+        data: {
+          type: due.kind === "break" ? "coffee_break_over" : "due_now",
+          speech_id: speech.id,
+          beat_id: b.id,
+        },
       });
+      if (!r.ok) console.error("push failed", { user: profile.id, status: r.status, error: r.error });
 
       if (r.ok) {
         sent++;
