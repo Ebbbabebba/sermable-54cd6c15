@@ -65,8 +65,8 @@ const calculatePercentile = (arr: number[], percentile: number): number => {
 };
 
 // Phase thresholds
-const CALIBRATION_WORDS = 10;  // First 10 words: use generous defaults
-const LEARNING_WORDS = 30;     // 10-30 words: blend defaults with statistics
+const CALIBRATION_WORDS = 5;   // First 5 words: use generous defaults (faster adaptation)
+const LEARNING_WORDS = 20;     // 5-20 words: blend defaults with statistics
 const SLIDING_WINDOW = 50;     // Keep last 50 intervals for adaptive calculation
 
 // Default generous thresholds (used during calibration)
@@ -172,20 +172,29 @@ export function useAdaptiveTempo(): UseAdaptiveTempoReturn {
       
       // Apply word length modifier
       let modifier = 1.0;
-      if (wordLength <= 3) modifier = 0.85;
-      else if (wordLength >= 8) modifier = 1.25;
+      if (wordLength <= 3) modifier = 0.7;
+      else if (wordLength >= 8) modifier = 1.5;
       
-      // Clamp to reasonable range
-      return Math.max(400, Math.min(5000, blended * modifier)) + sentenceStartExtraMs;
+      // Clamp to wider range to support very slow and very fast speakers
+      return Math.max(300, Math.min(7000, blended * modifier)) + sentenceStartExtraMs;
     }
     
     // Phase 3: Full adaptation
     // Threshold = median + 1.5 * stdDev (captures ~93% of natural variation)
     let threshold = median + (1.5 * stdDev);
     
-    // Word length modifiers
-    if (wordLength <= 3) threshold *= 0.8;       // Short words: expect faster
-    else if (wordLength >= 8) threshold *= 1.3;  // Long words: allow more time
+    // Word length modifiers (wider range to forgive long words / reward short ones)
+    if (wordLength <= 3) threshold *= 0.7;       // Short words: expect faster
+    else if (wordLength >= 8) threshold *= 1.5;  // Long words: allow more time
+    
+    // Burst mode: if last 3 intervals are all very fast (<300ms), the user is
+    // mid-burst — relax threshold so we don't yellow-flag rapid chunks.
+    if (stats.wordIntervals.length >= 3) {
+      const last3 = stats.wordIntervals.slice(-3);
+      if (last3.every(i => i < 300)) {
+        threshold = Math.min(threshold, median * 1.2);
+      }
+    }
     
     // Sentence-start gets extra time
     if (isAfterSentence) {
@@ -203,9 +212,10 @@ export function useAdaptiveTempo(): UseAdaptiveTempoReturn {
       threshold = Math.max(threshold, 2500);
     }
     
-    // Clamp to reasonable range (300ms to 5s)
-    return Math.max(300, Math.min(5000, threshold)) + sentenceStartExtraMs;
+    // Clamp to wider range (200ms to 7s) — supports both rapid and slow talkers
+    return Math.max(200, Math.min(7000, threshold)) + sentenceStartExtraMs;
   }, []);
+  
   
   const getAdaptiveHintDelays = useCallback((options: AdaptiveThresholdOptions, masteryConfidence: number = 0): { initialDelay: number; stepDelay: number } => {
     const stats = statsRef.current;

@@ -965,32 +965,46 @@ const [liveTranscription, setLiveTranscription] = useState("");
             return matrix[b.length][a.length];
           };
           
-          // Helper: Check if words are similar enough - STRICT matching to prevent premature filling
-          const areWordsSimilar = (spoken: string, expected: string): boolean => {
+          // Helper: Lenient matching — accept partial/prefix utterances so the
+          // recognizer doesn't stall on long or hard-to-catch words. Only a
+          // genuinely different word fails this check.
+          const areWordsSimilar = (spoken: string, expected: string, opts?: { lenient?: boolean }): boolean => {
+            if (!spoken || !expected) return false;
             // Exact match
             if (spoken === expected) return true;
-            
-            // For very short words (1-3 chars), require exact match
-            if (expected.length <= 3) {
-              return spoken === expected;
+
+            // Prefix match (either direction). Handles "demo" → "demokrati"
+            // and "demokratin" → "demokrati" style cuts from the recognizer.
+            // Need at least 2 chars of overlap (3 for very long expected words).
+            const prefixMin = expected.length >= 8 ? 3 : 2;
+            if (spoken.length >= prefixMin && expected.startsWith(spoken)) return true;
+            if (expected.length >= prefixMin && spoken.startsWith(expected)) return true;
+
+            // First-char guard: completely different start = not a match
+            // (unless lenient mode for visible words, where any overlap counts).
+            if (!opts?.lenient && spoken[0] !== expected[0]) {
+              // Allow soft phonetic equivalents: h-drop, double letters
+              const normSpoken = spoken.replace(/^h/, '').replace(/(.)\1+/g, '$1');
+              const normExpected = expected.replace(/^h/, '').replace(/(.)\1+/g, '$1');
+              if (normSpoken[0] !== normExpected[0]) return false;
             }
-            
-            // For short words (4-5 chars), allow only 1 character difference
-            if (expected.length <= 5) {
-              return levenshtein(spoken, expected) <= 1;
-            }
-            
-            // For longer words, require at least 80% character match
-            // This prevents partial words from triggering a match
-            const minLength = Math.min(spoken.length, expected.length);
-            const maxLength = Math.max(spoken.length, expected.length);
-            
-            // Don't match if lengths are too different (spoken word is too short)
-            if (minLength < maxLength * 0.7) return false;
-            
-            // Allow 1 char difference for 6-8 letter words, 2 for longer
-            const maxDist = expected.length <= 8 ? 1 : 2;
-            return levenshtein(spoken, expected) <= maxDist;
+
+            // Levenshtein with generous thresholds
+            const dist = levenshtein(spoken, expected);
+            if (expected.length <= 3) return dist <= 1;
+            if (expected.length <= 6) return dist <= 2;
+            return dist <= 3;
+          };
+
+          // Even more lenient match used for VISIBLE words — accept on any
+          // utterance that shares a starting fragment, since the word is on
+          // screen and the user is reading it.
+          const isLooseVisibleMatch = (spoken: string, expected: string): boolean => {
+            if (!spoken || !expected) return false;
+            if (areWordsSimilar(spoken, expected, { lenient: true })) return true;
+            // Share first char + at least 1 more char overlap anywhere in start
+            if (spoken[0] === expected[0] && spoken.length >= 2) return true;
+            return false;
           };
           
           // Only process NEW words from the transcript using refs (avoid stale closures)
@@ -1020,8 +1034,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
             
             console.log('🔍 Comparing:', cleanSpokenWord, 'vs', cleanExpectedWord, 'at index', currentIdx);
             
-            // Check if spoken word matches expected word
-            if (areWordsSimilar(cleanSpokenWord, cleanExpectedWord)) {
+            // Check if spoken word matches expected word.
+            // Visible words use a looser match so the recognizer doesn't stall
+            // — if the user even starts saying the word it counts as spoken.
+            const isVisibleWord = !currentHiddenIndices.has(currentIdx);
+            const matched = isVisibleWord
+              ? isLooseVisibleMatch(cleanSpokenWord, cleanExpectedWord)
+              : areWordsSimilar(cleanSpokenWord, cleanExpectedWord);
+            if (matched) {
               // Track timing FIRST to detect hesitation
               const currentTime = Date.now();
               const timeSinceLastWord = currentTime - lastWordTimeRef.current;
@@ -1104,7 +1124,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               console.log('⚠️ Spoken word mismatch:', cleanSpokenWord, 'vs expected:', cleanExpectedWord);
               
               let matchFound = false;
-              const maxLookAhead = 5;
+              const maxLookAhead = 8;
               
               for (let lookAhead = 1; lookAhead <= maxLookAhead && (currentIdx + lookAhead) < allExpectedWords.length; lookAhead++) {
                 const futureWord = allExpectedWords[currentIdx + lookAhead];
