@@ -3,6 +3,7 @@
 // per `next_scheduled_recall_at` cycle via `last_due_notification_at`.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { sendPush } from "../_shared/pushSender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,25 +40,6 @@ function getLocalHour(tz: string) {
   }
 }
 
-async function sendFCM(token: string, title: string, body: string, data: Record<string, string>) {
-  const key = Deno.env.get("FCM_SERVER_KEY");
-  if (!key) return { ok: false, error: "FCM not configured" };
-  try {
-    const r = await fetch("https://fcm.googleapis.com/fcm/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `key=${key}` },
-      body: JSON.stringify({
-        to: token,
-        notification: { title, body, sound: "default", badge: 1 },
-        data,
-        priority: "high",
-      }),
-    });
-    return { ok: r.ok };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "err" };
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
