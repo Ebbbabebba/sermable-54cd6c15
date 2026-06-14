@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { useEffect, useRef, useState } from 'react';
+import { PushNotifications, Token } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -8,17 +8,53 @@ export const usePushNotifications = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
+  // Cache the latest token until a logged-in session exists.
+  const pendingTokenRef = useRef<{ token: string; platform: 'ios' | 'android' } | null>(null);
+
+  const persistToken = async (token: string, platform: 'ios' | 'android') => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+
+    if (!user) {
+      // No user yet — queue and retry when auth state changes.
+      pendingTokenRef.current = { token, platform };
+      console.log('[push] token received before login — queued for later');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        push_token: token,
+        push_platform: platform,
+        notifications_enabled: true,
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('[push] failed to save token:', error);
+      toast({
+        title: 'Could not save push token',
+        description: error.message,
+        variant: 'destructive',
+      });
+      // Keep it queued so the next auth event retries.
+      pendingTokenRef.current = { token, platform };
+    } else {
+      pendingTokenRef.current = null;
+      setIsRegistered(true);
+      console.log('[push] token saved for user', user.id);
+    }
+  };
+
   const registerPushNotifications = async () => {
-    // Only works on native platforms
     if (!Capacitor.isNativePlatform()) {
       console.log('Push notifications only work on native platforms');
       return;
     }
 
     try {
-      // Request permission
       let permStatus = await PushNotifications.checkPermissions();
-
       if (permStatus.receive === 'prompt') {
         permStatus = await PushNotifications.requestPermissions();
       }
@@ -32,11 +68,8 @@ export const usePushNotifications = () => {
         return;
       }
 
-      // Register for push notifications
       await PushNotifications.register();
-      
       setNotificationsEnabled(true);
-      
       toast({
         title: 'Notifications enabled!',
         description: "You'll receive reminders when speeches are due for review.",
@@ -51,78 +84,65 @@ export const usePushNotifications = () => {
     }
   };
 
-  const updatePushToken = async (token: string, platform: 'ios' | 'android') => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        push_token: token,
-        push_platform: platform,
-        notifications_enabled: true,
-      })
-      .eq('id', user.id);
-
-    if (error) {
-      console.error('Error updating push token:', error);
-    } else {
-      setIsRegistered(true);
-      console.log('Push token registered successfully');
-    }
-  };
-
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) {
-      return;
-    }
+    if (!Capacitor.isNativePlatform()) return;
 
-    // Check current permission status
     PushNotifications.checkPermissions().then((permStatus) => {
       setNotificationsEnabled(permStatus.receive === 'granted');
     });
 
-    // Handle successful registration
-    PushNotifications.addListener('registration', async (token) => {
-      console.log('Push registration success, token:', token.value);
-      
-      const platform = Capacitor.getPlatform() as 'ios' | 'android';
-      await updatePushToken(token.value, platform);
+    // If permission is already granted from a previous session, re-register so
+    // we get the registration event again (Apple may issue a new token).
+    PushNotifications.checkPermissions().then((s) => {
+      if (s.receive === 'granted') {
+        PushNotifications.register().catch((e) =>
+          console.warn('[push] auto re-register failed', e),
+        );
+      }
     });
 
-    // Handle registration errors
+    PushNotifications.addListener('registration', async (token: Token) => {
+      console.log('[push] registration success, token:', token.value);
+      const platform = Capacitor.getPlatform() as 'ios' | 'android';
+      await persistToken(token.value, platform);
+    });
+
     PushNotifications.addListener('registrationError', (error) => {
-      console.error('Error on registration:', error);
+      console.error('[push] registration error:', error);
       toast({
         title: 'Registration error',
-        description: 'Failed to register for push notifications.',
+        description:
+          'Failed to register for push notifications. Check that Push Notifications capability is enabled in Xcode.',
         variant: 'destructive',
       });
     });
 
-    // Handle notification received while app is in foreground
     PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push notification received:', notification);
-      
+      console.log('[push] notification received:', notification);
       toast({
         title: notification.title || 'New notification',
         description: notification.body || '',
       });
     });
 
-    // Handle notification tap
     PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      console.log('Push notification action performed:', notification);
-      
-      // Navigate to dashboard when notification is tapped
+      console.log('[push] notification action performed:', notification);
       window.location.href = '/dashboard';
     });
 
-    // Clean up listeners on unmount
+    // Retry queued token when user signs in.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && pendingTokenRef.current) {
+        const { token, platform } = pendingTokenRef.current;
+        persistToken(token, platform).catch((e) =>
+          console.error('[push] retry persist failed', e),
+        );
+      }
+    });
+
     return () => {
       PushNotifications.removeAllListeners();
+      sub.subscription.unsubscribe();
     };
   }, []);
 
