@@ -13,6 +13,7 @@
 // done here — this only sends a push. Actual events come from the app.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { sendPush } from "../_shared/pushSender.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -145,28 +146,6 @@ function t(lang: string, key: string, vars: Record<string, string | number>): st
   return str;
 }
 
-async function sendFCM(token: string, title: string, body: string, data: any) {
-  const key = Deno.env.get("FCM_SERVER_KEY");
-  if (!key) return { success: false, error: "FCM not configured" };
-  try {
-    const r = await fetch("https://fcm.googleapis.com/fcm/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `key=${key}`,
-      },
-      body: JSON.stringify({
-        to: token,
-        notification: { title, body, sound: "default", badge: 1 },
-        data,
-        priority: "high",
-      }),
-    });
-    return { success: r.ok };
-  } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : "err" };
-  }
-}
 
 function getLocalHour(timezone: string): number {
   try {
@@ -285,14 +264,21 @@ Deno.serve(async (req) => {
         body = t(lang, "evening_recall.body", { title: top.speech_title });
       }
 
-      const result = await sendFCM(p.push_token!, title, body, {
-        type: "adaptive_mix",
-        window: win,
-        beat_ids: beats.map((b) => b.beat_id).join(","),
-        speech_id: top.speech_id,
+      const result = await sendPush({
+        token: p.push_token!,
+        platform: p.push_platform as "ios" | "android" | null,
+        title,
+        body,
+        data: {
+          type: "adaptive_mix",
+          window: win,
+          beat_ids: beats.map((b) => b.beat_id).join(","),
+          speech_id: top.speech_id,
+        },
       });
+      if (!result.ok) console.error("push failed", { user: p.id, status: result.status, error: result.error });
 
-      results.push({ user_id: p.id, window: win, success: result.success });
+      results.push({ user_id: p.id, window: win, success: result.ok });
     }
 
     return new Response(
