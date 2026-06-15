@@ -97,10 +97,13 @@ const Auth = () => {
       }
     } catch (error: any) {
       const msg: string = error?.message || '';
+      const code: string = error?.code || '';
       const isInvalidCreds =
         /invalid login credentials/i.test(msg) ||
         /invalid email or password/i.test(msg) ||
-        error?.status === 400;
+        /invalid_credentials/i.test(code) ||
+        error?.status === 400 ||
+        error?.status === 401;
       const description = isLogin && isInvalidCreds
         ? t('auth.invalidCredentials')
         : msg;
