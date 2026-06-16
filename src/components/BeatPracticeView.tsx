@@ -211,7 +211,14 @@ const RestCountdown = ({
     const diff = targetTime.getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / 1000));
   });
-  
+
+  // Warm up speech recognition the moment the practice view mounts so the
+  // first tap on the mic button doesn't pay for permission lookups or
+  // engine cold-start.
+  useEffect(() => {
+    warmupSpeechRecognition();
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       const diff = targetTime.getTime() - Date.now();
