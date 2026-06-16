@@ -41,6 +41,7 @@ import {
   MIN_HESITATION_MS,
   MAX_HESITATION_MS,
 } from "@/lib/practicePrefs";
+import { warmupSpeechRecognition } from "@/lib/speechWarmup";
 
 interface Speech {
   id: string;
@@ -187,6 +188,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const lastProcessedChunkIndex = useRef(0);
   const recognitionRef = useRef<any>(null);
   const audioFormatRef = useRef<string>('audio/webm');
+
+  useEffect(() => {
+    // Warm up speech recognition as early as possible so the first tap on
+    // the mic button is near-instant (permissions cached, engine primed).
+    warmupSpeechRecognition();
+  }, []);
 
   useEffect(() => {
     const loadUserProfile = async () => {

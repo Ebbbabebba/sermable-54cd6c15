@@ -16,6 +16,14 @@ import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
+import {
+  warmupSpeechRecognition,
+  isNativeAvailableCached,
+  isNativePermissionGrantedCached,
+  isWebMicGrantedCached,
+  markNativePermissionGranted,
+  markWebMicGranted,
+} from "@/lib/speechWarmup";
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 import PropCueOverlay from "./PropCueOverlay";
@@ -203,7 +211,14 @@ const RestCountdown = ({
     const diff = targetTime.getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / 1000));
   });
-  
+
+  // Warm up speech recognition the moment the practice view mounts so the
+  // first tap on the mic button doesn't pay for permission lookups or
+  // engine cold-start.
+  useEffect(() => {
+    warmupSpeechRecognition();
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       const diff = targetTime.getTime() - Date.now();
@@ -3029,21 +3044,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (isNative) {
         // ---- Native (iOS/Android) path ----
         try {
-          const { available } = await NativeSpeech.available();
-          if (!available) throw new Error("Native speech recognition unavailable");
-
-          const perm = await NativeSpeech.checkPermissions();
-          if (perm.speechRecognition !== "granted") {
-            const req = await NativeSpeech.requestPermissions();
-            if (req.speechRecognition !== "granted") {
-              toast({
-                variant: "destructive",
-                title: "Microphone Access Denied",
-                description: "Please allow microphone & speech access in iOS Settings.",
-              });
-              return;
-            }
+          // Use the warm-up cache when available so the first tap doesn't
+          // pay for two extra Capacitor bridge round-trips.
+          if (isNativeAvailableCached() === null) {
+            const { available } = await NativeSpeech.available();
+            if (!available) throw new Error("Native speech recognition unavailable");
+          } else if (isNativeAvailableCached() === false) {
+            throw new Error("Native speech recognition unavailable");
           }
+
+          if (isNativePermissionGrantedCached() !== true) {
+            const perm = await NativeSpeech.checkPermissions();
+            if (perm.speechRecognition !== "granted") {
+              const req = await NativeSpeech.requestPermissions();
+              if (req.speechRecognition !== "granted") {
+                toast({
+                  variant: "destructive",
+                  title: "Microphone Access Denied",
+                  description: "Please allow microphone & speech access in iOS Settings.",
+                });
+                return;
+              }
+            }
+            markNativePermissionGranted();
+          }
+
 
           // Track cumulative transcript across multiple short native sessions.
           // The native plugin returns the *current utterance* — we have to
@@ -3126,7 +3151,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   lastNativeInterim = "";
                 }
                 // Restart immediately to emulate continuous listening.
-                setTimeout(startNativeSession, 50);
+                // Restart on the next microtask for the snappiest gap-fill.
+                queueMicrotask(() => { if (!stopped && isRecordingRef.current) startNativeSession(); });
               }
             }
           );
@@ -3182,26 +3208,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           return;
         }
 
-        // Prewarm mic with constraints tuned for speaking from a distance:
-        // auto gain + noise suppression help when the user steps away from
-        // the device. Web Speech API will reuse this stream on most browsers.
-        try {
-          if (navigator.mediaDevices?.getUserMedia) {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-                channelCount: 1,
-              },
-            });
-            // Release immediately — Web Speech will open its own handle, but
-            // the browser remembers permission + applied processing.
-            stream.getTracks().forEach((t) => t.stop());
+        // Prewarm mic with constraints tuned for speaking from a distance,
+        // but ONLY if we don't already know permission is granted — running
+        // getUserMedia every start adds 200–500ms of latency for nothing
+        // when the browser already has permission.
+        if (isWebMicGrantedCached() !== true) {
+          try {
+            if (navigator.mediaDevices?.getUserMedia) {
+              const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                  echoCancellation: true,
+                  noiseSuppression: true,
+                  autoGainControl: true,
+                  channelCount: 1,
+                },
+              });
+              // Release immediately — Web Speech will open its own handle, but
+              // the browser remembers permission + applied processing.
+              stream.getTracks().forEach((t) => t.stop());
+              markWebMicGranted();
+            }
+          } catch (micErr) {
+            console.warn("Mic prewarm failed (continuing anyway):", micErr);
           }
-        } catch (micErr) {
-          console.warn("Mic prewarm failed (continuing anyway):", micErr);
         }
+
 
 
         const recognition = new SpeechRecognition();
