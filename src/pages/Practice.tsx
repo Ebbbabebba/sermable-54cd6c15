@@ -190,6 +190,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const audioFormatRef = useRef<string>('audio/webm');
 
   useEffect(() => {
+    // Warm up speech recognition as early as possible so the first tap on
+    // the mic button is near-instant (permissions cached, engine primed).
+    warmupSpeechRecognition();
+  }, []);
+
+  useEffect(() => {
     const loadUserProfile = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
