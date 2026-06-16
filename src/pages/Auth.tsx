@@ -114,6 +114,28 @@ const Auth = () => {
     }
   };
 
+  const handleOAuth = async (provider: "google" | "apple") => {
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin,
+      });
+      if (result.redirected) return;
+      if (result.error) throw result.error;
+      const pendingToken = sessionStorage.getItem('pending-share-token');
+      if (pendingToken) {
+        sessionStorage.removeItem('pending-share-token');
+        navigate(`/share/${pendingToken}`, { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: t('common.error'), description: error?.message || String(error) });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (isForgotPassword) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
