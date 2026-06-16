@@ -78,10 +78,7 @@
     "passwordUpdated": "Password aggiornata!",
     "passwordUpdatedDesc": "La tua password è stata aggiornata con successo.",
     "updatePassword": "Aggiorna password",
-    "invalidResetLink": "Questo link non è valido o è scaduto.",
-    "continueWithGoogle": "Continua con Google",
-    "continueWithApple": "Continua con Apple",
-    "orContinueWith": "oppure continua con"
+    "invalidResetLink": "Questo link non è valido o è scaduto."
   },
   "dashboard": {
     "shareTitleFmt": "Un discorso è stato condiviso con te su Sermable",

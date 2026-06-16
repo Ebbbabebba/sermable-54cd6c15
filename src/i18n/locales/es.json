@@ -78,10 +78,7 @@
     "passwordUpdated": "¡Contraseña actualizada!",
     "passwordUpdatedDesc": "Tu contraseña se ha actualizado correctamente.",
     "updatePassword": "Actualizar contraseña",
-    "invalidResetLink": "Este enlace es inválido o ha expirado.",
-    "continueWithGoogle": "Continuar con Google",
-    "continueWithApple": "Continuar con Apple",
-    "orContinueWith": "o continúa con"
+    "invalidResetLink": "Este enlace es inválido o ha expirado."
   },
   "dashboard": {
     "shareTitleFmt": "Se ha compartido un discurso contigo en Sermable",

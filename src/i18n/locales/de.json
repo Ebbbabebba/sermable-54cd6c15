@@ -78,10 +78,7 @@
     "passwordUpdated": "Passwort aktualisiert!",
     "passwordUpdatedDesc": "Dein Passwort wurde erfolgreich aktualisiert.",
     "updatePassword": "Passwort aktualisieren",
-    "invalidResetLink": "Dieser Link ist ungültig oder abgelaufen.",
-    "continueWithGoogle": "Mit Google fortfahren",
-    "continueWithApple": "Mit Apple fortfahren",
-    "orContinueWith": "oder fortfahren mit"
+    "invalidResetLink": "Dieser Link ist ungültig oder abgelaufen."
   },
   "dashboard": {
     "shareTitleFmt": "Eine Rede wurde mit dir auf Sermable geteilt",
