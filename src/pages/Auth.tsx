@@ -220,6 +220,21 @@ const Auth = () => {
               )}
             </Button>
           </form>
+          <div className="my-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground uppercase">{t('auth.orContinueWith')}</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="space-y-2">
+            <Button type="button" variant="outline" className="w-full" disabled={loading} onClick={() => handleOAuth('google')}>
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3.3 14.7 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12S6.7 21.6 12 21.6c6.9 0 11.5-4.8 11.5-11.6 0-.8-.1-1.4-.2-2H12z"/></svg>
+              {t('auth.continueWithGoogle')}
+            </Button>
+            <Button type="button" variant="outline" className="w-full" disabled={loading} onClick={() => handleOAuth('apple')}>
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.42 2.22-1.18 3.02-.82.87-2.14 1.55-3.23 1.46-.14-1.11.42-2.27 1.16-3.04.84-.87 2.27-1.52 3.25-1.44zM20.5 17.36c-.55 1.27-.81 1.84-1.52 2.97-.99 1.58-2.39 3.55-4.12 3.56-1.54.02-1.94-1-4.03-.99-2.09.01-2.53 1.01-4.07.99-1.73-.02-3.06-1.79-4.05-3.37C-.04 16.06-.34 10.92 1.86 8.16c1.56-1.96 4.02-3.11 6.33-3.11 2.35 0 3.83 1.29 5.78 1.29 1.89 0 3.04-1.29 5.76-1.29 2.06 0 4.24 1.12 5.79 3.06-5.09 2.79-4.26 10.06-4.02 9.25z"/></svg>
+              {t('auth.continueWithApple')}
+            </Button>
+          </div>
           <div className="mt-4 text-center text-sm">
             <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline">
               {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
