@@ -3037,21 +3037,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (isNative) {
         // ---- Native (iOS/Android) path ----
         try {
-          const { available } = await NativeSpeech.available();
-          if (!available) throw new Error("Native speech recognition unavailable");
-
-          const perm = await NativeSpeech.checkPermissions();
-          if (perm.speechRecognition !== "granted") {
-            const req = await NativeSpeech.requestPermissions();
-            if (req.speechRecognition !== "granted") {
-              toast({
-                variant: "destructive",
-                title: "Microphone Access Denied",
-                description: "Please allow microphone & speech access in iOS Settings.",
-              });
-              return;
-            }
+          // Use the warm-up cache when available so the first tap doesn't
+          // pay for two extra Capacitor bridge round-trips.
+          if (isNativeAvailableCached() === null) {
+            const { available } = await NativeSpeech.available();
+            if (!available) throw new Error("Native speech recognition unavailable");
+          } else if (isNativeAvailableCached() === false) {
+            throw new Error("Native speech recognition unavailable");
           }
+
+          if (isNativePermissionGrantedCached() !== true) {
+            const perm = await NativeSpeech.checkPermissions();
+            if (perm.speechRecognition !== "granted") {
+              const req = await NativeSpeech.requestPermissions();
+              if (req.speechRecognition !== "granted") {
+                toast({
+                  variant: "destructive",
+                  title: "Microphone Access Denied",
+                  description: "Please allow microphone & speech access in iOS Settings.",
+                });
+                return;
+              }
+            }
+            markNativePermissionGranted();
+          }
+
 
           // Track cumulative transcript across multiple short native sessions.
           // The native plugin returns the *current utterance* — we have to
