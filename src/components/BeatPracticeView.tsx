@@ -16,6 +16,14 @@ import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
+import {
+  warmupSpeechRecognition,
+  isNativeAvailableCached,
+  isNativePermissionGrantedCached,
+  isWebMicGrantedCached,
+  markNativePermissionGranted,
+  markWebMicGranted,
+} from "@/lib/speechWarmup";
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 import PropCueOverlay from "./PropCueOverlay";
