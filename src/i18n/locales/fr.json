@@ -78,7 +78,10 @@
     "passwordUpdated": "Mot de passe mis à jour !",
     "passwordUpdatedDesc": "Votre mot de passe a été mis à jour avec succès.",
     "updatePassword": "Mettre à jour le mot de passe",
-    "invalidResetLink": "Ce lien est invalide ou a expiré."
+    "invalidResetLink": "Ce lien est invalide ou a expiré.",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithApple": "Continuer avec Apple",
+    "orContinueWith": "ou continuer avec"
   },
   "dashboard": {
     "shareTitleFmt": "Un discours a été partagé avec vous sur Sermable",

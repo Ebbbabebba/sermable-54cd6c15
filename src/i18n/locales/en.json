@@ -102,7 +102,10 @@
     "passwordUpdated": "Password updated!",
     "passwordUpdatedDesc": "Your password has been successfully updated.",
     "updatePassword": "Update Password",
-    "invalidResetLink": "This password reset link is invalid or has expired."
+    "invalidResetLink": "This password reset link is invalid or has expired.",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple",
+    "orContinueWith": "or continue with"
   },
   "dashboard": {
     "shareTitleFmt": "A speech has been shared with you on Sermable",
