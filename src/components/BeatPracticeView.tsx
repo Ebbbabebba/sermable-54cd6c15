@@ -3144,7 +3144,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   lastNativeInterim = "";
                 }
                 // Restart immediately to emulate continuous listening.
-                setTimeout(startNativeSession, 50);
+                // Restart on the next microtask for the snappiest gap-fill.
+                queueMicrotask(() => { if (!stopped && isRecordingRef.current) startNativeSession(); });
               }
             }
           );
