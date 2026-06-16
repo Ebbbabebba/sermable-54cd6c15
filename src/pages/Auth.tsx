@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { waitForStableSession } from "@/lib/authSession";
+import { lovable } from "@/integrations/lovable";
 
 
 const Auth = () => {
