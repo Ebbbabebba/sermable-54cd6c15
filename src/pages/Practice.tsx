@@ -41,6 +41,7 @@ import {
   MIN_HESITATION_MS,
   MAX_HESITATION_MS,
 } from "@/lib/practicePrefs";
+import { warmupSpeechRecognition } from "@/lib/speechWarmup";
 
 interface Speech {
   id: string;
