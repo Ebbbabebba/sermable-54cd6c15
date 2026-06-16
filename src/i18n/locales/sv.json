@@ -102,7 +102,10 @@
     "passwordUpdated": "Lösenord uppdaterat!",
     "passwordUpdatedDesc": "Ditt lösenord har uppdaterats.",
     "updatePassword": "Uppdatera lösenord",
-    "invalidResetLink": "Denna återställningslänk är ogiltig eller har gått ut."
+    "invalidResetLink": "Denna återställningslänk är ogiltig eller har gått ut.",
+    "continueWithGoogle": "Fortsätt med Google",
+    "continueWithApple": "Fortsätt med Apple",
+    "orContinueWith": "eller fortsätt med"
   },
   "dashboard": {
     "shareTitleFmt": "Ett tal har delats med dig på Sermable",
