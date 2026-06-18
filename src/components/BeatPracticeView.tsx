@@ -1780,6 +1780,48 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return wordsMatch(rawTokenAt(absoluteIndex), words[expectedIndex], expectedIsHidden, expectedIsLenient);
     };
 
+    // COMPOUND MERGE: recognizer split a compound ("pluggkvällar" → "plugg kvällar").
+    // Concat 2-3 consecutive spoken tokens and match against the single expected word.
+    // Returns the number of raw tokens to consume (0 = no match).
+    const tryCompoundMerge = (rawStart: number, expectedIdx: number): number => {
+      const expected = words[expectedIdx] ?? '';
+      if (normalizeWord(expected).length < 6) return 0;
+      const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedIdx);
+      const expectedIsLenient = isEffectivelyLenientWord(expectedIdx);
+      for (let k = 2; k <= 3; k++) {
+        if (rawStart + k > rawWords.length) break;
+        const merged = rawWords.slice(rawStart, rawStart + k).join('');
+        if (normalizeWord(merged).length < 4) continue;
+        if (wordsMatch(merged, expected, expectedIsHidden, expectedIsLenient)) {
+          return k;
+        }
+      }
+      return 0;
+    };
+
+    // COMPOUND SPLIT: recognizer glued words together ("unga aktiesparare" → "ungaaktiesparare").
+    // One spoken token vs. 2-3 expected words. Returns expected words consumed (0 = no match).
+    const tryCompoundSplit = (rawIdx: number, expectedStart: number): number => {
+      const spoken = rawTokenAt(rawIdx);
+      if (normalizeWord(spoken).length < 6) return 0;
+      for (let k = 2; k <= 3; k++) {
+        if (expectedStart + k > words.length) break;
+        let crosses = false;
+        for (let j = expectedStart; j < expectedStart + k - 1; j++) {
+          if (/[.!?]$/.test(words[j] ?? '')) { crosses = true; break; }
+        }
+        if (crosses) break;
+        if (pauseWordMeta.has(expectedStart + k - 1)) break;
+        const mergedExpected = words.slice(expectedStart, expectedStart + k).join('');
+        const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedStart);
+        const expectedIsLenient = isEffectivelyLenientWord(expectedStart);
+        if (wordsMatch(spoken, mergedExpected, expectedIsHidden, expectedIsLenient)) {
+          return k;
+        }
+      }
+      return 0;
+    };
+
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
