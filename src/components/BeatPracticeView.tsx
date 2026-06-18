@@ -1851,8 +1851,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
       let usedSkipFill = false;
+      let compoundMergeConsumed = 0; // extra raw tokens consumed by a compound merge
+      let compoundSplitMatched = false; // intermediate expected words were part of one spoken token
       if (wordMatchesAnyVariant(absoluteRawIndex, advancedTo)) {
         foundIdx = advancedTo;
+      }
+
+      // COMPOUND MERGE: try concatenating 2-3 raw tokens against the expected word
+      if (foundIdx === -1) {
+        const consumed = tryCompoundMerge(absoluteRawIndex, advancedTo);
+        if (consumed > 0) {
+          foundIdx = advancedTo;
+          compoundMergeConsumed = consumed - 1;
+        }
+      }
+
+      // COMPOUND SPLIT: one raw token glued multiple expected words together
+      if (foundIdx === -1) {
+        const consumedExpected = tryCompoundSplit(absoluteRawIndex, advancedTo);
+        if (consumedExpected > 0) {
+          foundIdx = advancedTo + consumedExpected - 1;
+          compoundSplitMatched = true;
+        }
       }
 
       if (foundIdx === -1 && !skipFillUsed) {
