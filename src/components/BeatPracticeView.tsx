@@ -1780,6 +1780,48 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       return wordsMatch(rawTokenAt(absoluteIndex), words[expectedIndex], expectedIsHidden, expectedIsLenient);
     };
 
+    // COMPOUND MERGE: recognizer split a compound ("pluggkvällar" → "plugg kvällar").
+    // Concat 2-3 consecutive spoken tokens and match against the single expected word.
+    // Returns the number of raw tokens to consume (0 = no match).
+    const tryCompoundMerge = (rawStart: number, expectedIdx: number): number => {
+      const expected = words[expectedIdx] ?? '';
+      if (normalizeWord(expected).length < 6) return 0;
+      const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedIdx);
+      const expectedIsLenient = isEffectivelyLenientWord(expectedIdx);
+      for (let k = 2; k <= 3; k++) {
+        if (rawStart + k > rawWords.length) break;
+        const merged = rawWords.slice(rawStart, rawStart + k).join('');
+        if (normalizeWord(merged).length < 4) continue;
+        if (wordsMatch(merged, expected, expectedIsHidden, expectedIsLenient)) {
+          return k;
+        }
+      }
+      return 0;
+    };
+
+    // COMPOUND SPLIT: recognizer glued words together ("unga aktiesparare" → "ungaaktiesparare").
+    // One spoken token vs. 2-3 expected words. Returns expected words consumed (0 = no match).
+    const tryCompoundSplit = (rawIdx: number, expectedStart: number): number => {
+      const spoken = rawTokenAt(rawIdx);
+      if (normalizeWord(spoken).length < 6) return 0;
+      for (let k = 2; k <= 3; k++) {
+        if (expectedStart + k > words.length) break;
+        let crosses = false;
+        for (let j = expectedStart; j < expectedStart + k - 1; j++) {
+          if (/[.!?]$/.test(words[j] ?? '')) { crosses = true; break; }
+        }
+        if (crosses) break;
+        if (pauseWordMeta.has(expectedStart + k - 1)) break;
+        const mergedExpected = words.slice(expectedStart, expectedStart + k).join('');
+        const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedStart);
+        const expectedIsLenient = isEffectivelyLenientWord(expectedStart);
+        if (wordsMatch(spoken, mergedExpected, expectedIsHidden, expectedIsLenient)) {
+          return k;
+        }
+      }
+      return 0;
+    };
+
     let advancedTo = currentIdx;
     const newSpoken = new Set(spokenIndicesRef.current);
     const newMissed = new Set(missedIndicesRef.current);
@@ -1809,8 +1851,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // This prevents jumping to a duplicate word further in the sentence
       let foundIdx = -1;
       let usedSkipFill = false;
+      let compoundMergeConsumed = 0; // extra raw tokens consumed by a compound merge
+      let compoundSplitMatched = false; // intermediate expected words were part of one spoken token
       if (wordMatchesAnyVariant(absoluteRawIndex, advancedTo)) {
         foundIdx = advancedTo;
+      }
+
+      // COMPOUND MERGE: try concatenating 2-3 raw tokens against the expected word
+      if (foundIdx === -1) {
+        const consumed = tryCompoundMerge(absoluteRawIndex, advancedTo);
+        if (consumed > 0) {
+          foundIdx = advancedTo;
+          compoundMergeConsumed = consumed - 1;
+        }
+      }
+
+      // COMPOUND SPLIT: one raw token glued multiple expected words together
+      if (foundIdx === -1) {
+        const consumedExpected = tryCompoundSplit(absoluteRawIndex, advancedTo);
+        if (consumedExpected > 0) {
+          foundIdx = advancedTo + consumedExpected - 1;
+          compoundSplitMatched = true;
+        }
       }
 
       if (foundIdx === -1 && !skipFillUsed) {
@@ -1855,7 +1917,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       for (let j = advancedTo; j < foundIdx; j++) {
         const isHidden = hiddenWordIndicesRef.current.has(j);
         const isLenient = isEffectivelyLenientWord(j);
-        if (isHidden && !isLenient) {
+        // Compound-split: intermediate expected words were spoken as part of the merged token,
+        // so they should be marked as spoken (gray), not missed (red).
+        if (isHidden && !isLenient && !compoundSplitMatched) {
           newMissed.add(j);
         }
         newSpoken.add(j);
@@ -1876,6 +1940,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       advancedTo = foundIdx + 1;
+      // Compound MERGE consumed extra raw tokens — skip past them in the outer loop.
+      if (compoundMergeConsumed > 0) {
+        rawOffset += compoundMergeConsumed;
+      }
       lastMatchedRawIndex = startIdx + rawOffset;
       if (
         rawWords.length > prevCount &&
