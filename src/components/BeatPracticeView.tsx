@@ -2780,8 +2780,41 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setPhase(newPhase);
     setRepetitionCount(1);
     repetitionCountRef.current = 1;
-    setHiddenWordIndices(new Set());
-    setHiddenWordOrder([]);
+
+    // When entering a "combined" phase (sentences_1_2 or beat-with-all-3),
+    // pre-hide words that belong to already-mastered sentences. Otherwise the
+    // sentence the user JUST finished hiding suddenly becomes fully visible
+    // again, which reads as a bug ("samma mening igen") near the end of the
+    // exercise.
+    const preHidden = new Set<number>();
+    const preHiddenOrder: number[] = [];
+    try {
+      const uniqueSentences = currentBeat ? getUniqueSentences(currentBeat) : [];
+      const countTokens = (s: string) =>
+        s.split(/\s+/).filter((w) => w.trim()).length;
+      let masteredPrefix = "";
+      if (newPhase === 'sentences_1_2_learning' || newPhase === 'sentences_1_2_fading') {
+        if (uniqueSentences[0]) masteredPrefix = attachTrailingPauses(uniqueSentences[0]);
+      } else if (newPhase === 'beat_learning' || newPhase === 'beat_fading') {
+        if (uniqueSentences.length >= 2) {
+          masteredPrefix = joinWithPauses([uniqueSentences[0], uniqueSentences[1]]);
+        } else if (uniqueSentences[0]) {
+          masteredPrefix = attachTrailingPauses(uniqueSentences[0]);
+        }
+      }
+      if (masteredPrefix) {
+        const prefixCount = countTokens(masteredPrefix);
+        for (let i = 0; i < prefixCount; i++) {
+          preHidden.add(i);
+          preHiddenOrder.push(i);
+        }
+      }
+    } catch (e) {
+      console.warn('Pre-hide computation failed:', e);
+    }
+    hiddenWordIndicesRef.current = preHidden;
+    setHiddenWordIndices(preHidden);
+    setHiddenWordOrder(preHiddenOrder);
     setProtectedWordIndices(new Set()); // Clear protected words for new phase
     setConsecutiveNoScriptSuccess(0);
     setFadingSuccessCount(0); // Reset progressive hiding for new phase
