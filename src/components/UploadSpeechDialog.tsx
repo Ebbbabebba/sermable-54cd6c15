@@ -334,7 +334,12 @@ const UploadSpeechDialog = ({
       } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) throw new Error("Not authenticated");
-      const detectedLanguage = detectTextLanguage(text) || "en";
+      // For short texts (e.g. "kolla en bana"), franc cannot reliably detect.
+      // Fall back to the user's current UI language rather than hard-coding "en",
+      // otherwise Swedish short speeches get tagged English and speech
+      // recognition uses en-US — no words ever turn blue.
+      const detectedLanguage =
+        detectTextLanguage(text) || (i18n.language?.split("-")[0] ?? "en");
 
       const { data: newSpeech, error } = await supabase
         .from("speeches")
