@@ -2593,10 +2593,30 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       
-      // Hide exactly one *new* word after each clean repetition. This keeps the
-      // sentence progression word-by-word instead of deleting big chunks before
-      // the user has proven the newly hidden word.
-      const wordsToHide = 1;
+      // Word-hiding hierarchy:
+      //   PHASE 1 (junk/gap words) — hide ALL remaining visible gap words
+      //     ("att, typ, där, och, ...") in one go after the first clean rep.
+      //     These add no semantic load, so making the user re-prove them one
+      //     by one wastes reps and breaks flow.
+      //   PHASE 2 (content words) — progress 1 → 2 → 3 per clean rep so the
+      //     user actively recalls meaningful words a few at a time.
+      const visibleGapIndices: number[] = [];
+      for (let i = 0; i < words.length; i++) {
+        if (newHidden.has(i) || newProtected.has(i)) continue;
+        if (isGapWord(words[i])) visibleGapIndices.push(i);
+      }
+
+      let wordsToHide: number;
+      if (visibleGapIndices.length > 0) {
+        // PHASE 1: drop all gap words at once (capped so we never blow past
+        // 3-in-a-row spacing rules inside getNextWordToHide).
+        wordsToHide = Math.min(visibleGapIndices.length, 8);
+      } else {
+        // PHASE 2: 1, 2, 3 progression for content words.
+        const curve = [1, 2, 3];
+        wordsToHide = curve[Math.min(fadingSuccessCount, curve.length - 1)];
+      }
+
       for (let i = 0; i < wordsToHide; i++) {
         // Pass the updated protected set to prioritize hiding non-protected words
         const nextToHide = getNextWordToHide(newHidden, newProtected);
