@@ -27,7 +27,17 @@ const ReviewNotifications = () => {
   useEffect(() => {
     loadDueBeats();
     const interval = setInterval(loadDueBeats, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    // Re-run once the auth session is established (iOS/Safari restores it
+    // asynchronously, so the first call right after login often hits no-user).
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        loadDueBeats();
+      }
+    });
+    return () => {
+      clearInterval(interval);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const loadDueBeats = async () => {

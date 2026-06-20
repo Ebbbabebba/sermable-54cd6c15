@@ -219,10 +219,10 @@ const SentenceDisplay = ({
           state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60",
           // Spoken word gets muted styling (gray)
           state.isSpoken && "text-muted-foreground/50",
-          // Missed visible word (red)
-          state.isMissed && "bg-destructive/20 text-destructive",
-          // Hesitated visible word (yellow)
-          state.isHesitated && !state.isMissed && "bg-warning/20 text-warning",
+          // NOTE: Visible words never turn red (per project rule). Red is reserved
+          // for hidden words that were missed (handled in the !isVisible branch above).
+          // Hesitated visible word (yellow) — allowed: user paused on a visible word.
+          state.isHesitated && "bg-warning/20 text-warning",
         )}
       >
         {state.text}
