@@ -2589,7 +2589,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         resetForNextRep(true, true);
         return;
       } else {
-        setFadingSuccessCount(prev => Math.min(prev + 1, 2)); // Cap at 2 (so max = 5)
+        setFadingSuccessCount(prev => Math.min(prev + 1, 3)); // Cap at 3 so curve [1,2,3] tops out
       }
 
       
