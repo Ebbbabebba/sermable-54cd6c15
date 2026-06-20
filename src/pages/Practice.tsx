@@ -367,7 +367,36 @@ const [liveTranscription, setLiveTranscription] = useState("");
   }, [activeSegmentText]);
 
   useEffect(() => {
-    loadSpeech();
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const runWhenAuthed = async () => {
+      // Wait for Supabase to restore the session (iOS/Safari restores asynchronously
+      // after JS bridge starts, so a naive load fires unauthenticated → "Load failed").
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (session?.user) {
+        loadSpeech();
+      } else {
+        // Retry shortly in case the session is still being restored.
+        retryTimer = setTimeout(runWhenAuthed, 400);
+      }
+    };
+
+    runWhenAuthed();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        loadSpeech();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+      sub.subscription.unsubscribe();
+    };
   }, [id]);
 
   const loadSpeech = async () => {
