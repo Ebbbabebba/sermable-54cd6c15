@@ -14,6 +14,7 @@ import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 import {
@@ -411,6 +412,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Pre-beat recall state - recall the just-mastered beat before starting a new one
   const [beatToRecallBeforeNext, setBeatToRecallBeforeNext] = useState<Beat | null>(null);
   const [preBeatRecallSuccessCount, setPreBeatRecallSuccessCount] = useState(0);
+
+  // Soft cap: after 2 mastered beats in one session, gently suggest coming back later
+  const [beatsMasteredThisSession, setBeatsMasteredThisSession] = useState(0);
+  const [showSoftCapDialog, setShowSoftCapDialog] = useState(false);
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
@@ -2533,6 +2538,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         
         // Now transition to beat preview for the new beat
         if (nextBeatQueued) {
+          // Soft cap: after 2 mastered beats in this session, suggest a break (but allow continuing)
+          if (beatsMasteredThisSession >= 2) {
+            setShowSoftCapDialog(true);
+            return;
+          }
           setNewBeatToLearn(nextBeatQueued);
           setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
           setNextBeatQueued(null);
@@ -3024,6 +3034,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           : b
       );
       setBeats(updatedBeats);
+      setBeatsMasteredThisSession(prev => prev + 1);
+      
       
       // Find next unmastered beat for premium users
       const nextUnmastered = updatedBeats.find(b => !b.is_mastered);
@@ -4471,6 +4483,49 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         </div>
       </div>
+
+      {/* Soft cap dialog: after 2 mastered beats this session, gently suggest a break */}
+      <AlertDialog open={showSoftCapDialog} onOpenChange={setShowSoftCapDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              {t('beat_practice.soft_cap_title', "Du har gjort jättebra ifrån dig!")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('beat_practice.soft_cap_desc', "Du har klarat 2 beats i rad. Hjärnan lär sig bäst när den får vila mellan pass — kom gärna tillbaka om några timmar för att fortsätta. Du kan också köra vidare om du vill.")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setShowSoftCapDialog(false);
+                setNextBeatQueued(null);
+                setBeatToRecallBeforeNext(null);
+                setPreBeatRecallSuccessCount(0);
+                setSessionMode('session_complete');
+              }}
+            >
+              {t('beat_practice.soft_cap_later', "Kom tillbaka senare")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowSoftCapDialog(false);
+                if (nextBeatQueued) {
+                  setNewBeatToLearn(nextBeatQueued);
+                  setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
+                  setNextBeatQueued(null);
+                  setBeatToRecallBeforeNext(null);
+                  setPreBeatRecallSuccessCount(0);
+                  setSessionMode('beat_preview');
+                }
+              }}
+            >
+              {t('beat_practice.soft_cap_continue', "Fortsätt ändå")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
