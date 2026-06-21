@@ -4483,6 +4483,49 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         </div>
       </div>
+
+      {/* Soft cap dialog: after 2 mastered beats this session, gently suggest a break */}
+      <AlertDialog open={showSoftCapDialog} onOpenChange={setShowSoftCapDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              {t('beat_practice.soft_cap_title', "Du har gjort jättebra ifrån dig!")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('beat_practice.soft_cap_desc', "Du har klarat 2 beats i rad. Hjärnan lär sig bäst när den får vila mellan pass — kom gärna tillbaka om några timmar för att fortsätta. Du kan också köra vidare om du vill.")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setShowSoftCapDialog(false);
+                setNextBeatQueued(null);
+                setBeatToRecallBeforeNext(null);
+                setPreBeatRecallSuccessCount(0);
+                setSessionMode('session_complete');
+              }}
+            >
+              {t('beat_practice.soft_cap_later', "Kom tillbaka senare")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowSoftCapDialog(false);
+                if (nextBeatQueued) {
+                  setNewBeatToLearn(nextBeatQueued);
+                  setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
+                  setNextBeatQueued(null);
+                  setBeatToRecallBeforeNext(null);
+                  setPreBeatRecallSuccessCount(0);
+                  setSessionMode('beat_preview');
+                }
+              }}
+            >
+              {t('beat_practice.soft_cap_continue', "Fortsätt ändå")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
