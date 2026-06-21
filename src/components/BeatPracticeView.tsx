@@ -3981,14 +3981,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </>
         ) : (
           <>
-            <Button
-              variant="ghost"
+            {/* Free users: no skip button — forced 10-min wait. Premium upsell shown as info card. */}
+            <button
+              type="button"
               onClick={() => setShowCoffeePremiumUpsell(true)}
-              className="mt-4 text-muted-foreground"
+              className="mt-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground hover:bg-amber-500/10 transition-colors"
             >
-              <Crown className="h-4 w-4 mr-2 text-amber-500" />
-              {t('beat_practice.skip_break_locked', "Skip the break")}
-            </Button>
+              <Lock className="h-3.5 w-3.5" />
+              <span>
+                {t('beat_practice.skip_break_premium_only', "Premium users can skip the break")}
+              </span>
+              <Crown className="h-3.5 w-3.5 text-amber-500" />
+            </button>
             <PremiumUpgradeDialog
               open={showCoffeePremiumUpsell}
               onOpenChange={setShowCoffeePremiumUpsell}
