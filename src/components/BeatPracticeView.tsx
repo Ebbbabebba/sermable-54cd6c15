@@ -3028,6 +3028,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           : b
       );
       setBeats(updatedBeats);
+      setBeatsMasteredThisSession(prev => prev + 1);
+      
       
       // Find next unmastered beat for premium users
       const nextUnmastered = updatedBeats.find(b => !b.is_mastered);
