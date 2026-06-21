@@ -411,6 +411,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Pre-beat recall state - recall the just-mastered beat before starting a new one
   const [beatToRecallBeforeNext, setBeatToRecallBeforeNext] = useState<Beat | null>(null);
   const [preBeatRecallSuccessCount, setPreBeatRecallSuccessCount] = useState(0);
+
+  // Soft cap: after 2 mastered beats in one session, gently suggest coming back later
+  const [beatsMasteredThisSession, setBeatsMasteredThisSession] = useState(0);
+  const [showSoftCapDialog, setShowSoftCapDialog] = useState(false);
   
   // Phase tracking
   const [phase, setPhase] = useState<Phase>('sentence_1_learning');
