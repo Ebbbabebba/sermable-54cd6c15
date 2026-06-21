@@ -2537,6 +2537,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         
         // Now transition to beat preview for the new beat
         if (nextBeatQueued) {
+          // Soft cap: after 2 mastered beats in this session, suggest a break (but allow continuing)
+          if (beatsMasteredThisSession >= 2) {
+            setShowSoftCapDialog(true);
+            return;
+          }
           setNewBeatToLearn(nextBeatQueued);
           setCurrentBeatIndex(beats.findIndex(b => b.id === nextBeatQueued.id));
           setNextBeatQueued(null);
