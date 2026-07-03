@@ -4201,6 +4201,39 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </div>
           )}
         </div>
+
+        {/* Beat timeline — all beats in this speech */}
+        {beats.length > 0 && (
+          <div className="flex items-center justify-center gap-1.5 mt-2 max-w-2xl mx-auto">
+            {(() => {
+              const activeIdx = currentBeat
+                ? beats.findIndex((b) => b.id === currentBeat.id)
+                : -1;
+              return beats.map((b, idx) => {
+                const isMastered = b.is_mastered;
+                const isCurrent = idx === activeIdx;
+                return (
+                  <div
+                    key={b.id}
+                    className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all",
+                      isMastered && "bg-green-500 text-white",
+                      isCurrent && !isMastered && "bg-primary text-primary-foreground ring-2 ring-primary",
+                      !isCurrent && !isMastered && "bg-muted text-muted-foreground"
+                    )}
+                    title={isMastered ? `Beat ${idx + 1} — mastered` : isCurrent ? `Beat ${idx + 1} — current` : `Beat ${idx + 1}`}
+                  >
+                    {isMastered ? (
+                      <CheckCircle2 className="h-3 w-3" />
+                    ) : (
+                      idx + 1
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        )}
       </div>
 
       {/* Main content area - scrollable when text overflows */}
