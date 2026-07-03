@@ -2248,129 +2248,90 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Session Card - only show for active (non-complete) sessions */}
           {!todaySessionDone && (
-            <div className="bg-background rounded-3xl border border-border p-6 space-y-4">
+            <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/10">
-                  <Target className="h-6 w-6 text-primary" />
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-primary/10 ring-1 ring-primary/20">
+                  <Target className="h-5 w-5 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-semibold">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold leading-tight">
                     {masteredBeats === 0
                       ? t('beat_practice.todays_session')
                       : t('beat_practice.active_session')}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {masteredBeats > 0 
+                  <p className="text-xs text-muted-foreground leading-snug">
+                    {masteredBeats > 0
                       ? t('beat_practice.session_desc_recall')
                       : t('beat_practice.session_desc_start')}
                   </p>
                 </div>
               </div>
-          
-              <div className="flex flex-wrap gap-2">
-                {masteredBeats > 0 && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    {masteredBeats} {t('beat_practice.to_recall')}
-                  </span>
-                )}
-                {nextBeatNumber <= totalBeats && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                    <Flame className="h-3.5 w-3.5" />
-                    {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
-                  </span>
-                )}
-              </div>
+
+              {(masteredBeats > 0 || nextBeatNumber <= totalBeats) && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {masteredBeats > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-medium">
+                      <RotateCcw className="h-3 w-3" />
+                      {masteredBeats} {t('beat_practice.to_recall')}
+                    </span>
+                  )}
+                  {nextBeatNumber <= totalBeats && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
+                      <Flame className="h-3 w-3" />
+                      {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Upcoming beats preview - stacked and faded */}
-          {(() => {
-            const today = new Date().toDateString();
-            
-            // Get beats needing recall (mastered but not recalled today),
-            // sorted by least-recently recalled so the same beat doesn't
-            // dominate the preview every session.
-            const beatsNeedingRecall = practiceBeats
-              .filter(b => {
-                if (!b.is_mastered) return false;
-                if (!b.last_recall_at) return true;
-                return new Date(b.last_recall_at).toDateString() !== today;
-              })
-              .sort((a, b) => {
-                const aR = a.last_recall_at ? new Date(a.last_recall_at).getTime() : 0;
-                const bR = b.last_recall_at ? new Date(b.last_recall_at).getTime() : 0;
-                if (aR !== bR) return aR - bR;
-                return a.beat_order - b.beat_order;
-              });
-            
-            // Get next unmastered beat to learn
-            const nextToLearn = practiceBeats.find(b => !b.is_mastered);
-            
-            // Build preview list: recalls first, then new beat
-            const upcomingBeats = [
-              ...beatsNeedingRecall.slice(0, 2),
-              ...(nextToLearn && beatsNeedingRecall.length < 2 ? [nextToLearn] : [])
-            ].slice(0, 3);
-            
-            if (upcomingBeats.length === 0) return null;
-            
-            return (
-              <div className="space-y-3 mb-4">
-                <p className="text-sm text-muted-foreground text-center">{t('beat_practice.coming_up', 'Coming up')}</p>
-                <div className="space-y-2">
-                  {upcomingBeats.map((beat, index) => {
-                    // Get unique sentences (for short speeches, sentences may be duplicated)
-                    const uniqueSentences = [...new Set([beat.sentence_1_text, beat.sentence_2_text, beat.sentence_3_text].filter(Boolean))];
-                    const beatText = uniqueSentences.join(' ');
-                    const previewWords = beatText.split(/\s+/).slice(0, 8).join(' ');
-                    const isRecallBeat = beat.is_mastered;
-                    
+          {/* Beat Timeline - horizontal dots with connecting progress track */}
+          {hasBeats && (
+            <div className="pt-2 pb-1">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  {t('beat_practice.beats', 'Beats')}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium tabular-nums">
+                  {masteredBeats}/{totalBeats}
+                </span>
+              </div>
+              <div className="relative">
+                {/* Track */}
+                <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-0.5 bg-muted rounded-full" />
+                <div
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-0.5 bg-primary rounded-full transition-all duration-500"
+                  style={{
+                    width: totalBeats > 1
+                      ? `calc((100% - 2rem) * ${masteredBeats / (totalBeats - 1)})`
+                      : '0px'
+                  }}
+                />
+                <div className="relative flex items-center justify-between">
+                  {segments.map((segment, idx) => {
+                    const isCurrent = !segment.is_mastered && idx === masteredBeats;
                     return (
                       <div
-                        key={beat.id}
-                        style={{ opacity: 0.6 - (index * 0.15) }}
-                        className="bg-card/40 rounded-xl border border-border/20 p-3 backdrop-blur-sm"
+                        key={segment.id}
+                        className={`
+                          relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all
+                          ${segment.is_mastered
+                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                            : isCurrent
+                              ? 'bg-background text-primary border-2 border-primary ring-4 ring-primary/15'
+                              : 'bg-muted text-muted-foreground border border-border'}
+                        `}
                       >
-                        <div className="flex items-center justify-center mb-1">
-                          <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${isRecallBeat ? 'bg-amber-500/20 text-amber-500' : 'bg-primary/20 text-primary'}`}>
-                            {isRecallBeat ? '🔄 Recall' : '📚 Learn'} Beat {beat.beat_order + 1}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground/60 text-center truncate">
-                          {previewWords}...
-                        </p>
+                        {segment.is_mastered ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          idx + 1
+                        )}
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            );
-          })()}
-
-          {/* Beat Timeline - Compact horizontal dots */}
-          {hasBeats && (
-            <div className="flex flex-col items-center gap-3">
-              <div className="flex items-center gap-2 flex-wrap justify-center">
-                {segments.map((segment, idx) => (
-                  <div
-                    key={segment.id}
-                    className={`
-                      w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all
-                      ${segment.is_mastered 
-                        ? 'bg-primary text-primary-foreground' 
-                        : idx === masteredBeats 
-                          ? 'bg-primary/20 text-primary border-2 border-primary ring-2 ring-primary/20' 
-                          : 'bg-muted text-muted-foreground'}
-                    `}
-                  >
-                    {segment.is_mastered ? (
-                      <CheckCircle2 className="h-4 w-4" />
-                    ) : (
-                      idx + 1
-                    )}
-                  </div>
-                ))}
               </div>
             </div>
           )}
