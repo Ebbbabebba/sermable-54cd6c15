@@ -2311,6 +2311,20 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 <div className="relative flex items-center justify-between">
                   {segments.map((segment, idx) => {
                     const isCurrent = !segment.is_mastered && idx === masteredBeats;
+                    const isLast = idx === totalBeats - 1;
+                    const showSmallDot = idx > masteredBeats && !isLast;
+
+                    if (showSmallDot) {
+                      return (
+                        <div
+                          key={segment.id}
+                          className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center"
+                        >
+                          <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                        </div>
+                      );
+                    }
+
                     return (
                       <div
                         key={segment.id}
