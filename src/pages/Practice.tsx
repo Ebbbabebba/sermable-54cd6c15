@@ -2304,8 +2304,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   className="absolute left-4 top-1/2 -translate-y-1/2 h-0.5 bg-primary rounded-full transition-all duration-500"
                   style={{
                     width: totalBeats > 1
-                      ? `calc((100% - 2rem) * ${masteredBeats / (totalBeats - 1)})`
-                      : '0px'
+                      ? `calc((100% - 2rem) * ${Math.min(masteredBeats / (totalBeats - 1), 1)})`
+                      : masteredBeats > 0 ? 'calc(100% - 2rem)' : '0px'
                   }}
                 />
                 <div className="relative flex items-center justify-between">
