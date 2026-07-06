@@ -14,6 +14,8 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formInfo, setFormInfo] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -35,22 +37,24 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+    setFormInfo(null);
     if (password !== confirmPassword) {
-      toast({ variant: "destructive", title: t('common.error'), description: t('auth.passwordsMismatch') });
+      setFormError(t('auth.passwordsMismatch'));
       return;
     }
     if (password.length < 6) {
-      toast({ variant: "destructive", title: t('common.error'), description: t('auth.passwordTooShort') });
+      setFormError(t('auth.passwordTooShort'));
       return;
     }
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast({ title: t('auth.passwordUpdated'), description: t('auth.passwordUpdatedDesc') });
-      navigate("/dashboard");
+      setFormInfo(t('auth.passwordUpdatedDesc'));
+      setTimeout(() => navigate("/dashboard"), 1200);
     } catch (error: any) {
-      toast({ variant: "destructive", title: t('common.error'), description: error.message });
+      setFormError(error.message);
     } finally {
       setLoading(false);
     }
@@ -93,6 +97,12 @@ const ResetPassword = () => {
                 t('auth.updatePassword')
               )}
             </Button>
+            {formError && (
+              <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+            )}
+            {formInfo && (
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+            )}
           </form>
         </CardContent>
       </Card>

@@ -19,6 +19,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formInfo, setFormInfo] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -41,8 +43,10 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+    setFormInfo(null);
     if (!email) {
-      toast({ variant: "destructive", title: t('common.error'), description: t('auth.enterEmail') });
+      setFormError(t('auth.enterEmail'));
       return;
     }
     setLoading(true);
@@ -51,13 +55,9 @@ const Auth = () => {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      toast({
-        title: t('auth.resetEmailSent'),
-        description: t('auth.checkInbox'),
-      });
-      setIsForgotPassword(false);
+      setFormInfo(`${t('auth.resetEmailSent')} — ${t('auth.checkInbox')}`);
     } catch (error: any) {
-      toast({ variant: "destructive", title: t('common.error'), description: error.message });
+      setFormError(error.message);
     } finally {
       setLoading(false);
     }
@@ -65,6 +65,8 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+    setFormInfo(null);
     setLoading(true);
 
     try {
@@ -73,7 +75,6 @@ const Auth = () => {
         if (error) throw error;
         const session = data.session ?? await waitForStableSession();
         if (!session) throw new Error(t('auth.loading'));
-        toast({ title: t('auth.welcomeBackToast'), description: t('auth.signInSuccess') });
         const pendingToken = sessionStorage.getItem('pending-share-token');
         if (pendingToken) {
           sessionStorage.removeItem('pending-share-token');
@@ -92,7 +93,6 @@ const Auth = () => {
         });
         if (error) throw error;
         await waitForStableSession();
-        toast({ title: t('auth.accountCreated'), description: t('auth.welcomeToSermable') });
         navigate("/dashboard", { replace: true });
       }
     } catch (error: any) {
@@ -104,7 +104,7 @@ const Auth = () => {
       const description = isLogin && isInvalidCreds
         ? t('auth.invalidCredentials')
         : msg;
-      toast({ variant: "destructive", title: t('common.error'), description });
+      setFormError(description);
     } finally {
       setLoading(false);
     }
@@ -138,6 +138,12 @@ const Auth = () => {
                   t('auth.sendResetLink')
                 )}
               </Button>
+              {formError && (
+                <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+              )}
+              {formInfo && (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+              )}
             </form>
             <div className="mt-4 text-center text-sm">
               <button type="button" onClick={() => setIsForgotPassword(false)} className="text-primary hover:underline">
@@ -193,6 +199,12 @@ const Auth = () => {
                 t('auth.signUp')
               )}
             </Button>
+            {formError && (
+              <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+            )}
+            {formInfo && (
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+            )}
           </form>
           <div className="mt-4 text-center text-sm">
             <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline">
