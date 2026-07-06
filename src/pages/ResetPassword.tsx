@@ -97,6 +97,12 @@ const ResetPassword = () => {
                 t('auth.updatePassword')
               )}
             </Button>
+            {formError && (
+              <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+            )}
+            {formInfo && (
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+            )}
           </form>
         </CardContent>
       </Card>
