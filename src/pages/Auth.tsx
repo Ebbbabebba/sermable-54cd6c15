@@ -199,6 +199,12 @@ const Auth = () => {
                 t('auth.signUp')
               )}
             </Button>
+            {formError && (
+              <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+            )}
+            {formInfo && (
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+            )}
           </form>
           <div className="mt-4 text-center text-sm">
             <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline">
