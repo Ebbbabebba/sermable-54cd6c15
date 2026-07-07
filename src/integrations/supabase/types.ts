@@ -1257,6 +1257,7 @@ export type Database = {
           familiarity_level: string | null
           goal_date: string | null
           id: string
+          knowledge_test_completed_at: string | null
           last_accuracy: number | null
           last_practice_session_at: string | null
           learning_mode: string | null
@@ -1287,6 +1288,7 @@ export type Database = {
           familiarity_level?: string | null
           goal_date?: string | null
           id?: string
+          knowledge_test_completed_at?: string | null
           last_accuracy?: number | null
           last_practice_session_at?: string | null
           learning_mode?: string | null
@@ -1317,6 +1319,7 @@ export type Database = {
           familiarity_level?: string | null
           goal_date?: string | null
           id?: string
+          knowledge_test_completed_at?: string | null
           last_accuracy?: number | null
           last_practice_session_at?: string | null
           learning_mode?: string | null

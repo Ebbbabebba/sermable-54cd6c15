@@ -1,0 +1,1 @@
+ALTER TABLE public.speeches ADD COLUMN IF NOT EXISTS knowledge_test_completed_at TIMESTAMPTZ;
