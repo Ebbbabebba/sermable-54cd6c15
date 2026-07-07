@@ -29,13 +29,14 @@ export const PresentationModeSelector = ({
           <div className="grid md:grid-cols-3 gap-4">
             {/* Whole Speech Mode (formerly Strict Mode) */}
             <Card
-              className="p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group"
+              className="p-5 hover:shadow-md transition-all duration-200 border-2 hover:border-primary/50 cursor-pointer group"
               onClick={() => onSelectMode('strict')}
             >
               <div className="space-y-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Brain className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-primary" strokeWidth={1.5} />
                 </div>
+
 
                 <div>
                   <h3 className="text-lg font-bold mb-1">
