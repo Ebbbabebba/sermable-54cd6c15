@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Capacitor } from "@capacitor/core";
+import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 
 import { PauseSlidersList } from "@/components/PauseSlidersList";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +24,7 @@ import {
   Target,
   Wind,
   Check,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -32,6 +35,7 @@ import {
 import { AiSpeechBuilderDialog } from "@/components/AiSpeechBuilderDialog";
 import PropCueTextarea from "@/components/PropCueTextarea";
 import FirstTimeCreateTour from "@/components/FirstTimeCreateTour";
+
 
 interface UploadSpeechDialogProps {
   open: boolean;
@@ -138,13 +142,50 @@ const UploadSpeechDialog = ({
 
   // ----- camera / scan -----
   const startCamera = async () => {
+    // On native (iOS/Android) use Capacitor Camera — the WebView getUserMedia
+    // path renders black and lacks a proper permission prompt on iOS.
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const photo = await CapCamera.getPhoto({
+          quality: 85,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+        });
+        if (photo.dataUrl) {
+          await processImageDirectly(photo.dataUrl);
+        }
+      } catch (err: any) {
+        // User cancelled — silent. Real errors → inline toast.
+        if (err?.message && !/cancel/i.test(err.message)) {
+          toast({
+            variant: "destructive",
+            title: t("upload.cameraError"),
+            description: err.message || t("upload.cameraErrorDesc"),
+          });
+        }
+      }
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
       setShowCamera(true);
+      // Attach stream on next tick so the <video> is mounted, then explicitly play().
+      setTimeout(async () => {
+        const v = videoRef.current;
+        if (!v) return;
+        v.srcObject = stream;
+        v.muted = true;
+        v.setAttribute("playsinline", "true");
+        try {
+          await v.play();
+        } catch (e) {
+          console.warn("video.play() failed:", e);
+        }
+      }, 0);
     } catch {
       toast({
         variant: "destructive",
@@ -153,6 +194,7 @@ const UploadSpeechDialog = ({
       });
     }
   };
+
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -456,17 +498,11 @@ const UploadSpeechDialog = ({
             )}
           >
             <div className="flex justify-center pt-2">
-              <motion.div
-                className="relative"
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <div className="absolute inset-0 rounded-full bg-primary/25 blur-2xl animate-pulse" />
-                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-2xl">
-                  <Wand2 className="w-10 h-10 text-primary-foreground" />
-                </div>
-              </motion.div>
+              <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-primary" strokeWidth={1.5} />
+              </div>
             </div>
+
           </StepShell>
         );
 
@@ -775,10 +811,8 @@ const UploadSpeechDialog = ({
       case "submitting":
         return (
           <div className="flex flex-col items-center justify-center py-16 gap-5">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/40 blur-3xl animate-pulse" />
-              <Loader2 className="relative h-14 w-14 text-primary animate-spin" />
-            </div>
+            <Loader2 className="h-10 w-10 text-primary animate-spin" strokeWidth={1.5} />
+
             <div className="text-center space-y-1">
               <h3 className="text-xl font-semibold">
                 {t("upload.interview.creating", "Crafting your speech…")}

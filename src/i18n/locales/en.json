@@ -1143,5 +1143,20 @@
     "termsEula": "Terms of Use (EULA)",
     "privacyPolicy": "Privacy Policy",
     "refundPolicy": "Refund Policy"
+  },
+  "knowledgeTest": {
+    "bannerTitle": "Let's test what you already know",
+    "bannerBody": "You said you already know part of this speech. A 2-minute test tunes the difficulty to your actual level.",
+    "start": "Start test",
+    "skip": "Later",
+    "question": "Do you know this part?",
+    "yes": "Yes, I know it",
+    "no": "No, not yet",
+    "partial": "Partly",
+    "resultTitle": "We'll tune your practice level",
+    "resultBeginner": "Beginner — we'll start from the ground up.",
+    "resultIntermediate": "Intermediate — we'll skip the basics.",
+    "resultConfident": "Confident — straight to polishing.",
+    "done": "Done"
   }
 }

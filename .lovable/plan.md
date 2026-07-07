@@ -1,58 +1,61 @@
-# Mer förlåtande röstigenkänning
+# Plan: Fem förbättringar samlat
 
-## Mål
-- Synliga ord: accepteras nästan så fort du säger något som börjar likt — inte vänta på perfekt match.
-- Dolda ord: samma förlåtande tröskel — bara helt fel ord eller tystnad ska ge röd/gul.
-- Snabb eller långsam talhastighet ska fungera lika bra.
+## 1. Mindre "AI"-känsla på ikoner (t.ex. Nytt tal-dialogen)
+Idag används rörliga/gradient-ikoner (roterande stjärnor, pulserande gradient-cirklar) i UploadSpeechDialog och LearningModeSelector/PresentationModeSelector som ser generiskt AI-genererade ut.
 
-## Vad ändras (frontend, `src/pages/Practice.tsx`)
+**Ändring:** ersätt de animerade gradient-badgesarna med lugna, platta ikoner i stil med resten av appen:
+- Ta bort `animate-spin`, `animate-pulse`, `bg-gradient-to-br from-primary/…` runt ikonerna.
+- Behåll Lucide-ikonerna (Brain, BookOpen, Ear, MonitorPlay), men i en enfärgad rund/rounded-square badge (`bg-muted text-foreground`, aktiv = `bg-primary text-primary-foreground`), utan rörelse.
+- Samma behandling i UploadSpeechDialog-stegens header-ikoner.
 
-### 1. `areWordsSimilar()` — lättare matchning (rad 968–994)
-Idag: 1–3 tecken kräver exakt match; 4–5 tecken max 1 fel; långa ord kräver 70% längd.
-Nytt:
-- **Prefix-träff**: om talat ord = första 2+ tecken av förväntat ord (eller tvärtom), räknas det som match. Det fångar "demo" → "demokrati", "kapt" → "kapten" som Whisper/Web Speech ofta klipper.
-- **Ljudlik start**: matcha på första 3 tecken efter normalisering (ta bort 'h', dubbletter) — fångar "phon" ≈ "fon".
-- **Levenshtein**: tillåt 1 fel även för 3-bokstavsord, 2 fel för 4–6, 3 fel för 7+.
-- Längd-spärren (`< 70%`) tas bort — ersätts av prefix-regeln.
-- Behåll skydd: helt olika första bokstav + ingen prefix-träff = ingen match.
+## 2. "Tip:" på scen­anvisningar översätts till alla språk
+`upload.stageDirections.tip` finns bara delvis översatt (sv har "Pro-tips:", övriga faller tillbaka till engelska).
 
-### 2. Synligt ord = hoppa fram på minsta yttrande
-För ord där `currentHiddenIndices.has(i) === false` (synliga ord):
-- Om någon röst-aktivitet kommer in inom ordets fönster, behandla även en lös delträff som korrekt — auto-fade vid t.ex. första stavelsen.
-- `isHardToRecognizeWord`-logiken (utils/wordRecognition.ts) utökas till att också gälla synliga ord generellt: vid synligt ord auto-accepteras vid ≥1 talat tecken som matchar början.
+**Ändring:** lägg till korrekt översatt sträng i `de.json`, `fr.json`, `es.json`, `it.json`, `pt.json` för nyckeln `upload.stageDirections.tip` (och `upload.stageDirections.eyebrow/title/subtitle` om de saknas). Samma sak för `beat_practice.coffee_tip` som visas som "Tip: …" — verifieras i alla 7 filer.
 
-### 3. Dolda ord — bara fel på riktigt fel
-- Behåll dagens logik men höj acceptanskravet så att även dolda ord får prefix-/Levenshtein-toleransen från (1).
-- Endast två orsaker till röd-markering:
-  - Look-ahead hittar ett senare ord (= användaren hoppade över) **och** ordet var dolt.
-  - Tystnad längre än adaptiv hesitationströskel (redan implementerat).
+## 3. Kamera → "bara svart" när man scannar dokument
+`startCamera` i `UploadSpeechDialog.tsx` kör `getUserMedia({ video: { facingMode: "environment" } })` och sätter direkt `videoRef.current.srcObject = stream`. På iOS/Safari och i Capacitor blir videon svart eftersom:
+- `<video>` saknar `playsInline`, `muted`, `autoPlay`.
+- `video.play()` anropas aldrig efter att stream satts.
+- I native (Capacitor) körs getUserMedia i webviewen utan mikrofonpermission-flödet, vilket ofta ger svart bild.
 
-### 4. Talhastighet — bredare adaptiv tröskel (`useAdaptiveTempo.ts`)
-- Sänk `CALIBRATION_WORDS` 10 → 5 så systemet anpassar sig snabbare.
-- Höj övre clamp 5000 → 7000 ms för långsamma talare.
-- Sänk nedre clamp 300 → 200 ms för snabba talare.
-- Multiplikator för långa ord 1.3 → 1.5; korta ord 0.8 → 0.7.
-- Lägg till "burst-läge": om de 3 senaste intervallen alla < 300 ms, sänk tröskeln till median × 1.2 så snabba sjok inte stoppar upp.
+**Ändring:**
+- Lägg till `playsInline muted autoPlay` på `<video>` och `await videoRef.current.play()` när `loadedmetadata` fyrar.
+- Använd `@capacitor/camera` i native (redan kompatibelt med Capacitor-uppsättningen): på iOS/Android → `Camera.getPhoto({ source: CameraSource.Camera, resultType: DataUrl })` istället för getUserMedia; skicka direkt base64 till `scan-document`-edgefunktionen. På web fortsätt använda getUserMedia med fixarna ovan.
+- Vid fel: visa inline-fel (via nya InlineMessages) istället för toast.
 
-### 5. Look-ahead vid mismatch (rad 1106–1154)
-- Öka `maxLookAhead` från 5 → 8 för långa snabba meningar.
-- Använd den nya förlåtande `areWordsSimilar` även här (redan gör det, men nya regler gäller automatiskt).
+## 4. "Låt oss testa dina kunskaper" när talet öppnas
+Idag sätts `familiarity_level` (beginner/intermediate/confident) vid skapande, men den används bara för att styra hur snabbt ord göms — inget test triggas.
 
-### 6. Konstant timeout-recovery
-Behåll dagens 6 s "yellow timeout" för stillastående ord (memory: Yellow Timeout).
+**Ändring:**
+- Ny kolumn `knowledge_test_completed_at timestamptz` i `speeches`-tabellen.
+- När `SpeechDetail`/Practice öppnas för ett tal där `familiarity_level ∈ ('intermediate','confident')` OCH `knowledge_test_completed_at IS NULL` → visa en inline-banner högst upp: **"Låt oss testa dina kunskaper"** med CTA-knapp.
+- Klick startar ett **snabbtest**: en kort sekvens där 3–5 slumpade beats visas i strict-läge med ~40 % av orden dolda (motsvarande "confident"-svårighet). Använder befintliga `BeatPracticeView`-hjälpare men med flaggan `quickAssessment=true` som:
+  - hoppar över lock/cooldown,
+  - kör max ~2 min,
+  - loggar accuracy per beat.
+- Efter testet: beräkna medel-accuracy → uppdatera `familiarity_level` automatiskt (≥85 % = confident, 60–85 % = intermediate, <60 % = beginner) och sätt `knowledge_test_completed_at = now()`. Visa kort inline-summering ("Vi anpassar övningen till din nivå: …").
 
-## Filer som rörs
-- `src/pages/Practice.tsx` — `areWordsSimilar`, synligt-ord-acceptans, look-ahead.
-- `src/hooks/useAdaptiveTempo.ts` — kalibrering, clamps, burst-läge.
-- `src/utils/wordRecognition.ts` — utöka prefix-/start-matchning.
+## 5. Förklara skillnaderna direkt i UI (info-panel)
+Idag har `LearningModeSelector` och strict/flow-toggle korta beskrivningar men användaren förstår inte skillnaden.
 
-## Inget ändras
-- UI/layout, design tokens, översättningar.
-- Backend/edge functions.
-- Mastery/spaced repetition-regler.
+**Ord-för-ord vs Generell översikt:**
+- Ord-för-ord: du lär dig den exakta texten. Ord göms progressivt tills du kan recitera hela talet utantill. Bäst för högtidstal, monologer, pitchar där formuleringen räknas.
+- Generell översikt: du lär dig **strukturen och nyckelpoängerna** — inte ordval. AI:n godkänner att du säger samma sak med egna ord. Bäst för presentationer, föreläsningar, intervjusvar.
 
-## Test
-1. Säg bara första stavelsen av varje ord — alla synliga ord ska fade till grått.
-2. Prata extremt fort 3–4 ord i rad — inga gula markeringar.
-3. Prata extremt långsamt (≈1 ord/3 s) efter 10 ords kalibrering — inga gula så länge du faktiskt säger ordet.
-4. Säg ett helt fel ord på en dold position — markeras rött (oförändrat beteende).
+**Strikt vs Flöde:**
+- Strikt: talet matchas ord-för-ord. Fel/hopp markeras rött direkt, hesitationer gult efter 2 s. AI-analysen är sträng.
+- Flöde: talet matchas semantiskt. Små avvikelser, synonymer och omkastningar godkänns. Fokus på pace och naturligt flöde snarare än exakthet.
+
+**Ändring:** utöka `helpText` i `LearningModeSelector` med texten ovan (redan lokaliserad via `en.json` + de 6 andra), och lägg till motsvarande hjälp-popover vid strict/flow-toggeln där den visas (Practice-inställningar och SpeechDetail).
+
+---
+
+## Teknisk sammanfattning
+- **Frontend:** `UploadSpeechDialog.tsx` (ikoner + kamera-fix), `LearningModeSelector.tsx`/`PresentationModeSelector.tsx` (lugnare ikoner), nya `KnowledgeTestBanner.tsx` + `QuickAssessmentDialog.tsx`, hjälp-texter i strict/flow-toggle.
+- **Backend:** migration som lägger `knowledge_test_completed_at` på `speeches` (med GRANT + RLS-policy uppdatering).
+- **Native:** `@capacitor/camera` installeras för native-fallback i kamera-scannen.
+- **i18n:** komplettera `upload.stageDirections.tip`, `beat_practice.coffee_tip` samt nya nycklar för snabbtest och utökade hjälp-texter i alla 7 språk (en, sv, de, fr, es, it, pt).
+- **Inline-messages:** kamera-fel och test-resultat visas via nya `InlineMessages`-systemet, inga toasts.
+
+Inga ändringar i övrig inlärningslogik, spaced repetition eller mastery-beräkning.

@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation, Printer } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation, Printer, Sparkles, X } from "lucide-react";
 import SpeechCalendar from "@/components/SpeechCalendar";
 import { BeatPrintDialog } from "@/components/BeatPrintDialog";
+import KnowledgeTestDialog from "@/components/KnowledgeTestDialog";
 import { differenceInDays } from "date-fns";
 
 interface Speech {
@@ -18,7 +19,10 @@ interface Speech {
   mastery_level: number | null;
   last_accuracy: number | null;
   practice_strictness: string | null;
+  familiarity_level: string | null;
+  knowledge_test_completed_at: string | null;
 }
+
 
 const SpeechDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,14 +32,18 @@ const SpeechDetail = () => {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("overview");
   const [printOpen, setPrintOpen] = useState(false);
+  const [ktOpen, setKtOpen] = useState(false);
+  const [ktDismissed, setKtDismissed] = useState(false);
+
 
   useEffect(() => {
     if (!id) return;
     const load = async () => {
       const { data, error } = await supabase
         .from("speeches")
-        .select("id, title, text_original, goal_date, speech_language, mastery_level, last_accuracy, practice_strictness")
+        .select("id, title, text_original, goal_date, speech_language, mastery_level, last_accuracy, practice_strictness, familiarity_level, knowledge_test_completed_at")
         .eq("id", id)
+
         .single();
       if (error) {
         console.error("Failed to load speech:", error);
@@ -127,6 +135,46 @@ const SpeechDetail = () => {
           </div>
         </div>
 
+        {!ktDismissed &&
+          !speech.knowledge_test_completed_at &&
+          (speech.familiarity_level === "intermediate" ||
+            speech.familiarity_level === "confident") && (
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                <Sparkles className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">
+                  {t("knowledgeTest.bannerTitle")}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t("knowledgeTest.bannerBody")}
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <Button size="sm" onClick={() => setKtOpen(true)}>
+                    {t("knowledgeTest.start")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setKtDismissed(true)}
+                  >
+                    {t("knowledgeTest.skip")}
+                  </Button>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setKtDismissed(true)}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+
         <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="grid grid-cols-2 w-full max-w-sm">
             <TabsTrigger value="overview">
@@ -214,7 +262,19 @@ const SpeechDetail = () => {
         speechTitle={speech.title}
         fallbackText={speech.text_original}
       />
+
+      <KnowledgeTestDialog
+        open={ktOpen}
+        onClose={() => setKtOpen(false)}
+        speechId={speech.id}
+        onCompleted={() =>
+          setSpeech((s) =>
+            s ? { ...s, knowledge_test_completed_at: new Date().toISOString() } : s
+          )
+        }
+      />
     </div>
+
   );
 };
 

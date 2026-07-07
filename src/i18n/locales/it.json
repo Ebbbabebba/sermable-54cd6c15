@@ -232,7 +232,7 @@
     "wordLimitExceeded": "Il tuo discorso ha {{count}} parole. Il tuo piano consente fino a {{limit}} parole.",
     "wordLimitUpgrade": "Esegui l'upgrade a Premium per un massimo di 5000 parole.",
     "propCue": {
-      "tip": "Suggerimento: seleziona qualsiasi parola per aggiungere un'indicazione scenica (sorridi, ridi, alza la mano). Apparirà sopra il tuo copione mentre lo leggi.",
+      "tip": "Consiglio: seleziona qualsiasi parola per aggiungere una nota di regia (sorridi, ridi, alza la mano). Appare sopra il copione mentre leggi.",
       "addButton": "Aggiungi indicazione scenica",
       "placeholder": "Es: sorridi, ridi, alza la mano…",
       "previewLabel": "Anteprima indicazione scenica"
@@ -671,7 +671,8 @@
     "full_recall_subtitle": "Nessun copione. Pura memoria.",
     "full_recall_desc": "Hai imparato tutti i beat! Ora ricorda l'intero discorso a memoria.",
     "begin_recall": "Inizia richiamo completo",
-    "hint_available": "I suggerimenti appariranno se ti fermi per più di 3 secondi"
+    "hint_available": "I suggerimenti appariranno se ti fermi per più di 3 secondi",
+    "coffee_tip": "Consiglio: fai una breve passeggiata o prenditi un caffè!"
   },
   "presentation": {
     "settings": "Impostazioni presentazione",
@@ -1160,5 +1161,20 @@
     "termsEula": "Termini d'uso (EULA)",
     "privacyPolicy": "Informativa sulla privacy",
     "refundPolicy": "Politica di rimborso"
+  },
+  "knowledgeTest": {
+    "bannerTitle": "Mettiamo alla prova le tue conoscenze",
+    "bannerBody": "Hai indicato di conoscere già in parte questo discorso. Un test di 2 minuti adatterà la difficoltà al tuo livello reale.",
+    "start": "Avvia test",
+    "skip": "Più tardi",
+    "question": "Conosci questa parte?",
+    "yes": "Sì, la conosco",
+    "no": "No, non ancora",
+    "partial": "In parte",
+    "resultTitle": "Adattiamo il tuo livello di pratica",
+    "resultBeginner": "Principiante — partiamo da zero.",
+    "resultIntermediate": "Intermedio — saltiamo le basi.",
+    "resultConfident": "Sicuro — andiamo dritti alla rifinitura.",
+    "done": "Fatto"
   }
 }

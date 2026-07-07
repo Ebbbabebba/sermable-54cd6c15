@@ -232,7 +232,7 @@
     "wordLimitExceeded": "Votre discours contient {{count}} mots. Votre forfait autorise jusqu'à {{limit}} mots.",
     "wordLimitUpgrade": "Passez à la version premium pour jusqu'à 5000 mots.",
     "propCue": {
-      "tip": "Conseil de pro : sélectionnez n'importe quel mot pour ajouter une indication scénique (sourire, rire, lever la main). Elle flottera au-dessus de votre script pendant que vous le lisez.",
+      "tip": "Astuce : sélectionne n'importe quels mots pour ajouter une indication scénique (sourire, rire, lever la main). Elle apparaît au-dessus de ton script pendant que tu lis.",
       "addButton": "Ajouter une indication scénique",
       "placeholder": "ex: sourire, rire, lever la main...",
       "previewLabel": "Aperçu de la direction scénique"
@@ -671,7 +671,8 @@
     "full_recall_subtitle": "Pas de script. Pure mémoire.",
     "full_recall_desc": "Vous avez maîtrisé toutes les séquences ! Maintenant, récitez tout le discours de mémoire.",
     "begin_recall": "Commencer le rappel complet",
-    "hint_available": "Des indices apparaîtront si vous faites une pause de plus de 3 secondes"
+    "hint_available": "Des indices apparaîtront si vous faites une pause de plus de 3 secondes",
+    "coffee_tip": "Astuce : fais une petite promenade ou prends un café !"
   },
   "presentation": {
     "settings": "Paramètres de présentation",
@@ -1160,5 +1161,20 @@
     "termsEula": "Conditions d'utilisation (CLUF)",
     "privacyPolicy": "Politique de confidentialité",
     "refundPolicy": "Politique de remboursement"
+  },
+  "knowledgeTest": {
+    "bannerTitle": "Testons tes connaissances",
+    "bannerBody": "Tu as indiqué déjà connaître partiellement ce discours. Un test de 2 minutes ajustera la difficulté à ton vrai niveau.",
+    "start": "Démarrer le test",
+    "skip": "Plus tard",
+    "question": "Connais-tu cette partie ?",
+    "yes": "Oui, je la connais",
+    "no": "Non, pas encore",
+    "partial": "En partie",
+    "resultTitle": "On ajuste ton niveau de pratique",
+    "resultBeginner": "Débutant — on commence depuis le début.",
+    "resultIntermediate": "Intermédiaire — on saute les bases.",
+    "resultConfident": "Confiant — on passe directement au perfectionnement.",
+    "done": "Terminé"
   }
 }

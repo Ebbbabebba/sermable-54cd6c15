@@ -1192,5 +1192,20 @@
     "termsEula": "Användarvillkor (EULA)",
     "privacyPolicy": "Integritetspolicy",
     "refundPolicy": "Återbetalningspolicy"
+  },
+  "knowledgeTest": {
+    "bannerTitle": "Låt oss testa dina kunskaper",
+    "bannerBody": "Du sa att du redan kan talet delvis. Ett 2-minuters test anpassar svårighetsgraden till din faktiska nivå.",
+    "start": "Starta test",
+    "skip": "Senare",
+    "question": "Kan du den här delen?",
+    "yes": "Ja, jag kan den",
+    "no": "Nej, inte än",
+    "partial": "Delvis",
+    "resultTitle": "Vi anpassar din övningsnivå",
+    "resultBeginner": "Nybörjare — vi startar från början.",
+    "resultIntermediate": "Medel — vi hoppar över grunderna.",
+    "resultConfident": "Säker — vi går direkt till polering.",
+    "done": "Klart"
   }
 }
