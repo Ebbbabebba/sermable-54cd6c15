@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation, Printer } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation, Printer, Sparkles, X } from "lucide-react";
 import SpeechCalendar from "@/components/SpeechCalendar";
 import { BeatPrintDialog } from "@/components/BeatPrintDialog";
+import KnowledgeTestDialog from "@/components/KnowledgeTestDialog";
 import { differenceInDays } from "date-fns";
 
 interface Speech {
@@ -18,7 +19,10 @@ interface Speech {
   mastery_level: number | null;
   last_accuracy: number | null;
   practice_strictness: string | null;
+  familiarity_level: string | null;
+  knowledge_test_completed_at: string | null;
 }
+
 
 const SpeechDetail = () => {
   const { id } = useParams<{ id: string }>();
