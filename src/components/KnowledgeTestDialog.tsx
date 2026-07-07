@@ -56,15 +56,20 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
     (async () => {
       const { data, error } = await supabase
         .from("practice_beats")
-        .select("id, text_original, beat_index")
+        .select("id, sentence_1_text, sentence_2_text, sentence_3_text, beat_order")
         .eq("speech_id", speechId)
-        .order("beat_index", { ascending: true });
+        .order("beat_order", { ascending: true });
       if (error) {
         console.error(error);
         setBeats([]);
       } else {
-        // Pick up to 4 evenly-spaced beats.
-        const all = (data ?? []) as Beat[];
+        const all: Beat[] = (data ?? []).map((r) => ({
+          id: r.id,
+          beat_index: r.beat_order,
+          text_original: [r.sentence_1_text, r.sentence_2_text, r.sentence_3_text]
+            .filter((s) => s && s.trim().length > 0)
+            .join(" "),
+        }));
         if (all.length <= 4) {
           setBeats(all);
         } else {
@@ -74,6 +79,7 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
           );
         }
       }
+
       setLoading(false);
     })();
   }, [open, speechId]);
