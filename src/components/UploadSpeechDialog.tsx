@@ -811,10 +811,8 @@ const UploadSpeechDialog = ({
       case "submitting":
         return (
           <div className="flex flex-col items-center justify-center py-16 gap-5">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/40 blur-3xl animate-pulse" />
-              <Loader2 className="relative h-14 w-14 text-primary animate-spin" />
-            </div>
+            <Loader2 className="h-10 w-10 text-primary animate-spin" strokeWidth={1.5} />
+
             <div className="text-center space-y-1">
               <h3 className="text-xl font-semibold">
                 {t("upload.interview.creating", "Crafting your speech…")}
