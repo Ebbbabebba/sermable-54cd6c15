@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Capacitor } from "@capacitor/core";
+import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 
 import { PauseSlidersList } from "@/components/PauseSlidersList";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +24,7 @@ import {
   Target,
   Wind,
   Check,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -32,6 +35,7 @@ import {
 import { AiSpeechBuilderDialog } from "@/components/AiSpeechBuilderDialog";
 import PropCueTextarea from "@/components/PropCueTextarea";
 import FirstTimeCreateTour from "@/components/FirstTimeCreateTour";
+
 
 interface UploadSpeechDialogProps {
   open: boolean;
