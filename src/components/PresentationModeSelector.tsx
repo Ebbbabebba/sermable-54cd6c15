@@ -65,15 +65,14 @@ export const PresentationModeSelector = ({
 
             {/* Listen Mode (new) */}
             <Card
-              className="p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/50 cursor-pointer group relative overflow-hidden"
+              className="p-5 hover:shadow-md transition-all duration-200 border-2 hover:border-primary/50 cursor-pointer group"
               onClick={() => onSelectMode('listen')}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
               <div className="space-y-4 relative">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Ear className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Ear className="w-6 h-6 text-primary" strokeWidth={1.5} />
                 </div>
+
 
                 <div>
                   <h3 className="text-lg font-bold mb-1">
