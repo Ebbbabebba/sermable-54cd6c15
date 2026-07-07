@@ -142,13 +142,50 @@ const UploadSpeechDialog = ({
 
   // ----- camera / scan -----
   const startCamera = async () => {
+    // On native (iOS/Android) use Capacitor Camera — the WebView getUserMedia
+    // path renders black and lacks a proper permission prompt on iOS.
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const photo = await CapCamera.getPhoto({
+          quality: 85,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+        });
+        if (photo.dataUrl) {
+          await processImageDirectly(photo.dataUrl);
+        }
+      } catch (err: any) {
+        // User cancelled — silent. Real errors → inline toast.
+        if (err?.message && !/cancel/i.test(err.message)) {
+          toast({
+            variant: "destructive",
+            title: t("upload.cameraError"),
+            description: err.message || t("upload.cameraErrorDesc"),
+          });
+        }
+      }
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
       });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
       setShowCamera(true);
+      // Attach stream on next tick so the <video> is mounted, then explicitly play().
+      setTimeout(async () => {
+        const v = videoRef.current;
+        if (!v) return;
+        v.srcObject = stream;
+        v.muted = true;
+        v.setAttribute("playsinline", "true");
+        try {
+          await v.play();
+        } catch (e) {
+          console.warn("video.play() failed:", e);
+        }
+      }, 0);
     } catch {
       toast({
         variant: "destructive",
@@ -157,6 +194,7 @@ const UploadSpeechDialog = ({
       });
     }
   };
+
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
