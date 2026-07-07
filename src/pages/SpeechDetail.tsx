@@ -41,8 +41,9 @@ const SpeechDetail = () => {
     const load = async () => {
       const { data, error } = await supabase
         .from("speeches")
-        .select("id, title, text_original, goal_date, speech_language, mastery_level, last_accuracy, practice_strictness")
+        .select("id, title, text_original, goal_date, speech_language, mastery_level, last_accuracy, practice_strictness, familiarity_level, knowledge_test_completed_at")
         .eq("id", id)
+
         .single();
       if (error) {
         console.error("Failed to load speech:", error);
