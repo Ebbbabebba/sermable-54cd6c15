@@ -262,7 +262,19 @@ const SpeechDetail = () => {
         speechTitle={speech.title}
         fallbackText={speech.text_original}
       />
+
+      <KnowledgeTestDialog
+        open={ktOpen}
+        onClose={() => setKtOpen(false)}
+        speechId={speech.id}
+        onCompleted={() =>
+          setSpeech((s) =>
+            s ? { ...s, knowledge_test_completed_at: new Date().toISOString() } : s
+          )
+        }
+      />
     </div>
+
   );
 };
 
