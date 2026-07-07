@@ -232,7 +232,7 @@
     "wordLimitExceeded": "Tu discurso tiene {count} palabras. Tu plan permite hasta {limit} palabras.",
     "wordLimitUpgrade": "Actualiza a premium para hasta 5000 palabras.",
     "propCue": {
-      "tip": "Consejo profesional: selecciona cualquier palabra para adjuntar una instrucción de escena (sonreír, reír, levantar la mano). Flotará sobre tu guion mientras lo lees.",
+      "tip": "Consejo pro: selecciona cualquier palabra para añadir una indicación escénica (sonreír, reír, levantar la mano). Aparecerá sobre tu guion mientras lo lees.",
       "addButton": "Añadir instrucción de escena",
       "placeholder": "Ej. sonreír, reír, levantar la mano…",
       "previewLabel": "Vista previa de la instrucción de escena"
@@ -671,7 +671,8 @@
     "full_recall_subtitle": "Sin guion. Pura memoria.",
     "full_recall_desc": "¡Has dominado todos los beats! Ahora, recuerda el discurso completo de memoria.",
     "begin_recall": "Comenzar Recuerdo Completo",
-    "hint_available": "Las pistas aparecerán si pausas por más de 3 segundos"
+    "hint_available": "Las pistas aparecerán si pausas por más de 3 segundos",
+    "coffee_tip": "Consejo: da un pequeño paseo o tómate un café."
   },
   "presentation": {
     "settings": "Configuración de presentación",
@@ -1160,5 +1161,20 @@
     "termsEula": "Términos de uso (CLUF)",
     "privacyPolicy": "Política de privacidad",
     "refundPolicy": "Política de reembolso"
+  },
+  "knowledgeTest": {
+    "bannerTitle": "Vamos a poner a prueba tus conocimientos",
+    "bannerBody": "Indicaste que ya conoces en parte este discurso. Un test de 2 minutos ajustará la dificultad a tu nivel real.",
+    "start": "Empezar test",
+    "skip": "Más tarde",
+    "question": "¿Conoces esta parte?",
+    "yes": "Sí, la conozco",
+    "no": "No, aún no",
+    "partial": "En parte",
+    "resultTitle": "Ajustamos tu nivel de práctica",
+    "resultBeginner": "Principiante — empezamos desde cero.",
+    "resultIntermediate": "Intermedio — nos saltamos lo básico.",
+    "resultConfident": "Confiado — vamos directos a pulir.",
+    "done": "Listo"
   }
 }

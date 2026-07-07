@@ -232,7 +232,7 @@
     "wordLimitExceeded": "Seu discurso tem {{count}} palavras. Seu plano permite até {{limit}} palavras.",
     "wordLimitUpgrade": "Faça upgrade para premium para até 5000 palavras.",
     "propCue": {
-      "tip": "Dica: selecione quaisquer palavras para adicionar uma direção de palco (sorrir, rir, levantar a mão). Ela flutua acima do seu roteiro enquanto você o lê.",
+      "tip": "Dica pro: seleciona quaisquer palavras para adicionar uma indicação de cena (sorrir, rir, levantar a mão). Aparece acima do teu guião enquanto lês.",
       "addButton": "Adicionar direção de palco",
       "placeholder": "Ex: sorrir, rir, levantar a mão…",
       "previewLabel": "Prévia da direção de palco"
@@ -671,7 +671,8 @@
     "full_recall_subtitle": "Sem roteiro. Memória pura.",
     "full_recall_desc": "Você dominou todas as batidas! Agora lembre-se de todo o discurso de memória.",
     "begin_recall": "Iniciar Lembrança Total",
-    "hint_available": "Dicas aparecerão se você pausar por 3+ segundos"
+    "hint_available": "Dicas aparecerão se você pausar por 3+ segundos",
+    "coffee_tip": "Dica: dá um pequeno passeio ou vai buscar um café!"
   },
   "presentation": {
     "settings": "Configurações de apresentação",
@@ -1160,5 +1161,20 @@
     "termsEula": "Termos de uso (EULA)",
     "privacyPolicy": "Política de privacidade",
     "refundPolicy": "Política de reembolso"
+  },
+  "knowledgeTest": {
+    "bannerTitle": "Vamos testar os teus conhecimentos",
+    "bannerBody": "Disseste que já conheces parcialmente este discurso. Um teste de 2 minutos ajusta a dificuldade ao teu nível real.",
+    "start": "Iniciar teste",
+    "skip": "Mais tarde",
+    "question": "Conheces esta parte?",
+    "yes": "Sim, conheço",
+    "no": "Não, ainda não",
+    "partial": "Em parte",
+    "resultTitle": "Vamos ajustar o teu nível de prática",
+    "resultBeginner": "Iniciante — começamos do zero.",
+    "resultIntermediate": "Intermédio — saltamos o básico.",
+    "resultConfident": "Confiante — vamos direto ao polimento.",
+    "done": "Concluído"
   }
 }

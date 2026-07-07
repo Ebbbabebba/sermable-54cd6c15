@@ -232,7 +232,7 @@
     "wordLimitExceeded": "Deine Rede hat {{count}} Wörter. Dein Plan erlaubt bis zu {{limit}} Wörter.",
     "wordLimitUpgrade": "Upgrade auf Premium für bis zu 5000 Wörter.",
     "propCue": {
-      "tip": "Profi-Tipp: Wähle beliebige Wörter aus, um eine Bühnenanweisung hinzuzufügen (lächeln, lachen, Hand heben). Sie schwebt über deinem Skript, während du es liest.",
+      "tip": "Profi-Tipp: Wähle beliebige Wörter aus, um eine Regieanweisung hinzuzufügen (lächeln, lachen, Hand heben). Sie erscheint über deinem Skript, während du liest.",
       "addButton": "Bühnenanweisung hinzufügen",
       "placeholder": "z.B. lächeln, lachen, Hand heben…",
       "previewLabel": "Vorschau Bühnenanweisung"
@@ -671,7 +671,8 @@
     "full_recall_subtitle": "Kein Skript. Reine Erinnerung.",
     "full_recall_desc": "Du hast alle Takte gemeistert! Rufe jetzt die gesamte Rede aus dem Gedächtnis ab.",
     "begin_recall": "Vollständigen Abruf starten",
-    "hint_available": "Hinweise werden angezeigt, wenn du 3+ Sekunden pausierst"
+    "hint_available": "Hinweise werden angezeigt, wenn du 3+ Sekunden pausierst",
+    "coffee_tip": "Tipp: Mach einen kurzen Spaziergang oder hol dir einen Kaffee!"
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",
@@ -1160,5 +1161,20 @@
     "termsEula": "Nutzungsbedingungen (EULA)",
     "privacyPolicy": "Datenschutzrichtlinie",
     "refundPolicy": "Rückerstattungsrichtlinie"
+  },
+  "knowledgeTest": {
+    "bannerTitle": "Lass uns dein Wissen testen",
+    "bannerBody": "Du hast angegeben, dass du diese Rede schon teilweise kennst. Ein 2-Minuten-Test passt den Schwierigkeitsgrad an dein tatsächliches Niveau an.",
+    "start": "Test starten",
+    "skip": "Später",
+    "question": "Kennst du diesen Teil?",
+    "yes": "Ja, kenne ich",
+    "no": "Nein, noch nicht",
+    "partial": "Teilweise",
+    "resultTitle": "Wir passen dein Übungsniveau an",
+    "resultBeginner": "Anfänger — wir starten von Grund auf.",
+    "resultIntermediate": "Fortgeschritten — wir überspringen die Grundlagen.",
+    "resultConfident": "Sicher — wir gehen direkt zum Polieren.",
+    "done": "Fertig"
   }
 }
