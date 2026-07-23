@@ -59,29 +59,53 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
         .select("id, sentence_1_text, sentence_2_text, sentence_3_text, beat_order")
         .eq("speech_id", speechId)
         .order("beat_order", { ascending: true });
-      if (error) {
-        console.error(error);
-        setBeats([]);
-      } else {
-        const all: Beat[] = (data ?? []).map((r) => ({
+
+      let all: Beat[] = [];
+      if (!error && data && data.length > 0) {
+        all = data.map((r) => ({
           id: r.id,
           beat_index: r.beat_order,
           text_original: [r.sentence_1_text, r.sentence_2_text, r.sentence_3_text]
             .filter((s) => s && s.trim().length > 0)
             .join(" "),
         }));
-        if (all.length <= 4) {
-          setBeats(all);
-        } else {
-          const step = all.length / 4;
-          setBeats(
-            Array.from({ length: 4 }, (_, i) => all[Math.floor(i * step)])
-          );
+      }
+
+      // Fallback: if no practice_beats yet, derive chunks from speech text
+      if (all.length === 0) {
+        const { data: sp } = await supabase
+          .from("speeches")
+          .select("text_original")
+          .eq("id", speechId)
+          .single();
+        const raw = (sp?.text_original ?? "").trim();
+        if (raw.length > 0) {
+          const sentences = raw
+            .split(/(?<=[.!?])\s+/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+          const chunkCount = Math.min(4, Math.max(1, sentences.length));
+          const perChunk = Math.ceil(sentences.length / chunkCount);
+          all = Array.from({ length: chunkCount }, (_, i) => ({
+            id: `chunk-${i}`,
+            beat_index: i,
+            text_original: sentences.slice(i * perChunk, (i + 1) * perChunk).join(" "),
+          })).filter((b) => b.text_original.length > 0);
         }
+      }
+
+      if (all.length <= 4) {
+        setBeats(all);
+      } else {
+        const step = all.length / 4;
+        setBeats(
+          Array.from({ length: 4 }, (_, i) => all[Math.floor(i * step)])
+        );
       }
 
       setLoading(false);
     })();
+
   }, [open, speechId]);
 
   const current = beats?.[idx];
