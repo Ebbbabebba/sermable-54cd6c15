@@ -66,6 +66,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const progress = originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
 
   useEffect(() => {
+    let cancelled = false;
     const checkSchedule = async () => {
       try {
         const { data: schedule } = await supabase
@@ -75,21 +76,22 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
-        
+
+        if (cancelled) return;
         if (schedule?.next_review_date) {
           const reviewDate = new Date(schedule.next_review_date);
           setNextReviewDate(reviewDate);
           setIsLocked(reviewDate > new Date());
         }
       } catch (error) {
-        console.error('Error checking schedule:', error);
+        // silent — schedule may not exist yet
       }
     };
-    
+
     checkSchedule();
-    const interval = setInterval(checkSchedule, 60000);
-    return () => clearInterval(interval);
+    return () => { cancelled = true; };
   }, [speech.id]);
+
 
   useEffect(() => {
     const fetchMastery = async () => {
