@@ -49,6 +49,14 @@ const SpeechDetail = () => {
         console.error("Failed to load speech:", error);
       } else {
         setSpeech(data as Speech);
+        const s = data as Speech;
+        if (
+          !s.knowledge_test_completed_at &&
+          (s.familiarity_level === "intermediate" ||
+            s.familiarity_level === "confident")
+        ) {
+          setKtOpen(true);
+        }
       }
       setLoading(false);
     };
