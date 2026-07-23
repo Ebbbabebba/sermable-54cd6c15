@@ -92,7 +92,7 @@ const InlineMessages = () => {
   const m = msgs[msgs.length - 1];
   return (
     <div
-      className="fixed inset-x-0 top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center justify-center gap-2 px-6 pointer-events-none text-center"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-2 px-6 text-center bg-background"
       role="status"
       aria-live="polite"
       onClick={() => dismissMessage(m.id)}
