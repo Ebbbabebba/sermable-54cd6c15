@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { X, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export type InlineVariant = "default" | "success" | "error" | "info";
 
