@@ -497,13 +497,9 @@ const UploadSpeechDialog = ({
               "I'll ask a few quick questions and tailor your practice. Takes less than a minute."
             )}
           >
-            <div className="flex justify-center pt-2">
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <Sparkles className="w-8 h-8 text-primary" strokeWidth={1.5} />
-              </div>
-            </div>
-
+            <div />
           </StepShell>
+
         );
 
       case "title":

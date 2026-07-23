@@ -218,9 +218,6 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
 
             {!loading && finished && (
               <div className="text-center space-y-5">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mx-auto flex items-center justify-center">
-                  <Check className="w-8 h-8 text-primary" strokeWidth={1.5} />
-                </div>
                 <div className="space-y-1">
                   <h3 className="text-xl font-bold">
                     {t("knowledgeTest.resultTitle")}
