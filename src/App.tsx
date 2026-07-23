@@ -4,8 +4,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, ComponentType } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// Reload once per ~30s when a stale-chunk error happens (new deploy = hashed filenames).
+// Reload at most once per 5 minutes when a stale-chunk error happens
+// (new deploy = hashed filenames). We deliberately do NOT reload for generic
+// network errors, offline devices, or non-chunk failures — those used to cause
+// the app to "reload constantly" on flaky mobile connections.
 const RELOAD_TS_KEY = "lovable:chunk-reloaded-at";
+const RELOAD_COOLDOWN_MS = 5 * 60 * 1000;
+
 function isChunkLoadError(msg: string) {
   return (
     msg.includes("Importing a module script failed") ||
@@ -16,8 +21,12 @@ function isChunkLoadError(msg: string) {
 }
 function reloadForStaleChunk(): Promise<never> {
   if (typeof window !== "undefined") {
+    // Skip reload if offline — a reload while offline just shows an error page.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      return new Promise(() => {}) as Promise<never>;
+    }
     const last = Number(sessionStorage.getItem(RELOAD_TS_KEY) || 0);
-    if (Date.now() - last > 30_000) {
+    if (Date.now() - last > RELOAD_COOLDOWN_MS) {
       sessionStorage.setItem(RELOAD_TS_KEY, String(Date.now()));
       window.location.reload();
     }
@@ -31,25 +40,25 @@ function lazyWithRetry<T extends ComponentType<any>>(
     try {
       return await factory();
     } catch (err: any) {
-      if (isChunkLoadError(String(err?.message || ""))) {
-        return reloadForStaleChunk() as any;
+      const msg = String(err?.message || "");
+      if (isChunkLoadError(msg)) {
+        // Try once more before doing a full reload — often the chunk request
+        // just raced a network hiccup.
+        try {
+          return await factory();
+        } catch {
+          return reloadForStaleChunk() as any;
+        }
       }
       throw err;
     }
   });
 }
 
-// Safety net: stale-chunk errors that escape the lazy boundary (e.g. inside
-// React's render) bubble up as window errors / unhandled rejections.
-if (typeof window !== "undefined") {
-  window.addEventListener("error", (e) => {
-    if (isChunkLoadError(String(e?.message || ""))) reloadForStaleChunk();
-  });
-  window.addEventListener("unhandledrejection", (e) => {
-    const msg = String((e as any)?.reason?.message || (e as any)?.reason || "");
-    if (isChunkLoadError(msg)) reloadForStaleChunk();
-  });
-}
+// Note: we intentionally do NOT install global window `error` /
+// `unhandledrejection` listeners that reload on chunk errors — they were
+// firing on unrelated async failures and caused reload loops on mobile.
+
 
 const Index = lazyWithRetry(() => import("./pages/Index"));
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
