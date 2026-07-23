@@ -31,6 +31,7 @@ import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
 import DayAfterRecallView from "@/components/DayAfterRecallView";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
+import KnowledgeTestDialog from "@/components/KnowledgeTestDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
 import { PauseSlidersList } from "@/components/PauseSlidersList";
