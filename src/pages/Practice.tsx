@@ -124,6 +124,7 @@ const Practice = () => {
   const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
+  const [showKnowledgeTest, setShowKnowledgeTest] = useState(false);
   const [showSpeechSettings, setShowSpeechSettings] = useState(false);
   const [editingLearningMode, setEditingLearningMode] = useState<string>('word_by_word');
   const [editingDeadline, setEditingDeadline] = useState<Date | undefined>(undefined);
