@@ -31,6 +31,7 @@ import LockCountdown from "@/components/LockCountdown";
 import BeatPracticeView from "@/components/BeatPracticeView";
 import DayAfterRecallView from "@/components/DayAfterRecallView";
 import { LearningModeSelector } from "@/components/LearningModeSelector";
+import KnowledgeTestDialog from "@/components/KnowledgeTestDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
 import { PauseSlidersList } from "@/components/PauseSlidersList";
@@ -54,6 +55,8 @@ interface Speech {
   speech_type?: string | null;
   next_review_date?: string | null;
   learning_mode?: string | null;
+  familiarity_level?: string | null;
+  knowledge_test_completed_at?: string | null;
 }
 
 interface Segment {
@@ -121,6 +124,7 @@ const Practice = () => {
   const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
+  const [showKnowledgeTest, setShowKnowledgeTest] = useState(false);
   const [showSpeechSettings, setShowSpeechSettings] = useState(false);
   const [editingLearningMode, setEditingLearningMode] = useState<string>('word_by_word');
   const [editingDeadline, setEditingDeadline] = useState<Date | undefined>(undefined);
@@ -626,13 +630,25 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   }, [speech?.id, speech?.goal_date]);
 
-  const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false) => {
+  const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false, bypassKnowledgeTest = false) => {
+    // Show knowledge test first for users who marked "somewhat" or "confident" familiarity
+    if (
+      !bypassKnowledgeTest &&
+      speech &&
+      !speech.knowledge_test_completed_at &&
+      (speech.familiarity_level === "intermediate" || speech.familiarity_level === "confident")
+    ) {
+      setShowKnowledgeTest(true);
+      return;
+    }
+
     // For free users with session done, show premium upsell
     // For premium users, always allow practice
     if (!bypassSessionCheck && todaySessionDone && subscriptionTier === 'free') {
       setShowPremiumUpsell(true);
       return;
     }
+    
     
     // Only show spaced repetition warning if actually locked AND has practice history
     // Skip warning if there's no lock, no practice history, or next review date is past/now
@@ -2587,6 +2603,23 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Knowledge test for users who already know part of the speech */}
+      {speech && (
+        <KnowledgeTestDialog
+          open={showKnowledgeTest}
+          onClose={() => setShowKnowledgeTest(false)}
+          speechId={speech.id}
+          onCompleted={() => {
+            setSpeech((s) =>
+              s ? { ...s, knowledge_test_completed_at: new Date().toISOString() } : s
+            );
+            setShowKnowledgeTest(false);
+            // Continue into the practice session automatically
+            setTimeout(() => handleStartPractice(false, false, false, true), 50);
+          }}
+        />
+      )}
 
       {/* Premium Upsell Dialog (compact) */}
       <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
