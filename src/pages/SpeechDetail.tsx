@@ -31,8 +31,6 @@ const SpeechDetail = () => {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("overview");
   const [printOpen, setPrintOpen] = useState(false);
-  const [ktOpen, setKtOpen] = useState(false);
-  const [ktDismissed, setKtDismissed] = useState(false);
 
 
   useEffect(() => {
