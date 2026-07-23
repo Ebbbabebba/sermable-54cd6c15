@@ -457,9 +457,6 @@ const Dashboard = () => {
             ) : speeches.length === 0 ? (
               <Card className="border-0 shadow-apple-xl animate-fade-in">
                 <CardContent className="py-16 text-center">
-                  <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                    <MessageCircle className="w-10 h-10 text-primary" />
-                  </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">{t('dashboard.noSpeeches')}</h3>
                   <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
                     {t('dashboard.noSpeechesDesc')}
