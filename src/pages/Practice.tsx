@@ -1933,11 +1933,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
 
   if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center overflow-hidden">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <div className="h-screen overflow-hidden" />;
   }
 
   if (!speech) return null;
