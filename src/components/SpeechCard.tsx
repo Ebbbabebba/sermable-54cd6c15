@@ -341,16 +341,6 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
         <Button
           variant="ghost"
-          size="icon"
-          className="h-9 w-9 text-muted-foreground"
-          onClick={handleShare}
-          disabled={isSharing}
-        >
-          {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : shareSuccess ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
-        </Button>
-
-        <Button
-          variant="ghost"
           size="sm"
           onClick={(e) => {
             e.preventDefault();
