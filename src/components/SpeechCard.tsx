@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar as CalendarIcon, Play, Trash2, Presentation, Clock, Crown, Mic, Eye, Target, Share2, Loader2, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Play, Trash2, Presentation, Clock, Crown, Mic, Eye, Target } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
