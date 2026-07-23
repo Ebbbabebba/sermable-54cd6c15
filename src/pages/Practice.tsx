@@ -630,13 +630,25 @@ const [liveTranscription, setLiveTranscription] = useState("");
     }
   }, [speech?.id, speech?.goal_date]);
 
-  const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false) => {
+  const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false, bypassKnowledgeTest = false) => {
+    // Show knowledge test first for users who marked "somewhat" or "confident" familiarity
+    if (
+      !bypassKnowledgeTest &&
+      speech &&
+      !speech.knowledge_test_completed_at &&
+      (speech.familiarity_level === "intermediate" || speech.familiarity_level === "confident")
+    ) {
+      setShowKnowledgeTest(true);
+      return;
+    }
+
     // For free users with session done, show premium upsell
     // For premium users, always allow practice
     if (!bypassSessionCheck && todaySessionDone && subscriptionTier === 'free') {
       setShowPremiumUpsell(true);
       return;
     }
+    
     
     // Only show spaced repetition warning if actually locked AND has practice history
     // Skip warning if there's no lock, no practice history, or next review date is past/now
