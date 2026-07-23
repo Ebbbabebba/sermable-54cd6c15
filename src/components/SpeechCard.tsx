@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar as CalendarIcon, Play, Trash2, Presentation, Clock, Crown, Mic, Eye, Target, Share2, Loader2, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Play, Trash2, Presentation, Clock, Crown, Mic, Eye, Target } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -49,8 +49,6 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [showPresentationPremium, setShowPresentationPremium] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareSuccess, setShareSuccess] = useState(false);
   const [deadlineOpen, setDeadlineOpen] = useState(false);
   const [masteryPercent, setMasteryPercent] = useState<number | null>(null);
   
@@ -233,81 +231,6 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
     }
   };
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsSharing(true);
-    try {
-      // Check if speech already has a share token
-      const { data: existing } = await supabase
-        .from('speeches')
-        .select('share_token')
-        .eq('id', speech.id)
-        .single();
-
-      let token = existing?.share_token;
-
-      if (!token) {
-        // Generate a share token
-        token = crypto.randomUUID().replace(/-/g, '').substring(0, 12);
-        const { error } = await supabase
-          .from('speeches')
-          .update({ share_token: token } as any)
-          .eq('id', speech.id);
-        if (error) throw error;
-      }
-
-      const shareUrl = `${window.location.origin}/share/${token}`;
-      const shareTitle = t('dashboard.shareTitleFmt', 'A speech has been shared with you on Sermable');
-      const shareText = t('dashboard.shareTextFmt', 'Hi! I shared the speech "{{title}}" with you on Sermable. Open the link to add it to your account and start practicing:', { title: speech.title });
-      const shareData = {
-        title: shareTitle,
-        text: shareText,
-        url: shareUrl,
-      };
-      
-      // Check if Web Share API is available AND can share this data
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else if (navigator.share) {
-        // Fallback: some browsers support share but not canShare
-        try {
-          await navigator.share(shareData);
-        } catch (shareErr: any) {
-          if (shareErr.name === 'AbortError') return;
-          // If share fails, fall back to clipboard
-          await fallbackCopy(shareUrl);
-        }
-      } else {
-        await fallbackCopy(shareUrl);
-      }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        toast({ variant: "destructive", title: t('common.error'), description: err.message });
-      }
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  const fallbackCopy = async (url: string) => {
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      // Final fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = url;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-    }
-    setShareSuccess(true);
-    setTimeout(() => setShareSuccess(false), 2000);
-    toast({ title: t('dashboard.linkCopied', 'Link copied!'), description: t('dashboard.linkCopiedDesc', 'Share this link with others') });
-  };
 
   return (
     <Card 
@@ -414,16 +337,6 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         >
           <Play className="h-4 w-4" />
           {t('dashboard.practice')}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 text-muted-foreground"
-          onClick={handleShare}
-          disabled={isSharing}
-        >
-          {isSharing ? <Loader2 className="h-4 w-4 animate-spin" /> : shareSuccess ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
         </Button>
 
         <Button
