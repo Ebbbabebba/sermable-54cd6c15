@@ -33,9 +33,8 @@ export const PresentationModeSelector = ({
               onClick={() => onSelectMode('strict')}
             >
               <div className="space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <Brain className="w-6 h-6 text-primary" strokeWidth={1.5} />
-                </div>
+
+
 
 
                 <div>
@@ -70,9 +69,8 @@ export const PresentationModeSelector = ({
               onClick={() => onSelectMode('listen')}
             >
               <div className="space-y-4 relative">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <Ear className="w-6 h-6 text-primary" strokeWidth={1.5} />
-                </div>
+
+
 
 
                 <div>
@@ -107,9 +105,8 @@ export const PresentationModeSelector = ({
               onClick={() => onSelectMode('overview')}
             >
               <div className="space-y-4 relative">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <MonitorPlay className="w-6 h-6 text-primary" strokeWidth={1.5} />
-                </div>
+
+
 
 
                 <div>

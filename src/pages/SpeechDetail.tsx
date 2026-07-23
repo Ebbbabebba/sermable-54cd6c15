@@ -140,9 +140,6 @@ const SpeechDetail = () => {
           (speech.familiarity_level === "intermediate" ||
             speech.familiarity_level === "confident") && (
             <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                <Sparkles className="h-5 w-5 text-primary" strokeWidth={1.5} />
-              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm">
                   {t("knowledgeTest.bannerTitle")}

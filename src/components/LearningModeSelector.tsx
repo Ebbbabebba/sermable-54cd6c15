@@ -53,17 +53,7 @@ export const LearningModeSelector = ({
                   : "border-border bg-card"
               )}
             >
-              <div className="flex items-center justify-between w-full">
-                <div
-                  className={cn(
-                    "w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
-                    value === mode.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <mode.icon className="w-4.5 h-4.5" />
-                </div>
+              <div className="flex items-center justify-end w-full">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -75,6 +65,7 @@ export const LearningModeSelector = ({
                   <HelpCircle className="w-4 h-4" />
                 </button>
               </div>
+
               <div>
                 <span className="text-sm font-semibold block">{mode.label}</span>
                 <span className="text-xs text-muted-foreground leading-snug block mt-0.5">
