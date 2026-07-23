@@ -497,10 +497,9 @@ const UploadSpeechDialog = ({
               "I'll ask a few quick questions and tailor your practice. Takes less than a minute."
             )}
           >
-
-
-
+            <div />
           </StepShell>
+
         );
 
       case "title":
