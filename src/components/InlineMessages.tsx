@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { X, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export type InlineVariant = "default" | "success" | "error" | "info";
 
@@ -77,61 +78,39 @@ export function subscribe(l: Listener) {
   };
 }
 
-const variantStyles: Record<InlineVariant, string> = {
-  default: "bg-card border-border text-foreground",
-  success: "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
-  error: "bg-destructive/10 border-destructive/40 text-destructive",
-  info: "bg-primary/10 border-primary/40 text-primary",
-};
-
-const Icon = ({ variant }: { variant: InlineVariant }) => {
-  const cls = "h-4 w-4 shrink-0 mt-0.5";
-  if (variant === "success") return <CheckCircle2 className={cls} />;
-  if (variant === "error") return <AlertCircle className={cls} />;
-  if (variant === "info") return <Info className={cls} />;
-  return <Info className={cls} />;
+const variantColor: Record<InlineVariant, string> = {
+  default: "text-foreground",
+  success: "text-emerald-600 dark:text-emerald-400",
+  error: "text-destructive",
+  info: "text-primary",
 };
 
 const InlineMessages = () => {
   const [msgs, setMsgs] = useState<InlineMessage[]>(messages);
   useEffect(() => subscribe(setMsgs), []);
   if (msgs.length === 0) return null;
+  const m = msgs[msgs.length - 1];
   return (
     <div
-      className="fixed left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 w-[min(92vw,420px)] px-2 pointer-events-none"
-      style={{ top: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
+      className="fixed inset-x-0 top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center justify-center gap-2 px-6 pointer-events-none text-center"
       role="status"
       aria-live="polite"
+      onClick={() => dismissMessage(m.id)}
     >
-      {msgs.map((m) => (
-        <div
-          key={m.id}
-          className={cn(
-            "pointer-events-auto flex items-start gap-2 rounded-xl border px-3 py-2 shadow-sm backdrop-blur-sm animate-fade-in text-sm",
-            variantStyles[m.variant]
-          )}
-        >
-          <Icon variant={m.variant} />
-          <div className="flex-1 min-w-0">
-            {m.title && <div className="font-medium leading-snug">{m.title}</div>}
-            {m.description && (
-              <div className="text-xs opacity-80 leading-snug mt-0.5 break-words">
-                {m.description}
-              </div>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => dismissMessage(m.id)}
-            className="opacity-60 hover:opacity-100 transition-opacity -mr-1"
-            aria-label="Dismiss"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
+      <Loader2 className={cn("h-5 w-5 animate-spin opacity-70", variantColor[m.variant])} />
+      {m.title && (
+        <div className={cn("text-base font-medium leading-snug animate-fade-in", variantColor[m.variant])}>
+          {m.title}
         </div>
-      ))}
+      )}
+      {m.description && (
+        <div className="text-sm text-muted-foreground leading-snug max-w-sm animate-fade-in">
+          {m.description}
+        </div>
+      )}
     </div>
   );
 };
 
 export default InlineMessages;
+
