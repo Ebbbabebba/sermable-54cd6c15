@@ -49,8 +49,6 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [showPresentationPremium, setShowPresentationPremium] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareSuccess, setShareSuccess] = useState(false);
   const [deadlineOpen, setDeadlineOpen] = useState(false);
   const [masteryPercent, setMasteryPercent] = useState<number | null>(null);
   
