@@ -2604,6 +2604,23 @@ const [liveTranscription, setLiveTranscription] = useState("");
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Knowledge test for users who already know part of the speech */}
+      {speech && (
+        <KnowledgeTestDialog
+          open={showKnowledgeTest}
+          onClose={() => setShowKnowledgeTest(false)}
+          speechId={speech.id}
+          onCompleted={() => {
+            setSpeech((s) =>
+              s ? { ...s, knowledge_test_completed_at: new Date().toISOString() } : s
+            );
+            setShowKnowledgeTest(false);
+            // Continue into the practice session automatically
+            setTimeout(() => handleStartPractice(false, false, false, true), 50);
+          }}
+        />
+      )}
+
       {/* Premium Upsell Dialog (compact) */}
       <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
         <DialogContent className="max-w-sm">
