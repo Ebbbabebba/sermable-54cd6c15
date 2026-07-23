@@ -54,6 +54,8 @@ interface Speech {
   speech_type?: string | null;
   next_review_date?: string | null;
   learning_mode?: string | null;
+  familiarity_level?: string | null;
+  knowledge_test_completed_at?: string | null;
 }
 
 interface Segment {
