@@ -518,16 +518,17 @@ export const CompactPresentationView = ({
 
 
   // Process transcript and match words
-  const processTranscript = useCallback((newTranscript: string) => {
+  const processTranscript = useCallback((newTranscript: string, isFinal = false) => {
     const spokenWords = newTranscript.toLowerCase().trim().split(/\s+/).filter(w => w.length > 0);
     let localIndex = currentWordIndexRef.current;
-    
+
     for (const spokenWord of spokenWords) {
       if (localIndex >= words.length) break;
 
       // Per-word dwell — don't allow a single burst of speech to chain-advance
       // multiple words instantly. Wait MIN_WORD_DWELL_MS between matches.
-      if (Date.now() - lastMatchAtRef.current < MIN_WORD_DWELL_MS) {
+      // Final transcripts are trusted corrections, so we process every word.
+      if (!isFinal && Date.now() - lastMatchAtRef.current < MIN_WORD_DWELL_MS) {
         break;
       }
 
