@@ -21,14 +21,18 @@ const CONTEXT_WORDS = 4;
  * can tune the pause directly above where it sits in the text.
  */
 export const PauseSlidersList = ({ text, onChange }: PauseSlidersListProps) => {
+  const { t } = useTranslation();
   const pauses = extractPauses(text);
 
   if (pauses.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground leading-relaxed">
-        Tip: type a standalone <code className="px-1 rounded bg-muted">-</code>{" "}
-        anywhere in the script to insert a pause. A 1–10s slider will appear
-        here for each one.
+        {t("pauses.tipPrefix", "Tip: type a standalone")}{" "}
+        <code className="px-1 rounded bg-muted">-</code>{" "}
+        {t(
+          "pauses.tipSuffix",
+          "anywhere in the script to insert a pause. A 1-10s slider appears here for each one.",
+        )}
       </div>
     );
   }
@@ -41,7 +45,7 @@ export const PauseSlidersList = ({ text, onChange }: PauseSlidersListProps) => {
   return (
     <div className="space-y-2">
       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        Pauses ({pauses.length})
+        {t("pauses.title", "Pauses")} ({pauses.length})
       </div>
       <div className="space-y-2">
         {pauses.map((p) => {
