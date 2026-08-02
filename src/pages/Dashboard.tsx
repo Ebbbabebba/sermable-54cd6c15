@@ -195,13 +195,12 @@ const Dashboard = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("subscription_tier, monthly_speeches_count")
+        .select("subscription_tier")
         .eq("id", user.id)
         .single();
 
       if (profile) {
         setSubscriptionTier(profile.subscription_tier);
-        setMonthlySpeeches(profile.monthly_speeches_count);
       }
     } catch (error: any) {
       toast({
