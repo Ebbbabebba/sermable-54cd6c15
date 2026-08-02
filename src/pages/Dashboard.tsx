@@ -251,97 +251,75 @@ const Dashboard = () => {
       />
 
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
-        <div className="px-4 h-11 flex items-center justify-between gap-2">
-          {isMobile ? (
+        <div className="px-4 h-14 flex items-center justify-between gap-3 max-w-2xl mx-auto">
+          <span className="font-display font-bold text-lg tracking-tight">Sermable</span>
+
+          <div className="flex items-center gap-2">
             <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
               <Plus className="h-4 w-4" />
-              {t('nav.newSpeech')}
+              <span className="hidden sm:inline">{t('nav.newSpeech')}</span>
             </Button>
-          ) : (
-            <div className="w-8" />
-          )}
-          
-          {/* Desktop Navigation */}
-          {!isMobile && (
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
-                <Plus className="h-4 w-4" />
-                {t('nav.newSpeech')}
-              </Button>
-              
-              <div className="flex items-center gap-1 ml-2">
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                  subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
-                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 font-medium'
-                    : 'text-muted-foreground bg-secondary'
-                }`}>
-                  {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')}
-                </span>
-                
-                {subscriptionTier === 'free' && (
-                  <Button variant="apple-ghost" size="sm" onClick={handleUpgradeToPremium}>
-                    {t('nav.upgrade')}
-                  </Button>
-                )}
-              </div>
-              
-              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
-                <Settings className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          )}
 
-          {/* Mobile Menu */}
-          {isMobile && (
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
+            {!isMobile && (
+              <>
+                <Button variant="ghost" size="icon" aria-label={t('nav.settings')} onClick={() => navigate("/settings")}>
+                  <Settings className="h-5 w-5" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent className="bg-card border-l border-border" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
-                <SheetHeader>
-                  <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-3 mt-8">
-                  <div className="pb-4 border-b border-border">
-                    <span className={`text-sm ${
-                      subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
-                        ? 'text-amber-600 dark:text-amber-400 font-medium'
-                        : 'text-muted-foreground'
-                    }`}>
-                      {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
-                    </span>
-                  </div>
-                  {subscriptionTier === 'free' && (
-                    <Button variant="apple" onClick={() => {
-                      handleUpgradeToPremium();
+                <Button variant="ghost" size="icon" aria-label={t('nav.signOut')} onClick={handleLogout}>
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            )}
+
+            {/* Mobile Menu */}
+            {isMobile && (
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label={t('nav.menu')}>
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="bg-card border-l border-border" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+                  <SheetHeader>
+                    <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-3 mt-8">
+                    <div className="pb-4 border-b border-border">
+                      <span className={`text-sm ${
+                        subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
+                          ? 'text-amber-600 dark:text-amber-400 font-medium'
+                          : 'text-muted-foreground'
+                      }`}>
+                        {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
+                      </span>
+                    </div>
+                    {subscriptionTier === 'free' && (
+                      <Button variant="apple" onClick={() => {
+                        handleUpgradeToPremium();
+                        setMobileMenuOpen(false);
+                      }}>
+                        {t('nav.upgradeToPremium')}
+                      </Button>
+                    )}
+                    <Button variant="ghost" className="justify-start" onClick={() => {
+                      navigate("/settings");
                       setMobileMenuOpen(false);
                     }}>
-                      {t('nav.upgradeToPremium')}
+                      <Settings className="h-4 w-4 mr-3" />
+                      {t('nav.settings')}
                     </Button>
-                  )}
-                  <Button variant="ghost" className="justify-start" onClick={() => {
-                    navigate("/settings");
-                    setMobileMenuOpen(false);
-                  }}>
-                    <Settings className="h-4 w-4 mr-3" />
-                    {t('nav.settings')}
-                  </Button>
-                  <Button variant="ghost" className="justify-start text-destructive" onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}>
-                    <LogOut className="h-4 w-4 mr-3" />
-                    {t('nav.signOut')}
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
+                    <Button variant="ghost" className="justify-start text-destructive" onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}>
+                      <LogOut className="h-4 w-4 mr-3" />
+                      {t('nav.signOut')}
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
         </div>
       </header>
 
