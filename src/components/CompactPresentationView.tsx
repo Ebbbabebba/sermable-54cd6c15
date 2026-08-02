@@ -134,6 +134,7 @@ export const CompactPresentationView = ({
   
   const haptics = useHapticFeedback({ enabled: true });
   const { t } = useTranslation();
+  const { isTooLow } = useMicrophoneLevel(isRecording);
   
   const recognitionRef = useRef<any>(null);
   const wordStartTimeRef = useRef<number>(Date.now());
