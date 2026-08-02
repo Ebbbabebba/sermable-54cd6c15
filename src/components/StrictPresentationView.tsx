@@ -8,6 +8,8 @@ import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 import PropCueOverlay from "@/components/PropCueOverlay";
 import { extractPropCues, getActivePropCue } from "@/utils/propCues";
+import { useMicrophoneLevel } from "@/hooks/useMicrophoneLevel";
+import { ProximityWarning } from "@/components/ProximityWarning";
 
 interface WordPerformance {
   word: string;
