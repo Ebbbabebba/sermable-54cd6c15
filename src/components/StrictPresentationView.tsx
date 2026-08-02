@@ -599,6 +599,8 @@ export const StrictPresentationView = ({
         </Button>
       </div>
 
+      <ProximityWarning isVisible={isTooLow} />
+
       {/* Processing Overlay */}
       {isProcessing && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
