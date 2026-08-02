@@ -3399,12 +3399,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             if (navigator.mediaDevices?.getUserMedia) {
               const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
-                  echoCancellation: true,
-                  noiseSuppression: true,
+                  // Dictation-tuned capture: browser noise suppression and echo
+                  // cancellation gate quiet/distant speech and clip word onsets,
+                  // which is exactly what makes users repeat themselves. AGC
+                  // stays on so a soft voice is still lifted to a usable level.
+                  echoCancellation: false,
+                  noiseSuppression: false,
                   autoGainControl: true,
                   channelCount: 1,
-                },
+                } as MediaTrackConstraints,
               });
+
               // Release immediately — Web Speech will open its own handle, but
               // the browser remembers permission + applied processing.
               stream.getTracks().forEach((t) => t.stop());
