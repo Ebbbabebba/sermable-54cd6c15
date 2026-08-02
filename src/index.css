@@ -17,57 +17,57 @@ body {
 
 @layer base {
   :root {
-    /* Dark Mode - Deep slate with Duolingo accents */
-    --background: 220 20% 4%;
-    --foreground: 210 40% 96%;
+    /* Light Mode - Soft Apple-inspired palette */
+    --background: 240 7% 97%;
+    --foreground: 240 6% 12%;
 
-    --card: 215 25% 9%;
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 12%;
 
-    --popover: 215 25% 11%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 12%;
 
-    /* Duolingo Green — primary CTA */
-    --primary: 199 92% 54%;            /* #58CC02 */
+    /* Soft indigo — primary CTA */
+    --primary: 241 76% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-shadow: 199 92% 40%;     /* darker green for 3D bottom edge */
+    --primary-shadow: 241 76% 45%;
 
-    --secondary: 220 25% 14%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 240 6% 95%;
+    --secondary-foreground: 240 6% 12%;
 
-    --muted: 215 20% 16%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 240 5% 92%;
+    --muted-foreground: 240 4% 50%;
 
-    --accent: 88 60% 18%;
-    --accent-foreground: 210 40% 96%;
+    --accent: 240 6% 95%;
+    --accent-foreground: 240 6% 12%;
 
-    /* Duolingo system colors */
-    --success: 199 92% 54%;            /* same green */
+    /* Soft system colors */
+    --success: 160 70% 45%;
     --success-foreground: 0 0% 100%;
-    --success-shadow: 199 92% 40%;
+    --success-shadow: 160 70% 35%;
 
-    --warning: 36 100% 50%;           /* #FF9600 */
-    --warning-foreground: 0 0% 100%;
-    --warning-shadow: 36 100% 38%;
+    --warning: 35 100% 55%;
+    --warning-foreground: 240 6% 12%;
+    --warning-shadow: 35 100% 40%;
 
-    --destructive: 0 100% 64%;        /* #FF4B4B */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-shadow: 0 80% 48%;
+    --destructive-shadow: 0 74% 45%;
 
-    --info: 199 92% 54%;              /* #1CB0F6 Duo blue */
+    --info: 211 100% 55%;
     --info-foreground: 0 0% 100%;
-    --info-shadow: 199 92% 40%;
+    --info-shadow: 211 100% 40%;
 
-    --duo-purple: 274 100% 75%;       /* #CE82FF */
+    --duo-purple: 270 60% 65%;
     --duo-purple-foreground: 0 0% 100%;
-    --duo-purple-shadow: 274 60% 55%;
+    --duo-purple-shadow: 270 50% 50%;
 
-    --duo-yellow: 49 100% 56%;        /* #FFC800 */
-    --duo-yellow-foreground: 220 25% 12%;
+    --duo-yellow: 45 100% 55%;
+    --duo-yellow-foreground: 240 6% 12%;
 
-    --border: 215 20% 18%;
-    --input: 215 25% 14%;
-    --ring: 199 92% 54%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 241 76% 60%;
 
     /* Prop cue (text-selection rekvisita) — warm amber, distinct from primary */
     --prop-cue-bg: 32 95% 60% / 0.12;
@@ -76,107 +76,109 @@ body {
 
     --radius: 1rem;
 
-    /* Brand teal kept as accent for legacy components */
+    /* Brand accents kept for legacy components */
     --sermable-teal: 186 72% 46%;
     --sermable-indigo: 235 65% 60%;
     --sermable-cyan: 192 85% 55%;
     --sermable-mint: 168 60% 50%;
-    --word-bg: 215 25% 14%;
-    --word-text: 210 40% 96%;
-    --success-green: 199 92% 54%;
+    --word-bg: 240 6% 95%;
+    --word-text: 240 6% 12%;
+    --success-green: 160 70% 45%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(199 92% 45%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(274 100% 75%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(160 65% 40%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(199 92% 54%) 50%, hsl(274 100% 75%) 100%);
-    --gradient-space: radial-gradient(ellipse at top, hsl(220 25% 10%), hsl(220 20% 4%));
+    --gradient-primary: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(270 60% 65%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 70% 45%) 0%, hsl(160 70% 35%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 60%) 50%, hsl(270 60% 65%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(240 6% 95%), hsl(240 7% 97%));
 
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(199 92% 54% / 0.08), transparent);
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(241 76% 60% / 0.05), transparent);
 
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px hsl(199 92% 54% / 0.3);
-    --shadow-teal: 0 0 30px hsl(199 92% 54% / 0.2);
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+    --shadow-glow: 0 0 20px hsl(241 76% 60% / 0.15);
+    --shadow-teal: 0 0 30px hsl(241 76% 60% / 0.1);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
-  .light {
-    /* Light Mode - Warm cream with Duolingo accents */
-    --background: 180 15% 97%;
-    --foreground: 220 25% 12%;
+  .dark {
+    /* Dark Mode - Soft Apple-inspired palette */
+    --background: 240 10% 6%;
+    --foreground: 240 7% 97%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 12%;
+    --card: 240 8% 12%;
+    --card-foreground: 240 7% 97%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 12%;
+    --popover: 240 8% 14%;
+    --popover-foreground: 240 7% 97%;
 
-    /* Duolingo Green */
-    --primary: 199 92% 54%;
+    /* Soft indigo — primary CTA */
+    --primary: 241 76% 60%;
     --primary-foreground: 0 0% 100%;
-    --primary-shadow: 199 92% 40%;
+    --primary-shadow: 241 76% 45%;
 
-    --secondary: 180 15% 95%;
-    --secondary-foreground: 220 25% 12%;
+    --secondary: 240 7% 16%;
+    --secondary-foreground: 240 7% 97%;
 
-    --muted: 180 12% 94%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 240 6% 20%;
+    --muted-foreground: 240 5% 55%;
 
-    --accent: 88 60% 92%;
-    --accent-foreground: 220 25% 12%;
+    --accent: 240 7% 18%;
+    --accent-foreground: 240 7% 97%;
 
-    --success: 199 92% 54%;
+    /* Soft system colors */
+    --success: 160 70% 45%;
     --success-foreground: 0 0% 100%;
-    --success-shadow: 199 92% 40%;
+    --success-shadow: 160 70% 35%;
 
-    --warning: 36 100% 50%;
-    --warning-foreground: 0 0% 100%;
-    --warning-shadow: 36 100% 38%;
+    --warning: 35 100% 55%;
+    --warning-foreground: 240 6% 12%;
+    --warning-shadow: 35 100% 40%;
 
-    --destructive: 0 100% 64%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --destructive-shadow: 0 80% 48%;
+    --destructive-shadow: 0 74% 45%;
 
-    --info: 199 92% 54%;
+    --info: 211 100% 55%;
     --info-foreground: 0 0% 100%;
-    --info-shadow: 199 92% 40%;
+    --info-shadow: 211 100% 40%;
 
-    --duo-purple: 274 100% 75%;
+    --duo-purple: 270 60% 65%;
     --duo-purple-foreground: 0 0% 100%;
-    --duo-purple-shadow: 274 60% 55%;
+    --duo-purple-shadow: 270 50% 50%;
 
-    --duo-yellow: 49 100% 56%;
-    --duo-yellow-foreground: 220 25% 12%;
+    --duo-yellow: 45 100% 55%;
+    --duo-yellow-foreground: 240 6% 12%;
 
-    --border: 180 12% 88%;
-    --input: 180 12% 88%;
-    --ring: 199 92% 54%;
+    --border: 240 7% 22%;
+    --input: 240 7% 22%;
+    --ring: 241 76% 60%;
 
-    /* Prop cue (text-selection rekvisita) — warm amber for light theme */
-    --prop-cue-bg: 28 95% 55% / 0.14;
-    --prop-cue-bg-strong: 28 95% 55% / 0.32;
-    --prop-cue-fg: 24 90% 42%;
+    /* Prop cue (text-selection rekvisita) — warm amber for dark theme */
+    --prop-cue-bg: 32 95% 60% / 0.12;
+    --prop-cue-bg-strong: 32 95% 60% / 0.28;
+    --prop-cue-fg: 32 95% 62%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(199 92% 45%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(274 100% 75%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(160 65% 40%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(199 92% 54%) 0%, hsl(199 92% 54%) 50%, hsl(274 100% 75%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(270 60% 65%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 70% 45%) 0%, hsl(160 70% 35%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 60%) 50%, hsl(270 60% 65%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(240 8% 14%), hsl(240 10% 6%));
 
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(199 92% 54% / 0.06), transparent);
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(241 76% 60% / 0.08), transparent);
 
-    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-    --shadow-glow: 0 0 20px hsl(199 92% 54% / 0.18);
-    --shadow-teal: 0 0 30px hsl(199 92% 54% / 0.12);
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 2px -1px rgba(0, 0, 0, 0.15);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+    --shadow-glow: 0 0 20px hsl(241 76% 60% / 0.2);
+    --shadow-teal: 0 0 30px hsl(241 76% 60% / 0.15);
   }
 }
 
@@ -520,31 +522,31 @@ body {
     animation: wordComplete 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  /* ===== Duolingo design tokens ===== */
+  /* ===== Soft button tokens ===== */
 
-  /* 3D push-button — solid bottom edge that compresses on press */
+  /* Subtle pressed shadow that scales on press */
   .duo-btn {
-    box-shadow: 0 4px 0 0 hsl(var(--primary-shadow));
-    transform: translateY(0);
-    transition: transform 80ms ease-out, box-shadow 80ms ease-out, filter 150ms ease-out;
+    box-shadow: 0 1px 2px 0 hsl(var(--primary-shadow) / 0.25);
+    transform: translateY(0) scale(1);
+    transition: transform 100ms ease-out, box-shadow 100ms ease-out, filter 150ms ease-out;
   }
   .duo-btn:active,
   .duo-btn[data-pressed="true"] {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 0 hsl(var(--primary-shadow));
+    transform: scale(0.98);
+    box-shadow: 0 1px 1px 0 hsl(var(--primary-shadow) / 0.15);
   }
-  .duo-btn-destructive { box-shadow: 0 4px 0 0 hsl(var(--destructive-shadow)); }
-  .duo-btn-destructive:active { box-shadow: 0 1px 0 0 hsl(var(--destructive-shadow)); }
-  .duo-btn-warning     { box-shadow: 0 4px 0 0 hsl(var(--warning-shadow)); }
-  .duo-btn-warning:active { box-shadow: 0 1px 0 0 hsl(var(--warning-shadow)); }
-  .duo-btn-info        { box-shadow: 0 4px 0 0 hsl(var(--info-shadow)); }
-  .duo-btn-info:active { box-shadow: 0 1px 0 0 hsl(var(--info-shadow)); }
-  .duo-btn-purple      { box-shadow: 0 4px 0 0 hsl(var(--duo-purple-shadow)); }
-  .duo-btn-purple:active { box-shadow: 0 1px 0 0 hsl(var(--duo-purple-shadow)); }
-  .duo-btn-outline { box-shadow: 0 3px 0 0 hsl(var(--border)); }
+  .duo-btn-destructive { box-shadow: 0 1px 2px 0 hsl(var(--destructive-shadow) / 0.25); }
+  .duo-btn-destructive:active { box-shadow: 0 1px 1px 0 hsl(var(--destructive-shadow) / 0.15); }
+  .duo-btn-warning     { box-shadow: 0 1px 2px 0 hsl(var(--warning-shadow) / 0.25); }
+  .duo-btn-warning:active { box-shadow: 0 1px 1px 0 hsl(var(--warning-shadow) / 0.15); }
+  .duo-btn-info        { box-shadow: 0 1px 2px 0 hsl(var(--info-shadow) / 0.25); }
+  .duo-btn-info:active { box-shadow: 0 1px 1px 0 hsl(var(--info-shadow) / 0.15); }
+  .duo-btn-purple      { box-shadow: 0 1px 2px 0 hsl(var(--duo-purple-shadow) / 0.25); }
+  .duo-btn-purple:active { box-shadow: 0 1px 1px 0 hsl(var(--duo-purple-shadow) / 0.15); }
+  .duo-btn-outline { box-shadow: 0 1px 2px 0 hsl(var(--border) / 0.5); }
   .duo-btn-outline:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 0 hsl(var(--border));
+    transform: scale(0.98);
+    box-shadow: 0 1px 1px 0 hsl(var(--border) / 0.3);
   }
 
   /* Icon-in-circle — colored circle behind a lucide icon */
