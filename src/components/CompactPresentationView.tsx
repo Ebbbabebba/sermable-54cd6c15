@@ -223,7 +223,7 @@ export const CompactPresentationView = ({
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
   const currentWordIndexRef = useRef(0);
-  const processTranscriptRef = useRef<(t: string) => void>(() => {});
+  const processTranscriptRef = useRef<(t: string, isFinal?: boolean) => void>(() => {});
   const lastProcessedInterimRef = useRef<string>("");
   const lastMatchAtRef = useRef<number>(0);
   
