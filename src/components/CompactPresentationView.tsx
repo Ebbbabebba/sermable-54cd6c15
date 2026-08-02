@@ -362,11 +362,16 @@ export const CompactPresentationView = ({
       let interimTranscript = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + " ";
+        const result = event.results[i];
+        const alts: string[] = [];
+        for (let j = 0; j < result.length; j++) {
+          alts.push(result[j].transcript);
+        }
+        const best = pickBestAlternative(alts, words, currentWordIndexRef.current);
+        if (result.isFinal) {
+          finalTranscript += best + " ";
         } else {
-          interimTranscript += transcript;
+          interimTranscript += best;
         }
       }
 
@@ -381,7 +386,7 @@ export const CompactPresentationView = ({
         if (currentWords.length > prevWords.length) {
           const toProcess = currentWords.slice(prevWords.length);
           if (toProcess.length > 0) {
-            processTranscriptRef.current(toProcess.join(" "));
+            processTranscriptRef.current(toProcess.join(" "), false);
           }
         }
         lastProcessedInterimRef.current = interimTranscript;
@@ -390,10 +395,10 @@ export const CompactPresentationView = ({
       if (finalTranscript) {
         transcriptRef.current += finalTranscript;
         // Final transcripts can contain corrections — process them too.
-        processTranscriptRef.current(finalTranscript);
+        processTranscriptRef.current(finalTranscript, true);
         lastProcessedInterimRef.current = "";
       }
-      
+
       setAudioLevel(0.8);
       lastProgressTime.current = Date.now();
     };
@@ -414,7 +419,7 @@ export const CompactPresentationView = ({
               recognition.start();
             } catch (e) {}
           }
-        }, 300);
+        }, 150);
       }
     };
 
