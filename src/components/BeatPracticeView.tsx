@@ -3308,7 +3308,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setIsSpeechReady(true);
 
               const matches: string[] = data?.matches ?? [];
-              const interim = matches[0] ?? "";
+              const interim = pickBestAlternative(matches);
               lastNativeInterim = interim;
               const combined = (nativeFinalsRef.current + " " + interim).trim();
               processTranscriptionRef.current(
