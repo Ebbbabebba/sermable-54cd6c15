@@ -1,5 +1,6 @@
 import { Slider } from "@/components/ui/slider";
 import { Pause } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   extractPauses,
   setPauseDurationInText,
