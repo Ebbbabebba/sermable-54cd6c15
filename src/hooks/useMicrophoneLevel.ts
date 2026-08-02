@@ -3,8 +3,8 @@ import { requestMicrophoneAccess } from "@/utils/microphone";
 
 const ANALYSIS_INTERVAL_MS = 150;
 const NOISE_FLOOR = 0.015;
-const TOO_QUIET_THRESHOLD = 0.035;
-const LOW_DURATION_MS = 2500;
+const TOO_QUIET_THRESHOLD = 0.025;
+const LOW_DURATION_MS = 4000;
 const SILENCE_RESET_MS = 800;
 
 export function useMicrophoneLevel(isRecording: boolean) {
