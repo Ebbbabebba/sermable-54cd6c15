@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          "DM Sans",
+          "Manrope",
           "Inter",
           "system-ui",
           "-apple-system",
@@ -23,8 +23,8 @@ export default {
           "sans-serif",
         ],
         display: [
-          "Space Grotesk",
-          "DM Sans",
+          "Sora",
+          "Manrope",
           "sans-serif",
         ],
       },

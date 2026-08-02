@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, LogOut, FileText, Settings, Menu, ArrowUpDown, MessageCircle } from "lucide-react";
+import { Plus, LogOut, Settings, Menu, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -20,8 +20,6 @@ import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
-import SleepAwareScheduling from "@/components/SleepAwareScheduling";
-import { useTheme } from "@/contexts/ThemeContext";
 import { waitForStableSession } from "@/lib/authSession";
 
 interface Speech {
@@ -42,7 +40,6 @@ const Dashboard = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
-  const [monthlySpeeches, setMonthlySpeeches] = useState(0);
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
@@ -50,7 +47,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { theme } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -199,13 +195,12 @@ const Dashboard = () => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("subscription_tier, monthly_speeches_count")
+        .select("subscription_tier")
         .eq("id", user.id)
         .single();
 
       if (profile) {
         setSubscriptionTier(profile.subscription_tier);
-        setMonthlySpeeches(profile.monthly_speeches_count);
       }
     } catch (error: any) {
       toast({
@@ -251,102 +246,80 @@ const Dashboard = () => {
       />
 
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
-        <div className="px-4 h-11 flex items-center justify-between gap-2">
-          {isMobile ? (
+        <div className="px-4 h-14 flex items-center justify-between gap-3 max-w-2xl mx-auto">
+          <span className="font-display font-bold text-lg tracking-tight">Sermable</span>
+
+          <div className="flex items-center gap-2">
             <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
               <Plus className="h-4 w-4" />
-              {t('nav.newSpeech')}
+              <span className="hidden sm:inline">{t('nav.newSpeech')}</span>
             </Button>
-          ) : (
-            <div className="w-8" />
-          )}
-          
-          {/* Desktop Navigation */}
-          {!isMobile && (
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
-                <Plus className="h-4 w-4" />
-                {t('nav.newSpeech')}
-              </Button>
-              
-              <div className="flex items-center gap-1 ml-2">
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                  subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
-                    ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 font-medium'
-                    : 'text-muted-foreground bg-secondary'
-                }`}>
-                  {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')}
-                </span>
-                
-                {subscriptionTier === 'free' && (
-                  <Button variant="apple-ghost" size="sm" onClick={handleUpgradeToPremium}>
-                    {t('nav.upgrade')}
-                  </Button>
-                )}
-              </div>
-              
-              <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
-                <Settings className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          )}
 
-          {/* Mobile Menu */}
-          {isMobile && (
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
+            {!isMobile && (
+              <>
+                <Button variant="ghost" size="icon" aria-label={t('nav.settings')} onClick={() => navigate("/settings")}>
+                  <Settings className="h-5 w-5" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent className="bg-card border-l border-border" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
-                <SheetHeader>
-                  <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-3 mt-8">
-                  <div className="pb-4 border-b border-border">
-                    <span className={`text-sm ${
-                      subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
-                        ? 'text-amber-600 dark:text-amber-400 font-medium'
-                        : 'text-muted-foreground'
-                    }`}>
-                      {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
-                    </span>
-                  </div>
-                  {subscriptionTier === 'free' && (
-                    <Button variant="apple" onClick={() => {
-                      handleUpgradeToPremium();
+                <Button variant="ghost" size="icon" aria-label={t('nav.signOut')} onClick={handleLogout}>
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            )}
+
+            {/* Mobile Menu */}
+            {isMobile && (
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label={t('nav.menu')}>
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="bg-card border-l border-border" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+                  <SheetHeader>
+                    <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-3 mt-8">
+                    <div className="pb-4 border-b border-border">
+                      <span className={`text-sm ${
+                        subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
+                          ? 'text-amber-600 dark:text-amber-400 font-medium'
+                          : 'text-muted-foreground'
+                      }`}>
+                        {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
+                      </span>
+                    </div>
+                    {subscriptionTier === 'free' && (
+                      <Button variant="apple" onClick={() => {
+                        handleUpgradeToPremium();
+                        setMobileMenuOpen(false);
+                      }}>
+                        {t('nav.upgradeToPremium')}
+                      </Button>
+                    )}
+                    <Button variant="ghost" className="justify-start" onClick={() => {
+                      navigate("/settings");
                       setMobileMenuOpen(false);
                     }}>
-                      {t('nav.upgradeToPremium')}
+                      <Settings className="h-4 w-4 mr-3" />
+                      {t('nav.settings')}
                     </Button>
-                  )}
-                  <Button variant="ghost" className="justify-start" onClick={() => {
-                    navigate("/settings");
-                    setMobileMenuOpen(false);
-                  }}>
-                    <Settings className="h-4 w-4 mr-3" />
-                    {t('nav.settings')}
-                  </Button>
-                  <Button variant="ghost" className="justify-start text-destructive" onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}>
-                    <LogOut className="h-4 w-4 mr-3" />
-                    {t('nav.signOut')}
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
+                    <Button variant="ghost" className="justify-start text-destructive" onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}>
+                      <LogOut className="h-4 w-4 mr-3" />
+                      {t('nav.signOut')}
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+          </div>
         </div>
       </header>
 
       <main className="px-4 py-6 pb-28">
-        <div className="space-y-10">
+        <div className="max-w-2xl mx-auto space-y-10">
           {/* Welcome Section - Large, clean typography */}
           <section className="animate-fade-in">
             {(() => {
@@ -379,9 +352,9 @@ const Dashboard = () => {
               
               return (
                 <>
-                  <h2 className="text-3xl font-semibold text-foreground mb-1">
+                  <h1 className="text-4xl sm:text-5xl font-display font-semibold text-foreground mb-2">
                     {greetingText}
-                  </h2>
+                  </h1>
                   <p className="text-muted-foreground text-lg">
                     {t('dashboard.continueOrStart')}
                   </p>
@@ -390,22 +363,11 @@ const Dashboard = () => {
             })()}
           </section>
 
-          {/* Sleep-Aware Scheduling removed */}
-
           {/* Review Notifications */}
           <ReviewNotifications />
 
-          {/* Ad Placeholder - Free Users */}
-          {subscriptionTier === 'free' && (
-            <Card className="bg-secondary/50 border-0">
-              <CardContent className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">{t('dashboard.adSpace')}</p>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Speeches Section */}
-          <section className="space-y-6">
+          <section className="space-y-5">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-semibold text-foreground">{t('dashboard.yourSpeeches')}</h3>
@@ -442,9 +404,9 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="flex flex-col gap-4">
                 {[1, 2, 3].map(i => (
-                  <Card key={i} className="border-0 shadow-apple-xl animate-pulse">
+                  <Card key={i} className="border border-border/60 shadow-sm animate-pulse">
                     <CardContent className="p-6 space-y-4">
                       <div className="h-5 bg-muted rounded w-3/4" />
                       <div className="h-4 bg-muted rounded w-1/2" />
@@ -455,7 +417,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : speeches.length === 0 ? (
-              <Card className="border-0 shadow-apple-xl animate-fade-in">
+              <Card className="border border-border/60 shadow-sm animate-fade-in">
                 <CardContent className="py-16 text-center">
                   <h3 className="text-xl font-semibold text-foreground mb-2">{t('dashboard.noSpeeches')}</h3>
                   <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
@@ -468,7 +430,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="flex flex-col gap-4">
                 {(() => {
                   const sortedSpeeches = [...speeches].sort((a, b) => {
                     if (sortBy === 'deadline') {

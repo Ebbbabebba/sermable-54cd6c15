@@ -236,36 +236,24 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
   return (
     <Card 
-      className="group cursor-pointer hover:shadow-apple-xl transition-all duration-300 border-0"
+      className="group cursor-pointer border border-border/60 rounded-3xl bg-card shadow-sm hover:shadow-md transition-all duration-300"
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base font-semibold truncate capitalize text-foreground">
+            <CardTitle className="font-display text-lg font-semibold truncate capitalize text-foreground">
               {speech.title}
             </CardTitle>
             <CardDescription className="text-xs mt-1">
               {format(new Date(speech.created_at), "MMM dd, yyyy")}
             </CardDescription>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/speech/${speech.id}`);
-            }}
-            title={t("speechDetail.tabs.calendar")}
-          >
-            <CalendarIcon className="h-4 w-4" />
-          </Button>
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
             isOverdue 
               ? "bg-destructive/10 text-destructive" 
               : daysRemaining === 0
-                ? "bg-orange-500/15 text-orange-600 dark:text-orange-400"
+                ? "bg-warning/15 text-warning-foreground"
                 : "bg-secondary text-muted-foreground"
           }`}>
             {isOverdue
@@ -300,7 +288,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </Popover>
 
         {isLocked && nextReviewDate && (
-          <div className="flex items-center gap-2 p-3 bg-primary/5 rounded-xl">
+          <div className="flex items-center gap-2 p-3 bg-secondary rounded-2xl">
             <Clock className="h-4 w-4 text-primary" />
             <div className="flex-1 text-xs">
               <span className="text-muted-foreground">{t('dashboard.nextPractice')} </span>
@@ -314,8 +302,8 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             <span className="text-muted-foreground">{t('dashboard.progress')}</span>
             <span className="font-medium text-foreground">{progress}%</span>
           </div>
-          <Progress value={progress} className="h-1.5" />
-        {masteryPercent !== null && (
+          <Progress value={progress} className="h-2" />
+          {masteryPercent !== null && (
             <div className="flex items-center gap-1.5 text-xs">
               <Target className="h-3 w-3 text-emerald-500" />
               <span className="text-emerald-600 dark:text-emerald-400 font-medium">
@@ -325,12 +313,12 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-          {speech.text_original.substring(0, 120)}...
+        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+          {speech.text_original.substring(0, 140)}...
         </p>
       </CardContent>
 
-      <CardFooter onClick={(e) => e.stopPropagation()}>
+      <CardFooter className="flex items-center gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="apple"
           onClick={handleCardClick}
@@ -342,8 +330,9 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </Button>
 
         <Button
-          variant="ghost"
+          variant="secondary"
           size="sm"
+          aria-label={t('settings.subscription.presentationMode', 'Presentation Mode')}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -359,7 +348,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" aria-label={t('common.delete')}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
@@ -391,7 +380,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
       {/* Presentation Mode Premium Dialog */}
       <Dialog open={showPresentationPremium} onOpenChange={setShowPresentationPremium}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-center justify-center">
               <Presentation className="h-5 w-5 text-primary" />
@@ -404,7 +393,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
               {t('practice.presentationPremiumDesc', 'Test your memory with a full run-through. Premium feature.')}
             </p>
             
-            <div className="space-y-2 bg-muted/50 rounded-xl p-4">
+            <div className="space-y-2 bg-muted/50 rounded-2xl p-4">
               <div className="flex items-center gap-2">
                 <Mic className="h-4 w-4 text-primary" />
                 <span className="text-sm">{t('practice.presentationFeature1', 'Real-time speech tracking')}</span>
