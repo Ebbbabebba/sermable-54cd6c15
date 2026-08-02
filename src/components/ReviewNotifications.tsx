@@ -88,14 +88,16 @@ const ReviewNotifications = () => {
   const grouped = Array.from(bySpeech.values());
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+    <Card className="border border-border/60 rounded-3xl bg-card shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary animate-pulse" />
+            <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary">
+              <Bell className="h-4 w-4" />
+            </div>
             <CardTitle>{t('dashboard.dueForPractice', 'Redo att öva')}</CardTitle>
           </div>
-          <Badge variant="secondary" className="ml-2">
+          <Badge variant="secondary" className="ml-2 rounded-full">
             {grouped.length}
           </Badge>
         </div>
@@ -111,7 +113,7 @@ const ReviewNotifications = () => {
             <button
               key={b.beat_id}
               onClick={() => navigate(`/practice/${b.speech_id}`)}
-              className="w-full flex items-center justify-between p-4 rounded-lg bg-card border hover:border-primary/50 transition-colors text-left"
+              className="w-full flex items-center justify-between p-4 rounded-2xl bg-secondary/60 hover:bg-secondary transition-colors text-left"
             >
               <div className="flex-1 min-w-0 mr-4">
                 <h4 className="font-semibold truncate">{b.speech_title}</h4>
@@ -120,7 +122,7 @@ const ReviewNotifications = () => {
                     {t('dashboard.beat', 'Moment')} {b.beat_order + 1}
                   </span>
                   {isOverdue ? (
-                    <Badge variant="destructive" className="text-xs">
+                    <Badge variant="destructive" className="text-xs rounded-full">
                       {t('dashboard.overdue', 'Försenad')}
                     </Badge>
                   ) : (
