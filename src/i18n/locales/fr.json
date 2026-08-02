@@ -710,7 +710,11 @@
     "step3Desc": "Vous recevez ensuite une analyse IA détaillée de votre performance.",
     "startPresentation": "Démarrer la présentation",
     "processing": "Traitement...",
-    "processingDesc": "Analyse de votre présentation"
+    "processingDesc": "Analyse de votre présentation",
+    "proximityTitle": "Restez à moins de 2 mètres du micro",
+    "proximitySubtitle": "Une distance plus courte améliore la reconnaissance vocale",
+    "moveCloser": "Rapprochez-vous",
+    "withinRange": "Bonne distance"
   },
   "subscription": {
     "premium": "Premium",

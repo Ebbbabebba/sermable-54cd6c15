@@ -710,7 +710,11 @@
     "step3Desc": "Anschließend erhältst du eine detaillierte KI-Analyse deiner Leistung.",
     "startPresentation": "Präsentation starten",
     "processing": "Verarbeitung...",
-    "processingDesc": "Präsentation wird analysiert"
+    "processingDesc": "Präsentation wird analysiert",
+    "proximityTitle": "Bleiben Sie maximal 2 Meter vom Mikrofon entfernt",
+    "proximitySubtitle": "Kleinerer Abstand ermöglicht bessere Spracherkennung",
+    "moveCloser": "Kommen Sie näher",
+    "withinRange": "Guter Abstand"
   },
   "subscription": {
     "premium": "Premium",

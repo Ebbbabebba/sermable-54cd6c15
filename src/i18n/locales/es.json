@@ -710,7 +710,11 @@
     "step3Desc": "Al terminar obtendrás un análisis detallado con IA de tu rendimiento.",
     "startPresentation": "Iniciar presentación",
     "processing": "Procesando...",
-    "processingDesc": "Analizando tu presentación"
+    "processingDesc": "Analizando tu presentación",
+    "proximityTitle": "Mantente a menos de 2 metros del micrófono",
+    "proximitySubtitle": "Menos distancia da un mejor reconocimiento de voz",
+    "moveCloser": "Acércate",
+    "withinRange": "Buena distancia"
   },
   "subscription": {
     "premium": "Premium",

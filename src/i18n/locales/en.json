@@ -969,7 +969,11 @@
     "step3Desc": "Afterwards you get a detailed AI analysis of your performance.",
     "startPresentation": "Start Presentation",
     "processing": "Processing...",
-    "processingDesc": "Analyzing your presentation"
+    "processingDesc": "Analyzing your presentation",
+    "proximityTitle": "Stay within 2 meters of the microphone",
+    "proximitySubtitle": "Closer distance gives better voice recognition",
+    "moveCloser": "Move closer",
+    "withinRange": "Good distance"
   },
   "sleepScheduling": {
     "morningRecall": "Morning Memory Test",
