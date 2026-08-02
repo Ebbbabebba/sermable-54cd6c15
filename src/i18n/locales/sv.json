@@ -990,7 +990,11 @@
     "step3Desc": "Efteråt får du en detaljerad AI-analys av din prestation.",
     "startPresentation": "Starta presentation",
     "processing": "Bearbetar...",
-    "processingDesc": "Analyserar din presentation"
+    "processingDesc": "Analyserar din presentation",
+    "proximityTitle": "Stå max 2 meter från mikrofonen",
+    "proximitySubtitle": "Närmare avstånd ger bättre röstigenkänning",
+    "moveCloser": "Kom närmare",
+    "withinRange": "Bra avstånd"
   },
   "sleepScheduling": {
     "morningRecall": "Morgontest",

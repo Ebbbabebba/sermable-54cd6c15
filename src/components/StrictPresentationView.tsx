@@ -8,6 +8,8 @@ import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 import PropCueOverlay from "@/components/PropCueOverlay";
 import { extractPropCues, getActivePropCue } from "@/utils/propCues";
+import { useMicrophoneLevel } from "@/hooks/useMicrophoneLevel";
+import { ProximityWarning } from "@/components/ProximityWarning";
 
 interface WordPerformance {
   word: string;
@@ -133,6 +135,8 @@ export const StrictPresentationView = ({
   
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
+
+  const { isTooLow } = useMicrophoneLevel(isRecording);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -594,6 +598,8 @@ export const StrictPresentationView = ({
           {isRecording ? <Square className="h-6 w-6" /> : <Circle className="h-6 w-6 fill-current" />}
         </Button>
       </div>
+
+      <ProximityWarning isVisible={isTooLow} />
 
       {/* Processing Overlay */}
       {isProcessing && (

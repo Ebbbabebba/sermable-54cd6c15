@@ -10,6 +10,8 @@ import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 import PropCueOverlay from "@/components/PropCueOverlay";
 import { extractPropCues, getActivePropCue } from "@/utils/propCues";
+import { useMicrophoneLevel } from "@/hooks/useMicrophoneLevel";
+import { ProximityWarning } from "@/components/ProximityWarning";
 
 interface WordPerformance {
   word: string;
@@ -132,6 +134,7 @@ export const CompactPresentationView = ({
   
   const haptics = useHapticFeedback({ enabled: true });
   const { t } = useTranslation();
+  const { isTooLow } = useMicrophoneLevel(isRecording);
   
   const recognitionRef = useRef<any>(null);
   const wordStartTimeRef = useRef<number>(Date.now());
@@ -621,6 +624,8 @@ export const CompactPresentationView = ({
           onToggleRecording={handleToggleRecording}
           elapsedTime={elapsedTime}
         />
+
+        <ProximityWarning isVisible={isTooLow} />
         
         {/* Processing Overlay */}
         {isProcessing && (
@@ -854,6 +859,8 @@ export const CompactPresentationView = ({
           <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
+
+      <ProximityWarning isVisible={isTooLow} />
 
       {/* Processing Overlay */}
       {isProcessing && (
