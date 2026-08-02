@@ -196,6 +196,9 @@ const SpeechDetail = () => {
                         <div className="text-xs text-muted-foreground mt-1">
                           {t(`speechDetail.strictness.${mode}Desc`)}
                         </div>
+                        <div className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
+                          {t(`speechDetail.strictness.${mode}Help`)}
+                        </div>
                       </button>
                     );
                   })}
