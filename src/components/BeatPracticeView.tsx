@@ -2099,7 +2099,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
-        pauseSpeechRecognition(900, true);
+        pauseSpeechRecognition(1600, true);
         resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
         const nextPhase = currentPhase.replace('learning', 'fading') as Phase;
@@ -2112,11 +2112,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             showCelebrationRef.current = false;
             setShowCelebration(false);
             transitionToPhase(nextPhase);
-          }, 900);
+          }, 1400);
         }, 150);
       } else {
         repetitionCountRef.current = currentRep + 1;
-        pauseSpeechRecognition(900, true);
+        pauseSpeechRecognition(1600, true);
         setCelebrationMessage(`${currentRep}/${requiredLearningReps}`);
         setShowCelebration(true);
 
@@ -2125,17 +2125,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           setRepetitionCount(repetitionCountRef.current);
           resetForNextRep(true, true);
 
-        }, 800);
+        }, 1400);
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
-      pauseSpeechRecognition(750, true);
+      pauseSpeechRecognition(1300, true);
       handleFadingCompletion(hadErrors, failedSet);
     }
   }
 
   // Handle recall mode completion - progressive fading approach
   function handleRecallCompletion(hadErrors: boolean) {
-    pauseSpeechRecognition(1200);
+    pauseSpeechRecognition(1900);
 
     const allHidden = hiddenWordIndices.size >= words.length;
 
@@ -2246,7 +2246,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
         resetForNextRep(true, true);
-      }, 1200);
+      }, 1800);
     } else if (!allHidden) {
       // Success - hide progressively more words: 3 → 4 → 5
       const wordsToHide = getWordsToHideCount(recallSuccessCount);
@@ -2275,7 +2275,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
         resetForNextRep(true, true);
-      }, 800);
+      }, 1400);
     } else {
       // All hidden and success! Count towards 2 perfect recalls
       const newCount = recallSuccessCount + 1;
@@ -2451,7 +2451,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               }
             }
           }
-        }, 1800);
+        }, 2600);
       } else {
         // Need one more successful recall with all hidden
         setRecallSuccessCount(newCount);
@@ -2461,7 +2461,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setTimeout(() => {
           setShowCelebration(false);
           resetForNextRep(true, true);
-        }, 800);
+        }, 1400);
       }
     }
   }
@@ -2469,7 +2469,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Handle pre-beat recall mode completion (recall the just-mastered beat before learning next)
   // Similar to recall mode but simpler - just need 1 successful recall with all hidden
   function handlePreBeatRecallCompletion(hadErrors: boolean) {
-    pauseSpeechRecognition(1200);
+    pauseSpeechRecognition(1900);
 
     const allHidden = hiddenWordIndices.size >= words.length;
 
@@ -2498,7 +2498,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
         resetForNextRep(true, true);
-      }, 1200);
+      }, 1800);
     } else if (!allHidden) {
       // Success but not all hidden yet - hide more words progressively 3 → 4 → 5
       const wordsToHide = Math.min(3 + preBeatRecallSuccessCount, 5);
@@ -2527,7 +2527,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         setHiddenWordIndices(newHidden);
         setHiddenWordOrder(newOrder);
         resetForNextRep(true, true);
-      }, 800);
+      }, 1400);
     } else {
       // All hidden and success! Pre-beat recall complete - now show the new beat preview
       setCelebrationMessage(t('beat_practice.recall_complete', "Ready for next beat!"));
@@ -2554,7 +2554,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // No next beat - session complete
           setSessionMode('session_complete');
         }
-      }, 1500);
+      }, 2200);
     }
   }
 
@@ -2946,7 +2946,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             transitionToPhase('beat_learning');
           }
         }
-      }, 2000);
+      }, 3500);
     }, 150);
   };
 
@@ -3083,7 +3083,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               Notification.requestPermission();
             }
           }
-        }, 2000);
+        }, 3000);
       } else {
         // Session ending: show coffee break with 10-min timer, then recall
         setCelebrationMessage(t('beat_practice.beat_complete', "Beat complete! Coffee break time."));
@@ -3121,7 +3121,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           if (!isPremium && nextUnmastered) {
             onSessionLimitReached?.();
           }
-        }, 2500);
+        }, 3200);
       }
     }
   };
