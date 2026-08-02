@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, LogOut, FileText, Settings, Menu, ArrowUpDown, MessageCircle } from "lucide-react";
+import { Plus, LogOut, Settings, Menu, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -20,8 +20,6 @@ import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
-import SleepAwareScheduling from "@/components/SleepAwareScheduling";
-import { useTheme } from "@/contexts/ThemeContext";
 import { waitForStableSession } from "@/lib/authSession";
 
 interface Speech {
@@ -42,7 +40,6 @@ const Dashboard = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
-  const [monthlySpeeches, setMonthlySpeeches] = useState(0);
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
@@ -50,7 +47,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { theme } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
