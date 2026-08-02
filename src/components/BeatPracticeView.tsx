@@ -3281,7 +3281,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             try {
               await NativeSpeech.start({
                 language: lang,
-                maxResults: 1,
+                maxResults: 5,
                 prompt: "",
                 partialResults: true,
                 popup: false,
