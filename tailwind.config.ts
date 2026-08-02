@@ -27,7 +27,7 @@ export default {
           "Manrope",
           "sans-serif",
         ],
-      }
+      },
       fontSize: {
         /* Caption: 13px */
         caption: ["0.8125rem", { lineHeight: "1.5" }],
