@@ -221,7 +221,7 @@ export const CompactPresentationView = ({
   const wrongAttempts = useRef<string[]>([]);
   const lastProgressTime = useRef<number>(Date.now());
   const restartAttemptsRef = useRef<number>(0);
-  const maxRestartAttempts = 10;
+  const maxRestartAttempts = 50;
   const currentWordIndexRef = useRef(0);
   const processTranscriptRef = useRef<(t: string, isFinal?: boolean) => void>(() => {});
   const lastProcessedInterimRef = useRef<string>("");
@@ -345,7 +345,7 @@ export const CompactPresentationView = ({
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = recognitionLang;
-    recognition.maxAlternatives = 3;
+    recognition.maxAlternatives = 5;
 
     recognition.onstart = () => {
       restartAttemptsRef.current = 0;
