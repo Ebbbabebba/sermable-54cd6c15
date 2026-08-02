@@ -3425,6 +3425,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
+        // Ask for n-best hypotheses so pickBestAlternative() can rescue words
+        // the engine ranked wrong on its first guess.
+        recognition.maxAlternatives = 5;
+
         recognition.lang = lang;
         console.log("🗣️ Speech recognition language:", recognition.lang);
 
