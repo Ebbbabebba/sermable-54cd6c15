@@ -3462,10 +3462,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (i < ignoreResultsBeforeIndexRef.current) continue;
             const res = event.results[i];
-            const chunk = res?.[0]?.transcript ?? "";
+            const alts: string[] = [];
+            for (let a = 0; a < (res?.length ?? 0) && a < 5; a++) {
+              const t = res[a]?.transcript;
+              if (t) alts.push(t);
+            }
+            const chunk = pickBestAlternative(alts);
             if (res.isFinal) runningTranscriptRef.current += chunk + " ";
             else interim += chunk + " ";
           }
+
 
           const combined = (runningTranscriptRef.current + interim).trim();
           const lastIsFinal = event.results.length
