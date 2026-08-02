@@ -624,6 +624,8 @@ export const CompactPresentationView = ({
           onToggleRecording={handleToggleRecording}
           elapsedTime={elapsedTime}
         />
+
+        <ProximityWarning isVisible={isTooLow} />
         
         {/* Processing Overlay */}
         {isProcessing && (
@@ -857,6 +859,8 @@ export const CompactPresentationView = ({
           <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
+
+      <ProximityWarning isVisible={isTooLow} />
 
       {/* Processing Overlay */}
       {isProcessing && (
