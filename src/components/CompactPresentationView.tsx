@@ -487,7 +487,7 @@ export const CompactPresentationView = ({
       // (hint shown + extra grace), move the teleprompter forward by one word
       // so the script keeps following the speaker. Mark as hesitated, never
       // as skipped/missed — Whole Speech Mode is non-punitive.
-      const AUTO_ADVANCE_AFTER = effectiveDelay + 2500;
+      const AUTO_ADVANCE_AFTER = effectiveDelay + 1200;
       if (wordDuration >= AUTO_ADVANCE_AFTER) {
         const wasPrompted = showHint?.phase === "showing";
         setWordPerformance(prev => {
