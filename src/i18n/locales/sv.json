@@ -1048,7 +1048,9 @@
       "strictDesc": "Exakt ordföljd. Bra när varje ord räknas.",
       "flow": "Flöde",
       "flowDesc": "Andemening framför exakthet. Naturligare talföring.",
-      "saved": "Sparat"
+      "saved": "Sparat",
+      "strictHelp": "Talet matchas ord för ord. Fel och överhoppade ord markeras rött direkt, tveksamheter blir gula efter 2 s. AI-analysen är sträng.",
+      "flowHelp": "Talet matchas efter innebörd. Synonymer, små avvikelser och omkastade formuleringar godkänns. Fokus ligger på tempo och naturligt flöde snarare än exakthet."
     },
     "wordCount_one": "{{count}} ord",
     "wordCount_other": "{{count}} ord",
@@ -1207,5 +1209,13 @@
     "resultIntermediate": "Medel — vi hoppar över grunderna.",
     "resultConfident": "Säker — vi går direkt till polering.",
     "done": "Klart"
+  },
+  "listenMode": {
+    "tip": "Pausa 2 s för att se nästa ord"
+  },
+  "pauses": {
+    "tipPrefix": "Tips: skriv ett fristående",
+    "tipSuffix": "var som helst i manuset för att lägga in en paus. En reglage på 1–10 s dyker upp här för varje.",
+    "title": "Pauser"
   }
 }

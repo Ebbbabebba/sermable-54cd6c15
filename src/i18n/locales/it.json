@@ -813,7 +813,9 @@
       "strictDesc": "Ordine esatto delle parole. Ideale quando ogni parola conta.",
       "flow": "Fluida",
       "flowDesc": "Significato prima dell'esattezza. Esposizione più naturale.",
-      "saved": "Salvato"
+      "saved": "Salvato",
+      "strictHelp": "Il discorso viene confrontato parola per parola. Errori e parole saltate vengono segnati subito in rosso, le esitazioni diventano gialle dopo 2 s. L'analisi AI è severa.",
+      "flowHelp": "Il discorso viene confrontato per significato. Sinonimi, piccole deviazioni e frasi riordinate sono accettati. L'attenzione è sul ritmo e sulla naturalezza più che sull'esattezza."
     }
   },
   "tour": {
@@ -1176,5 +1178,13 @@
     "resultIntermediate": "Intermedio — saltiamo le basi.",
     "resultConfident": "Sicuro — andiamo dritti alla rifinitura.",
     "done": "Fatto"
+  },
+  "listenMode": {
+    "tip": "Fai una pausa di 2 s per vedere le parole successive"
+  },
+  "pauses": {
+    "tipPrefix": "Consiglio: scrivi un",
+    "tipSuffix": "isolato in qualsiasi punto del copione per inserire una pausa. Per ognuna comparirà qui un cursore da 1 a 10 s.",
+    "title": "Pause"
   }
 }

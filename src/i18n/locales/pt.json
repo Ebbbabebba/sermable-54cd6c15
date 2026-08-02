@@ -813,7 +813,9 @@
       "strictDesc": "Ordem exata das palavras. Melhor quando cada palavra importa.",
       "flow": "Fluidez",
       "flowDesc": "Significado acima da exatidão. Entrega mais natural.",
-      "saved": "Salvo"
+      "saved": "Salvo",
+      "strictHelp": "O teu discurso é comparado palavra a palavra. Erros e palavras saltadas ficam a vermelho de imediato e as hesitações a amarelo após 2 s. A análise de IA é exigente.",
+      "flowHelp": "O teu discurso é comparado pelo significado. Sinónimos, pequenos desvios e frases reordenadas são aceites. O foco está no ritmo e na fluidez natural em vez da exatidão."
     }
   },
   "tour": {
@@ -1176,5 +1178,13 @@
     "resultIntermediate": "Intermédio — saltamos o básico.",
     "resultConfident": "Confiante — vamos direto ao polimento.",
     "done": "Concluído"
+  },
+  "listenMode": {
+    "tip": "Faz uma pausa de 2 s para ver as próximas palavras"
+  },
+  "pauses": {
+    "tipPrefix": "Dica: escreve um",
+    "tipSuffix": "isolado em qualquer parte do guião para inserir uma pausa. Aparecerá aqui um cursor de 1 a 10 s para cada uma.",
+    "title": "Pausas"
   }
 }

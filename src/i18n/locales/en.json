@@ -1027,7 +1027,9 @@
       "strictDesc": "Exact word order. Best when every word matters.",
       "flow": "Flow",
       "flowDesc": "Meaning over exactness. More natural delivery.",
-      "saved": "Saved"
+      "saved": "Saved",
+      "strictHelp": "Your speech is matched word for word. Mistakes and skipped words are marked red immediately, hesitations turn yellow after 2s. The AI analysis is demanding.",
+      "flowHelp": "Your speech is matched by meaning. Synonyms, small deviations and reordered phrases are accepted. Focus is on pace and natural flow rather than exactness."
     },
     "wordCount_one": "{{count}} word",
     "wordCount_other": "{{count}} words",
@@ -1158,5 +1160,13 @@
     "resultIntermediate": "Intermediate — we'll skip the basics.",
     "resultConfident": "Confident — straight to polishing.",
     "done": "Done"
+  },
+  "listenMode": {
+    "tip": "Pause 2s to see the next words"
+  },
+  "pauses": {
+    "tipPrefix": "Tip: type a standalone",
+    "tipSuffix": "anywhere in the script to insert a pause. A 1-10s slider appears here for each one.",
+    "title": "Pauses"
   }
 }

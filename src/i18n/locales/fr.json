@@ -813,7 +813,9 @@
       "strictDesc": "Ordre des mots exact. Idéal quand chaque mot compte.",
       "flow": "Fluidité",
       "flowDesc": "Privilégie le sens à l'exactitude. Élocution plus naturelle.",
-      "saved": "Enregistré"
+      "saved": "Enregistré",
+      "strictHelp": "Votre discours est comparé mot à mot. Les erreurs et les mots sautés sont marqués en rouge immédiatement, les hésitations passent au jaune après 2 s. L'analyse IA est exigeante.",
+      "flowHelp": "Votre discours est comparé par le sens. Les synonymes, petites variations et reformulations sont acceptés. L'accent est mis sur le rythme et la fluidité plutôt que sur l'exactitude."
     }
   },
   "tour": {
@@ -1176,5 +1178,13 @@
     "resultIntermediate": "Intermédiaire — on saute les bases.",
     "resultConfident": "Confiant — on passe directement au perfectionnement.",
     "done": "Terminé"
+  },
+  "listenMode": {
+    "tip": "Faites une pause de 2 s pour voir les mots suivants"
+  },
+  "pauses": {
+    "tipPrefix": "Astuce : tapez un",
+    "tipSuffix": "isolé n'importe où dans le script pour insérer une pause. Un curseur de 1 à 10 s apparaîtra ici pour chacune.",
+    "title": "Pauses"
   }
 }

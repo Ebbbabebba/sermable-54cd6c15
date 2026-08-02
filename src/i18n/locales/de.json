@@ -813,7 +813,9 @@
       "strictDesc": "Genaue Wortreihenfolge. Am besten, wenn jedes Wort zählt.",
       "flow": "Flüssig",
       "flowDesc": "Bedeutung über Genauigkeit. Natürlichere Darbietung.",
-      "saved": "Gespeichert"
+      "saved": "Gespeichert",
+      "strictHelp": "Deine Rede wird Wort für Wort abgeglichen. Fehler und übersprungene Wörter werden sofort rot markiert, Zögern nach 2 Sek. gelb. Die KI-Analyse ist streng.",
+      "flowHelp": "Deine Rede wird sinngemäß abgeglichen. Synonyme, kleine Abweichungen und umgestellte Formulierungen werden akzeptiert. Der Fokus liegt auf Tempo und natürlichem Fluss statt auf Exaktheit."
     }
   },
   "tour": {
@@ -1176,5 +1178,13 @@
     "resultIntermediate": "Fortgeschritten — wir überspringen die Grundlagen.",
     "resultConfident": "Sicher — wir gehen direkt zum Polieren.",
     "done": "Fertig"
+  },
+  "listenMode": {
+    "tip": "2 Sek. pausieren, um die nächsten Wörter zu sehen"
+  },
+  "pauses": {
+    "tipPrefix": "Tipp: Schreibe ein einzelnes",
+    "tipSuffix": "an beliebiger Stelle im Skript, um eine Pause einzufügen. Für jede erscheint hier ein 1–10-Sek.-Regler.",
+    "title": "Pausen"
   }
 }
