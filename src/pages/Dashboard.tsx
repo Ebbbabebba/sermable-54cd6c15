@@ -324,7 +324,7 @@ const Dashboard = () => {
       </header>
 
       <main className="px-4 py-6 pb-28">
-        <div className="space-y-10">
+        <div className="max-w-2xl mx-auto space-y-10">
           {/* Welcome Section - Large, clean typography */}
           <section className="animate-fade-in">
             {(() => {
@@ -357,9 +357,9 @@ const Dashboard = () => {
               
               return (
                 <>
-                  <h2 className="text-3xl font-semibold text-foreground mb-1">
+                  <h1 className="text-4xl sm:text-5xl font-display font-semibold text-foreground mb-2">
                     {greetingText}
-                  </h2>
+                  </h1>
                   <p className="text-muted-foreground text-lg">
                     {t('dashboard.continueOrStart')}
                   </p>
@@ -368,22 +368,11 @@ const Dashboard = () => {
             })()}
           </section>
 
-          {/* Sleep-Aware Scheduling removed */}
-
           {/* Review Notifications */}
           <ReviewNotifications />
 
-          {/* Ad Placeholder - Free Users */}
-          {subscriptionTier === 'free' && (
-            <Card className="bg-secondary/50 border-0">
-              <CardContent className="flex items-center justify-center py-8">
-                <p className="text-sm text-muted-foreground">{t('dashboard.adSpace')}</p>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Speeches Section */}
-          <section className="space-y-6">
+          <section className="space-y-5">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-semibold text-foreground">{t('dashboard.yourSpeeches')}</h3>
@@ -420,9 +409,9 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="flex flex-col gap-4">
                 {[1, 2, 3].map(i => (
-                  <Card key={i} className="border-0 shadow-apple-xl animate-pulse">
+                  <Card key={i} className="border border-border/60 shadow-sm animate-pulse">
                     <CardContent className="p-6 space-y-4">
                       <div className="h-5 bg-muted rounded w-3/4" />
                       <div className="h-4 bg-muted rounded w-1/2" />
@@ -433,7 +422,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : speeches.length === 0 ? (
-              <Card className="border-0 shadow-apple-xl animate-fade-in">
+              <Card className="border border-border/60 shadow-sm animate-fade-in">
                 <CardContent className="py-16 text-center">
                   <h3 className="text-xl font-semibold text-foreground mb-2">{t('dashboard.noSpeeches')}</h3>
                   <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
@@ -446,7 +435,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="flex flex-col gap-4">
                 {(() => {
                   const sortedSpeeches = [...speeches].sort((a, b) => {
                     if (sortBy === 'deadline') {
