@@ -2099,7 +2099,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       // Use familiarity-based required reps (2 for confident, 3 for others)
       if (currentRep >= requiredLearningReps) {
-        pauseSpeechRecognition(900, true);
+        pauseSpeechRecognition(1600, true);
         resetForNextRep(false);
         setCelebrationMessage(t('beat_practice.great_start_fading'));
         const nextPhase = currentPhase.replace('learning', 'fading') as Phase;
@@ -2116,7 +2116,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 150);
       } else {
         repetitionCountRef.current = currentRep + 1;
-        pauseSpeechRecognition(900, true);
+        pauseSpeechRecognition(1600, true);
         setCelebrationMessage(`${currentRep}/${requiredLearningReps}`);
         setShowCelebration(true);
 
@@ -2128,14 +2128,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         }, 1400);
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
-      pauseSpeechRecognition(750, true);
+      pauseSpeechRecognition(1300, true);
       handleFadingCompletion(hadErrors, failedSet);
     }
   }
 
   // Handle recall mode completion - progressive fading approach
   function handleRecallCompletion(hadErrors: boolean) {
-    pauseSpeechRecognition(1200);
+    pauseSpeechRecognition(1900);
 
     const allHidden = hiddenWordIndices.size >= words.length;
 
@@ -2469,7 +2469,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Handle pre-beat recall mode completion (recall the just-mastered beat before learning next)
   // Similar to recall mode but simpler - just need 1 successful recall with all hidden
   function handlePreBeatRecallCompletion(hadErrors: boolean) {
-    pauseSpeechRecognition(1200);
+    pauseSpeechRecognition(1900);
 
     const allHidden = hiddenWordIndices.size >= words.length;
 
