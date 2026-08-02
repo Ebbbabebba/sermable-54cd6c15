@@ -7,12 +7,15 @@
  */
 export async function requestMicrophoneAccess(
   audioConstraints: MediaTrackConstraints = {
-    sampleRate: 24000,
+    sampleRate: 48000,
     channelCount: 1,
-    echoCancellation: true,
-    noiseSuppression: true,
+    // Dictation-tuned: noise suppression / echo cancellation gate soft and
+    // distant speech and clip word onsets, which forces users to repeat words.
+    echoCancellation: false,
+    noiseSuppression: false,
     autoGainControl: true,
   }
+
 ): Promise<MediaStream> {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new MicrophoneError(

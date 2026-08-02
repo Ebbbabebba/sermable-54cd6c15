@@ -1662,6 +1662,55 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return getWordDistance(s, e) <= maxDist;
   };
 
+  // ---- N-best alternative picking -------------------------------------
+  // Speech engines regularly rank a wrong homophone first ("kär" vs "kärnan",
+  // "there" vs "their"). Instead of forcing the user to repeat the sentence we
+  // ask the engine for several alternatives and keep the one that best lines up
+  // with the words we're actually waiting for.
+  const pickBestAlternative = (alternatives: string[]): string => {
+    const alts = alternatives.map((a) => (a ?? "").trim()).filter(Boolean);
+    if (alts.length <= 1) return alts[0] ?? "";
+
+    const start = currentWordIndexRef.current;
+    const expected = words.slice(start, start + 8);
+    if (expected.length === 0) return alts[0];
+
+    const scoreAlt = (alt: string): number => {
+      const tokens = alt.split(/\s+/).filter(Boolean).slice(-8);
+      if (tokens.length === 0) return 0;
+      let score = 0;
+      let cursor = 0;
+      for (const token of tokens) {
+        for (let k = cursor; k < Math.min(expected.length, cursor + 3); k++) {
+          const isHidden = hiddenWordIndicesRef.current.has(start + k);
+          const isLenient = isEffectivelyLenientWord(start + k);
+          if (wordsMatch(token, expected[k], isHidden, isLenient)) {
+            // Reward in-order matches highest, near-order matches slightly less.
+            score += k === cursor ? 2 : 1;
+            cursor = k + 1;
+            break;
+          }
+        }
+      }
+      return score;
+    };
+
+    let best = alts[0];
+    // Bias towards the engine's own top pick — only switch when an alternative
+    // is meaningfully better, so we never trade accuracy for noise.
+    let bestScore = scoreAlt(alts[0]) + 1;
+    for (let i = 1; i < alts.length; i++) {
+      const s = scoreAlt(alts[i]);
+      if (s > bestScore) {
+        bestScore = s;
+        best = alts[i];
+      }
+    }
+    return best;
+  };
+
+
+
   // Process transcription - cursor-based
   const processTranscription = useCallback((transcript: string, isFinal: boolean, repId: number, phaseEpoch?: number) => {
     if (repId !== repetitionIdRef.current) return;
@@ -3232,7 +3281,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             try {
               await NativeSpeech.start({
                 language: lang,
-                maxResults: 1,
+                maxResults: 5,
                 prompt: "",
                 partialResults: true,
                 popup: false,
@@ -3259,7 +3308,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               setIsSpeechReady(true);
 
               const matches: string[] = data?.matches ?? [];
-              const interim = matches[0] ?? "";
+              const interim = pickBestAlternative(matches);
               lastNativeInterim = interim;
               const combined = (nativeFinalsRef.current + " " + interim).trim();
               processTranscriptionRef.current(
@@ -3350,12 +3399,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             if (navigator.mediaDevices?.getUserMedia) {
               const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
-                  echoCancellation: true,
-                  noiseSuppression: true,
+                  // Dictation-tuned capture: browser noise suppression and echo
+                  // cancellation gate quiet/distant speech and clip word onsets,
+                  // which is exactly what makes users repeat themselves. AGC
+                  // stays on so a soft voice is still lifted to a usable level.
+                  echoCancellation: false,
+                  noiseSuppression: false,
                   autoGainControl: true,
                   channelCount: 1,
-                },
+                } as MediaTrackConstraints,
               });
+
               // Release immediately — Web Speech will open its own handle, but
               // the browser remembers permission + applied processing.
               stream.getTracks().forEach((t) => t.stop());
@@ -3371,6 +3425,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
+        // Ask for n-best hypotheses so pickBestAlternative() can rescue words
+        // the engine ranked wrong on its first guess.
+        recognition.maxAlternatives = 5;
+
         recognition.lang = lang;
         console.log("🗣️ Speech recognition language:", recognition.lang);
 
@@ -3404,10 +3462,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           for (let i = event.resultIndex; i < event.results.length; i++) {
             if (i < ignoreResultsBeforeIndexRef.current) continue;
             const res = event.results[i];
-            const chunk = res?.[0]?.transcript ?? "";
+            const alts: string[] = [];
+            for (let a = 0; a < (res?.length ?? 0) && a < 5; a++) {
+              const t = res[a]?.transcript;
+              if (t) alts.push(t);
+            }
+            const chunk = pickBestAlternative(alts);
             if (res.isFinal) runningTranscriptRef.current += chunk + " ";
             else interim += chunk + " ";
           }
+
 
           const combined = (runningTranscriptRef.current + interim).trim();
           const lastIsFinal = event.results.length
