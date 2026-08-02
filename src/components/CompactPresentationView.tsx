@@ -70,10 +70,10 @@ const getRecognitionLanguage = (lang: string): string => {
 import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 
 // --- Matching tuning ---
-// Tightened from 0.5 to stop unrelated words from leapfrogging the cursor.
-const SIMILARITY_THRESHOLD = 0.72;
-// Lookahead must clear a higher bar so a stray match doesn't skip a whole phrase.
-const LOOKAHEAD_THRESHOLD = 0.78;
+// Whole Speech Mode should follow the speaker even when they speak lightly or
+// the engine is uncertain, so the bars are intentionally lower than in practice.
+const SIMILARITY_THRESHOLD = 0.62;
+const LOOKAHEAD_THRESHOLD = 0.70;
 // Only allow skipping at most 2 words at a time in normal flow.
 const LOOKAHEAD_WORDS = 2;
 // When the speaker is clearly stuck (we have multiple unmatched attempts OR they
@@ -83,7 +83,7 @@ const STUCK_LOOKAHEAD_WORDS = 6;
 const STUCK_ATTEMPTS_THRESHOLD = 2;
 const STUCK_TIME_MS = 2500;
 // Minimum time between successful matches — prevents one burst from chain-advancing.
-const MIN_WORD_DWELL_MS = 220;
+const MIN_WORD_DWELL_MS = 120;
 
 // Normalize text for comparison (Unicode-aware)
 const normalizeWord = (text: string): string => {
@@ -94,22 +94,101 @@ const normalizeWord = (text: string): string => {
     .replace(/[^\p{L}\p{N}]/gu, "");
 };
 
-// Calculate word similarity
+// Levenshtein distance for fuzzy matching of lightly/quietly spoken words.
+const levenshteinDistance = (s: string, t: string): number => {
+  const m = s.length;
+  const n = t.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const prev: number[] = Array(n + 1).fill(0);
+  const curr: number[] = Array(n + 1).fill(0);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+      curr[j] = Math.min(
+        curr[j - 1] + 1,
+        prev[j] + 1,
+        prev[j - 1] + cost
+      );
+    }
+    for (let j = 0; j <= n; j++) prev[j] = curr[j];
+  }
+  return curr[n];
+};
+
+// Calculate word similarity. Extra lenient for Whole Speech Mode so quiet or
+// clipped speech still advances the teleprompter.
 const getWordSimilarity = (word1: string, word2: string): number => {
   const w1 = normalizeWord(word1);
   const w2 = normalizeWord(word2);
   if (w1 === w2) return 1.0;
-  if (w1.length <= 2 || w2.length <= 2) return w1 === w2 ? 1.0 : 0.0;
-  
+  if (w1.length <= 2 || w2.length <= 2) {
+    // Allow a single-character slip for very short words.
+    if (w1.length === w2.length && levenshteinDistance(w1, w2) <= 1) return 0.9;
+    return w1 === w2 ? 1.0 : 0.0;
+  }
+
   const maxLen = Math.max(w1.length, w2.length);
   const minLen = Math.min(w1.length, w2.length);
-  if (minLen / maxLen >= 0.7 && (w1.startsWith(w2) || w2.startsWith(w1))) return 0.85;
-  
+
+  // Containment catches cases like "tale" vs "talet".
+  if (w1.includes(w2) || w2.includes(w1)) return 0.82;
+
+  // Prefix match with a lower ratio so clipped words (e.g. "tal" for "talet")
+  // are still accepted.
+  if (minLen / maxLen >= 0.5 && (w1.startsWith(w2) || w2.startsWith(w1))) return 0.85;
+
+  const dist = levenshteinDistance(w1, w2);
+  const levSim = Math.max(0, 1 - dist / maxLen);
+
   let matches = 0;
   for (let i = 0; i < Math.min(w1.length, w2.length); i++) {
     if (w1[i] === w2[i]) matches++;
   }
-  return matches / maxLen;
+  const prefixSim = matches / maxLen;
+
+  return Math.max(levSim, prefixSim);
+};
+
+// Pick the speech alternative that best lines up with the upcoming script words.
+const pickBestAlternative = (
+  alternatives: string[],
+  words: string[],
+  currentIndex: number
+): string => {
+  const alts = alternatives.map((a) => (a ?? "").trim()).filter(Boolean);
+  if (alts.length <= 1) return alts[0] ?? "";
+
+  const expected = words.slice(currentIndex, currentIndex + 6);
+  if (expected.length === 0) return alts[0];
+
+  let best = alts[0];
+  let bestScore = -1;
+
+  for (const alt of alts) {
+    const tokens = alt.split(/\s+/).filter(Boolean).slice(0, 6);
+    if (tokens.length === 0) continue;
+    let score = 0;
+    let cursor = 0;
+    for (const token of tokens) {
+      for (let k = cursor; k < Math.min(expected.length, cursor + 4); k++) {
+        const sim = getWordSimilarity(token, expected[k]);
+        if (sim >= SIMILARITY_THRESHOLD) {
+          score += sim * (k === cursor ? 2 : 1);
+          cursor = k + 1;
+          break;
+        }
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = alt;
+    }
+  }
+
+  return best;
 };
 
 export const CompactPresentationView = ({
