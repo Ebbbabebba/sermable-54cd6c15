@@ -136,6 +136,8 @@ export const StrictPresentationView = ({
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
 
+  const { isTooLow } = useMicrophoneLevel(isRecording);
+
   // Initialize speech recognition
   useEffect(() => {
     if (!isRecording) {
