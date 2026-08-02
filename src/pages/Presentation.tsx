@@ -12,6 +12,7 @@ import { CompactPresentationView } from "@/components/CompactPresentationView";
 import ScriptPracticeView from "@/components/ScriptPracticeView";
 import ListenMode from "@/components/ListenMode";
 import PresentationControls from "@/components/PresentationControls";
+import { ProximityGuide } from "@/components/ProximityGuide";
 
 import { AudienceOverlay } from "@/components/audience";
 import type { ViewMode } from "@/components/WearableHUD";
@@ -503,6 +504,8 @@ const Presentation = () => {
               </div>
             </div>
           </div>
+
+          <ProximityGuide />
 
           <Button
             size="xl"
