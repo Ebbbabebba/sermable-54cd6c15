@@ -3,12 +3,24 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, HelpCircle, Mic, BookOpen, Clock, BarChart3, Settings, MessageCircle, Mail, ExternalLink, Smartphone, Zap, Trophy, Shield } from "lucide-react";
-import { openMailto } from "@/lib/openMailto";
+import { ArrowLeft, HelpCircle, Mic, BookOpen, Clock, BarChart3, Settings, MessageCircle, Mail, ExternalLink, Smartphone, Zap, Trophy, Shield, Copy, Check } from "lucide-react";
+import { buildMailtoUrl, copyToClipboard, openMailto } from "@/lib/openMailto";
+import { useState } from "react";
+
+const SUPPORT_EMAIL = "support@sermable.com";
 
 const Help = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(SUPPORT_EMAIL);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
 
   const faqCategories = [
     {
@@ -172,14 +184,38 @@ const Help = () => {
             <CardDescription>{t('help.contactDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => openMailto('support@sermable.com')}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              support@sermable.com
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                asChild
+                variant="outline"
+                className="flex-1 justify-start min-w-0"
+              >
+                <a
+                  href={buildMailtoUrl(SUPPORT_EMAIL)}
+                  rel="external noopener"
+                  onClick={(e) => {
+                    // In the in-app webview / preview iframe the default mailto
+                    // navigation is often blocked — handle it explicitly.
+                    e.preventDefault();
+                    openMailto(SUPPORT_EMAIL);
+                  }}
+                >
+                  <Mail className="h-4 w-4 mr-2 shrink-0" />
+                  <span className="truncate">{SUPPORT_EMAIL}</span>
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Copy email address"
+                onClick={handleCopy}
+              >
+                {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            {copied && (
+              <p className="text-xs text-primary mt-2">{SUPPORT_EMAIL} copied</p>
+            )}
             <p className="text-xs text-muted-foreground mt-3">
               We typically respond within 24–48 hours on business days (Monday–Friday, CET).
               Account, billing and subscription issues are prioritised.
