@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
@@ -81,7 +82,8 @@ export const useSubscription = () => {
     };
   }, []);
 
-  const isPremium = tier !== 'free';
+  // Payments are disabled — everyone gets full access.
+  const isPremium = FORCE_PREMIUM || tier !== 'free';
   const isStudent = tier === 'student';
   const isEnterprise = tier === 'enterprise';
 
