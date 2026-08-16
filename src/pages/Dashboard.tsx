@@ -20,6 +20,7 @@ import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
+import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { waitForStableSession } from "@/lib/authSession";
 
 interface Speech {
@@ -39,7 +40,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>(FORCE_PREMIUM ? 'regular' : 'free');
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
@@ -200,7 +201,7 @@ const Dashboard = () => {
         .single();
 
       if (profile) {
-        setSubscriptionTier(profile.subscription_tier);
+        setSubscriptionTier(effectiveTier(profile.subscription_tier));
       }
     } catch (error: any) {
       toast({

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/contexts/ThemeContext";
 import type { Database } from "@/integrations/supabase/types";
+import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { openMailto } from "@/lib/openMailto";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
@@ -58,7 +59,7 @@ const Settings = () => {
   const [bestStreak, setBestStreak] = useState(0);
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
-  const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');
+  const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(FORCE_PREMIUM ? 'regular' : 'free');
   
   const [practiceStartHour, setPracticeStartHour] = useState(8);
   const [practiceEndHour, setPracticeEndHour] = useState(22);
@@ -105,7 +106,7 @@ const Settings = () => {
         if (profile) {
           if (profile.practice_start_hour !== null) setPracticeStartHour(profile.practice_start_hour);
           if (profile.practice_end_hour !== null) setPracticeEndHour(profile.practice_end_hour);
-          if (profile.subscription_tier) setSubscriptionTier(profile.subscription_tier);
+          if (profile.subscription_tier) setSubscriptionTier(effectiveTier(profile.subscription_tier) as SubscriptionTier);
           if (typeof profile.instant_due_notifications === "boolean") setInstantDueNotifications(profile.instant_due_notifications);
         }
 
