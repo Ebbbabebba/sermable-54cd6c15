@@ -10,11 +10,16 @@ import { useToast } from "@/hooks/use-toast";
 import { isIOSNativeApp, triggerNativeIAP, getNativePrices, installPurchaseListener } from "@/lib/iosBridge";
 import { getLocalizedFallbackPrices } from "@/lib/localizedPricing";
 import type { Database } from "@/integrations/supabase/types";
+import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
 const PaymentSettings = () => {
   const navigate = useNavigate();
+  // Payments are disabled — no plans to show.
+  useEffect(() => {
+    if (FORCE_PREMIUM) navigate("/settings", { replace: true });
+  }, [navigate]);
   const { t } = useTranslation();
   const { toast } = useToast();
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>('free');

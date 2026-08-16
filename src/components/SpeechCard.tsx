@@ -6,6 +6,7 @@ import { format, differenceInDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -53,7 +54,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const [masteryPercent, setMasteryPercent] = useState<number | null>(null);
   
   // Check if this is the only speech for a free user
-  const isOnlyFreeSpeech = subscriptionTier === 'free' && totalSpeeches === 1;
+  const isOnlyFreeSpeech = !FORCE_PREMIUM && subscriptionTier === 'free' && totalSpeeches === 1;
   
   const goalDate = new Date(speech.goal_date);
   const today = new Date();
@@ -336,7 +337,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (subscriptionTier === 'free') {
+            if (!FORCE_PREMIUM && subscriptionTier === 'free') {
               setShowPresentationPremium(true);
             } else {
               navigate(`/presentation/${speech.id}`);

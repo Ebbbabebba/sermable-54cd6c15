@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -110,6 +111,7 @@ const Practice = () => {
   const [sessionResults, setSessionResults] = useState<SessionResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>(() => {
+    if (FORCE_PREMIUM) return 'regular';
     try {
       const v = localStorage.getItem('sermable.subscription_tier');
       if (v === 'free' || v === 'student' || v === 'regular' || v === 'enterprise') return v;
@@ -213,7 +215,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           .single();
 
         if (profile) {
-          setSubscriptionTier(profile.subscription_tier);
+          setSubscriptionTier(effectiveTier(profile.subscription_tier));
           try { localStorage.setItem('sermable.subscription_tier', profile.subscription_tier); } catch {}
           setSkillLevel((profile.skill_level || 'beginner') as 'beginner' | 'intermediate' | 'advanced');
         }

@@ -9,6 +9,7 @@ import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/
 
 import { PauseSlidersList } from "@/components/PauseSlidersList";
 import { supabase } from "@/integrations/supabase/client";
+import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2,
@@ -124,7 +125,7 @@ const UploadSpeechDialog = ({
           .eq("id", user.id)
           .single();
         if (profile) {
-          setUserTier(profile.subscription_tier);
+          setUserTier(FORCE_PREMIUM ? 'regular' : profile.subscription_tier);
           const { data: limitData } = await supabase.rpc("get_word_limit", {
             p_user_id: user.id,
           });
@@ -132,7 +133,7 @@ const UploadSpeechDialog = ({
           const { data: canCreate } = await supabase.rpc("can_create_speech", {
             p_user_id: user.id,
           });
-          if (canCreate !== null) setCanCreateSpeech(canCreate);
+          if (canCreate !== null) setCanCreateSpeech(FORCE_PREMIUM ? true : canCreate);
         }
       } catch (err) {
         console.error("Error loading user limits:", err);

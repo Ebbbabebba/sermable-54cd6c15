@@ -14,6 +14,7 @@ import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
+import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
@@ -363,7 +364,7 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
 
 const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
-  const isPremium = subscriptionTier !== 'free';
+  const isPremium = FORCE_PREMIUM || subscriptionTier !== 'free';
   
   // Full speech modal state
   const [showFullSpeechModal, setShowFullSpeechModal] = useState(false);
@@ -4170,7 +4171,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </Button>
           
           {/* Edit script — exits the session and opens the inline edit dialog */}
-          {onEditScript && !showCelebration && subscriptionTier !== 'free' && (
+          {onEditScript && !showCelebration && (FORCE_PREMIUM || subscriptionTier !== 'free') && (
             <Button
               variant="ghost"
               size="icon"

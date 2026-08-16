@@ -20,6 +20,7 @@ import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
+import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { waitForStableSession } from "@/lib/authSession";
 
 interface Speech {
@@ -39,7 +40,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>('free');
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'student' | 'regular' | 'enterprise'>(FORCE_PREMIUM ? 'regular' : 'free');
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
@@ -200,7 +201,7 @@ const Dashboard = () => {
         .single();
 
       if (profile) {
-        setSubscriptionTier(profile.subscription_tier);
+        setSubscriptionTier(effectiveTier(profile.subscription_tier));
       }
     } catch (error: any) {
       toast({
@@ -279,22 +280,26 @@ const Dashboard = () => {
                     <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col gap-3 mt-8">
-                    <div className="pb-4 border-b border-border">
-                      <span className={`text-sm ${
-                        subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
-                          ? 'text-amber-600 dark:text-amber-400 font-medium'
-                          : 'text-muted-foreground'
-                      }`}>
-                        {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
-                      </span>
-                    </div>
-                    {subscriptionTier === 'free' && (
-                      <Button variant="apple" onClick={() => {
-                        handleUpgradeToPremium();
-                        setMobileMenuOpen(false);
-                      }}>
-                        {t('nav.upgradeToPremium')}
-                      </Button>
+                    {!FORCE_PREMIUM && (
+                      <>
+                        <div className="pb-4 border-b border-border">
+                          <span className={`text-sm ${
+                            subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
+                              ? 'text-amber-600 dark:text-amber-400 font-medium'
+                              : 'text-muted-foreground'
+                          }`}>
+                            {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
+                          </span>
+                        </div>
+                        {subscriptionTier === 'free' && (
+                          <Button variant="apple" onClick={() => {
+                            handleUpgradeToPremium();
+                            setMobileMenuOpen(false);
+                          }}>
+                            {t('nav.upgradeToPremium')}
+                          </Button>
+                        )}
+                      </>
                     )}
                     <Button variant="ghost" className="justify-start" onClick={() => {
                       navigate("/settings");
