@@ -250,28 +250,27 @@ const Settings = () => {
       </header>
 
       <div className="pb-12 overflow-y-auto" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 3rem)' }}>
-        {/* Subscription */}
-        <SectionLabel>{t('settings.payment.title')}</SectionLabel>
-        <Section>
-          <Row onClick={() => navigate("/settings/payment")} last>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <CreditCard className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <div>
-                <span className="text-sm font-medium">{isPremium ? t('settings.payment.managePlan') : t('settings.payment.viewPlans')}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {isPremium && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium">
-                  Premium
-                </span>
-              )}
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </Row>
-        </Section>
+        {/* Subscription — hidden while payments are disabled */}
+        {!FORCE_PREMIUM && (
+          <>
+            <SectionLabel>{t('settings.payment.title')}</SectionLabel>
+            <Section>
+              <Row onClick={() => navigate("/settings/payment")} last>
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                    <CreditCard className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium">{isPremium ? t('settings.payment.managePlan') : t('settings.payment.viewPlans')}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </Row>
+            </Section>
+          </>
+        )}
 
         {/* Appearance */}
         <SectionLabel>{t('settings.appearance.title')}</SectionLabel>

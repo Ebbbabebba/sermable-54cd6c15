@@ -280,22 +280,26 @@ const Dashboard = () => {
                     <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col gap-3 mt-8">
-                    <div className="pb-4 border-b border-border">
-                      <span className={`text-sm ${
-                        subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
-                          ? 'text-amber-600 dark:text-amber-400 font-medium'
-                          : 'text-muted-foreground'
-                      }`}>
-                        {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
-                      </span>
-                    </div>
-                    {subscriptionTier === 'free' && (
-                      <Button variant="apple" onClick={() => {
-                        handleUpgradeToPremium();
-                        setMobileMenuOpen(false);
-                      }}>
-                        {t('nav.upgradeToPremium')}
-                      </Button>
+                    {!FORCE_PREMIUM && (
+                      <>
+                        <div className="pb-4 border-b border-border">
+                          <span className={`text-sm ${
+                            subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
+                              ? 'text-amber-600 dark:text-amber-400 font-medium'
+                              : 'text-muted-foreground'
+                          }`}>
+                            {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
+                          </span>
+                        </div>
+                        {subscriptionTier === 'free' && (
+                          <Button variant="apple" onClick={() => {
+                            handleUpgradeToPremium();
+                            setMobileMenuOpen(false);
+                          }}>
+                            {t('nav.upgradeToPremium')}
+                          </Button>
+                        )}
+                      </>
                     )}
                     <Button variant="ghost" className="justify-start" onClick={() => {
                       navigate("/settings");
