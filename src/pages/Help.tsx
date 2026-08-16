@@ -3,12 +3,24 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, HelpCircle, Mic, BookOpen, Clock, BarChart3, Settings, MessageCircle, Mail, ExternalLink, Smartphone, Zap, Trophy, Shield } from "lucide-react";
-import { openMailto } from "@/lib/openMailto";
+import { ArrowLeft, HelpCircle, Mic, BookOpen, Clock, BarChart3, Settings, MessageCircle, Mail, ExternalLink, Smartphone, Zap, Trophy, Shield, Copy, Check } from "lucide-react";
+import { buildMailtoUrl, copyToClipboard, openMailto } from "@/lib/openMailto";
+import { useState } from "react";
+
+const SUPPORT_EMAIL = "support@sermable.com";
 
 const Help = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(SUPPORT_EMAIL);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
 
   const faqCategories = [
     {
