@@ -454,6 +454,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const triggeredPausesRef = useRef<Set<number>>(new Set());
   const postPauseNoHesitationIndicesRef = useRef<Set<number>>(new Set());
   const pauseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Allows the speaker to cut a planned pause short: as soon as the word that
+  // follows the `-` marker is heard, the countdown ends and we advance.
+  const pauseSkipRef = useRef<{
+    nextWord: string;
+    startedAt: number;
+    baselineTokens: number | null;
+    finish: () => void;
+  } | null>(null);
+
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
