@@ -851,7 +851,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const pauseIdx = currentWordIndex;
 
     const finishPause = () => {
+      pauseSkipRef.current = null;
+      if (pauseTimerRef.current) {
+        clearInterval(pauseTimerRef.current);
+        pauseTimerRef.current = null;
+      }
       setActivePause(null);
+
       const nextSpoken = new Set(spokenIndicesRef.current);
       nextSpoken.add(pauseIdx);
       spokenIndicesRef.current = nextSpoken;
