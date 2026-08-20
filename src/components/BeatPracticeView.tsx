@@ -1688,6 +1688,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return getWordDistance(s, e) <= maxDist;
   };
 
+  // While a planned pause (`-`) counts down, listen for the word that follows it.
+  // If the speaker starts early we end the countdown immediately instead of
+  // forcing them to wait out the full timer.
+  const maybeSkipPauseFromTranscript = (text: string) => {
+    const pending = pauseSkipRef.current;
+    if (!pending) return;
+    const tokens = (text ?? "").split(/\s+/).filter(Boolean);
+    if (pending.baselineTokens === null) {
+      pending.baselineTokens = tokens.length;
+      return;
+    }
+    // Ignore the very first 250ms — trailing audio from the previous word.
+    if (Date.now() - pending.startedAt < 250) return;
+    const fresh = tokens.slice(pending.baselineTokens);
+    if (fresh.length === 0) return;
+    const matched = fresh
+      .slice(-3)
+      .some((token) => wordsMatch(token, pending.nextWord, false, true));
+    if (matched) {
+      pauseSkipRef.current = null;
+      pending.finish();
+    }
+  };
+
+
   // ---- N-best alternative picking -------------------------------------
   // Speech engines regularly rank a wrong homophone first ("kär" vs "kärnan",
   // "there" vs "their"). Instead of forcing the user to repeat the sentence we
