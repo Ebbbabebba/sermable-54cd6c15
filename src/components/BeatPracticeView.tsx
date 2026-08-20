@@ -3492,7 +3492,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           if (showCelebrationRef.current) return;
+          if (pauseSkipRef.current) {
+            let early = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const t = event.results[i]?.[0]?.transcript;
+              if (t) early += t + " ";
+            }
+            maybeSkipPauseFromTranscript(early);
+          }
           if (Date.now() < ignoreResultsUntilRef.current) return;
+
           if (
             ignoreResultsBeforeIndexRef.current > 0 &&
             event.results.length <= ignoreResultsBeforeIndexRef.current
