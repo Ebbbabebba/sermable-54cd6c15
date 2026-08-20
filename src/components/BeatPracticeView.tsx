@@ -840,9 +840,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   useEffect(() => {
     if (!isRecording) return;
     if (!pauseWordMeta.has(currentWordIndex)) return;
-    if (triggeredPausesRef.current.has(currentWordIndex)) return;
+    const alreadyTriggered = triggeredPausesRef.current.has(currentWordIndex);
     triggeredPausesRef.current.add(currentWordIndex);
-    const dur = pauseWordMeta.get(currentWordIndex) ?? 0;
+    // If this marker already ran once (cursor bounced back onto it), never
+    // re-run the countdown — skip it instantly so the speaker can't get stuck.
+    const dur = alreadyTriggered ? 0 : (pauseWordMeta.get(currentWordIndex) ?? 0);
+
     const pauseIdx = currentWordIndex;
 
     const finishPause = () => {
