@@ -2199,8 +2199,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
       pauseSpeechRecognition(1300, true);
-      // Random little audience of animals — only for a clean, script-free run.
-      if (!hadErrors && hiddenWordIndicesRef.current.size > 0 && Math.random() < 0.35) {
+      // Random little audience of animals — only for a clean, script-free run,
+      // and never during the very first sentence of a beat.
+      const isFirstSentence = phase === 'sentence_1_fading';
+      if (!isFirstSentence && !hadErrors && hiddenWordIndicesRef.current.size > 0 && Math.random() < 0.35) {
         setShowAnimalAudience(true);
       }
       handleFadingCompletion(hadErrors, failedSet);
