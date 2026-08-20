@@ -1897,9 +1897,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
       if (advancedTo >= words.length) break;
-      // If we've landed on a pause token, stop matching and let the
+      // Untimed `-` markers are transparent: consume them silently so the
+      // speaker is pushed straight on to the next word.
+      while (pauseWordMeta.has(advancedTo) && (pauseWordMeta.get(advancedTo) ?? 0) <= 0) {
+        newSpoken.add(advancedTo);
+        triggeredPausesRef.current.add(advancedTo);
+        advancedTo += 1;
+      }
+      if (advancedTo >= words.length) break;
+      // If we've landed on a TIMED pause token, stop matching and let the
       // pause-trigger effect handle the countdown + auto-advance.
       if (pauseWordMeta.has(advancedTo)) break;
+
 
       // True if advancing past `advancedTo` would cross into a new sentence
       const crossesSentenceBoundary = (from: number, to: number) => {
