@@ -1004,7 +1004,7 @@ const ScriptPracticeView = ({
               >
                 <div className="text-center space-y-4">
                   <Trophy className="h-12 w-12 text-primary mx-auto" />
-                  <h2 className="text-2xl font-bold">{t('script.sessionComplete', 'Session Complete!')}</h2>
+                  <h2 className="text-2xl font-bold">{t('script.sessionComplete', 'Lesson Complete!')}</h2>
                   <div>
                     <span className={`text-5xl font-bold ${getScoreColor(overallScore)}`}>
                       {overallScore}%

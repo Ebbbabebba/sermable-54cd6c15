@@ -1405,7 +1405,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           toast({
             title: "Processing...",
-            description: "AI is analyzing your practice session",
+            description: "AI is analyzing your practice lesson",
           });
 
           // Use stored speech language directly - no re-detection
