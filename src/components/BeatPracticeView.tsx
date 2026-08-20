@@ -3351,7 +3351,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             "partialResults" as any,
             (data: any) => {
               if (showCelebrationRef.current) return;
+              if (pauseSkipRef.current) {
+                const early: string[] = data?.matches ?? [];
+                maybeSkipPauseFromTranscript(early.join(" "));
+              }
               if (Date.now() < ignoreResultsUntilRef.current) return;
+
               if (Date.now() >= ignoreResultIndexCutoffUntilRef.current) {
                 ignoreResultIndexCutoffUntilRef.current = 0;
               }
