@@ -1873,7 +1873,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           if (/[.!?]$/.test(words[j] ?? '')) { crosses = true; break; }
         }
         if (crosses) break;
-        if (pauseWordMeta.has(expectedStart + k - 1)) break;
+        if ((pauseWordMeta.get(expectedStart + k - 1) ?? 0) > 0) break;
         const mergedExpected = words.slice(expectedStart, expectedStart + k).join('');
         const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedStart);
         const expectedIsLenient = isEffectivelyLenientWord(expectedStart);
@@ -1953,7 +1953,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
         // Never jump over a planned pause — the pause overlay must fire.
         const pauseInRange = (from: number, to: number) => {
-          for (let k = from; k <= to; k++) if (pauseWordMeta.has(k)) return true;
+          for (let k = from; k <= to; k++) if ((pauseWordMeta.get(k) ?? 0) > 0) return true;
           return false;
         };
 
