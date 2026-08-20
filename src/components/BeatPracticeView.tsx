@@ -900,7 +900,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     pauseSpeechRecognition(dur);
     if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
     const startedAt = Date.now();
+    // Arm early-exit: saying the word right after the `-` ends the pause now.
+    const nextWord = wordsRef.current?.[pauseIdx + 1];
+    pauseSkipRef.current = nextWord
+      ? { nextWord, startedAt, baselineTokens: null, finish: finishPause }
+      : null;
     pauseTimerRef.current = setInterval(() => {
+
       const elapsedMs = Date.now() - startedAt;
       const remainingMs = Math.max(0, dur - elapsedMs);
       if (remainingMs <= 0) {
