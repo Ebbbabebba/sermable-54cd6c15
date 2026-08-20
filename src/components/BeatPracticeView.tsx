@@ -28,6 +28,7 @@ import {
 } from "@/lib/speechWarmup";
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
+import AnimalAudience from "./AnimalAudience";
 import PropCueOverlay from "./PropCueOverlay";
 import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/propCues";
 import { scheduleNextReview } from "@/lib/scheduleNextReview";
@@ -459,6 +460,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeechReady, setIsSpeechReady] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  // Occasional Duolingo-style animal audience that cheers when a sentence is
+  // mastered without the script.
+  const [showAnimalAudience, setShowAnimalAudience] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   const { toast } = useToast();
   
@@ -2195,6 +2199,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
       pauseSpeechRecognition(1300, true);
+      // Random little audience of animals — only for a clean, script-free run.
+      if (!hadErrors && hiddenWordIndicesRef.current.size > 0 && Math.random() < 0.35) {
+        setShowAnimalAudience(true);
+      }
       handleFadingCompletion(hadErrors, failedSet);
     }
   }
@@ -4165,6 +4173,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   return (
     <div className="flex flex-col h-full bg-background">
+      {showAnimalAudience && (
+        <AnimalAudience onDone={() => setShowAnimalAudience(false)} />
+      )}
       <PauseCountdownOverlay
         remainingSeconds={activePause?.remainingSeconds ?? null}
         totalSeconds={activePause?.totalSeconds ?? 1}
