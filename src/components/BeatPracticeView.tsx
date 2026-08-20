@@ -744,7 +744,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     words.forEach((w, i) => {
       const match = w.match(PAUSE_TOKEN_RE);
       if (match) {
-        const seconds = match[1] ? parseInt(match[1], 10) : 2;
+        // A bare `-` (no duration configured) is NOT a timed pause — it is
+        // just a breath marker. It must never block the speaker: we skip it
+        // instantly so the next spoken word advances the cursor.
+        const seconds = match[1] ? parseInt(match[1], 10) : 0;
         const clamped = Math.max(0, Math.min(10, seconds));
         m.set(i, clamped * 1000);
       }
@@ -752,6 +755,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return m;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [words]);
+
 
   useEffect(() => {
     wordsLengthRef.current = words.length;
