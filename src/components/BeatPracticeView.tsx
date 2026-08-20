@@ -744,7 +744,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     words.forEach((w, i) => {
       const match = w.match(PAUSE_TOKEN_RE);
       if (match) {
-        const seconds = match[1] ? parseInt(match[1], 10) : 2;
+        // A bare `-` (no duration configured) is NOT a timed pause — it is
+        // just a breath marker. It must never block the speaker: we skip it
+        // instantly so the next spoken word advances the cursor.
+        const seconds = match[1] ? parseInt(match[1], 10) : 0;
         const clamped = Math.max(0, Math.min(10, seconds));
         m.set(i, clamped * 1000);
       }
@@ -752,6 +755,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return m;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [words]);
+
 
   useEffect(() => {
     wordsLengthRef.current = words.length;
@@ -836,9 +840,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   useEffect(() => {
     if (!isRecording) return;
     if (!pauseWordMeta.has(currentWordIndex)) return;
-    if (triggeredPausesRef.current.has(currentWordIndex)) return;
+    const alreadyTriggered = triggeredPausesRef.current.has(currentWordIndex);
     triggeredPausesRef.current.add(currentWordIndex);
-    const dur = pauseWordMeta.get(currentWordIndex) ?? 0;
+    // If this marker already ran once (cursor bounced back onto it), never
+    // re-run the countdown — skip it instantly so the speaker can't get stuck.
+    const dur = alreadyTriggered ? 0 : (pauseWordMeta.get(currentWordIndex) ?? 0);
+
     const pauseIdx = currentWordIndex;
 
     const finishPause = () => {
@@ -1866,7 +1873,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           if (/[.!?]$/.test(words[j] ?? '')) { crosses = true; break; }
         }
         if (crosses) break;
-        if (pauseWordMeta.has(expectedStart + k - 1)) break;
+        if ((pauseWordMeta.get(expectedStart + k - 1) ?? 0) > 0) break;
         const mergedExpected = words.slice(expectedStart, expectedStart + k).join('');
         const expectedIsHidden = hiddenWordIndicesRef.current.has(expectedStart);
         const expectedIsLenient = isEffectivelyLenientWord(expectedStart);
@@ -1890,9 +1897,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     for (let rawOffset = 0; rawOffset < newWords.length; rawOffset++) {
       const absoluteRawIndex = startIdx + rawOffset;
       if (advancedTo >= words.length) break;
-      // If we've landed on a pause token, stop matching and let the
+      // Untimed `-` markers are transparent: consume them silently so the
+      // speaker is pushed straight on to the next word.
+      while (pauseWordMeta.has(advancedTo) && (pauseWordMeta.get(advancedTo) ?? 0) <= 0) {
+        newSpoken.add(advancedTo);
+        triggeredPausesRef.current.add(advancedTo);
+        advancedTo += 1;
+      }
+      if (advancedTo >= words.length) break;
+      // If we've landed on a TIMED pause token, stop matching and let the
       // pause-trigger effect handle the countdown + auto-advance.
       if (pauseWordMeta.has(advancedTo)) break;
+
 
       // True if advancing past `advancedTo` would cross into a new sentence
       const crossesSentenceBoundary = (from: number, to: number) => {
@@ -1937,7 +1953,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
         // Never jump over a planned pause — the pause overlay must fire.
         const pauseInRange = (from: number, to: number) => {
-          for (let k = from; k <= to; k++) if (pauseWordMeta.has(k)) return true;
+          for (let k = from; k <= to; k++) if ((pauseWordMeta.get(k) ?? 0) > 0) return true;
           return false;
         };
 
