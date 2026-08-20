@@ -4114,7 +4114,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         <h2 className="text-2xl font-bold">
           {allMastered 
             ? t('beat_practice.all_completed', "All beats completed!")
-            : t('beat_practice.session_complete', "Session Complete!")}
+            : t('beat_practice.session_complete', "Lesson Complete!")}
         </h2>
         <p className="text-muted-foreground max-w-md">
           {allMastered 
