@@ -454,6 +454,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const triggeredPausesRef = useRef<Set<number>>(new Set());
   const postPauseNoHesitationIndicesRef = useRef<Set<number>>(new Set());
   const pauseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Allows the speaker to cut a planned pause short: as soon as the word that
+  // follows the `-` marker is heard, the countdown ends and we advance.
+  const pauseSkipRef = useRef<{
+    nextWord: string;
+    startedAt: number;
+    baselineTokens: number | null;
+    finish: () => void;
+  } | null>(null);
+
   
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -529,6 +538,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const hesitatedIndicesRef = useRef<Set<number>>(new Set());
   const missedIndicesRef = useRef<Set<number>>(new Set());
   const wordsLengthRef = useRef(0);
+  const wordsRef = useRef<string[]>([]);
+
   const showCelebrationRef = useRef(false);
   const processTranscriptionRef = useRef<
     (transcript: string, isFinal: boolean, repId: number, phaseEpoch?: number) => void
@@ -755,6 +766,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   useEffect(() => {
     wordsLengthRef.current = words.length;
+    wordsRef.current = words;
+
     // Detect lenient words (proper nouns, difficult names) whenever text changes
     const detected = detectLenientWords(words);
     setLenientWordIndices(detected);
@@ -842,7 +855,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const pauseIdx = currentWordIndex;
 
     const finishPause = () => {
+      pauseSkipRef.current = null;
+      if (pauseTimerRef.current) {
+        clearInterval(pauseTimerRef.current);
+        pauseTimerRef.current = null;
+      }
       setActivePause(null);
+
       const nextSpoken = new Set(spokenIndicesRef.current);
       nextSpoken.add(pauseIdx);
       spokenIndicesRef.current = nextSpoken;
@@ -885,7 +904,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     pauseSpeechRecognition(dur);
     if (pauseTimerRef.current) clearInterval(pauseTimerRef.current);
     const startedAt = Date.now();
+    // Arm early-exit: saying the word right after the `-` ends the pause now.
+    const nextWord = wordsRef.current?.[pauseIdx + 1];
+    pauseSkipRef.current = nextWord
+      ? { nextWord, startedAt, baselineTokens: null, finish: finishPause }
+      : null;
     pauseTimerRef.current = setInterval(() => {
+
       const elapsedMs = Date.now() - startedAt;
       const remainingMs = Math.max(0, dur - elapsedMs);
       if (remainingMs <= 0) {
@@ -1662,6 +1687,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const maxDist = e.length <= 6 ? 1 : e.length <= 10 ? 2 : 3;
     return getWordDistance(s, e) <= maxDist;
   };
+
+  // While a planned pause (`-`) counts down, listen for the word that follows it.
+  // If the speaker starts early we end the countdown immediately instead of
+  // forcing them to wait out the full timer.
+  const maybeSkipPauseFromTranscript = (text: string) => {
+    const pending = pauseSkipRef.current;
+    if (!pending) return;
+    const tokens = (text ?? "").split(/\s+/).filter(Boolean);
+    if (pending.baselineTokens === null) {
+      pending.baselineTokens = tokens.length;
+      return;
+    }
+    // Ignore the very first 250ms — trailing audio from the previous word.
+    if (Date.now() - pending.startedAt < 250) return;
+    const fresh = tokens.slice(pending.baselineTokens);
+    if (fresh.length === 0) return;
+    const matched = fresh
+      .slice(-3)
+      .some((token) => wordsMatch(token, pending.nextWord, false, true));
+    if (matched) {
+      pauseSkipRef.current = null;
+      pending.finish();
+    }
+  };
+
 
   // ---- N-best alternative picking -------------------------------------
   // Speech engines regularly rank a wrong homophone first ("kär" vs "kärnan",
@@ -3301,7 +3351,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             "partialResults" as any,
             (data: any) => {
               if (showCelebrationRef.current) return;
+              if (pauseSkipRef.current) {
+                const early: string[] = data?.matches ?? [];
+                maybeSkipPauseFromTranscript(early.join(" "));
+              }
               if (Date.now() < ignoreResultsUntilRef.current) return;
+
               if (Date.now() >= ignoreResultIndexCutoffUntilRef.current) {
                 ignoreResultIndexCutoffUntilRef.current = 0;
               }
@@ -3437,7 +3492,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           if (showCelebrationRef.current) return;
+          if (pauseSkipRef.current) {
+            let early = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const t = event.results[i]?.[0]?.transcript;
+              if (t) early += t + " ";
+            }
+            maybeSkipPauseFromTranscript(early);
+          }
           if (Date.now() < ignoreResultsUntilRef.current) return;
+
           if (
             ignoreResultsBeforeIndexRef.current > 0 &&
             event.results.length <= ignoreResultsBeforeIndexRef.current
