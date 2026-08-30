@@ -440,7 +440,10 @@
     "premiumFeature3": "Discorsi illimitati",
     "sessionCompleteTitle": "Lezione odierna completata!",
     "sessionCompleteDesc": "Ottimo lavoro! Il tuo cervello ha bisogno di tempo per consolidare ciò che hai imparato. Torna più tardi per una migliore ritenzione.",
-    "restHelpsMemory": "Il riposo aiuta il consolidamento della memoria"
+    "restHelpsMemory": "Il riposo aiuta il consolidamento della memoria",
+    "markWords": "Contrassegna parole",
+    "markWordsHint": "Tocca le parole per nasconderle o mostrarle",
+    "backToText": "Torna al testo"
   },
   "settings": {
     "title": "Impostazioni",

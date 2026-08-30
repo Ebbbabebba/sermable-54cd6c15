@@ -464,7 +464,10 @@
       "inMinutes": "in {{minutes}} minute",
       "inMinutesPlural": "in {{minutes}} minutes",
       "inLessThanMinute": "in less than a minute"
-    }
+    },
+    "markWords": "Mark words",
+    "markWordsHint": "Tap words to hide or show them",
+    "backToText": "Back to text"
   },
   "settings": {
     "title": "Settings",
