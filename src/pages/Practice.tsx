@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon, Highlighter } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -123,6 +123,76 @@ const Practice = () => {
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isEditingScript, setIsEditingScript] = useState(false);
   const [editedScriptText, setEditedScriptText] = useState("");
+  const [isMarkingWords, setIsMarkingWords] = useState(false);
+
+  // Tap-to-mark mode: split script into tappable word chips. Tapping a chip
+  // toggles [brackets] around it (hide/show word) without text selection.
+  interface MarkingChip {
+    start: number; // index into raw token array
+    end: number;
+    label: string;
+    bracketed: boolean;
+    disabled: boolean; // stage directions (…) and pause tokens are not markable
+  }
+
+  const getMarkingChips = (): MarkingChip[] => {
+    const raw = editedScriptText.split(/(\s+)/);
+    const chips: MarkingChip[] = [];
+    for (let i = 0; i < raw.length; i++) {
+      const tok = raw[i];
+      if (!tok.trim()) continue;
+      // Pause token — not markable
+      if (/^-(\d{1,2})?s?$/.test(tok)) {
+        chips.push({ start: i, end: i, label: tok, bracketed: false, disabled: true });
+        continue;
+      }
+      // Stage direction group ( ... ) — not markable
+      if (tok.startsWith('(')) {
+        let j = i;
+        const parts = [tok];
+        while (!raw[j].includes(')') && j + 1 < raw.length) {
+          j++;
+          if (raw[j].trim()) parts.push(raw[j]);
+        }
+        chips.push({ start: i, end: j, label: parts.join(' '), bracketed: false, disabled: true });
+        i = j;
+        continue;
+      }
+      // Bracket group [ ... ] — may span multiple words
+      if (tok.startsWith('[')) {
+        let j = i;
+        const parts = [tok];
+        while (!raw[j].includes(']') && j + 1 < raw.length) {
+          j++;
+          if (raw[j].trim()) parts.push(raw[j]);
+        }
+        const closed = raw[j].includes(']');
+        chips.push({
+          start: i,
+          end: j,
+          label: parts.join(' ').replace(/^\[/, '').replace(/\]$/, ''),
+          bracketed: closed,
+          disabled: !closed,
+        });
+        i = j;
+        continue;
+      }
+      chips.push({ start: i, end: i, label: tok, bracketed: false, disabled: false });
+    }
+    return chips;
+  };
+
+  const toggleMarkingChip = (chip: MarkingChip) => {
+    const raw = editedScriptText.split(/(\s+)/);
+    if (chip.bracketed) {
+      raw[chip.start] = raw[chip.start].replace(/^\[/, '');
+      raw[chip.end] = raw[chip.end].replace(/\]$/, '');
+    } else {
+      raw[chip.start] = '[' + raw[chip.start];
+      raw[chip.end] = raw[chip.end] + ']';
+    }
+    setEditedScriptText(raw.join(''));
+  };
   const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
@@ -2477,12 +2547,52 @@ const [liveTranscription, setLiveTranscription] = useState("");
               {t('practice.editScriptDesc')}
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={editedScriptText}
-            onChange={(e) => setEditedScriptText(e.target.value)}
-            className="min-h-[300px] font-mono text-sm"
-            placeholder={t('practice.enterSpeechText')}
-          />
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <p className="text-xs text-muted-foreground">
+              {isMarkingWords ? t('practice.markWordsHint', 'Tap words to hide or show them') : ''}
+            </p>
+            <Button
+              type="button"
+              variant={isMarkingWords ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsMarkingWords(v => !v)}
+              className="shrink-0"
+            >
+              <Highlighter className="h-4 w-4 mr-1.5" />
+              {isMarkingWords
+                ? t('practice.backToText', 'Back to text')
+                : t('practice.markWords', 'Mark words')}
+            </Button>
+          </div>
+          {isMarkingWords ? (
+            <div className="min-h-[300px] max-h-[300px] overflow-y-auto rounded-md border border-input bg-background p-3 flex flex-wrap gap-1.5 content-start">
+              {getMarkingChips().map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={chip.disabled}
+                  onClick={() => toggleMarkingChip(chip)}
+                  className={
+                    "px-2 py-1 rounded-md text-sm transition-colors " +
+                    (chip.disabled
+                      ? "text-muted-foreground/50 italic cursor-default"
+                      : chip.bracketed
+                        ? "bg-primary/15 text-primary ring-1 ring-primary/40 font-medium"
+                        : "bg-muted hover:bg-muted/60 text-foreground")
+                  }
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <Textarea
+              value={editedScriptText}
+              onChange={(e) => setEditedScriptText(e.target.value)}
+              className="min-h-[300px] font-mono text-sm"
+              placeholder={t('practice.enterSpeechText')}
+            />
+          )}
           <div className="mt-3">
             <PauseSlidersList
               text={editedScriptText}
