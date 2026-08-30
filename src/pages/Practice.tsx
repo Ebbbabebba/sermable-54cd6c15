@@ -2547,12 +2547,52 @@ const [liveTranscription, setLiveTranscription] = useState("");
               {t('practice.editScriptDesc')}
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={editedScriptText}
-            onChange={(e) => setEditedScriptText(e.target.value)}
-            className="min-h-[300px] font-mono text-sm"
-            placeholder={t('practice.enterSpeechText')}
-          />
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <p className="text-xs text-muted-foreground">
+              {isMarkingWords ? t('practice.markWordsHint', 'Tap words to hide or show them') : ''}
+            </p>
+            <Button
+              type="button"
+              variant={isMarkingWords ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsMarkingWords(v => !v)}
+              className="shrink-0"
+            >
+              <Highlighter className="h-4 w-4 mr-1.5" />
+              {isMarkingWords
+                ? t('practice.backToText', 'Back to text')
+                : t('practice.markWords', 'Mark words')}
+            </Button>
+          </div>
+          {isMarkingWords ? (
+            <div className="min-h-[300px] max-h-[300px] overflow-y-auto rounded-md border border-input bg-background p-3 flex flex-wrap gap-1.5 content-start">
+              {getMarkingChips().map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={chip.disabled}
+                  onClick={() => toggleMarkingChip(chip)}
+                  className={
+                    "px-2 py-1 rounded-md text-sm transition-colors " +
+                    (chip.disabled
+                      ? "text-muted-foreground/50 italic cursor-default"
+                      : chip.bracketed
+                        ? "bg-primary/15 text-primary ring-1 ring-primary/40 font-medium"
+                        : "bg-muted hover:bg-muted/60 text-foreground")
+                  }
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <Textarea
+              value={editedScriptText}
+              onChange={(e) => setEditedScriptText(e.target.value)}
+              className="min-h-[300px] font-mono text-sm"
+              placeholder={t('practice.enterSpeechText')}
+            />
+          )}
           <div className="mt-3">
             <PauseSlidersList
               text={editedScriptText}
