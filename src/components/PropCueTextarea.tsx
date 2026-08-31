@@ -97,13 +97,6 @@ const PropCueTextarea = ({
       setEditing(false);
       return;
     }
-    // Don't allow selection that crosses an existing cue marker
-    const selectedText = value.slice(start, end);
-    if (/\{\{|\}\}/.test(selectedText)) {
-      setSel(null);
-      setPos(null);
-      return;
-    }
     setSel({ start, end });
     // Position the floating button just above the textarea, aligned roughly
     // with the selection's vertical position — clamped to viewport so it
