@@ -31,6 +31,7 @@ import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 import AnimalAudience from "./AnimalAudience";
 import PropCueOverlay from "./PropCueOverlay";
 import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/propCues";
+import { getKeywordIndices } from "@/utils/keywordExtraction";
 import { scheduleNextReview } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 
@@ -182,6 +183,7 @@ interface BeatPracticeViewProps {
   speechId: string;
   subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
   fullSpeechText?: string; // Full speech text for "Show Whole Speech" modal
+  learningMode?: string | null; // 'word_by_word' (default) or 'general_overview'
   onComplete?: () => void;
   onExit?: () => void;
   onSessionLimitReached?: () => void; // Called when free user hits daily limit
@@ -363,7 +365,7 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = FORCE_PREMIUM || subscriptionTier !== 'free';
   
@@ -737,6 +739,34 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [propCues]);
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+
+  // ---- General overview mode -------------------------------------------
+  // In overview mode only content-bearing KEYWORDS (names, numbers, longer
+  // non-stopwords) are hidden and must be recalled; filler words stay visible
+  // as support text, and matching is relaxed so the speaker can paraphrase.
+  const isOverviewMode = learningMode === 'general_overview';
+  const isOverviewModeRef = useRef(isOverviewMode);
+  useEffect(() => {
+    isOverviewModeRef.current = isOverviewMode;
+  }, [isOverviewMode]);
+  const keywordIndices = useMemo(
+    () => (isOverviewMode ? getKeywordIndices(words, COMMON_WORDS) : new Set<number>()),
+    [words, isOverviewMode]
+  );
+  const keywordIndicesRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    keywordIndicesRef.current = keywordIndices;
+  }, [keywordIndices]);
+
+  // "All hidden" means every KEYWORD is hidden in overview mode (non-keywords
+  // are never hidden), and every word in word-by-word mode.
+  const isAllTargetHidden = (hidden: Set<number>): boolean => {
+    if (!isOverviewModeRef.current) return hidden.size >= words.length;
+    const kw = keywordIndicesRef.current;
+    if (kw.size === 0) return true;
+    for (const i of kw) if (!hidden.has(i)) return false;
+    return true;
+  };
 
   useLayoutEffect(() => {
     phaseTransitionPendingRenderRef.current = false;
@@ -1432,7 +1462,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Effect to reset hidden words when changing recall beat
   // Gap words (COMMON_WORDS) are always pre-hidden from the start
   useEffect(() => {
-    if (sessionMode === 'recall' && words.length > 0) {
+    // Overview mode: gap words are support text and stay visible — only
+    // keywords are ever hidden, so skip the recall pre-hide of gap words.
+    if (sessionMode === 'recall' && words.length > 0 && !isOverviewModeRef.current) {
       const preHidden = new Set<number>();
       const preHiddenOrder: number[] = [];
       words.forEach((w, i) => {
@@ -1451,11 +1483,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Protected words (failed/hesitated) are hidden LAST
   const getNextWordToHide = useCallback((currentHidden: Set<number>, protectedSet?: Set<number>): number | null => {
     const protected_ = protectedSet ?? protectedWordIndices;
-    
+
+    // Overview mode: only keyword indices are eligible for hiding — the rest
+    // of the text remains visible as support for free retelling.
+    const hideEligible = (i: number) =>
+      !isOverviewModeRef.current || keywordIndicesRef.current.has(i);
+
     // First pass: only consider non-protected visible words
     const nonProtectedVisible = words
       .map((_, i) => i)
-      .filter(i => !currentHidden.has(i) && !protected_.has(i));
+      .filter(i => !currentHidden.has(i) && !protected_.has(i) && hideEligible(i));
 
     // Identify sentence-start indices — these are fragile to hide because the
     // first word of a sentence is the most error-prone for speech recognition.
@@ -1491,7 +1528,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Second pass: all non-protected words are hidden, now hide protected words
     const protectedVisible = words
       .map((_, i) => i)
-      .filter(i => !currentHidden.has(i) && protected_.has(i));
+      .filter(i => !currentHidden.has(i) && protected_.has(i) && hideEligible(i));
     
     if (protectedVisible.length === 0) return null;
     
@@ -1547,7 +1584,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // FLOW mode should be a little more forgiving, but not “name-level” lenient.
     // Treating every hidden word as lenient allowed weak first-letter matches to
     // cascade through whole sentences/sessions.
-    const isFlowRelaxedHidden = practiceStrictness === 'flow' && isHidden && !isLenient;
+    // Overview mode reuses flow-level tolerance: paraphrasing is expected, so
+    // hidden keywords accept pronunciation/wording variance.
+    const isFlowRelaxedHidden = (practiceStrictness === 'flow' || isOverviewModeRef.current) && isHidden && !isLenient;
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
@@ -2213,7 +2252,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   function handleRecallCompletion(hadErrors: boolean) {
     pauseSpeechRecognition(1900);
 
-    const allHidden = hiddenWordIndices.size >= words.length;
+    const allHidden = isAllTargetHidden(hiddenWordIndices);
 
     if (hadErrors) {
       // Failed recall: reveal missed/hesitated words and retry the same visibility.
@@ -2547,7 +2586,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   function handlePreBeatRecallCompletion(hadErrors: boolean) {
     pauseSpeechRecognition(1900);
 
-    const allHidden = hiddenWordIndices.size >= words.length;
+    const allHidden = isAllTargetHidden(hiddenWordIndices);
 
     if (hadErrors) {
       // Failed: reveal failed words, reset progress, retry same visibility.
@@ -2641,7 +2680,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Key behavior: only hide more words after a clean repetition.
   // Failed words stay visible and become "protected" - they disappear LAST
   function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
-    const allHidden = hiddenWordIndices.size >= words.length;
+    const allHidden = isAllTargetHidden(hiddenWordIndices);
 
     if (!allHidden) {
       let newHidden = new Set(hiddenWordIndices);
@@ -2763,6 +2802,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allHidden = new Set<number>();
     const newOrder = [...hiddenWordOrder];
     for (let i = 0; i < words.length; i++) {
+      // Overview mode: only keywords are hidden — support text stays visible.
+      if (isOverviewModeRef.current && !keywordIndicesRef.current.has(i)) continue;
       allHidden.add(i);
       if (!hiddenWordIndicesRef.current.has(i)) newOrder.push(i);
     }

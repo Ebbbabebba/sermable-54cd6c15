@@ -1068,19 +1068,18 @@ const Choice = ({
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-    whileHover={{ scale: 1.015 }}
-    whileTap={{ scale: 0.98 }}
+    whileTap={{ scale: 0.97 }}
     className={cn(
-      "w-full text-left p-4 rounded-2xl border transition-colors flex items-start gap-3",
+      "w-full text-left px-5 py-4 rounded-2xl border-2 transition-colors flex items-center gap-4",
       active
-        ? "border-primary bg-primary/10 ring-2 ring-primary/30 shadow-md"
-        : "border-border bg-card hover:border-primary/40 hover:bg-accent/40"
+        ? "border-primary bg-primary/5"
+        : "border-border bg-card hover:border-primary/40"
     )}
   >
     {icon && (
       <div
         className={cn(
-          "shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+          "shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-colors",
           active
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground"
@@ -1095,15 +1094,22 @@ const Choice = ({
         {description}
       </div>
     </div>
-    {active && (
-      <motion.div
-        initial={{ scale: 0, rotate: -90 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 18 }}
-      >
-        <Check className="w-5 h-5 text-primary shrink-0 mt-1" strokeWidth={3} />
-      </motion.div>
-    )}
+    <div
+      className={cn(
+        "shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+        active ? "border-primary bg-primary" : "border-border"
+      )}
+    >
+      {active && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 20 }}
+        >
+          <Check className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={3.5} />
+        </motion.div>
+      )}
+    </div>
   </motion.button>
 );
 
