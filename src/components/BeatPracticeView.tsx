@@ -2252,7 +2252,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   function handleRecallCompletion(hadErrors: boolean) {
     pauseSpeechRecognition(1900);
 
-    const allHidden = hiddenWordIndices.size >= words.length;
+    const allHidden = isAllTargetHidden(hiddenWordIndices);
 
     if (hadErrors) {
       // Failed recall: reveal missed/hesitated words and retry the same visibility.
