@@ -103,7 +103,7 @@ const PropCueTextarea = ({
     // never sticks out on narrow (mobile / iPhone) screens.
     const rect = el.getBoundingClientRect();
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight || "20");
-    const before = value.slice(0, start);
+    const before = displayValue.slice(0, start);
     const lineIdx = (before.match(/\n/g) || []).length;
     const scrollTop = el.scrollTop;
     const top = rect.top + lineIdx * lineHeight - scrollTop - 40;
@@ -129,11 +129,11 @@ const PropCueTextarea = ({
     if (!sel) return;
     const cue = cueDraft.trim();
     if (!cue) return;
-    const before = value.slice(0, sel.start);
-    const inside = value.slice(sel.start, sel.end);
-    const after = value.slice(sel.end);
-    const next = `${before}{{${cue}}}${inside}{{/}}${after}`;
-    onChange(next);
+    // Selection offsets refer to the clean (displayed) text — translate to
+    // word indices and wrap in the raw text instead.
+    const indices = wordIndicesInRange(displayValue, sel.start, sel.end);
+    if (indices.length === 0) return;
+    onChange(applyPropCueToIndices(value, indices, cue));
     setEditing(false);
     setCueDraft("");
     setSel(null);
@@ -149,8 +149,8 @@ const PropCueTextarea = ({
       <div className="relative">
         <Textarea
           ref={taRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={displayValue}
+          onChange={(e) => handlePlainChange(e.target.value)}
           onSelect={updateSelection}
           onMouseUp={updateSelection}
           onKeyUp={updateSelection}
