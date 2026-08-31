@@ -47,6 +47,45 @@ const PropCueTextarea = ({
   const [cueDraft, setCueDraft] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  /** What the user sees: markers are hidden, only real words are shown. */
+  const displayValue = stripPropCueMarkers(value);
+
+  /** Word indices covered by a character range in the *clean* text. */
+  const wordIndicesInRange = (clean: string, start: number, end: number) => {
+    const out: number[] = [];
+    const re = /\S+/g;
+    let m: RegExpExecArray | null;
+    let idx = 0;
+    while ((m = re.exec(clean)) !== null) {
+      const s = m.index;
+      const e = s + m[0].length;
+      if (e > start && s < end) out.push(idx);
+      idx += 1;
+    }
+    return out;
+  };
+
+  /**
+   * The user edits plain text — re-attach existing cues afterwards by word
+   * index so the markers never leak into the visible field.
+   */
+  const handlePlainChange = (nextClean: string) => {
+    const { cues } = extractPropCues(value);
+    if (cues.length === 0) {
+      onChange(nextClean);
+      return;
+    }
+    const wordCount = nextClean.split(/\s+/).filter(Boolean).length;
+    let raw = nextClean;
+    for (const c of cues) {
+      if (c.endWordIndex >= wordCount) continue;
+      const indices: number[] = [];
+      for (let i = c.startWordIndex; i <= c.endWordIndex; i++) indices.push(i);
+      raw = applyPropCueToIndices(raw, indices, c.cue);
+    }
+    onChange(raw);
+  };
+
   const updateSelection = () => {
     const el = taRef.current;
     if (!el) return;
