@@ -31,6 +31,7 @@ import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
 import AnimalAudience from "./AnimalAudience";
 import PropCueOverlay from "./PropCueOverlay";
 import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/propCues";
+import { getKeywordIndices } from "@/utils/keywordExtraction";
 import { scheduleNextReview } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 
@@ -182,6 +183,7 @@ interface BeatPracticeViewProps {
   speechId: string;
   subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
   fullSpeechText?: string; // Full speech text for "Show Whole Speech" modal
+  learningMode?: string | null; // 'word_by_word' (default) or 'general_overview'
   onComplete?: () => void;
   onExit?: () => void;
   onSessionLimitReached?: () => void; // Called when free user hits daily limit
@@ -363,7 +365,7 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = FORCE_PREMIUM || subscriptionTier !== 'free';
   
@@ -737,6 +739,34 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [propCues]);
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+
+  // ---- General overview mode -------------------------------------------
+  // In overview mode only content-bearing KEYWORDS (names, numbers, longer
+  // non-stopwords) are hidden and must be recalled; filler words stay visible
+  // as support text, and matching is relaxed so the speaker can paraphrase.
+  const isOverviewMode = learningMode === 'general_overview';
+  const isOverviewModeRef = useRef(isOverviewMode);
+  useEffect(() => {
+    isOverviewModeRef.current = isOverviewMode;
+  }, [isOverviewMode]);
+  const keywordIndices = useMemo(
+    () => (isOverviewMode ? getKeywordIndices(words, COMMON_WORDS) : new Set<number>()),
+    [words, isOverviewMode]
+  );
+  const keywordIndicesRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    keywordIndicesRef.current = keywordIndices;
+  }, [keywordIndices]);
+
+  // "All hidden" means every KEYWORD is hidden in overview mode (non-keywords
+  // are never hidden), and every word in word-by-word mode.
+  const isAllTargetHidden = (hidden: Set<number>): boolean => {
+    if (!isOverviewModeRef.current) return hidden.size >= words.length;
+    const kw = keywordIndicesRef.current;
+    if (kw.size === 0) return true;
+    for (const i of kw) if (!hidden.has(i)) return false;
+    return true;
+  };
 
   useLayoutEffect(() => {
     phaseTransitionPendingRenderRef.current = false;
