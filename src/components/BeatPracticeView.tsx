@@ -1462,7 +1462,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Effect to reset hidden words when changing recall beat
   // Gap words (COMMON_WORDS) are always pre-hidden from the start
   useEffect(() => {
-    if (sessionMode === 'recall' && words.length > 0) {
+    // Overview mode: gap words are support text and stay visible — only
+    // keywords are ever hidden, so skip the recall pre-hide of gap words.
+    if (sessionMode === 'recall' && words.length > 0 && !isOverviewModeRef.current) {
       const preHidden = new Set<number>();
       const preHiddenOrder: number[] = [];
       words.forEach((w, i) => {
@@ -1481,11 +1483,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Protected words (failed/hesitated) are hidden LAST
   const getNextWordToHide = useCallback((currentHidden: Set<number>, protectedSet?: Set<number>): number | null => {
     const protected_ = protectedSet ?? protectedWordIndices;
-    
+
+    // Overview mode: only keyword indices are eligible for hiding — the rest
+    // of the text remains visible as support for free retelling.
+    const hideEligible = (i: number) =>
+      !isOverviewModeRef.current || keywordIndicesRef.current.has(i);
+
     // First pass: only consider non-protected visible words
     const nonProtectedVisible = words
       .map((_, i) => i)
-      .filter(i => !currentHidden.has(i) && !protected_.has(i));
+      .filter(i => !currentHidden.has(i) && !protected_.has(i) && hideEligible(i));
 
     // Identify sentence-start indices — these are fragile to hide because the
     // first word of a sentence is the most error-prone for speech recognition.
