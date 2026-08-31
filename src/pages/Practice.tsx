@@ -36,6 +36,7 @@ import KnowledgeTestDialog from "@/components/KnowledgeTestDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
 import { PauseSlidersList } from "@/components/PauseSlidersList";
+import PropCueTextarea from "@/components/PropCueTextarea";
 import { Slider } from "@/components/ui/slider";
 import {
   getHesitationThresholdMs,
