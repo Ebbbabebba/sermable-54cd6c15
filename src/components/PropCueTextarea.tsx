@@ -8,6 +8,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import PropCueWordPicker from "@/components/PropCueWordPicker";
 import { Hand } from "lucide-react";
+import {
+  stripPropCueMarkers,
+  extractPropCues,
+  applyPropCueToIndices,
+} from "@/utils/propCues";
 
 interface PropCueTextareaProps {
   value: string;
@@ -42,6 +47,45 @@ const PropCueTextarea = ({
   const [cueDraft, setCueDraft] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  /** What the user sees: markers are hidden, only real words are shown. */
+  const displayValue = stripPropCueMarkers(value);
+
+  /** Word indices covered by a character range in the *clean* text. */
+  const wordIndicesInRange = (clean: string, start: number, end: number) => {
+    const out: number[] = [];
+    const re = /\S+/g;
+    let m: RegExpExecArray | null;
+    let idx = 0;
+    while ((m = re.exec(clean)) !== null) {
+      const s = m.index;
+      const e = s + m[0].length;
+      if (e > start && s < end) out.push(idx);
+      idx += 1;
+    }
+    return out;
+  };
+
+  /**
+   * The user edits plain text — re-attach existing cues afterwards by word
+   * index so the markers never leak into the visible field.
+   */
+  const handlePlainChange = (nextClean: string) => {
+    const { cues } = extractPropCues(value);
+    if (cues.length === 0) {
+      onChange(nextClean);
+      return;
+    }
+    const wordCount = nextClean.split(/\s+/).filter(Boolean).length;
+    let raw = nextClean;
+    for (const c of cues) {
+      if (c.endWordIndex >= wordCount) continue;
+      const indices: number[] = [];
+      for (let i = c.startWordIndex; i <= c.endWordIndex; i++) indices.push(i);
+      raw = applyPropCueToIndices(raw, indices, c.cue);
+    }
+    onChange(raw);
+  };
+
   const updateSelection = () => {
     const el = taRef.current;
     if (!el) return;
@@ -53,20 +97,13 @@ const PropCueTextarea = ({
       setEditing(false);
       return;
     }
-    // Don't allow selection that crosses an existing cue marker
-    const selectedText = value.slice(start, end);
-    if (/\{\{|\}\}/.test(selectedText)) {
-      setSel(null);
-      setPos(null);
-      return;
-    }
     setSel({ start, end });
     // Position the floating button just above the textarea, aligned roughly
     // with the selection's vertical position — clamped to viewport so it
     // never sticks out on narrow (mobile / iPhone) screens.
     const rect = el.getBoundingClientRect();
     const lineHeight = parseFloat(getComputedStyle(el).lineHeight || "20");
-    const before = value.slice(0, start);
+    const before = displayValue.slice(0, start);
     const lineIdx = (before.match(/\n/g) || []).length;
     const scrollTop = el.scrollTop;
     const top = rect.top + lineIdx * lineHeight - scrollTop - 40;
@@ -92,11 +129,11 @@ const PropCueTextarea = ({
     if (!sel) return;
     const cue = cueDraft.trim();
     if (!cue) return;
-    const before = value.slice(0, sel.start);
-    const inside = value.slice(sel.start, sel.end);
-    const after = value.slice(sel.end);
-    const next = `${before}{{${cue}}}${inside}{{/}}${after}`;
-    onChange(next);
+    // Selection offsets refer to the clean (displayed) text — translate to
+    // word indices and wrap in the raw text instead.
+    const indices = wordIndicesInRange(displayValue, sel.start, sel.end);
+    if (indices.length === 0) return;
+    onChange(applyPropCueToIndices(value, indices, cue));
     setEditing(false);
     setCueDraft("");
     setSel(null);
@@ -112,8 +149,8 @@ const PropCueTextarea = ({
       <div className="relative">
         <Textarea
           ref={taRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={displayValue}
+          onChange={(e) => handlePlainChange(e.target.value)}
           onSelect={updateSelection}
           onMouseUp={updateSelection}
           onKeyUp={updateSelection}
@@ -234,7 +271,7 @@ const PropCueTextarea = ({
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1.5 px-1">
-              "{value.slice(sel.start, sel.end)}"
+              "{displayValue.slice(sel.start, sel.end)}"
             </p>
           </motion.div>
         )}
