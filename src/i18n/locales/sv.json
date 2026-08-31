@@ -465,10 +465,7 @@
       "inMinutes": "om {{minutes}} minut",
       "inMinutesPlural": "om {{minutes}} minuter",
       "inLessThanMinute": "om mindre än en minut"
-    },
-    "markWords": "Markera ord",
-    "markWordsHint": "Tryck på ord för att dölja eller visa dem",
-    "backToText": "Tillbaka till text"
+    }
   },
   "settings": {
     "title": "Inställningar",

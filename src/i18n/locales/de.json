@@ -440,10 +440,7 @@
     "premiumFeature3": "Unbegrenzte Reden",
     "sessionCompleteTitle": "Heutige Lektion abgeschlossen!",
     "sessionCompleteDesc": "Großartige Arbeit! Ihr Gehirn braucht Zeit, um das Gelernte zu festigen. Kommen Sie später wieder, um eine bessere Behaltensleistung zu erzielen.",
-    "restHelpsMemory": "Ruhe hilft der Gedächtniskonsolidierung",
-    "markWords": "Wörter markieren",
-    "markWordsHint": "Tippe auf Wörter, um sie auszublenden oder einzublenden",
-    "backToText": "Zurück zum Text"
+    "restHelpsMemory": "Ruhe hilft der Gedächtniskonsolidierung"
   },
   "settings": {
     "title": "Einstellungen",
