@@ -210,14 +210,15 @@ const PropCueTextarea = ({
         </AnimatePresence>
       </div>
 
-      {/* Tap-to-tag picker (touch friendly alternative to text selection) */}
+      {/* Tap-to-tag picker (touch friendly alternative to text selection) — inline toggle, no popup */}
       <Button
         type="button"
-        variant="outline"
+        variant={pickerOpen ? "secondary" : "outline"}
         size="sm"
         disabled={disabled || !value.trim()}
-        onClick={() => setPickerOpen(true)}
+        onClick={() => setPickerOpen((v) => !v)}
         className="gap-1.5 rounded-full"
+        aria-expanded={pickerOpen}
       >
         <Hand className="h-4 w-4" />
         {t("upload.propCue.pickerButton", "Mark words by tapping")}
