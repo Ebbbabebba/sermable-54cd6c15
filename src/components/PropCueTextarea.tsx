@@ -271,7 +271,7 @@ const PropCueTextarea = ({
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1.5 px-1">
-              "{value.slice(sel.start, sel.end)}"
+              "{displayValue.slice(sel.start, sel.end)}"
             </p>
           </motion.div>
         )}
