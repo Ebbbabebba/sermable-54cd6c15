@@ -2802,6 +2802,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allHidden = new Set<number>();
     const newOrder = [...hiddenWordOrder];
     for (let i = 0; i < words.length; i++) {
+      // Overview mode: only keywords are hidden — support text stays visible.
+      if (isOverviewModeRef.current && !keywordIndicesRef.current.has(i)) continue;
       allHidden.add(i);
       if (!hiddenWordIndicesRef.current.has(i)) newOrder.push(i);
     }
