@@ -1429,6 +1429,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               language: speechLanguage,
               skillLevel: skillLevel,
               strictness: (speech as any)?.practice_strictness ?? 'strict',
+              learningMode: speech?.learning_mode ?? 'word_by_word',
             },
             headers: {
               Authorization: `Bearer ${session.access_token}`
@@ -1994,6 +1995,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             speechId={speech.id}
             subscriptionTier={subscriptionTier}
             fullSpeechText={speech.text_original}
+            learningMode={speech.learning_mode}
             onComplete={async () => {
               setIsPracticing(false);
               // Ensure schedule is written with future date, then reload

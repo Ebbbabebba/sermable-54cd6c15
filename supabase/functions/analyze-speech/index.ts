@@ -144,8 +144,9 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
-    const { audio, originalText, speechId, userTier, language, skillLevel, strictness } = await req.json();
+    const { audio, originalText, speechId, userTier, language, skillLevel, strictness, learningMode } = await req.json();
     const gradingMode: 'strict' | 'flow' = strictness === 'flow' ? 'flow' : 'strict';
+    const isOverviewMode = learningMode === 'general_overview';
     
     // Verify user owns the speech they're analyzing and get familiarity level
     const { data: speech, error: speechError } = await supabase
@@ -248,7 +249,9 @@ serve(async (req) => {
     // Step 2: Use AI to analyze the speech and identify issues
     console.log('Analyzing speech patterns...');
     
-    const flowGuidance = gradingMode === 'flow'
+    const flowGuidance = isOverviewMode
+      ? `\n\nGRADING MODE: GENERAL OVERVIEW (keyword coverage). The speaker is practicing FREE RETELLING, not verbatim memorization. Grade ONLY coverage of key content: important nouns, names, numbers, and core ideas. Accept paraphrasing, synonyms, reordered sentences, and the speaker's own wording as fully correct. NEVER penalize for missing or different filler/connector words, different grammar forms, or rephrased clauses. A key point counts as covered if its meaning is conveyed in any wording. Accuracy = percentage of key ideas/keywords covered. In the analysis feedback, frame everything around which key points were covered or missed, never around exact wording.`
+      : gradingMode === 'flow'
       ? `\n\nGRADING MODE: FLOW (semantic). Prioritize MEANING and KEY CONTENT over exact word order or phrasing. Accept paraphrasing, reordered clauses, and synonyms as long as the core message and main keywords are conveyed. Only mark as missed if a key idea or anchor word is genuinely skipped. Be MORE generous on accuracy than strict mode.`
       : `\n\nGRADING MODE: STRICT (verbatim). Compare word-for-word. Reward exact phrasing.`;
 
