@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkle, X, Check, Lightbulb } from "lucide-react";
+import { Sparkle, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -239,24 +239,6 @@ const PropCueTextarea = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Pro-tip */}
-      <div
-        className="flex items-start gap-2 text-xs rounded-lg px-3 py-2 border"
-        style={{
-          backgroundColor: "hsl(var(--prop-cue-bg))",
-          borderColor: "hsl(var(--prop-cue-fg) / 0.3)",
-          color: "hsl(var(--prop-cue-fg))",
-        }}
-      >
-        <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0" />
-        <p>
-          {t(
-            "upload.propCue.tip",
-            "Pro-tip: select any words to attach a prop cue (smile, laugh, raise hand). It floats above your script while you read it.",
-          )}
-        </p>
-      </div>
     </div>
   );
 };

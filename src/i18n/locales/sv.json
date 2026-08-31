@@ -255,7 +255,6 @@
     "wordLimitUpgrade": "Uppgradera till premium för upp till 5000 ord.",
     "pasteText": "Klistra in din taltext här...",
     "propCue": {
-      "tip": "Pro-tips: markera valfri text för att lägga till en scenanvisning (le, skratta, höj handen). Den dyker upp ovanför manus medan du läser den.",
       "addButton": "Lägg till scenanvisning",
       "placeholder": "t.ex. le, skratta, höj handen…",
       "previewLabel": "Förhandsvisning av scenanvisning",

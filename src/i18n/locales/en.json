@@ -254,7 +254,6 @@
     "wordLimitUpgrade": "Upgrade to premium for up to 5000 words.",
     "pasteText": "Paste your speech text here...",
     "propCue": {
-      "tip": "Pro-tip: select any words to attach a stage direction (smile, laugh, raise hand). It floats above your script while you read it.",
       "addButton": "Add stage direction",
       "placeholder": "e.g. smile, laugh, raise hand…",
       "previewLabel": "Stage direction preview",

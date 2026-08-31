@@ -232,7 +232,6 @@
     "wordLimitExceeded": "Deine Rede hat {{count}} Wörter. Dein Plan erlaubt bis zu {{limit}} Wörter.",
     "wordLimitUpgrade": "Upgrade auf Premium für bis zu 5000 Wörter.",
     "propCue": {
-      "tip": "Profi-Tipp: Wähle beliebige Wörter aus, um eine Regieanweisung hinzuzufügen (lächeln, lachen, Hand heben). Sie erscheint über deinem Skript, während du liest.",
       "addButton": "Bühnenanweisung hinzufügen",
       "placeholder": "z.B. lächeln, lachen, Hand heben…",
       "previewLabel": "Vorschau Bühnenanweisung",
