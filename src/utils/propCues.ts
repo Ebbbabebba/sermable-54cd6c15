@@ -115,3 +115,114 @@ export const hasPropCues = (text: string): boolean => {
   if (!text) return false;
   return /\{\{[^{}]+\}\}/.test(text);
 };
+
+// ---------------------------------------------------------------------------
+// Tap-to-tag helpers (word picker)
+// ---------------------------------------------------------------------------
+
+interface WordToken {
+  /** Clean word index (aligned with PropCueRange indices). */
+  index: number;
+  /** Character offset in the raw text where the word starts. */
+  start: number;
+  /** Character offset in the raw text just after the word. */
+  end: number;
+  text: string;
+}
+
+const ALL_TOKEN_RE = /\{\{\/\}\}|\{\{([^{}]+)\}\}|\([^()]*\)|\s+|[^\s{}()]+/g;
+
+/** Tokenise raw text into the plain words the speaker actually says. */
+export const tokenizeWords = (text: string): WordToken[] => {
+  const out: WordToken[] = [];
+  if (!text) return out;
+  let wordIndex = 0;
+  let m: RegExpExecArray | null;
+  ALL_TOKEN_RE.lastIndex = 0;
+  while ((m = ALL_TOKEN_RE.exec(text)) !== null) {
+    const tok = m[0];
+    if (tok === "{{/}}" || m[1] !== undefined) continue;
+    if (tok.startsWith("(") && tok.endsWith(")")) continue;
+    if (/^\s+$/.test(tok)) continue;
+    if (PAUSE_TOKEN_RE.test(tok)) continue;
+    out.push({ index: wordIndex, start: m.index, end: m.index + tok.length, text: tok });
+    wordIndex += 1;
+  }
+  return out;
+};
+
+/** Wrap the given word indices (grouped into contiguous runs) with a cue. */
+export const applyPropCueToIndices = (
+  text: string,
+  indices: number[],
+  cue: string,
+): string => {
+  const clean = cue.trim();
+  const tokens = tokenizeWords(text);
+  const sorted = [...new Set(indices)].sort((a, b) => a - b);
+  if (!clean || sorted.length === 0) return text;
+
+  // Build contiguous runs
+  const runs: Array<[number, number]> = [];
+  let runStart = sorted[0];
+  let prev = sorted[0];
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] === prev + 1) {
+      prev = sorted[i];
+    } else {
+      runs.push([runStart, prev]);
+      runStart = sorted[i];
+      prev = sorted[i];
+    }
+  }
+  runs.push([runStart, prev]);
+
+  let next = text;
+  // Apply from the end so earlier offsets stay valid
+  for (let i = runs.length - 1; i >= 0; i--) {
+    const [s, e] = runs[i];
+    const startTok = tokens.find((tk) => tk.index === s);
+    const endTok = tokens.find((tk) => tk.index === e);
+    if (!startTok || !endTok) continue;
+    next =
+      next.slice(0, startTok.start) +
+      `{{${clean}}}` +
+      next.slice(startTok.start, endTok.end) +
+      `{{/}}` +
+      next.slice(endTok.end);
+  }
+  return next;
+};
+
+/** Remove the cue that covers the given word index (markers only, words kept). */
+export const removePropCueAt = (text: string, wordIndex: number): string => {
+  if (!text) return text;
+  const stack: Array<{ openStart: number; openEnd: number; startWord: number }> = [];
+  let wIdx = 0;
+  let m: RegExpExecArray | null;
+  ALL_TOKEN_RE.lastIndex = 0;
+  while ((m = ALL_TOKEN_RE.exec(text)) !== null) {
+    const tok = m[0];
+    if (m[1] !== undefined) {
+      stack.push({ openStart: m.index, openEnd: m.index + tok.length, startWord: wIdx });
+    } else if (tok === "{{/}}") {
+      const open = stack.pop();
+      if (open && wordIndex >= open.startWord && wordIndex <= wIdx - 1) {
+        return (
+          text.slice(0, open.openStart) +
+          text.slice(open.openEnd, m.index) +
+          text.slice(m.index + tok.length)
+        ).replace(/[ \t]{2,}/g, " ");
+      }
+    } else if (tok.startsWith("(") && tok.endsWith(")")) {
+      // stage direction
+    } else if (/^\s+$/.test(tok)) {
+      // whitespace
+    } else if (PAUSE_TOKEN_RE.test(tok)) {
+      // pause marker
+    } else {
+      wIdx += 1;
+    }
+  }
+  return text;
+};
