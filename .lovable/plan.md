@@ -1,61 +1,54 @@
-# Plan: Fem förbättringar samlat
+# Läget "Generell översikt" – gör det verkligt och rent
 
-## 1. Mindre "AI"-känsla på ikoner (t.ex. Nytt tal-dialogen)
-Idag används rörliga/gradient-ikoner (roterande stjärnor, pulserande gradient-cirklar) i UploadSpeechDialog och LearningModeSelector/PresentationModeSelector som ser generiskt AI-genererade ut.
+## Vad som gäller idag
 
-**Ändring:** ersätt de animerade gradient-badgesarna med lugna, platta ikoner i stil med resten av appen:
-- Ta bort `animate-spin`, `animate-pulse`, `bg-gradient-to-br from-primary/…` runt ikonerna.
-- Behåll Lucide-ikonerna (Brain, BookOpen, Ear, MonitorPlay), men i en enfärgad rund/rounded-square badge (`bg-muted text-foreground`, aktiv = `bg-primary text-primary-foreground`), utan rörelse.
-- Samma behandling i UploadSpeechDialog-stegens header-ikoner.
+Steget "Hur vill du lära dig talet?" sparar valet som `learning_mode` på talet
+(`word_by_word` eller `general_overview`). Valet skrivs till databasen och går att
+ändra i efterhand, men ingen del av övningen läser det: all träning körs alltid
+ord-för-ord med progressiv ordgömning. "Generell översikt" är alltså i praktiken
+bara en etikett just nu.
 
-## 2. "Tip:" på scen­anvisningar översätts till alla språk
-`upload.stageDirections.tip` finns bara delvis översatt (sv har "Pro-tips:", övriga faller tillbaka till engelska).
+Beskrivningen som visas ("Lär dig innehåll och flöde med nyckelord, siffror &
+fraser") behålls enligt önskemål – det är beteendet bakom som byggs.
 
-**Ändring:** lägg till korrekt översatt sträng i `de.json`, `fr.json`, `es.json`, `it.json`, `pt.json` för nyckeln `upload.stageDirections.tip` (och `upload.stageDirections.eyebrow/title/subtitle` om de saknas). Samma sak för `beat_practice.coffee_tip` som visas som "Tip: …" — verifieras i alla 7 filer.
+## Vad som byggs
 
-## 3. Kamera → "bara svart" när man scannar dokument
-`startCamera` i `UploadSpeechDialog.tsx` kör `getUserMedia({ video: { facingMode: "environment" } })` och sätter direkt `videoRef.current.srcObject = stream`. På iOS/Safari och i Capacitor blir videon svart eftersom:
-- `<video>` saknar `playsInline`, `muted`, `autoPlay`.
-- `video.play()` anropas aldrig efter att stream satts.
-- I native (Capacitor) körs getUserMedia i webviewen utan mikrofonpermission-flödet, vilket ofta ger svart bild.
+### 1. Generell översikt får egen träningslogik
 
-**Ändring:**
-- Lägg till `playsInline muted autoPlay` på `<video>` och `await videoRef.current.play()` när `loadedmetadata` fyrar.
-- Använd `@capacitor/camera` i native (redan kompatibelt med Capacitor-uppsättningen): på iOS/Android → `Camera.getPhoto({ source: CameraSource.Camera, resultType: DataUrl })` istället för getUserMedia; skicka direkt base64 till `scan-document`-edgefunktionen. På web fortsätt använda getUserMedia med fixarna ovan.
-- Vid fel: visa inline-fel (via nya InlineMessages) istället för toast.
+När ett tal har `learning_mode = general_overview`:
 
-## 4. "Låt oss testa dina kunskaper" när talet öppnas
-Idag sätts `familiarity_level` (beginner/intermediate/confident) vid skapande, men den används bara för att styra hur snabbt ord göms — inget test triggas.
+- **Nyckelord istället för alla ord**: i varje beat markeras bärande ord
+  (substantiv, namn, siffror, fackord) som nyckelord. Övningen kräver bara att
+  dessa sägs – fyllnadsord och böjningar räknas alltid som klarade.
+- **Mjukare matchning**: matchningströskeln sänks och synonym-/omformulerings-
+  tolerans höjs, så man kan säga samma sak med egna ord.
+- **Ordgömning gömmer bara nyckelorden**: resten av texten står kvar som stöd,
+  istället för att hela texten successivt försvinner.
+- **Bemästrat = alla nyckelord täckta** i rätt ordning, inte exakt formulering.
+- Analys och feedback efter passet bedömer täckning av nyckelord och struktur,
+  inte ordagrannhet.
 
-**Ändring:**
-- Ny kolumn `knowledge_test_completed_at timestamptz` i `speeches`-tabellen.
-- När `SpeechDetail`/Practice öppnas för ett tal där `familiarity_level ∈ ('intermediate','confident')` OCH `knowledge_test_completed_at IS NULL` → visa en inline-banner högst upp: **"Låt oss testa dina kunskaper"** med CTA-knapp.
-- Klick startar ett **snabbtest**: en kort sekvens där 3–5 slumpade beats visas i strict-läge med ~40 % av orden dolda (motsvarande "confident"-svårighet). Använder befintliga `BeatPracticeView`-hjälpare men med flaggan `quickAssessment=true` som:
-  - hoppar över lock/cooldown,
-  - kör max ~2 min,
-  - loggar accuracy per beat.
-- Efter testet: beräkna medel-accuracy → uppdatera `familiarity_level` automatiskt (≥85 % = confident, 60–85 % = intermediate, <60 % = beginner) och sätt `knowledge_test_completed_at = now()`. Visa kort inline-summering ("Vi anpassar övningen till din nivå: …").
+Ord-för-ord-läget fungerar exakt som idag och påverkas inte.
 
-## 5. Förklara skillnaderna direkt i UI (info-panel)
-Idag har `LearningModeSelector` och strict/flow-toggle korta beskrivningar men användaren förstår inte skillnaden.
+### 2. Valsteget görs Duolingo-rent
 
-**Ord-för-ord vs Generell översikt:**
-- Ord-för-ord: du lär dig den exakta texten. Ord göms progressivt tills du kan recitera hela talet utantill. Bäst för högtidstal, monologer, pitchar där formuleringen räknas.
-- Generell översikt: du lär dig **strukturen och nyckelpoängerna** — inte ordval. AI:n godkänner att du säger samma sak med egna ord. Bäst för presentationer, föreläsningar, intervjusvar.
-
-**Strikt vs Flöde:**
-- Strikt: talet matchas ord-för-ord. Fel/hopp markeras rött direkt, hesitationer gult efter 2 s. AI-analysen är sträng.
-- Flöde: talet matchas semantiskt. Små avvikelser, synonymer och omkastningar godkänns. Fokus på pace och naturligt flöde snarare än exakthet.
-
-**Ändring:** utöka `helpText` i `LearningModeSelector` med texten ovan (redan lokaliserad via `en.json` + de 6 andra), och lägg till motsvarande hjälp-popover vid strict/flow-toggeln där den visas (Practice-inställningar och SpeechDetail).
-
----
+- Två stora, luftiga kort med tydlig ikon, kort rubrik och nuvarande beskrivning.
+- Ett tydligt aktivt tillstånd (färgad ram, bock, mjuk skala) och taktil feedback.
+- Bort med extra hjälp-ikoner och dubbla förklaringslager – ett kort, en mening.
+- Samma kortdesign används både vid skapande och vid redigering i efterhand,
+  så det ser identiskt ut på båda ställena.
+- Ingen ny text skrivs; befintliga översättningar återanvänds på alla sju språk.
 
 ## Teknisk sammanfattning
-- **Frontend:** `UploadSpeechDialog.tsx` (ikoner + kamera-fix), `LearningModeSelector.tsx`/`PresentationModeSelector.tsx` (lugnare ikoner), nya `KnowledgeTestBanner.tsx` + `QuickAssessmentDialog.tsx`, hjälp-texter i strict/flow-toggle.
-- **Backend:** migration som lägger `knowledge_test_completed_at` på `speeches` (med GRANT + RLS-policy uppdatering).
-- **Native:** `@capacitor/camera` installeras för native-fallback i kamera-scannen.
-- **i18n:** komplettera `upload.stageDirections.tip`, `beat_practice.coffee_tip` samt nya nycklar för snabbtest och utökade hjälp-texter i alla 7 språk (en, sv, de, fr, es, it, pt).
-- **Inline-messages:** kamera-fel och test-resultat visas via nya `InlineMessages`-systemet, inga toasts.
 
-Inga ändringar i övrig inlärningslogik, spaced repetition eller mastery-beräkning.
+- `learning_mode` läses in i praktikflödet (`src/pages/Practice.tsx`) och skickas
+  vidare till beat-vyn.
+- `src/components/BeatPracticeView.tsx` får ett översiktsläge: nyckelordsurval,
+  sänkta matchningströsklar, nyckelordsbaserad gömning och mastery-villkor.
+- Nyckelordsurvalet görs i en ny hjälpmodul (t.ex. `src/utils/keywordExtraction.ts`)
+  med heuristik (versaler, siffror, ordlängd, stoppordslista per språk), så att
+  inget extra AI-anrop behövs vid övning.
+- Analyssteget (`supabase/functions/analyze-speech`) får läget som indata och
+  betygsätter täckning istället för exakthet när översiktsläget är valt.
+- `src/components/UploadSpeechDialog.tsx` och `src/components/LearningModeSelector.tsx`
+  får den nya, förenklade kortdesignen (delad `Choice`-komponent).
