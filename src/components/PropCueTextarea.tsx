@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +6,6 @@ import { Sparkle, X, Check, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { extractPropCues } from "@/utils/propCues";
-import { stripStageDirections } from "@/utils/stageDirections";
 import PropCueWordPicker from "@/components/PropCueWordPicker";
 import { Hand } from "lucide-react";
 
@@ -108,59 +106,6 @@ const PropCueTextarea = ({
       taRef.current?.focus();
     });
   };
-
-  // ---- Live preview ----
-  const preview = useMemo(() => {
-    if (!value) return null;
-    const plain = stripStageDirections(value);
-    const words = plain.split(/\s+/).filter(Boolean);
-    if (words.length === 0) return null;
-    const { cues } = extractPropCues(value);
-    if (cues.length === 0) return null;
-    const cueByIdx = new Map<number, string>();
-    cues.forEach((r) => {
-      for (let i = r.startWordIndex; i <= r.endWordIndex; i++) {
-        cueByIdx.set(i, r.cue);
-      }
-    });
-    // Group consecutive cue runs to show the cue label once
-    const out: Array<JSX.Element> = [];
-    let i = 0;
-    while (i < words.length) {
-      const c = cueByIdx.get(i);
-      if (c) {
-        const start = i;
-        while (i < words.length && cueByIdx.get(i) === c) i++;
-        const chunk = words.slice(start, i).join(" ");
-        out.push(
-          <span
-            key={`c-${start}`}
-            className="relative inline-block align-baseline px-1.5 py-0.5 rounded-md mr-1 mb-1"
-            style={{ backgroundColor: "hsl(var(--prop-cue-bg-strong))" }}
-          >
-            <span
-              className="absolute -top-3 left-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              style={{
-                backgroundColor: "hsl(var(--prop-cue-fg))",
-                color: "hsl(var(--background))",
-              }}
-            >
-              {c}
-            </span>
-            <span style={{ color: "hsl(var(--prop-cue-fg))" }}>{chunk}</span>
-          </span>,
-        );
-      } else {
-        out.push(
-          <span key={`w-${i}`} className="text-muted-foreground">
-            {words[i]}{" "}
-          </span>,
-        );
-        i++;
-      }
-    }
-    return out;
-  }, [value]);
 
   return (
     <div className="space-y-3">
@@ -294,18 +239,6 @@ const PropCueTextarea = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Live preview of cue ranges */}
-      {preview && (
-        <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
-            {t("upload.propCue.previewLabel", "Prop cue preview")}
-          </p>
-          <div className="text-sm leading-loose max-h-32 overflow-y-auto">
-            {preview}
-          </div>
-        </div>
-      )}
 
       {/* Pro-tip */}
       <div
