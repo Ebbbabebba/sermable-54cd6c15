@@ -42,6 +42,7 @@ const PropCueTextarea = ({
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [editing, setEditing] = useState(false);
   const [cueDraft, setCueDraft] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const updateSelection = () => {
     const el = taRef.current;
