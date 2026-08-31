@@ -69,33 +69,18 @@ const PropCueWordPicker = ({
 
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
-      <DialogContent
-        hideClose
-        className="max-w-none w-screen h-[100dvh] sm:w-[92vw] sm:h-[92vh] sm:max-w-3xl sm:rounded-3xl rounded-none p-0 gap-0 flex flex-col overflow-hidden"
-      >
-        <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3 border-b border-border/60">
-          <div>
-            <h2 className="text-base font-semibold flex items-center gap-1.5">
-              <Hand className="h-4 w-4" style={{ color: "hsl(var(--prop-cue-fg))" }} />
-              {t("upload.propCue.pickerTitle", "Tap words to add stage directions")}
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t(
-                "upload.propCue.pickerDesc",
-                "Tap the words you want, name the cue and save. Tap a highlighted word to remove its cue.",
-              )}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={close}
-            aria-label={t("common.done", "Done")}
-            className="shrink-0 -mt-1 -mr-1"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+      <DialogContent className="max-w-none w-screen h-[100dvh] sm:w-[92vw] sm:h-[92vh] sm:max-w-3xl sm:rounded-3xl rounded-none p-0 gap-0 flex flex-col overflow-hidden">
+        <div className="px-5 pt-5 pb-3 pr-14 border-b border-border/60">
+          <h2 className="text-base font-semibold flex items-center gap-1.5">
+            <Hand className="h-4 w-4" style={{ color: "hsl(var(--prop-cue-fg))" }} />
+            {t("upload.propCue.pickerTitle", "Tap words to add stage directions")}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t(
+              "upload.propCue.pickerDesc",
+              "Tap the words you want, name the cue and save. Tap a highlighted word to remove its cue.",
+            )}
+          </p>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-6 leading-loose">
