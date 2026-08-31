@@ -210,6 +210,26 @@ const PropCueTextarea = ({
         </AnimatePresence>
       </div>
 
+      {/* Tap-to-tag picker (touch friendly alternative to text selection) */}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={disabled || !value.trim()}
+        onClick={() => setPickerOpen(true)}
+        className="gap-1.5 rounded-full"
+      >
+        <Hand className="h-4 w-4" />
+        {t("upload.propCue.pickerButton", "Mark words by tapping")}
+      </Button>
+      <PropCueWordPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        value={value}
+        onChange={onChange}
+      />
+
+
       {/* Inline form */}
       <AnimatePresence>
         {editing && sel && (
