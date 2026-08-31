@@ -355,9 +355,18 @@ const Dashboard = () => {
               // Mark this period as shown
               sessionStorage.setItem('greeting_period', currentPeriod);
               
+              const dateLabel = new Intl.DateTimeFormat(undefined, {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              }).format(new Date());
+
               return (
                 <>
-                  <h1 className="text-4xl sm:text-5xl font-display font-semibold text-foreground mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                    {dateLabel}
+                  </p>
+                  <h1 className="text-4xl sm:text-5xl font-display font-semibold text-foreground mb-2 leading-[1.1]">
                     {greetingText}
                   </h1>
                   <p className="text-muted-foreground text-lg">
