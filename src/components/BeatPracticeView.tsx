@@ -1528,7 +1528,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Second pass: all non-protected words are hidden, now hide protected words
     const protectedVisible = words
       .map((_, i) => i)
-      .filter(i => !currentHidden.has(i) && protected_.has(i));
+      .filter(i => !currentHidden.has(i) && protected_.has(i) && hideEligible(i));
     
     if (protectedVisible.length === 0) return null;
     
@@ -1584,7 +1584,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // FLOW mode should be a little more forgiving, but not “name-level” lenient.
     // Treating every hidden word as lenient allowed weak first-letter matches to
     // cascade through whole sentences/sessions.
-    const isFlowRelaxedHidden = practiceStrictness === 'flow' && isHidden && !isLenient;
+    // Overview mode reuses flow-level tolerance: paraphrasing is expected, so
+    // hidden keywords accept pronunciation/wording variance.
+    const isFlowRelaxedHidden = (practiceStrictness === 'flow' || isOverviewModeRef.current) && isHidden && !isLenient;
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
