@@ -2586,7 +2586,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   function handlePreBeatRecallCompletion(hadErrors: boolean) {
     pauseSpeechRecognition(1900);
 
-    const allHidden = hiddenWordIndices.size >= words.length;
+    const allHidden = isAllTargetHidden(hiddenWordIndices);
 
     if (hadErrors) {
       // Failed: reveal failed words, reset progress, retry same visibility.
@@ -2680,7 +2680,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Key behavior: only hide more words after a clean repetition.
   // Failed words stay visible and become "protected" - they disappear LAST
   function handleFadingCompletion(hadErrors: boolean, failedSet: Set<number>) {
-    const allHidden = hiddenWordIndices.size >= words.length;
+    const allHidden = isAllTargetHidden(hiddenWordIndices);
 
     if (!allHidden) {
       let newHidden = new Set(hiddenWordIndices);
