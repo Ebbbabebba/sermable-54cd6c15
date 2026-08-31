@@ -257,7 +257,13 @@
       "tip": "Pro-tip: select any words to attach a stage direction (smile, laugh, raise hand). It floats above your script while you read it.",
       "addButton": "Add stage direction",
       "placeholder": "e.g. smile, laugh, raise hand…",
-      "previewLabel": "Stage direction preview"
+      "previewLabel": "Stage direction preview",
+      "pickerButton": "Mark words by tapping",
+      "pickerTitle": "Tap words to add stage directions",
+      "pickerDesc": "Tap the words you want, name the cue and save. Tap a highlighted word to remove its cue.",
+      "pickerSave": "Add cue",
+      "pickerSelected": "{{count}} words selected",
+      "pickerEmpty": "Add some text first."
     },
     "autoDetectsLanguage": "Auto-detects language",
     "analyzingImage": "Analyzing image...",

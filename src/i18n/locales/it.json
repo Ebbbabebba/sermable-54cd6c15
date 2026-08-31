@@ -235,7 +235,13 @@
       "tip": "Consiglio: seleziona qualsiasi parola per aggiungere una nota di regia (sorridi, ridi, alza la mano). Appare sopra il copione mentre leggi.",
       "addButton": "Aggiungi indicazione scenica",
       "placeholder": "Es: sorridi, ridi, alza la mano…",
-      "previewLabel": "Anteprima indicazione scenica"
+      "previewLabel": "Anteprima indicazione scenica",
+      "pickerButton": "Segna le parole toccando",
+      "pickerTitle": "Tocca le parole per aggiungere indicazioni sceniche",
+      "pickerDesc": "Tocca le parole che vuoi, dai un nome all'indicazione e salva. Tocca una parola evidenziata per rimuoverla.",
+      "pickerSave": "Aggiungi",
+      "pickerSelected": "{{count}} parole selezionate",
+      "pickerEmpty": "Aggiungi prima del testo."
     },
     "autoDetectsLanguage": "Rilevamento automatico della lingua",
     "analyzingImage": "Analisi immagine in corso...",

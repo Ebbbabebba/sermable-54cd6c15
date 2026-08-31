@@ -8,6 +8,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { extractPropCues } from "@/utils/propCues";
 import { stripStageDirections } from "@/utils/stageDirections";
+import PropCueWordPicker from "@/components/PropCueWordPicker";
+import { Hand } from "lucide-react";
 
 interface PropCueTextareaProps {
   value: string;
@@ -40,6 +42,7 @@ const PropCueTextarea = ({
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [editing, setEditing] = useState(false);
   const [cueDraft, setCueDraft] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const updateSelection = () => {
     const el = taRef.current;
@@ -206,6 +209,26 @@ const PropCueTextarea = ({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Tap-to-tag picker (touch friendly alternative to text selection) */}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={disabled || !value.trim()}
+        onClick={() => setPickerOpen(true)}
+        className="gap-1.5 rounded-full"
+      >
+        <Hand className="h-4 w-4" />
+        {t("upload.propCue.pickerButton", "Mark words by tapping")}
+      </Button>
+      <PropCueWordPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        value={value}
+        onChange={onChange}
+      />
+
 
       {/* Inline form */}
       <AnimatePresence>

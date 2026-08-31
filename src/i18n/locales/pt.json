@@ -235,7 +235,13 @@
       "tip": "Dica pro: seleciona quaisquer palavras para adicionar uma indicação de cena (sorrir, rir, levantar a mão). Aparece acima do teu guião enquanto lês.",
       "addButton": "Adicionar direção de palco",
       "placeholder": "Ex: sorrir, rir, levantar a mão…",
-      "previewLabel": "Prévia da direção de palco"
+      "previewLabel": "Prévia da direção de palco",
+      "pickerButton": "Marcar palavras tocando",
+      "pickerTitle": "Toque nas palavras para adicionar indicações cénicas",
+      "pickerDesc": "Toque nas palavras que quiser, dê um nome à indicação e guarde. Toque numa palavra destacada para a remover.",
+      "pickerSave": "Adicionar",
+      "pickerSelected": "{{count}} palavras selecionadas",
+      "pickerEmpty": "Adicione texto primeiro."
     },
     "autoDetectsLanguage": "Detecta idioma automaticamente",
     "analyzingImage": "Analisando imagem...",

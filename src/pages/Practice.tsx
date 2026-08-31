@@ -36,6 +36,7 @@ import KnowledgeTestDialog from "@/components/KnowledgeTestDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
 import { PauseSlidersList } from "@/components/PauseSlidersList";
+import PropCueTextarea from "@/components/PropCueTextarea";
 import { Slider } from "@/components/ui/slider";
 import {
   getHesitationThresholdMs,
@@ -2477,10 +2478,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
               {t('practice.editScriptDesc')}
             </DialogDescription>
           </DialogHeader>
-          <Textarea
+          <PropCueTextarea
             value={editedScriptText}
-            onChange={(e) => setEditedScriptText(e.target.value)}
-            className="min-h-[300px] font-mono text-sm"
+            onChange={setEditedScriptText}
+            rows={12}
+            className="min-h-[300px] text-sm"
             placeholder={t('practice.enterSpeechText')}
           />
           <div className="mt-3">
