@@ -235,7 +235,13 @@
       "tip": "Profi-Tipp: Wähle beliebige Wörter aus, um eine Regieanweisung hinzuzufügen (lächeln, lachen, Hand heben). Sie erscheint über deinem Skript, während du liest.",
       "addButton": "Bühnenanweisung hinzufügen",
       "placeholder": "z.B. lächeln, lachen, Hand heben…",
-      "previewLabel": "Vorschau Bühnenanweisung"
+      "previewLabel": "Vorschau Bühnenanweisung",
+      "pickerButton": "Wörter durch Tippen markieren",
+      "pickerTitle": "Tippe Wörter an, um Regieanweisungen hinzuzufügen",
+      "pickerDesc": "Tippe die gewünschten Wörter an, benenne den Hinweis und speichere. Tippe ein markiertes Wort an, um es zu entfernen.",
+      "pickerSave": "Hinzufügen",
+      "pickerSelected": "{{count}} Wörter ausgewählt",
+      "pickerEmpty": "Füge zuerst Text hinzu."
     },
     "autoDetectsLanguage": "Sprache wird automatisch erkannt",
     "analyzingImage": "Bild wird analysiert...",

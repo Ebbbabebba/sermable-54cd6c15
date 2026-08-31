@@ -258,7 +258,13 @@
       "tip": "Pro-tips: markera valfri text för att lägga till en scenanvisning (le, skratta, höj handen). Den dyker upp ovanför manus medan du läser den.",
       "addButton": "Lägg till scenanvisning",
       "placeholder": "t.ex. le, skratta, höj handen…",
-      "previewLabel": "Förhandsvisning av scenanvisning"
+      "previewLabel": "Förhandsvisning av scenanvisning",
+      "pickerButton": "Markera ord genom att trycka",
+      "pickerTitle": "Tryck på ord för att lägga till scenanvisning",
+      "pickerDesc": "Tryck på orden du vill markera, namnge anvisningen och spara. Tryck på ett markerat ord för att ta bort det.",
+      "pickerSave": "Lägg till",
+      "pickerSelected": "{{count}} ord markerade",
+      "pickerEmpty": "Lägg till text först."
     },
     "autoDetectsLanguage": "Upptäcker språk automatiskt",
     "analyzingImage": "Analyserar bild...",
