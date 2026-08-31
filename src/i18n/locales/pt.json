@@ -232,7 +232,6 @@
     "wordLimitExceeded": "Seu discurso tem {{count}} palavras. Seu plano permite até {{limit}} palavras.",
     "wordLimitUpgrade": "Faça upgrade para premium para até 5000 palavras.",
     "propCue": {
-      "tip": "Dica pro: seleciona quaisquer palavras para adicionar uma indicação de cena (sorrir, rir, levantar a mão). Aparece acima do teu guião enquanto lês.",
       "addButton": "Adicionar direção de palco",
       "placeholder": "Ex: sorrir, rir, levantar a mão…",
       "previewLabel": "Prévia da direção de palco",

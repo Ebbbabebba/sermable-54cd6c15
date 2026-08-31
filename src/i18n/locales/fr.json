@@ -232,7 +232,6 @@
     "wordLimitExceeded": "Votre discours contient {{count}} mots. Votre forfait autorise jusqu'à {{limit}} mots.",
     "wordLimitUpgrade": "Passez à la version premium pour jusqu'à 5000 mots.",
     "propCue": {
-      "tip": "Astuce : sélectionne n'importe quels mots pour ajouter une indication scénique (sourire, rire, lever la main). Elle apparaît au-dessus de ton script pendant que tu lis.",
       "addButton": "Ajouter une indication scénique",
       "placeholder": "ex: sourire, rire, lever la main...",
       "previewLabel": "Aperçu de la direction scénique",

@@ -232,7 +232,6 @@
     "wordLimitExceeded": "Tu discurso tiene {count} palabras. Tu plan permite hasta {limit} palabras.",
     "wordLimitUpgrade": "Actualiza a premium para hasta 5000 palabras.",
     "propCue": {
-      "tip": "Consejo pro: selecciona cualquier palabra para añadir una indicación escénica (sonreír, reír, levantar la mano). Aparecerá sobre tu guion mientras lo lees.",
       "addButton": "Añadir instrucción de escena",
       "placeholder": "Ej. sonreír, reír, levantar la mano…",
       "previewLabel": "Vista previa de la instrucción de escena",

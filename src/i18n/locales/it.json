@@ -232,7 +232,6 @@
     "wordLimitExceeded": "Il tuo discorso ha {{count}} parole. Il tuo piano consente fino a {{limit}} parole.",
     "wordLimitUpgrade": "Esegui l'upgrade a Premium per un massimo di 5000 parole.",
     "propCue": {
-      "tip": "Consiglio: seleziona qualsiasi parola per aggiungere una nota di regia (sorridi, ridi, alza la mano). Appare sopra il copione mentre leggi.",
       "addButton": "Aggiungi indicazione scenica",
       "placeholder": "Es: sorridi, ridi, alza la mano…",
       "previewLabel": "Anteprima indicazione scenica",
