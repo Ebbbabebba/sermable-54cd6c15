@@ -8,6 +8,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { extractPropCues } from "@/utils/propCues";
 import { stripStageDirections } from "@/utils/stageDirections";
+import PropCueWordPicker from "@/components/PropCueWordPicker";
+import { Hand } from "lucide-react";
 
 interface PropCueTextareaProps {
   value: string;
