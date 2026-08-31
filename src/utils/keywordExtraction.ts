@@ -12,7 +12,7 @@ export const normalizeForKeyword = (word: string): string =>
   word
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\p{L}\p{N}]+/gu, '');
 
 /**
