@@ -1441,7 +1441,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setLoading(false);
   };
 
-  // Initialize recall mode - start fully visible, then fade 2-3 words per successful rep
+  // Initialize recall mode - start partly hidden, then fade fast per successful rep
   const initializeRecallMode = () => {
     // Start fully visible for recall (words fade as user succeeds)
     setPhase('beat_fading'); // Use beat_fading phase for recall
@@ -1449,26 +1449,41 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     repetitionCountRef.current = 1;
     setConsecutiveNoScriptSuccess(0);
     setRecallSuccessCount(0);
+    recallHadFailureRef.current = false;
     // Start with all words VISIBLE (empty hidden set)
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
   };
 
   // HYBRID streak-based hiding:
-  //   • Per repetition: clean rep → hide MORE next time (accelerating curve
-  //     1 → 2 → 3 → 5 → 7 → 9 → 11 → 13, capped at 14).
+  //   • Per repetition: clean rep → hide MORE next time. The curve is now
+  //     PROPORTIONAL: at least 25% of the still-visible target words (min 3),
+  //     so a recall reaches "all hidden" in ~3-4 reps instead of 6-7.
   //   • Per word: missed (red) or hesitated (yellow) words reset the streak
   //     to 0 AND are marked "protected" so they stay visible until the user
   //     says them cleanly (see protectedWordIndices + getNextWordToHide).
-  // This rewards strong sections with fast progression while making weak
-  // words stick around longer instead of being hidden prematurely.
-  const getWordsToHideCount = useCallback((successCount: number): number => {
-    const curve = [1, 2, 3, 5, 7, 9, 11, 13, 14];
-    return curve[Math.min(successCount, curve.length - 1)];
+  const getWordsToHideCount = useCallback((successCount: number, visibleTargets?: number): number => {
+    const curve = [3, 5, 8, 11, 14, 16, 18, 20, 22];
+    const base = curve[Math.min(successCount, curve.length - 1)];
+    if (typeof visibleTargets !== 'number') return base;
+    const proportional = Math.max(3, Math.ceil(visibleTargets * 0.25));
+    return Math.max(base, proportional);
   }, []);
 
+  // How many target words are still visible (keywords only in overview mode)
+  const countVisibleTargets = useCallback((hidden: Set<number>): number => {
+    if (isOverviewModeRef.current) {
+      let n = 0;
+      keywordIndicesRef.current.forEach(i => { if (!hidden.has(i)) n++; });
+      return n;
+    }
+    return Math.max(0, words.length - hidden.size);
+  }, [words]);
+
   // Effect to reset hidden words when changing recall beat
-  // Gap words (COMMON_WORDS) are always pre-hidden from the start
+  // Gap words (COMMON_WORDS) are always pre-hidden from the start.
+  // Beats that have been recalled before ALSO start ~40% pre-hidden — no need
+  // to read a known beat off the script again.
   useEffect(() => {
     // Overview mode: gap words are support text and stay visible — only
     // keywords are ever hidden, so skip the recall pre-hide of gap words.
@@ -1482,10 +1497,25 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           preHiddenOrder.push(i);
         }
       });
+
+      // Warm start for already-practiced beats: hide an extra slice up-front.
+      const activeBeat = beatsToRecall[recallIndex];
+      const sessionNum = activeBeat?.recall_session_number ?? 0;
+      if (sessionNum >= 1) {
+        const target = Math.floor(words.length * 0.4);
+        for (let i = 0; i < words.length && preHidden.size < target; i += 2) {
+          if (!preHidden.has(i)) {
+            preHidden.add(i);
+            preHiddenOrder.push(i);
+          }
+        }
+      }
+
       setHiddenWordIndices(preHidden);
       setHiddenWordOrder(preHiddenOrder);
     }
-  }, [sessionMode, recallIndex, words]);
+  }, [sessionMode, recallIndex, words, beatsToRecall]);
+
 
   // Determine which word to hide next (priority order)
   // Protected words (failed/hesitated) are hidden LAST
