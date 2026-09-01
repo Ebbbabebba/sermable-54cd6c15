@@ -776,7 +776,11 @@
     "skip_rest": "Start now anyway",
     "beats_remaining": "{{count}} beat remaining today",
     "beats_remaining_plural": "{{count}} beats remaining today",
-    "beat_complete_rest": "Beat complete! Take a short break."
+    "beat_complete_rest": "Beat complete! Take a short break.",
+    "skip_warning_title": "Are you sure?",
+    "skip_warning_desc": "The 10-minute break helps your brain consolidate what you just learned. Skipping it may reduce retention.",
+    "coffee_break_title": "Coffee break",
+    "coffee_break_desc": "Great job! Take a 10-minute break to let your brain consolidate what you just learned. A quick recall will start when the timer runs out."
   },
   "day_after_recall": {
     "title": "Day-After Recall",

@@ -677,7 +677,11 @@
     "full_recall_desc": "¡Has dominado todos los beats! Ahora, recuerda el discurso completo de memoria.",
     "begin_recall": "Comenzar Recuerdo Completo",
     "hint_available": "Las pistas aparecerán si pausas por más de 3 segundos",
-    "coffee_tip": "Consejo: da un pequeño paseo o tómate un café."
+    "coffee_tip": "Consejo: da un pequeño paseo o tómate un café.",
+    "skip_warning_title": "¿Estás seguro?",
+    "skip_warning_desc": "El descanso de 10 minutos ayuda a tu cerebro a consolidar lo que acabas de aprender. Saltarlo puede reducir la retención.",
+    "coffee_break_title": "Pausa para café",
+    "coffee_break_desc": "¡Buen trabajo! Tómate un descanso de 10 minutos para que tu cerebro consolide lo que acabas de aprender. Una repetición rápida comenzará cuando termine el temporizador."
   },
   "presentation": {
     "settings": "Configuración de presentación",

@@ -677,7 +677,11 @@
     "full_recall_desc": "Você dominou todas as batidas! Agora lembre-se de todo o discurso de memória.",
     "begin_recall": "Iniciar Lembrança Total",
     "hint_available": "Dicas aparecerão se você pausar por 3+ segundos",
-    "coffee_tip": "Dica: dá um pequeno passeio ou vai buscar um café!"
+    "coffee_tip": "Dica: dá um pequeno passeio ou vai buscar um café!",
+    "skip_warning_title": "Tem certeza?",
+    "skip_warning_desc": "A pausa de 10 minutos ajuda o cérebro a consolidar o que você acabou de aprender. Pulá-la pode reduzir a retenção.",
+    "coffee_break_title": "Pausa para café",
+    "coffee_break_desc": "Bom trabalho! Faça uma pausa de 10 minutos para o cérebro consolidar o que você acabou de aprender. Uma revisão rápida começará quando o tempo acabar."
   },
   "presentation": {
     "settings": "Configurações de apresentação",

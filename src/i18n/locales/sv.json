@@ -957,7 +957,9 @@
     "full_recall_subtitle": "Inget manus. Rent minne.",
     "full_recall_desc": "Du har bemästrat alla takter! Återkalla nu hela talet från minnet.",
     "begin_recall": "Börja full återkallelse",
-    "hint_available": "Tips visas om du pausar i 3+ sekunder"
+    "hint_available": "Tips visas om du pausar i 3+ sekunder",
+    "skip_warning_title": "Är du säker?",
+    "skip_warning_desc": "10-minuterspausen hjälper hjärnan att befästa det du just lärde dig. Att hoppa över den kan försämra inlärningen."
   },
   "presentation": {
     "settings": "Presentationsinställningar",

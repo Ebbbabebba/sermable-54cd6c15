@@ -677,7 +677,11 @@
     "full_recall_desc": "Vous avez maîtrisé toutes les séquences ! Maintenant, récitez tout le discours de mémoire.",
     "begin_recall": "Commencer le rappel complet",
     "hint_available": "Des indices apparaîtront si vous faites une pause de plus de 3 secondes",
-    "coffee_tip": "Astuce : fais une petite promenade ou prends un café !"
+    "coffee_tip": "Astuce : fais une petite promenade ou prends un café !",
+    "skip_warning_title": "Es-tu sûr ?",
+    "skip_warning_desc": "La pause de 10 minutes aide ton cerveau à consolider ce que tu viens d'apprendre. La sauter peut réduire la mémorisation.",
+    "coffee_break_title": "Pause café",
+    "coffee_break_desc": "Bravo ! Fais une pause de 10 minutes pour laisser ton cerveau consolider ce que tu viens d'apprendre. Un rappel rapide démarre quand le minuteur s'écoule."
   },
   "presentation": {
     "settings": "Paramètres de présentation",
