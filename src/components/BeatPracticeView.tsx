@@ -382,6 +382,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [loading, setLoading] = useState(true);
   const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
   const [practiceStrictness, setPracticeStrictness] = useState<'strict' | 'flow'>('strict');
+  // Ref mirror so matching/completion callbacks never read a stale strictness.
+  const practiceStrictnessRef = useRef<'strict' | 'flow'>('strict');
+  useEffect(() => {
+    practiceStrictnessRef.current = practiceStrictness;
+  }, [practiceStrictness]);
+  // FLOW = content-based grading: a rep passes when ≥85% of the hidden target
+  // words were said (connector/gap words never count as failures).
+  const FLOW_PASS_RATIO = 0.85;
   const [familiarityLevel, setFamiliarityLevel] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
   
   // requiredLearningReps is computed after `phase` is declared (see below).
