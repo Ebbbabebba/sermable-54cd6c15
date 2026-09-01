@@ -2340,6 +2340,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Never hide new words after an errored round — otherwise the system can
       // progress even though the user has not completed the repetition.
       setRecallSuccessCount(0);
+      recallHadFailureRef.current = true;
 
       // FAILURE SEVERITY WEIGHTING:
       //   • full blank      (>50% missed)  → demote 2 rungs, 1-day cooldown candidate
@@ -2597,6 +2598,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             // Move to next beat to recall
             setRecallIndex(prev => prev + 1);
             setRecallSuccessCount(0);
+            recallHadFailureRef.current = false;
             setHiddenWordIndices(new Set());
             setHiddenWordOrder([]);
             resetForNextRep();
@@ -2659,7 +2661,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       } else {
         // Need one more successful recall with all hidden
         setRecallSuccessCount(newCount);
-        setCelebrationMessage(`${newCount}/2 perfect recalls`);
+        setCelebrationMessage(`${newCount}/${requiredPerfectRuns} perfect recalls`);
         setShowCelebration(true);
         
         setTimeout(() => {
