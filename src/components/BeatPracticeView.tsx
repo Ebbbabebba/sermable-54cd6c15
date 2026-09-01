@@ -399,6 +399,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [beatsToRecall, setBeatsToRecall] = useState<Beat[]>([]);
   const [recallIndex, setRecallIndex] = useState(0);
   const [recallSuccessCount, setRecallSuccessCount] = useState(0);
+  // True when the current recall beat has failed at least one rep this session.
+  // A clean, already-practiced beat only needs ONE perfect all-hidden run.
+  const recallHadFailureRef = useRef(false);
   const [newBeatToLearn, setNewBeatToLearn] = useState<Beat | null>(null);
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(30);
   const [beatsPerDay, setBeatsPerDay] = useState(1);
@@ -1190,7 +1193,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       });
       
       // Combine: 10-minute recalls first, then evening, then morning, then scheduled 2/3/5/7, then daily recalls
-      const allBeatsNeedingRecall = [
+      const queuedRecalls = [
         ...beatsNeeding10MinRecall, 
         ...beatsNeedingEveningRecall, 
         ...beatsNeedingMorningRecall, 
@@ -1199,13 +1202,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       ];
       
       // Check if we need a merged recall (2+ mastered beats and any individual recall is due)
-      const shouldDoMergedRecall = masteredBeats.length >= 2 && allBeatsNeedingRecall.length > 0;
+      const shouldDoMergedRecall = masteredBeats.length >= 2 && queuedRecalls.length > 0;
       // Check if merged recall was already done recently (within last 4 hours)
       const mergedRecallNeeded = shouldDoMergedRecall && masteredBeats.every(b => {
         if (!b.last_merged_recall_at) return true;
         const lastMerged = new Date(b.last_merged_recall_at);
         return (now.getTime() - lastMerged.getTime()) > 4 * 60 * 60 * 1000; // 4 hours
       });
+
+      // SESSION LENGTH CAP: never run more than 2 solo recalls in one session.
+      // When a merged rehearsal runs anyway it already covers every mastered
+      // beat, so the remaining due beats are handled there instead of being
+      // repeated twice in the same session.
+      const MAX_SOLO_RECALLS = 2;
+      const allBeatsNeedingRecall = mergedRecallNeeded
+        ? queuedRecalls.slice(0, MAX_SOLO_RECALLS)
+        : queuedRecalls.slice(0, Math.max(MAX_SOLO_RECALLS, 1));
+      if (allBeatsNeedingRecall.length < queuedRecalls.length) {
+        const deferred = queuedRecalls.slice(allBeatsNeedingRecall.length);
+        console.log(`✂️ Recall queue trimmed ${queuedRecalls.length} → ${allBeatsNeedingRecall.length} (rest rescheduled)`);
+        // Reschedule the deferred beats a few hours ahead so nothing is lost.
+        const deferUntil = new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
+        void Promise.all(
+          deferred.map(b =>
+            supabase
+              .from('practice_beats')
+              .update({ next_scheduled_recall_at: deferUntil })
+              .eq('id', b.id)
+          )
+        ).catch(err => console.error('Failed to reschedule deferred recalls:', err));
+      }
+      
       
       // Find unmastered beats
       const unmasteredBeats = rows.filter(b => !b.is_mastered);
@@ -1290,7 +1317,27 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             .filter(b => b.mastered_at)
             .sort((a, b) => new Date(b.mastered_at!).getTime() - new Date(a.mastered_at!).getTime())[0];
           
-          if (lastMasteredBeat) {
+          // Only re-test the previous beat when it is actually DUE — a beat
+          // mastered minutes ago is still fresh, so testing it again right away
+          // just makes the session longer without helping memory.
+          const preBeatDue = (() => {
+            if (!lastMasteredBeat) return false;
+            if (computedDaysUntilDeadline <= 3) return true;
+            const scheduled = lastMasteredBeat.next_scheduled_recall_at
+              ? new Date(lastMasteredBeat.next_scheduled_recall_at)
+              : null;
+            if (scheduled && scheduled.getTime() <= now.getTime()) return true;
+            const tenMin = lastMasteredBeat.recall_10min_at
+              ? new Date(lastMasteredBeat.recall_10min_at)
+              : null;
+            const recalledSinceMastery = !!lastMasteredBeat.last_recall_at
+              && (!lastMasteredBeat.mastered_at
+                || new Date(lastMasteredBeat.last_recall_at) >= new Date(lastMasteredBeat.mastered_at));
+            if (tenMin && tenMin.getTime() <= now.getTime() && !recalledSinceMastery) return true;
+            return false;
+          })();
+
+          if (lastMasteredBeat && preBeatDue) {
             // There's a previously mastered beat - recall it once before learning the new beat
             console.log('🔄 Pre-beat recall: recalling beat', lastMasteredBeat.beat_order, 'before learning beat', firstUnmastered.beat_order);
             setBeatToRecallBeforeNext(lastMasteredBeat);
@@ -1441,7 +1488,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setLoading(false);
   };
 
-  // Initialize recall mode - start fully visible, then fade 2-3 words per successful rep
+  // Initialize recall mode - start partly hidden, then fade fast per successful rep
   const initializeRecallMode = () => {
     // Start fully visible for recall (words fade as user succeeds)
     setPhase('beat_fading'); // Use beat_fading phase for recall
@@ -1449,26 +1496,41 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     repetitionCountRef.current = 1;
     setConsecutiveNoScriptSuccess(0);
     setRecallSuccessCount(0);
+    recallHadFailureRef.current = false;
     // Start with all words VISIBLE (empty hidden set)
     setHiddenWordIndices(new Set());
     setHiddenWordOrder([]);
   };
 
   // HYBRID streak-based hiding:
-  //   • Per repetition: clean rep → hide MORE next time (accelerating curve
-  //     1 → 2 → 3 → 5 → 7 → 9 → 11 → 13, capped at 14).
+  //   • Per repetition: clean rep → hide MORE next time. The curve is now
+  //     PROPORTIONAL: at least 25% of the still-visible target words (min 3),
+  //     so a recall reaches "all hidden" in ~3-4 reps instead of 6-7.
   //   • Per word: missed (red) or hesitated (yellow) words reset the streak
   //     to 0 AND are marked "protected" so they stay visible until the user
   //     says them cleanly (see protectedWordIndices + getNextWordToHide).
-  // This rewards strong sections with fast progression while making weak
-  // words stick around longer instead of being hidden prematurely.
-  const getWordsToHideCount = useCallback((successCount: number): number => {
-    const curve = [1, 2, 3, 5, 7, 9, 11, 13, 14];
-    return curve[Math.min(successCount, curve.length - 1)];
+  const getWordsToHideCount = useCallback((successCount: number, visibleTargets?: number): number => {
+    const curve = [3, 5, 8, 11, 14, 16, 18, 20, 22];
+    const base = curve[Math.min(successCount, curve.length - 1)];
+    if (typeof visibleTargets !== 'number') return base;
+    const proportional = Math.max(3, Math.ceil(visibleTargets * 0.25));
+    return Math.max(base, proportional);
   }, []);
 
+  // How many target words are still visible (keywords only in overview mode)
+  const countVisibleTargets = useCallback((hidden: Set<number>): number => {
+    if (isOverviewModeRef.current) {
+      let n = 0;
+      keywordIndicesRef.current.forEach(i => { if (!hidden.has(i)) n++; });
+      return n;
+    }
+    return Math.max(0, words.length - hidden.size);
+  }, [words]);
+
   // Effect to reset hidden words when changing recall beat
-  // Gap words (COMMON_WORDS) are always pre-hidden from the start
+  // Gap words (COMMON_WORDS) are always pre-hidden from the start.
+  // Beats that have been recalled before ALSO start ~40% pre-hidden — no need
+  // to read a known beat off the script again.
   useEffect(() => {
     // Overview mode: gap words are support text and stay visible — only
     // keywords are ever hidden, so skip the recall pre-hide of gap words.
@@ -1482,10 +1544,25 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           preHiddenOrder.push(i);
         }
       });
+
+      // Warm start for already-practiced beats: hide an extra slice up-front.
+      const activeBeat = beatsToRecall[recallIndex];
+      const sessionNum = activeBeat?.recall_session_number ?? 0;
+      if (sessionNum >= 1) {
+        const target = Math.floor(words.length * 0.4);
+        for (let i = 0; i < words.length && preHidden.size < target; i += 2) {
+          if (!preHidden.has(i)) {
+            preHidden.add(i);
+            preHiddenOrder.push(i);
+          }
+        }
+      }
+
       setHiddenWordIndices(preHidden);
       setHiddenWordOrder(preHiddenOrder);
     }
-  }, [sessionMode, recallIndex, words]);
+  }, [sessionMode, recallIndex, words, beatsToRecall]);
+
 
   // Determine which word to hide next (priority order)
   // Protected words (failed/hesitated) are hidden LAST
@@ -2307,6 +2384,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Never hide new words after an errored round — otherwise the system can
       // progress even though the user has not completed the repetition.
       setRecallSuccessCount(0);
+      recallHadFailureRef.current = true;
 
       // FAILURE SEVERITY WEIGHTING:
       //   • full blank      (>50% missed)  → demote 2 rungs, 1-day cooldown candidate
@@ -2415,8 +2493,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         resetForNextRep(true, true);
       }, 1800);
     } else if (!allHidden) {
-      // Success - hide progressively more words: 3 → 4 → 5
-      const wordsToHide = getWordsToHideCount(recallSuccessCount);
+      // Success - hide a proportional slice of what is still visible
+      const wordsToHide = getWordsToHideCount(recallSuccessCount, countVisibleTargets(hiddenWordIndices));
       const newSuccessCount = recallSuccessCount + 1;
       setRecallSuccessCount(newSuccessCount);
       
@@ -2444,11 +2522,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         resetForNextRep(true, true);
       }, 1400);
     } else {
-      // All hidden and success! Count towards 2 perfect recalls
+      // All hidden and success! One perfect run is enough for a beat that is
+      // already established (session ≥ 2) and had no failed rep this session.
       const newCount = recallSuccessCount + 1;
+      const activeRecallBeat = beatsToRecall[recallIndex];
+      const establishedBeat = (activeRecallBeat?.recall_session_number ?? 0) >= 2;
+      const requiredPerfectRuns = establishedBeat && !recallHadFailureRef.current ? 1 : 2;
       
-      if (newCount >= 2) {
-        // Successfully recalled this beat twice with all hidden! Update last_recall_at + 2/3/5/7 schedule
+      if (newCount >= requiredPerfectRuns) {
+        // Successfully recalled this beat with all hidden! Update last_recall_at + 2/3/5/7 schedule
         const recalledBeat = beatsToRecall[recallIndex];
         if (recalledBeat && !isMergedRecall) {
           const currentSessionNum = recalledBeat.recall_session_number ?? 0;
@@ -2560,6 +2642,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             // Move to next beat to recall
             setRecallIndex(prev => prev + 1);
             setRecallSuccessCount(0);
+            recallHadFailureRef.current = false;
             setHiddenWordIndices(new Set());
             setHiddenWordOrder([]);
             resetForNextRep();
@@ -2622,7 +2705,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       } else {
         // Need one more successful recall with all hidden
         setRecallSuccessCount(newCount);
-        setCelebrationMessage(`${newCount}/2 perfect recalls`);
+        setCelebrationMessage(`${newCount}/${requiredPerfectRuns} perfect recalls`);
         setShowCelebration(true);
         
         setTimeout(() => {
