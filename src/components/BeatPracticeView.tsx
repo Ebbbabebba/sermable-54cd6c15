@@ -1594,7 +1594,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // cascade through whole sentences/sessions.
     // Overview mode reuses flow-level tolerance: paraphrasing is expected, so
     // hidden keywords accept pronunciation/wording variance.
-    const isFlowRelaxedHidden = (practiceStrictness === 'flow' || isOverviewModeRef.current) && isHidden && !isLenient;
+    const isFlowRelaxedHidden = (practiceStrictnessRef.current === 'flow' || isOverviewModeRef.current) && isHidden && !isLenient;
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
