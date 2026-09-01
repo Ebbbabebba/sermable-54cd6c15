@@ -780,7 +780,12 @@
     "skip_warning_title": "Are you sure?",
     "skip_warning_desc": "The 10-minute break helps your brain consolidate what you just learned. Skipping it may reduce retention.",
     "coffee_break_title": "Coffee break",
-    "coffee_break_desc": "Great job! Take a 10-minute break to let your brain consolidate what you just learned. A quick recall will start when the timer runs out."
+    "coffee_break_desc": "Great job! Take a 10-minute break to let your brain consolidate what you just learned. A quick recall will start when the timer runs out.",
+    "recall_intro_title": "Quick Recall",
+    "recall_intro_hint": "Words will progressively hide as you speak correctly. Common words are pre-hidden.",
+    "recall_mode": "Quick Recall",
+    "hidden_words_explanation": "Common words are pre-hidden to test your recall",
+    "recall_intro_desc": "Before the next beat, let's make sure you still remember Beat {{beatNumber}}."
   },
   "day_after_recall": {
     "title": "Day-After Recall",

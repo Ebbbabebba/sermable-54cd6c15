@@ -681,7 +681,12 @@
     "skip_warning_title": "Sei sicuro?",
     "skip_warning_desc": "La pausa di 10 minuti aiuta il cervello a consolidare ciò che hai appena imparato. Saltarla può ridurre la ritenzione.",
     "coffee_break_title": "Pausa caffè",
-    "coffee_break_desc": "Ottimo lavoro! Fai una pausa di 10 minuti per lasciare che il cervello consolidi ciò che hai appena imparato. Un ripasso rapido partirà allo scadere del timer."
+    "coffee_break_desc": "Ottimo lavoro! Fai una pausa di 10 minuti per lasciare che il cervello consolidi ciò che hai appena imparato. Un ripasso rapido partirà allo scadere del timer.",
+    "recall_intro_title": "Ripasso rapido",
+    "recall_intro_hint": "Le parole si nascondono progressivamente quando le dici correttamente. Le parole comuni sono pre-nascoste.",
+    "recall_mode": "Ripasso rapido",
+    "hidden_words_explanation": "Le parole comuni sono pre-nascoste per testare la tua memoria",
+    "recall_intro_desc": "Prima del prossimo blocco, assicuriamoci che ricordi ancora il Blocco {{beatNumber}}."
   },
   "presentation": {
     "settings": "Impostazioni presentazione",

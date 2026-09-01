@@ -681,7 +681,12 @@
     "skip_warning_title": "Tem certeza?",
     "skip_warning_desc": "A pausa de 10 minutos ajuda o cérebro a consolidar o que você acabou de aprender. Pulá-la pode reduzir a retenção.",
     "coffee_break_title": "Pausa para café",
-    "coffee_break_desc": "Bom trabalho! Faça uma pausa de 10 minutos para o cérebro consolidar o que você acabou de aprender. Uma revisão rápida começará quando o tempo acabar."
+    "coffee_break_desc": "Bom trabalho! Faça uma pausa de 10 minutos para o cérebro consolidar o que você acabou de aprender. Uma revisão rápida começará quando o tempo acabar.",
+    "recall_intro_title": "Revisão rápida",
+    "recall_intro_hint": "As palavras vão sendo ocultadas conforme você as diz corretamente. Palavras comuns já vêm ocultas.",
+    "recall_mode": "Revisão rápida",
+    "hidden_words_explanation": "Palavras comuns já vêm ocultas para testar sua memória",
+    "recall_intro_desc": "Antes do próximo trecho, vamos garantir que você ainda se lembra do Trecho {{beatNumber}}."
   },
   "presentation": {
     "settings": "Configurações de apresentação",
