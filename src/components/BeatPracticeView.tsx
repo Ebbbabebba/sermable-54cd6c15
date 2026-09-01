@@ -1219,7 +1219,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         ? queuedRecalls.slice(0, MAX_SOLO_RECALLS)
         : queuedRecalls.slice(0, Math.max(MAX_SOLO_RECALLS, 1));
       if (allBeatsNeedingRecall.length < queuedRecalls.length) {
-        console.log(`✂️ Recall queue trimmed ${queuedRecalls.length} → ${allBeatsNeedingRecall.length} (rest covered by merged/next scheduled session)`);
+        const deferred = queuedRecalls.slice(allBeatsNeedingRecall.length);
+        console.log(`✂️ Recall queue trimmed ${queuedRecalls.length} → ${allBeatsNeedingRecall.length} (rest rescheduled)`);
+        // Reschedule the deferred beats a few hours ahead so nothing is lost.
+        const deferUntil = new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
+        void Promise.all(
+          deferred.map(b =>
+            supabase
+              .from('speech_beats')
+              .update({ next_scheduled_recall_at: deferUntil })
+              .eq('id', b.id)
+          )
+        ).catch(err => console.error('Failed to reschedule deferred recalls:', err));
       }
       
       
