@@ -1226,7 +1226,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         void Promise.all(
           deferred.map(b =>
             supabase
-              .from('speech_beats')
+              .from('practice_beats')
               .update({ next_scheduled_recall_at: deferUntil })
               .eq('id', b.id)
           )
