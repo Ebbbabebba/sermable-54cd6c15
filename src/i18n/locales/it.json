@@ -205,7 +205,7 @@
         "strict": "Severa",
         "strictDesc": "Ogni parola conta. Ideale per memorizzare.",
         "flow": "Fluidità",
-        "flowDesc": "Trasmetti il significato. Ideale per un'esposizione naturale."
+        "flowDesc": "Trasmetti il senso: superato a ~85 %."
       }
     },
     "title": "Carica nuovo discorso",
@@ -821,10 +821,10 @@
       "strict": "Rigorosa",
       "strictDesc": "Ordine esatto delle parole. Ideale quando ogni parola conta.",
       "flow": "Fluida",
-      "flowDesc": "Significato prima dell'esattezza. Esposizione più naturale.",
+      "flowDesc": "Trasmetti il senso: superato a ~85 %.",
       "saved": "Salvato",
       "strictHelp": "Il discorso viene confrontato parola per parola. Errori e parole saltate vengono segnati subito in rosso, le esitazioni diventano gialle dopo 2 s. L'analisi AI è severa.",
-      "flowHelp": "Il discorso viene confrontato per significato. Sinonimi, piccole deviazioni e frasi riordinate sono accettati. L'attenzione è sul ritmo e sulla naturalezza più che sull'esattezza."
+      "flowHelp": "Il tuo discorso viene valutato sul significato. Sinonimi, frasi riordinate e parole saltate sono accettati e un giro è superato quando almeno l'85 % delle parole chiave nascoste è presente. I connettivi non contano mai come errori."
     }
   },
   "tour": {
