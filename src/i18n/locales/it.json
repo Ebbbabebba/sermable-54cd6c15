@@ -686,7 +686,7 @@
     "recall_intro_hint": "Le parole si nascondono progressivamente quando le dici correttamente. Le parole comuni sono pre-nascoste.",
     "recall_mode": "Ripasso rapido",
     "hidden_words_explanation": "Le parole comuni sono pre-nascoste per testare la tua memoria",
-    "recall_intro_desc": "Prima del prossimo blocco, assicuriamoci che ricordi ancora il Blocco {{beat}}."
+    "recall_intro_desc": "Prima del prossimo blocco, assicuriamoci che ricordi ancora il Blocco {{beatNumber}}."
   },
   "presentation": {
     "settings": "Impostazioni presentazione",

@@ -686,7 +686,7 @@
     "recall_intro_hint": "Wörter werden nach und nach ausgeblendet, wenn du sie richtig sagst. Häufige Wörter sind vorab ausgeblendet.",
     "recall_mode": "Schnelle Abfrage",
     "hidden_words_explanation": "Häufige Wörter sind vorab ausgeblendet, um dein Gedächtnis zu testen",
-    "recall_intro_desc": "Bevor es zum nächsten Abschnitt geht, prüfen wir, ob du dich noch an Abschnitt {{beat}} erinnerst."
+    "recall_intro_desc": "Bevor es zum nächsten Abschnitt geht, prüfen wir, ob du dich noch an Abschnitt {{beatNumber}} erinnerst."
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",

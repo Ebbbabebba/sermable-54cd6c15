@@ -686,7 +686,7 @@
     "recall_intro_hint": "Les mots se cachent progressivement quand tu les dis correctement. Les mots courants sont pré-masqués.",
     "recall_mode": "Rappel rapide",
     "hidden_words_explanation": "Les mots courants sont pré-masqués pour tester ta mémoire",
-    "recall_intro_desc": "Avant le passage suivant, vérifions que tu te souviens encore du Passage {{beat}}."
+    "recall_intro_desc": "Avant le passage suivant, vérifions que tu te souviens encore du Passage {{beatNumber}}."
   },
   "presentation": {
     "settings": "Paramètres de présentation",
