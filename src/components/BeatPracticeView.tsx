@@ -1311,7 +1311,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // just makes the session longer without helping memory.
           const preBeatDue = (() => {
             if (!lastMasteredBeat) return false;
-            if (daysUntilDeadline <= 3) return true;
+            if (computedDaysUntilDeadline <= 3) return true;
             const scheduled = lastMasteredBeat.next_scheduled_recall_at
               ? new Date(lastMasteredBeat.next_scheduled_recall_at)
               : null;
