@@ -2190,7 +2190,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Learning: 60% (strict — must read sentence). Fading: 40% (more lenient
     // because hidden words may be auto-advanced).
     if ((phase.includes('learning') || phase.includes('fading')) && sessionMode !== 'recall' && sessionMode !== 'pre_beat_recall') {
-      const ratio = phase.includes('learning') ? 0.6 : 0.4;
+      const isFlow = practiceStrictnessRef.current === 'flow';
+      // Flow speaks freely, so require a smaller share of verbatim fresh matches.
+      const ratio = phase.includes('learning') ? (isFlow ? 0.5 : 0.6) : (isFlow ? 0.3 : 0.4);
       const required = Math.max(1, Math.ceil(words.length * ratio));
       if (freshMatchesThisRepRef.current < required) {
         console.log(`🛑 Completion blocked — only ${freshMatchesThisRepRef.current}/${required} fresh matches this rep (${phase})`);
