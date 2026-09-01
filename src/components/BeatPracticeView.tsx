@@ -4355,7 +4355,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     );
   }
 
-  // Get progress info based on mode
+  // Get progress info based on mode + current phase
   const getProgressInfo = () => {
     if (sessionMode === 'recall') {
       return {
@@ -4369,11 +4369,37 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         sublabel: t('beat_practice.recall_before_next', 'Recall before next beat'),
       };
     }
+
+    // Learn mode: reflect the actual phase the learner is in
+    const beatLabel = t('beat_practice.beat_short', {
+      n: currentBeatIndex + 1,
+      defaultValue: `Beat ${currentBeatIndex + 1}`,
+    });
+
+    let phaseLabel: string;
+    if (phase.startsWith('sentences_1_2')) {
+      phaseLabel = phase.endsWith('fading')
+        ? t('beat_practice.phase_combine_recall', 'Sentence 1 + 2 · no script')
+        : t('beat_practice.phase_combine', 'Sentence 1 + 2');
+    } else if (phase.startsWith('beat_')) {
+      phaseLabel = phase === 'beat_fading'
+        ? t('beat_practice.phase_full_recall', 'Whole part · no script')
+        : t('beat_practice.phase_full_read', 'Whole part');
+    } else if (phase.startsWith('sentence_')) {
+      const n = Number(phase.split('_')[1]) || 1;
+      phaseLabel = phase.endsWith('fading')
+        ? t('beat_practice.phase_sentence_recall', { n, defaultValue: `Sentence ${n} · no script` })
+        : t('beat_practice.phase_sentence_read', { n, defaultValue: `Sentence ${n}` });
+    } else {
+      phaseLabel = t('beat_practice.phase_mastered', 'Complete');
+    }
+
     return {
       label: t('beat_practice.learn_mode', 'Learning New Beat'),
-      sublabel: `Beat ${currentBeatIndex + 1}/${beats.length}`,
+      sublabel: `${beatLabel} · ${phaseLabel}`,
     };
   };
+
 
   const progressInfo = getProgressInfo();
 
