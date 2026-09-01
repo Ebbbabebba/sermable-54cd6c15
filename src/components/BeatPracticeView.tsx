@@ -1529,39 +1529,53 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   // Effect to reset hidden words when changing recall beat
   // Gap words (COMMON_WORDS) are always pre-hidden from the start.
-  // Beats that have been recalled before ALSO start ~40% pre-hidden — no need
-  // to read a known beat off the script again.
+  // On top of that, recall ALWAYS starts partly hidden: the pre-hidden words
+  // are the ones the user had the FEWEST errors/hesitations on in previous
+  // repetitions (see wordDifficulty) — easy words go first, shaky words stay
+  // visible until earned.
   useEffect(() => {
-    // Overview mode: gap words are support text and stay visible — only
-    // keywords are ever hidden, so skip the recall pre-hide of gap words.
-    if (sessionMode === 'recall' && words.length > 0 && !isOverviewModeRef.current) {
+    if ((sessionMode === 'recall' || sessionMode === 'pre_beat_recall') && words.length > 0) {
+      const overview = isOverviewModeRef.current;
       const preHidden = new Set<number>();
       const preHiddenOrder: number[] = [];
-      words.forEach((w, i) => {
-        const clean = w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
-        if (COMMON_WORDS.has(clean)) {
-          preHidden.add(i);
-          preHiddenOrder.push(i);
-        }
-      });
 
-      // Warm start for already-practiced beats: hide an extra slice up-front.
-      const activeBeat = beatsToRecall[recallIndex];
-      const sessionNum = activeBeat?.recall_session_number ?? 0;
-      if (sessionNum >= 1) {
-        const target = Math.floor(words.length * 0.4);
-        for (let i = 0; i < words.length && preHidden.size < target; i += 2) {
-          if (!preHidden.has(i)) {
+      // Overview mode: gap words are support text and stay visible — only
+      // keywords are ever hidden, so skip the recall pre-hide of gap words.
+      if (!overview) {
+        words.forEach((w, i) => {
+          const clean = w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
+          if (COMMON_WORDS.has(clean)) {
             preHidden.add(i);
             preHiddenOrder.push(i);
           }
+        });
+      }
+
+      const activeBeat = sessionMode === 'recall' ? beatsToRecall[recallIndex] : beatToRecallBeforeNext;
+      const sessionNum = activeBeat?.recall_session_number ?? 0;
+
+      // Eligible targets: keywords only in overview mode, otherwise all words.
+      const eligible = (i: number) => !overview || keywordIndicesRef.current.has(i);
+      const eligibleCount = overview ? keywordIndicesRef.current.size : words.length;
+
+      // Established beats start deeper in; fresh recalls still start partly hidden.
+      const ratio = sessionNum >= 1 ? 0.4 : 0.25;
+      const target = Math.max(3, Math.floor(eligibleCount * ratio));
+
+      const easiestFirst = getEasiestWordIndices(activeBeat?.id, words.length, eligible);
+      for (const idx of easiestFirst) {
+        if (preHidden.size >= target) break;
+        if (!preHidden.has(idx)) {
+          preHidden.add(idx);
+          preHiddenOrder.push(idx);
         }
       }
 
       setHiddenWordIndices(preHidden);
       setHiddenWordOrder(preHiddenOrder);
     }
-  }, [sessionMode, recallIndex, words, beatsToRecall]);
+  }, [sessionMode, recallIndex, words, beatsToRecall, beatToRecallBeforeNext]);
+
 
 
   // Determine which word to hide next (priority order)
