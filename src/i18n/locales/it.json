@@ -677,7 +677,9 @@
     "full_recall_desc": "Hai imparato tutti i beat! Ora ricorda l'intero discorso a memoria.",
     "begin_recall": "Inizia richiamo completo",
     "hint_available": "I suggerimenti appariranno se ti fermi per più di 3 secondi",
-    "coffee_tip": "Consiglio: fai una breve passeggiata o prenditi un caffè!"
+    "coffee_tip": "Consiglio: fai una breve passeggiata o prenditi un caffè!",
+    "skip_warning_title": "Sei sicuro?",
+    "skip_warning_desc": "La pausa di 10 minuti aiuta il cervello a consolidare ciò che hai appena imparato. Saltarla può ridurre la ritenzione."
   },
   "presentation": {
     "settings": "Impostazioni presentazione",

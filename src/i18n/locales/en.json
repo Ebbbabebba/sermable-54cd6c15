@@ -776,7 +776,9 @@
     "skip_rest": "Start now anyway",
     "beats_remaining": "{{count}} beat remaining today",
     "beats_remaining_plural": "{{count}} beats remaining today",
-    "beat_complete_rest": "Beat complete! Take a short break."
+    "beat_complete_rest": "Beat complete! Take a short break.",
+    "skip_warning_title": "Are you sure?",
+    "skip_warning_desc": "The 10-minute break helps your brain consolidate what you just learned. Skipping it may reduce retention."
   },
   "day_after_recall": {
     "title": "Day-After Recall",
