@@ -2331,6 +2331,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const failedSet = failed ?? failedWordIndices;
     const hadErrors = !isRepPassable(failedSet);
 
+    // Remember which words were shaky this rep, so the NEXT recall pre-hides
+    // the words with the fewest errors and keeps the hard ones visible.
+    {
+      const repErrors = new Set<number>(failedSet);
+      hesitatedIndicesRef.current.forEach(i => repErrors.add(i));
+      missedIndicesRef.current.forEach(i => repErrors.add(i));
+      recordRepDifficulty(currentBeat?.id, words.length, repErrors);
+    }
+
+
     // Handle recall mode completion (morning recall of mastered beats)
     if (sessionMode === 'recall') {
       handleRecallCompletion(hadErrors);
