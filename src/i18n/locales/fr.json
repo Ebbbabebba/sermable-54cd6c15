@@ -686,7 +686,15 @@
     "recall_intro_hint": "Les mots se cachent progressivement quand tu les dis correctement. Les mots courants sont pré-masqués.",
     "recall_mode": "Rappel rapide",
     "hidden_words_explanation": "Les mots courants sont pré-masqués pour tester ta mémoire",
-    "recall_intro_desc": "Avant le passage suivant, vérifions que tu te souviens encore du Passage {{beatNumber}}."
+    "recall_intro_desc": "Avant le passage suivant, vérifions que tu te souviens encore du Passage {{beatNumber}}.",
+    "beat_short": "Partie {{n}}",
+    "phase_sentence_read": "Phrase {{n}} · lecture",
+    "phase_sentence_recall": "Phrase {{n}} · sans texte",
+    "phase_combine": "Phrase 1 + 2",
+    "phase_combine_recall": "Phrase 1 + 2 · sans texte",
+    "phase_full_read": "Partie entière",
+    "phase_full_recall": "Partie entière · sans texte",
+    "phase_mastered": "Terminé"
   },
   "presentation": {
     "settings": "Paramètres de présentation",
