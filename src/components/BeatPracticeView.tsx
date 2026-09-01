@@ -2012,16 +2012,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           return false;
         };
 
-        if (
-          canSkipCurrent &&
-          advancedTo + 1 < words.length &&
-          !crossesSentenceBoundary(advancedTo, advancedTo + 1) &&
-          !pauseInRange(advancedTo, advancedTo + 1) &&
-          wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)
-        ) {
-          newSpoken.add(advancedTo);
-          foundIdx = advancedTo + 1;
-          usedSkipFill = true;
+        // Strict: only 1 word ahead. Flow: up to 2 words ahead.
+        const maxLookAhead = practiceStrictnessRef.current === 'flow' ? 2 : 1;
+        for (let ahead = 1; ahead <= maxLookAhead && foundIdx === -1; ahead++) {
+          const target = advancedTo + ahead;
+          if (
+            canSkipCurrent &&
+            target < words.length &&
+            !crossesSentenceBoundary(advancedTo, target) &&
+            !pauseInRange(advancedTo, target) &&
+            wordMatchesAnyVariant(absoluteRawIndex, target)
+          ) {
+            for (let j = advancedTo; j < target; j++) newSpoken.add(j);
+            foundIdx = target;
+            usedSkipFill = true;
+          }
         }
 
       }
