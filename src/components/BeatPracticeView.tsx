@@ -34,6 +34,8 @@ import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/
 import { getKeywordIndices } from "@/utils/keywordExtraction";
 import { scheduleNextReview } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
+import { recordRepDifficulty, getEasiestWordIndices } from "@/utils/wordDifficulty";
+
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
