@@ -2448,8 +2448,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         resetForNextRep(true, true);
       }, 1800);
     } else if (!allHidden) {
-      // Success - hide progressively more words: 3 → 4 → 5
-      const wordsToHide = getWordsToHideCount(recallSuccessCount);
+      // Success - hide a proportional slice of what is still visible
+      const wordsToHide = getWordsToHideCount(recallSuccessCount, countVisibleTargets(hiddenWordIndices));
       const newSuccessCount = recallSuccessCount + 1;
       setRecallSuccessCount(newSuccessCount);
       
@@ -2477,11 +2477,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         resetForNextRep(true, true);
       }, 1400);
     } else {
-      // All hidden and success! Count towards 2 perfect recalls
+      // All hidden and success! One perfect run is enough for a beat that is
+      // already established (session ≥ 2) and had no failed rep this session.
       const newCount = recallSuccessCount + 1;
+      const activeRecallBeat = beatsToRecall[recallIndex];
+      const establishedBeat = (activeRecallBeat?.recall_session_number ?? 0) >= 2;
+      const requiredPerfectRuns = establishedBeat && !recallHadFailureRef.current ? 1 : 2;
       
-      if (newCount >= 2) {
-        // Successfully recalled this beat twice with all hidden! Update last_recall_at + 2/3/5/7 schedule
+      if (newCount >= requiredPerfectRuns) {
+        // Successfully recalled this beat with all hidden! Update last_recall_at + 2/3/5/7 schedule
         const recalledBeat = beatsToRecall[recallIndex];
         if (recalledBeat && !isMergedRecall) {
           const currentSessionNum = recalledBeat.recall_session_number ?? 0;
