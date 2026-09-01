@@ -963,8 +963,16 @@
     "recall_intro_title": "Snabb återkallning",
     "recall_intro_hint": "Orden döljs gradvis när du säger dem rätt. Vanliga ord är fördolda.",
     "recall_mode": "Snabb återkallning",
-     "hidden_words_explanation": "Vanliga ord är fördolda för att testa ditt minne",
-    "recall_intro_desc": "Innan nästa moment, låt oss säkerställa att du fortfarande minns Moment {{beatNumber}}."
+    "hidden_words_explanation": "Vanliga ord är fördolda för att testa ditt minne",
+    "recall_intro_desc": "Innan nästa moment, låt oss säkerställa att du fortfarande minns Moment {{beatNumber}}.",
+    "beat_short": "Avsnitt {{n}}",
+    "phase_sentence_read": "Mening {{n}} · läs",
+    "phase_sentence_recall": "Mening {{n}} · utan manus",
+    "phase_combine": "Mening 1 + 2",
+    "phase_combine_recall": "Mening 1 + 2 · utan manus",
+    "phase_full_read": "Hela avsnittet",
+    "phase_full_recall": "Hela avsnittet · utan manus",
+    "phase_mastered": "Klar"
   },
   "presentation": {
     "settings": "Presentationsinställningar",

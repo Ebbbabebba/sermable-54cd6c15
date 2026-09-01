@@ -686,7 +686,15 @@
     "recall_intro_hint": "Wörter werden nach und nach ausgeblendet, wenn du sie richtig sagst. Häufige Wörter sind vorab ausgeblendet.",
     "recall_mode": "Schnelle Abfrage",
     "hidden_words_explanation": "Häufige Wörter sind vorab ausgeblendet, um dein Gedächtnis zu testen",
-    "recall_intro_desc": "Bevor es zum nächsten Abschnitt geht, prüfen wir, ob du dich noch an Abschnitt {{beatNumber}} erinnerst."
+    "recall_intro_desc": "Bevor es zum nächsten Abschnitt geht, prüfen wir, ob du dich noch an Abschnitt {{beatNumber}} erinnerst.",
+    "beat_short": "Abschnitt {{n}}",
+    "phase_sentence_read": "Satz {{n}} · lesen",
+    "phase_sentence_recall": "Satz {{n}} · ohne Skript",
+    "phase_combine": "Satz 1 + 2",
+    "phase_combine_recall": "Satz 1 + 2 · ohne Skript",
+    "phase_full_read": "Ganzer Abschnitt",
+    "phase_full_recall": "Ganzer Abschnitt · ohne Skript",
+    "phase_mastered": "Fertig"
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",

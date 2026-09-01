@@ -686,7 +686,15 @@
     "recall_intro_hint": "Las palabras se ocultan progresivamente cuando las dices correctamente. Las palabras comunes están preocultas.",
     "recall_mode": "Repaso rápido",
     "hidden_words_explanation": "Las palabras comunes están preocultas para poner a prueba tu memoria",
-    "recall_intro_desc": "Antes del siguiente fragmento, asegurémonos de que aún recuerdas el Fragmento {{beatNumber}}."
+    "recall_intro_desc": "Antes del siguiente fragmento, asegurémonos de que aún recuerdas el Fragmento {{beatNumber}}.",
+    "beat_short": "Parte {{n}}",
+    "phase_sentence_read": "Frase {{n}} · leer",
+    "phase_sentence_recall": "Frase {{n}} · sin guion",
+    "phase_combine": "Frase 1 + 2",
+    "phase_combine_recall": "Frase 1 + 2 · sin guion",
+    "phase_full_read": "Parte completa",
+    "phase_full_recall": "Parte completa · sin guion",
+    "phase_mastered": "Completado"
   },
   "presentation": {
     "settings": "Configuración de presentación",
