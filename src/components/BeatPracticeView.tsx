@@ -3670,7 +3670,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
-        const hesitationMs = getHesitationThresholdMs();
+        // Flow gets an extra second before a hidden word is marked hesitated.
+        const hesitationMs =
+          getHesitationThresholdMs() + (practiceStrictnessRef.current === 'flow' ? 1000 : 0);
         const currentIsHidden = hiddenWordIndicesRef.current.has(idx);
         if (elapsed > hesitationMs && idx < wordsLengthRef.current) {
           if (currentIsHidden) {
