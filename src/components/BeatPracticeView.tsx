@@ -2001,7 +2001,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Current word didn't match - optionally check the next 1-2 words, but ONLY
         // when the skipped words are visible. Hidden words must be spoken or
         // revealed by the hesitation timer.
-        const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
+        // FLOW: paraphrasing is allowed, so the cursor may also step over a
+        // hidden word (still bounded by sentence + pause guards below).
+        const canSkipCurrent =
+          practiceStrictnessRef.current === 'flow' ||
+          !hiddenWordIndicesRef.current.has(advancedTo);
         // Never jump over a planned pause — the pause overlay must fire.
         const pauseInRange = (from: number, to: number) => {
           for (let k = from; k <= to; k++) if ((pauseWordMeta.get(k) ?? 0) > 0) return true;
