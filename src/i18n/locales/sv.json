@@ -961,7 +961,7 @@
     "skip_warning_title": "Är du säker?",
     "skip_warning_desc": "10-minuterspausen hjälper hjärnan att befästa det du just lärde dig. Att hoppa över den kan försämra inlärningen.",
     "recall_intro_title": "Snabb återkallning",
-    "recall_intro_hint": "Orden döljs gradvis när du säger dem rätt. Vanliga ord är fordolda.",
+    "recall_intro_hint": "Orden döljs gradvis när du säger dem rätt. Vanliga ord är fördolda.",
     "recall_mode": "Snabb återkallning",
      "hidden_words_explanation": "Vanliga ord är fördolda för att testa ditt minne",
     "recall_intro_desc": "Innan nästa moment, låt oss säkerställa att du fortfarande minns Moment {{beatNumber}}."
