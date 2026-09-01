@@ -1319,7 +1319,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             const tenMin = lastMasteredBeat.recall_10min_at
               ? new Date(lastMasteredBeat.recall_10min_at)
               : null;
-            if (tenMin && tenMin.getTime() <= now.getTime() && !lastMasteredBeat.recall_10min_done) return true;
+            const recalledSinceMastery = !!lastMasteredBeat.last_recall_at
+              && (!lastMasteredBeat.mastered_at
+                || new Date(lastMasteredBeat.last_recall_at) >= new Date(lastMasteredBeat.mastered_at));
+            if (tenMin && tenMin.getTime() <= now.getTime() && !recalledSinceMastery) return true;
             return false;
           })();
 
