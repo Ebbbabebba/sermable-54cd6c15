@@ -681,7 +681,12 @@
     "skip_warning_title": "Es-tu sûr ?",
     "skip_warning_desc": "La pause de 10 minutes aide ton cerveau à consolider ce que tu viens d'apprendre. La sauter peut réduire la mémorisation.",
     "coffee_break_title": "Pause café",
-    "coffee_break_desc": "Bravo ! Fais une pause de 10 minutes pour laisser ton cerveau consolider ce que tu viens d'apprendre. Un rappel rapide démarre quand le minuteur s'écoule."
+    "coffee_break_desc": "Bravo ! Fais une pause de 10 minutes pour laisser ton cerveau consolider ce que tu viens d'apprendre. Un rappel rapide démarre quand le minuteur s'écoule.",
+    "recall_intro_title": "Rappel rapide",
+    "recall_intro_hint": "Les mots se cachent progressivement quand tu les dis correctement. Les mots courants sont pré-masqués.",
+    "recall_mode": "Rappel rapide",
+    "hidden_words_explanation": "Les mots courants sont pré-masqués pour tester ta mémoire",
+    "recall_intro_desc": "Avant le passage suivant, vérifions que tu te souviens encore du Passage {{beat}}."
   },
   "presentation": {
     "settings": "Paramètres de présentation",

@@ -681,7 +681,12 @@
     "skip_warning_title": "Bist du sicher?",
     "skip_warning_desc": "Die 10-minütige Pause hilft deinem Gehirn, das Gelernte zu festigen. Sie zu überspringen kann das Behalten verringern.",
     "coffee_break_title": "Kaffeepause",
-    "coffee_break_desc": "Gut gemacht! Mach eine 10-minütige Pause, damit dein Gehirn das Gelernte festigen kann. Wenn der Timer abläuft, startet eine kurze Abfrage."
+    "coffee_break_desc": "Gut gemacht! Mach eine 10-minütige Pause, damit dein Gehirn das Gelernte festigen kann. Wenn der Timer abläuft, startet eine kurze Abfrage.",
+    "recall_intro_title": "Schnelle Abfrage",
+    "recall_intro_hint": "Wörter werden nach und nach ausgeblendet, wenn du sie richtig sagst. Häufige Wörter sind vorab ausgeblendet.",
+    "recall_mode": "Schnelle Abfrage",
+    "hidden_words_explanation": "Häufige Wörter sind vorab ausgeblendet, um dein Gedächtnis zu testen",
+    "recall_intro_desc": "Bevor es zum nächsten Abschnitt geht, prüfen wir, ob du dich noch an Abschnitt {{beat}} erinnerst."
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",

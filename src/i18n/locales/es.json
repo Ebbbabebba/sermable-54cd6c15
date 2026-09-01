@@ -681,7 +681,12 @@
     "skip_warning_title": "¿Estás seguro?",
     "skip_warning_desc": "El descanso de 10 minutos ayuda a tu cerebro a consolidar lo que acabas de aprender. Saltarlo puede reducir la retención.",
     "coffee_break_title": "Pausa para café",
-    "coffee_break_desc": "¡Buen trabajo! Tómate un descanso de 10 minutos para que tu cerebro consolide lo que acabas de aprender. Una repetición rápida comenzará cuando termine el temporizador."
+    "coffee_break_desc": "¡Buen trabajo! Tómate un descanso de 10 minutos para que tu cerebro consolide lo que acabas de aprender. Una repetición rápida comenzará cuando termine el temporizador.",
+    "recall_intro_title": "Repaso rápido",
+    "recall_intro_hint": "Las palabras se ocultan progresivamente cuando las dices correctamente. Las palabras comunes están preocultas.",
+    "recall_mode": "Repaso rápido",
+    "hidden_words_explanation": "Las palabras comunes están preocultas para poner a prueba tu memoria",
+    "recall_intro_desc": "Antes del siguiente fragmento, asegurémonos de que aún recuerdas el Fragmento {{beat}}."
   },
   "presentation": {
     "settings": "Configuración de presentación",
