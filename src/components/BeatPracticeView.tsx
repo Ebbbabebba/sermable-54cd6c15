@@ -1562,6 +1562,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return lenientWordIndicesRef.current.has(index);
   };
 
+  /**
+   * Does this repetition count as "good enough"?
+   *   • STRICT — zero tolerance: any yellow/red word fails the rep.
+   *   • FLOW   — content grading: connector/gap words never count as errors,
+   *              and the rep passes when ≥85% of the hidden target words were
+   *              said, as long as no two errors landed back to back.
+   */
+  const isRepPassable = (failedSet: Set<number>): boolean => {
+    if (practiceStrictnessRef.current !== 'flow') return failedSet.size === 0;
+    if (failedSet.size === 0) return true;
+
+    const hidden = hiddenWordIndicesRef.current;
+    const targets = Array.from(hidden).filter((i) => !isGapWord(words[i] ?? ''));
+    if (targets.length === 0) return true;
+
+    const realFailures = Array.from(failedSet)
+      .filter((i) => hidden.has(i) && !isGapWord(words[i] ?? ''))
+      .sort((a, b) => a - b);
+    if (realFailures.length === 0) return true;
+
+    // Two adjacent target words missed in a row = a genuine blank, not a slip.
+    for (let i = 1; i < realFailures.length; i++) {
+      if (realFailures[i] - realFailures[i - 1] === 1) return false;
+    }
+
+    const hitRatio = (targets.length - realFailures.length) / targets.length;
+    return hitRatio >= FLOW_PASS_RATIO;
+  };
+
   const getWordDistance = (a: string, b: string): number => {
     if (a === b) return 0;
     if (!a) return b.length;
