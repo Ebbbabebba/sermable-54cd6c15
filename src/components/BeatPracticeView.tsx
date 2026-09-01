@@ -2207,7 +2207,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastCompletionAtRef.current = Date.now();
 
     const failedSet = failed ?? failedWordIndices;
-    const hadErrors = failedSet.size > 0;
+    const hadErrors = !isRepPassable(failedSet);
 
     // Handle recall mode completion (morning recall of mastered beats)
     if (sessionMode === 'recall') {
