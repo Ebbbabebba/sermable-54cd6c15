@@ -230,7 +230,7 @@
         "strict": "Strikt",
         "strictDesc": "Varje ord räknas. Bäst för memorering.",
         "flow": "Flöde",
-        "flowDesc": "Få fram budskapet. Bäst för naturlig leverans."
+        "flowDesc": "Få fram budskapet — godkänt när ~85 % kommer med."
       }
     },
     "title": "Ladda upp nytt tal",
@@ -1056,10 +1056,10 @@
       "strict": "Strikt",
       "strictDesc": "Exakt ordföljd. Bra när varje ord räknas.",
       "flow": "Flöde",
-      "flowDesc": "Andemening framför exakthet. Naturligare talföring.",
+      "flowDesc": "Få fram budskapet — godkänt när ~85 % kommer med.",
       "saved": "Sparat",
       "strictHelp": "Talet matchas ord för ord. Fel och överhoppade ord markeras rött direkt, tveksamheter blir gula efter 2 s. AI-analysen är sträng.",
-      "flowHelp": "Talet matchas efter innebörd. Synonymer, små avvikelser och omkastade formuleringar godkänns. Fokus ligger på tempo och naturligt flöde snarare än exakthet."
+      "flowHelp": "Talet matchas efter innebörd. Synonymer, omkastade formuleringar och överhoppade ord godkänns, och en omgång räknas som klar när minst 85 % av de dolda nyckelorden kommer med. Bindeord räknas aldrig som fel."
     },
     "wordCount_one": "{{count}} ord",
     "wordCount_other": "{{count}} ord",

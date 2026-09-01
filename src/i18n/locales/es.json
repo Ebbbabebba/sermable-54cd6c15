@@ -205,7 +205,7 @@
         "strict": "Estricta",
         "strictDesc": "Cada palabra cuenta. Ideal para memorizar.",
         "flow": "Fluidez",
-        "flowDesc": "Transmite el significado. Ideal para una entrega natural."
+        "flowDesc": "Transmite el mensaje: se aprueba con ~85 %."
       }
     },
     "title": "Subir nuevo discurso",
@@ -821,10 +821,10 @@
       "strict": "Estricto",
       "strictDesc": "Orden exacto de las palabras. Ideal cuando cada palabra importa.",
       "flow": "Fluido",
-      "flowDesc": "El significado por encima de la exactitud. Entrega más natural.",
+      "flowDesc": "Transmite el mensaje: se aprueba con ~85 %.",
       "saved": "Guardado",
       "strictHelp": "Tu discurso se compara palabra por palabra. Los errores y las palabras omitidas se marcan en rojo al instante y las dudas en amarillo tras 2 s. El análisis de IA es exigente.",
-      "flowHelp": "Tu discurso se compara por significado. Se aceptan sinónimos, pequeñas desviaciones y frases reordenadas. El foco está en el ritmo y la fluidez natural más que en la exactitud."
+      "flowHelp": "Tu discurso se evalúa por significado. Se aceptan sinónimos, frases reordenadas y palabras omitidas, y una ronda se aprueba cuando al menos el 85 % de las palabras clave ocultas están cubiertas. Los conectores nunca cuentan como errores."
     }
   },
   "tour": {

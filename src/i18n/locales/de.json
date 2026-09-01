@@ -205,7 +205,7 @@
         "strict": "Strikt",
         "strictDesc": "Jedes Wort zählt. Am besten zum Auswendiglernen.",
         "flow": "Fluss",
-        "flowDesc": "Bring die Botschaft rüber. Am besten für natürliches Sprechen."
+        "flowDesc": "Die Botschaft zählt – bestanden ab ca. 85 %."
       }
     },
     "title": "Neue Rede hochladen",
@@ -821,10 +821,10 @@
       "strict": "Streng",
       "strictDesc": "Genaue Wortreihenfolge. Am besten, wenn jedes Wort zählt.",
       "flow": "Flüssig",
-      "flowDesc": "Bedeutung über Genauigkeit. Natürlichere Darbietung.",
+      "flowDesc": "Die Botschaft zählt – bestanden ab ca. 85 %.",
       "saved": "Gespeichert",
       "strictHelp": "Deine Rede wird Wort für Wort abgeglichen. Fehler und übersprungene Wörter werden sofort rot markiert, Zögern nach 2 Sek. gelb. Die KI-Analyse ist streng.",
-      "flowHelp": "Deine Rede wird sinngemäß abgeglichen. Synonyme, kleine Abweichungen und umgestellte Formulierungen werden akzeptiert. Der Fokus liegt auf Tempo und natürlichem Fluss statt auf Exaktheit."
+      "flowHelp": "Deine Rede wird nach Bedeutung bewertet. Synonyme, umgestellte Formulierungen und ausgelassene Wörter werden akzeptiert; eine Runde gilt als bestanden, wenn mindestens 85 % der versteckten Schlüsselwörter vorkommen. Füllwörter zählen nie als Fehler."
     }
   },
   "tour": {

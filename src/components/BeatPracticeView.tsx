@@ -382,6 +382,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [loading, setLoading] = useState(true);
   const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
   const [practiceStrictness, setPracticeStrictness] = useState<'strict' | 'flow'>('strict');
+  // Ref mirror so matching/completion callbacks never read a stale strictness.
+  const practiceStrictnessRef = useRef<'strict' | 'flow'>('strict');
+  useEffect(() => {
+    practiceStrictnessRef.current = practiceStrictness;
+  }, [practiceStrictness]);
+  // FLOW = content-based grading: a rep passes when ≥85% of the hidden target
+  // words were said (connector/gap words never count as failures).
+  const FLOW_PASS_RATIO = 0.85;
   const [familiarityLevel, setFamiliarityLevel] = useState<'beginner' | 'intermediate' | 'confident'>('beginner');
   
   // requiredLearningReps is computed after `phase` is declared (see below).
@@ -1554,6 +1562,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return lenientWordIndicesRef.current.has(index);
   };
 
+  /**
+   * Does this repetition count as "good enough"?
+   *   • STRICT — zero tolerance: any yellow/red word fails the rep.
+   *   • FLOW   — content grading: connector/gap words never count as errors,
+   *              and the rep passes when ≥85% of the hidden target words were
+   *              said, as long as no two errors landed back to back.
+   */
+  const isRepPassable = (failedSet: Set<number>): boolean => {
+    if (practiceStrictnessRef.current !== 'flow') return failedSet.size === 0;
+    if (failedSet.size === 0) return true;
+
+    const hidden = hiddenWordIndicesRef.current;
+    const targets = Array.from(hidden).filter((i) => !isGapWord(words[i] ?? ''));
+    if (targets.length === 0) return true;
+
+    const realFailures = Array.from(failedSet)
+      .filter((i) => hidden.has(i) && !isGapWord(words[i] ?? ''))
+      .sort((a, b) => a - b);
+    if (realFailures.length === 0) return true;
+
+    // Two adjacent target words missed in a row = a genuine blank, not a slip.
+    for (let i = 1; i < realFailures.length; i++) {
+      if (realFailures[i] - realFailures[i - 1] === 1) return false;
+    }
+
+    const hitRatio = (targets.length - realFailures.length) / targets.length;
+    return hitRatio >= FLOW_PASS_RATIO;
+  };
+
   const getWordDistance = (a: string, b: string): number => {
     if (a === b) return 0;
     if (!a) return b.length;
@@ -1586,7 +1623,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // cascade through whole sentences/sessions.
     // Overview mode reuses flow-level tolerance: paraphrasing is expected, so
     // hidden keywords accept pronunciation/wording variance.
-    const isFlowRelaxedHidden = (practiceStrictness === 'flow' || isOverviewModeRef.current) && isHidden && !isLenient;
+    const isFlowRelaxedHidden = (practiceStrictnessRef.current === 'flow' || isOverviewModeRef.current) && isHidden && !isLenient;
     const s = normalizeWord(spoken);
     const e = normalizeWord(expected);
     
@@ -1993,23 +2030,32 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Current word didn't match - optionally check the next 1-2 words, but ONLY
         // when the skipped words are visible. Hidden words must be spoken or
         // revealed by the hesitation timer.
-        const canSkipCurrent = !hiddenWordIndicesRef.current.has(advancedTo);
+        // FLOW: paraphrasing is allowed, so the cursor may also step over a
+        // hidden word (still bounded by sentence + pause guards below).
+        const canSkipCurrent =
+          practiceStrictnessRef.current === 'flow' ||
+          !hiddenWordIndicesRef.current.has(advancedTo);
         // Never jump over a planned pause — the pause overlay must fire.
         const pauseInRange = (from: number, to: number) => {
           for (let k = from; k <= to; k++) if ((pauseWordMeta.get(k) ?? 0) > 0) return true;
           return false;
         };
 
-        if (
-          canSkipCurrent &&
-          advancedTo + 1 < words.length &&
-          !crossesSentenceBoundary(advancedTo, advancedTo + 1) &&
-          !pauseInRange(advancedTo, advancedTo + 1) &&
-          wordMatchesAnyVariant(absoluteRawIndex, advancedTo + 1)
-        ) {
-          newSpoken.add(advancedTo);
-          foundIdx = advancedTo + 1;
-          usedSkipFill = true;
+        // Strict: only 1 word ahead. Flow: up to 2 words ahead.
+        const maxLookAhead = practiceStrictnessRef.current === 'flow' ? 2 : 1;
+        for (let ahead = 1; ahead <= maxLookAhead && foundIdx === -1; ahead++) {
+          const target = advancedTo + ahead;
+          if (
+            canSkipCurrent &&
+            target < words.length &&
+            !crossesSentenceBoundary(advancedTo, target) &&
+            !pauseInRange(advancedTo, target) &&
+            wordMatchesAnyVariant(absoluteRawIndex, target)
+          ) {
+            for (let j = advancedTo; j < target; j++) newSpoken.add(j);
+            foundIdx = target;
+            usedSkipFill = true;
+          }
         }
 
       }
@@ -2173,7 +2219,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Learning: 60% (strict — must read sentence). Fading: 40% (more lenient
     // because hidden words may be auto-advanced).
     if ((phase.includes('learning') || phase.includes('fading')) && sessionMode !== 'recall' && sessionMode !== 'pre_beat_recall') {
-      const ratio = phase.includes('learning') ? 0.6 : 0.4;
+      const isFlow = practiceStrictnessRef.current === 'flow';
+      // Flow speaks freely, so require a smaller share of verbatim fresh matches.
+      const ratio = phase.includes('learning') ? (isFlow ? 0.5 : 0.6) : (isFlow ? 0.3 : 0.4);
       const required = Math.max(1, Math.ceil(words.length * ratio));
       if (freshMatchesThisRepRef.current < required) {
         console.log(`🛑 Completion blocked — only ${freshMatchesThisRepRef.current}/${required} fresh matches this rep (${phase})`);
@@ -2188,7 +2236,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     lastCompletionAtRef.current = Date.now();
 
     const failedSet = failed ?? failedWordIndices;
-    const hadErrors = failedSet.size > 0;
+    const hadErrors = !isRepPassable(failedSet);
 
     // Handle recall mode completion (morning recall of mastered beats)
     if (sessionMode === 'recall') {
@@ -2278,8 +2326,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const failRatio = words.length > 0 ? totalFailed / words.length : 0;
 
         let demotionRungs = 0;
-        if (failRatio > 0.5) demotionRungs = 2;
-        else if (failRatio > 0.2) demotionRungs = 1;
+        // Flow tolerates more slips before demoting (content over wording).
+        const isFlow = practiceStrictnessRef.current === 'flow';
+        const hardFailAt = isFlow ? 0.6 : 0.5;
+        const softFailAt = isFlow ? 0.35 : 0.2;
+        if (failRatio > hardFailAt) demotionRungs = 2;
+        else if (failRatio > softFailAt) demotionRungs = 1;
         else demotionRungs = 0;
 
         const currentSession = failedBeat.recall_session_number ?? 0;
@@ -3618,7 +3670,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
-        const hesitationMs = getHesitationThresholdMs();
+        // Flow gets an extra second before a hidden word is marked hesitated.
+        const hesitationMs =
+          getHesitationThresholdMs() + (practiceStrictnessRef.current === 'flow' ? 1000 : 0);
         const currentIsHidden = hiddenWordIndicesRef.current.has(idx);
         if (elapsed > hesitationMs && idx < wordsLengthRef.current) {
           if (currentIsHidden) {
