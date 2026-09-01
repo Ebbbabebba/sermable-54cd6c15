@@ -74,7 +74,7 @@ body {
     --prop-cue-bg-strong: 32 95% 60% / 0.28;
     --prop-cue-fg: 32 95% 62%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
     /* Brand accents kept for legacy components */
     --sermable-teal: 186 72% 46%;
