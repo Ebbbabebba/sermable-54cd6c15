@@ -1193,7 +1193,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       });
       
       // Combine: 10-minute recalls first, then evening, then morning, then scheduled 2/3/5/7, then daily recalls
-      const allBeatsNeedingRecall = [
+      const queuedRecalls = [
         ...beatsNeeding10MinRecall, 
         ...beatsNeedingEveningRecall, 
         ...beatsNeedingMorningRecall, 
@@ -1202,13 +1202,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       ];
       
       // Check if we need a merged recall (2+ mastered beats and any individual recall is due)
-      const shouldDoMergedRecall = masteredBeats.length >= 2 && allBeatsNeedingRecall.length > 0;
+      const shouldDoMergedRecall = masteredBeats.length >= 2 && queuedRecalls.length > 0;
       // Check if merged recall was already done recently (within last 4 hours)
       const mergedRecallNeeded = shouldDoMergedRecall && masteredBeats.every(b => {
         if (!b.last_merged_recall_at) return true;
         const lastMerged = new Date(b.last_merged_recall_at);
         return (now.getTime() - lastMerged.getTime()) > 4 * 60 * 60 * 1000; // 4 hours
       });
+
+      // SESSION LENGTH CAP: never run more than 2 solo recalls in one session.
+      // When a merged rehearsal runs anyway it already covers every mastered
+      // beat, so the remaining due beats are handled there instead of being
+      // repeated twice in the same session.
+      const MAX_SOLO_RECALLS = 2;
+      const allBeatsNeedingRecall = mergedRecallNeeded
+        ? queuedRecalls.slice(0, MAX_SOLO_RECALLS)
+        : queuedRecalls.slice(0, Math.max(MAX_SOLO_RECALLS, 1));
+      if (allBeatsNeedingRecall.length < queuedRecalls.length) {
+        console.log(`✂️ Recall queue trimmed ${queuedRecalls.length} → ${allBeatsNeedingRecall.length} (rest covered by merged/next scheduled session)`);
+      }
+      
       
       // Find unmastered beats
       const unmasteredBeats = rows.filter(b => !b.is_mastered);
