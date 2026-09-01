@@ -399,6 +399,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [beatsToRecall, setBeatsToRecall] = useState<Beat[]>([]);
   const [recallIndex, setRecallIndex] = useState(0);
   const [recallSuccessCount, setRecallSuccessCount] = useState(0);
+  // True when the current recall beat has failed at least one rep this session.
+  // A clean, already-practiced beat only needs ONE perfect all-hidden run.
+  const recallHadFailureRef = useRef(false);
   const [newBeatToLearn, setNewBeatToLearn] = useState<Beat | null>(null);
   const [daysUntilDeadline, setDaysUntilDeadline] = useState(30);
   const [beatsPerDay, setBeatsPerDay] = useState(1);
