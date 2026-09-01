@@ -1306,7 +1306,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             .filter(b => b.mastered_at)
             .sort((a, b) => new Date(b.mastered_at!).getTime() - new Date(a.mastered_at!).getTime())[0];
           
-          if (lastMasteredBeat) {
+          // Only re-test the previous beat when it is actually DUE — a beat
+          // mastered minutes ago is still fresh, so testing it again right away
+          // just makes the session longer without helping memory.
+          const preBeatDue = (() => {
+            if (!lastMasteredBeat) return false;
+            if (daysUntilDeadline <= 3) return true;
+            const scheduled = lastMasteredBeat.next_scheduled_recall_at
+              ? new Date(lastMasteredBeat.next_scheduled_recall_at)
+              : null;
+            if (scheduled && scheduled.getTime() <= now.getTime()) return true;
+            const tenMin = lastMasteredBeat.recall_10min_at
+              ? new Date(lastMasteredBeat.recall_10min_at)
+              : null;
+            if (tenMin && tenMin.getTime() <= now.getTime() && !lastMasteredBeat.recall_10min_done) return true;
+            return false;
+          })();
+
+          if (lastMasteredBeat && preBeatDue) {
             // There's a previously mastered beat - recall it once before learning the new beat
             console.log('🔄 Pre-beat recall: recalling beat', lastMasteredBeat.beat_order, 'before learning beat', firstUnmastered.beat_order);
             setBeatToRecallBeforeNext(lastMasteredBeat);
