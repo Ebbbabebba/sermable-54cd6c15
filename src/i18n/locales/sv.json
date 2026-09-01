@@ -963,7 +963,7 @@
     "recall_intro_title": "Snabb återkallning",
     "recall_intro_hint": "Orden döljs gradvis när du säger dem rätt. Vanliga ord är fordolda.",
     "recall_mode": "Snabb återkallning",
-    "hidden_words_explanation": "Vanliga ord är fordolda för att testa ditt minne",
+     "hidden_words_explanation": "Vanliga ord är fördolda för att testa ditt minne",
     "recall_intro_desc": "Innan nästa moment, låt oss säkerställa att du fortfarande minns Moment {{beatNumber}}."
   },
   "presentation": {
