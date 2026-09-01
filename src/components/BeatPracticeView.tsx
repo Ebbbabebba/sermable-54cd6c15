@@ -2326,8 +2326,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const failRatio = words.length > 0 ? totalFailed / words.length : 0;
 
         let demotionRungs = 0;
-        if (failRatio > 0.5) demotionRungs = 2;
-        else if (failRatio > 0.2) demotionRungs = 1;
+        // Flow tolerates more slips before demoting (content over wording).
+        const isFlow = practiceStrictnessRef.current === 'flow';
+        const hardFailAt = isFlow ? 0.6 : 0.5;
+        const softFailAt = isFlow ? 0.35 : 0.2;
+        if (failRatio > hardFailAt) demotionRungs = 2;
+        else if (failRatio > softFailAt) demotionRungs = 1;
         else demotionRungs = 0;
 
         const currentSession = failedBeat.recall_session_number ?? 0;
