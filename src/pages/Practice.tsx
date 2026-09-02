@@ -126,12 +126,10 @@ const Practice = () => {
   const [editedScriptText, setEditedScriptText] = useState("");
   const [showTimingWarning, setShowTimingWarning] = useState(false);
   const [showSpacedRepetitionInfo, setShowSpacedRepetitionInfo] = useState(false);
-  const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   const [showKnowledgeTest, setShowKnowledgeTest] = useState(false);
   const [showSpeechSettings, setShowSpeechSettings] = useState(false);
   const [editingLearningMode, setEditingLearningMode] = useState<string>('word_by_word');
   const [editingDeadline, setEditingDeadline] = useState<Date | undefined>(undefined);
-  const [showPresentationPremium, setShowPresentationPremium] = useState(false);
   const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [todaySessionDone, setTodaySessionDone] = useState(false);
   const [practiceBeats, setPracticeBeats] = useState<{ id: string; beat_order: number; is_mastered: boolean; mastered_at: string | null; last_recall_at: string | null; sentence_1_text: string; sentence_2_text: string; sentence_3_text: string }[]>([]);
@@ -645,13 +643,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
       return;
     }
 
-    // For free users with session done, show premium upsell
-    // For premium users, always allow practice
-    if (!bypassSessionCheck && todaySessionDone && subscriptionTier === 'free') {
-      setShowPremiumUpsell(true);
-      return;
-    }
-    
     
     // Only show spaced repetition warning if actually locked AND has practice history
     // Skip warning if there's no lock, no practice history, or next review date is past/now
@@ -707,12 +698,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   
   const handleSpacedRepetitionPracticeAnyway = () => {
     setShowSpacedRepetitionInfo(false);
-    // Show premium upsell for free users, or start practice for premium
-    if (subscriptionTier === 'free') {
-      setShowPremiumUpsell(true);
-    } else {
-      handleStartPractice(true, true, true);
-    }
+    handleStartPractice(true, true, true);
   };
   
 
@@ -2183,13 +2169,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (subscriptionTier === 'free') {
-                    setShowPresentationPremium(true);
-                  } else {
-                    navigate(`/presentation/${id}`);
-                  }
-                }}
+                onClick={() => navigate(`/presentation/${id}`)}
                 className="rounded-full"
               >
                 <Presentation className="h-4 w-4" />
@@ -2406,27 +2386,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
           {/* Secondary CTA: strong button for practice anyway / upgrade, with countdown caption */}
           {isLocked && nextReviewDate && (
             <>
-              {subscriptionTier === 'free' ? (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => navigate('/settings')}
-                  className="w-full h-12 rounded-2xl font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {t('practice.upgradeToPremium')}
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setShowTimingWarning(true)}
-                  className="w-full h-12 rounded-2xl font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {t('practice.practiceAnyway')}
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setShowTimingWarning(true)}
+                className="w-full h-12 rounded-2xl font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                {t('practice.practiceAnyway')}
+              </Button>
               <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground pt-0.5">
                 <Clock className="h-3 w-3" />
                 <LockCountdown nextReviewDate={nextReviewDate} />
@@ -2623,114 +2591,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
         />
       )}
 
-      {/* Premium Upsell Dialog (compact) */}
-      <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-center justify-center">
-              <Crown className="h-5 w-5 text-amber-500" />
-              {t('practice.unlockFlexibility', 'Unlock Flexibility')}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground text-center">
-              {t('practice.premiumBypassDesc', 'Premium members can bypass spaced repetition timing when needed.')}
-            </p>
-            
-            <div className="space-y-2 bg-muted/50 rounded-xl p-4">
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.premiumFeature1', 'Practice anytime you want')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.premiumFeature2', 'AI-optimized scheduling')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <InfinityIcon className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.premiumFeature3', 'Unlimited speeches')}</span>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter className="flex-col gap-2">
-            <Button 
-              onClick={() => {
-                setShowPremiumUpsell(false);
-                navigate("/settings/payment");
-              }}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              {t('nav.upgradeToPremium', 'Upgrade to Premium')}
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => setShowPremiumUpsell(false)}
-              className="w-full text-muted-foreground"
-            >
-              {t('common.close', 'Close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Presentation Mode Premium Dialog */}
-      <Dialog open={showPresentationPremium} onOpenChange={setShowPresentationPremium}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-center justify-center">
-              <Presentation className="h-5 w-5 text-primary" />
-              {t('settings.subscription.presentationMode', 'Presentation Mode')}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground text-center">
-              {t('practice.presentationPremiumDesc', 'Test your memory with a full run-through. Premium feature.')}
-            </p>
-            
-            <div className="space-y-2 bg-muted/50 rounded-xl p-4">
-              <div className="flex items-center gap-2">
-                <Mic className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.presentationFeature1', 'Real-time speech tracking')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.presentationFeature2', 'Teleprompter hints when stuck')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.presentationFeature3', 'Detailed accuracy analysis')}</span>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter className="flex-col gap-2">
-            <Button 
-              onClick={() => {
-                setShowPresentationPremium(false);
-                navigate("/settings/payment");
-              }}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              {t('nav.upgradeToPremium', 'Upgrade to Premium')}
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => {
-                setShowPresentationPremium(false);
-                navigate("/dashboard");
-              }}
-              className="w-full text-muted-foreground"
-            >
-              {t('common.close', 'Close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
     </div>
   );
