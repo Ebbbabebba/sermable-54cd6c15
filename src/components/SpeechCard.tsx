@@ -337,9 +337,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (!FORCE_PREMIUM && subscriptionTier === 'free') {
-              setShowPresentationPremium(true);
-            } else {
+            {
               navigate(`/presentation/${speech.id}`);
             }
           }}
