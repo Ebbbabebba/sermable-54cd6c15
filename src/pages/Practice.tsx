@@ -1999,14 +1999,6 @@ const [liveTranscription, setLiveTranscription] = useState("");
               // Don't call ensureNextPracticeScheduled here - only lock when beat is mastered
               loadSpeech();
             }}
-            onSessionLimitReached={async () => {
-              // Free user hit daily beat limit - show premium upsell
-              setIsPracticing(false);
-              // Ensure schedule is written with future date, then reload
-              await ensureNextPracticeScheduled();
-              loadSpeech();
-              setShowPremiumUpsell(true);
-            }}
             onEditScript={() => {
               // Exit practice and open the edit-script dialog with the latest text
               setIsPracticing(false);

@@ -187,7 +187,6 @@ interface BeatPracticeViewProps {
   learningMode?: string | null; // 'word_by_word' (default) or 'general_overview'
   onComplete?: () => void;
   onExit?: () => void;
-  onSessionLimitReached?: () => void; // Called when free user hits daily limit
   onEditScript?: () => void; // Called when user wants to edit the script inline
 }
 
@@ -366,7 +365,7 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = FORCE_PREMIUM || subscriptionTier !== 'free';
   
