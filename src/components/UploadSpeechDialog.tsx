@@ -105,40 +105,6 @@ const UploadSpeechDialog = ({
     }
   }, [open]);
 
-  // Load tier limits when opened
-  useEffect(() => {
-    if (!open) return;
-    (async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const user = session?.user;
-        if (!user) return;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select(
-            "subscription_tier, monthly_speeches_count, monthly_speeches_reset_date"
-          )
-          .eq("id", user.id)
-          .single();
-        if (profile) {
-          setUserTier(FORCE_PREMIUM ? 'regular' : profile.subscription_tier);
-          const { data: limitData } = await supabase.rpc("get_word_limit", {
-            p_user_id: user.id,
-          });
-          if (limitData) setWordLimit(limitData);
-          const { data: canCreate } = await supabase.rpc("can_create_speech", {
-            p_user_id: user.id,
-          });
-          if (canCreate !== null) setCanCreateSpeech(FORCE_PREMIUM ? true : canCreate);
-        }
-      } catch (err) {
-        console.error("Error loading user limits:", err);
-      }
-    })();
-  }, [open]);
-
   // ----- camera / scan -----
   const startCamera = async () => {
     // On native (iOS/Android) use Capacitor Camera — the WebView getUserMedia
