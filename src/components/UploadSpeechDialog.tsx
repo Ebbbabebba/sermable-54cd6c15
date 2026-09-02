@@ -310,7 +310,7 @@ const UploadSpeechDialog = ({
       case "date":
         return goalDate.length > 0;
       case "text":
-        return text.trim().length >= 5 && wordCount <= wordLimit;
+        return text.trim().length >= 5;
       case "familiarity":
         return !!familiarityLevel;
       case "learning":
@@ -348,27 +348,6 @@ const UploadSpeechDialog = ({
 
   // ----- submit -----
   const handleSubmit = async () => {
-    if (wordCount > wordLimit) {
-      toast({
-        variant: "destructive",
-        title: t("upload.error"),
-        description:
-          t("upload.wordLimitExceeded", {
-            count: wordCount,
-            limit: wordLimit,
-          }) +
-          (userTier === "free" ? " " + t("upload.wordLimitUpgrade") : ""),
-      });
-      return;
-    }
-    if (!canCreateSpeech) {
-      toast({
-        variant: "destructive",
-        title: t("upload.limitReached"),
-        description: t("upload.limitReachedDesc"),
-      });
-      return;
-    }
     setLoading(true);
     setStep("submitting");
     try {
@@ -662,21 +641,6 @@ const UploadSpeechDialog = ({
               <PauseSlidersList text={text} onChange={handleTextChange} />
             </div>
 
-            <div className="flex items-center justify-between text-xs">
-              <span
-                className={cn(
-                  "text-muted-foreground",
-                  wordCount > wordLimit && "text-destructive font-medium"
-                )}
-              >
-                {wordCount} / {wordLimit} {t("dashboard.words")}
-              </span>
-              {userTier === "free" && (
-                <span className="text-muted-foreground">
-                  {t("upload.wordLimit")}
-                </span>
-              )}
-            </div>
           </StepShell>
         );
 
