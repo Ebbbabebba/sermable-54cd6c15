@@ -13,7 +13,6 @@ import { isHardToRecognizeWord } from "@/utils/wordRecognition";
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
-import { PremiumUpgradeDialog } from "./PremiumUpgradeDialog";
 import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Capacitor } from "@capacitor/core";
@@ -188,7 +187,6 @@ interface BeatPracticeViewProps {
   learningMode?: string | null; // 'word_by_word' (default) or 'general_overview'
   onComplete?: () => void;
   onExit?: () => void;
-  onSessionLimitReached?: () => void; // Called when free user hits daily limit
   onEditScript?: () => void; // Called when user wants to edit the script inline
 }
 
@@ -367,7 +365,7 @@ const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number
   return Math.ceil(unmasteredCount / daysUntilDeadline);
 };
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onSessionLimitReached, onEditScript }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = FORCE_PREMIUM || subscriptionTier !== 'free';
   
@@ -418,7 +416,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Hybrid endurance drills: alternate full-speech vs spot-reinforcement merges
   const [enduranceDrillCounter, setEnduranceDrillCounter] = useState<number>(0);
   const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
-  const [showCoffeePremiumUpsell, setShowCoffeePremiumUpsell] = useState(false); // Free-user upsell when tapping skip
   const [showPreBeatRecallIntro, setShowPreBeatRecallIntro] = useState(false); // Animated intro before pre-beat recall
   
   // Rest between beats state
@@ -1264,8 +1261,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         return masteredDate.toDateString() === new Date().toDateString();
       }).length;
       
-      // Premium users can learn unlimited beats; free users are limited
-      const canLearnMore = isPremium || beatsLearnedToday < computedBeatsPerDay;
+      // Everyone can learn unlimited beats.
+      const canLearnMore = true;
       const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
       
       console.log('Beat selection:', {
@@ -3395,10 +3392,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           } else {
             setSessionMode('session_complete');
           }
-          // Check if free user has more beats to learn (trigger upsell for next session)
-          if (!isPremium && nextUnmastered) {
-            onSessionLimitReached?.();
-          }
         }, 3200);
       }
     }
@@ -4244,64 +4237,39 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </p>
         </motion.div>
         
-        {/* Skip button - premium only */}
-        {isPremium ? (
-          <>
-            <Button variant="ghost" onClick={handleSkipClick} className="mt-4 text-muted-foreground">
-              <Play className="h-4 w-4 mr-2" />
-              {t('beat_practice.skip_break', "Start recall now")}
-            </Button>
-            
-            {/* Warning dialog for premium users */}
-            <AnimatePresence>
-              {showSkipWarning && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="bg-warning/10 border border-warning/30 rounded-xl p-4 max-w-sm"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-5 w-5 text-warning" />
-                    <span className="font-semibold text-warning text-sm">
-                      {t('beat_practice.skip_warning_title', "Are you sure?")}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {t('beat_practice.skip_warning_desc', "The 10-minute break helps your brain consolidate what you just learned. Skipping it may reduce retention.")}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setShowSkipWarning(false)} className="flex-1">
-                      {t('beat_practice.keep_waiting', "Keep waiting")}
-                    </Button>
-                    <Button size="sm" variant="default" onClick={startCoffeeBreakRecall} className="flex-1">
-                      {t('beat_practice.skip_anyway', "Skip anyway")}
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </>
-        ) : (
-          <>
-            {/* Free users: no skip button — forced 10-min wait. Premium upsell shown as info card. */}
-            <button
-              type="button"
-              onClick={() => setShowCoffeePremiumUpsell(true)}
-              className="mt-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground hover:bg-amber-500/10 transition-colors"
+        <Button variant="ghost" onClick={handleSkipClick} className="mt-4 text-muted-foreground">
+          <Play className="h-4 w-4 mr-2" />
+          {t('beat_practice.skip_break', "Start recall now")}
+        </Button>
+
+        <AnimatePresence>
+          {showSkipWarning && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="bg-warning/10 border border-warning/30 rounded-2xl p-4 max-w-sm"
             >
-              <Lock className="h-3.5 w-3.5" />
-              <span>
-                {t('beat_practice.skip_break_premium_only', "Premium users can skip the break")}
-              </span>
-              <Crown className="h-3.5 w-3.5 text-amber-500" />
-            </button>
-            <PremiumUpgradeDialog
-              open={showCoffeePremiumUpsell}
-              onOpenChange={setShowCoffeePremiumUpsell}
-            />
-          </>
-        )}
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-5 w-5 text-warning" />
+                <span className="font-semibold text-warning text-sm">
+                  {t('beat_practice.skip_warning_title', "Are you sure?")}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                {t('beat_practice.skip_warning_desc', "The 10-minute break helps your brain consolidate what you just learned. Skipping it may reduce retention.")}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowSkipWarning(false)} className="flex-1">
+                  {t('beat_practice.keep_waiting', "Keep waiting")}
+                </Button>
+                <Button size="sm" variant="default" onClick={startCoffeeBreakRecall} className="flex-1">
+                  {t('beat_practice.skip_anyway', "Skip anyway")}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -4430,7 +4398,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </Button>
           
           {/* Edit script — exits the session and opens the inline edit dialog */}
-          {onEditScript && !showCelebration && (FORCE_PREMIUM || subscriptionTier !== 'free') && (
+          {onEditScript && !showCelebration && (
             <Button
               variant="ghost"
               size="icon"

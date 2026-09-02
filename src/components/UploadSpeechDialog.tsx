@@ -86,8 +86,6 @@ const UploadSpeechDialog = ({
   const [userTier, setUserTier] = useState<
     "free" | "student" | "regular" | "enterprise"
   >("free");
-  const [wordLimit, setWordLimit] = useState(500);
-  const [canCreateSpeech, setCanCreateSpeech] = useState(true);
 
   // ----- text-input helpers -----
   const [isScanning, setIsScanning] = useState(false);
@@ -105,40 +103,6 @@ const UploadSpeechDialog = ({
     } else {
       stopCamera();
     }
-  }, [open]);
-
-  // Load tier limits when opened
-  useEffect(() => {
-    if (!open) return;
-    (async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const user = session?.user;
-        if (!user) return;
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select(
-            "subscription_tier, monthly_speeches_count, monthly_speeches_reset_date"
-          )
-          .eq("id", user.id)
-          .single();
-        if (profile) {
-          setUserTier(FORCE_PREMIUM ? 'regular' : profile.subscription_tier);
-          const { data: limitData } = await supabase.rpc("get_word_limit", {
-            p_user_id: user.id,
-          });
-          if (limitData) setWordLimit(limitData);
-          const { data: canCreate } = await supabase.rpc("can_create_speech", {
-            p_user_id: user.id,
-          });
-          if (canCreate !== null) setCanCreateSpeech(FORCE_PREMIUM ? true : canCreate);
-        }
-      } catch (err) {
-        console.error("Error loading user limits:", err);
-      }
-    })();
   }, [open]);
 
   // ----- camera / scan -----
@@ -310,7 +274,7 @@ const UploadSpeechDialog = ({
       case "date":
         return goalDate.length > 0;
       case "text":
-        return text.trim().length >= 5 && wordCount <= wordLimit;
+        return text.trim().length >= 5;
       case "familiarity":
         return !!familiarityLevel;
       case "learning":
@@ -348,27 +312,6 @@ const UploadSpeechDialog = ({
 
   // ----- submit -----
   const handleSubmit = async () => {
-    if (wordCount > wordLimit) {
-      toast({
-        variant: "destructive",
-        title: t("upload.error"),
-        description:
-          t("upload.wordLimitExceeded", {
-            count: wordCount,
-            limit: wordLimit,
-          }) +
-          (userTier === "free" ? " " + t("upload.wordLimitUpgrade") : ""),
-      });
-      return;
-    }
-    if (!canCreateSpeech) {
-      toast({
-        variant: "destructive",
-        title: t("upload.limitReached"),
-        description: t("upload.limitReachedDesc"),
-      });
-      return;
-    }
     setLoading(true);
     setStep("submitting");
     try {
@@ -662,21 +605,6 @@ const UploadSpeechDialog = ({
               <PauseSlidersList text={text} onChange={handleTextChange} />
             </div>
 
-            <div className="flex items-center justify-between text-xs">
-              <span
-                className={cn(
-                  "text-muted-foreground",
-                  wordCount > wordLimit && "text-destructive font-medium"
-                )}
-              >
-                {wordCount} / {wordLimit} {t("dashboard.words")}
-              </span>
-              {userTier === "free" && (
-                <span className="text-muted-foreground">
-                  {t("upload.wordLimit")}
-                </span>
-              )}
-            </div>
           </StepShell>
         );
 

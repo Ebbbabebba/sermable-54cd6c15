@@ -19,7 +19,6 @@ import UploadSpeechDialog from "@/components/UploadSpeechDialog";
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
-import { PremiumUpgradeDialog } from "@/components/PremiumUpgradeDialog";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { waitForStableSession } from "@/lib/authSession";
 
@@ -44,7 +43,6 @@ const Dashboard = () => {
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
-  const [showPremiumDialog, setShowPremiumDialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -224,10 +222,6 @@ const Dashboard = () => {
     loadSpeeches();
   };
 
-  const handleUpgradeToPremium = () => {
-    setShowPremiumDialog(true);
-  };
-
   // No full-screen loading blocker — show the shell immediately
 
   return (
@@ -239,12 +233,6 @@ const Dashboard = () => {
           onClose={() => setShowStreakCelebration(false)} 
         />
       )}
-
-      {/* Premium Upgrade Dialog */}
-      <PremiumUpgradeDialog 
-        open={showPremiumDialog} 
-        onOpenChange={setShowPremiumDialog} 
-      />
 
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
         <div className="px-4 h-14 flex items-center justify-between gap-3 max-w-2xl mx-auto">
@@ -280,27 +268,6 @@ const Dashboard = () => {
                     <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col gap-3 mt-8">
-                    {!FORCE_PREMIUM && (
-                      <>
-                        <div className="pb-4 border-b border-border">
-                          <span className={`text-sm ${
-                            subscriptionTier === 'regular' || subscriptionTier === 'enterprise' || subscriptionTier === 'student'
-                              ? 'text-amber-600 dark:text-amber-400 font-medium'
-                              : 'text-muted-foreground'
-                          }`}>
-                            {subscriptionTier === 'regular' ? t('subscription.premium') : subscriptionTier === 'enterprise' ? t('subscription.enterprise') : subscriptionTier === 'student' ? t('subscription.student') : t('subscription.free')} {t('dashboard.plan')}
-                          </span>
-                        </div>
-                        {subscriptionTier === 'free' && (
-                          <Button variant="apple" onClick={() => {
-                            handleUpgradeToPremium();
-                            setMobileMenuOpen(false);
-                          }}>
-                            {t('nav.upgradeToPremium')}
-                          </Button>
-                        )}
-                      </>
-                    )}
                     <Button variant="ghost" className="justify-start" onClick={() => {
                       navigate("/settings");
                       setMobileMenuOpen(false);

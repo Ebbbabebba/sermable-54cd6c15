@@ -49,12 +49,9 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const { toast } = useToast();
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
   const [isLocked, setIsLocked] = useState(false);
-  const [showPresentationPremium, setShowPresentationPremium] = useState(false);
   const [deadlineOpen, setDeadlineOpen] = useState(false);
   const [masteryPercent, setMasteryPercent] = useState<number | null>(null);
   
-  // Check if this is the only speech for a free user
-  const isOnlyFreeSpeech = !FORCE_PREMIUM && subscriptionTier === 'free' && totalSpeeches === 1;
   
   const goalDate = new Date(speech.goal_date);
   const today = new Date();
@@ -337,9 +334,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (!FORCE_PREMIUM && subscriptionTier === 'free') {
-              setShowPresentationPremium(true);
-            } else {
+            {
               navigate(`/presentation/${speech.id}`);
             }
           }}
@@ -359,13 +354,6 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
               <AlertDialogDescription asChild>
                 <div className="space-y-3">
                   <p>{t('dashboard.deleteSpeechDesc', { title: speech.title })}</p>
-                  {isOnlyFreeSpeech && (
-                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400">
-                      <p className="text-sm font-medium">
-                        {t('dashboard.deleteOnlyFreeSpeechWarning', "This is your only free speech this month. Free users can only create 1 speech per month. If you delete it, you won't be able to create a new one until next month.")}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -379,58 +367,6 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </AlertDialog>
       </CardFooter>
 
-      {/* Presentation Mode Premium Dialog */}
-      <Dialog open={showPresentationPremium} onOpenChange={setShowPresentationPremium}>
-        <DialogContent className="max-w-sm rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-center justify-center">
-              <Presentation className="h-5 w-5 text-primary" />
-              {t('settings.subscription.presentationMode', 'Presentation Mode')}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground text-center">
-              {t('practice.presentationPremiumDesc', 'Test your memory with a full run-through. Premium feature.')}
-            </p>
-            
-            <div className="space-y-2 bg-muted/50 rounded-2xl p-4">
-              <div className="flex items-center gap-2">
-                <Mic className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.presentationFeature1', 'Real-time speech tracking')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.presentationFeature2', 'Teleprompter hints when stuck')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" />
-                <span className="text-sm">{t('practice.presentationFeature3', 'Detailed accuracy analysis')}</span>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter className="flex-col gap-2">
-            <Button 
-              onClick={() => {
-                setShowPresentationPremium(false);
-                navigate("/settings/payment");
-              }}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              {t('nav.upgradeToPremium', 'Upgrade to Premium')}
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => setShowPresentationPremium(false)}
-              className="w-full text-muted-foreground"
-            >
-              {t('common.close', 'Close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 };
