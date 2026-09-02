@@ -86,8 +86,6 @@ const UploadSpeechDialog = ({
   const [userTier, setUserTier] = useState<
     "free" | "student" | "regular" | "enterprise"
   >("free");
-  const [wordLimit, setWordLimit] = useState(500);
-  const [canCreateSpeech, setCanCreateSpeech] = useState(true);
 
   // ----- text-input helpers -----
   const [isScanning, setIsScanning] = useState(false);
