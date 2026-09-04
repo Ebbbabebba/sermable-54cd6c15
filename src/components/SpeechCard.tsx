@@ -209,6 +209,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   };
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("speeches")
@@ -228,8 +229,11 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         title: t('common.error'),
         description: error.message,
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
+
 
 
   return (
