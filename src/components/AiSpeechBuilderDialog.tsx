@@ -144,9 +144,9 @@ export const AiSpeechBuilderDialog = ({
     <Dialog open={open} onOpenChange={closeAndReset}>
       <DialogContent
         overlayClassName="!z-[60] bg-background/65 backdrop-blur-none"
-        className="!z-[70] !inset-auto !left-1/2 !top-1/2 w-[calc(100%-2rem)] max-w-2xl max-h-[min(86dvh,720px)] !-translate-x-1/2 !-translate-y-1/2 overflow-y-auto rounded-3xl border-border/60 bg-card p-5 shadow-2xl backdrop-blur-none sm:p-6"
+        className="!z-[70] !inset-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 w-screen h-[100dvh] max-w-none sm:w-[calc(100%-2rem)] sm:max-w-2xl sm:h-auto sm:max-h-[min(86dvh,720px)] !translate-x-0 !translate-y-0 sm:!-translate-x-1/2 sm:!-translate-y-1/2 flex flex-col overflow-hidden rounded-none sm:rounded-3xl border-border/60 bg-card p-0 shadow-2xl backdrop-blur-none"
       >
-        <DialogHeader>
+        <DialogHeader className="px-5 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-border/60 shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-primary" />
             {t("aiBuilder.title", "Bygg tal med AI")}
