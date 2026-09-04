@@ -47,7 +47,9 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
+
   const [isLocked, setIsLocked] = useState(false);
   const [deadlineOpen, setDeadlineOpen] = useState(false);
   const [masteryPercent, setMasteryPercent] = useState<number | null>(null);
@@ -209,6 +211,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   };
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("speeches")
@@ -228,8 +231,11 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         title: t('common.error'),
         description: error.message,
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
+
 
 
   return (
@@ -358,10 +364,15 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-border">{t('common.cancel')}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                {t('common.delete')}
+              <AlertDialogCancel className="border-border" disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? t('dashboard.deleting') : t('common.delete')}
               </AlertDialogAction>
+
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
