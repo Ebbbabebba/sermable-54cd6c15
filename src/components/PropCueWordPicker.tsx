@@ -118,11 +118,6 @@ const PropCueWordPicker = ({
                       className="absolute left-0 px-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap pointer-events-none"
                       style={{ top: "-1.15rem", backgroundColor: "hsl(var(--prop-cue-fg))", color: "hsl(var(--background))" }}
                     >
-                      style={{
-                        backgroundColor: "hsl(var(--prop-cue-fg))",
-                        color: "hsl(var(--background))",
-                      }}
-                    >
                       {existing.cue}
                     </span>
                   )}
