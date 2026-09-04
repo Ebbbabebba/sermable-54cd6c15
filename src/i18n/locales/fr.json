@@ -128,7 +128,8 @@
     "dueForPractice": "Prêt à pratiquer",
     "dueForPracticeDescription": "Ces segments sont parfaits à pratiquer maintenant",
     "beat": "Segment",
-    "inTime": "dans"
+    "inTime": "dans",
+    "deleting": "Suppression du discours..."
   },
   "onboarding": {
     "skip": "Passer",

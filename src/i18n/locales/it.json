@@ -128,7 +128,8 @@
     "dueForPractice": "Pronto per esercitarsi",
     "dueForPracticeDescription": "Questi segmenti sono ottimali da esercitare adesso",
     "beat": "Segmento",
-    "inTime": "tra"
+    "inTime": "tra",
+    "deleting": "Eliminazione del discorso..."
   },
   "onboarding": {
     "skip": "Salta",
