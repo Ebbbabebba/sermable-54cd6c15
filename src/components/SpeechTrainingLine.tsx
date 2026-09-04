@@ -131,8 +131,9 @@ export default function SpeechTrainingLine({
   };
 
 
-  const isCorrectWord = (spoken: string, expected: string): boolean => 
-    spoken.toLowerCase() === expected.toLowerCase();
+  const isCorrectWord = (spoken: string, expected: string): boolean =>
+    spoken.toLowerCase() === expected.toLowerCase() ||
+    phoneticMatch(spoken, expected);
 
   const isAlmostWord = (spoken: string, expected: string): boolean => {
     const lev = levenshtein(spoken.toLowerCase(), expected.toLowerCase());
