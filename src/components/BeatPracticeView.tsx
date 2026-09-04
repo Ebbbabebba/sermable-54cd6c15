@@ -4374,6 +4374,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   const progressInfo = getProgressInfo();
 
+  // Full-screen animal audience: only in the final, script-free stage of a
+  // repetition (every target word hidden) — they wake up word by word.
+  const audienceScriptFree = phase.includes('fading') || sessionMode === 'recall' || sessionMode === 'pre_beat_recall';
+  const audienceVisible =
+    (audienceCelebrating || (audienceScriptFree && hiddenWordIndices.size > 0 && isAllTargetHidden(hiddenWordIndices))) &&
+    !activePause;
+  const audienceProgress = Math.min(1, spokenIndices.size / Math.max(1, words.length));
+
   return (
     <div className="flex flex-col h-full bg-background">
       {audienceVisible && (
