@@ -4376,8 +4376,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {showAnimalAudience && (
-        <AnimalAudience onDone={() => setShowAnimalAudience(false)} />
+      {audienceVisible && (
+        <AnimalAudience
+          progress={audienceProgress}
+          celebrating={audienceCelebrating}
+          onDone={() => setAudienceCelebrating(false)}
+        />
       )}
       <PauseCountdownOverlay
         remainingSeconds={activePause?.remainingSeconds ?? null}
