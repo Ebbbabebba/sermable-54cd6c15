@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { isHardToRecognizeWord, phoneticMatch } from "@/utils/wordRecognition";
 
 import SentenceDisplay from "./SentenceDisplay";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1731,9 +1731,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     
     // Exact match - always pass
     if (s === e) return true;
-    
+
     // Empty after normalization
     if (!s || !e) return false;
+
+    // Phonetic match: spoken the way it sounds (e.g. "Sermable" → "särmable")
+    // passes even when the recognizer spells it differently.
+    if (phoneticMatch(s, e)) return true;
     
     // For LENIENT words (proper nouns/names, flow mode, and short gap words), use forgiving rules.
     // These are hidden but should not block the user when speech recognition drops or merges them.

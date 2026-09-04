@@ -36,3 +36,70 @@ export const isHardToRecognizeWord = (word: string): boolean => {
 
   return false;
 };
+
+/**
+ * Phonetic matching: accepts words spoken the way they sound even when the
+ * recognizer transcribes a different spelling (e.g. brand names like
+ * "Sermable" → "särmable"). Soundex-style key: keep the first letter, map
+ * the rest to consonant-sound groups, drop vowels, collapse repeats.
+ */
+const PHONETIC_GROUP: Record<string, string> = {
+  b: '1', p: '1', f: '1', v: '1', w: '1',
+  c: '2', g: '2', j: '2', k: '2', q: '2', s: '2', x: '2', z: '2',
+  d: '3', t: '3',
+  l: '4',
+  m: '5', n: '5',
+  r: '6',
+};
+
+export const phoneticKey = (word: string): string => {
+  const cleaned = word
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^\p{L}]+/gu, '');
+  if (!cleaned) return '';
+
+  let key = cleaned[0];
+  let prev = PHONETIC_GROUP[cleaned[0]] ?? '';
+  for (let i = 1; i < cleaned.length; i++) {
+    const g = PHONETIC_GROUP[cleaned[i]] ?? '';
+    if (g && g !== prev) key += g;
+    prev = g;
+  }
+  return key;
+};
+
+const phoneticDistance = (a: string, b: string): number => {
+  if (a === b) return 0;
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const curr = new Array<number>(b.length + 1);
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      curr[j] = Math.min(
+        curr[j - 1] + 1,
+        prev[j] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    prev.splice(0, prev.length, ...curr);
+  }
+  return prev[b.length];
+};
+
+/**
+ * True when two words sound alike. Requires the expected word to be 4+
+ * letters so short words never false-positive, keys to share the first
+ * letter, and at most one edit between the phonetic keys.
+ */
+export const phoneticMatch = (spoken: string, expected: string): boolean => {
+  const a = phoneticKey(spoken);
+  const b = phoneticKey(expected);
+  if (!a || !b) return false;
+  if (expected.replace(/[^\p{L}]+/gu, '').length < 4) return false;
+  if (a[0] !== b[0]) return false;
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  return b.length >= 4 && phoneticDistance(a, b) <= 1;
+};

@@ -35,6 +35,7 @@ import { LearningModeSelector } from "@/components/LearningModeSelector";
 import KnowledgeTestDialog from "@/components/KnowledgeTestDialog";
 import { useTheme } from "@/contexts/ThemeContext";
 import { stripStageDirections } from "@/utils/stageDirections";
+import { phoneticMatch } from "@/utils/wordRecognition";
 import { PauseSlidersList } from "@/components/PauseSlidersList";
 import PropCueTextarea from "@/components/PropCueTextarea";
 import { Slider } from "@/components/ui/slider";
@@ -1013,6 +1014,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
             if (!spoken || !expected) return false;
             // Exact match
             if (spoken === expected) return true;
+
+            // Sounds-the-same spellings (brand names like "Sermable" → "särmable")
+            if (phoneticMatch(spoken, expected)) return true;
 
             // Prefix match (either direction). Handles "demo" → "demokrati"
             // and "demokratin" → "demokrati" style cuts from the recognizer.

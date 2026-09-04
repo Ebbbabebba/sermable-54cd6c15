@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Mic, Square, X, Ear } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { isHardToRecognizeWord, phoneticMatch } from "@/utils/wordRecognition";
 
 interface ListenSessionResult {
   durationSeconds: number;
@@ -62,6 +62,8 @@ const getWordSimilarity = (w1: string, w2: string): number => {
   if (a === b) return 1.0;
   if (!a || !b) return 0.0;
   if (a.length <= 2 || b.length <= 2) return a === b ? 1.0 : 0.0;
+  // Sounds-the-same spellings (brand names like "Sermable" → "särmable").
+  if (phoneticMatch(a, b)) return 0.9;
   if (a.length >= b.length + 2 && a.includes(b)) return 0.9;
   if (b.length >= a.length + 2 && b.includes(a) && a.length >= Math.max(3, b.length - 2)) return 0.86;
   if (a[0] !== b[0] && a[1] !== b[1]) return 0.0;
