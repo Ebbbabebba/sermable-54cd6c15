@@ -83,50 +83,59 @@ const PropCueWordPicker = ({
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-6 leading-relaxed">
+        <div className="flex-1 overflow-y-auto px-5 py-6">
           {tokens.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("upload.propCue.pickerEmpty", "Add some text first.")}
             </p>
           ) : (
-            tokens.map((tk) => {
-              const existing = cueIndex.get(tk.index);
-              const isSelected = selected.has(tk.index);
-              const isCueStart = !!existing && existing.startWordIndex === tk.index;
-              return (
-                <button
-                  key={tk.index}
-                  type="button"
-                  onClick={() => toggle(tk.index)}
-                  className={cn(
-                    "relative inline-block mr-1.5 mb-3 px-2 py-1 rounded-lg text-base transition-colors align-bottom",
-                    isCueStart && "mt-5",
-                    !existing && !isSelected && "hover:bg-muted",
-                    isSelected && "bg-primary text-primary-foreground",
-                  )}
-                  style={
-                    existing && !isSelected
-                      ? {
-                          backgroundColor: "hsl(var(--prop-cue-bg-strong))",
-                          color: "hsl(var(--prop-cue-fg))",
-                        }
-                      : undefined
-                  }
-                >
-                  {isCueStart && (
+            <div className="flex flex-wrap items-end gap-x-1.5 gap-y-2">
+              {tokens.map((tk) => {
+                const existing = cueIndex.get(tk.index);
+                const isSelected = selected.has(tk.index);
+                const isCueStart = !!existing && existing.startWordIndex === tk.index;
+                return (
+                  <button
+                    key={tk.index}
+                    type="button"
+                    onClick={() => toggle(tk.index)}
+                    className="flex flex-col items-start max-w-full"
+                  >
+                    {isCueStart && (
+                      <span
+                        className="mb-0.5 max-w-[9rem] truncate px-1.5 py-[1px] rounded-full text-[10px] font-bold uppercase tracking-wider"
+                        style={{
+                          backgroundColor: "hsl(var(--prop-cue-fg))",
+                          color: "hsl(var(--background))",
+                        }}
+                      >
+                        {existing.cue}
+                      </span>
+                    )}
                     <span
-                      className="absolute left-0 px-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap pointer-events-none"
-                      style={{ top: "-1.15rem", backgroundColor: "hsl(var(--prop-cue-fg))", color: "hsl(var(--background))" }}
+                      className={cn(
+                        "block px-2 py-1 rounded-lg text-base transition-colors max-w-full break-words text-left",
+                        !existing && !isSelected && "hover:bg-muted",
+                        isSelected && "bg-primary text-primary-foreground",
+                      )}
+                      style={
+                        existing && !isSelected
+                          ? {
+                              backgroundColor: "hsl(var(--prop-cue-bg-strong))",
+                              color: "hsl(var(--prop-cue-fg))",
+                            }
+                          : undefined
+                      }
                     >
-                      {existing.cue}
+                      {tk.text}
                     </span>
-                  )}
-                  {tk.text}
-                </button>
-              );
-            })
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
+
 
         <div className="border-t border-border/60 px-5 py-4 space-y-3 bg-card/60 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <div className="flex items-center gap-2">
