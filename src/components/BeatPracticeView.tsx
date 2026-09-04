@@ -474,7 +474,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [showCelebration, setShowCelebration] = useState(false);
   // Occasional Duolingo-style animal audience that cheers when a sentence is
   // mastered without the script.
-  const [showAnimalAudience, setShowAnimalAudience] = useState(false);
+  const [audienceCelebrating, setAudienceCelebrating] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   const { toast } = useToast();
   
@@ -2390,11 +2390,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
       pauseSpeechRecognition(1300, true);
-      // Random little audience of animals — only for a clean, script-free run,
-      // and never during the very first sentence of a beat.
-      const isFirstSentence = phase === 'sentence_1_fading';
-      if (!isFirstSentence && !hadErrors && hiddenWordIndicesRef.current.size > 0 && Math.random() < 0.35) {
-        setShowAnimalAudience(true);
+      // If the whole-script audience was up and the run was clean, let the
+      // animals erupt in a final cheer before the phase moves on.
+      if (!hadErrors && isAllTargetHidden(hiddenWordIndicesRef.current)) {
+        setAudienceCelebrating(true);
       }
       handleFadingCompletion(hadErrors, failedSet);
     }
