@@ -83,7 +83,7 @@ const PropCueWordPicker = ({
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-6 leading-loose">
+        <div className="flex-1 overflow-y-auto px-5 py-6 leading-relaxed">
           {tokens.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("upload.propCue.pickerEmpty", "Add some text first.")}
@@ -92,13 +92,15 @@ const PropCueWordPicker = ({
             tokens.map((tk) => {
               const existing = cueIndex.get(tk.index);
               const isSelected = selected.has(tk.index);
+              const isCueStart = !!existing && existing.startWordIndex === tk.index;
               return (
                 <button
                   key={tk.index}
                   type="button"
                   onClick={() => toggle(tk.index)}
                   className={cn(
-                    "relative inline-block mr-1.5 mb-3 px-2 py-1 rounded-lg text-base transition-colors",
+                    "relative inline-block mr-1.5 mb-3 px-2 py-1 rounded-lg text-base transition-colors align-bottom",
+                    isCueStart && "mt-5",
                     !existing && !isSelected && "hover:bg-muted",
                     isSelected && "bg-primary text-primary-foreground",
                   )}
@@ -111,13 +113,10 @@ const PropCueWordPicker = ({
                       : undefined
                   }
                 >
-                  {existing && existing.startWordIndex === tk.index && (
+                  {isCueStart && (
                     <span
-                      className="absolute -top-3 left-0 px-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"
-                      style={{
-                        backgroundColor: "hsl(var(--prop-cue-fg))",
-                        color: "hsl(var(--background))",
-                      }}
+                      className="absolute left-0 px-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap pointer-events-none"
+                      style={{ top: "-1.15rem", backgroundColor: "hsl(var(--prop-cue-fg))", color: "hsl(var(--background))" }}
                     >
                       {existing.cue}
                     </span>
