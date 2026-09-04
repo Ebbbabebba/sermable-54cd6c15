@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { phoneticMatch } from '@/utils/wordRecognition';
 import './SpeechTrainingLine.css';
 
 interface WordStatus {
