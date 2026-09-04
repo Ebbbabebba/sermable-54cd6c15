@@ -67,7 +67,7 @@ const getRecognitionLanguage = (lang: string): string => {
   return langMap[lang.toLowerCase()] || `${lang}-${lang.toUpperCase()}`;
 };
 
-import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { isHardToRecognizeWord, phoneticMatch } from "@/utils/wordRecognition";
 
 // --- Matching tuning ---
 // Whole Speech Mode should follow the speaker even when they speak lightly or
@@ -129,6 +129,8 @@ const getWordSimilarity = (word1: string, word2: string): number => {
     if (w1.length === w2.length && levenshteinDistance(w1, w2) <= 1) return 0.9;
     return w1 === w2 ? 1.0 : 0.0;
   }
+  // Sounds-the-same spellings (brand names like "Sermable" → "särmable").
+  if (phoneticMatch(w1, w2)) return 0.9;
 
   const maxLen = Math.max(w1.length, w2.length);
   const minLen = Math.min(w1.length, w2.length);

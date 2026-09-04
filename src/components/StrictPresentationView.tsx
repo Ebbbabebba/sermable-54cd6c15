@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { isHardToRecognizeWord } from "@/utils/wordRecognition";
+import { isHardToRecognizeWord, phoneticMatch } from "@/utils/wordRecognition";
 import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 import PropCueOverlay from "@/components/PropCueOverlay";
@@ -77,7 +77,9 @@ const getWordSimilarity = (word1: string, word2: string): number => {
   const w2 = normalizeWord(word2);
   if (w1 === w2) return 1.0;
   if (w1.length <= 2 || w2.length <= 2) return w1 === w2 ? 1.0 : 0.0;
-  
+  // Sounds-the-same spellings (brand names like "Sermable" → "särmable").
+  if (phoneticMatch(w1, w2)) return 0.9;
+
   const maxLen = Math.max(w1.length, w2.length);
   const minLen = Math.min(w1.length, w2.length);
   if (minLen / maxLen >= 0.7 && (w1.startsWith(w2) || w2.startsWith(w1))) return 0.85;
