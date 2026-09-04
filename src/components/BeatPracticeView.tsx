@@ -3845,13 +3845,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             // get a much shorter timeout — the engine often can't transcribe
             // them at all, so we shouldn't make the user wait 6s.
             const isHardWord = isHardToRecognizeWord(words[idx] ?? '');
-            const VISIBLE_STUCK_MS = isHardWord ? 2500 : 6000;
+            // Sentence-ending and final words get a longer leash so the user
+            // has time to actually say them — but they must STILL auto-advance
+            // eventually. Previously they were excluded entirely, which froze
+            // the whole practice when the last word got misheard (yellow).
+            const isFinalOrSentenceEnding =
+              idx >= wordsLengthRef.current - 1 || /[.!?]$/.test(words[idx] ?? '');
+            const VISIBLE_STUCK_MS = isHardWord ? 2500 : isFinalOrSentenceEnding ? 9000 : 6000;
             if (
               hasHeardSpeechRef.current &&
               elapsed > VISIBLE_STUCK_MS &&
-              !postPauseNoHesitationIndicesRef.current.has(idx) &&
-              idx < wordsLengthRef.current - 1 &&
-              !/[.!?]$/.test(words[idx] ?? '')
+              !postPauseNoHesitationIndicesRef.current.has(idx)
             ) {
               console.log(
                 `⏭️ Visible word "${words[idx]}" at index ${idx} stuck for ${(elapsed / 1000).toFixed(1)}s — auto-advancing`
