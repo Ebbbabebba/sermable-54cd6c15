@@ -364,10 +364,15 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-border">{t('common.cancel')}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                {t('common.delete')}
+              <AlertDialogCancel className="border-border" disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? t('dashboard.deleting') : t('common.delete')}
               </AlertDialogAction>
+
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
