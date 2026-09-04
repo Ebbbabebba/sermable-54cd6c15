@@ -47,7 +47,9 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [nextReviewDate, setNextReviewDate] = useState<Date | null>(null);
+
   const [isLocked, setIsLocked] = useState(false);
   const [deadlineOpen, setDeadlineOpen] = useState(false);
   const [masteryPercent, setMasteryPercent] = useState<number | null>(null);
