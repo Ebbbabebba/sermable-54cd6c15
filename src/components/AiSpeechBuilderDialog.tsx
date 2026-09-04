@@ -170,6 +170,7 @@ export const AiSpeechBuilderDialog = ({
           </DialogDescription>
         </DialogHeader>
 
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4">
         {step === "prompt" && (
           <div className="space-y-3 py-2">
             <Label htmlFor="ai-prompt">
@@ -268,8 +269,9 @@ export const AiSpeechBuilderDialog = ({
             </div>
           </div>
         )}
+        </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 px-5 sm:px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border/60 shrink-0 bg-card">
           {step === "prompt" && (
             <>
               <Button
