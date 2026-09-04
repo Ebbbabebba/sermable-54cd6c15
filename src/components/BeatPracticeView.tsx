@@ -3018,6 +3018,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHesitatedIndices(new Set());
     setMissedIndices(new Set());
     setFailedWordIndices(new Set());
+    setAudienceCelebrating(false);
 
     transcriptRef.current = "";
     transcriptWordsRef.current = [];
