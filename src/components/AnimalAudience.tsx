@@ -1,21 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-
-/**
- * A full-screen audience of six distinct animals that appears during the
- * final, script-free stage of a repetition. They start out gloomy and
- * sleepy, and for every word said correctly they wake up a little more —
- * arms rising, eyes opening, frowns turning into smiles — until the whole
- * row erupts in cheers when the line lands perfectly.
- */
+import { useEffect, useMemo } from "react";
 
 interface AnimalAudienceProps {
-  /** 0..1 — how much of the line has been said correctly so far this rep. */
   progress: number;
-  /** True when the whole line just landed — full cheer, then onDone fires. */
   celebrating?: boolean;
-  /** Called after the celebration has played out. */
   onDone?: () => void;
-  /** How long the final cheer lasts before fading out (ms). */
   cheerDurationMs?: number;
 }
 
@@ -29,74 +17,67 @@ type Palette = {
 };
 
 const ANIMALS: { kind: AnimalKind; palette: Palette }[] = [
-  { kind: "fox",   palette: { body: "#F59E0B", belly: "#FDE9C8", accent: "#D97706", detail: "#7C2D12" } },
-  { kind: "bunny", palette: { body: "#C084FC", belly: "#F3E8FF", accent: "#A855F7", detail: "#4C1D95" } },
-  { kind: "frog",  palette: { body: "#34D399", belly: "#D1FAE5", accent: "#10B981", detail: "#065F46" } },
-  { kind: "cat",   palette: { body: "#60A5FA", belly: "#DBEAFE", accent: "#3B82F6", detail: "#1E3A8A" } },
-  { kind: "bear",  palette: { body: "#B45309", belly: "#FDE68A", accent: "#92400E", detail: "#451A03" } },
-  { kind: "owl",   palette: { body: "#94A3B8", belly: "#E2E8F0", accent: "#64748B", detail: "#1E293B" } },
+  { kind: "fox", palette: { body: "hsl(var(--animal-fox))", belly: "hsl(var(--animal-fox-light))", accent: "hsl(var(--animal-fox-dark))", detail: "hsl(var(--animal-fox-detail))" } },
+  { kind: "bunny", palette: { body: "hsl(var(--animal-bunny))", belly: "hsl(var(--animal-bunny-light))", accent: "hsl(var(--animal-bunny-dark))", detail: "hsl(var(--animal-bunny-detail))" } },
+  { kind: "frog", palette: { body: "hsl(var(--animal-frog))", belly: "hsl(var(--animal-frog-light))", accent: "hsl(var(--animal-frog-dark))", detail: "hsl(var(--animal-frog-detail))" } },
+  { kind: "cat", palette: { body: "hsl(var(--animal-cat))", belly: "hsl(var(--animal-cat-light))", accent: "hsl(var(--animal-cat-dark))", detail: "hsl(var(--animal-cat-detail))" } },
+  { kind: "bear", palette: { body: "hsl(var(--animal-bear))", belly: "hsl(var(--animal-bear-light))", accent: "hsl(var(--animal-bear-dark))", detail: "hsl(var(--animal-bear-detail))" } },
+  { kind: "owl", palette: { body: "hsl(var(--animal-owl))", belly: "hsl(var(--animal-owl-light))", accent: "hsl(var(--animal-owl-dark))", detail: "hsl(var(--animal-owl-detail))" } },
 ];
 
-const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
-const Ears = ({ kind, p, mood }: { kind: AnimalKind; p: Palette; mood: number }) => {
-  switch (kind) {
-    case "fox":
-      return (
-        <>
-          <polygon points="24,30 34,4 44,28" fill={p.accent} />
-          <polygon points="56,28 66,4 76,30" fill={p.accent} />
-          <polygon points="28,26 34,12 40,26" fill={p.belly} />
-          <polygon points="60,26 66,12 72,26" fill={p.belly} />
-        </>
-      );
-    case "bunny":
-      return (
-        <>
-          <ellipse cx="33" cy={12 + (1 - mood) * 4} rx="7" ry="20" fill={p.body}
-            transform={`rotate(${-10 - (1 - mood) * 18} 33 30)`} />
-          <ellipse cx="67" cy={12 + (1 - mood) * 4} rx="7" ry="20" fill={p.body}
-            transform={`rotate(${10 + (1 - mood) * 18} 67 30)`} />
-          <ellipse cx="33" cy={14 + (1 - mood) * 4} rx="3.4" ry="12" fill={p.belly}
-            transform={`rotate(${-10 - (1 - mood) * 18} 33 30)`} />
-          <ellipse cx="67" cy={14 + (1 - mood) * 4} rx="3.4" ry="12" fill={p.belly}
-            transform={`rotate(${10 + (1 - mood) * 18} 67 30)`} />
-        </>
-      );
-    case "frog":
-      // no ears — eye bumps drawn with the head
-      return null;
-    case "cat":
-      return (
-        <>
-          <polygon points="26,28 28,8 44,22" fill={p.accent} />
-          <polygon points="56,22 72,8 74,28" fill={p.accent} />
-          <polygon points="29,24 30,14 38,21" fill={p.belly} />
-          <polygon points="62,21 70,14 71,24" fill={p.belly} />
-        </>
-      );
-    case "bear":
-      return (
-        <>
-          <circle cx="27" cy="24" r="11" fill={p.accent} />
-          <circle cx="73" cy="24" r="11" fill={p.accent} />
-          <circle cx="27" cy="24" r="5" fill={p.belly} />
-          <circle cx="73" cy="24" r="5" fill={p.belly} />
-        </>
-      );
-    case "owl":
-      return (
-        <>
-          <polygon points="26,26 30,8 42,22" fill={p.body} />
-          <polygon points="58,22 70,8 74,26" fill={p.body} />
-        </>
-      );
+const AnimalEars = ({ kind, palette, mood }: { kind: AnimalKind; palette: Palette; mood: number }) => {
+  if (kind === "fox") {
+    return <>
+      <polygon points="18,31 31,2 45,28" fill={palette.accent} />
+      <polygon points="55,28 69,2 82,31" fill={palette.accent} />
+      <polygon points="24,26 31,11 39,26" fill={palette.belly} />
+      <polygon points="61,26 69,11 76,26" fill={palette.belly} />
+    </>;
   }
+
+  if (kind === "bunny") {
+    const droop = (1 - mood) * 22;
+    return <>
+      <ellipse cx="32" cy="12" rx="8" ry="23" fill={palette.body} transform={`rotate(${-9 - droop} 32 31)`} />
+      <ellipse cx="68" cy="12" rx="8" ry="23" fill={palette.body} transform={`rotate(${9 + droop} 68 31)`} />
+      <ellipse cx="32" cy="12" rx="3.5" ry="15" fill={palette.belly} transform={`rotate(${-9 - droop} 32 31)`} />
+      <ellipse cx="68" cy="12" rx="3.5" ry="15" fill={palette.belly} transform={`rotate(${9 + droop} 68 31)`} />
+    </>;
+  }
+
+  if (kind === "cat") {
+    return <>
+      <polygon points="19,31 25,5 44,25" fill={palette.accent} />
+      <polygon points="56,25 75,5 81,31" fill={palette.accent} />
+      <polygon points="25,25 28,14 38,24" fill={palette.belly} />
+      <polygon points="62,24 72,14 75,25" fill={palette.belly} />
+    </>;
+  }
+
+  if (kind === "bear") {
+    return <>
+      <circle cx="25" cy="25" r="13" fill={palette.accent} />
+      <circle cx="75" cy="25" r="13" fill={palette.accent} />
+      <circle cx="25" cy="25" r="6" fill={palette.belly} />
+      <circle cx="75" cy="25" r="6" fill={palette.belly} />
+    </>;
+  }
+
+  if (kind === "owl") {
+    return <>
+      <polygon points="18,31 29,7 43,27" fill={palette.accent} />
+      <polygon points="57,27 71,7 82,31" fill={palette.accent} />
+    </>;
+  }
+
+  return null;
 };
 
 const Animal = ({
   kind,
-  palette: p,
+  palette,
   mood,
   celebrating,
   delay,
@@ -107,251 +88,137 @@ const Animal = ({
   celebrating: boolean;
   delay: number;
 }) => {
-  const transition = "all 320ms cubic-bezier(0.34,1.56,0.64,1)";
-  const armAngle = 8 + mood * 54; // drooped → raised
-  const pupilY = 42 - mood * 3.4;
-  const browCtrlY = 34 - mood * 6.5;
-  const mouthCtrlY = 54 + mood * 10;
-  const lidHeight = (1 - mood) * 7; // sleepy eyelids shrinking as they wake
+  const transition = "all 360ms cubic-bezier(0.34, 1.56, 0.64, 1)";
+  const armAngle = 5 + mood * 68;
+  const eyeY = kind === "frog" ? 26 : 43;
+  const lidHeight = Math.max(0, (1 - mood) * 8);
+  const mouthY = kind === "frog" ? 63 : 61;
+  const mouthCurve = mouthY - 7 + mood * 17;
 
   return (
     <svg
-      viewBox="0 0 100 116"
-      className="w-20 h-[5.8rem] sm:w-28 sm:h-[8.1rem] drop-shadow-md"
+      viewBox="0 0 100 122"
+      className="h-full w-full overflow-visible drop-shadow-lg"
       style={{
-        transform: celebrating
-          ? "translateY(-8px) scale(1.04)"
-          : `translateY(${(1 - mood) * 3}px)`,
+        transform: celebrating ? "translateY(-4%) scale(1.05)" : `translateY(${(1 - mood) * 4}%) scale(${0.94 + mood * 0.06})`,
         transition,
         transitionDelay: `${delay}ms`,
       }}
       aria-hidden="true"
     >
-      {/* arms */}
-      <g
-        style={{
-          transformOrigin: "26px 74px",
-          transform: `rotate(${-armAngle}deg)`,
-          transition,
-          transitionDelay: `${delay}ms`,
-        }}
-      >
-        <rect x="18" y="66" width="12" height="28" rx="6" fill={p.accent} />
-        <circle cx="24" cy="92" r="6" fill={p.accent} />
+      {kind === "fox" && <path d="M22 88 Q3 78 13 59 Q18 75 31 76" fill={palette.accent} />}
+      {kind === "bunny" && <circle cx="77" cy="96" r="11" fill={palette.belly} />}
+      {kind === "cat" && <path d="M76 91 Q97 91 87 70" fill="none" stroke={palette.accent} strokeWidth="8" strokeLinecap="round" />}
+
+      <g style={{ transformOrigin: "27px 79px", transform: `rotate(${-armAngle}deg)`, transition, transitionDelay: `${delay}ms` }}>
+        <rect x="20" y="69" width="14" height="31" rx="7" fill={palette.accent} />
+        <circle cx="27" cy="98" r="7" fill={palette.accent} />
       </g>
-      <g
-        style={{
-          transformOrigin: "74px 74px",
-          transform: `rotate(${armAngle}deg)`,
-          transition,
-          transitionDelay: `${delay}ms`,
-        }}
-      >
-        <rect x="70" y="66" width="12" height="28" rx="6" fill={p.accent} />
-        <circle cx="76" cy="92" r="6" fill={p.accent} />
+      <g style={{ transformOrigin: "73px 79px", transform: `rotate(${armAngle}deg)`, transition, transitionDelay: `${delay}ms` }}>
+        <rect x="66" y="69" width="14" height="31" rx="7" fill={palette.accent} />
+        <circle cx="73" cy="98" r="7" fill={palette.accent} />
       </g>
 
-      {/* body */}
-      <ellipse cx="50" cy="88" rx="27" ry="24" fill={p.body} />
-      <ellipse cx="50" cy="94" rx="15" ry="14" fill={p.belly} />
+      {kind === "owl" ? <ellipse cx="50" cy="89" rx="34" ry="30" fill={palette.body} /> : <ellipse cx="50" cy="91" rx="29" ry="27" fill={palette.body} />}
+      <ellipse cx="50" cy="98" rx={kind === "owl" ? 22 : 17} ry="16" fill={palette.belly} />
 
-      {/* frog: eye bumps on top of the head */}
-      {kind === "frog" && (
-        <>
-          <circle cx="32" cy="22" r="11" fill={p.body} />
-          <circle cx="68" cy="22" r="11" fill={p.body} />
-        </>
-      )}
+      {kind === "frog" && <>
+        <circle cx="31" cy="27" r="13" fill={palette.body} />
+        <circle cx="69" cy="27" r="13" fill={palette.body} />
+      </>}
+      <AnimalEars kind={kind} palette={palette} mood={mood} />
 
-      <Ears kind={kind} p={p} mood={mood} />
+      {kind === "frog"
+        ? <ellipse cx="50" cy="54" rx="35" ry="29" fill={palette.body} />
+        : kind === "owl"
+          ? <path d="M14 45 Q18 19 50 24 Q82 19 86 45 L79 72 Q50 82 21 72 Z" fill={palette.body} />
+          : <circle cx="50" cy="49" r={kind === "bear" ? 31 : 29} fill={palette.body} />}
 
-      {/* head */}
-      {kind === "frog" ? (
-        <ellipse cx="50" cy="50" rx="32" ry="26" fill={p.body} />
-      ) : (
-        <circle cx="50" cy="46" r="28" fill={p.body} />
-      )}
-      <ellipse cx="50" cy={kind === "frog" ? 58 : 56} rx="15" ry="11" fill={p.belly} />
+      {kind === "owl" ? <>
+        <circle cx="36" cy="46" r="13" fill={palette.belly} />
+        <circle cx="64" cy="46" r="13" fill={palette.belly} />
+        <circle cx="36" cy={45 - mood * 2} r="5" fill={palette.detail} />
+        <circle cx="64" cy={45 - mood * 2} r="5" fill={palette.detail} />
+        <circle cx="38" cy={43 - mood * 2} r="1.8" fill="hsl(var(--animal-eye-glint))" />
+        <circle cx="66" cy={43 - mood * 2} r="1.8" fill="hsl(var(--animal-eye-glint))" />
+        <polygon points="50,51 43,59 57,59" fill="hsl(var(--animal-beak))" />
+      </> : <>
+        <circle cx="38" cy={eyeY} r={kind === "frog" ? 8 : 6} fill="hsl(var(--animal-eye-glint))" />
+        <circle cx="62" cy={eyeY} r={kind === "frog" ? 8 : 6} fill="hsl(var(--animal-eye-glint))" />
+        <circle cx="38" cy={eyeY - mood * 2} r="3" fill={palette.detail} />
+        <circle cx="62" cy={eyeY - mood * 2} r="3" fill={palette.detail} />
+        <rect x={kind === "frog" ? 30 : 32} y={eyeY - 8} width="16" height={lidHeight} rx="2" fill={palette.body} style={{ transition }} />
+        <rect x={kind === "frog" ? 54 : 54} y={eyeY - 8} width="16" height={lidHeight} rx="2" fill={palette.body} style={{ transition }} />
+      </>}
 
-      {/* eyes */}
-      {kind === "owl" ? (
-        <>
-          <circle cx="38" cy="42" r="9.5" fill="#FFFFFF" />
-          <circle cx="62" cy="42" r="9.5" fill="#FFFFFF" />
-          <circle cx="38" cy={pupilY + 1} r="4" fill={p.detail} />
-          <circle cx="62" cy={pupilY + 1} r="4" fill={p.detail} />
-          <circle cx="39.6" cy={pupilY - 0.6} r="1.3" fill="#FFFFFF" />
-          <circle cx="63.6" cy={pupilY - 0.6} r="1.3" fill="#FFFFFF" />
-        </>
-      ) : (
-        <>
-          <circle cx="39" cy={kind === "frog" ? 24 : 41} r={kind === "frog" ? 7.5 : 5.5} fill="#FFFFFF" />
-          <circle cx="61" cy={kind === "frog" ? 24 : 41} r={kind === "frog" ? 7.5 : 5.5} fill="#FFFFFF" />
-          <circle
-            cx="39"
-            cy={kind === "frog" ? 24 + (42 - pupilY) * -0 : pupilY}
-            r="2.8"
-            fill={p.detail}
-            style={{ transition: "cy 240ms ease-out", transitionDelay: `${delay}ms` }}
-          />
-          <circle
-            cx="61"
-            cy={kind === "frog" ? 24 : pupilY}
-            r="2.8"
-            fill={p.detail}
-            style={{ transition: "cy 240ms ease-out", transitionDelay: `${delay}ms` }}
-          />
-          {/* sleepy eyelids */}
-          <rect
-            x={kind === "frog" ? 31.5 : 33.5}
-            y={kind === "frog" ? 16.5 : 35.5}
-            width="15"
-            height={lidHeight}
-            fill={p.body}
-            style={{ transition: "height 240ms ease-out", transitionDelay: `${delay}ms` }}
-          />
-          <rect
-            x={kind === "frog" ? 53.5 : 55.5}
-            y={kind === "frog" ? 16.5 : 35.5}
-            width="15"
-            height={lidHeight}
-            fill={p.body}
-            style={{ transition: "height 240ms ease-out", transitionDelay: `${delay}ms` }}
-          />
-        </>
-      )}
+      {kind !== "frog" && kind !== "owl" && <>
+        <path d={`M31 ${34 - mood * 2} Q38 ${39 - mood * 9} 45 34`} fill="none" stroke={palette.detail} strokeWidth="2.8" strokeLinecap="round" />
+        <path d={`M55 34 Q62 ${39 - mood * 9} 69 ${34 - mood * 2}`} fill="none" stroke={palette.detail} strokeWidth="2.8" strokeLinecap="round" />
+      </>}
 
-      {/* brows: sad slant → raised arcs */}
-      {kind !== "frog" && kind !== "owl" && (
-        <>
-          <path
-            d={`M33 ${31 - mood} Q39 ${browCtrlY} 45 31`}
-            stroke={p.detail}
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            fill="none"
-          />
-          <path
-            d={`M55 31 Q61 ${browCtrlY} 67 ${31 - mood}`}
-            stroke={p.detail}
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            fill="none"
-          />
-        </>
-      )}
+      {kind !== "frog" && kind !== "owl" && <ellipse cx="50" cy={kind === "fox" ? 56 : 54} rx="4" ry="3" fill={palette.detail} />}
+      {kind === "fox" && <ellipse cx="50" cy="60" rx="11" ry="8" fill={palette.belly} />}
+      {kind === "bear" && <ellipse cx="50" cy="61" rx="14" ry="11" fill={palette.belly} />}
 
-      {/* nose / beak */}
-      {kind === "owl" ? (
-        <polygon points="50,48 45.5,54 54.5,54" fill="#F59E0B" />
-      ) : kind === "frog" ? null : (
-        <ellipse cx="50" cy={kind === "fox" ? 52 : 50} rx="3.4" ry="2.6" fill={p.detail} />
-      )}
+      {kind === "cat" && <>
+        <line x1="17" y1="54" x2="34" y2="57" stroke={palette.detail} strokeWidth="1.8" strokeLinecap="round" />
+        <line x1="17" y1="61" x2="34" y2="60" stroke={palette.detail} strokeWidth="1.8" strokeLinecap="round" />
+        <line x1="66" y1="57" x2="83" y2="54" stroke={palette.detail} strokeWidth="1.8" strokeLinecap="round" />
+        <line x1="66" y1="60" x2="83" y2="61" stroke={palette.detail} strokeWidth="1.8" strokeLinecap="round" />
+      </>}
 
-      {/* fox snout */}
-      {kind === "fox" && (
-        <ellipse cx="50" cy="55" rx="9" ry="6.5" fill={p.belly} />
-      )}
-
-      {/* whiskers for the cat */}
-      {kind === "cat" && (
-        <>
-          <line x1="20" y1="50" x2="32" y2="52" stroke={p.detail} strokeWidth="1.6" strokeLinecap="round" />
-          <line x1="20" y1="56" x2="32" y2="55" stroke={p.detail} strokeWidth="1.6" strokeLinecap="round" />
-          <line x1="68" y1="52" x2="80" y2="50" stroke={p.detail} strokeWidth="1.6" strokeLinecap="round" />
-          <line x1="68" y1="55" x2="80" y2="56" stroke={p.detail} strokeWidth="1.6" strokeLinecap="round" />
-        </>
-      )}
-
-      {/* mouth: frown → smile → open cheer */}
-      {celebrating ? (
-        <path d="M42 58 Q50 68 58 58 Q50 62 42 58 Z" fill={p.detail} />
-      ) : (
-        <path
-          d={kind === "frog"
-            ? `M38 60 Q50 ${mouthCtrlY} 62 60`
-            : `M43 ${kind === "fox" ? 62 : 59} Q50 ${mouthCtrlY} 57 ${kind === "fox" ? 62 : 59}`}
-          stroke={p.detail}
-          strokeWidth="2.6"
-          strokeLinecap="round"
-          fill="none"
-        />
-      )}
+      {celebrating
+        ? <path d={`M39 ${mouthY - 2} Q50 ${mouthY + 15} 61 ${mouthY - 2} Q50 ${mouthY + 5} 39 ${mouthY - 2} Z`} fill={palette.detail} />
+        : <path d={`M39 ${mouthY} Q50 ${mouthCurve} 61 ${mouthY}`} fill="none" stroke={palette.detail} strokeWidth="3" strokeLinecap="round" />}
     </svg>
   );
 };
 
-const AnimalAudience = ({
-  progress,
-  celebrating = false,
-  onDone,
-  cheerDurationMs = 2200,
-}: AnimalAudienceProps) => {
-  const [leaving, setLeaving] = useState(false);
-
+const AnimalAudience = ({ progress, celebrating = false, onDone, cheerDurationMs = 2400 }: AnimalAudienceProps) => {
   useEffect(() => {
     if (!celebrating) return;
-    const leaveAt = setTimeout(() => setLeaving(true), cheerDurationMs);
-    const doneAt = setTimeout(() => onDone?.(), cheerDurationMs + 450);
-    return () => {
-      clearTimeout(leaveAt);
-      clearTimeout(doneAt);
-    };
+    const doneTimer = setTimeout(() => onDone?.(), cheerDurationMs);
+    return () => clearTimeout(doneTimer);
   }, [celebrating, cheerDurationMs, onDone]);
 
-  // Each animal wakes up at a slightly different point, so the crowd comes
-  // alive one by one as the words land.
-  const moods = useMemo(
-    () => ANIMALS.map((_, i) => clamp01(clamp01(progress) * 1.35 - i * 0.06)),
-    [progress]
-  );
+  const moods = useMemo(() => {
+    const normalized = clamp01(progress);
+    return ANIMALS.map((_, index) => clamp01(normalized * 1.18 - index * 0.035));
+  }, [progress]);
 
   return (
-    <div
-      className="fixed inset-0 z-30 pointer-events-none flex items-end justify-center"
-      style={{
-        opacity: leaving ? 0 : 1,
-        transition: "opacity 400ms ease-out",
-      }}
-    >
-      {/* soft stage glow behind the crowd */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-2/5"
-        style={{
-          background:
-            "linear-gradient(to top, hsl(var(--background)) 12%, hsl(var(--background) / 0.75) 55%, transparent 100%)",
-        }}
-      />
-      <div
-        className="relative flex items-end justify-center gap-1 sm:gap-4 px-2"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
-      >
-        {ANIMALS.map(({ kind, palette }, i) => (
-          <div
-            key={kind}
+    <div className="animal-audience fixed inset-0 z-30 pointer-events-none overflow-hidden bg-background" aria-hidden="true">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_68%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-muted via-muted/65 to-transparent" />
+
+      <div className={`animal-audience__burst absolute inset-0 ${celebrating ? "opacity-100" : "opacity-0"}`}>
+        {Array.from({ length: 18 }, (_, index) => (
+          <span
+            key={index}
+            className={`animal-confetti animal-confetti--${index % 3}`}
             style={{
-              animation: celebrating
-                ? `pulse-bounce 520ms ease-in-out ${i * 80}ms 4`
-                : undefined,
+              left: `${6 + ((index * 29) % 88)}%`,
+              animationDelay: `${(index % 6) * 70}ms`,
+              transform: `rotate(${index * 31}deg)`,
             }}
-          >
-            <Animal
-              kind={kind}
-              palette={palette}
-              mood={celebrating ? 1 : moods[i]}
-              celebrating={celebrating}
-              delay={i * 80}
-            />
-          </div>
+          />
         ))}
       </div>
 
-      <style>{`
-        @keyframes pulse-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-12px); }
-        }
-      `}</style>
+      <div className="relative z-10 grid h-full w-full grid-cols-3 grid-rows-2 items-end gap-x-2 gap-y-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] sm:gap-x-6 sm:px-8 md:px-[8vw]">
+        {ANIMALS.map(({ kind, palette }, index) => (
+          <div
+            key={kind}
+            className={`animal-audience__character mx-auto flex h-full max-h-[42vh] w-full max-w-[15rem] items-end justify-center ${celebrating ? "is-celebrating" : ""}`}
+            style={{
+              animationDelay: `${index * 75}ms`,
+              transform: `translateY(${index % 2 === 0 ? 2 : -1}%)`,
+            }}
+          >
+            <Animal kind={kind} palette={palette} mood={celebrating ? 1 : moods[index]} celebrating={celebrating} delay={index * 35} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
