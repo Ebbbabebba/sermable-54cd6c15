@@ -472,8 +472,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeechReady, setIsSpeechReady] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  // Occasional Duolingo-style animal audience that cheers when a sentence is
-  // mastered without the script.
+  // Full-screen animal audience that cheers when a script-free sentence lands.
   const [audienceCelebrating, setAudienceCelebrating] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   const { toast } = useToast();
@@ -2341,6 +2340,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       recordRepDifficulty(currentBeat?.id, words.length, repErrors);
     }
 
+    if (!hadErrors && isAllTargetHidden(hiddenWordIndicesRef.current)) {
+      setAudienceCelebrating(true);
+    }
+
 
     // Handle recall mode completion (morning recall of mastered beats)
     if (sessionMode === 'recall') {
@@ -2390,11 +2393,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
     } else if (phase.includes('fading') || phase.includes('combining')) {
       pauseSpeechRecognition(1300, true);
-      // If the whole-script audience was up and the run was clean, let the
-      // animals erupt in a final cheer before the phase moves on.
-      if (!hadErrors && isAllTargetHidden(hiddenWordIndicesRef.current)) {
-        setAudienceCelebrating(true);
-      }
       handleFadingCompletion(hadErrors, failedSet);
     }
   }
@@ -4379,13 +4377,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   const progressInfo = getProgressInfo();
 
-  // Full-screen animal audience: only in the final, script-free stage of a
-  // repetition (every target word hidden) — they wake up word by word.
+  // In the fully script-free stage, the audience replaces the script and
+  // reacts only to targetable words (pause markers never reduce progress).
   const audienceScriptFree = phase.includes('fading') || sessionMode === 'recall' || sessionMode === 'pre_beat_recall';
-  const audienceVisible =
-    (audienceCelebrating || (audienceScriptFree && hiddenWordIndices.size > 0 && isAllTargetHidden(hiddenWordIndices))) &&
-    !activePause;
-  const audienceProgress = Math.min(1, spokenIndices.size / Math.max(1, words.length));
+  const audienceVisible = (audienceCelebrating || (audienceScriptFree && isAllTargetHidden(hiddenWordIndices))) && !activePause;
+  const audienceTargetIndices = isOverviewMode
+    ? Array.from(keywordIndices)
+    : words.map((_, index) => index).filter(index => !pauseWordMeta.has(index));
+  const audienceSpokenTargets = audienceTargetIndices.reduce(
+    (count, index) => count + (spokenIndices.has(index) ? 1 : 0),
+    0
+  );
+  const audienceProgress = Math.min(1, audienceSpokenTargets / Math.max(1, audienceTargetIndices.length));
 
   return (
     <div className="flex flex-col h-full bg-background">

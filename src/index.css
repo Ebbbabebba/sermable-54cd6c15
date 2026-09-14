@@ -65,6 +65,34 @@ body {
     --duo-yellow: 45 100% 55%;
     --duo-yellow-foreground: 240 6% 12%;
 
+    /* Full-screen animal audience */
+    --animal-fox: 37 91% 55%;
+    --animal-fox-light: 35 88% 88%;
+    --animal-fox-dark: 28 85% 45%;
+    --animal-fox-detail: 18 65% 28%;
+    --animal-bunny: 276 76% 72%;
+    --animal-bunny-light: 274 100% 94%;
+    --animal-bunny-dark: 274 81% 60%;
+    --animal-bunny-detail: 263 67% 35%;
+    --animal-frog: 158 64% 52%;
+    --animal-frog-light: 156 72% 90%;
+    --animal-frog-dark: 160 84% 39%;
+    --animal-frog-detail: 164 85% 22%;
+    --animal-cat: 213 94% 68%;
+    --animal-cat-light: 214 95% 92%;
+    --animal-cat-dark: 217 91% 60%;
+    --animal-cat-detail: 224 64% 33%;
+    --animal-bear: 26 70% 43%;
+    --animal-bear-light: 48 96% 77%;
+    --animal-bear-dark: 25 76% 31%;
+    --animal-bear-detail: 24 75% 16%;
+    --animal-owl: 215 20% 65%;
+    --animal-owl-light: 214 32% 91%;
+    --animal-owl-dark: 215 16% 47%;
+    --animal-owl-detail: 215 28% 24%;
+    --animal-eye-glint: 0 0% 100%;
+    --animal-beak: 38 92% 55%;
+
     --border: 240 6% 90%;
     --input: 240 6% 90%;
     --ring: 241 76% 60%;
@@ -179,6 +207,47 @@ body {
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
     --shadow-glow: 0 0 20px hsl(241 76% 60% / 0.2);
     --shadow-teal: 0 0 30px hsl(241 76% 60% / 0.15);
+  }
+}
+
+@keyframes animal-cheer {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  28% { transform: translateY(-11%) rotate(-2deg); }
+  58% { transform: translateY(-4%) rotate(2deg); }
+}
+
+@keyframes animal-confetti-fall {
+  0% { opacity: 0; transform: translateY(-8vh) rotate(0deg); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(92vh) rotate(540deg); }
+}
+
+.animal-audience__character.is-celebrating {
+  animation: animal-cheer 560ms cubic-bezier(0.34, 1.56, 0.64, 1) 4;
+}
+
+.animal-audience__burst {
+  transition: opacity 180ms ease-out;
+}
+
+.animal-confetti {
+  position: absolute;
+  top: 0;
+  width: 0.65rem;
+  height: 1.15rem;
+  border-radius: 0.2rem;
+  background: hsl(var(--duo-yellow));
+  animation: animal-confetti-fall 1650ms ease-in both;
+}
+
+.animal-confetti--1 { background: hsl(var(--primary)); }
+.animal-confetti--2 { background: hsl(var(--success)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .animal-audience__character.is-celebrating,
+  .animal-confetti {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
   }
 }
 
