@@ -370,7 +370,14 @@ function createBeats(sentences: string[]): Beat[] {
       }
     }
 
+    // Even out the parts so the beat's sentences have similar length
+    const balanced = balanceBeatParts([sentence1, sentence2, sentence3]);
+    sentence1 = balanced[0] ?? sentence1;
+    sentence2 = balanced[1] ?? '';
+    sentence3 = balanced[2] ?? '';
+
     // Ensure the last non-empty sentence ends with terminal punctuation
+
     if (sentence3) {
       sentence3 = ensureEndsPeriod(sentence3);
     } else if (sentence2) {
