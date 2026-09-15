@@ -794,7 +794,8 @@
     "phase_combine_recall": "Sentence 1 + 2 · no script",
     "phase_full_read": "Whole part",
     "phase_full_recall": "Whole part · no script",
-    "phase_mastered": "Complete"
+    "phase_mastered": "Complete",
+    "sentence_done": "Sentence done!"
   },
   "day_after_recall": {
     "title": "Day-After Recall",

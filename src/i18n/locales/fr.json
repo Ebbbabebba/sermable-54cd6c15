@@ -695,7 +695,8 @@
     "phase_combine_recall": "Phrase 1 + 2 · sans texte",
     "phase_full_read": "Partie entière",
     "phase_full_recall": "Partie entière · sans texte",
-    "phase_mastered": "Terminé"
+    "phase_mastered": "Terminé",
+    "sentence_done": "Phrase réussie !"
   },
   "presentation": {
     "settings": "Paramètres de présentation",
