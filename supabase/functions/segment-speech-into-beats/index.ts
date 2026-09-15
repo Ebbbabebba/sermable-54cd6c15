@@ -214,6 +214,103 @@ function ensureEndsPeriod(s: string): string {
   return trimmed + '.';
 }
 
+// ---- Balance the 1-3 parts inside a beat so they have similar length ----
+
+// Split a part into clause chunks at commas/semicolons/colons.
+function clauseChunks(part: string): string[] {
+  const words = part.split(/\s+/).filter(Boolean);
+  const chunks: string[] = [];
+  let cur: string[] = [];
+  for (const w of words) {
+    cur.push(w);
+    if (/[,;:]$/.test(w) && cur.length >= 3) {
+      chunks.push(cur.join(' '));
+      cur = [];
+    }
+  }
+  if (cur.length) {
+    if (chunks.length > 0 && cur.length < 3) {
+      chunks[chunks.length - 1] += ' ' + cur.join(' ');
+    } else {
+      chunks.push(cur.join(' '));
+    }
+  }
+  return chunks;
+}
+
+// Regroup chunks into exactly n contiguous groups with the most even word counts.
+function evenGroups(chunks: string[], n: number): string[] {
+  const w = chunks.map(sentenceWordCount);
+  const prefix = [0];
+  w.forEach((x, i) => prefix.push(prefix[i] + x));
+  const total = prefix[chunks.length];
+  const target = total / n;
+
+  const INF = Number.POSITIVE_INFINITY;
+  // dp[k][i] = best cost splitting first i chunks into k groups
+  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(chunks.length + 1).fill(INF));
+  const cut: number[][] = Array.from({ length: n + 1 }, () => new Array(chunks.length + 1).fill(-1));
+  dp[0][0] = 0;
+
+  for (let k = 1; k <= n; k++) {
+    for (let i = k; i <= chunks.length; i++) {
+      for (let j = k - 1; j < i; j++) {
+        if (dp[k - 1][j] === INF) continue;
+        const size = prefix[i] - prefix[j];
+        const cost = dp[k - 1][j] + Math.pow(size - target, 2);
+        if (cost < dp[k][i]) {
+          dp[k][i] = cost;
+          cut[k][i] = j;
+        }
+      }
+    }
+  }
+
+  if (dp[n][chunks.length] === INF) return [];
+
+  const groups: string[] = [];
+  let i = chunks.length;
+  for (let k = n; k >= 1; k--) {
+    const j = cut[k][i];
+    groups.unshift(chunks.slice(j, i).join(' ').trim());
+    i = j;
+  }
+  return groups;
+}
+
+// Even out the parts of a beat when one part is clearly longer than the others.
+function balanceBeatParts(parts: string[]): string[] {
+  const active = parts.map((p) => p.trim()).filter(Boolean);
+  if (active.length < 2) return parts;
+
+  const counts = active.map(sentenceWordCount);
+  const total = counts.reduce((a, b) => a + b, 0);
+  const target = total / active.length;
+  const longest = Math.max(...counts);
+  const shortest = Math.min(...counts);
+
+  // Already reasonably even – leave as is
+  if (longest <= target * 1.45 && shortest >= target * 0.6) return parts;
+
+  const chunks = active.flatMap(clauseChunks);
+  if (chunks.length < active.length) return parts;
+
+  const groups = evenGroups(chunks, active.length);
+  if (groups.length !== active.length || groups.some((g) => !g)) return parts;
+
+  const newCounts = groups.map(sentenceWordCount);
+  const newSpread = Math.max(...newCounts) - Math.min(...newCounts);
+  const oldSpread = longest - shortest;
+  if (newSpread >= oldSpread) return parts;
+
+  console.log(`Balanced beat parts: [${counts.join(', ')}] -> [${newCounts.join(', ')}]`);
+
+  const out = [...groups];
+  while (out.length < 3) out.push('');
+  return out.slice(0, 3);
+}
+
+
 // Determine base sentences per beat based on total word count
 // STRICT LIMIT: Maximum 3 sentences per beat, never more
 function getSentencesPerBeat(totalWords: number): number {
@@ -273,7 +370,14 @@ function createBeats(sentences: string[]): Beat[] {
       }
     }
 
+    // Even out the parts so the beat's sentences have similar length
+    const balanced = balanceBeatParts([sentence1, sentence2, sentence3]);
+    sentence1 = balanced[0] ?? sentence1;
+    sentence2 = balanced[1] ?? '';
+    sentence3 = balanced[2] ?? '';
+
     // Ensure the last non-empty sentence ends with terminal punctuation
+
     if (sentence3) {
       sentence3 = ensureEndsPeriod(sentence3);
     } else if (sentence2) {
