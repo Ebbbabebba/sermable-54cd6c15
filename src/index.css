@@ -223,7 +223,11 @@ body {
 }
 
 .animal-audience__character.is-celebrating {
-  animation: animal-cheer 560ms cubic-bezier(0.34, 1.56, 0.64, 1) 4;
+  animation: animal-cheer 560ms cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.animal-confetti {
+  animation-iteration-count: infinite;
 }
 
 .animal-audience__burst {
