@@ -4396,7 +4396,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         <AnimalAudience
           progress={audienceProgress}
           celebrating={audienceCelebrating}
-          onDone={() => setAudienceCelebrating(false)}
+          variant={currentBeatIndex + phase.length}
+          doneLabel={t('beat_practice.sentence_done', 'Sentence done!')}
         />
       )}
       <PauseCountdownOverlay

@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 interface AnimalAudienceProps {
   progress: number;
   celebrating?: boolean;
-  onDone?: () => void;
-  cheerDurationMs?: number;
+  /** Which animal to show — rotates between sentences/beats. */
+  variant?: number;
+  /** Text shown while the animal celebrates, e.g. "Sentence done!". */
+  doneLabel?: string;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
@@ -80,13 +82,11 @@ const Animal = ({
   palette,
   mood,
   celebrating,
-  delay,
 }: {
   kind: AnimalKind;
   palette: Palette;
   mood: number;
   celebrating: boolean;
-  delay: number;
 }) => {
   const transition = "all 360ms cubic-bezier(0.34, 1.56, 0.64, 1)";
   const armAngle = 5 + mood * 68;
@@ -98,11 +98,10 @@ const Animal = ({
   return (
     <svg
       viewBox="0 0 100 122"
-      className="h-full w-full overflow-visible drop-shadow-lg"
+      className="h-full w-full overflow-visible drop-shadow-xl"
       style={{
-        transform: celebrating ? "translateY(-4%) scale(1.05)" : `translateY(${(1 - mood) * 4}%) scale(${0.94 + mood * 0.06})`,
+        transform: celebrating ? "scale(1.04)" : `translateY(${(1 - mood) * 3}%) scale(${0.95 + mood * 0.05})`,
         transition,
-        transitionDelay: `${delay}ms`,
       }}
       aria-hidden="true"
     >
@@ -110,11 +109,11 @@ const Animal = ({
       {kind === "bunny" && <circle cx="77" cy="96" r="11" fill={palette.belly} />}
       {kind === "cat" && <path d="M76 91 Q97 91 87 70" fill="none" stroke={palette.accent} strokeWidth="8" strokeLinecap="round" />}
 
-      <g style={{ transformOrigin: "27px 79px", transform: `rotate(${-armAngle}deg)`, transition, transitionDelay: `${delay}ms` }}>
+      <g style={{ transformOrigin: "27px 79px", transform: `rotate(${-armAngle}deg)`, transition }}>
         <rect x="20" y="69" width="14" height="31" rx="7" fill={palette.accent} />
         <circle cx="27" cy="98" r="7" fill={palette.accent} />
       </g>
-      <g style={{ transformOrigin: "73px 79px", transform: `rotate(${armAngle}deg)`, transition, transitionDelay: `${delay}ms` }}>
+      <g style={{ transformOrigin: "73px 79px", transform: `rotate(${armAngle}deg)`, transition }}>
         <rect x="66" y="69" width="14" height="31" rx="7" fill={palette.accent} />
         <circle cx="73" cy="98" r="7" fill={palette.accent} />
       </g>
@@ -174,17 +173,13 @@ const Animal = ({
   );
 };
 
-const AnimalAudience = ({ progress, celebrating = false, onDone, cheerDurationMs = 2400 }: AnimalAudienceProps) => {
-  useEffect(() => {
-    if (!celebrating) return;
-    const doneTimer = setTimeout(() => onDone?.(), cheerDurationMs);
-    return () => clearTimeout(doneTimer);
-  }, [celebrating, cheerDurationMs, onDone]);
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel }: AnimalAudienceProps) => {
+  const animal = useMemo(() => {
+    const index = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
+    return ANIMALS[index];
+  }, [variant]);
 
-  const moods = useMemo(() => {
-    const normalized = clamp01(progress);
-    return ANIMALS.map((_, index) => clamp01(normalized * 1.18 - index * 0.035));
-  }, [progress]);
+  const mood = celebrating ? 1 : clamp01(progress);
 
   return (
     <div className="animal-audience fixed inset-0 z-30 pointer-events-none overflow-hidden bg-background" aria-hidden="true">
@@ -205,19 +200,18 @@ const AnimalAudience = ({ progress, celebrating = false, onDone, cheerDurationMs
         ))}
       </div>
 
-      <div className="relative z-10 grid h-full w-full grid-cols-3 grid-rows-2 items-end gap-x-2 gap-y-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-[calc(env(safe-area-inset-top,0px)+1rem)] sm:gap-x-6 sm:px-8 md:px-[8vw]">
-        {ANIMALS.map(({ kind, palette }, index) => (
-          <div
-            key={kind}
-            className={`animal-audience__character mx-auto flex h-full max-h-[42vh] w-full max-w-[15rem] items-end justify-center ${celebrating ? "is-celebrating" : ""}`}
-            style={{
-              animationDelay: `${index * 75}ms`,
-              transform: `translateY(${index % 2 === 0 ? 2 : -1}%)`,
-            }}
-          >
-            <Animal kind={kind} palette={palette} mood={celebrating ? 1 : moods[index]} celebrating={celebrating} delay={index * 35} />
+      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-6 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]">
+        <div
+          className={`animal-audience__character flex w-full max-w-[26rem] flex-1 items-center justify-center ${celebrating ? "is-celebrating" : ""}`}
+        >
+          <Animal kind={animal.kind} palette={animal.palette} mood={mood} celebrating={celebrating} />
+        </div>
+
+        {celebrating && doneLabel && (
+          <div className="animate-scale-in rounded-3xl bg-card/90 px-7 py-4 text-center shadow-lg backdrop-blur-sm">
+            <p className="text-2xl font-extrabold text-success sm:text-3xl">{doneLabel}</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

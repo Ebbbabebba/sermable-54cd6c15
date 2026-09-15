@@ -973,7 +973,8 @@
     "phase_combine_recall": "Mening 1 + 2 · utan manus",
     "phase_full_read": "Hela avsnittet",
     "phase_full_recall": "Hela avsnittet · utan manus",
-    "phase_mastered": "Klar"
+    "phase_mastered": "Klar",
+    "sentence_done": "Meningen klar!"
   },
   "presentation": {
     "settings": "Presentationsinställningar",
