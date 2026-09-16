@@ -129,7 +129,8 @@
     "dueForPracticeDescription": "Estes segmentos são ideais para praticar agora",
     "beat": "Segmento",
     "inTime": "em",
-    "deleting": "Excluindo discurso..."
+    "deleting": "Excluindo discurso...",
+    "readyNow": "Pronto agora"
   },
   "onboarding": {
     "skip": "Pular",

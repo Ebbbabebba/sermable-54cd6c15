@@ -129,7 +129,8 @@
     "dueForPracticeDescription": "Diese Abschnitte sind jetzt optimal zum Üben",
     "beat": "Abschnitt",
     "inTime": "in",
-    "deleting": "Rede wird gelöscht..."
+    "deleting": "Rede wird gelöscht...",
+    "readyNow": "Jetzt bereit"
   },
   "onboarding": {
     "skip": "Überspringen",

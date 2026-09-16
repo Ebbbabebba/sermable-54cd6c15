@@ -154,7 +154,8 @@
     "dueForPracticeDescription": "Dessa moment är optimala att öva på just nu",
     "beat": "Moment",
     "inTime": "om",
-    "deleting": "Raderar tal..."
+    "deleting": "Raderar tal...",
+    "readyNow": "Redo nu"
   },
   "onboarding": {
     "skip": "Hoppa över",

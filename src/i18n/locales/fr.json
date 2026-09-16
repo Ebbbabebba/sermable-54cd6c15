@@ -129,7 +129,8 @@
     "dueForPracticeDescription": "Ces segments sont parfaits à pratiquer maintenant",
     "beat": "Segment",
     "inTime": "dans",
-    "deleting": "Suppression du discours..."
+    "deleting": "Suppression du discours...",
+    "readyNow": "Prêt maintenant"
   },
   "onboarding": {
     "skip": "Passer",

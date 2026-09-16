@@ -153,7 +153,8 @@
     "dueForPracticeDescription": "These segments are optimal to practice right now",
     "beat": "Segment",
     "inTime": "in",
-    "deleting": "Deleting speech..."
+    "deleting": "Deleting speech...",
+    "readyNow": "Ready now"
   },
   "onboarding": {
     "skip": "Skip",
