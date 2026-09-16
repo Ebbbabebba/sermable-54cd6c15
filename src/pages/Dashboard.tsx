@@ -234,10 +234,10 @@ const Dashboard = () => {
         />
       )}
 
-      <header className="sticky top-0 z-50 bg-background/95 border-b border-border/50" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
+      <header className="sticky top-0 z-50 bg-background/95 border-b border-border/50 backdrop-blur-md" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
         <div className="px-4 h-14 flex items-center justify-between gap-3 max-w-2xl mx-auto">
-          <span className="flex items-center gap-2 font-display font-bold text-lg tracking-tight">
-            <span className="h-3 w-3 rounded-full bg-primary shadow-[0_0_0_5px_hsl(var(--primary)/0.12)]" aria-hidden="true" />
+          <span className="flex items-center gap-2.5 font-display font-bold text-lg tracking-tight">
+            <span className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-primary to-duo-yellow shadow-[0_0_0_5px_hsl(var(--primary)/0.14)]" aria-hidden="true" />
             Sermable
           </span>
 

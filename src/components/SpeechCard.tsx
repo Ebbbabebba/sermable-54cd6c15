@@ -240,13 +240,13 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
   return (
     <Card 
-      className="group cursor-pointer overflow-hidden border-2 border-border/60 rounded-3xl bg-card shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md active:translate-y-0"
+      className="group cursor-pointer overflow-hidden border-2 border-border/60 rounded-3xl bg-card shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0 active:scale-[0.995]"
       onClick={handleCardClick}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div className="icon-circle icon-circle-primary h-11 w-11">
+            <div className="icon-circle icon-circle-solid-primary h-11 w-11 shadow-sm">
               <Mic className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -258,12 +258,14 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
               </CardDescription>
             </div>
           </div>
-          <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
+          <span className={`text-xs font-bold px-3 py-1.5 rounded-full shrink-0 shadow-sm ${
             isOverdue 
-              ? "bg-destructive/10 text-destructive" 
+              ? "bg-destructive/12 text-destructive border border-destructive/20" 
               : daysRemaining === 0
-                ? "bg-warning/15 text-warning-foreground"
-                : "bg-secondary text-muted-foreground"
+                ? "bg-warning text-warning-foreground border border-warning/30"
+                : daysRemaining <= 3
+                  ? "bg-primary/12 text-primary border border-primary/20"
+                  : "bg-secondary text-muted-foreground border border-border/60"
           }`}>
             {isOverdue
               ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
