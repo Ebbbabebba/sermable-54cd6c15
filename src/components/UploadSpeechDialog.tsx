@@ -29,10 +29,9 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import {
-  switchLanguageBasedOnText,
-  detectTextLanguage,
-} from "@/utils/languageDetection";
+// Language detection pulls in the heavy `franc` dataset — load it on demand.
+const loadLanguageDetection = () => import("@/utils/languageDetection");
+
 import { AiSpeechBuilderDialog } from "@/components/AiSpeechBuilderDialog";
 import PropCueTextarea from "@/components/PropCueTextarea";
 import FirstTimeCreateTour from "@/components/FirstTimeCreateTour";
@@ -237,18 +236,20 @@ const UploadSpeechDialog = ({
   const handleTextChange = (newText: string) => {
     setText(newText);
     if (newText.length > 50) {
-      const switched = switchLanguageBasedOnText(
-        newText,
-        i18n.language,
-        i18n.changeLanguage
-      );
-      if (switched) {
-        toast({
-          title: t("common.success"),
-          description: `${t("upload.languageDetected")} (${i18n.language.toUpperCase()})`,
-          duration: 3000,
-        });
-      }
+      loadLanguageDetection().then(({ switchLanguageBasedOnText }) => {
+        const switched = switchLanguageBasedOnText(
+          newText,
+          i18n.language,
+          i18n.changeLanguage
+        );
+        if (switched) {
+          toast({
+            title: t("common.success"),
+            description: `${t("upload.languageDetected")} (${i18n.language.toUpperCase()})`,
+            duration: 3000,
+          });
+        }
+      }).catch(() => {});
     }
   };
 
@@ -324,6 +325,7 @@ const UploadSpeechDialog = ({
       // Fall back to the user's current UI language rather than hard-coding "en",
       // otherwise Swedish short speeches get tagged English and speech
       // recognition uses en-US — no words ever turn blue.
+      const { detectTextLanguage } = await loadLanguageDetection();
       const detectedLanguage =
         detectTextLanguage(text) || (i18n.language?.split("-")[0] ?? "en");
 
