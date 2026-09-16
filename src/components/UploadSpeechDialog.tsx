@@ -29,10 +29,9 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import {
-  switchLanguageBasedOnText,
-  detectTextLanguage,
-} from "@/utils/languageDetection";
+// Language detection pulls in the heavy `franc` dataset — load it on demand.
+const loadLanguageDetection = () => import("@/utils/languageDetection");
+
 import { AiSpeechBuilderDialog } from "@/components/AiSpeechBuilderDialog";
 import PropCueTextarea from "@/components/PropCueTextarea";
 import FirstTimeCreateTour from "@/components/FirstTimeCreateTour";
