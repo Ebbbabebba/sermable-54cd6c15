@@ -70,6 +70,21 @@ Return ONLY a JSON object:
 { "title": "Short title", "speech": "The full speech text..." }
 No markdown, no commentary.`;
 
+const PAUSE_DIRECTION_RE = /\(\s*(?:(?:ta|take|faire|fai|haz|faça|mach)\s+(?:en|a|une|una|um|eine)\s+)?(?:(kort|short|brief|kurze|kurz|petite|courte|breve|corta|curta)\s+|(lång|lang|long|longue|lunga|larga|longa|lange)\s+)?(?:paus|pausa|pause|pausiere|silence|silenzio|silencio|silêncio|beat)(?:\s+(?:i|for|of|de|von|på)\s*)?\s*(\d{1,2})?\s*(?:s|sek|sec|secs|sekunder|sekunden|seconds|second|segundos|secondi|secondes)?\s*[.!]?\s*\)/gi;
+
+function normalizePauseDirections(text: string): string {
+  return text
+    .replace(PAUSE_DIRECTION_RE, (_match, short?: string, long?: string, rawSeconds?: string) => {
+      const requested = rawSeconds ? Number.parseInt(rawSeconds, 10) : long ? 4 : short ? 1 : 2;
+      const seconds = Math.max(1, Math.min(10, requested || 2));
+      return `-${seconds}s`;
+    })
+    .replace(/[ \t]+(-\d{1,2}s)/g, " $1")
+    .replace(/(-\d{1,2}s)[ \t]*([,.;:!?])/g, "$2 $1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/ +\n/g, "\n");
+}
+
 async function callOpenAI(
   apiKey: string,
   systemPrompt: string,
@@ -216,7 +231,9 @@ Now write the speech and propose a short title. Return JSON only.`;
         userPrompt,
       );
       const title = typeof json?.title === "string" ? json.title.trim() : "";
-      const speech = typeof json?.speech === "string" ? json.speech.trim() : "";
+      const speech = typeof json?.speech === "string"
+        ? normalizePauseDirections(json.speech.trim())
+        : "";
       if (!speech) {
         return new Response(
           JSON.stringify({ error: "AI did not return a speech" }),

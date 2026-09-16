@@ -16,6 +16,7 @@ interface DueBeat {
   due_at: string;
   priority_score: number;
   goal_date: string | null;
+  speech_created_at?: string;
 }
 
 const ReviewNotifications = () => {
@@ -53,12 +54,30 @@ const ReviewNotifications = () => {
 
       if (error) throw error;
 
+      const speechIds = Array.from(
+        new Set((data ?? []).map((beat: DueBeat) => beat.speech_id)),
+      );
+      const createdAtBySpeech = new Map<string, string>();
+      if (speechIds.length > 0) {
+        const { data: speeches, error: speechesError } = await supabase
+          .from("speeches")
+          .select("id, created_at")
+          .in("id", speechIds);
+        if (speechesError) throw speechesError;
+        for (const speech of speeches ?? []) {
+          if (speech.created_at) createdAtBySpeech.set(speech.id, speech.created_at);
+        }
+      }
+
       // Only show items that are actually due (priority high or overdue)
       const now = Date.now();
       const filtered = (data ?? []).filter((b: DueBeat) => {
         const dueMs = new Date(b.due_at).getTime();
         return dueMs <= now || b.priority_score >= 0.5;
-      });
+      }).map((beat: DueBeat) => ({
+        ...beat,
+        speech_created_at: createdAtBySpeech.get(beat.speech_id),
+      }));
 
       setDueBeats(filtered);
     } catch (error) {
@@ -108,10 +127,15 @@ const ReviewNotifications = () => {
       <CardContent className="space-y-3">
         {grouped.map((b) => {
           const dueMs = new Date(b.due_at).getTime();
+          const createdMs = b.speech_created_at
+            ? new Date(b.speech_created_at).getTime()
+            : Number.NaN;
+          const isNewSpeech = Number.isFinite(createdMs)
+            && createdMs > Date.now() - 24 * 60 * 60 * 1000;
           // Give a full day of grace before calling something "overdue" —
           // a freshly created speech is due immediately and should read as
           // "ready now", not as if the user already missed it.
-          const isOverdue = dueMs <= Date.now() - 24 * 60 * 60 * 1000;
+          const isOverdue = !isNewSpeech && dueMs <= Date.now() - 24 * 60 * 60 * 1000;
           const isDueNow = !isOverdue && dueMs <= Date.now();
           return (
             <button
