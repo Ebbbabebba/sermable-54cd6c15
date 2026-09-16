@@ -236,18 +236,20 @@ const UploadSpeechDialog = ({
   const handleTextChange = (newText: string) => {
     setText(newText);
     if (newText.length > 50) {
-      const switched = switchLanguageBasedOnText(
-        newText,
-        i18n.language,
-        i18n.changeLanguage
-      );
-      if (switched) {
-        toast({
-          title: t("common.success"),
-          description: `${t("upload.languageDetected")} (${i18n.language.toUpperCase()})`,
-          duration: 3000,
-        });
-      }
+      loadLanguageDetection().then(({ switchLanguageBasedOnText }) => {
+        const switched = switchLanguageBasedOnText(
+          newText,
+          i18n.language,
+          i18n.changeLanguage
+        );
+        if (switched) {
+          toast({
+            title: t("common.success"),
+            description: `${t("upload.languageDetected")} (${i18n.language.toUpperCase()})`,
+            duration: 3000,
+          });
+        }
+      }).catch(() => {});
     }
   };
 
