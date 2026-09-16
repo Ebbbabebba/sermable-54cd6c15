@@ -10,7 +10,6 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/contexts/ThemeContext";
 import type { Database } from "@/integrations/supabase/types";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { openMailto } from "@/lib/openMailto";
