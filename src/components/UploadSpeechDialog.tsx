@@ -325,6 +325,7 @@ const UploadSpeechDialog = ({
       // Fall back to the user's current UI language rather than hard-coding "en",
       // otherwise Swedish short speeches get tagged English and speech
       // recognition uses en-US — no words ever turn blue.
+      const { detectTextLanguage } = await loadLanguageDetection();
       const detectedLanguage =
         detectTextLanguage(text) || (i18n.language?.split("-")[0] ?? "en");
 
