@@ -10,36 +10,36 @@ body {
 }
 
 /* Sermable Design System
- * Playful green-led palette
+ * Playful amber-led palette
  * Clean, focused, and distinctive
  * All colors in HSL format
  */
 
 @layer base {
   :root {
-    /* Light Mode - Soft Apple-inspired palette */
-    --background: 240 7% 97%;
-    --foreground: 240 6% 12%;
+    /* Light Mode - Warm amber-inspired palette */
+    --background: 43 100% 97%;
+    --foreground: 30 6% 10%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 6% 12%;
+    --card: 40 60% 99%;
+    --card-foreground: 30 6% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 6% 12%;
+    --popover: 40 60% 99%;
+    --popover-foreground: 30 6% 10%;
 
-    /* Fresh green — primary CTA */
-    --primary: 145 63% 44%;
+    /* Sunny amber — primary CTA */
+    --primary: 33 95% 48%;
     --primary-foreground: 0 0% 100%;
-    --primary-shadow: 145 68% 31%;
+    --primary-shadow: 28 85% 38%;
 
-    --secondary: 240 6% 95%;
-    --secondary-foreground: 240 6% 12%;
+    --secondary: 38 30% 93%;
+    --secondary-foreground: 30 6% 10%;
 
-    --muted: 240 5% 92%;
-    --muted-foreground: 240 4% 50%;
+    --muted: 38 20% 90%;
+    --muted-foreground: 30 5% 45%;
 
-    --accent: 240 6% 95%;
-    --accent-foreground: 240 6% 12%;
+    --accent: 36 100% 92%;
+    --accent-foreground: 30 6% 10%;
 
     /* Soft system colors */
     --success: 160 70% 45%;
@@ -47,8 +47,8 @@ body {
     --success-shadow: 160 70% 35%;
 
     --warning: 35 100% 55%;
-    --warning-foreground: 240 6% 12%;
-    --warning-shadow: 35 100% 40%;
+    --warning-foreground: 30 6% 10%;
+    --warning-shadow: 30 100% 40%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -63,7 +63,7 @@ body {
     --duo-purple-shadow: 270 50% 50%;
 
     --duo-yellow: 45 100% 55%;
-    --duo-yellow-foreground: 240 6% 12%;
+    --duo-yellow-foreground: 30 6% 10%;
 
     /* Full-screen animal audience */
     --animal-fox: 37 91% 55%;
@@ -93,14 +93,14 @@ body {
     --animal-eye-glint: 0 0% 100%;
     --animal-beak: 38 92% 55%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 145 63% 44%;
+    --border: 36 20% 85%;
+    --input: 36 20% 85%;
+    --ring: 33 95% 48%;
 
-    /* Prop cue (text-selection rekvisita) — warm amber, distinct from primary */
-    --prop-cue-bg: 32 95% 60% / 0.12;
-    --prop-cue-bg-strong: 32 95% 60% / 0.28;
-    --prop-cue-fg: 32 95% 62%;
+    /* Prop cue (text-selection rekvisita) — warm amber, same family as primary */
+    --prop-cue-bg: 32 95% 55% / 0.12;
+    --prop-cue-bg-strong: 32 95% 55% / 0.28;
+    --prop-cue-fg: 28 90% 45%;
 
     --radius: 1.25rem;
 
@@ -109,25 +109,25 @@ body {
     --sermable-indigo: 235 65% 60%;
     --sermable-cyan: 192 85% 55%;
     --sermable-mint: 168 60% 50%;
-    --word-bg: 240 6% 95%;
-    --word-text: 240 6% 12%;
+    --word-bg: 38 30% 93%;
+    --word-text: 30 6% 10%;
     --success-green: 160 70% 45%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(145 63% 48%) 0%, hsl(145 63% 40%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(145 63% 44%) 0%, hsl(211 100% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(33 95% 52%) 0%, hsl(28 90% 44%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(33 95% 48%) 0%, hsl(45 100% 55%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(160 70% 45%) 0%, hsl(160 70% 35%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(145 63% 44%) 0%, hsl(145 63% 44%) 50%, hsl(211 100% 55%) 100%);
-    --gradient-space: radial-gradient(ellipse at top, hsl(240 6% 95%), hsl(240 7% 97%));
+    --gradient-hero: linear-gradient(135deg, hsl(33 95% 48%) 0%, hsl(33 95% 48%) 50%, hsl(45 100% 55%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(38 30% 93%), hsl(43 100% 97%));
 
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(145 63% 44% / 0.05), transparent);
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(33 95% 48% / 0.07), transparent);
 
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-    --shadow-glow: 0 0 20px hsl(145 63% 44% / 0.15);
-    --shadow-teal: 0 0 30px hsl(145 63% 44% / 0.1);
+    --shadow-glow: 0 0 20px hsl(33 95% 48% / 0.18);
+    --shadow-teal: 0 0 30px hsl(33 95% 48% / 0.12);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -135,29 +135,29 @@ body {
   }
 
   .dark {
-    /* Dark Mode - Soft Apple-inspired palette */
-    --background: 240 10% 6%;
-    --foreground: 240 7% 97%;
+    /* Dark Mode - Warm amber-inspired palette */
+    --background: 24 12% 8%;
+    --foreground: 40 30% 96%;
 
-    --card: 240 8% 12%;
-    --card-foreground: 240 7% 97%;
+    --card: 24 10% 12%;
+    --card-foreground: 40 30% 96%;
 
-    --popover: 240 8% 14%;
-    --popover-foreground: 240 7% 97%;
+    --popover: 24 10% 14%;
+    --popover-foreground: 40 30% 96%;
 
-    /* Fresh green — primary CTA */
-    --primary: 145 60% 48%;
+    /* Sunny amber — primary CTA */
+    --primary: 33 90% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-shadow: 145 68% 31%;
+    --primary-shadow: 28 80% 32%;
 
-    --secondary: 240 7% 16%;
-    --secondary-foreground: 240 7% 97%;
+    --secondary: 24 8% 18%;
+    --secondary-foreground: 40 30% 96%;
 
-    --muted: 240 6% 20%;
-    --muted-foreground: 240 5% 55%;
+    --muted: 24 8% 22%;
+    --muted-foreground: 35 10% 60%;
 
-    --accent: 240 7% 18%;
-    --accent-foreground: 240 7% 97%;
+    --accent: 30 40% 22%;
+    --accent-foreground: 40 30% 96%;
 
     /* Soft system colors */
     --success: 160 70% 45%;
@@ -165,8 +165,8 @@ body {
     --success-shadow: 160 70% 35%;
 
     --warning: 35 100% 55%;
-    --warning-foreground: 240 6% 12%;
-    --warning-shadow: 35 100% 40%;
+    --warning-foreground: 30 6% 10%;
+    --warning-shadow: 30 100% 40%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -181,32 +181,32 @@ body {
     --duo-purple-shadow: 270 50% 50%;
 
     --duo-yellow: 45 100% 55%;
-    --duo-yellow-foreground: 240 6% 12%;
+    --duo-yellow-foreground: 30 6% 10%;
 
-    --border: 240 7% 22%;
-    --input: 240 7% 22%;
-    --ring: 145 60% 48%;
+    --border: 24 8% 22%;
+    --input: 24 8% 22%;
+    --ring: 33 90% 52%;
 
     /* Prop cue (text-selection rekvisita) — warm amber for dark theme */
-    --prop-cue-bg: 32 95% 60% / 0.12;
-    --prop-cue-bg-strong: 32 95% 60% / 0.28;
-    --prop-cue-fg: 32 95% 62%;
+    --prop-cue-bg: 32 95% 55% / 0.12;
+    --prop-cue-bg-strong: 32 95% 55% / 0.28;
+    --prop-cue-fg: 35 100% 68%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(145 60% 52%) 0%, hsl(145 60% 43%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(145 60% 48%) 0%, hsl(211 100% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(33 90% 54%) 0%, hsl(28 85% 46%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(33 90% 52%) 0%, hsl(45 100% 55%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(160 70% 45%) 0%, hsl(160 70% 35%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(145 60% 48%) 0%, hsl(145 60% 48%) 50%, hsl(211 100% 55%) 100%);
-    --gradient-space: radial-gradient(ellipse at top, hsl(240 8% 14%), hsl(240 10% 6%));
+    --gradient-hero: linear-gradient(135deg, hsl(33 90% 52%) 0%, hsl(33 90% 52%) 50%, hsl(45 100% 55%) 100%);
+    --gradient-space: radial-gradient(ellipse at top, hsl(24 10% 14%), hsl(24 12% 8%));
 
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(145 60% 48% / 0.08), transparent);
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(33 90% 52% / 0.09), transparent);
 
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 2px -1px rgba(0, 0, 0, 0.15);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.15);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
-    --shadow-glow: 0 0 20px hsl(145 60% 48% / 0.2);
-    --shadow-teal: 0 0 30px hsl(145 60% 48% / 0.15);
+    --shadow-glow: 0 0 20px hsl(33 90% 52% / 0.22);
+    --shadow-teal: 0 0 30px hsl(33 90% 52% / 0.15);
   }
 }
 
@@ -266,7 +266,7 @@ body {
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Subtle teal glow at top of page */
+    /* Subtle amber glow at top of page */
     background-image: var(--bg-glow);
     background-attachment: fixed;
   }
@@ -301,7 +301,8 @@ body {
     @apply backdrop-blur-2xl bg-background/70;
   }
 
-  /* Teal glow effect */
+  /* Amber glow effect */
+  .amber-glow,
   .teal-glow {
     box-shadow: 0 0 40px hsl(var(--primary) / 0.15);
   }

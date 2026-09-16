@@ -166,6 +166,7 @@ export default {
         "sermable-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03)",
         "sermable-xl": "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03)",
         "sermable-glow": "0 0 20px hsl(var(--primary) / 0.15)",
+        "amber-glow": "0 0 30px hsl(var(--primary) / 0.2)",
         "teal-glow": "0 0 30px hsl(var(--primary) / 0.2)",
       },
       backgroundImage: {
