@@ -1,5 +1,12 @@
 # Roadmap
 
+## Klart: Mjukare och färgstarkare kärnupplevelse
+
+- [x] Grön standardaccent med tydliga kompletterande statusfärger
+- [x] Stabilare dashboardkort, framsteg och knappövergångar
+- [x] Gemensamt laddningsläge med glatt djur och lokaliserade fakta
+- [x] Verifiera dashboard och laddningsläge i mobil och desktop
+
 ## Klart: Djurpublik i helskärm
 
 - [x] Djurvyn ersätter manuset i den helt fördolda fasen

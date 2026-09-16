@@ -10,7 +10,7 @@ body {
 }
 
 /* Sermable Design System
- * Unique teal-indigo palette
+ * Playful green-led palette
  * Clean, focused, and distinctive
  * All colors in HSL format
  */
@@ -27,10 +27,10 @@ body {
     --popover: 0 0% 100%;
     --popover-foreground: 240 6% 12%;
 
-    /* Soft indigo — primary CTA */
-    --primary: 241 76% 60%;
+    /* Fresh green — primary CTA */
+    --primary: 145 63% 44%;
     --primary-foreground: 0 0% 100%;
-    --primary-shadow: 241 76% 45%;
+    --primary-shadow: 145 68% 31%;
 
     --secondary: 240 6% 95%;
     --secondary-foreground: 240 6% 12%;
@@ -95,7 +95,7 @@ body {
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 241 76% 60%;
+    --ring: 145 63% 44%;
 
     /* Prop cue (text-selection rekvisita) — warm amber, distinct from primary */
     --prop-cue-bg: 32 95% 60% / 0.12;
@@ -113,21 +113,21 @@ body {
     --word-text: 240 6% 12%;
     --success-green: 160 70% 45%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 50%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(270 60% 65%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(145 63% 48%) 0%, hsl(145 63% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(145 63% 44%) 0%, hsl(211 100% 55%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(160 70% 45%) 0%, hsl(160 70% 35%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 60%) 50%, hsl(270 60% 65%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(145 63% 44%) 0%, hsl(145 63% 44%) 50%, hsl(211 100% 55%) 100%);
     --gradient-space: radial-gradient(ellipse at top, hsl(240 6% 95%), hsl(240 7% 97%));
 
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(241 76% 60% / 0.05), transparent);
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(145 63% 44% / 0.05), transparent);
 
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-    --shadow-glow: 0 0 20px hsl(241 76% 60% / 0.15);
-    --shadow-teal: 0 0 30px hsl(241 76% 60% / 0.1);
+    --shadow-glow: 0 0 20px hsl(145 63% 44% / 0.15);
+    --shadow-teal: 0 0 30px hsl(145 63% 44% / 0.1);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -145,10 +145,10 @@ body {
     --popover: 240 8% 14%;
     --popover-foreground: 240 7% 97%;
 
-    /* Soft indigo — primary CTA */
-    --primary: 241 76% 60%;
+    /* Fresh green — primary CTA */
+    --primary: 145 60% 48%;
     --primary-foreground: 0 0% 100%;
-    --primary-shadow: 241 76% 45%;
+    --primary-shadow: 145 68% 31%;
 
     --secondary: 240 7% 16%;
     --secondary-foreground: 240 7% 97%;
@@ -185,28 +185,28 @@ body {
 
     --border: 240 7% 22%;
     --input: 240 7% 22%;
-    --ring: 241 76% 60%;
+    --ring: 145 60% 48%;
 
     /* Prop cue (text-selection rekvisita) — warm amber for dark theme */
     --prop-cue-bg: 32 95% 60% / 0.12;
     --prop-cue-bg-strong: 32 95% 60% / 0.28;
     --prop-cue-fg: 32 95% 62%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 50%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(270 60% 65%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(145 60% 52%) 0%, hsl(145 60% 43%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(145 60% 48%) 0%, hsl(211 100% 55%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(160 70% 45%) 0%, hsl(160 70% 35%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(241 76% 60%) 0%, hsl(241 76% 60%) 50%, hsl(270 60% 65%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(145 60% 48%) 0%, hsl(145 60% 48%) 50%, hsl(211 100% 55%) 100%);
     --gradient-space: radial-gradient(ellipse at top, hsl(240 8% 14%), hsl(240 10% 6%));
 
-    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(241 76% 60% / 0.08), transparent);
+    --bg-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(145 60% 48% / 0.08), transparent);
 
     --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
     --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 2px -1px rgba(0, 0, 0, 0.15);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.15);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
-    --shadow-glow: 0 0 20px hsl(241 76% 60% / 0.2);
-    --shadow-teal: 0 0 30px hsl(241 76% 60% / 0.15);
+    --shadow-glow: 0 0 20px hsl(145 60% 48% / 0.2);
+    --shadow-teal: 0 0 30px hsl(145 60% 48% / 0.15);
   }
 }
 
@@ -594,14 +594,14 @@ body {
 
   /* Subtle pressed shadow that scales on press */
   .duo-btn {
-    box-shadow: 0 1px 2px 0 hsl(var(--primary-shadow) / 0.25);
+    box-shadow: 0 3px 0 0 hsl(var(--primary-shadow) / 0.65);
     transform: translateY(0) scale(1);
-    transition: transform 100ms ease-out, box-shadow 100ms ease-out, filter 150ms ease-out;
+    transition: transform 180ms ease-out, box-shadow 180ms ease-out, filter 200ms ease-out;
   }
   .duo-btn:active,
   .duo-btn[data-pressed="true"] {
-    transform: scale(0.98);
-    box-shadow: 0 1px 1px 0 hsl(var(--primary-shadow) / 0.15);
+    transform: translateY(2px) scale(0.99);
+    box-shadow: 0 1px 0 0 hsl(var(--primary-shadow) / 0.45);
   }
   .duo-btn-destructive { box-shadow: 0 1px 2px 0 hsl(var(--destructive-shadow) / 0.25); }
   .duo-btn-destructive:active { box-shadow: 0 1px 1px 0 hsl(var(--destructive-shadow) / 0.15); }
@@ -637,6 +637,36 @@ body {
   .icon-circle-solid-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
   .icon-circle-solid-purple      { background: hsl(var(--duo-purple));  color: hsl(var(--duo-purple-foreground)); }
 }
+
+/* Friendly lightweight loading mascot */
+.loading-mascot {
+  position: relative;
+  width: 9rem;
+  height: 10rem;
+  animation: loading-mascot-float 2.4s ease-in-out infinite;
+}
+.loading-mascot-face,
+.loading-mascot-body,
+.loading-mascot-ear { position: absolute; display: block; background: hsl(var(--primary)); }
+.loading-mascot-face { z-index: 2; top: 1.4rem; left: 1.5rem; width: 6rem; height: 6.5rem; border-radius: 48% 48% 44% 44%; border: 4px solid hsl(var(--primary-shadow) / 0.3); }
+.loading-mascot-body { bottom: 0; left: 2.25rem; width: 4.5rem; height: 4.2rem; border-radius: 55% 55% 35% 35%; }
+.loading-mascot-ear { top: 0; width: 1.6rem; height: 3.6rem; border-radius: 70% 70% 35% 35%; transform-origin: bottom; }
+.loading-mascot-ear-left { left: 1.8rem; transform: rotate(-18deg); }
+.loading-mascot-ear-right { right: 1.8rem; transform: rotate(18deg); }
+.loading-mascot-eye,
+.loading-mascot-cheek,
+.loading-mascot-smile { position: absolute; z-index: 3; display: block; }
+.loading-mascot-eye { top: 2.3rem; width: .55rem; height: .7rem; border-radius: 50%; background: hsl(var(--primary-foreground)); animation: loading-mascot-blink 3.8s infinite; }
+.loading-mascot-eye-left { left: 1.55rem; }
+.loading-mascot-eye-right { right: 1.55rem; }
+.loading-mascot-cheek { top: 3.45rem; width: .75rem; height: .38rem; border-radius: 50%; background: hsl(var(--warning) / 0.75); }
+.loading-mascot-cheek-left { left: .85rem; }
+.loading-mascot-cheek-right { right: .85rem; }
+.loading-mascot-smile { top: 3.45rem; left: 2.35rem; width: 1.3rem; height: .75rem; border-bottom: 4px solid hsl(var(--primary-foreground)); border-radius: 0 0 50% 50%; }
+.loading-progress-bar { animation: loading-progress 1.35s ease-in-out infinite alternate; }
+@keyframes loading-mascot-float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-.55rem) rotate(1deg); } }
+@keyframes loading-mascot-blink { 0%, 44%, 50%, 100% { transform: scaleY(1); } 47% { transform: scaleY(.12); } }
+@keyframes loading-progress { from { transform: translateX(-80%); } to { transform: translateX(180%); } }
 
 
 /* ===== Performance & motion smoothing ===== */
