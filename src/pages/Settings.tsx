@@ -275,15 +275,6 @@ const Settings = () => {
         {/* Appearance */}
         <SectionLabel>{t('settings.appearance.title')}</SectionLabel>
         <Section>
-          <Row>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-indigo-500/15 flex items-center justify-center">
-                {theme === 'dark' ? <Moon className="h-4 w-4 text-indigo-500" /> : <Sun className="h-4 w-4 text-indigo-500" />}
-              </div>
-              <span className="text-sm">{t('settings.appearance.theme')}</span>
-            </div>
-            <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
-          </Row>
           <Row last>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-md bg-pink-500/15 flex items-center justify-center">
