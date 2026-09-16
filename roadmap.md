@@ -5,7 +5,7 @@
 - [x] Grön standardaccent med tydliga kompletterande statusfärger
 - [x] Stabilare dashboardkort, framsteg och knappövergångar
 - [x] Gemensamt laddningsläge med glatt djur och lokaliserade fakta
-- [ ] Verifiera dashboard och laddningsläge i mobil och desktop
+- [x] Verifiera dashboard och laddningsläge i mobil och desktop
 
 ## Klart: Djurpublik i helskärm
 
