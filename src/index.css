@@ -266,7 +266,7 @@ body {
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Subtle teal glow at top of page */
+    /* Subtle amber glow at top of page */
     background-image: var(--bg-glow);
     background-attachment: fixed;
   }
@@ -301,7 +301,8 @@ body {
     @apply backdrop-blur-2xl bg-background/70;
   }
 
-  /* Teal glow effect */
+  /* Amber glow effect */
+  .amber-glow,
   .teal-glow {
     box-shadow: 0 0 40px hsl(var(--primary) / 0.15);
   }
