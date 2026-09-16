@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Languages, Bell, Flame, Trophy, CreditCard, ChevronRight, Trash2, Volume2, VolumeX, Moon, Sun, Clock, MessageCircle, Mail, ExternalLink, FileText, Clock4 } from "lucide-react";
+import { ArrowLeft, Languages, Bell, Flame, Trophy, CreditCard, ChevronRight, Trash2, Volume2, VolumeX, Clock, MessageCircle, Mail, ExternalLink, FileText, Clock4 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,7 +52,6 @@ const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
-  const { theme, toggleTheme } = useTheme();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
   
   const [currentStreak, setCurrentStreak] = useState(0);
