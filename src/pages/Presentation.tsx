@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { requestMicrophoneAccess } from "@/utils/microphone";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -14,7 +14,10 @@ import ListenMode from "@/components/ListenMode";
 import PresentationControls from "@/components/PresentationControls";
 import { ProximityGuide } from "@/components/ProximityGuide";
 
-import { AudienceOverlay } from "@/components/audience";
+// Heavy 3D scene (three.js) — only loaded when the audience mode is used.
+const AudienceOverlay = lazy(() =>
+  import("@/components/audience").then((m) => ({ default: m.AudienceOverlay }))
+);
 import type { ViewMode } from "@/components/WearableHUD";
 import type { Environment } from "@/components/audience/types";
 import { stripStageDirections } from "@/utils/stageDirections";
@@ -644,12 +647,14 @@ const Presentation = () => {
       
       {/* Audience overlay for premium users */}
       {selectedMode === 'audience' && (
-        <AudienceOverlay
-          isVisible={showAudienceOverlay}
-          environment={audienceEnvironment}
-          onClose={() => setShowAudienceOverlay(false)}
-          wordPerformance={currentWordPerformance}
-        />
+        <Suspense fallback={null}>
+          <AudienceOverlay
+            isVisible={showAudienceOverlay}
+            environment={audienceEnvironment}
+            onClose={() => setShowAudienceOverlay(false)}
+            wordPerformance={currentWordPerformance}
+          />
+        </Suspense>
       )}
     </>
   );

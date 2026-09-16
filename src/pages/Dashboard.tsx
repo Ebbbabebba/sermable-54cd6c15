@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import UploadSpeechDialog from "@/components/UploadSpeechDialog";
+const UploadSpeechDialog = lazy(() => import("@/components/UploadSpeechDialog"));
 import SpeechCard from "@/components/SpeechCard";
 import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
@@ -448,11 +448,15 @@ const Dashboard = () => {
       </main>
 
 
-      <UploadSpeechDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        onSuccess={handleSpeechAdded}
-      />
+      <Suspense fallback={null}>
+        {uploadDialogOpen && (
+          <UploadSpeechDialog
+            open={uploadDialogOpen}
+            onOpenChange={setUploadDialogOpen}
+            onSuccess={handleSpeechAdded}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };

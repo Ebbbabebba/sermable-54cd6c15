@@ -8,7 +8,9 @@ const LOW_DURATION_MS = 4000;
 const SILENCE_RESET_MS = 800;
 
 export function useMicrophoneLevel(isRecording: boolean) {
-  const [level, setLevel] = useState(0);
+  // Level is kept in a ref: it changes ~7x/second and used to re-render the
+  // whole practice/presentation view, which caused visible stutter.
+  const levelRef = useRef(0);
   const [isTooLow, setIsTooLow] = useState(false);
 
   const streamRef = useRef<MediaStream | null>(null);
@@ -21,7 +23,7 @@ export function useMicrophoneLevel(isRecording: boolean) {
   useEffect(() => {
     if (!isRecording) {
       setIsTooLow(false);
-      setLevel(0);
+      levelRef.current = 0;
       lowStartRef.current = null;
       silenceStartRef.current = null;
       return;
@@ -73,7 +75,7 @@ export function useMicrophoneLevel(isRecording: boolean) {
             sum += normalized * normalized;
           }
           const rms = Math.sqrt(sum / bufferLength);
-          setLevel(rms);
+          levelRef.current = rms;
 
           const now = Date.now();
 
@@ -134,5 +136,5 @@ export function useMicrophoneLevel(isRecording: boolean) {
     };
   }, [isRecording]);
 
-  return { level, isTooLow };
+  return { levelRef, isTooLow };
 }

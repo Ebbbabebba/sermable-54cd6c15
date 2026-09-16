@@ -557,21 +557,16 @@ body {
 
   /* Ultra-smooth word state transitions - no layout shifts */
   .word-smooth-transition {
-    transition: 
-      background-color 600ms cubic-bezier(0.22, 1, 0.36, 1),
-      color 500ms cubic-bezier(0.22, 1, 0.36, 1),
-      opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 500ms cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 500ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 400ms cubic-bezier(0.22, 1, 0.36, 1),
-      filter 600ms cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: opacity, background-color, transform;
+    transition:
+      background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   /* Spoken word smooth fade - gentle shrink and dim */
   .word-spoken {
     transform: scale(0.96);
-    filter: blur(0px);
   }
 
   /* Word completing animation - brief highlight then fade */
@@ -641,4 +636,37 @@ body {
   .icon-circle-solid-warning     { background: hsl(var(--warning));     color: hsl(var(--warning-foreground)); }
   .icon-circle-solid-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
   .icon-circle-solid-purple      { background: hsl(var(--duo-purple));  color: hsl(var(--duo-purple-foreground)); }
+}
+
+
+/* ===== Performance & motion smoothing ===== */
+
+/* Keep long scrolling text lists off the main-thread paint path */
+.speech-line,
+.word-block,
+.word-smooth-transition {
+  backface-visibility: hidden;
+}
+
+/* Lighter glass on small screens: heavy backdrop blur is the main
+   source of dropped frames on phones. */
+@media (max-width: 768px) {
+  .glass,
+  .glass-strong,
+  [class*="backdrop-blur-2xl"],
+  [class*="backdrop-blur-xl"] {
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
