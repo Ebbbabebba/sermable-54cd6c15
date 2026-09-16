@@ -240,7 +240,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
   return (
     <Card 
-      className="group cursor-pointer overflow-hidden border-2 border-border/60 rounded-3xl bg-card shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0 active:scale-[0.995]"
+      className="group cursor-pointer overflow-hidden border-2 border-border/60 rounded-3xl bg-card shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0 active:scale-[0.995]"
       onClick={handleCardClick}
     >
       <CardHeader className="pb-2">
