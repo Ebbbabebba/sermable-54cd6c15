@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Wand2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { convertPauseDirectionsToMarkers } from "@/utils/pauses";
 
 interface AiSpeechBuilderDialogProps {
   open: boolean;
@@ -118,7 +119,9 @@ export const AiSpeechBuilderDialog = ({
       });
       if (error) throw error;
       setDraftTitle((data?.title as string) || "");
-      setDraftSpeech((data?.speech as string) || "");
+      setDraftSpeech(
+        convertPauseDirectionsToMarkers((data?.speech as string) || ""),
+      );
       setStep("preview");
     } catch (err) {
       console.error("build-speech draft failed:", err);

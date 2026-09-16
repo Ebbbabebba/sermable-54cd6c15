@@ -108,7 +108,11 @@ const ReviewNotifications = () => {
       <CardContent className="space-y-3">
         {grouped.map((b) => {
           const dueMs = new Date(b.due_at).getTime();
-          const isOverdue = dueMs <= Date.now();
+          // Give a full day of grace before calling something "overdue" —
+          // a freshly created speech is due immediately and should read as
+          // "ready now", not as if the user already missed it.
+          const isOverdue = dueMs <= Date.now() - 24 * 60 * 60 * 1000;
+          const isDueNow = !isOverdue && dueMs <= Date.now();
           return (
             <button
               key={b.beat_id}
@@ -124,6 +128,10 @@ const ReviewNotifications = () => {
                   {isOverdue ? (
                     <Badge variant="destructive" className="text-xs rounded-full">
                       {t('dashboard.overdue', 'Försenad')}
+                    </Badge>
+                  ) : isDueNow ? (
+                    <Badge variant="secondary" className="text-xs rounded-full">
+                      {t('dashboard.readyNow', 'Redo nu')}
                     </Badge>
                   ) : (
                     <span>
