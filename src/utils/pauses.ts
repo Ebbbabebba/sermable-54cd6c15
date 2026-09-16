@@ -124,7 +124,7 @@ const SHORT_WORDS = "kort|short|brief|kurze|kurz|petite|courte|breve|corta|curta
 const LONG_WORDS = "lång|lang|long|longue|lunga|larga|longa|lange";
 
 const PAUSE_DIRECTION_RE = new RegExp(
-  `\\(\\s*(?:(${SHORT_WORDS})\\s+|(${LONG_WORDS})\\s+)?(?:${PAUSE_WORDS})` +
+  `\\(\\s*(?:(?:ta|take|faire|fai|haz|faça|mach)\\s+(?:en|a|une|una|um|eine)\\s+)?(?:(${SHORT_WORDS})\\s+|(${LONG_WORDS})\\s+)?(?:${PAUSE_WORDS})` +
     `(?:\\s+(?:i|for|of|de|von|på)\\s*)?\\s*(\\d{1,2})?\\s*` +
     `(?:s|sek|sec|secs|sekunder|sekunden|seconds|second|segundos|secondi|secondes)?\\s*[.!]?\\s*\\)`,
   "gi",
