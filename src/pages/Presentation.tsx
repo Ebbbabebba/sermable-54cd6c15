@@ -647,12 +647,14 @@ const Presentation = () => {
       
       {/* Audience overlay for premium users */}
       {selectedMode === 'audience' && (
-        <AudienceOverlay
-          isVisible={showAudienceOverlay}
-          environment={audienceEnvironment}
-          onClose={() => setShowAudienceOverlay(false)}
-          wordPerformance={currentWordPerformance}
-        />
+        <Suspense fallback={null}>
+          <AudienceOverlay
+            isVisible={showAudienceOverlay}
+            environment={audienceEnvironment}
+            onClose={() => setShowAudienceOverlay(false)}
+            wordPerformance={currentWordPerformance}
+          />
+        </Suspense>
       )}
     </>
   );
