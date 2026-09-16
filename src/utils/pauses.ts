@@ -111,3 +111,45 @@ export const setPauseDurationInText = (
   }
   return text;
 };
+
+/**
+ * Convert pause-style stage directions written by the AI (or pasted by the
+ * user) into real pause markers. "(paus)" → "-2s", "(kort paus)" → "-1s",
+ * "(lång paus)" → "-4s", "(pause 3 seconds)" → "-3s".
+ * Non-pause stage directions like "(look at the bride)" are left untouched.
+ */
+const PAUSE_WORDS =
+  "paus|pausa|pause|pausiere|pausa breve|silence|silenzio|silencio|silêncio|beat";
+const SHORT_WORDS = "kort|short|brief|kurze|kurz|petite|courte|breve|corta|curta";
+const LONG_WORDS = "lång|lang|long|longue|lunga|larga|longa|lange";
+
+const PAUSE_DIRECTION_RE = new RegExp(
+  `\\(\\s*(?:(${SHORT_WORDS})\\s+|(${LONG_WORDS})\\s+)?(?:${PAUSE_WORDS})` +
+    `(?:\\s+(?:i|for|of|de|von|på)\\s*)?\\s*(\\d{1,2})?\\s*` +
+    `(?:s|sek|sec|secs|sekunder|sekunden|seconds|second|segundos|secondi|secondes)?\\s*[.!]?\\s*\\)`,
+  "gi",
+);
+
+export const convertPauseDirectionsToMarkers = (text: string): string => {
+  if (!text) return text;
+  const replaced = text.replace(
+    PAUSE_DIRECTION_RE,
+    (_m, short?: string, long?: string, num?: string) => {
+      let seconds = PAUSE_DEFAULT_SECONDS;
+      if (num) seconds = parseInt(num, 10);
+      else if (short) seconds = 1;
+      else if (long) seconds = 4;
+      const clamped = Math.max(
+        1,
+        Math.min(PAUSE_MAX_SECONDS, seconds || PAUSE_DEFAULT_SECONDS),
+      );
+      return `-${clamped}s`;
+    },
+  );
+  // Tidy spacing around inserted markers.
+  return replaced
+    .replace(/[ \t]+(-\d{1,2}s)/g, " $1")
+    .replace(/(-\d{1,2}s)[ \t]*([,.;:!?])/g, "$2 $1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/ +\n/g, "\n");
+};

@@ -129,7 +129,8 @@
     "dueForPracticeDescription": "Estos segmentos son óptimos para practicar ahora",
     "beat": "Segmento",
     "inTime": "en",
-    "deleting": "Eliminando discurso..."
+    "deleting": "Eliminando discurso...",
+    "readyNow": "Listo ahora"
   },
   "onboarding": {
     "skip": "Saltar",

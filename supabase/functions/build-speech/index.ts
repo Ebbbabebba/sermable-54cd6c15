@@ -58,7 +58,10 @@ Rules:
 - Match the requested tone (warm, formal, funny, etc.).
 - Weave in the user's anecdote or example naturally; do not just append it.
 - Use stage directions in (parentheses) sparingly only when they add value
-  (e.g. "(pause)", "(look at the bride)").
+  (e.g. "(look at the bride)", "(raise your glass)").
+- NEVER write a pause as a stage direction. For a pause, write a standalone
+  hyphen token with the duration in seconds instead, e.g. "-2s" for a short
+  pause or "-4s" for a longer one. It must be surrounded by spaces.
 - If the user asked for a specific length, target that length; otherwise aim
   for ~2-3 minutes spoken (around 300-450 words).
 - Also propose a short title (max 5 words) for the speech.
