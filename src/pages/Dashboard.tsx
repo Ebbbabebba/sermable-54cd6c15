@@ -448,11 +448,15 @@ const Dashboard = () => {
       </main>
 
 
-      <UploadSpeechDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        onSuccess={handleSpeechAdded}
-      />
+      <Suspense fallback={null}>
+        {uploadDialogOpen && (
+          <UploadSpeechDialog
+            open={uploadDialogOpen}
+            onOpenChange={setUploadDialogOpen}
+            onSuccess={handleSpeechAdded}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };
