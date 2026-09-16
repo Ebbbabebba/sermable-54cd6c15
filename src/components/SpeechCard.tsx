@@ -240,18 +240,23 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
   return (
     <Card 
-      className="group cursor-pointer border border-border/60 rounded-3xl bg-card shadow-sm hover:shadow-md transition-all duration-300"
+      className="group cursor-pointer overflow-hidden border-2 border-border/60 rounded-3xl bg-card shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md active:translate-y-0"
       onClick={handleCardClick}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="font-display text-lg font-semibold truncate capitalize text-foreground">
-              {speech.title}
-            </CardTitle>
-            <CardDescription className="text-xs mt-1">
-              {format(new Date(speech.created_at), "MMM dd, yyyy")}
-            </CardDescription>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="icon-circle icon-circle-primary h-11 w-11">
+              <Mic className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="font-display text-lg font-semibold truncate capitalize text-foreground">
+                {speech.title}
+              </CardTitle>
+              <CardDescription className="text-xs mt-1">
+                {format(new Date(speech.created_at), "MMM dd, yyyy")}
+              </CardDescription>
+            </div>
           </div>
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${
             isOverdue 
@@ -272,13 +277,16 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
       <CardContent className="space-y-4">
         <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
           <PopoverTrigger asChild>
-            <button
-              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 -ml-3 gap-2 px-3 text-xs text-muted-foreground hover:text-foreground"
               onClick={(e) => e.stopPropagation()}
             >
               <CalendarIcon className="h-3.5 w-3.5" />
               <span>{t('dashboard.goal')}: {format(goalDate, "MMM dd, yyyy")}</span>
-            </button>
+            </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
             <Calendar
@@ -306,7 +314,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             <span className="text-muted-foreground">{t('dashboard.progress')}</span>
             <span className="font-medium text-foreground">{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-3 bg-primary/12" />
           {masteryPercent !== null && (
             <div className="flex items-center gap-1.5 text-xs">
               <Target className="h-3 w-3 text-emerald-500" />

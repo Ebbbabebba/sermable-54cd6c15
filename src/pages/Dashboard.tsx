@@ -234,9 +234,12 @@ const Dashboard = () => {
         />
       )}
 
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
+      <header className="sticky top-0 z-50 bg-background/95 border-b border-border/50" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
         <div className="px-4 h-14 flex items-center justify-between gap-3 max-w-2xl mx-auto">
-          <span className="font-display font-bold text-lg tracking-tight">Sermable</span>
+          <span className="flex items-center gap-2 font-display font-bold text-lg tracking-tight">
+            <span className="h-3 w-3 rounded-full bg-primary shadow-[0_0_0_5px_hsl(var(--primary)/0.12)]" aria-hidden="true" />
+            Sermable
+          </span>
 
           <div className="flex items-center gap-2">
             <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
@@ -290,8 +293,8 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="px-4 py-6 pb-28">
-        <div className="max-w-2xl mx-auto space-y-10">
+      <main className="px-4 py-7 pb-28">
+        <div className="max-w-2xl mx-auto space-y-9">
           {/* Welcome Section - Large, clean typography */}
           <section className="animate-fade-in">
             {(() => {
@@ -385,7 +388,7 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-5">
                 {[1, 2, 3].map(i => (
                   <Card key={i} className="border border-border/60 shadow-sm animate-pulse">
                     <CardContent className="p-6 space-y-4">
@@ -429,8 +432,8 @@ const Dashboard = () => {
                   return sortedSpeeches.map((speech, index) => (
                     <div 
                       key={speech.id}
-                      className="animate-scale-in"
-                      style={{ animationDelay: `${index * 50}ms` }}
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 70}ms`, animationFillMode: 'both' }}
                     >
                       <SpeechCard 
                         speech={speech} 

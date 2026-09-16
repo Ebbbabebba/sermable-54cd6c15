@@ -1,5 +1,6 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import InlineMessages from "@/components/InlineMessages";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, ComponentType } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -86,7 +87,7 @@ const App = () => (
     <TooltipProvider>
       <InlineMessages />
       <BrowserRouter>
-        <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <Suspense fallback={<LoadingOverlay isVisible />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/onboarding" element={<Onboarding />} />
