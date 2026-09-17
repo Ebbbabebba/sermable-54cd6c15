@@ -30,7 +30,7 @@ const PracticeResults = ({
 }: PracticeResultsProps) => {
   const { t } = useTranslation();
 
-  const originalWords = originalText.split(/\s+/).filter((word) => word.length > 0);
+  const originalWords = stripStageDirections(stripPropCueMarkers(originalText)).split(/\s+/).filter((word) => word.length > 0);
 
   // Prefer index-based hidden detection (brackets in currentText) to avoid issues with repeated words
   const extractHiddenIndices = (text: string): Set<number> => {
