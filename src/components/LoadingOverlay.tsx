@@ -68,7 +68,13 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6 animate-fade-in">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="fixed inset-0 z-50 flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6"
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 14 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -100,7 +106,7 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
