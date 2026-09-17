@@ -3988,7 +3988,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   </SheetHeader>
                   <ScrollArea className="h-[calc(80vh-80px)] mt-4">
                     <p className="text-base leading-relaxed whitespace-pre-wrap pr-4">
-                      {fullSpeechText}
+                      {stripPropCueMarkers(fullSpeechText)}
                     </p>
                   </ScrollArea>
                 </SheetContent>
