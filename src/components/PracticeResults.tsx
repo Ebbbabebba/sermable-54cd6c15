@@ -38,7 +38,7 @@ const PracticeResults = ({
   const extractHiddenIndices = (text: string): Set<number> => {
     const hidden = new Set<number>();
     let globalWordIndex = 0;
-    const parts = text.split(/(\[[^\]]*\])/);
+    const parts = stripPropCueMarkers(text).split(/(\[[^\]]*\])/);
 
     for (const part of parts) {
       if (part.startsWith('[') && part.endsWith(']')) {
