@@ -2,8 +2,42 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import InlineMessages from "@/components/InlineMessages";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense, ComponentType } from "react";
+import { lazy, Suspense, ComponentType, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+
+// Keep the loading screen visible for at least this long, so fast loads
+// feel like a smooth transition instead of a millisecond flash.
+const MIN_LOADING_MS = 1200;
+
+const SuspenseProbe = ({ onReady }: { onReady: () => void }) => {
+  useEffect(() => onReady(), [onReady]);
+  return null;
+};
+
+const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
+  const [contentReady, setContentReady] = useState(false);
+  const [minElapsed, setMinElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinElapsed(true), MIN_LOADING_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const showOverlay = !(contentReady && minElapsed);
+
+  return (
+    <>
+      <Suspense fallback={null}>
+        <SuspenseProbe onReady={() => setContentReady(true)} />
+        {children}
+      </Suspense>
+      <AnimatePresence>
+        {showOverlay && <LoadingOverlay isVisible />}
+      </AnimatePresence>
+    </>
+  );
+};
 
 // Reload at most once per 5 minutes when a stale-chunk error happens
 // (new deploy = hashed filenames). We deliberately do NOT reload for generic
@@ -87,7 +121,7 @@ const App = () => (
     <TooltipProvider>
       <InlineMessages />
       <BrowserRouter>
-        <Suspense fallback={<LoadingOverlay isVisible />}>
+        <SmoothSuspense>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/onboarding" element={<Onboarding />} />
@@ -110,7 +144,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Suspense>
+        </SmoothSuspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
