@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { stripPropCueMarkers } from "@/utils/propCues";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface PracticeResultsProps {
   accuracy: number;
@@ -30,13 +32,13 @@ const PracticeResults = ({
 }: PracticeResultsProps) => {
   const { t } = useTranslation();
 
-  const originalWords = originalText.split(/\s+/).filter((word) => word.length > 0);
+  const originalWords = stripStageDirections(stripPropCueMarkers(originalText)).split(/\s+/).filter((word) => word.length > 0);
 
   // Prefer index-based hidden detection (brackets in currentText) to avoid issues with repeated words
   const extractHiddenIndices = (text: string): Set<number> => {
     const hidden = new Set<number>();
     let globalWordIndex = 0;
-    const parts = text.split(/(\[[^\]]*\])/);
+    const parts = stripPropCueMarkers(text).split(/(\[[^\]]*\])/);
 
     for (const part of parts) {
       if (part.startsWith('[') && part.endsWith(']')) {

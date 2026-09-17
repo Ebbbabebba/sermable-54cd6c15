@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation,
 import SpeechCalendar from "@/components/SpeechCalendar";
 import { BeatPrintDialog } from "@/components/BeatPrintDialog";
 import { differenceInDays } from "date-fns";
+import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface Speech {
   id: string;
@@ -153,7 +154,7 @@ const SpeechDetail = () => {
                   {t("speechDetail.scriptPreview")}
                 </p>
                 <p className="text-sm leading-relaxed line-clamp-[12] whitespace-pre-wrap">
-                  {speech.text_original}
+                  {stripPropCueMarkers(speech.text_original)}
                 </p>
               </div>
 
