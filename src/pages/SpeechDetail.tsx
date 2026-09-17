@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation,
 import SpeechCalendar from "@/components/SpeechCalendar";
 import { BeatPrintDialog } from "@/components/BeatPrintDialog";
 import { differenceInDays } from "date-fns";
+import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface Speech {
   id: string;

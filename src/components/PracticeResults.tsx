@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { stripPropCueMarkers } from "@/utils/propCues";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 interface PracticeResultsProps {
   accuracy: number;
