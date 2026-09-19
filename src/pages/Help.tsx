@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft, HelpCircle, Mic, BookOpen, Clock, BarChart3, Settings, MessageCircle, Mail, ExternalLink, Smartphone, Zap, Trophy, Shield, Copy, Check } from "lucide-react";
-import { buildMailtoUrl, copyToClipboard, openMailto } from "@/lib/openMailto";
+import { buildMailtoUrl, copyToClipboard } from "@/lib/openMailto";
 import { useState } from "react";
 
 const SUPPORT_EMAIL = "support@sermable.com";
@@ -192,13 +192,8 @@ const Help = () => {
               >
                 <a
                   href={buildMailtoUrl(SUPPORT_EMAIL)}
+                  target="_blank"
                   rel="external noopener"
-                  onClick={(e) => {
-                    // In the in-app webview / preview iframe the default mailto
-                    // navigation is often blocked — handle it explicitly.
-                    e.preventDefault();
-                    openMailto(SUPPORT_EMAIL);
-                  }}
                 >
                   <Mail className="h-4 w-4 mr-2 shrink-0" />
                   <span className="truncate">{SUPPORT_EMAIL}</span>
