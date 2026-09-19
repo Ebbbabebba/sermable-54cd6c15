@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { stripPropCueMarkers } from "@/utils/propCues";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -328,7 +329,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-          {speech.text_original.substring(0, 140)}...
+          {stripPropCueMarkers(speech.text_original).substring(0, 140)}...
         </p>
       </CardContent>
 
