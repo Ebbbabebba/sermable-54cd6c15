@@ -2372,7 +2372,27 @@ const [liveTranscription, setLiveTranscription] = useState("");
       {/* Fixed bottom CTA - Duolingo style */}
         <div className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-6 bg-background/95 backdrop-blur-md border-t border-border/40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
           <div className="max-w-md mx-auto space-y-2">
-            {todaySessionDone ? (
+            {isFullyComplete ? (
+              <>
+                <Button
+                  size="lg"
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                >
+                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  {t('practice.back_to_overview', 'Back to overview')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate(`/presentation/${id}`)}
+                  className="w-full h-12 rounded-2xl font-semibold"
+                >
+                  <Presentation className="h-4 w-4 mr-2" />
+                  {t('practice.rehearse_presentation', 'Rehearse for the big day')}
+                </Button>
+              </>
+            ) : todaySessionDone ? (
               <Button 
                 size="lg" 
                 variant="outline"
@@ -2388,11 +2408,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Button 
               size="lg" 
               onClick={() => handleStartPractice()}
-              disabled={isLocked}
+              disabled={isLockedEffective}
               className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
             >
               <Play className="h-5 w-5 mr-2" />
-              {isLocked 
+              {isLockedEffective 
                 ? t('practice.locked') 
                 : masteredBeats === 0
                   ? t('beat_practice.start_session', 'Start Session')
@@ -2400,8 +2420,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </Button>
           )}
 
-          {/* Secondary CTA: strong button for practice anyway / upgrade, with countdown caption */}
-          {isLocked && nextReviewDate && (
+          {/* Secondary CTA: practice anyway link, only while the speech is still being learned */}
+          {isLockedEffective && nextReviewDate && (
             <>
               <Button
                 variant="outline"
