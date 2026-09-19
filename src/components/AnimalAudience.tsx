@@ -23,7 +23,7 @@ type Palette = {
   detail: string;
 };
 
-const ANIMALS: { kind: AnimalKind; palette: Palette }[] = [
+export const ANIMALS: { kind: AnimalKind; palette: Palette }[] = [
   { kind: "fox", palette: { body: "hsl(var(--animal-fox))", belly: "hsl(var(--animal-fox-light))", accent: "hsl(var(--animal-fox-dark))", detail: "hsl(var(--animal-fox-detail))" } },
   { kind: "bunny", palette: { body: "hsl(var(--animal-bunny))", belly: "hsl(var(--animal-bunny-light))", accent: "hsl(var(--animal-bunny-dark))", detail: "hsl(var(--animal-bunny-detail))" } },
   { kind: "frog", palette: { body: "hsl(var(--animal-frog))", belly: "hsl(var(--animal-frog-light))", accent: "hsl(var(--animal-frog-dark))", detail: "hsl(var(--animal-frog-detail))" } },
@@ -86,7 +86,7 @@ const Ears = ({ kind, palette, mood }: { kind: AnimalKind; palette: Palette; moo
   </>;
 };
 
-const Animal = ({
+export const Animal = ({
   kind,
   palette,
   mood,
