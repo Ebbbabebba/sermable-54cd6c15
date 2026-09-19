@@ -828,7 +828,8 @@
     "regenerate": "Régénérer",
     "noDeadlineTitle": "Aucune échéance",
     "noDeadlineDescription": "Ajoutez une date pour créer un planning.",
-    "plannedSessions": "{{count}} leçons planifiées"
+    "plannedSessions": "{{count}} leçons planifiées",
+    "fullRunthrough": "Discours complet"
   },
   "speechDetail": {
     "notFound": "Discours introuvable",
@@ -855,6 +856,16 @@
       "saved": "Enregistré",
       "strictHelp": "Votre discours est comparé mot à mot. Les erreurs et les mots sautés sont marqués en rouge immédiatement, les hésitations passent au jaune après 2 s. L'analyse IA est exigeante.",
       "flowHelp": "Ton discours est évalué sur le sens. Les synonymes, les phrases réorganisées et les mots omis sont acceptés, et une série est validée quand au moins 85 % des mots-clés masqués sont dits. Les mots de liaison ne comptent jamais comme des erreurs."
+    },
+    "plan": {
+      "title": "Votre plan",
+      "learning": "Apprendre de nouvelles parties",
+      "review": "Répétition uniquement",
+      "runthrough": "Répétitions générales",
+      "performance": "Présentation",
+      "until": "jusqu au {{date}}",
+      "from": "à partir du {{date}}",
+      "on": "{{date}}"
     }
   },
   "tour": {

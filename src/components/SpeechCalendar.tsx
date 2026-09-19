@@ -4,13 +4,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Play, Mic, RotateCcw, Target, Trophy } from "lucide-react";
+import { Loader2, Play, Mic, RotateCcw, Target, Trophy, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { format, isAfter, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
-type EventType = "practice" | "recall" | "test" | "presentation";
+type EventType = "practice" | "recall" | "test" | "presentation" | "full_runthrough";
 
 interface CalendarEvent {
   id: string;
@@ -31,7 +31,9 @@ const EVENT_ICONS: Record<EventType, typeof Mic> = {
   recall: RotateCcw,
   test: Target,
   presentation: Trophy,
+  full_runthrough: Flag,
 };
+
 
 const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps) => {
   const { t } = useTranslation();
@@ -107,18 +109,20 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
     const recall: Date[] = [];
     const test: Date[] = [];
     const presentation: Date[] = [];
+    const runthrough: Date[] = [];
     const completed: Date[] = [];
 
     for (const e of events) {
       const d = new Date(`${e.event_date}T00:00:00`);
       if (e.event_type === "presentation") presentation.push(d);
+      else if (e.event_type === "full_runthrough") runthrough.push(d);
       else if (e.event_type === "test") test.push(d);
       else if (e.event_type === "recall") recall.push(d);
       else practice.push(d);
       if (e.completed) completed.push(d);
     }
 
-    return { practice, recall, test, presentation, completed };
+    return { practice, recall, test, presentation, runthrough, completed };
   }, [events]);
 
   const modifiersClassNames = {
@@ -128,6 +132,8 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
       "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-amber-500",
     test:
       "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-orange-500",
+    runthrough:
+      "relative font-semibold after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-rose-500",
     presentation:
       "bg-gradient-to-br from-rose-500 to-orange-500 !text-white rounded-full font-semibold shadow-md",
     completed:
@@ -146,6 +152,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
     if (type === "practice") return t("calendar.practice");
     if (type === "recall") return t("calendar.recall");
     if (type === "test") return t("calendar.test");
+    if (type === "full_runthrough") return t("calendar.fullRunthrough");
     return t("calendar.presentationDay");
   };
 
@@ -164,6 +171,10 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-orange-500" />
           {t("calendar.test")}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-rose-500" />
+          {t("calendar.fullRunthrough")}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-gradient-to-br from-rose-500 to-orange-500" />
@@ -247,6 +258,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                           e.event_type === "practice" && "bg-primary/10 text-primary",
                           e.event_type === "recall" && "bg-amber-500/15 text-amber-600 dark:text-amber-400",
                           e.event_type === "test" && "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+                          e.event_type === "full_runthrough" && "bg-rose-500/15 text-rose-600 dark:text-rose-400",
                           isPresentation && "bg-gradient-to-br from-rose-500 to-orange-500 text-white",
                         )}
                       >

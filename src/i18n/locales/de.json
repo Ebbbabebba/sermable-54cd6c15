@@ -828,7 +828,8 @@
     "regenerate": "Neu erstellen",
     "noDeadlineTitle": "Keine Frist gesetzt",
     "noDeadlineDescription": "Füge ein Zieldatum hinzu, um einen Übungsplan zu erstellen.",
-    "plannedSessions": "{{count}} geplante Lektionen"
+    "plannedSessions": "{{count}} geplante Lektionen",
+    "fullRunthrough": "Ganzer Durchlauf"
   },
   "speechDetail": {
     "notFound": "Rede nicht gefunden",
@@ -855,6 +856,16 @@
       "saved": "Gespeichert",
       "strictHelp": "Deine Rede wird Wort für Wort abgeglichen. Fehler und übersprungene Wörter werden sofort rot markiert, Zögern nach 2 Sek. gelb. Die KI-Analyse ist streng.",
       "flowHelp": "Deine Rede wird nach Bedeutung bewertet. Synonyme, umgestellte Formulierungen und ausgelassene Wörter werden akzeptiert; eine Runde gilt als bestanden, wenn mindestens 85 % der versteckten Schlüsselwörter vorkommen. Füllwörter zählen nie als Fehler."
+    },
+    "plan": {
+      "title": "Dein Plan",
+      "learning": "Neue Abschnitte lernen",
+      "review": "Nur Wiederholung",
+      "runthrough": "Komplette Durchläufe",
+      "performance": "Auftritt",
+      "until": "bis {{date}}",
+      "from": "ab {{date}}",
+      "on": "{{date}}"
     }
   },
   "tour": {

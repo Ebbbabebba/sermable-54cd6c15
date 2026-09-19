@@ -1051,7 +1051,8 @@
     "regenerate": "Regenerate",
     "noDeadlineTitle": "No deadline set",
     "noDeadlineDescription": "Add a goal date to generate a practice schedule.",
-    "plannedSessions": "{{count}} planned lessons"
+    "plannedSessions": "{{count}} planned lessons",
+    "fullRunthrough": "Full run-through"
   },
   "speechDetail": {
     "notFound": "Speech not found",
@@ -1078,6 +1079,16 @@
     "tabs": {
       "overview": "Overview",
       "calendar": "Calendar"
+    },
+    "plan": {
+      "title": "Your plan",
+      "learning": "Learning new sections",
+      "review": "Repetition only",
+      "runthrough": "Full run-throughs",
+      "performance": "Performance",
+      "until": "until {{date}}",
+      "from": "from {{date}}",
+      "on": "{{date}}"
     }
   },
   "beatPrint": {

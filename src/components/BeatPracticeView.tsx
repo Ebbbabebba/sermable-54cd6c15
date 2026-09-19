@@ -407,13 +407,47 @@ const isNewDay = (lastPractice: Date | null): boolean => {
   return lastPractice.toDateString() !== today.toDateString();
 };
 
+// INTAKE WINDOW: all beats must be introduced well before the deadline so the
+// remaining time is pure consolidation. Learning "1 per day until the deadline"
+// meant the END of the speech was introduced days before the performance and
+// never got enough repetitions. We front-load intake into the first 60% of the
+// available time and leave the last 40% for repetition only.
+const INTAKE_FRACTION = 0.6;
+
 // Calculate how many beats we need per day given deadline
 const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number): number => {
+  if (unmasteredCount <= 0) return 0;
   if (daysUntilDeadline <= 0) return unmasteredCount; // Deadline passed or today - learn all
-  if (daysUntilDeadline >= unmasteredCount) return 1; // Plenty of time - 1 per day
-  // Tight deadline: distribute remaining beats across remaining days
-  return Math.ceil(unmasteredCount / daysUntilDeadline);
+  const intakeDays = Math.max(1, Math.floor(daysUntilDeadline * INTAKE_FRACTION));
+  return Math.max(1, Math.ceil(unmasteredCount / intakeDays));
 };
+
+// PRIMACY + RECENCY: learning strictly front-to-back leaves the ending — the
+// part the audience remembers best — as the least rehearsed. Alternate between
+// the earliest and the latest unlearned beat so both ends get early exposure.
+const pickNextBeatToLearn = <T extends { beat_order: number }>(
+  unmastered: T[],
+  learnedCount: number
+): T | null => {
+  if (unmastered.length === 0) return null;
+  const sorted = [...unmastered].sort((a, b) => a.beat_order - b.beat_order);
+  if (sorted.length === 1) return sorted[0];
+  return learnedCount % 2 === 1 ? sorted[sorted.length - 1] : sorted[0];
+};
+
+// FRAGILITY: when the day's queue has to be trimmed, the beats most likely to
+// be forgotten go first — recent failures, then the longest overdue.
+const fragilityRank = (b: {
+  recent_failure_count?: number | null;
+  next_scheduled_recall_at?: string | null;
+  last_recall_at?: string | null;
+}): number => {
+  const failures = b.recent_failure_count ?? 0;
+  const due = b.next_scheduled_recall_at ? new Date(b.next_scheduled_recall_at).getTime() : Date.now();
+  const overdueHours = Math.max(0, (Date.now() - due) / (1000 * 60 * 60));
+  return failures * 100 + Math.min(overdueHours, 99);
+};
+
 
 const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
@@ -1258,14 +1292,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         return true;
       });
       
-      // Combine: 10-minute recalls first, then evening, then morning, then scheduled 2/3/5/7, then daily recalls
+      // Combine: 10-minute recalls first, then evening, then morning, then scheduled 2/3/5/7, then daily recalls.
+      // Within the two "elastic" groups (scheduled + daily) the most fragile
+      // beats come first, so if the day's queue has to be trimmed the shaky
+      // ones are the ones that actually get practiced.
+      const byFragility = <T extends Beat>(list: T[]) =>
+        [...list].sort((a, b) => fragilityRank(b) - fragilityRank(a));
       const queuedRecalls = [
         ...beatsNeeding10MinRecall, 
         ...beatsNeedingEveningRecall, 
         ...beatsNeedingMorningRecall, 
-        ...beatsNeedingScheduledRecall,
-        ...beatsNeedingDailyRecall,
+        ...byFragility(beatsNeedingScheduledRecall),
+        ...byFragility(beatsNeedingDailyRecall),
       ];
+      
       
       // Check if we need a merged recall (2+ mastered beats and any individual recall is due)
       const shouldDoMergedRecall = masteredBeats.length >= 2 && queuedRecalls.length > 0;
@@ -1287,15 +1327,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (allBeatsNeedingRecall.length < queuedRecalls.length) {
         const deferred = queuedRecalls.slice(allBeatsNeedingRecall.length);
         console.log(`✂️ Recall queue trimmed ${queuedRecalls.length} → ${allBeatsNeedingRecall.length} (rest rescheduled)`);
-        // Reschedule the deferred beats a few hours ahead so nothing is lost.
-        const deferUntil = new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
+        // LOAD BALANCING: don't dump every deferred beat on the same later
+        // moment — that just recreates the pile-up. Spread them out in 3-hour
+        // steps starting 4 hours from now, so each later session gets a
+        // manageable handful instead of one giant queue.
         void Promise.all(
-          deferred.map(b =>
-            supabase
+          deferred.map((b, i) => {
+            const deferUntil = new Date(
+              now.getTime() + (4 + i * 3) * 60 * 60 * 1000
+            ).toISOString();
+            return supabase
               .from('practice_beats')
               .update({ next_scheduled_recall_at: deferUntil })
-              .eq('id', b.id)
-          )
+              .eq('id', b.id);
+          })
         ).catch(err => console.error('Failed to reschedule deferred recalls:', err));
       }
       
@@ -1330,7 +1375,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       // Everyone can learn unlimited beats.
       const canLearnMore = true;
-      const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
+      const firstUnmastered = canLearnMore
+        ? pickNextBeatToLearn(unmasteredBeats, masteredBeats.length)
+        : null;
       
       console.log('Beat selection:', {
         beatsPerDay: computedBeatsPerDay,
@@ -3462,8 +3509,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setBeatsMasteredThisSession(prev => prev + 1);
       
       
-      // Find next unmastered beat for premium users
-      const nextUnmastered = updatedBeats.find(b => !b.is_mastered);
+      // Find next beat to learn — alternating front/back so the ending of the
+      // speech is introduced early instead of days before the performance.
+      const nextUnmastered = pickNextBeatToLearn(
+        updatedBeats.filter(b => !b.is_mastered),
+        updatedBeats.filter(b => b.is_mastered).length
+      );
       
       // Count how many beats were mastered today (including the one just mastered)
       const beatsLearnedToday = updatedBeats.filter(b => {

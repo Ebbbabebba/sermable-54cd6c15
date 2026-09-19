@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar as CalendarIcon, Info, Loader2, Play, Presentation, Printer } from "lucide-react";
 import SpeechCalendar from "@/components/SpeechCalendar";
 import { BeatPrintDialog } from "@/components/BeatPrintDialog";
-import { differenceInDays } from "date-fns";
+import { addDays, differenceInDays, format } from "date-fns";
 import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface Speech {
@@ -149,6 +149,56 @@ const SpeechDetail = () => {
 
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-4">
+              {daysLeft !== null && daysLeft >= 1 && (
+                <div className="rounded-xl border bg-card/60 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+                    {t("speechDetail.plan.title")}
+                  </p>
+                  <ol className="space-y-2.5">
+                    {[
+                      {
+                        key: "learning",
+                        label: t("speechDetail.plan.learning"),
+                        when: t("speechDetail.plan.until", {
+                          date: format(addDays(new Date(), Math.max(1, Math.floor(daysLeft * 0.6))), "d MMM"),
+                        }),
+                        dot: "bg-primary",
+                      },
+                      {
+                        key: "review",
+                        label: t("speechDetail.plan.review"),
+                        when: t("speechDetail.plan.from", {
+                          date: format(addDays(new Date(), Math.max(1, Math.floor(daysLeft * 0.6)) + 1), "d MMM"),
+                        }),
+                        dot: "bg-amber-500",
+                      },
+                      {
+                        key: "runthrough",
+                        label: t("speechDetail.plan.runthrough"),
+                        when: t("speechDetail.plan.on", {
+                          date: format(addDays(new Date(), Math.max(1, daysLeft - 1)), "d MMM"),
+                        }),
+                        dot: "bg-rose-500",
+                      },
+                      {
+                        key: "performance",
+                        label: t("speechDetail.plan.performance"),
+                        when: t("speechDetail.plan.on", {
+                          date: format(new Date(speech.goal_date as string), "d MMM"),
+                        }),
+                        dot: "bg-gradient-to-br from-rose-500 to-orange-500",
+                      },
+                    ].map((row) => (
+                      <li key={row.key} className="flex items-center gap-3">
+                        <span className={`h-2 w-2 rounded-full shrink-0 ${row.dot}`} />
+                        <span className="text-sm flex-1 min-w-0 truncate">{row.label}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">{row.when}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
               <div className="rounded-xl border bg-card/60 p-4">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
                   {t("speechDetail.scriptPreview")}
