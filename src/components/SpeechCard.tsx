@@ -329,7 +329,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-          {speech.text_original.substring(0, 140)}...
+          {stripPropCueMarkers(speech.text_original).substring(0, 140)}...
         </p>
       </CardContent>
 

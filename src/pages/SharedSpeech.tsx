@@ -126,7 +126,7 @@ const SharedSpeech = () => {
 
           <div className="bg-muted/50 rounded-xl p-4 max-h-48 overflow-y-auto">
             <p className="text-sm text-foreground/80 leading-relaxed">
-              {speech.text_original.substring(0, 500)}
+              {stripPropCueMarkers(speech.text_original).substring(0, 500)}
               {speech.text_original.length > 500 && '...'}
             </p>
           </div>
