@@ -81,6 +81,26 @@ const Dashboard = () => {
     };
   }, [navigate]);
 
+  // Re-check the streak whenever the app returns to the foreground on a new day.
+  // In the native app the WebView is kept alive, so the mount effect alone is not enough.
+  useEffect(() => {
+    const maybeRecheckStreak = () => {
+      if (document.visibilityState !== "visible") return;
+      const lastShownDate = localStorage.getItem('streak-last-shown-date');
+      const today = new Date().toDateString();
+      if (lastShownDate !== today) {
+        checkStreak();
+      }
+    };
+
+    document.addEventListener("visibilitychange", maybeRecheckStreak);
+    window.addEventListener("focus", maybeRecheckStreak);
+    return () => {
+      document.removeEventListener("visibilitychange", maybeRecheckStreak);
+      window.removeEventListener("focus", maybeRecheckStreak);
+    };
+  }, []);
+
   const checkStreak = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
