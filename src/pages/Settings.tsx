@@ -104,7 +104,7 @@ const Settings = () => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("practice_start_hour, practice_end_hour, timezone, subscription_tier, instant_due_notifications")
+          .select("practice_start_hour, practice_end_hour, timezone, subscription_tier")
           .eq("id", user.id)
           .single();
 
@@ -112,7 +112,6 @@ const Settings = () => {
           if (profile.practice_start_hour !== null) setPracticeStartHour(profile.practice_start_hour);
           if (profile.practice_end_hour !== null) setPracticeEndHour(profile.practice_end_hour);
           if (profile.subscription_tier) setSubscriptionTier(effectiveTier(profile.subscription_tier) as SubscriptionTier);
-          if (typeof profile.instant_due_notifications === "boolean") setInstantDueNotifications(profile.instant_due_notifications);
         }
 
         // Calculate streaks
@@ -197,7 +196,7 @@ const Settings = () => {
         .update({
           practice_start_hour: start,
           practice_end_hour: end,
-          timezone: autoDetectTimezone ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         })
         .eq("id", user.id);
 
@@ -226,20 +225,6 @@ const Settings = () => {
     return `${hour.toString().padStart(2, '0')}:00`;
   };
 
-  const handleInstantDueToggle = async (checked: boolean) => {
-    setInstantDueNotifications(checked);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      if (!user) return;
-      await supabase
-        .from("profiles")
-        .update({ instant_due_notifications: checked })
-        .eq("id", user.id);
-    } catch (e) {
-      console.error("Error saving instant_due_notifications:", e);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-secondary/30">
