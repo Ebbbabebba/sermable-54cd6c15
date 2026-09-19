@@ -639,35 +639,94 @@ body {
   .icon-circle-solid-purple      { background: hsl(var(--duo-purple));  color: hsl(var(--duo-purple-foreground)); }
 }
 
-/* Friendly lightweight loading mascot */
-.loading-mascot {
+/* Loading overlay snus-can illustration */
+.snus-can {
   position: relative;
-  width: 9rem;
-  height: 10rem;
-  animation: loading-mascot-float 2.4s ease-in-out infinite;
+  width: 6.5rem;
+  height: 9rem;
+  animation: snus-can-float 2.6s ease-in-out infinite;
 }
-.loading-mascot-face,
-.loading-mascot-body,
-.loading-mascot-ear { position: absolute; display: block; background: hsl(var(--primary)); }
-.loading-mascot-face { z-index: 2; top: 1.4rem; left: 1.5rem; width: 6rem; height: 6.5rem; border-radius: 48% 48% 44% 44%; border: 4px solid hsl(var(--primary-shadow) / 0.3); }
-.loading-mascot-body { bottom: 0; left: 2.25rem; width: 4.5rem; height: 4.2rem; border-radius: 55% 55% 35% 35%; }
-.loading-mascot-ear { top: 0; width: 1.6rem; height: 3.6rem; border-radius: 70% 70% 35% 35%; transform-origin: bottom; }
-.loading-mascot-ear-left { left: 1.8rem; transform: rotate(-18deg); }
-.loading-mascot-ear-right { right: 1.8rem; transform: rotate(18deg); }
-.loading-mascot-eye,
-.loading-mascot-cheek,
-.loading-mascot-smile { position: absolute; z-index: 3; display: block; }
-.loading-mascot-eye { top: 2.3rem; width: .55rem; height: .7rem; border-radius: 50%; background: hsl(var(--primary-foreground)); animation: loading-mascot-blink 3.8s infinite; }
-.loading-mascot-eye-left { left: 1.55rem; }
-.loading-mascot-eye-right { right: 1.55rem; }
-.loading-mascot-cheek { top: 3.45rem; width: .75rem; height: .38rem; border-radius: 50%; background: hsl(var(--warning) / 0.75); }
-.loading-mascot-cheek-left { left: .85rem; }
-.loading-mascot-cheek-right { right: .85rem; }
-.loading-mascot-smile { top: 3.45rem; left: 2.35rem; width: 1.3rem; height: .75rem; border-bottom: 4px solid hsl(var(--primary-foreground)); border-radius: 0 0 50% 50%; }
+.snus-can-lid,
+.snus-can-body,
+.snus-can-base {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: block;
+}
+.snus-can-lid {
+  top: 0;
+  z-index: 3;
+  width: 5.2rem;
+  height: 1.6rem;
+  border-radius: 0.5rem 0.5rem 0.35rem 0.35rem;
+  background: linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary-shadow)) 100%);
+  box-shadow: 0 0 0 2px hsl(var(--primary-shadow) / 0.35) inset;
+}
+.snus-can-lip {
+  position: absolute;
+  bottom: 0.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4.4rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: hsl(var(--primary-foreground) / 0.25);
+}
+.snus-can-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: hsl(var(--primary-foreground));
+  color: hsl(var(--primary));
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1;
+  box-shadow: 0 1px 3px hsl(var(--primary-shadow) / 0.4);
+}
+.snus-can-body {
+  top: 1.35rem;
+  z-index: 2;
+  width: 5rem;
+  height: 6.4rem;
+  border-radius: 0.45rem;
+  background: linear-gradient(90deg, hsl(var(--primary-shadow)) 0%, hsl(var(--primary)) 15%, hsl(var(--primary)) 85%, hsl(var(--primary-shadow)) 100%);
+  overflow: hidden;
+  box-shadow: 0 6px 16px hsl(var(--primary-shadow) / 0.35);
+}
+.snus-can-stripe {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110%;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: hsl(var(--primary-foreground) / 0.22);
+}
+.snus-can-stripe-1 { top: 1.1rem; }
+.snus-can-stripe-2 { top: 2.8rem; }
+.snus-can-stripe-3 { top: 4.5rem; }
+.snus-can-base {
+  bottom: 0;
+  z-index: 1;
+  width: 5rem;
+  height: 1.25rem;
+  border-radius: 0.35rem 0.35rem 0.5rem 0.5rem;
+  background: linear-gradient(180deg, hsl(var(--primary-shadow)) 0%, hsl(var(--primary)) 100%);
+  box-shadow: 0 4px 10px hsl(var(--primary-shadow) / 0.25);
+}
 .loading-progress-bar { animation: loading-progress 1.35s ease-in-out infinite alternate; }
-@keyframes loading-mascot-float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-.55rem) rotate(1deg); } }
-@keyframes loading-mascot-blink { 0%, 44%, 50%, 100% { transform: scaleY(1); } 47% { transform: scaleY(.12); } }
+@keyframes snus-can-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-0.6rem) rotate(2deg); } }
 @keyframes loading-progress { from { transform: translateX(-80%); } to { transform: translateX(180%); } }
+@media (prefers-reduced-motion: reduce) {
+  .snus-can { animation: none; }
+}
 
 
 /* ===== Performance & motion smoothing ===== */
