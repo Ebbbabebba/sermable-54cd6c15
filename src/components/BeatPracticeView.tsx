@@ -2486,7 +2486,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(8, 0, 0, 0);
+        tomorrow.setHours(Math.max(6, Math.min(12, fallbackPracticeHour)), 0, 0, 0);
 
         const updateData: Record<string, any> = {
           last_recall_at: now.toISOString(),
