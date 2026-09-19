@@ -9,7 +9,8 @@ interface LoadingOverlayProps {
 
 type SupportedLanguage = "en" | "sv" | "de" | "fr" | "es" | "it" | "pt";
 
-const LONG_WAIT_MS = 2000;
+const ICON_WAIT_MS = 2000;
+const FACT_WAIT_MS = 5000;
 const FACT_ROTATION_MS = 5200;
 
 const loadingCopy: Record<SupportedLanguage, { label: string; facts: string[] }> = {
