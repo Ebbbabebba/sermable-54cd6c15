@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -15,6 +15,7 @@ import { Loader2, Wand2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { convertPauseDirectionsToMarkers } from "@/utils/pauses";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 interface AiSpeechBuilderDialogProps {
   open: boolean;
@@ -47,6 +48,17 @@ export const AiSpeechBuilderDialog = ({
   const [draftTitle, setDraftTitle] = useState("");
   const [draftSpeech, setDraftSpeech] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showRichLoading, setShowRichLoading] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setShowRichLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(() => setShowRichLoading(true), 700);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const reset = () => {
     setStep("prompt");
@@ -145,6 +157,7 @@ export const AiSpeechBuilderDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={closeAndReset}>
+      <LoadingOverlay isVisible={showRichLoading} />
       <DialogContent
         overlayClassName="!z-[60] bg-background/65 backdrop-blur-none"
         className="!z-[70] !inset-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 w-screen h-[100dvh] max-w-none sm:w-[calc(100%-2rem)] sm:max-w-2xl sm:h-auto sm:max-h-[min(86dvh,720px)] !translate-x-0 !translate-y-0 sm:!-translate-x-1/2 sm:!-translate-y-1/2 flex flex-col overflow-hidden rounded-none sm:rounded-3xl border-border/60 bg-card p-0 shadow-2xl backdrop-blur-none"

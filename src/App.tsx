@@ -6,9 +6,9 @@ import { lazy, Suspense, ComponentType, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
-// Keep the loading screen visible for at least this long, so fast loads
-// feel like a smooth transition instead of a millisecond flash.
-const MIN_LOADING_MS = 1200;
+// Fast route changes only get a warm background transition. The richer
+// loading screen is reserved for waits long enough to benefit from it.
+const LOADING_OVERLAY_DELAY_MS = 450;
 
 const SuspenseProbe = ({ onReady }: { onReady: () => void }) => {
   useEffect(() => onReady(), [onReady]);
@@ -17,25 +17,23 @@ const SuspenseProbe = ({ onReady }: { onReady: () => void }) => {
 
 const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
   const [contentReady, setContentReady] = useState(false);
-  const [minElapsed, setMinElapsed] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setMinElapsed(true), MIN_LOADING_MS);
+    const timer = setTimeout(() => setShowOverlay(true), LOADING_OVERLAY_DELAY_MS);
     return () => clearTimeout(timer);
   }, []);
 
-  const showOverlay = !(contentReady && minElapsed);
-
   return (
-    <>
+    <div className="min-h-[100dvh] bg-background">
       <Suspense fallback={null}>
         <SuspenseProbe onReady={() => setContentReady(true)} />
         {children}
       </Suspense>
       <AnimatePresence>
-        {showOverlay && <LoadingOverlay isVisible />}
+        {showOverlay && !contentReady && <LoadingOverlay isVisible />}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
 
