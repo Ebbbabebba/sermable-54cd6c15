@@ -2422,21 +2422,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Secondary CTA: practice anyway link, only while the speech is still being learned */}
           {isLockedEffective && nextReviewDate && (
-            <>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setShowTimingWarning(true)}
-                className="w-full h-12 rounded-2xl font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
-              >
-                <Crown className="h-4 w-4 mr-2" />
-                {t('practice.practiceAnyway')}
-              </Button>
-              <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground pt-0.5">
-                <Clock className="h-3 w-3" />
-                <LockCountdown nextReviewDate={nextReviewDate} />
-              </p>
-            </>
+            <button
+              type="button"
+              onClick={() => setShowTimingWarning(true)}
+              className="mx-auto flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors pt-1"
+            >
+              <Clock className="h-3.5 w-3.5" />
+              {t('practice.practiceAnyway')}
+            </button>
           )}
         </div>
       </div>
