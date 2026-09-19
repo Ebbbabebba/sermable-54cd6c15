@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Mic } from "lucide-react";
 
 interface AnimalAudienceProps {
   progress: number;
@@ -7,6 +8,8 @@ interface AnimalAudienceProps {
   variant?: number;
   /** Text shown while the animal celebrates, e.g. "Sentence done!". */
   doneLabel?: string;
+  /** Instruction shown above the animal, e.g. "Say the sentence out loud". */
+  promptLabel?: string;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
