@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { languageInstruction } from "../_shared/feedbackLanguage.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
@@ -144,7 +145,7 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
-    const { audio, originalText, speechId, userTier, language, skillLevel, strictness, learningMode } = await req.json();
+    const { audio, originalText, speechId, userTier, language, skillLevel, strictness, learningMode, feedbackLanguage } = await req.json();
     const gradingMode: 'strict' | 'flow' = strictness === 'flow' ? 'flow' : 'strict';
     const isOverviewMode = learningMode === 'general_overview';
     
@@ -364,7 +365,7 @@ Return ONLY this JSON structure with no extra text:
         model: analysisModel,
         response_format: { type: "json_object" },
         messages: [
-          { role: 'system', content: 'You are a supportive speech analysis assistant. Be encouraging and lenient with word matching. Return ONLY valid JSON with no markdown formatting or explanations.' },
+          { role: 'system', content: `You are a supportive speech analysis assistant. Be encouraging and lenient with word matching. Return ONLY valid JSON with no markdown formatting or explanations.${languageInstruction(feedbackLanguage || language)}` },
           { role: 'user', content: analysisPrompt }
         ],
         max_tokens: 1000,

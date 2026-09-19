@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { languageInstruction, fallbackText } from "../_shared/feedbackLanguage.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,7 +31,7 @@ serve(async (req) => {
   }
 
   try {
-    const { transcript, originalText, speechId, durationSeconds, wordPerformance, mode = 'strict' } = await req.json();
+    const { transcript, originalText, speechId, durationSeconds, wordPerformance, mode = 'strict', feedbackLanguage } = await req.json();
     
     console.log('Analyzing presentation:', { speechId, durationSeconds, hasWordPerformance: !!wordPerformance, mode });
 
@@ -186,7 +187,7 @@ IMPORTANT:
 - If they said wrong words, explain what happened
 - Consider their pacing - if pace consistency is low, mention it
 - Keep feedback concise and actionable
-- PROPER NOUNS & NAMES: Names of people, places, organizations (e.g. "Ebba Hallert Djurberg") are often misinterpreted by speech recognition. Treat them with maximum leniency - accept any phonetically similar variation and do NOT penalize for name differences. Just gently correct the name if needed.`
+- PROPER NOUNS & NAMES: Names of people, places, organizations (e.g. "Ebba Hallert Djurberg") are often misinterpreted by speech recognition. Treat them with maximum leniency - accept any phonetically similar variation and do NOT penalize for name differences. Just gently correct the name if needed.${languageInstruction(feedbackLanguage)}`
             },
             {
               role: 'user',
@@ -225,14 +226,14 @@ Format your response as JSON:
           }
           
           const parsed = JSON.parse(jsonContent);
-          feedbackSummary = parsed.summary || 'Good effort on your presentation!';
-          feedbackAdvice = parsed.advice || 'Continue practicing to improve fluency.';
-          feedbackNextStep = parsed.nextStep || 'Practice again focusing on the missed words.';
+          feedbackSummary = parsed.summary || fallbackText(feedbackLanguage, 'defaultSummary');
+          feedbackAdvice = parsed.advice || fallbackText(feedbackLanguage, 'defaultAdvice');
+          feedbackNextStep = parsed.nextStep || fallbackText(feedbackLanguage, 'defaultNextStep');
         } catch (e) {
           console.error('Failed to parse AI feedback:', e, 'Raw content:', content);
-          feedbackSummary = accuracy >= 90 ? 'Excellent performance!' : 'Good effort, keep practicing!';
-          feedbackAdvice = 'Continue practicing to improve fluency and reduce hesitations.';
-          feedbackNextStep = 'Practice the sections where you needed prompts.';
+          feedbackSummary = accuracy >= 90 ? fallbackText(feedbackLanguage, 'outstanding') : fallbackText(feedbackLanguage, 'good');
+          feedbackAdvice = fallbackText(feedbackLanguage, 'defaultAdvice');
+          feedbackNextStep = fallbackText(feedbackLanguage, 'promptedSections');
         }
       } else {
         console.error('AI gateway error:', await aiResponse.text());
@@ -242,24 +243,24 @@ Format your response as JSON:
     // Fallback feedback if AI not available
     if (!feedbackSummary) {
       if (accuracy >= 95) {
-        feedbackSummary = 'Outstanding! You delivered the speech almost perfectly!';
+        feedbackSummary = fallbackText(feedbackLanguage, 'outstanding');
       } else if (accuracy >= 85) {
-        feedbackSummary = 'Great job! You remembered most of the speech with only minor struggles.';
+        feedbackSummary = fallbackText(feedbackLanguage, 'great');
       } else if (accuracy >= 70) {
-        feedbackSummary = 'Good effort! Some sections need more practice.';
+        feedbackSummary = fallbackText(feedbackLanguage, 'good');
       } else {
-        feedbackSummary = 'Keep practicing! Focus on the sections where you needed help.';
+        feedbackSummary = fallbackText(feedbackLanguage, 'keep');
       }
       
       if (promptedWords.length > 0) {
-        feedbackAdvice = `Focus on memorizing: ${promptedWords.slice(0, 5).join(', ')}`;
+        feedbackAdvice = `${fallbackText(feedbackLanguage, 'focusMemorizing')} ${promptedWords.slice(0, 5).join(', ')}`;
       } else if (missedWords.length > 0) {
-        feedbackAdvice = `Review these words: ${missedWords.slice(0, 5).join(', ')}`;
+        feedbackAdvice = `${fallbackText(feedbackLanguage, 'reviewWords')} ${missedWords.slice(0, 5).join(', ')}`;
       } else {
-        feedbackAdvice = 'Work on maintaining a steady pace without pauses.';
+        feedbackAdvice = fallbackText(feedbackLanguage, 'steadyPace');
       }
       
-      feedbackNextStep = 'Practice again, aiming for a smooth delivery without pauses.';
+      feedbackNextStep = fallbackText(feedbackLanguage, 'nextStep');
     }
 
     // Save detailed word performance to database if available
