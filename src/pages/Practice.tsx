@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
