@@ -801,7 +801,12 @@
     "phase_full_recall": "Whole part · no script",
     "phase_mastered": "Complete",
     "sentence_done": "Sentence done!",
-    "say_sentence_prompt": "Say the sentence out loud from memory"
+    "say_sentence_prompt": "Say the sentence out loud from memory",
+    "self_rating_title": "How did that feel?",
+    "self_rating_hint": "Your answer fine-tunes when this part comes back.",
+    "self_rating_hard": "Tough",
+    "self_rating_ok": "Okay",
+    "self_rating_solid": "Nailed it"
   },
   "day_after_recall": {
     "title": "Day-After Recall",

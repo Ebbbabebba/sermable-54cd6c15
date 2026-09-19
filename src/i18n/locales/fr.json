@@ -702,7 +702,12 @@
     "phase_full_recall": "Partie entière · sans texte",
     "phase_mastered": "Terminé",
     "sentence_done": "Phrase réussie !",
-    "say_sentence_prompt": "Dis la phrase à voix haute de mémoire"
+    "say_sentence_prompt": "Dis la phrase à voix haute de mémoire",
+    "self_rating_title": "Comment ça s’est passé ?",
+    "self_rating_hint": "Ta réponse ajuste le moment du prochain rappel.",
+    "self_rating_hard": "Difficile",
+    "self_rating_ok": "Correct",
+    "self_rating_solid": "Parfait"
   },
   "presentation": {
     "settings": "Paramètres de présentation",

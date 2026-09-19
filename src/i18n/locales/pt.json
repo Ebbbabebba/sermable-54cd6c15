@@ -702,7 +702,12 @@
     "phase_full_recall": "Parte inteira · sem guião",
     "phase_mastered": "Concluído",
     "sentence_done": "Frase concluída!",
-    "say_sentence_prompt": "Diz a frase em voz alta de memória"
+    "say_sentence_prompt": "Diz a frase em voz alta de memória",
+    "self_rating_title": "Como foi?",
+    "self_rating_hint": "A tua resposta ajusta quando esta parte volta.",
+    "self_rating_hard": "Difícil",
+    "self_rating_ok": "Ok",
+    "self_rating_solid": "Perfeito"
   },
   "presentation": {
     "settings": "Configurações de apresentação",

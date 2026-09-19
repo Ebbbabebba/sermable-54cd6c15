@@ -980,7 +980,12 @@
     "phase_full_recall": "Hela avsnittet · utan manus",
     "phase_mastered": "Klar",
     "sentence_done": "Meningen klar!",
-    "say_sentence_prompt": "Säg meningen högt ur minnet"
+    "say_sentence_prompt": "Säg meningen högt ur minnet",
+    "self_rating_title": "Hur kändes det?",
+    "self_rating_hint": "Ditt svar finjusterar när avsnittet kommer tillbaka.",
+    "self_rating_hard": "Kämpigt",
+    "self_rating_ok": "Okej",
+    "self_rating_solid": "Satt perfekt"
   },
   "presentation": {
     "settings": "Presentationsinställningar",
