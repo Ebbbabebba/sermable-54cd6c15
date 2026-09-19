@@ -1236,5 +1236,10 @@
     "tipPrefix": "Tipp: Schreibe ein einzelnes",
     "tipSuffix": "an beliebiger Stelle im Skript, um eine Pause einzufügen. Für jede erscheint hier ein 1–10-Sek.-Regler.",
     "title": "Pausen"
+  },
+  "streak": {
+    "title": "Tage in Folge!",
+    "subtitle": "Du bist auf Feuer! Übe jeden Tag, um deine Serie zu halten.",
+    "button": "Super!"
   }
 }

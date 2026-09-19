@@ -69,7 +69,7 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
             size="lg"
             className="w-full text-lg font-bold py-6 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
           >
-            Yay!
+            {t("streak.button")}
           </Button>
         </motion.div>
       </motion.div>

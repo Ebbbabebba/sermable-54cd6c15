@@ -1265,5 +1265,10 @@
     "tipPrefix": "Tips: skriv ett fristående",
     "tipSuffix": "var som helst i manuset för att lägga in en paus. En reglage på 1–10 s dyker upp här för varje.",
     "title": "Pauser"
+  },
+  "streak": {
+    "title": "Dagar i rad!",
+    "subtitle": "Du är på gång! Öva varje dag för att hålla din svit vid liv.",
+    "button": "Härligt!"
   }
 }

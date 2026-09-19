@@ -1236,5 +1236,10 @@
     "tipPrefix": "Consejo: escribe un",
     "tipSuffix": "suelto en cualquier parte del guion para insertar una pausa. Aquí aparecerá un control de 1 a 10 s para cada una.",
     "title": "Pausas"
+  },
+  "streak": {
+    "title": "¡Días seguidos!",
+    "subtitle": "¡Estás que arde! Practica cada día para mantener tu racha.",
+    "button": "¡Genial!"
   }
 }
