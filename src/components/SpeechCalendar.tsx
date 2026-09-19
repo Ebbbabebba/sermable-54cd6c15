@@ -4,13 +4,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Play, Mic, RotateCcw, Target, Trophy } from "lucide-react";
+import { Loader2, Play, Mic, RotateCcw, Target, Trophy, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { format, isAfter, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
-type EventType = "practice" | "recall" | "test" | "presentation";
+type EventType = "practice" | "recall" | "test" | "presentation" | "full_runthrough";
 
 interface CalendarEvent {
   id: string;
@@ -31,7 +31,9 @@ const EVENT_ICONS: Record<EventType, typeof Mic> = {
   recall: RotateCcw,
   test: Target,
   presentation: Trophy,
+  full_runthrough: Flag,
 };
+
 
 const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps) => {
   const { t } = useTranslation();
