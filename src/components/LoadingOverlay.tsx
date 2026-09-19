@@ -165,7 +165,7 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
       className="fixed inset-0 z-[80] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6"
     >
       <AnimatePresence>
-        {phase === "rich" && (
+        {(phase === "icon" || phase === "rich") && (
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -177,21 +177,23 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
             </div>
 
-            <div className="mt-8 rounded-3xl border border-primary/10 bg-card/80 px-6 py-5 text-center shadow-lg backdrop-blur-sm">
-              <span className="block text-xs font-bold uppercase tracking-wide text-primary">{copy.label}</span>
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={factIndex}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="mt-2 text-sm leading-relaxed text-muted-foreground"
-                >
-                  {copy.facts[factIndex]}
-                </motion.p>
-              </AnimatePresence>
-            </div>
+            {phase === "rich" && (
+              <div className="mt-8 rounded-3xl border border-primary/10 bg-card/80 px-6 py-5 text-center shadow-lg backdrop-blur-sm">
+                <span className="block text-xs font-bold uppercase tracking-wide text-primary">{copy.label}</span>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={factIndex}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-2 text-sm leading-relaxed text-muted-foreground"
+                  >
+                    {copy.facts[factIndex]}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
