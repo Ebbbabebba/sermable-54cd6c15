@@ -260,13 +260,15 @@ serve(async (req) => {
     }
 
     // ---- Compute next interval ----
-    const baseDays = intervalDays(s);
-    let nextIntervalMin = baseDays * 24 * 60;
+    let nextIntervalMin = intervalMinutesFromStability(s);
 
     // Apply visibility modifier (more reliance on script → shorter interval)
     nextIntervalMin = Math.round(
       nextIntervalMin * visibilityFactor(visibilityPercent),
     );
+
+    // Snap to whole hours so the ladder reads cleanly (20h, 2.5d, 6d …)
+    nextIntervalMin = Math.max(60, Math.round(nextIntervalMin / 60) * 60);
 
     // Apply deadline cap
     nextIntervalMin = capIntervalByDeadline(nextIntervalMin, speech.goal_date);
