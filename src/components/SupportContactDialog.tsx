@@ -32,15 +32,19 @@ export const SupportContactDialog = ({ open, onOpenChange, email = SUPPORT_EMAIL
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl">
-        <DialogHeader>
-          <DialogTitle>{t('settings.support.title', 'Support')}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="inset-x-4 top-1/2 bottom-auto -translate-y-1/2 w-auto max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl p-6 pt-8 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <Mail className="h-6 w-6 text-primary" />
+        </div>
+
+        <DialogHeader className="space-y-1.5 pt-2">
+          <DialogTitle className="text-center">{t('settings.support.title', 'Support')}</DialogTitle>
+          <DialogDescription className="text-center">
             {t('settings.support.dialogDesc', 'Mejla oss så svarar vi vanligtvis inom 24–48 timmar.')}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-3 pt-1">
           <Button asChild className="w-full rounded-2xl h-12">
             <a href={buildMailtoUrl(email)} target="_blank" rel="external noopener">
               <Mail className="h-4 w-4 mr-2" />
@@ -48,15 +52,22 @@ export const SupportContactDialog = ({ open, onOpenChange, email = SUPPORT_EMAIL
             </a>
           </Button>
 
-          <Button variant="outline" className="w-full rounded-2xl h-12 justify-between" onClick={handleCopy}>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="mx-auto flex items-center gap-2 rounded-full bg-secondary/60 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary"
+          >
             <span className="truncate">{email}</span>
-            {copied ? <Check className="h-4 w-4 text-primary shrink-0" /> : <Copy className="h-4 w-4 shrink-0" />}
-          </Button>
-          {copied && (
-            <p className="text-xs text-primary text-center">
-              {t('settings.support.copied', 'Adressen är kopierad')}
-            </p>
-          )}
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 shrink-0" />
+            )}
+          </button>
+
+          <p className={`text-xs text-primary transition-opacity ${copied ? "opacity-100" : "opacity-0"}`}>
+            {t('settings.support.copied', 'Adressen är kopierad')}
+          </p>
         </div>
       </DialogContent>
     </Dialog>
