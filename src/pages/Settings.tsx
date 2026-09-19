@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Languages, Bell, Flame, Trophy, CreditCard, ChevronRight, Trash2, Volume2, VolumeX, Clock, MessageCircle, Mail, ExternalLink, FileText, Clock4 } from "lucide-react";
+import { ArrowLeft, Languages, Flame, Trophy, CreditCard, ChevronRight, Trash2, Volume2, VolumeX, Clock, Mail, ExternalLink, FileText } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
-import { openMailto } from "@/lib/openMailto";
+import { SupportContactDialog } from "@/components/SupportContactDialog";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
@@ -58,11 +58,18 @@ const Settings = () => {
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(FORCE_PREMIUM ? 'regular' : 'free');
-  
+  const [supportOpen, setSupportOpen] = useState(false);
+
   const [practiceStartHour, setPracticeStartHour] = useState(8);
   const [practiceEndHour, setPracticeEndHour] = useState(22);
-  const [autoDetectTimezone, setAutoDetectTimezone] = useState(true);
-  const [instantDueNotifications, setInstantDueNotifications] = useState(true);
+
+  // Reminders are on by default — ask for permission silently on native.
+  useEffect(() => {
+    if (isNativePlatform && !notificationsEnabled) {
+      registerPushNotifications();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNativePlatform, notificationsEnabled]);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem('soundEnabled');
     return stored !== 'false';
@@ -97,7 +104,7 @@ const Settings = () => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("practice_start_hour, practice_end_hour, timezone, subscription_tier, instant_due_notifications")
+          .select("practice_start_hour, practice_end_hour, timezone, subscription_tier")
           .eq("id", user.id)
           .single();
 
@@ -105,7 +112,6 @@ const Settings = () => {
           if (profile.practice_start_hour !== null) setPracticeStartHour(profile.practice_start_hour);
           if (profile.practice_end_hour !== null) setPracticeEndHour(profile.practice_end_hour);
           if (profile.subscription_tier) setSubscriptionTier(effectiveTier(profile.subscription_tier) as SubscriptionTier);
-          if (typeof profile.instant_due_notifications === "boolean") setInstantDueNotifications(profile.instant_due_notifications);
         }
 
         // Calculate streaks
@@ -190,7 +196,7 @@ const Settings = () => {
         .update({
           practice_start_hour: start,
           practice_end_hour: end,
-          timezone: autoDetectTimezone ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         })
         .eq("id", user.id);
 
@@ -219,20 +225,6 @@ const Settings = () => {
     return `${hour.toString().padStart(2, '0')}:00`;
   };
 
-  const handleInstantDueToggle = async (checked: boolean) => {
-    setInstantDueNotifications(checked);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      if (!user) return;
-      await supabase
-        .from("profiles")
-        .update({ instant_due_notifications: checked })
-        .eq("id", user.id);
-    } catch (e) {
-      console.error("Error saving instant_due_notifications:", e);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -365,7 +357,7 @@ const Settings = () => {
               </SelectContent>
             </Select>
           </Row>
-          <Row>
+          <Row last>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-md bg-orange-500/15 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-orange-500" />
@@ -385,91 +377,14 @@ const Settings = () => {
               </SelectContent>
             </Select>
           </Row>
-          <Row last>
-            <div className="flex items-center gap-3">
-              <span className="text-sm">{t('settings.practiceHours.autoTimezone')}</span>
-            </div>
-            <Switch checked={autoDetectTimezone} onCheckedChange={setAutoDetectTimezone} />
-          </Row>
         </Section>
         <SectionFooter>{t('settings.practiceHours.sleepProtection')}</SectionFooter>
 
-        {/* Notifications */}
-        <SectionLabel>{t('settings.notifications.title')}</SectionLabel>
-        <Section>
-          {!isNativePlatform ? (
-            <div className="px-4 py-3">
-              <p className="text-sm text-muted-foreground">{t('settings.notifications.nativeRequired')}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t('settings.notifications.nativeRequiredDesc')}</p>
-            </div>
-          ) : (
-            <>
-              <Row last={!notificationsEnabled}>
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-md bg-red-500/15 flex items-center justify-center">
-                    <Bell className="h-4 w-4 text-red-500" />
-                  </div>
-                  <span className="text-sm">{t('settings.notifications.pushNotifications')}</span>
-                </div>
-                <Switch
-                  checked={notificationsEnabled}
-                  onCheckedChange={(checked) => {
-                    if (checked) registerPushNotifications();
-                  }}
-                />
-              </Row>
-              {notificationsEnabled && (
-                <>
-                  <Row>
-                    <span className="text-sm">{t('settings.notifications.from')}</span>
-                    <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
-                      <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                          <SelectItem key={hour} value={hour.toString()}>
-                            {formatHour(hour)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Row>
-                  <Row>
-                    <span className="text-sm">{t('settings.notifications.to')}</span>
-                    <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
-                      <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                          <SelectItem key={hour} value={hour.toString()}>
-                            {formatHour(hour)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Row>
-                  <Row last>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm">{t('settings.notifications.instantDue', 'Påminn när det är dags att öva')}</span>
-                    </div>
-                    <Switch
-                      checked={instantDueNotifications}
-                      onCheckedChange={handleInstantDueToggle}
-                    />
-                  </Row>
-                </>
-              )}
-            </>
-          )}
-        </Section>
-        <SectionFooter>{t('settings.notifications.instantDueDesc', 'Du får en pushnotis direkt när vilointervallet för en repetition är slut.')}</SectionFooter>
 
         {/* Support */}
         <SectionLabel>{t('settings.support.title')}</SectionLabel>
         <Section>
-          <Row onClick={() => openMailto('support@sermable.com')} last>
+          <Row onClick={() => setSupportOpen(true)} last>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-md bg-blue-500/15 flex items-center justify-center">
                 <Mail className="h-4 w-4 text-blue-500" />
@@ -516,6 +431,8 @@ const Settings = () => {
           </Row>
         </Section>
       </div>
+
+      <SupportContactDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
   );
 };
