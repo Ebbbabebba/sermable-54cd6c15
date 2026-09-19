@@ -121,6 +121,7 @@ const Help = lazyWithRetry(() => import("./pages/Help"));
 const SharedSpeech = lazyWithRetry(() => import("./pages/SharedSpeech"));
 const DeleteAccountRequest = lazyWithRetry(() => import("./pages/DeleteAccountRequest"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const DevAnimals = lazyWithRetry(() => import("./pages/DevAnimals"));
 
 const queryClient = new QueryClient();
 
@@ -150,6 +151,7 @@ const App = () => (
             <Route path="/share/:token" element={<SharedSpeech />} />
             <Route path="/delete-account" element={<DeleteAccountRequest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/dev-animals" element={<DevAnimals />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </RouteTransition>
