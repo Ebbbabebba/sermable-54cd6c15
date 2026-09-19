@@ -102,8 +102,14 @@ function nextStability(
   );
 }
 
-function intervalDays(stability: number): number {
-  return Math.max(1, Math.round((stability / FACTOR) * (Math.pow(REQUEST_RETENTION, 1 / DECAY) - 1)));
+// Hour-resolution interval. Rounding to whole days made the ladder jumpy
+// (especially combined with the visibility shrink), so we keep fractional days
+// and convert to minutes, rounded to the nearest hour.
+function intervalMinutesFromStability(stability: number): number {
+  const days = (stability / FACTOR) * (Math.pow(REQUEST_RETENTION, 1 / DECAY) - 1);
+  const minutes = days * 24 * 60;
+  // Never below 4h at this stage; the caller applies further modifiers.
+  return Math.max(4 * 60, Math.round(minutes / 60) * 60);
 }
 
 function retrievability(elapsedDays: number, stability: number): number {
