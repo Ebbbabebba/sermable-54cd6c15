@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Mic } from "lucide-react";
+import { Mic, X } from "lucide-react";
 
 interface AnimalAudienceProps {
   progress: number;
@@ -10,6 +10,8 @@ interface AnimalAudienceProps {
   doneLabel?: string;
   /** Instruction shown above the animal, e.g. "Say the sentence out loud". */
   promptLabel?: string;
+  /** Called when the user taps the exit marker. */
+  onExit?: () => void | Promise<void>;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
@@ -176,7 +178,7 @@ const Animal = ({
   );
 };
 
-const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel, promptLabel }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel, promptLabel, onExit }: AnimalAudienceProps) => {
   const animal = useMemo(() => {
     const index = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return ANIMALS[index];
@@ -186,6 +188,16 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel,
 
   return (
     <div className="animal-audience fixed inset-0 z-30 pointer-events-none overflow-hidden bg-background" aria-hidden="true">
+      {onExit && (
+        <button
+          type="button"
+          onClick={onExit}
+          className="pointer-events-auto absolute right-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-50 flex h-11 w-11 items-center justify-center rounded-full bg-card/90 text-muted-foreground shadow-md backdrop-blur-sm ring-1 ring-border/60 transition-transform active:scale-95 hover:bg-card hover:text-foreground"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.14),transparent_68%)]" />
       <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-muted via-muted/65 to-transparent" />
 
