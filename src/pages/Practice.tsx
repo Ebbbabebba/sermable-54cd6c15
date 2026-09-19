@@ -2135,6 +2135,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const nextBeatNumber = masteredBeats + 1;
   const hasBeats = totalBeats > 0;
 
+  // Fully complete: every beat mastered AND the deadline has passed.
+  // In this state repetition is voluntary — no locks, countdowns or warnings.
+  const isFullyComplete =
+    masteryPercent >= 100 &&
+    !!speech?.goal_date &&
+    new Date(speech.goal_date).getTime() < Date.now();
+  const isLockedEffective = isLocked && !isFullyComplete;
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-auto">
       <LoadingOverlay isVisible={isProcessing} />
@@ -2239,8 +2247,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </div>
 
 
+          {/* Fully complete card — speech mastered and deadline passed */}
+          {isFullyComplete && (
+            <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.08] via-background to-background p-6 shadow-sm text-center space-y-3">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                <CheckCircle2 className="h-7 w-7 text-primary" />
+              </div>
+              <h2 className="text-lg font-bold">{t('practice.speech_complete_title', 'You know your speech!')}</h2>
+              <p className="text-sm text-muted-foreground leading-snug">
+                {t('practice.speech_complete_desc', 'All parts are mastered and your deadline has passed. Great job!')}
+              </p>
+            </div>
+          )}
+
           {/* Session Card - only show for active (non-complete) sessions */}
-          {!todaySessionDone && (
+          {!todaySessionDone && !isFullyComplete && (
             <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background p-5 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-primary/10 ring-1 ring-primary/20">
