@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 interface StreakCelebrationProps {
   streak: number;
@@ -8,6 +9,7 @@ interface StreakCelebrationProps {
 }
 
 const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
+  const { t } = useTranslation();
   return (
     <AnimatePresence>
       <motion.div
@@ -54,11 +56,11 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
           </motion.div>
           
           <div className="text-2xl font-bold mb-2">
-            Day Streak!
+            {t("streak.title")}
           </div>
-          
+
           <p className="text-muted-foreground mb-8">
-            You're on fire! Keep practicing every day to maintain your streak.
+            {t("streak.subtitle")}
           </p>
           
           {/* Big continue button */}
