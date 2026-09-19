@@ -413,6 +413,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Predictive rescheduling: user's best practice hours (from analytics or profile)
   const [preferredPracticeHours, setPreferredPracticeHours] = useState<number[]>([]);
   const [fallbackPracticeHour, setFallbackPracticeHour] = useState<number>(8);
+  // End of the user's practice window — the evening recall is placed just
+  // before it so sleep can consolidate the pass.
+  const [practiceEndHour, setPracticeEndHour] = useState<number>(21);
   // Hybrid endurance drills: alternate full-speech vs spot-reinforcement merges
   const [enduranceDrillCounter, setEnduranceDrillCounter] = useState<number>(0);
   const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
@@ -1057,7 +1060,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             .maybeSingle(),
           supabase
             .from('profiles')
-            .select('practice_start_hour')
+            .select('practice_start_hour, practice_end_hour')
             .eq('id', user.id)
             .maybeSingle(),
         ]);
@@ -1068,6 +1071,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const fallback = profileRes.data?.practice_start_hour;
         if (typeof fallback === 'number') {
           setFallbackPracticeHour(fallback);
+        }
+        const endHour = (profileRes.data as any)?.practice_end_hour;
+        if (typeof endHour === 'number') {
+          setPracticeEndHour(endHour);
         }
       }
     } catch (err) {
