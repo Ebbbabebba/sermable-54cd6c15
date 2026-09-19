@@ -828,7 +828,8 @@
     "regenerate": "Regenerar",
     "noDeadlineTitle": "Sin fecha límite",
     "noDeadlineDescription": "Añade una fecha objetivo para generar un plan.",
-    "plannedSessions": "{{count}} lecciones planificadas"
+    "plannedSessions": "{{count}} lecciones planificadas",
+    "fullRunthrough": "Discurso completo"
   },
   "speechDetail": {
     "notFound": "Discurso no encontrado",
@@ -855,6 +856,16 @@
       "saved": "Guardado",
       "strictHelp": "Tu discurso se compara palabra por palabra. Los errores y las palabras omitidas se marcan en rojo al instante y las dudas en amarillo tras 2 s. El análisis de IA es exigente.",
       "flowHelp": "Tu discurso se evalúa por significado. Se aceptan sinónimos, frases reordenadas y palabras omitidas, y una ronda se aprueba cuando al menos el 85 % de las palabras clave ocultas están cubiertas. Los conectores nunca cuentan como errores."
+    },
+    "plan": {
+      "title": "Tu plan",
+      "learning": "Aprender nuevas secciones",
+      "review": "Solo repaso",
+      "runthrough": "Ensayos completos",
+      "performance": "Presentación",
+      "until": "hasta el {{date}}",
+      "from": "desde el {{date}}",
+      "on": "{{date}}"
     }
   },
   "tour": {

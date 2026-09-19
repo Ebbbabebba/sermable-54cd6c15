@@ -258,6 +258,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                           e.event_type === "practice" && "bg-primary/10 text-primary",
                           e.event_type === "recall" && "bg-amber-500/15 text-amber-600 dark:text-amber-400",
                           e.event_type === "test" && "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+                          e.event_type === "full_runthrough" && "bg-rose-500/15 text-rose-600 dark:text-rose-400",
                           isPresentation && "bg-gradient-to-br from-rose-500 to-orange-500 text-white",
                         )}
                       >

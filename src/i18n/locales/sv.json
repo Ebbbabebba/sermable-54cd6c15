@@ -1070,7 +1070,8 @@
     "regenerate": "Generera om",
     "noDeadlineTitle": "Ingen deadline satt",
     "noDeadlineDescription": "Lägg till ett måldatum för att skapa övningsschema.",
-    "plannedSessions": "{{count}} planerade lektioner"
+    "plannedSessions": "{{count}} planerade lektioner",
+    "fullRunthrough": "Hela talet"
   },
   "speechDetail": {
     "notFound": "Talet hittades inte",
@@ -1097,6 +1098,16 @@
     "tabs": {
       "overview": "Översikt",
       "calendar": "Kalender"
+    },
+    "plan": {
+      "title": "Din plan",
+      "learning": "Lär in nya avsnitt",
+      "review": "Endast repetition",
+      "runthrough": "Genrep av hela talet",
+      "performance": "Framträdande",
+      "until": "till {{date}}",
+      "from": "från {{date}}",
+      "on": "{{date}}"
     }
   },
   "beatPrint": {

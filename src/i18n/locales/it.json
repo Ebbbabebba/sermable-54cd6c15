@@ -828,7 +828,8 @@
     "regenerate": "Rigenera",
     "noDeadlineTitle": "Nessuna scadenza",
     "noDeadlineDescription": "Aggiungi una data obiettivo per generare un programma.",
-    "plannedSessions": "{{count}} lezioni pianificate"
+    "plannedSessions": "{{count}} lezioni pianificate",
+    "fullRunthrough": "Discorso completo"
   },
   "speechDetail": {
     "notFound": "Discorso non trovato",
@@ -855,6 +856,16 @@
       "saved": "Salvato",
       "strictHelp": "Il discorso viene confrontato parola per parola. Errori e parole saltate vengono segnati subito in rosso, le esitazioni diventano gialle dopo 2 s. L'analisi AI è severa.",
       "flowHelp": "Il tuo discorso viene valutato sul significato. Sinonimi, frasi riordinate e parole saltate sono accettati e un giro è superato quando almeno l'85 % delle parole chiave nascoste è presente. I connettivi non contano mai come errori."
+    },
+    "plan": {
+      "title": "Il tuo piano",
+      "learning": "Imparare nuove sezioni",
+      "review": "Solo ripasso",
+      "runthrough": "Prove complete",
+      "performance": "Presentazione",
+      "until": "fino al {{date}}",
+      "from": "dal {{date}}",
+      "on": "{{date}}"
     }
   },
   "tour": {
