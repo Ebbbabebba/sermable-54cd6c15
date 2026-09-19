@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, Crown, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2135,6 +2135,14 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const nextBeatNumber = masteredBeats + 1;
   const hasBeats = totalBeats > 0;
 
+  // Fully complete: every beat mastered AND the deadline has passed.
+  // In this state repetition is voluntary — no locks, countdowns or warnings.
+  const isFullyComplete =
+    masteryPercent >= 100 &&
+    !!speech?.goal_date &&
+    new Date(speech.goal_date).getTime() < Date.now();
+  const isLockedEffective = isLocked && !isFullyComplete;
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-auto">
       <LoadingOverlay isVisible={isProcessing} />
@@ -2239,8 +2247,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
           </div>
 
 
+          {/* Fully complete card — speech mastered and deadline passed */}
+          {isFullyComplete && (
+            <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.08] via-background to-background p-6 shadow-sm text-center space-y-3">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
+                <CheckCircle2 className="h-7 w-7 text-primary" />
+              </div>
+              <h2 className="text-lg font-bold">{t('practice.speech_complete_title', 'You know your speech!')}</h2>
+              <p className="text-sm text-muted-foreground leading-snug">
+                {t('practice.speech_complete_desc', 'All parts are mastered and your deadline has passed. Great job!')}
+              </p>
+            </div>
+          )}
+
           {/* Session Card - only show for active (non-complete) sessions */}
-          {!todaySessionDone && (
+          {!todaySessionDone && !isFullyComplete && (
             <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background p-5 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-primary/10 ring-1 ring-primary/20">
@@ -2351,7 +2372,27 @@ const [liveTranscription, setLiveTranscription] = useState("");
       {/* Fixed bottom CTA - Duolingo style */}
         <div className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-6 bg-background/95 backdrop-blur-md border-t border-border/40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
           <div className="max-w-md mx-auto space-y-2">
-            {todaySessionDone ? (
+            {isFullyComplete ? (
+              <>
+                <Button
+                  size="lg"
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                >
+                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  {t('practice.back_to_overview', 'Back to overview')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate(`/presentation/${id}`)}
+                  className="w-full h-12 rounded-2xl font-semibold"
+                >
+                  <Presentation className="h-4 w-4 mr-2" />
+                  {t('practice.rehearse_presentation', 'Rehearse for the big day')}
+                </Button>
+              </>
+            ) : todaySessionDone ? (
               <Button 
                 size="lg" 
                 variant="outline"
@@ -2367,11 +2408,11 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <Button 
               size="lg" 
               onClick={() => handleStartPractice()}
-              disabled={isLocked}
+              disabled={isLockedEffective}
               className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
             >
               <Play className="h-5 w-5 mr-2" />
-              {isLocked 
+              {isLockedEffective 
                 ? t('practice.locked') 
                 : masteredBeats === 0
                   ? t('beat_practice.start_session', 'Start Session')
@@ -2379,23 +2420,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </Button>
           )}
 
-          {/* Secondary CTA: strong button for practice anyway / upgrade, with countdown caption */}
-          {isLocked && nextReviewDate && (
-            <>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setShowTimingWarning(true)}
-                className="w-full h-12 rounded-2xl font-semibold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
-              >
-                <Crown className="h-4 w-4 mr-2" />
-                {t('practice.practiceAnyway')}
-              </Button>
-              <p className="flex items-center justify-center gap-1 text-xs text-muted-foreground pt-0.5">
-                <Clock className="h-3 w-3" />
-                <LockCountdown nextReviewDate={nextReviewDate} />
-              </p>
-            </>
+          {/* Secondary CTA: practice anyway link, only while the speech is still being learned */}
+          {isLockedEffective && nextReviewDate && (
+            <button
+              type="button"
+              onClick={() => setShowTimingWarning(true)}
+              className="mx-auto flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors pt-1"
+            >
+              <Clock className="h-3.5 w-3.5" />
+              {t('practice.practiceAnyway')}
+            </button>
           )}
         </div>
       </div>
