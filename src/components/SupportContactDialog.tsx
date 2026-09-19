@@ -32,7 +32,7 @@ export const SupportContactDialog = ({ open, onOpenChange, email = SUPPORT_EMAIL
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl p-6 text-center">
+      <DialogContent className="inset-x-4 top-1/2 bottom-auto -translate-y-1/2 w-auto max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl p-6 pt-8 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <Mail className="h-6 w-6 text-primary" />
         </div>
