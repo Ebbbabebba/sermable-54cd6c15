@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FORCE_PREMIUM } from "@/lib/premiumOverride";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { stripPropCueMarkers } from "@/utils/propCues";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,

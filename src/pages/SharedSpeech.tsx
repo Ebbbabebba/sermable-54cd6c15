@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Download, FileText, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface SharedSpeechData {
   title: string;
