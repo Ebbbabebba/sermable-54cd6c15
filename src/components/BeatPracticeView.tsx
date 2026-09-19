@@ -407,13 +407,47 @@ const isNewDay = (lastPractice: Date | null): boolean => {
   return lastPractice.toDateString() !== today.toDateString();
 };
 
+// INTAKE WINDOW: all beats must be introduced well before the deadline so the
+// remaining time is pure consolidation. Learning "1 per day until the deadline"
+// meant the END of the speech was introduced days before the performance and
+// never got enough repetitions. We front-load intake into the first 60% of the
+// available time and leave the last 40% for repetition only.
+const INTAKE_FRACTION = 0.6;
+
 // Calculate how many beats we need per day given deadline
 const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number): number => {
+  if (unmasteredCount <= 0) return 0;
   if (daysUntilDeadline <= 0) return unmasteredCount; // Deadline passed or today - learn all
-  if (daysUntilDeadline >= unmasteredCount) return 1; // Plenty of time - 1 per day
-  // Tight deadline: distribute remaining beats across remaining days
-  return Math.ceil(unmasteredCount / daysUntilDeadline);
+  const intakeDays = Math.max(1, Math.floor(daysUntilDeadline * INTAKE_FRACTION));
+  return Math.max(1, Math.ceil(unmasteredCount / intakeDays));
 };
+
+// PRIMACY + RECENCY: learning strictly front-to-back leaves the ending — the
+// part the audience remembers best — as the least rehearsed. Alternate between
+// the earliest and the latest unlearned beat so both ends get early exposure.
+const pickNextBeatToLearn = <T extends { beat_order: number }>(
+  unmastered: T[],
+  learnedCount: number
+): T | null => {
+  if (unmastered.length === 0) return null;
+  const sorted = [...unmastered].sort((a, b) => a.beat_order - b.beat_order);
+  if (sorted.length === 1) return sorted[0];
+  return learnedCount % 2 === 1 ? sorted[sorted.length - 1] : sorted[0];
+};
+
+// FRAGILITY: when the day's queue has to be trimmed, the beats most likely to
+// be forgotten go first — recent failures, then the longest overdue.
+const fragilityRank = (b: {
+  recent_failure_count?: number | null;
+  next_scheduled_recall_at?: string | null;
+  last_recall_at?: string | null;
+}): number => {
+  const failures = b.recent_failure_count ?? 0;
+  const due = b.next_scheduled_recall_at ? new Date(b.next_scheduled_recall_at).getTime() : Date.now();
+  const overdueHours = Math.max(0, (Date.now() - due) / (1000 * 60 * 60));
+  return failures * 100 + Math.min(overdueHours, 99);
+};
+
 
 const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
