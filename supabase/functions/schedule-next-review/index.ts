@@ -127,6 +127,29 @@ function retrievability(elapsedDays: number, stability: number): number {
   return Math.pow(1 + (FACTOR * elapsedDays) / stability, DECAY);
 }
 
+// ---------- Fixed expanding ladder ----------
+// 10 min → 1 → 3 → 7 → 14 → 30 days. Each success climbs one step, a failure
+// drops to the bottom. This keeps the schedule predictable and deadline-safe.
+const LADDER_MINUTES = [
+  10,
+  1 * 24 * 60,
+  3 * 24 * 60,
+  7 * 24 * 60,
+  14 * 24 * 60,
+  30 * 24 * 60,
+];
+
+// Which rung the beat is currently standing on, inferred from the interval it
+// was last given (tolerant: picks the closest rung at or below it).
+function currentRung(prevIntervalMinutes: number): number {
+  if (!prevIntervalMinutes || prevIntervalMinutes <= 0) return -1;
+  let rung = 0;
+  for (let i = 0; i < LADDER_MINUTES.length; i++) {
+    if (prevIntervalMinutes >= LADDER_MINUTES[i] * 0.8) rung = i;
+  }
+  return rung;
+}
+
 // ---------- Deadline-aware interval capping ----------
 function capIntervalByDeadline(intervalMinutes: number, goalDate: string | null): number {
   if (!goalDate) return intervalMinutes;
@@ -138,13 +161,16 @@ function capIntervalByDeadline(intervalMinutes: number, goalDate: string | null)
     ),
   );
   let maxMinutes: number;
-  if (daysUntil <= 2) maxMinutes = 4 * 60;
-  else if (daysUntil <= 7) maxMinutes = 12 * 60;
-  else if (daysUntil <= 14) maxMinutes = 2 * 24 * 60;
-  else if (daysUntil <= 30) maxMinutes = 4 * 24 * 60;
+  // Final stretch: tighten hard so the speech is fresh on the day.
+  if (daysUntil <= 1) maxMinutes = 4 * 60;
+  else if (daysUntil <= 3) maxMinutes = 12 * 60;
+  else if (daysUntil <= 7) maxMinutes = 24 * 60;
+  else if (daysUntil <= 14) maxMinutes = 3 * 24 * 60;
+  else if (daysUntil <= 30) maxMinutes = 7 * 24 * 60;
   else maxMinutes = 14 * 24 * 60;
   return Math.min(intervalMinutes, maxMinutes);
 }
+
 
 // ---------- Visibility modifier: high visibility → shorter interval ----------
 // Forces user to come back sooner if they still relied heavily on script.
@@ -259,22 +285,36 @@ serve(async (req) => {
       if (rating === 1) newLapses += 1;
     }
 
-    // ---- Compute next interval ----
-    let nextIntervalMin = intervalMinutesFromStability(s);
+    // ---- Compute next interval (fixed ladder, FSRS decides direction) ----
+    // Free-running FSRS exploded into month/year intervals after a few clean
+    // runs, which is useless for a speech with a date. Instead we snap to the
+    // classic expanding schedule: 10 min → 1 → 3 → 7 → 14 → 30 days.
+    const prevIntervalMin =
+      beat.fsrs_last_review && beat.next_scheduled_recall_at
+        ? (new Date(beat.next_scheduled_recall_at).getTime() -
+            new Date(beat.fsrs_last_review).getTime()) /
+          60000
+        : 0;
+    let rung = currentRung(prevIntervalMin);
 
-    // Apply visibility modifier (more reliance on script → shorter interval)
-    nextIntervalMin = Math.round(
-      nextIntervalMin * visibilityFactor(visibilityPercent),
-    );
+    if (rating === 1) rung = 0;                 // failed → back to 10 min
+    else if (rating === 2) rung = Math.max(0, rung); // shaky → repeat same step
+    else if (rating === 3) rung = rung + 1;     // solid → next step
+    else rung = rung + 2;                       // effortless → skip a step
 
-    // Snap to whole hours so the ladder reads cleanly (20h, 2.5d, 6d …)
-    nextIntervalMin = Math.max(60, Math.round(nextIntervalMin / 60) * 60);
+    // Still leaning on the script? Don't let the interval run away.
+    if (visibilityPercent > 30) rung = Math.min(rung, 1);
+
+    let nextIntervalMin = LADDER_MINUTES[
+      Math.min(rung, LADDER_MINUTES.length - 1)
+    ];
 
     // Apply deadline cap
     nextIntervalMin = capIntervalByDeadline(nextIntervalMin, speech.goal_date);
 
     // Floor: never less than 10 min, even for catastrophic fails
     nextIntervalMin = Math.max(10, nextIntervalMin);
+
 
     const nextDueAt = new Date(Date.now() + nextIntervalMin * 60 * 1000);
 
