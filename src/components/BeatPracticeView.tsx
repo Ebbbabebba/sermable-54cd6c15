@@ -1332,7 +1332,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         selectedBeatOrder: firstUnmastered?.beat_order,
       });
       
-      setBeatsToRecall(allBeatsNeedingRecall);
+      setBeatsToRecall(interleaveRecallOrder(allBeatsNeedingRecall));
       setNewBeatToLearn(firstUnmastered);
       
       // Store merged recall info
