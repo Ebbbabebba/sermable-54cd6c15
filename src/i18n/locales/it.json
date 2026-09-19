@@ -1236,5 +1236,10 @@
     "tipPrefix": "Consiglio: scrivi un",
     "tipSuffix": "isolato in qualsiasi punto del copione per inserire una pausa. Per ognuna comparirà qui un cursore da 1 a 10 s.",
     "title": "Pause"
+  },
+  "streak": {
+    "title": "Giorni di fila!",
+    "subtitle": "Sei in fiamme! Allenati ogni giorno per mantenere la serie.",
+    "button": "Evviva!"
   }
 }

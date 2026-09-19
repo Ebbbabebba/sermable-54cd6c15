@@ -1236,5 +1236,10 @@
     "tipPrefix": "Astuce : tapez un",
     "tipSuffix": "isolé n'importe où dans le script pour insérer une pause. Un curseur de 1 à 10 s apparaîtra ici pour chacune.",
     "title": "Pauses"
+  },
+  "streak": {
+    "title": "Jours de suite !",
+    "subtitle": "Tu es en feu ! Entraîne-toi chaque jour pour garder ta série.",
+    "button": "Génial !"
   }
 }

@@ -1218,5 +1218,10 @@
     "tipPrefix": "Tip: type a standalone",
     "tipSuffix": "anywhere in the script to insert a pause. A 1-10s slider appears here for each one.",
     "title": "Pauses"
+  },
+  "streak": {
+    "title": "Day Streak!",
+    "subtitle": "You're on fire! Keep practicing every day to maintain your streak.",
+    "button": "Yay!"
   }
 }

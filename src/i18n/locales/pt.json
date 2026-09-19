@@ -1236,5 +1236,10 @@
     "tipPrefix": "Dica: escreve um",
     "tipSuffix": "isolado em qualquer parte do guião para inserir uma pausa. Aparecerá aqui um cursor de 1 a 10 s para cada uma.",
     "title": "Pausas"
+  },
+  "streak": {
+    "title": "Dias seguidos!",
+    "subtitle": "Você está em chamas! Pratique todos os dias para manter a sequência.",
+    "button": "Isso!"
   }
 }
