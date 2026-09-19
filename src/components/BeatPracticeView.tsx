@@ -3274,24 +3274,32 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const now = new Date();
       const recall10minAt = new Date(now.getTime() + 10 * 60 * 1000);
       
-      // Evening recall: same day at 8 PM (or 2+ hours later if mastered after 6 PM)
+      // Evening recall: placed ~45 min before the end of the user's own
+      // practice window so the last pass is as close to sleep as possible
+      // (sleep consolidation) without falling outside the window.
+      const eveningHour = Math.max(0, Math.min(23, practiceEndHour));
       const eveningTarget = new Date(now);
-      eveningTarget.setHours(20, 0, 0, 0); // 8 PM today
+      eveningTarget.setHours(eveningHour, 0, 0, 0);
+      eveningTarget.setMinutes(eveningTarget.getMinutes() - 45);
       let recallEveningAt: Date;
-      if (now.getHours() >= 20) {
-        // Already past 8 PM — skip evening, let morning recall take over
+      if (now.getTime() >= eveningTarget.getTime()) {
+        // Already past the window's end — skip evening, morning takes over
         recallEveningAt = eveningTarget; // in the past, won't trigger
-      } else if (now.getHours() >= 18) {
-        // Mastered between 6 PM and 8 PM — schedule 2 hours from now
-        recallEveningAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      } else if (eveningTarget.getTime() - now.getTime() < 2 * 60 * 60 * 1000) {
+        // Less than 2h left in the window — keep at least a 2h gap from now,
+        // but never push past the window end.
+        recallEveningAt = new Date(
+          Math.min(now.getTime() + 2 * 60 * 60 * 1000, eveningTarget.getTime()),
+        );
       } else {
         recallEveningAt = eveningTarget;
       }
       
-      // Morning recall: next day at 6 AM (always available from 6 AM local time)
+      // Morning recall: next day at the start of the practice window
+      // (defaults to the profile's practice_start_hour, min 6 AM).
       const recallMorningAt = new Date(now);
       recallMorningAt.setDate(recallMorningAt.getDate() + 1);
-      recallMorningAt.setHours(6, 0, 0, 0);
+      recallMorningAt.setHours(Math.max(6, Math.min(12, fallbackPracticeHour)), 0, 0, 0);
       
       console.log('📅 Scheduling recalls:', {
         '10min': recall10minAt.toISOString(),
