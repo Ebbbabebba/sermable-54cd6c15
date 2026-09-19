@@ -975,7 +975,8 @@
     "phase_full_read": "Hela avsnittet",
     "phase_full_recall": "Hela avsnittet · utan manus",
     "phase_mastered": "Klar",
-    "sentence_done": "Meningen klar!"
+    "sentence_done": "Meningen klar!",
+    "say_sentence_prompt": "Säg meningen högt ur minnet"
   },
   "presentation": {
     "settings": "Presentationsinställningar",

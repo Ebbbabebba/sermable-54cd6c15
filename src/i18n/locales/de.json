@@ -697,7 +697,8 @@
     "phase_full_read": "Ganzer Abschnitt",
     "phase_full_recall": "Ganzer Abschnitt · ohne Skript",
     "phase_mastered": "Fertig",
-    "sentence_done": "Satz geschafft!"
+    "sentence_done": "Satz geschafft!",
+    "say_sentence_prompt": "Sprich den Satz laut aus dem Gedächtnis"
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",
