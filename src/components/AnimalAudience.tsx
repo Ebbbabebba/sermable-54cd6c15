@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Mic } from "lucide-react";
+import { Mic, X } from "lucide-react";
 
 interface AnimalAudienceProps {
   progress: number;
@@ -10,6 +10,8 @@ interface AnimalAudienceProps {
   doneLabel?: string;
   /** Instruction shown above the animal, e.g. "Say the sentence out loud". */
   promptLabel?: string;
+  /** Called when the user taps the exit marker. */
+  onExit?: () => void | Promise<void>;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
