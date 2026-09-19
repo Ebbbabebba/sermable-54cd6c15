@@ -144,9 +144,15 @@ const calculateNextRecallDate = (
 // fluency without forcing a full slog every single time.
 const selectBeatsForEnduranceDrill = (
   masteredBeats: Beat[],
-  drillCounter: number
+  drillCounter: number,
+  daysUntilDeadline?: number | null
 ): { beats: Beat[]; isFullSpeech: boolean } => {
   const sorted = [...masteredBeats].sort((a, b) => a.beat_order - b.beat_order);
+  // FINAL STRETCH: within the last 2 days before the deadline, every drill is
+  // a full run-through — that's what the real performance demands.
+  if (typeof daysUntilDeadline === 'number' && daysUntilDeadline <= 2) {
+    return { beats: sorted, isFullSpeech: true };
+  }
   if (sorted.length < 4 || drillCounter % 2 === 0) {
     return { beats: sorted, isFullSpeech: true };
   }
