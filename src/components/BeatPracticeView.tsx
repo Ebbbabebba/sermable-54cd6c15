@@ -3509,8 +3509,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setBeatsMasteredThisSession(prev => prev + 1);
       
       
-      // Find next unmastered beat for premium users
-      const nextUnmastered = updatedBeats.find(b => !b.is_mastered);
+      // Find next beat to learn — alternating front/back so the ending of the
+      // speech is introduced early instead of days before the performance.
+      const nextUnmastered = pickNextBeatToLearn(
+        updatedBeats.filter(b => !b.is_mastered),
+        updatedBeats.filter(b => b.is_mastered).length
+      );
       
       // Count how many beats were mastered today (including the one just mastered)
       const beatsLearnedToday = updatedBeats.filter(b => {
