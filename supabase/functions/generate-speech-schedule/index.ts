@@ -52,19 +52,33 @@ function buildSchedule(today: Date, goalDate: Date): PlannedEvent[] {
     Math.round((goalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
   );
 
+  // FULL RUN-THROUGH MILESTONES: performing the whole speech start-to-finish
+  // has to be a planned event, not a side effect of the beats happening to be
+  // finished. Halfway through the period, three days out and the day before.
+  const midpointOffset = Math.floor(totalDays / 2);
+  const runthroughOffsets = new Set<number>();
+  if (totalDays >= 6) runthroughOffsets.add(midpointOffset);
+  if (totalDays >= 4) runthroughOffsets.add(totalDays - 3);
+  if (totalDays >= 2) runthroughOffsets.add(totalDays - 1);
+
   for (let offset = 0; offset <= totalDays; offset++) {
     const date = addDays(today, offset);
     const daysUntilDeadline = totalDays - offset;
     const iso = toISODate(date);
 
     if (daysUntilDeadline === 0) {
+      // Performance day: one last full run in the morning, then the real thing.
+      if (totalDays >= 1) events.push({ date: iso, type: "full_runthrough" });
       events.push({ date: iso, type: "presentation" });
       continue;
     }
 
+    const isRunthroughDay = runthroughOffsets.has(offset);
+    if (isRunthroughDay) events.push({ date: iso, type: "full_runthrough" });
+
     if (daysUntilDeadline <= 3) {
       // Final stretch: full run-through every day
-      events.push({ date: iso, type: "test" });
+      if (!isRunthroughDay) events.push({ date: iso, type: "test" });
       continue;
     }
 
@@ -98,6 +112,7 @@ function buildSchedule(today: Date, goalDate: Date): PlannedEvent[] {
       events.push({ date: iso, type: "practice" });
     }
   }
+
 
   return events;
 }
