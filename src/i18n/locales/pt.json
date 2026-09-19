@@ -697,7 +697,8 @@
     "phase_full_read": "Parte inteira",
     "phase_full_recall": "Parte inteira · sem guião",
     "phase_mastered": "Concluído",
-    "sentence_done": "Frase concluída!"
+    "sentence_done": "Frase concluída!",
+    "say_sentence_prompt": "Diz a frase em voz alta de memória"
   },
   "presentation": {
     "settings": "Configurações de apresentação",

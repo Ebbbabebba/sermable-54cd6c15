@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Mic } from "lucide-react";
 
 interface AnimalAudienceProps {
   progress: number;
@@ -7,6 +8,8 @@ interface AnimalAudienceProps {
   variant?: number;
   /** Text shown while the animal celebrates, e.g. "Sentence done!". */
   doneLabel?: string;
+  /** Instruction shown above the animal, e.g. "Say the sentence out loud". */
+  promptLabel?: string;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
@@ -173,7 +176,7 @@ const Animal = ({
   );
 };
 
-const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel, promptLabel }: AnimalAudienceProps) => {
   const animal = useMemo(() => {
     const index = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return ANIMALS[index];
@@ -183,7 +186,7 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel 
 
   return (
     <div className="animal-audience fixed inset-0 z-30 pointer-events-none overflow-hidden bg-background" aria-hidden="true">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.12),transparent_68%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.14),transparent_68%)]" />
       <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-muted via-muted/65 to-transparent" />
 
       <div className={`animal-audience__burst absolute inset-0 ${celebrating ? "opacity-100" : "opacity-0"}`}>
@@ -200,16 +203,34 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, doneLabel 
         ))}
       </div>
 
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-6 px-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]">
+      <div className="relative z-10 flex h-full w-full flex-col items-center px-6 pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] pt-[calc(env(safe-area-inset-top,0px)+4.5rem)]">
+        {promptLabel && !celebrating && (
+          <div className="animate-fade-in flex items-center gap-2.5 rounded-full bg-card/95 px-5 py-2.5 shadow-md backdrop-blur-sm ring-1 ring-border/60">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15">
+              <Mic className="h-4 w-4 text-primary" />
+            </span>
+            <p className="text-sm font-semibold text-foreground sm:text-base">{promptLabel}</p>
+          </div>
+        )}
+
         <div
-          className={`animal-audience__character flex w-full max-w-[26rem] flex-1 items-center justify-center ${celebrating ? "is-celebrating" : ""}`}
+          className={`animal-audience__character flex w-full max-w-[30rem] flex-1 items-center justify-center ${celebrating ? "is-celebrating" : "is-idle"}`}
         >
           <Animal kind={animal.kind} palette={animal.palette} mood={mood} celebrating={celebrating} />
         </div>
 
-        {celebrating && doneLabel && (
-          <div className="animate-scale-in rounded-3xl bg-card/90 px-7 py-4 text-center shadow-lg backdrop-blur-sm">
+        {celebrating && doneLabel ? (
+          <div className="animate-scale-in rounded-3xl bg-card/95 px-7 py-4 text-center shadow-lg backdrop-blur-sm ring-1 ring-border/60">
             <p className="text-2xl font-extrabold text-success sm:text-3xl">{doneLabel}</p>
+          </div>
+        ) : (
+          <div className="w-full max-w-xs">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                style={{ width: `${Math.round(clamp01(progress) * 100)}%` }}
+              />
+            </div>
           </div>
         )}
       </div>
