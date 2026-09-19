@@ -56,6 +56,17 @@ function ratingFromAccuracy(
   return 4;                                              // Easy
 }
 
+// The user's own judgment-of-learning right after the attempt predicts
+// forgetting better than word accuracy alone. 1 = struggled, 2 = ok, 3 = solid.
+// It can pull the rating one notch in either direction but never overrides a
+// genuine failure (Again stays Again).
+function applySelfRating(rating: Rating, selfRating?: number): Rating {
+  if (rating === 1) return 1;
+  if (selfRating === 1) return Math.max(2, rating - 1) as Rating;
+  if (selfRating === 3) return Math.min(4, rating + 1) as Rating;
+  return rating;
+}
+
 function initialStability(rating: Rating): number {
   return Math.max(W[rating - 1], 0.1);
 }
@@ -102,8 +113,14 @@ function nextStability(
   );
 }
 
-function intervalDays(stability: number): number {
-  return Math.max(1, Math.round((stability / FACTOR) * (Math.pow(REQUEST_RETENTION, 1 / DECAY) - 1)));
+// Hour-resolution interval. Rounding to whole days made the ladder jumpy
+// (especially combined with the visibility shrink), so we keep fractional days
+// and convert to minutes, rounded to the nearest hour.
+function intervalMinutesFromStability(stability: number): number {
+  const days = (stability / FACTOR) * (Math.pow(REQUEST_RETENTION, 1 / DECAY) - 1);
+  const minutes = days * 24 * 60;
+  // Never below 4h at this stage; the caller applies further modifiers.
+  return Math.max(4 * 60, Math.round(minutes / 60) * 60);
 }
 
 function retrievability(elapsedDays: number, stability: number): number {
@@ -179,6 +196,7 @@ serve(async (req) => {
       lapses = 0,
       missedWordCount = 0,
       durationSeconds = null,
+      selfRating = null,
     } = body ?? {};
 
     if (!beatId || typeof beatId !== "string") {
@@ -212,7 +230,10 @@ serve(async (req) => {
       });
     }
 
-    const rating = ratingFromAccuracy(rawAccuracy, hesitations, visibilityPercent);
+    const rating = applySelfRating(
+      ratingFromAccuracy(rawAccuracy, hesitations, visibilityPercent),
+      typeof selfRating === "number" ? selfRating : undefined,
+    );
     const reps = (beat.fsrs_reps ?? 0) + 1;
     const wasOverdue = beat.next_scheduled_recall_at
       ? new Date(beat.next_scheduled_recall_at).getTime() < Date.now()
@@ -239,13 +260,15 @@ serve(async (req) => {
     }
 
     // ---- Compute next interval ----
-    const baseDays = intervalDays(s);
-    let nextIntervalMin = baseDays * 24 * 60;
+    let nextIntervalMin = intervalMinutesFromStability(s);
 
     // Apply visibility modifier (more reliance on script → shorter interval)
     nextIntervalMin = Math.round(
       nextIntervalMin * visibilityFactor(visibilityPercent),
     );
+
+    // Snap to whole hours so the ladder reads cleanly (20h, 2.5d, 6d …)
+    nextIntervalMin = Math.max(60, Math.round(nextIntervalMin / 60) * 60);
 
     // Apply deadline cap
     nextIntervalMin = capIntervalByDeadline(nextIntervalMin, speech.goal_date);

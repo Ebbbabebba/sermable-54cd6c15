@@ -31,7 +31,7 @@ import AnimalAudience from "./AnimalAudience";
 import PropCueOverlay from "./PropCueOverlay";
 import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/propCues";
 import { getKeywordIndices } from "@/utils/keywordExtraction";
-import { scheduleNextReview } from "@/lib/scheduleNextReview";
+import { scheduleNextReview, type ScheduleNextReviewInput } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 import { recordRepDifficulty, getEasiestWordIndices } from "@/utils/wordDifficulty";
 
@@ -144,9 +144,15 @@ const calculateNextRecallDate = (
 // fluency without forcing a full slog every single time.
 const selectBeatsForEnduranceDrill = (
   masteredBeats: Beat[],
-  drillCounter: number
+  drillCounter: number,
+  daysUntilDeadline?: number | null
 ): { beats: Beat[]; isFullSpeech: boolean } => {
   const sorted = [...masteredBeats].sort((a, b) => a.beat_order - b.beat_order);
+  // FINAL STRETCH: within the last 2 days before the deadline, every drill is
+  // a full run-through — that's what the real performance demands.
+  if (typeof daysUntilDeadline === 'number' && daysUntilDeadline <= 2) {
+    return { beats: sorted, isFullSpeech: true };
+  }
   if (sorted.length < 4 || drillCounter % 2 === 0) {
     return { beats: sorted, isFullSpeech: true };
   }
@@ -179,6 +185,48 @@ const selectBeatsForEnduranceDrill = (
   }
   return { beats: merged, isFullSpeech: false };
 };
+
+// INTERLEAVING: recalling beats strictly back-to-back in script order lets the
+// user coast on momentum instead of retrieving. Mixing the order (while keeping
+// any urgent, long-overdue beats first) makes each recall a real retrieval.
+const interleaveRecallOrder = <T extends { beat_order: number; next_scheduled_recall_at?: string | null }>(
+  beats: T[]
+): T[] => {
+  if (beats.length < 3) return beats;
+  const sorted = [...beats].sort((a, b) => a.beat_order - b.beat_order);
+  const mid = Math.ceil(sorted.length / 2);
+  const front = sorted.slice(0, mid);
+  const back = sorted.slice(mid);
+  const mixed: T[] = [];
+  for (let i = 0; i < mid; i++) {
+    if (front[i]) mixed.push(front[i]);
+    if (back[i]) mixed.push(back[i]);
+  }
+  return mixed;
+};
+
+// SEAM DRILL: transitions between beats are where speeches break down. Build a
+// practice unit from the tail of one beat and the head of the next.
+const buildSeamBeat = (sorted: Beat[], drillCounter: number): Beat | null => {
+  if (sorted.length < 2) return null;
+  const pairIndex = Math.floor(drillCounter / 3) % (sorted.length - 1);
+  const first = sorted[pairIndex];
+  const second = sorted[pairIndex + 1];
+  if (!first || !second) return null;
+  const tail = first.sentence_3_text || first.sentence_2_text || first.sentence_1_text;
+  const head = second.sentence_1_text || second.sentence_2_text || second.sentence_3_text;
+  if (!tail || !head) return null;
+  return {
+    ...first,
+    id: 'seam-recall',
+    beat_order: -2,
+    sentence_1_text: tail,
+    sentence_2_text: head,
+    sentence_3_text: '',
+    is_mastered: true,
+  };
+};
+
 
 interface BeatPracticeViewProps {
   speechId: string;
@@ -413,6 +461,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Predictive rescheduling: user's best practice hours (from analytics or profile)
   const [preferredPracticeHours, setPreferredPracticeHours] = useState<number[]>([]);
   const [fallbackPracticeHour, setFallbackPracticeHour] = useState<number>(8);
+  // End of the user's practice window — the evening recall is placed just
+  // before it so sleep can consolidate the pass.
+  const [practiceEndHour, setPracticeEndHour] = useState<number>(21);
   // Hybrid endurance drills: alternate full-speech vs spot-reinforcement merges
   const [enduranceDrillCounter, setEnduranceDrillCounter] = useState<number>(0);
   const [showSkipWarning, setShowSkipWarning] = useState(false); // Warning dialog for skipping coffee break
@@ -475,6 +526,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Full-screen animal audience that cheers when a script-free sentence lands.
   const [audienceCelebrating, setAudienceCelebrating] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
+  // Judgment-of-learning prompt shown right after a successful recall.
+  // Its answer nudges the FSRS interval up or down one notch.
+  const [selfRatingPrompt, setSelfRatingPrompt] = useState<
+    Omit<ScheduleNextReviewInput, 'selfRating'> | null
+  >(null);
+  const selfRatingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
   
   // Transcription using Web Speech API
@@ -1051,7 +1108,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             .maybeSingle(),
           supabase
             .from('profiles')
-            .select('practice_start_hour')
+            .select('practice_start_hour, practice_end_hour')
             .eq('id', user.id)
             .maybeSingle(),
         ]);
@@ -1062,6 +1119,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         const fallback = profileRes.data?.practice_start_hour;
         if (typeof fallback === 'number') {
           setFallbackPracticeHour(fallback);
+        }
+        const endHour = (profileRes.data as any)?.practice_end_hour;
+        if (typeof endHour === 'number') {
+          setPracticeEndHour(endHour);
         }
       }
     } catch (err) {
@@ -1271,7 +1332,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         selectedBeatOrder: firstUnmastered?.beat_order,
       });
       
-      setBeatsToRecall(allBeatsNeedingRecall);
+      setBeatsToRecall(interleaveRecallOrder(allBeatsNeedingRecall));
       setNewBeatToLearn(firstUnmastered);
       
       // Store merged recall info
@@ -1557,7 +1618,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const eligibleCount = overview ? keywordIndicesRef.current.size : words.length;
 
       // Established beats start deeper in; fresh recalls still start partly hidden.
-      const ratio = sessionNum >= 1 ? 0.4 : 0.25;
+      let ratio = sessionNum >= 1 ? 0.4 : 0.25;
+
+      // OVERDUE SUPPORT: coming back long after the due date means natural
+      // forgetting, not failure. Start with more of the script visible so the
+      // user re-anchors instead of face-planting into a blank screen.
+      const dueAt = activeBeat?.next_scheduled_recall_at
+        ? new Date(activeBeat.next_scheduled_recall_at).getTime()
+        : null;
+      if (dueAt) {
+        const overdueDays = (Date.now() - dueAt) / (1000 * 60 * 60 * 24);
+        if (overdueDays >= 7) ratio *= 0.4;
+        else if (overdueDays >= 3) ratio *= 0.6;
+        else if (overdueDays >= 1) ratio *= 0.8;
+      }
+
       const target = Math.max(3, Math.floor(eligibleCount * ratio));
 
       const easiestFirst = getEasiestWordIndices(activeBeat?.id, words.length, eligible);
@@ -2436,6 +2511,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         else if (failRatio > softFailAt) demotionRungs = 1;
         else demotionRungs = 0;
 
+        // OVERDUE LENIENCY: a miss after a long gap is expected forgetting,
+        // not a sign the beat was never learned. Soften the demotion so the
+        // user isn't thrown back to the start for taking a break.
+        const overdueMs = failedBeat.next_scheduled_recall_at
+          ? Date.now() - new Date(failedBeat.next_scheduled_recall_at).getTime()
+          : 0;
+        const overdueDays = overdueMs / (1000 * 60 * 60 * 24);
+        const isLongOverdue = overdueDays >= 3;
+        if (isLongOverdue && demotionRungs > 0) {
+          demotionRungs = 1;
+        }
+
         const currentSession = failedBeat.recall_session_number ?? 0;
         const demotedSession = Math.max(0, currentSession - demotionRungs);
 
@@ -2447,7 +2534,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         const tomorrow = new Date(now);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(8, 0, 0, 0);
+        tomorrow.setHours(Math.max(6, Math.min(12, fallbackPracticeHour)), 0, 0, 0);
 
         const updateData: Record<string, any> = {
           last_recall_at: now.toISOString(),
@@ -2597,16 +2684,40 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           if (useFsrs) {
             // FSRS scheduler — single source of truth for next_scheduled_recall_at
             // once the beat has cleared the short-cycle ladder.
+            //
+            // Report the REAL quality of the pass, not a hardcoded 100. A run
+            // that limped over the line (hesitations, or a failed rep earlier
+            // in this session) must not earn the same interval as a fluent one.
             const visibleCount = Math.max(0, words.length - hiddenWordIndicesRef.current.size);
-            scheduleNextReview({
+            const slipUnion = new Set<number>([
+              ...hesitatedIndicesRef.current,
+              ...missedIndicesRef.current,
+            ]);
+            const slipRatio = words.length > 0 ? slipUnion.size / words.length : 0;
+            const struggledEarlier = recallHadFailureRef.current;
+            const rawAccuracy = Math.max(
+              40,
+              Math.min(100, Math.round(100 - slipRatio * 100 - (struggledEarlier ? 12 : 0))),
+            );
+            const payload: Omit<ScheduleNextReviewInput, 'selfRating'> = {
               beatId: recalledBeat.id,
               eventType: 'recall',
-              rawAccuracy: 100,
+              rawAccuracy,
               visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 0,
-              hesitations: 0,
-              lapses: 0,
-              missedWordCount: 0,
-            });
+              hesitations: hesitatedIndicesRef.current.size,
+              lapses: missedIndicesRef.current.size,
+              missedWordCount: missedIndicesRef.current.size,
+            };
+            // Ask the user how it felt; the answer refines the interval.
+            // If they don't answer within 8s we schedule with "ok".
+            setSelfRatingPrompt(payload);
+            if (selfRatingTimerRef.current) clearTimeout(selfRatingTimerRef.current);
+            selfRatingTimerRef.current = setTimeout(() => {
+              setSelfRatingPrompt(prev => {
+                if (prev) scheduleNextReview({ ...prev, selfRating: 2 });
+                return null;
+              });
+            }, 8000);
           }
         }
 
@@ -2676,9 +2787,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               // HYBRID ENDURANCE DRILL: alternate between full-speech and
               // spot-reinforcement (weak beats + ending). Even counts → full
               // pass. Odd counts (with weak beats) → focused merge.
+              // SEAM DRILL: every third drill (outside the final 2 days)
+              // practises one transition between two beats instead.
+              const sortedMerged = [...mergedRecallBeats].sort((a, b) => a.beat_order - b.beat_order);
+              const seamBeat =
+                daysUntilDeadline > 2 && enduranceDrillCounter % 3 === 1
+                  ? buildSeamBeat(sortedMerged, enduranceDrillCounter)
+                  : null;
+
+              if (seamBeat) {
+                setEnduranceDrillCounter(prev => prev + 1);
+                console.log('🪡 Seam drill between beats');
+                setIsMergedRecall(true);
+                setBeatsToRecall([seamBeat]);
+                setRecallIndex(0);
+                setRecallSuccessCount(0);
+                setHiddenWordIndices(new Set());
+                setHiddenWordOrder([]);
+                resetForNextRep();
+                return;
+              }
+
               const { beats: drillBeats, isFullSpeech } = selectBeatsForEnduranceDrill(
                 mergedRecallBeats,
-                enduranceDrillCounter
+                enduranceDrillCounter,
+                daysUntilDeadline
               );
               setEnduranceDrillCounter(prev => prev + 1);
               console.log(
@@ -3237,24 +3370,32 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const now = new Date();
       const recall10minAt = new Date(now.getTime() + 10 * 60 * 1000);
       
-      // Evening recall: same day at 8 PM (or 2+ hours later if mastered after 6 PM)
+      // Evening recall: placed ~45 min before the end of the user's own
+      // practice window so the last pass is as close to sleep as possible
+      // (sleep consolidation) without falling outside the window.
+      const eveningHour = Math.max(0, Math.min(23, practiceEndHour));
       const eveningTarget = new Date(now);
-      eveningTarget.setHours(20, 0, 0, 0); // 8 PM today
+      eveningTarget.setHours(eveningHour, 0, 0, 0);
+      eveningTarget.setMinutes(eveningTarget.getMinutes() - 45);
       let recallEveningAt: Date;
-      if (now.getHours() >= 20) {
-        // Already past 8 PM — skip evening, let morning recall take over
+      if (now.getTime() >= eveningTarget.getTime()) {
+        // Already past the window's end — skip evening, morning takes over
         recallEveningAt = eveningTarget; // in the past, won't trigger
-      } else if (now.getHours() >= 18) {
-        // Mastered between 6 PM and 8 PM — schedule 2 hours from now
-        recallEveningAt = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      } else if (eveningTarget.getTime() - now.getTime() < 2 * 60 * 60 * 1000) {
+        // Less than 2h left in the window — keep at least a 2h gap from now,
+        // but never push past the window end.
+        recallEveningAt = new Date(
+          Math.min(now.getTime() + 2 * 60 * 60 * 1000, eveningTarget.getTime()),
+        );
       } else {
         recallEveningAt = eveningTarget;
       }
       
-      // Morning recall: next day at 6 AM (always available from 6 AM local time)
+      // Morning recall: next day at the start of the practice window
+      // (defaults to the profile's practice_start_hour, min 6 AM).
       const recallMorningAt = new Date(now);
       recallMorningAt.setDate(recallMorningAt.getDate() + 1);
-      recallMorningAt.setHours(6, 0, 0, 0);
+      recallMorningAt.setHours(Math.max(6, Math.min(12, fallbackPracticeHour)), 0, 0, 0);
       
       console.log('📅 Scheduling recalls:', {
         '10min': recall10minAt.toISOString(),
@@ -4390,8 +4531,54 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   );
   const audienceProgress = Math.min(1, audienceSpokenTargets / Math.max(1, audienceTargetIndices.length));
 
+  const submitSelfRating = (value: 1 | 2 | 3) => {
+    if (selfRatingTimerRef.current) {
+      clearTimeout(selfRatingTimerRef.current);
+      selfRatingTimerRef.current = null;
+    }
+    setSelfRatingPrompt(prev => {
+      if (prev) scheduleNextReview({ ...prev, selfRating: value });
+      return null;
+    });
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
+      {selfRatingPrompt && (
+        <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-xl border border-border">
+            <p className="text-center text-base font-semibold text-foreground">
+              {t('beat_practice.self_rating_title', 'How did that feel?')}
+            </p>
+            <p className="mt-1 text-center text-sm text-muted-foreground">
+              {t('beat_practice.self_rating_hint', 'Your answer fine-tunes when this part comes back.')}
+            </p>
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => submitSelfRating(1)}
+                className="rounded-2xl bg-muted px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+              >
+                {t('beat_practice.self_rating_hard', 'Tough')}
+              </button>
+              <button
+                type="button"
+                onClick={() => submitSelfRating(2)}
+                className="rounded-2xl bg-muted px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+              >
+                {t('beat_practice.self_rating_ok', 'Okay')}
+              </button>
+              <button
+                type="button"
+                onClick={() => submitSelfRating(3)}
+                className="rounded-2xl bg-primary px-3 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                {t('beat_practice.self_rating_solid', 'Nailed it')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {audienceVisible && (
         <AnimalAudience
           progress={audienceProgress}

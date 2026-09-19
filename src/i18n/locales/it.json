@@ -702,7 +702,12 @@
     "phase_full_recall": "Parte intera · senza testo",
     "phase_mastered": "Completato",
     "sentence_done": "Frase completata!",
-    "say_sentence_prompt": "Di' la frase ad alta voce a memoria"
+    "say_sentence_prompt": "Di' la frase ad alta voce a memoria",
+    "self_rating_title": "Com’è andata?",
+    "self_rating_hint": "La tua risposta regola quando tornerà questa parte.",
+    "self_rating_hard": "Faticoso",
+    "self_rating_ok": "Ok",
+    "self_rating_solid": "Perfetto"
   },
   "presentation": {
     "settings": "Impostazioni presentazione",

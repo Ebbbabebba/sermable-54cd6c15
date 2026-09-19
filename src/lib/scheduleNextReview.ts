@@ -9,6 +9,8 @@ export interface ScheduleNextReviewInput {
   lapses?: number;
   missedWordCount?: number;
   durationSeconds?: number;
+  /** User's own judgment right after the attempt: 1 = struggled, 2 = ok, 3 = solid. */
+  selfRating?: 1 | 2 | 3;
 }
 
 /**
