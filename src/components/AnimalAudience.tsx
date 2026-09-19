@@ -188,7 +188,7 @@ const Animal = ({
       {kind !== "frog" && kind !== "owl" && <>
         <ellipse cx="60" cy={kind === "fox" || kind === "bear" ? 62 : 62} rx="4.2" ry="3.2" fill={palette.detail} />
       </>}
-      {kind === "owl" && <polygon points="60,66 53,74 67,74" fill="hsl(var(--animal-beak))" rx="2" />}
+      {kind === "owl" && <polygon points="60,66 53,74 67,74" fill="hsl(var(--animal-beak))" />}
 
       {/* Whiskers for the cat */}
       {kind === "cat" && <>
