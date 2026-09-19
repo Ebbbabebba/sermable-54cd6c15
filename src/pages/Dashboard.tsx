@@ -178,7 +178,7 @@ const Dashboard = () => {
     }
   };
 
-  const loadSpeeches = async () => {
+  const loadSpeeches = async (attempt = 0) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
@@ -202,15 +202,22 @@ const Dashboard = () => {
         setSubscriptionTier(effectiveTier(profile.subscription_tier));
       }
     } catch (error: any) {
+      // Transient network/session hiccups are common on mobile — retry quietly
+      // before bothering the user with an error toast.
+      if (attempt < 2) {
+        setTimeout(() => loadSpeeches(attempt + 1), 800 * (attempt + 1));
+        return;
+      }
       toast({
         variant: "destructive",
         title: t('dashboard.errorLoading'),
         description: error.message,
       });
     } finally {
-      setLoading(false);
+      if (attempt === 0) setLoading(false);
     }
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
