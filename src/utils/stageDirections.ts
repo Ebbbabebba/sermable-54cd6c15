@@ -60,6 +60,9 @@ export const stripStageDirections = (text: string): string => {
  * Directions retain their relative position (after which clean word they
  * appear) so views can render them inline without consuming a word index.
  */
+const SCRIPT_TOKEN_RE = /\{\{\/\}\}|\{\{([^{}]+)\}\}|\([^()]*\)|\s+|[^\s{}()]+/g;
+const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+
 export const tokenizeScript = (
   text: string,
 ): { tokens: ScriptToken[]; words: string[] } => {
@@ -67,33 +70,30 @@ export const tokenizeScript = (
   const words: string[] = [];
   if (!text) return { tokens, words };
 
-  // Split text into segments alternating between non-paren and paren parts.
-  // Parens are legacy direction syntax — new scripts use selection cues.
-  const parts = text.split(/(\([^()]*\))/g);
   let wordIndex = 0;
   let lastWordIndex = -1;
+  let m: RegExpExecArray | null;
+  SCRIPT_TOKEN_RE.lastIndex = 0;
 
-  for (const part of parts) {
-    if (!part) continue;
-    const directionMatch = part.match(/^\(([^()]*)\)$/);
-    if (directionMatch) {
-      const inner = directionMatch[1].trim();
+  while ((m = SCRIPT_TOKEN_RE.exec(text)) !== null) {
+    const tok = m[0];
+    // Prop-cue markers `{{cue}}` / `{{/}}` are not words and not directions.
+    if (tok === "{{/}}" || m[1] !== undefined) continue;
+    if (/^\s+$/.test(tok)) continue;
+    if (tok.startsWith("(") && tok.endsWith(")")) {
+      const inner = tok.slice(1, -1).trim();
       if (inner.length > 0) {
-        tokens.push({
-          type: "direction",
-          text: inner,
-          afterWordIndex: lastWordIndex,
-        });
+        tokens.push({ type: "direction", text: inner, afterWordIndex: lastWordIndex });
       }
       continue;
     }
-    const partWords = part.split(/\s+/).filter((w) => w.length > 0);
-    for (const w of partWords) {
-      tokens.push({ type: "word", text: w, wordIndex });
-      words.push(w);
-      lastWordIndex = wordIndex;
-      wordIndex += 1;
-    }
+    // Pause markers (`-`, `-3s`) are non-spoken artefacts.
+    if (PAUSE_TOKEN_RE.test(tok)) continue;
+
+    tokens.push({ type: "word", text: tok, wordIndex });
+    words.push(tok);
+    lastWordIndex = wordIndex;
+    wordIndex += 1;
   }
 
   return { tokens, words };
