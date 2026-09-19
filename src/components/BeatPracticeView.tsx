@@ -4399,6 +4399,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           variant={currentBeatIndex + phase.length}
           doneLabel={t('beat_practice.sentence_done', 'Sentence done!')}
           promptLabel={t('beat_practice.say_sentence_prompt', 'Say the sentence out loud from memory')}
+          onExit={async () => {
+            stopListening();
+            await saveCheckpoint();
+            onExit?.();
+          }}
         />
       )}
       <PauseCountdownOverlay
