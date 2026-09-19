@@ -1,34 +1,38 @@
-# Städa upp klarskärmen efter en lektion
+# Tydlig slutskärm när talet är 100 % behärskat och deadline passerad
 
 ## Problemet
-När dagens lektion är klar på talsidan (Practice) visas idag:
-- En stor knapp med texten **"Klart för idag!"** — ser ut som ett meddelande men är egentligen en navigationsknapp till översikten.
-- Under den en **lika stor "Öva ändå"-knapp med kronikon** (rest från gamla premiumflödet) plus nedräkningstext.
-Resultatet: två stora knappar i högsta prioritet, otydligt vad som är klart och vad man ska göra.
+När ett tal är helt genomarbetat (alla delar behärskade) och deadline har passerat beter sig appen fortfarande som mitt i inlärningen: den låser talet med en nedräkning, visar "Klart för idag!" och en "Öva ändå"-knapp med varning om att öva för tidigt. Det finns ingen riktig slutpunkt — användaren får aldrig veta att talet är *klart*.
 
 ## Åtgärd
 
-### 1. Eget "klart"-läge i huvudinnehållet (`src/pages/Practice.tsx`)
-När dagens lektion är klar (`todaySessionDone`) visas ett eget klartkort i mitten istället för bara statistikraden:
-- Rund bockikon i primärfärg.
-- Rubrik: "Klart för idag!" (eller "Klart för nu!" om repetitionen är senare samma dag).
-- Undertext som tydligt säger när nästa repetition är ("Nästa repetition: imorgon kl. 08:00" — bygger på befintlig `nextReviewDate`).
-- Statistikraden (lärt / behärskning % / kvar) ligger kvar som den är.
+### 1. Nytt "Talet är klart"-läge (`src/pages/Practice.tsx`)
+Nytt villkor högst upp i visningslogiken: `isFullyComplete = masteryPercent >= 100 && goal_date passerad` (behärskning räknas redan på masterade delar; deadline finns i `speech.goal_date`).
 
-### 2. Bottenlisten förenklas
-- **Klar-läge:** en enda primär knapp "Tillbaka till översikten" (navigerar till dashboard). Ingen text som ser ut som ett meddelande på knappen.
-- **"Öva ändå"** blir en liten, diskret textlänk under knappen (utan kronikon) — öppnar samma varningsdialog som idag med nedräkning och förklaring varför man bör vänta. Samma hantering när talet är låst men dagens lektion inte är klar.
-- Nedräkningstexten under "Öva ändå" flyttas in i varningsdialogen (finns redan där) och tas bort från bottenlisten.
+När villkoret är uppfyllt visas en egen slutskärm istället för sessionskort, lås och "Öva ändå":
+- Festlig ikon (t.ex. bock eller pokal i primärfärg, rund, appens stil).
+- Rubrik: "Du kan talet!" 
+- Undertext: "Alla delar är behärskade och din deadline har passerats. Bra jobbat!"
+- Statistikraden (lärt / 100 % / 0 kvar) ligger kvar under.
+- **Primär knapp:** "Tillbaka till översikten" → dashboard.
+- **Sekundär knapp:** "Öva inför framträdandet" → presentationsläget (`/presentation/:id`) — det enda som är relevant att göra med ett färdigt tal.
+- Ingen nedräkning, ingen varningstriangel, ingen "Öva ändå"-länk.
 
-### 3. Texter
-- Nyckel `practice.back_to_overview` ("Tillbaka till översikten") läggs till på alla sju språk (sv, en, de, fr, es, it, pt).
-- Nyckel `practice.next_review_at` ("Nästa repetition: {{time}}") på alla sju språk.
+### 2. Sluta låsa färdiga tal
+I `ensureNextPracticeScheduled` / låsberäkningen: om talet är 100 % behärskat och deadline passerad sätts ingen ny låsning (`setIsLocked(false)`) — upprepning efter deadline ska vara frivillig, inte schemalagd. Befintlig schemaläggning före deadline är orörd.
+
+### 3. Texter på alla sju språk
+Nya nycklar (sv, en, de, fr, es, it, pt):
+- `practice.speech_complete_title` — "Du kan talet!"
+- `practice.speech_complete_desc` — "Alla delar är behärskade och din deadline har passerats."
+- `practice.back_to_overview` — "Tillbaka till översikten"
+- `practice.rehearse_presentation` — "Öva inför framträdandet"
 
 ### 4. Inget annat ändras
-- "Lektion klar!"-skärmen i själva övningen (BeatPracticeView) ligger kvar — den fungerar.
-- Låslogik, varningsdialog och tidsstyrning är orörda; det är bara presentationen av klart-läget som ändras.
+- "Klart för idag!"-läget för tal som fortfarande är under inlärning behålls som det är.
+- "Lektion klar!"-skärmen i övningen (BeatPracticeView) är orörd.
+- Dashboard-kortets utseende för färdiga tal ändras inte i denna omgång (säg till om du vill ha ett "Klart"-märke där också).
 
 ## Tekniska detaljer
-- Fil: `src/pages/Practice.tsx` (klartkort + bottenlisten runt rad 2351–2400).
-- `isLocked` + `nextReviewDate` används fortfarande för att avgöra om "Öva ändå"-länken syns.
-- Kronikonen (`Crown`) tas bort från "Öva ändå" — premium är inte längre en gräns i appen.
+- Fil: `src/pages/Practice.tsx` — nytt villkor före nuvarande `todaySessionDone`-rendering, plus justering i `ensureNextPracticeScheduled` (rad ~565) och låssättning (rad ~1741).
+- `masteryPercent`, `speech.goal_date`, `nextReviewDate` finns redan i komponenten — ingen ny datahämtning.
+- Översättningsfiler: `src/i18n/locales/{sv,en,de,fr,es,it,pt}.json`.
