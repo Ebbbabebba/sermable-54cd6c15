@@ -469,7 +469,7 @@ const Settings = () => {
         {/* Support */}
         <SectionLabel>{t('settings.support.title')}</SectionLabel>
         <Section>
-          <Row onClick={() => openMailto('support@sermable.com')} last>
+          <Row onClick={() => setSupportOpen(true)} last>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-md bg-blue-500/15 flex items-center justify-center">
                 <Mail className="h-4 w-4 text-blue-500" />
