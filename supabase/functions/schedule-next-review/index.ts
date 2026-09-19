@@ -196,6 +196,7 @@ serve(async (req) => {
       lapses = 0,
       missedWordCount = 0,
       durationSeconds = null,
+      selfRating = null,
     } = body ?? {};
 
     if (!beatId || typeof beatId !== "string") {
@@ -229,7 +230,10 @@ serve(async (req) => {
       });
     }
 
-    const rating = ratingFromAccuracy(rawAccuracy, hesitations, visibilityPercent);
+    const rating = applySelfRating(
+      ratingFromAccuracy(rawAccuracy, hesitations, visibilityPercent),
+      typeof selfRating === "number" ? selfRating : undefined,
+    );
     const reps = (beat.fsrs_reps ?? 0) + 1;
     const wasOverdue = beat.next_scheduled_recall_at
       ? new Date(beat.next_scheduled_recall_at).getTime() < Date.now()
