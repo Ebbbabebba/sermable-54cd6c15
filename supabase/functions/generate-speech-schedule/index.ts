@@ -13,7 +13,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type EventType = "practice" | "recall" | "test" | "presentation";
+type EventType =
+  | "practice"
+  | "recall"
+  | "test"
+  | "presentation"
+  | "full_runthrough";
 
 interface PlannedEvent {
   date: string; // YYYY-MM-DD
