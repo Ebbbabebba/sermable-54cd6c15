@@ -385,86 +385,9 @@ const Settings = () => {
               </SelectContent>
             </Select>
           </Row>
-          <Row last>
-            <div className="flex items-center gap-3">
-              <span className="text-sm">{t('settings.practiceHours.autoTimezone')}</span>
-            </div>
-            <Switch checked={autoDetectTimezone} onCheckedChange={setAutoDetectTimezone} />
-          </Row>
         </Section>
         <SectionFooter>{t('settings.practiceHours.sleepProtection')}</SectionFooter>
 
-        {/* Notifications */}
-        <SectionLabel>{t('settings.notifications.title')}</SectionLabel>
-        <Section>
-          {!isNativePlatform ? (
-            <div className="px-4 py-3">
-              <p className="text-sm text-muted-foreground">{t('settings.notifications.nativeRequired')}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t('settings.notifications.nativeRequiredDesc')}</p>
-            </div>
-          ) : (
-            <>
-              <Row last={!notificationsEnabled}>
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-md bg-red-500/15 flex items-center justify-center">
-                    <Bell className="h-4 w-4 text-red-500" />
-                  </div>
-                  <span className="text-sm">{t('settings.notifications.pushNotifications')}</span>
-                </div>
-                <Switch
-                  checked={notificationsEnabled}
-                  onCheckedChange={(checked) => {
-                    if (checked) registerPushNotifications();
-                  }}
-                />
-              </Row>
-              {notificationsEnabled && (
-                <>
-                  <Row>
-                    <span className="text-sm">{t('settings.notifications.from')}</span>
-                    <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
-                      <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                          <SelectItem key={hour} value={hour.toString()}>
-                            {formatHour(hour)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Row>
-                  <Row>
-                    <span className="text-sm">{t('settings.notifications.to')}</span>
-                    <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
-                      <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
-                          <SelectItem key={hour} value={hour.toString()}>
-                            {formatHour(hour)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Row>
-                  <Row last>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm">{t('settings.notifications.instantDue', 'Påminn när det är dags att öva')}</span>
-                    </div>
-                    <Switch
-                      checked={instantDueNotifications}
-                      onCheckedChange={handleInstantDueToggle}
-                    />
-                  </Row>
-                </>
-              )}
-            </>
-          )}
-        </Section>
-        <SectionFooter>{t('settings.notifications.instantDueDesc', 'Du får en pushnotis direkt när vilointervallet för en repetition är slut.')}</SectionFooter>
 
         {/* Support */}
         <SectionLabel>{t('settings.support.title')}</SectionLabel>
