@@ -1292,14 +1292,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         return true;
       });
       
-      // Combine: 10-minute recalls first, then evening, then morning, then scheduled 2/3/5/7, then daily recalls
+      // Combine: 10-minute recalls first, then evening, then morning, then scheduled 2/3/5/7, then daily recalls.
+      // Within the two "elastic" groups (scheduled + daily) the most fragile
+      // beats come first, so if the day's queue has to be trimmed the shaky
+      // ones are the ones that actually get practiced.
+      const byFragility = <T extends Beat>(list: T[]) =>
+        [...list].sort((a, b) => fragilityRank(b) - fragilityRank(a));
       const queuedRecalls = [
         ...beatsNeeding10MinRecall, 
         ...beatsNeedingEveningRecall, 
         ...beatsNeedingMorningRecall, 
-        ...beatsNeedingScheduledRecall,
-        ...beatsNeedingDailyRecall,
+        ...byFragility(beatsNeedingScheduledRecall),
+        ...byFragility(beatsNeedingDailyRecall),
       ];
+      
       
       // Check if we need a merged recall (2+ mastered beats and any individual recall is due)
       const shouldDoMergedRecall = masteredBeats.length >= 2 && queuedRecalls.length > 0;
