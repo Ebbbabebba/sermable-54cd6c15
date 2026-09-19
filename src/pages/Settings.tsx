@@ -431,6 +431,8 @@ const Settings = () => {
           </Row>
         </Section>
       </div>
+
+      <SupportContactDialog open={supportOpen} onOpenChange={setSupportOpen} />
     </div>
   );
 };
