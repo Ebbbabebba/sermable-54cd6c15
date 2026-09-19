@@ -9,7 +9,8 @@ interface LoadingOverlayProps {
 
 type SupportedLanguage = "en" | "sv" | "de" | "fr" | "es" | "it" | "pt";
 
-const LONG_WAIT_MS = 2000;
+const ICON_WAIT_MS = 2000;
+const FACT_WAIT_MS = 5000;
 const FACT_ROTATION_MS = 5200;
 
 const loadingCopy: Record<SupportedLanguage, { label: string; facts: string[] }> = {
@@ -122,7 +123,7 @@ const loadingCopy: Record<SupportedLanguage, { label: string; facts: string[] }>
 
 const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
   const { i18n } = useTranslation();
-  const [phase, setPhase] = useState<"blank" | "rich">("blank");
+  const [phase, setPhase] = useState<"blank" | "icon" | "rich">("blank");
   const [factIndex, setFactIndex] = useState(0);
   const language = i18n.resolvedLanguage?.split("-")[0] as SupportedLanguage | undefined;
   const copy = loadingCopy[language ?? "en"] ?? loadingCopy.en;
@@ -137,8 +138,12 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
 
     setFactIndex(initialFact);
 
-    const timer = setTimeout(() => setPhase("rich"), LONG_WAIT_MS);
-    return () => clearTimeout(timer);
+    const iconTimer = setTimeout(() => setPhase("icon"), ICON_WAIT_MS);
+    const factTimer = setTimeout(() => setPhase("rich"), FACT_WAIT_MS);
+    return () => {
+      clearTimeout(iconTimer);
+      clearTimeout(factTimer);
+    };
   }, [copy.facts.length, isVisible, initialFact]);
 
   useEffect(() => {
@@ -160,7 +165,7 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
       className="fixed inset-0 z-[80] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6"
     >
       <AnimatePresence>
-        {phase === "rich" && (
+        {(phase === "icon" || phase === "rich") && (
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -172,21 +177,23 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
             </div>
 
-            <div className="mt-8 rounded-3xl border border-primary/10 bg-card/80 px-6 py-5 text-center shadow-lg backdrop-blur-sm">
-              <span className="block text-xs font-bold uppercase tracking-wide text-primary">{copy.label}</span>
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={factIndex}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="mt-2 text-sm leading-relaxed text-muted-foreground"
-                >
-                  {copy.facts[factIndex]}
-                </motion.p>
-              </AnimatePresence>
-            </div>
+            {phase === "rich" && (
+              <div className="mt-8 rounded-3xl border border-primary/10 bg-card/80 px-6 py-5 text-center shadow-lg backdrop-blur-sm">
+                <span className="block text-xs font-bold uppercase tracking-wide text-primary">{copy.label}</span>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={factIndex}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-2 text-sm leading-relaxed text-muted-foreground"
+                  >
+                    {copy.facts[factIndex]}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
