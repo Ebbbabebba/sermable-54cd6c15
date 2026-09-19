@@ -186,6 +186,48 @@ const selectBeatsForEnduranceDrill = (
   return { beats: merged, isFullSpeech: false };
 };
 
+// INTERLEAVING: recalling beats strictly back-to-back in script order lets the
+// user coast on momentum instead of retrieving. Mixing the order (while keeping
+// any urgent, long-overdue beats first) makes each recall a real retrieval.
+const interleaveRecallOrder = <T extends { beat_order: number; next_scheduled_recall_at?: string | null }>(
+  beats: T[]
+): T[] => {
+  if (beats.length < 3) return beats;
+  const sorted = [...beats].sort((a, b) => a.beat_order - b.beat_order);
+  const mid = Math.ceil(sorted.length / 2);
+  const front = sorted.slice(0, mid);
+  const back = sorted.slice(mid);
+  const mixed: T[] = [];
+  for (let i = 0; i < mid; i++) {
+    if (front[i]) mixed.push(front[i]);
+    if (back[i]) mixed.push(back[i]);
+  }
+  return mixed;
+};
+
+// SEAM DRILL: transitions between beats are where speeches break down. Build a
+// practice unit from the tail of one beat and the head of the next.
+const buildSeamBeat = (sorted: Beat[], drillCounter: number): Beat | null => {
+  if (sorted.length < 2) return null;
+  const pairIndex = Math.floor(drillCounter / 3) % (sorted.length - 1);
+  const first = sorted[pairIndex];
+  const second = sorted[pairIndex + 1];
+  if (!first || !second) return null;
+  const tail = first.sentence_3_text || first.sentence_2_text || first.sentence_1_text;
+  const head = second.sentence_1_text || second.sentence_2_text || second.sentence_3_text;
+  if (!tail || !head) return null;
+  return {
+    ...first,
+    id: 'seam-recall',
+    beat_order: -2,
+    sentence_1_text: tail,
+    sentence_2_text: head,
+    sentence_3_text: '',
+    is_mastered: true,
+  };
+};
+
+
 interface BeatPracticeViewProps {
   speechId: string;
   subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
