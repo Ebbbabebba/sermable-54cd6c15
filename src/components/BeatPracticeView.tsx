@@ -31,7 +31,7 @@ import AnimalAudience from "./AnimalAudience";
 import PropCueOverlay from "./PropCueOverlay";
 import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/propCues";
 import { getKeywordIndices } from "@/utils/keywordExtraction";
-import { scheduleNextReview } from "@/lib/scheduleNextReview";
+import { scheduleNextReview, type ScheduleNextReviewInput } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 import { recordRepDifficulty, getEasiestWordIndices } from "@/utils/wordDifficulty";
 
