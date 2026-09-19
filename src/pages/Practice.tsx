@@ -565,7 +565,37 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const ensureNextPracticeScheduled = useCallback(async () => {
     if (!speech?.id) return null;
 
-    const next = computeNextBeatReviewDate(speech.goal_date);
+    // The lock/countdown should mirror the real spaced-repetition schedule,
+    // not a flat 24h. Take the earliest UPCOMING recall timestamp across all
+    // beats (FSRS `next_scheduled_recall_at` plus the day-1 short cycle).
+    // Only if nothing is scheduled at all do we fall back to the legacy
+    // deadline-based pacing interval.
+    let next: Date | null = null;
+    try {
+      const { data: recallBeats } = await supabase
+        .from('practice_beats')
+        .select('recall_10min_at, recall_evening_at, recall_morning_at, next_scheduled_recall_at')
+        .eq('speech_id', speech.id);
+
+      const nowMs = Date.now();
+      const upcoming: number[] = [];
+      for (const b of recallBeats ?? []) {
+        for (const v of [b.recall_10min_at, b.recall_evening_at, b.recall_morning_at, b.next_scheduled_recall_at]) {
+          if (!v) continue;
+          const t = new Date(v).getTime();
+          if (t > nowMs) upcoming.push(t);
+        }
+      }
+      if (upcoming.length > 0) {
+        next = new Date(Math.min(...upcoming));
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not derive next recall from beats:', err);
+    }
+
+    if (!next) {
+      next = computeNextBeatReviewDate(speech.goal_date);
+    }
     const sessionDate = new Date().toISOString().split('T')[0];
 
     try {
