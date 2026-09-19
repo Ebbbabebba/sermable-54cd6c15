@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Languages, Bell, Flame, Trophy, CreditCard, ChevronRight, Trash2, Volume2, VolumeX, Clock, MessageCircle, Mail, ExternalLink, FileText, Clock4 } from "lucide-react";
+import { ArrowLeft, Languages, Flame, Trophy, CreditCard, ChevronRight, Trash2, Volume2, VolumeX, Clock, Mail, ExternalLink, FileText } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
-import { openMailto } from "@/lib/openMailto";
+import { SupportContactDialog } from "@/components/SupportContactDialog";
 
 type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
@@ -365,7 +365,7 @@ const Settings = () => {
               </SelectContent>
             </Select>
           </Row>
-          <Row>
+          <Row last>
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-md bg-orange-500/15 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-orange-500" />
