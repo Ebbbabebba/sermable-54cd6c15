@@ -2463,6 +2463,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         else if (failRatio > softFailAt) demotionRungs = 1;
         else demotionRungs = 0;
 
+        // OVERDUE LENIENCY: a miss after a long gap is expected forgetting,
+        // not a sign the beat was never learned. Soften the demotion so the
+        // user isn't thrown back to the start for taking a break.
+        const overdueMs = failedBeat.next_scheduled_recall_at
+          ? Date.now() - new Date(failedBeat.next_scheduled_recall_at).getTime()
+          : 0;
+        const overdueDays = overdueMs / (1000 * 60 * 60 * 24);
+        const isLongOverdue = overdueDays >= 3;
+        if (isLongOverdue && demotionRungs > 0) {
+          demotionRungs = 1;
+        }
+
         const currentSession = failedBeat.recall_session_number ?? 0;
         const demotedSession = Math.max(0, currentSession - demotionRungs);
 
