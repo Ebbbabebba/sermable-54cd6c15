@@ -160,7 +160,7 @@ export const AiSpeechBuilderDialog = ({
       <LoadingOverlay isVisible={showRichLoading} />
       <DialogContent
         overlayClassName="!z-[60] bg-background/65 backdrop-blur-none"
-        className="!z-[70] !inset-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 w-screen h-[100dvh] max-w-none sm:w-[calc(100%-2rem)] sm:max-w-2xl sm:h-auto sm:max-h-[min(86dvh,720px)] !translate-x-0 !translate-y-0 sm:!-translate-x-1/2 sm:!-translate-y-1/2 flex flex-col overflow-hidden rounded-none sm:rounded-3xl border-border/60 bg-card p-0 shadow-2xl backdrop-blur-none"
+        className="!z-[70] !inset-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 w-full max-w-[100dvw] h-[100dvh] sm:w-[calc(100%-2rem)] sm:max-w-2xl sm:h-auto sm:max-h-[min(86dvh,720px)] !translate-x-0 !translate-y-0 sm:!-translate-x-1/2 sm:!-translate-y-1/2 flex flex-col overflow-hidden rounded-none sm:rounded-3xl border-border/60 bg-card p-0 shadow-2xl backdrop-blur-none"
       >
         <DialogHeader className="px-5 sm:px-6 pt-5 sm:pt-6 pb-3 border-b border-border/60 shrink-0">
           <DialogTitle className="flex items-center gap-2">
@@ -264,7 +264,7 @@ export const AiSpeechBuilderDialog = ({
                 id="draft-title"
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                className="flex h-10 w-full max-w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background"
               />
             </div>
             <div className="space-y-2">
