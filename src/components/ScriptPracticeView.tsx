@@ -150,7 +150,7 @@ const ScriptPracticeView = ({
   speechLanguage,
   onBack,
 }: ScriptPracticeViewProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
 
   // Beat data
@@ -470,6 +470,7 @@ const ScriptPracticeView = ({
               originalText: analysisText,
               transcript,
               language: speechLanguage,
+              feedbackLanguage: i18n.language || speechLanguage,
             }
           });
           if (analysisError) throw analysisError;

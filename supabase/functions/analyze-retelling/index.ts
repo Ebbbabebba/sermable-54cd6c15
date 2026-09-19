@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { languageInstruction } from "../_shared/feedbackLanguage.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { originalText, transcript, language } = await req.json();
+    const { originalText, transcript, language, feedbackLanguage } = await req.json();
     
     if (!originalText || !transcript) {
       return new Response(JSON.stringify({ error: 'originalText and transcript are required' }), {
@@ -39,8 +40,7 @@ Evaluate these dimensions:
 3. **Detail & completeness**: Did they include important details, names, numbers, and specifics from the original?
 4. **Key word accuracy**: Did they use the specific important terms from the original? (This is supplementary, not primary.)
 
-Be encouraging but honest. The language is: ${language || 'auto-detect'}.
-Give feedback in the same language as the original text.`;
+Be encouraging but honest. The spoken language is: ${language || 'auto-detect'}.${languageInstruction(feedbackLanguage || language)}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -4,7 +4,7 @@ import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord, phoneticMatch } from "@/utils/wordRecognition";
-import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
+import { tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 import PropCueOverlay from "@/components/PropCueOverlay";
 import { extractPropCues, getActivePropCue } from "@/utils/propCues";
@@ -117,12 +117,8 @@ export const StrictPresentationView = ({
   const restartAttemptsRef = useRef<number>(0);
   const maxRestartAttempts = 10;
   
-  const words = useMemo(
-    () => stripStageDirections(text).split(/\s+/).filter((w) => w.length > 0),
-    [text],
-  );
-  const directionsByAfterIndex = useMemo(() => {
-    const { tokens } = tokenizeScript(text);
+  const { words, directionsByAfterIndex } = useMemo(() => {
+    const { tokens, words: w } = tokenizeScript(text);
     const map = new Map<number, string[]>();
     for (const tok of tokens) {
       if (tok.type === "direction") {
@@ -131,7 +127,7 @@ export const StrictPresentationView = ({
         map.set(tok.afterWordIndex, list);
       }
     }
-    return map;
+    return { words: w, directionsByAfterIndex: map };
   }, [text]);
   const propCues = useMemo(() => extractPropCues(text).cues, [text]);
   

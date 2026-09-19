@@ -1450,6 +1450,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               skillLevel: skillLevel,
               strictness: (speech as any)?.practice_strictness ?? 'strict',
               learningMode: speech?.learning_mode ?? 'word_by_word',
+              feedbackLanguage: i18n.language || speechLanguage,
             },
             headers: {
               Authorization: `Bearer ${session.access_token}`
