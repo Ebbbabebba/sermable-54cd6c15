@@ -264,7 +264,7 @@ export const AiSpeechBuilderDialog = ({
                 id="draft-title"
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                className="flex h-10 w-full max-w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background"
               />
             </div>
             <div className="space-y-2">
