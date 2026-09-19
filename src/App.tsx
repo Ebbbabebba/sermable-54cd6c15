@@ -3,7 +3,7 @@ import InlineMessages from "@/components/InlineMessages";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, ComponentType, useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
 // Keep the loading screen visible for at least this long, so fast loads
@@ -36,6 +36,16 @@ const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
         {showOverlay && <LoadingOverlay isVisible />}
       </AnimatePresence>
     </>
+  );
+};
+
+const RouteTransition = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+
+  return (
+    <SmoothSuspense key={location.pathname}>
+      {children}
+    </SmoothSuspense>
   );
 };
 
@@ -121,7 +131,7 @@ const App = () => (
     <TooltipProvider>
       <InlineMessages />
       <BrowserRouter>
-        <SmoothSuspense>
+        <RouteTransition>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/onboarding" element={<Onboarding />} />
@@ -144,7 +154,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </SmoothSuspense>
+        </RouteTransition>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
