@@ -2787,9 +2787,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               // HYBRID ENDURANCE DRILL: alternate between full-speech and
               // spot-reinforcement (weak beats + ending). Even counts → full
               // pass. Odd counts (with weak beats) → focused merge.
+              // SEAM DRILL: every third drill (outside the final 2 days)
+              // practises one transition between two beats instead.
+              const sortedMerged = [...mergedRecallBeats].sort((a, b) => a.beat_order - b.beat_order);
+              const seamBeat =
+                daysUntilDeadline > 2 && enduranceDrillCounter % 3 === 1
+                  ? buildSeamBeat(sortedMerged, enduranceDrillCounter)
+                  : null;
+
+              if (seamBeat) {
+                setEnduranceDrillCounter(prev => prev + 1);
+                console.log('🪡 Seam drill between beats');
+                setIsMergedRecall(true);
+                setBeatsToRecall([seamBeat]);
+                setRecallIndex(0);
+                setRecallSuccessCount(0);
+                setHiddenWordIndices(new Set());
+                setHiddenWordOrder([]);
+                resetForNextRep();
+                return;
+              }
+
               const { beats: drillBeats, isFullSpeech } = selectBeatsForEnduranceDrill(
                 mergedRecallBeats,
-                enduranceDrillCounter
+                enduranceDrillCounter,
+                daysUntilDeadline
               );
               setEnduranceDrillCounter(prev => prev + 1);
               console.log(
