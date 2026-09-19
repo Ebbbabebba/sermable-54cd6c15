@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { tokenizeScript } from "@/utils/stageDirections";
+import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface BeatPrintDialogProps {
   open: boolean;
