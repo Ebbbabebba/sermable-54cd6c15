@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { WearableHUD, type ViewMode } from "./WearableHUD";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { motion, AnimatePresence } from "framer-motion";
-import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
+import { tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 import PropCueOverlay from "@/components/PropCueOverlay";
 import { extractPropCues, getActivePropCue } from "@/utils/propCues";

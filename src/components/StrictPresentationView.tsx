@@ -4,7 +4,7 @@ import { Circle, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { isHardToRecognizeWord, phoneticMatch } from "@/utils/wordRecognition";
-import { stripStageDirections, tokenizeScript } from "@/utils/stageDirections";
+import { tokenizeScript } from "@/utils/stageDirections";
 import StageDirectionCue, { getActiveDirections } from "@/components/StageDirectionCue";
 import PropCueOverlay from "@/components/PropCueOverlay";
 import { extractPropCues, getActivePropCue } from "@/utils/propCues";
