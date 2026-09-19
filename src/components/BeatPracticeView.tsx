@@ -475,6 +475,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Full-screen animal audience that cheers when a script-free sentence lands.
   const [audienceCelebrating, setAudienceCelebrating] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
+  // Judgment-of-learning prompt shown right after a successful recall.
+  // Its answer nudges the FSRS interval up or down one notch.
+  const [selfRatingPrompt, setSelfRatingPrompt] = useState<
+    Omit<ScheduleNextReviewInput, 'selfRating'> | null
+  >(null);
+  const selfRatingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
   
   // Transcription using Web Speech API
