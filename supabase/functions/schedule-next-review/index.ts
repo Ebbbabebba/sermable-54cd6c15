@@ -56,6 +56,17 @@ function ratingFromAccuracy(
   return 4;                                              // Easy
 }
 
+// The user's own judgment-of-learning right after the attempt predicts
+// forgetting better than word accuracy alone. 1 = struggled, 2 = ok, 3 = solid.
+// It can pull the rating one notch in either direction but never overrides a
+// genuine failure (Again stays Again).
+function applySelfRating(rating: Rating, selfRating?: number): Rating {
+  if (rating === 1) return 1;
+  if (selfRating === 1) return Math.max(2, rating - 1) as Rating;
+  if (selfRating === 3) return Math.min(4, rating + 1) as Rating;
+  return rating;
+}
+
 function initialStability(rating: Rating): number {
   return Math.max(W[rating - 1], 0.1);
 }
