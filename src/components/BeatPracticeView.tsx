@@ -1375,7 +1375,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       
       // Everyone can learn unlimited beats.
       const canLearnMore = true;
-      const firstUnmastered = canLearnMore ? (unmasteredBeats[0] || null) : null;
+      const firstUnmastered = canLearnMore
+        ? pickNextBeatToLearn(unmasteredBeats, masteredBeats.length)
+        : null;
       
       console.log('Beat selection:', {
         beatsPerDay: computedBeatsPerDay,
