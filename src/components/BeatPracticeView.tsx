@@ -2603,16 +2603,40 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           if (useFsrs) {
             // FSRS scheduler — single source of truth for next_scheduled_recall_at
             // once the beat has cleared the short-cycle ladder.
+            //
+            // Report the REAL quality of the pass, not a hardcoded 100. A run
+            // that limped over the line (hesitations, or a failed rep earlier
+            // in this session) must not earn the same interval as a fluent one.
             const visibleCount = Math.max(0, words.length - hiddenWordIndicesRef.current.size);
-            scheduleNextReview({
+            const slipUnion = new Set<number>([
+              ...hesitatedIndicesRef.current,
+              ...missedIndicesRef.current,
+            ]);
+            const slipRatio = words.length > 0 ? slipUnion.size / words.length : 0;
+            const struggledEarlier = recallHadFailureRef.current;
+            const rawAccuracy = Math.max(
+              40,
+              Math.min(100, Math.round(100 - slipRatio * 100 - (struggledEarlier ? 12 : 0))),
+            );
+            const payload: Omit<ScheduleNextReviewInput, 'selfRating'> = {
               beatId: recalledBeat.id,
               eventType: 'recall',
-              rawAccuracy: 100,
+              rawAccuracy,
               visibilityPercent: words.length > 0 ? Math.round((visibleCount / words.length) * 100) : 0,
-              hesitations: 0,
-              lapses: 0,
-              missedWordCount: 0,
-            });
+              hesitations: hesitatedIndicesRef.current.size,
+              lapses: missedIndicesRef.current.size,
+              missedWordCount: missedIndicesRef.current.size,
+            };
+            // Ask the user how it felt; the answer refines the interval.
+            // If they don't answer within 8s we schedule with "ok".
+            setSelfRatingPrompt(payload);
+            if (selfRatingTimerRef.current) clearTimeout(selfRatingTimerRef.current);
+            selfRatingTimerRef.current = setTimeout(() => {
+              setSelfRatingPrompt(prev => {
+                if (prev) scheduleNextReview({ ...prev, selfRating: 2 });
+                return null;
+              });
+            }, 8000);
           }
         }
 
