@@ -747,7 +747,9 @@ export const CompactPresentationView = ({
           <div className="text-center space-y-4">
             <p className="text-xl text-muted-foreground">{t('presentation.pressToStart')}</p>
             <p className="text-sm text-muted-foreground/60">
-              {t('presentation.speechAppearSentence')}
+              {scriptHidden
+                ? t('presentation.hiddenScriptIntro', 'The screen stays empty — words appear only if you get stuck.')
+                : t('presentation.speechAppearSentence')}
             </p>
           </div>
         ) : (
@@ -793,17 +795,22 @@ export const CompactPresentationView = ({
                       const globalIndex = startIndex + wordIdx;
                       const isSpoken = globalIndex < currentWordIndex;
                       const isCurrent = globalIndex === currentWordIndex;
+                      // Hidden-script variant: nothing is readable until the
+                      // speaker hesitates and the current word is surfaced.
+                      const isConcealed = scriptHidden && !(isCurrent && isShowingHint);
 
                       nodes.push(
                         <span
                           key={`w-${globalIndex}`}
                           className={cn(
                             "inline-block transition-colors duration-700 ease-out relative",
-                            isCurrent
-                              ? "text-foreground"
-                              : isSpoken
-                                ? "text-muted-foreground/25"
-                                : "text-muted-foreground/70",
+                            isConcealed
+                              ? "text-transparent select-none"
+                              : isCurrent
+                                ? "text-foreground"
+                                : isSpoken
+                                  ? "text-muted-foreground/25"
+                                  : "text-muted-foreground/70",
                           )}
                         >
                           {isCurrent && (isHesitating || isShowingHint) && (
