@@ -15,7 +15,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.classList.remove('dark');
     root.classList.add('light');
     root.style.colorScheme = 'light';
-    document.body.style.backgroundColor = '#f7f7f8';
+    document.body.style.backgroundColor = 'hsl(43 100% 97%)';
     localStorage.removeItem('theme');
   }, []);
 
