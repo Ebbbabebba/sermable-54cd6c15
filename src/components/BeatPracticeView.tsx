@@ -4420,8 +4420,54 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   );
   const audienceProgress = Math.min(1, audienceSpokenTargets / Math.max(1, audienceTargetIndices.length));
 
+  const submitSelfRating = (value: 1 | 2 | 3) => {
+    if (selfRatingTimerRef.current) {
+      clearTimeout(selfRatingTimerRef.current);
+      selfRatingTimerRef.current = null;
+    }
+    setSelfRatingPrompt(prev => {
+      if (prev) scheduleNextReview({ ...prev, selfRating: value });
+      return null;
+    });
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
+      {selfRatingPrompt && (
+        <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-xl border border-border">
+            <p className="text-center text-base font-semibold text-foreground">
+              {t('beat_practice.self_rating_title', 'How did that feel?')}
+            </p>
+            <p className="mt-1 text-center text-sm text-muted-foreground">
+              {t('beat_practice.self_rating_hint', 'Your answer fine-tunes when this part comes back.')}
+            </p>
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => submitSelfRating(1)}
+                className="rounded-2xl bg-muted px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+              >
+                {t('beat_practice.self_rating_hard', 'Tough')}
+              </button>
+              <button
+                type="button"
+                onClick={() => submitSelfRating(2)}
+                className="rounded-2xl bg-muted px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+              >
+                {t('beat_practice.self_rating_ok', 'Okay')}
+              </button>
+              <button
+                type="button"
+                onClick={() => submitSelfRating(3)}
+                className="rounded-2xl bg-primary px-3 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                {t('beat_practice.self_rating_solid', 'Nailed it')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {audienceVisible && (
         <AnimalAudience
           progress={audienceProgress}
