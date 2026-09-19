@@ -1327,15 +1327,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (allBeatsNeedingRecall.length < queuedRecalls.length) {
         const deferred = queuedRecalls.slice(allBeatsNeedingRecall.length);
         console.log(`✂️ Recall queue trimmed ${queuedRecalls.length} → ${allBeatsNeedingRecall.length} (rest rescheduled)`);
-        // Reschedule the deferred beats a few hours ahead so nothing is lost.
-        const deferUntil = new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString();
+        // LOAD BALANCING: don't dump every deferred beat on the same later
+        // moment — that just recreates the pile-up. Spread them out in 3-hour
+        // steps starting 4 hours from now, so each later session gets a
+        // manageable handful instead of one giant queue.
         void Promise.all(
-          deferred.map(b =>
-            supabase
+          deferred.map((b, i) => {
+            const deferUntil = new Date(
+              now.getTime() + (4 + i * 3) * 60 * 60 * 1000
+            ).toISOString();
+            return supabase
               .from('practice_beats')
               .update({ next_scheduled_recall_at: deferUntil })
-              .eq('id', b.id)
-          )
+              .eq('id', b.id);
+          })
         ).catch(err => console.error('Failed to reschedule deferred recalls:', err));
       }
       
