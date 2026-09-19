@@ -1207,14 +1207,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         return true;
       });
       
-      // Find mastered beats that need regular daily recall (only on new days)
+      // Find mastered beats that need regular daily recall (only on new days).
+      // This only applies during the initial same-day consolidation cycle
+      // (sessions 0–1: 10 min → evening → next morning). From session 2 onward
+      // the FSRS ladder (next_scheduled_recall_at) owns the timing, so we must
+      // NOT nag daily while the algorithm says the memory is durable.
       // Sort by least-recently recalled so we rotate through them instead of
       // always practicing the same beat first.
+      const isInConsolidationCycle = (b: Beat) => (b.recall_session_number ?? 0) < 2;
       const masteredBeats = rows.filter(b => b.is_mastered && b.mastered_at);
-      const beatsNeedingDailyRecall = todayIsNewDay 
+      const beatsNeedingDailyRecall = todayIsNewDay
         ? masteredBeats
             .filter(b => {
-              if (!isShortCycleEligible(b)) return false;
+              if (!isInConsolidationCycle(b)) return false;
               if (isInCooldown(b)) return false;
               // Skip if already in any recall queue
               if (beatsNeeding10MinRecall.some(r => r.id === b.id)) return false;
