@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WearableHUD, type ViewMode } from "./WearableHUD";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { motion, AnimatePresence } from "framer-motion";
 import { tokenizeScript } from "@/utils/stageDirections";
@@ -28,7 +27,8 @@ interface CompactPresentationViewProps {
   isRecording: boolean;
   isProcessing: boolean;
   elapsedTime: number;
-  viewMode: ViewMode;
+  /** When true the script stays hidden; words only surface as hesitation hints. */
+  scriptHidden?: boolean;
   onStartRecording: () => void;
   onStopRecording: () => void;
   onPerformanceData: (data: WordPerformance[]) => void;
@@ -199,7 +199,7 @@ export const CompactPresentationView = ({
   isRecording,
   isProcessing,
   elapsedTime,
-  viewMode,
+  scriptHidden = false,
   onStartRecording,
   onStopRecording,
   onPerformanceData,
@@ -695,38 +695,6 @@ export const CompactPresentationView = ({
     }
   };
 
-  // Use WearableHUD for compact and wearable modes
-  if (viewMode === 'compact' || viewMode === 'wearable') {
-    return (
-      <>
-        <WearableHUD
-          viewMode={viewMode}
-          progress={progress}
-          currentWord={currentWordIndex}
-          totalWords={words.length}
-          nextKeyword={showHint?.phase === 'showing' ? showHint.word : nextKeyword}
-          isRecording={isRecording}
-          isListening={audioLevel > 0.3}
-          status={status}
-          onToggleRecording={handleToggleRecording}
-          elapsedTime={elapsedTime}
-        />
-
-        <ProximityWarning isVisible={isTooLow} />
-        
-        {/* Processing Overlay */}
-        {isProcessing && (
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-              <p className="text-lg font-medium">{t('presentation.analyzingShort')}</p>
-            </div>
-          </div>
-        )}
-      </>
-    );
-  }
-
   // Full mode - original detailed view
   const minutes = Math.floor(elapsedTime / 60);
   const seconds = elapsedTime % 60;
@@ -779,7 +747,9 @@ export const CompactPresentationView = ({
           <div className="text-center space-y-4">
             <p className="text-xl text-muted-foreground">{t('presentation.pressToStart')}</p>
             <p className="text-sm text-muted-foreground/60">
-              {t('presentation.speechAppearSentence')}
+              {scriptHidden
+                ? t('presentation.hiddenScriptIntro', 'The screen stays empty — words appear only if you get stuck.')
+                : t('presentation.speechAppearSentence')}
             </p>
           </div>
         ) : (
@@ -825,17 +795,22 @@ export const CompactPresentationView = ({
                       const globalIndex = startIndex + wordIdx;
                       const isSpoken = globalIndex < currentWordIndex;
                       const isCurrent = globalIndex === currentWordIndex;
+                      // Hidden-script variant: nothing is readable until the
+                      // speaker hesitates and the current word is surfaced.
+                      const isConcealed = scriptHidden && !(isCurrent && isShowingHint);
 
                       nodes.push(
                         <span
                           key={`w-${globalIndex}`}
                           className={cn(
                             "inline-block transition-colors duration-700 ease-out relative",
-                            isCurrent
-                              ? "text-foreground"
-                              : isSpoken
-                                ? "text-muted-foreground/25"
-                                : "text-muted-foreground/70",
+                            isConcealed
+                              ? "text-transparent select-none"
+                              : isCurrent
+                                ? "text-foreground"
+                                : isSpoken
+                                  ? "text-muted-foreground/25"
+                                  : "text-muted-foreground/70",
                           )}
                         >
                           {isCurrent && (isHesitating || isShowingHint) && (

@@ -749,7 +749,17 @@
     "proximityTitle": "Mantente a menos de 2 metros del micrófono",
     "proximitySubtitle": "Menos distancia da un mejor reconocimiento de voz",
     "moveCloser": "Acércate",
-    "withinRange": "Buena distancia"
+    "withinRange": "Buena distancia",
+    "wholeSpeechModeLabel": "Discurso completo",
+    "scriptVisibilityTitle": "Texto en pantalla",
+    "scriptVisible": "Mostrar el texto",
+    "scriptVisibleDesc": "El texto avanza mientras hablas.",
+    "scriptHidden": "Ocultar el texto",
+    "scriptHiddenDesc": "Pantalla vacía: las palabras aparecen solo si dudas.",
+    "hiddenScriptIntro": "La pantalla queda vacía: las palabras aparecen solo si te atascas.",
+    "micErrorTitle": "Error de micrófono",
+    "micErrorDesc": "No se pudo acceder al micrófono. Revisa los permisos.",
+    "processingFailed": "El análisis falló"
   },
   "subscription": {
     "premium": "Premium",
@@ -780,24 +790,29 @@
     "startWithAudience": "Empezar con audiencia",
     "unlockPremium": "Desbloquear Premium",
     "switchModes": "Puedes cambiar de modo en cualquier momento antes de empezar",
-    "wholeSpeechMode": "Modo Discurso Completo",
+    "wholeSpeechMode": "Discurso completo",
     "wholeSpeechModeDesc": "Memoriza palabra por palabra con sugerencias",
-    "selectWholeSpeech": "Seleccionar Discurso Completo",
+    "selectWholeSpeech": "Elegir Discurso completo",
     "listenMode": "Modo Escucha",
     "listenModeDesc": "Habla libremente. Haz una pausa de 2s para ver las siguientes palabras.",
     "noFollowAlong": "Sin seguimiento — pantalla vacía",
     "hintOnPause": "Revela palabras cuando dudas",
     "selectListen": "Seleccionar Modo Escucha",
-    "scriptMode": "Modo Guion",
+    "scriptMode": "Modo guion",
     "scriptModeDesc": "Lee frases, luego recuenta a partir de una palabra clave",
     "referenceWordAnchors": "Anclajes de palabras clave",
     "retellFromMemory": "Recuenta de memoria",
-    "selectScript": "Seleccionar Guion",
+    "selectScript": "Elegir Modo guion",
     "generalMode": "Modo Guion",
     "generalModeDesc": "Aprende a través de palabras de referencia — lee, recuerda, recuenta",
     "keyWordsAnchors": "La IA elige una palabra de referencia por frase",
     "ownWordsStyle": "Recuenta con tus propias palabras",
-    "selectGeneral": "Seleccionar Modo Guion"
+    "selectGeneral": "Seleccionar Modo Guion",
+    "recommended": "Recomendado",
+    "wholeSpeechModeDescV2": "Haz todo el discurso de principio a fin y recibe comentarios de la IA.",
+    "wholeSpeechTrains": "Entrena: la exposición y el recuerdo palabra por palabra",
+    "scriptModeDescV2": "Lee una parte y luego cuéntala a partir de una palabra clave.",
+    "scriptModeTrains": "Entrena: el sentido y la estructura, parte por parte"
   },
   "script": {
     "currentKeyword": "Palabra clave actual",
@@ -1228,9 +1243,6 @@
     "resultIntermediate": "Intermedio — nos saltamos lo básico.",
     "resultConfident": "Confiado — vamos directos a pulir.",
     "done": "Listo"
-  },
-  "listenMode": {
-    "tip": "Haz una pausa de 2 s para ver las siguientes palabras"
   },
   "pauses": {
     "tipPrefix": "Consejo: escribe un",

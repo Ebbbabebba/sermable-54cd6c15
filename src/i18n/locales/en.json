@@ -945,7 +945,12 @@
     "generalModeDesc": "Learn via reference words — read, recall, retell",
     "keyWordsAnchors": "AI picks one reference word per beat",
     "ownWordsStyle": "Retell in your own words",
-    "selectGeneral": "Select Script Mode"
+    "selectGeneral": "Select Script Mode",
+    "recommended": "Recommended",
+    "wholeSpeechModeDescV2": "Run the whole speech from start to finish and get AI feedback.",
+    "wholeSpeechTrains": "Trains: delivery and word-for-word recall",
+    "scriptModeDescV2": "Read one beat at a time, then retell it from a reference word.",
+    "scriptModeTrains": "Trains: meaning and structure, beat by beat"
   },
   "script": {
     "currentKeyword": "Current keyword",
@@ -1008,7 +1013,17 @@
     "proximityTitle": "Stay within 2 meters of the microphone",
     "proximitySubtitle": "Closer distance gives better voice recognition",
     "moveCloser": "Move closer",
-    "withinRange": "Good distance"
+    "withinRange": "Good distance",
+    "wholeSpeechModeLabel": "Whole Speech Mode",
+    "scriptVisibilityTitle": "Script on screen",
+    "scriptVisible": "Show script",
+    "scriptVisibleDesc": "Teleprompter follows along as you speak.",
+    "scriptHidden": "Hide script",
+    "scriptHiddenDesc": "Empty screen — words appear only when you hesitate.",
+    "hiddenScriptIntro": "The screen stays empty — words appear only if you get stuck.",
+    "micErrorTitle": "Microphone error",
+    "micErrorDesc": "Could not access the microphone. Please check permissions.",
+    "processingFailed": "Processing failed"
   },
   "sleepScheduling": {
     "morningRecall": "Morning Memory Test",
@@ -1210,9 +1225,6 @@
     "resultIntermediate": "Intermediate — we'll skip the basics.",
     "resultConfident": "Confident — straight to polishing.",
     "done": "Done"
-  },
-  "listenMode": {
-    "tip": "Pause 2s to see the next words"
   },
   "pauses": {
     "tipPrefix": "Tip: type a standalone",

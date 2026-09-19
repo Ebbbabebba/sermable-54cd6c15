@@ -1,25 +1,18 @@
-import { useEffect, useState, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useRef } from "react";
 import { requestMicrophoneAccess } from "@/utils/microphone";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { X, Play, Settings } from "lucide-react";
+import { X, Play, Settings, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
 import ScriptPracticeView from "@/components/ScriptPracticeView";
-import ListenMode from "@/components/ListenMode";
 import PresentationControls from "@/components/PresentationControls";
 import { ProximityGuide } from "@/components/ProximityGuide";
-
-// Heavy 3D scene (three.js) — only loaded when the audience mode is used.
-const AudienceOverlay = lazy(() =>
-  import("@/components/audience").then((m) => ({ default: m.AudienceOverlay }))
-);
-import type { ViewMode } from "@/components/WearableHUD";
-import type { Environment } from "@/components/audience/types";
 import { stripStageDirections } from "@/utils/stageDirections";
 
 interface WordPerformance {
@@ -37,7 +30,6 @@ interface Speech {
   text_original: string;
   text_current: string;
   speech_language: string;
-  presentation_mode?: 'strict';
   speech_type?: string;
 }
 
@@ -46,60 +38,56 @@ const Presentation = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
-  
+
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Mode selection
-  const [selectedMode, setSelectedMode] = useState<'strict' | 'listen' | 'audience' | 'overview' | 'script' | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('full');
-  
+
+  // Mode selection: 'strict' = whole speech run-through, 'script' = beat retelling
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'script' | null>(null);
+  // Whether the script is visible on screen during the run-through
+  const [scriptHidden, setScriptHidden] = useState(false);
+
   // Session states
   const [stage, setStage] = useState<'mode-select' | 'prep' | 'live' | 'summary'>('mode-select');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState(0);
-  
-  // Audience mode
-  const [showAudienceOverlay, setShowAudienceOverlay] = useState(false);
-  const [currentWordPerformance, setCurrentWordPerformance] = useState<{
-    status: 'correct' | 'hesitated' | 'missed' | 'skipped';
-    timeToSpeak?: number;
-  } | null>(null);
-  
+
   // Settings
-  const [autoStopSilence, setAutoStopSilence] = useState(4);
-  const [fontSize, setFontSize] = useState(40);
   const [showSettings, setShowSettings] = useState(false);
   const [hintDelay, setHintDelay] = useState(700);
   const [sentenceStartDelay, setSentenceStartDelay] = useState(2500);
-  
+
   // Results
   const [sessionResults, setSessionResults] = useState<any>(null);
-  const [wordPerformanceData, setWordPerformanceData] = useState<WordPerformance[]>([]);
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+
   const streamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     loadSpeech();
-    
-    // ESC key to exit
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // ESC key to stop an ongoing run
+  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && stage === 'live' && isRecording) {
         handleStopRecording();
       }
     };
-    
     window.addEventListener("keydown", handleEscape);
-    return () => {
-      window.removeEventListener("keydown", handleEscape);
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [id, stage, isRecording]);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [stage, isRecording]);
 
   const loadSpeech = async () => {
     try {
@@ -110,10 +98,7 @@ const Presentation = () => {
         .single();
 
       if (error) throw error;
-      setSpeech({
-        ...data,
-        presentation_mode: 'strict' as const,
-      });
+      setSpeech(data as Speech);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -128,15 +113,21 @@ const Presentation = () => {
 
   const handleStartPresentation = () => {
     setStage('live');
-    setStartTime(Date.now());
     setElapsedTime(0);
-    
-    // Start timer
+  };
+
+  const startTimer = () => {
+    const recordStartTime = Date.now();
+    setStartTime(recordStartTime);
+    setElapsedTime(0);
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - Date.now()) / 1000));
+      setElapsedTime(Math.floor((Date.now() - recordStartTime) / 1000));
     }, 1000);
   };
 
+  // Speech recognition lives inside CompactPresentationView; here we only make
+  // sure the microphone permission is granted and keep the session timer.
   const handleRecordingStart = async () => {
     try {
       const stream = await requestMicrophoneAccess({
@@ -146,153 +137,101 @@ const Presentation = () => {
         noiseSuppression: true,
         autoGainControl: true,
       });
-
       streamRef.current = stream;
-      chunksRef.current = [];
-
-      // Detect format
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      
-      let mimeType = 'audio/webm';
-      if (isIOS && MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4';
-      }
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
-        handleRecordingStop(audioBlob);
-        
-        // Stop stream
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
-          streamRef.current = null;
-        }
-      };
-
-      mediaRecorder.start(200);
-      mediaRecorderRef.current = mediaRecorder;
-      
       setIsRecording(true);
-      setStartTime(Date.now());
-      
-      // Update timer
-      const recordStartTime = Date.now();
-      timerRef.current = setInterval(() => {
-        setElapsedTime(Math.floor((Date.now() - recordStartTime) / 1000));
-      }, 1000);
-      
-      toast({
-        title: "Recording started",
-        description: "Speak naturally, the system is listening",
-      });
+      startTimer();
     } catch (error) {
       console.error('Error starting recording:', error);
       toast({
         variant: "destructive",
-        title: "Microphone error",
-        description: "Could not access microphone. Please check permissions.",
+        title: t('presentation.micErrorTitle', 'Microphone error'),
+        description: t('presentation.micErrorDesc', 'Could not access the microphone. Please check permissions.'),
       });
     }
   };
 
   const handleStopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
-    
     setIsRecording(false);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
   };
 
-  const handleRecordingStop = async (audioBlob: Blob) => {
+  const handleRetry = () => {
+    setSessionResults(null);
+    setStage('mode-select');
+    setSelectedMode(null);
+  };
+
+  const handleExit = () => {
+    navigate('/dashboard');
+  };
+
+  const handleModeSelect = (mode: 'strict' | 'overview') => {
+    if (mode === 'overview') {
+      setSelectedMode('script');
+      setStage('live');
+      return;
+    }
+    setSelectedMode('strict');
+    setStage('prep');
+  };
+
+  // Analyse and persist a completed run-through (visible or hidden script)
+  const handlePerformanceData = async (data: WordPerformance[]) => {
     setIsProcessing(true);
-    const duration = Math.floor((Date.now() - startTime) / 1000);
+    const duration = Math.max(1, Math.floor((Date.now() - startTime) / 1000));
 
     try {
-      // Convert to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      reader.onloadend = async () => {
-        try {
-          const base64Audio = (reader.result as string).split(',')[1];
+      toast({
+        title: t('presentation.processing'),
+        description: t('presentation.processingDesc'),
+      });
 
-          toast({
-            title: "Processing...",
-            description: "Analyzing your presentation",
-          });
-
-          // Transcribe with Whisper
-          const { data: transcriptData, error: transcriptError } = await supabase.functions.invoke('whisper-stream', {
-            body: { audio: base64Audio, language: speech?.speech_language || 'en' }
-          });
-
-          if (transcriptError) throw transcriptError;
-
-          // Analyze presentation
-          const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-presentation', {
-            body: {
-              transcript: transcriptData.transcript,
-              originalText: speech!.text_original,
-              speechId: speech!.id,
-              durationSeconds: duration,
-              feedbackLanguage: i18n.language || speech?.speech_language || 'en',
-            }
-          });
-
-          if (analysisError) throw analysisError;
-
-          // Save to database
-          const { error: saveError } = await supabase
-            .from('presentation_sessions')
-            .insert({
-              speech_id: speech!.id,
-              transcript: analysisData.transcript,
-              accuracy: analysisData.accuracy,
-              hesitations: analysisData.hesitations,
-              missed_words: analysisData.missedWords,
-              duration_seconds: duration,
-              feedback_summary: analysisData.feedbackSummary,
-              feedback_advice: analysisData.feedbackAdvice,
-              feedback_next_step: analysisData.feedbackNextStep,
-            });
-
-          if (saveError) {
-            console.error('Error saving session:', saveError);
-          }
-
-          setSessionResults(analysisData);
-          setStage('summary');
-          setIsProcessing(false);
-
-        } catch (error: any) {
-          console.error('Error processing:', error);
-          toast({
-            variant: "destructive",
-            title: "Processing failed",
-            description: error.message,
-          });
-          setIsProcessing(false);
-          setStage('prep');
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-presentation', {
+        body: {
+          originalText: speech!.text_original,
+          speechId: speech!.id,
+          durationSeconds: duration,
+          wordPerformance: data,
+          scriptHidden,
+          feedbackLanguage: i18n.language || speech?.speech_language || 'en',
         }
-      };
+      });
+
+      if (analysisError) throw analysisError;
+
+      const { error: saveError } = await supabase
+        .from('presentation_sessions')
+        .insert({
+          speech_id: speech!.id,
+          transcript: analysisData.transcript,
+          accuracy: analysisData.accuracy,
+          hesitations: analysisData.hesitations,
+          missed_words: analysisData.missedWords,
+          duration_seconds: duration,
+          feedback_summary: analysisData.feedbackSummary,
+          feedback_advice: analysisData.feedbackAdvice,
+          feedback_next_step: analysisData.feedbackNextStep,
+        });
+
+      if (saveError) {
+        console.error('Error saving session:', saveError);
+      }
+
+      setSessionResults({ ...analysisData, durationSeconds: duration });
+      setStage('summary');
+      setIsProcessing(false);
     } catch (error: any) {
+      console.error('Error processing:', error);
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('presentation.processingFailed', 'Processing failed'),
         description: error.message,
       });
       setIsProcessing(false);
@@ -300,92 +239,17 @@ const Presentation = () => {
     }
   };
 
-  const handleRetry = () => {
-    setSessionResults(null);
-    setStage('mode-select');
-  };
-
-  const handleExit = () => {
-    navigate('/dashboard');
-  };
-
-  const handleModeSelect = (mode: 'strict' | 'listen' | 'overview') => {
-    if (mode === 'overview') {
-      setSelectedMode('script');
-      setStage('live');
-      return;
-    }
-
-    setSelectedMode(mode);
-
-    if (mode === 'listen') {
-      setStage('live');
-    } else {
-      setStage('prep');
-    }
-  };
-
-  const handleAudienceModeSelect = () => {
-    setSelectedMode('audience');
-    setShowAudienceOverlay(true);
-    // Audience mode goes directly to prep
-    setStage('prep');
-  };
-
-  const handleOverviewModeSelect = () => {
-    setSelectedMode('overview');
-    setStage('live');
-  };
-
-  const handleFullScriptComplete = (result: {
-    durationSeconds: number;
-    accuracy: number;
-    hesitations: number;
-    missedWords: string[];
-    matchedCount: number;
-    totalWords: number;
-  }) => {
-    const { accuracy, durationSeconds, hesitations, missedWords, matchedCount, totalWords } = result;
-    setElapsedTime(durationSeconds);
-
-    const summaryKey =
-      accuracy >= 90 ? 'presentationSummary.excellentSubtitle' :
-      accuracy >= 75 ? 'presentationSummary.goodJobSubtitle' :
-      accuracy >= 50 ? 'presentationSummary.keepPracticingSubtitle' :
-      'presentationSummary.keepPracticingSubtitle';
-
-    setSessionResults({
-      accuracy,
-      durationSeconds,
-      hesitations,
-      missedWords,
-      feedbackSummary: t('listenMode.feedbackSummary', {
-        matched: matchedCount,
-        total: totalWords,
-        defaultValue: `You followed along with {{matched}} of {{total}} words.`,
-      }),
-      feedbackAdvice: t(summaryKey, ''),
-      feedbackNextStep: accuracy >= 75
-        ? t('listenMode.nextStepStrict', 'Try Whole Speech Mode to test your memorization.')
-        : t('listenMode.nextStepReview', 'Review the script and run Listen Mode again.'),
-    });
-    setStage('summary');
-  };
-
-
   if (loading) {
     return (
       <div className="h-screen bg-background flex items-center justify-center overflow-hidden">
-        <div className="text-center">
-          <div className="animate-pulse text-muted-foreground">Loading presentation...</div>
-        </div>
+        <div className="animate-pulse text-muted-foreground">{t('common.loading', 'Loading...')}</div>
       </div>
     );
   }
 
   if (!speech) return null;
 
-  // Show mode selector
+  // Mode selector
   if (stage === 'mode-select') {
     return (
       <div className="h-screen bg-background overflow-hidden" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
@@ -393,21 +257,18 @@ const Presentation = () => {
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="gap-2 bg-background/80 backdrop-blur-sm"
+            className="gap-2 bg-background/80 backdrop-blur-sm rounded-full"
           >
             <X className="h-4 w-4" />
-            Exit
+            {t('common.exit')}
           </Button>
         </div>
-        <PresentationModeSelector 
-          onSelectMode={handleModeSelect}
-        />
+        <PresentationModeSelector onSelectMode={handleModeSelect} />
       </div>
     );
   }
 
-
-  // Show summary (for both modes)
+  // Summary
   if (stage === 'summary' && sessionResults) {
     return (
       <PresentationSummary
@@ -423,19 +284,7 @@ const Presentation = () => {
     );
   }
 
-  // Show Listen Mode (no follow-along; reveals next words after 2s pause)
-  if (stage === 'live' && selectedMode === 'listen') {
-    return (
-      <ListenMode
-        text={speech.text_original}
-        speechLanguage={speech.speech_language || 'en'}
-        onComplete={handleFullScriptComplete}
-        onExit={handleExit}
-      />
-    );
-  }
-
-  // Show script practice mode
+  // Script mode
   if (selectedMode === 'script') {
     return (
       <ScriptPracticeView
@@ -451,17 +300,12 @@ const Presentation = () => {
     );
   }
 
-  // Show prep screen (for strict mode)
+  // Prep screen (whole speech mode)
   if (stage === 'prep') {
     return (
-      <div className="min-h-screen bg-background p-8" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 2rem)' }}>
-        {/* Settings gear button */}
+      <div className="min-h-screen bg-background p-6 md:p-8" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 2rem)' }}>
         <div className="absolute right-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowSettings(true)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
             <Settings className="h-5 w-5" />
           </Button>
         </div>
@@ -470,20 +314,59 @@ const Presentation = () => {
           <Button
             variant="ghost"
             onClick={() => setStage('mode-select')}
-            className="mb-4"
+            className="mb-2 rounded-full"
           >
             <X className="h-4 w-4 mr-2" />
             {t('presentation.backToModeSelection')}
           </Button>
 
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold capitalize">{speech.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold capitalize">{speech.title}</h1>
             <p className="text-muted-foreground">
               {t('presentation.wholeSpeechModeLabel', 'Whole Speech Mode')} • {t('presentation.wordsCount', { count: stripStageDirections(speech.text_original).split(/\s+/).filter(Boolean).length })}
             </p>
           </div>
 
-          <div className="p-6 bg-primary/5 rounded-lg border border-primary/20 space-y-4">
+          {/* Script visibility choice */}
+          <div className="p-4 bg-muted/40 rounded-3xl border border-border space-y-3">
+            <p className="text-sm font-medium">{t('presentation.scriptVisibilityTitle', 'Script on screen')}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setScriptHidden(false)}
+                className={cn(
+                  "rounded-2xl border-2 p-3 text-left transition-colors",
+                  !scriptHidden ? "border-primary bg-primary/10" : "border-border bg-background"
+                )}
+              >
+                <span className="flex items-center gap-2 font-medium text-sm">
+                  <Eye className="h-4 w-4" />
+                  {t('presentation.scriptVisible', 'Show script')}
+                </span>
+                <span className="block text-xs text-muted-foreground mt-1">
+                  {t('presentation.scriptVisibleDesc', 'Teleprompter follows along as you speak.')}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setScriptHidden(true)}
+                className={cn(
+                  "rounded-2xl border-2 p-3 text-left transition-colors",
+                  scriptHidden ? "border-primary bg-primary/10" : "border-border bg-background"
+                )}
+              >
+                <span className="flex items-center gap-2 font-medium text-sm">
+                  <EyeOff className="h-4 w-4" />
+                  {t('presentation.scriptHidden', 'Hide script')}
+                </span>
+                <span className="block text-xs text-muted-foreground mt-1">
+                  {t('presentation.scriptHiddenDesc', 'Empty screen — words appear only when you hesitate.')}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 bg-primary/5 rounded-3xl border border-primary/20 space-y-4">
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">1</div>
@@ -522,17 +405,12 @@ const Presentation = () => {
           </Button>
         </div>
 
-        {/* Settings overlay */}
         {showSettings && (
           <PresentationControls
             hintDelay={hintDelay}
             setHintDelay={setHintDelay}
             sentenceStartDelay={sentenceStartDelay}
             setSentenceStartDelay={setSentenceStartDelay}
-            autoReveal={true}
-            setAutoReveal={() => {}}
-            fontSize={fontSize}
-            setFontSize={setFontSize}
             onClose={() => setShowSettings(false)}
           />
         )}
@@ -540,70 +418,7 @@ const Presentation = () => {
     );
   }
 
-  // Handle performance data from strict presentation view
-  const handlePerformanceData = async (data: WordPerformance[]) => {
-    setWordPerformanceData(data);
-    setIsProcessing(true);
-    const duration = Math.floor((Date.now() - startTime) / 1000);
-
-    try {
-      toast({
-        title: t('presentation.processing'),
-        description: t('presentation.processingDesc'),
-      });
-
-      // Analyze presentation with detailed word performance
-      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-presentation', {
-        body: {
-          originalText: speech!.text_original,
-          speechId: speech!.id,
-          durationSeconds: duration,
-          wordPerformance: data,
-          feedbackLanguage: i18n.language || speech?.speech_language || 'en',
-        }
-      });
-
-      if (analysisError) throw analysisError;
-
-      // Save to database
-      const { error: saveError } = await supabase
-        .from('presentation_sessions')
-        .insert({
-          speech_id: speech!.id,
-          transcript: analysisData.transcript,
-          accuracy: analysisData.accuracy,
-          hesitations: analysisData.hesitations,
-          missed_words: analysisData.missedWords,
-          duration_seconds: duration,
-          feedback_summary: analysisData.feedbackSummary,
-          feedback_advice: analysisData.feedbackAdvice,
-          feedback_next_step: analysisData.feedbackNextStep,
-        });
-
-      if (saveError) {
-        console.error('Error saving session:', saveError);
-      }
-
-      setSessionResults(analysisData);
-      setStage('summary');
-      setIsProcessing(false);
-
-    } catch (error: any) {
-      console.error('Error processing:', error);
-      toast({
-        variant: "destructive",
-        title: "Processing failed",
-        description: error.message,
-      });
-      setIsProcessing(false);
-      setStage('prep');
-    }
-  };
-
-  // Get environment for audience mode
-  const audienceEnvironment = (speech.speech_type || 'general') as Environment;
-
-  // Show strict presentation live view
+  // Live run-through
   return (
     <>
       <CompactPresentationView
@@ -612,7 +427,7 @@ const Presentation = () => {
         isRecording={isRecording}
         isProcessing={isProcessing}
         elapsedTime={elapsedTime}
-        viewMode={viewMode}
+        scriptHidden={scriptHidden}
         onStartRecording={handleRecordingStart}
         onStopRecording={handleStopRecording}
         onPerformanceData={handlePerformanceData}
@@ -620,43 +435,26 @@ const Presentation = () => {
         hintDelay={hintDelay}
         sentenceStartDelay={sentenceStartDelay}
       />
-      
-      {/* Settings gear during live */}
+
       <div className="fixed right-4 z-50" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setShowSettings(true)}
-          className="bg-background/50 backdrop-blur-sm"
+          className="bg-background/50 backdrop-blur-sm rounded-full"
         >
           <Settings className="h-5 w-5" />
         </Button>
       </div>
-      
+
       {showSettings && (
         <PresentationControls
           hintDelay={hintDelay}
           setHintDelay={setHintDelay}
           sentenceStartDelay={sentenceStartDelay}
           setSentenceStartDelay={setSentenceStartDelay}
-          autoReveal={true}
-          setAutoReveal={() => {}}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
           onClose={() => setShowSettings(false)}
         />
-      )}
-      
-      {/* Audience overlay for premium users */}
-      {selectedMode === 'audience' && (
-        <Suspense fallback={null}>
-          <AudienceOverlay
-            isVisible={showAudienceOverlay}
-            environment={audienceEnvironment}
-            onClose={() => setShowAudienceOverlay(false)}
-            wordPerformance={currentWordPerformance}
-          />
-        </Suspense>
       )}
     </>
   );

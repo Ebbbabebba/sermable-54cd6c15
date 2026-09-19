@@ -749,7 +749,17 @@
     "proximityTitle": "Bleiben Sie maximal 2 Meter vom Mikrofon entfernt",
     "proximitySubtitle": "Kleinerer Abstand ermöglicht bessere Spracherkennung",
     "moveCloser": "Kommen Sie näher",
-    "withinRange": "Guter Abstand"
+    "withinRange": "Guter Abstand",
+    "wholeSpeechModeLabel": "Ganze Rede",
+    "scriptVisibilityTitle": "Skript auf dem Bildschirm",
+    "scriptVisible": "Skript zeigen",
+    "scriptVisibleDesc": "Der Text läuft mit, während du sprichst.",
+    "scriptHidden": "Skript ausblenden",
+    "scriptHiddenDesc": "Leerer Bildschirm – Wörter erscheinen nur beim Zögern.",
+    "hiddenScriptIntro": "Der Bildschirm bleibt leer – Wörter erscheinen nur, wenn du stockst.",
+    "micErrorTitle": "Mikrofonfehler",
+    "micErrorDesc": "Kein Zugriff auf das Mikrofon. Bitte Berechtigungen prüfen.",
+    "processingFailed": "Analyse fehlgeschlagen"
   },
   "subscription": {
     "premium": "Premium",
@@ -780,24 +790,29 @@
     "startWithAudience": "Mit Publikum starten",
     "unlockPremium": "Premium freischalten",
     "switchModes": "Du kannst den Modus jederzeit vor Beginn deiner Präsentation wechseln",
-    "wholeSpeechMode": "Ganze Rede Modus",
+    "wholeSpeechMode": "Ganze Rede",
     "wholeSpeechModeDesc": "Auswendiglernen Wort für Wort mit Hinweisen",
-    "selectWholeSpeech": "Ganze Rede auswählen",
+    "selectWholeSpeech": "Ganze Rede wählen",
     "listenMode": "Zuhörmodus",
     "listenModeDesc": "Sprechen Sie frei. Nach 2 Sekunden Pause werden die nächsten Wörter angezeigt.",
     "noFollowAlong": "Keine Begleitung – leerer Bildschirm",
     "hintOnPause": "Zeigt Wörter an, wenn Sie zögern",
     "selectListen": "Zuhörmodus auswählen",
-    "scriptMode": "Skript-Modus",
+    "scriptMode": "Skriptmodus",
     "scriptModeDesc": "Takte lesen, dann von einem Referenzwort aus nacherzählen",
     "referenceWordAnchors": "Referenzwort-Anker",
     "retellFromMemory": "Aus dem Gedächtnis nacherzählen",
-    "selectScript": "Skript auswählen",
+    "selectScript": "Skriptmodus wählen",
     "generalMode": "Skript-Modus",
     "generalModeDesc": "Lernen Sie über Referenzwörter – lesen, erinnern, nacherzählen",
     "keyWordsAnchors": "KI wählt ein Referenzwort pro Takt",
     "ownWordsStyle": "In eigenen Worten nacherzählen",
-    "selectGeneral": "Skript-Modus auswählen"
+    "selectGeneral": "Skript-Modus auswählen",
+    "recommended": "Empfohlen",
+    "wholeSpeechModeDescV2": "Halte die ganze Rede von Anfang bis Ende und erhalte KI-Feedback.",
+    "wholeSpeechTrains": "Trainiert: Vortrag und wortgenaues Erinnern",
+    "scriptModeDescV2": "Lies einen Abschnitt und erzähle ihn aus einem Stichwort nach.",
+    "scriptModeTrains": "Trainiert: Inhalt und Struktur, Abschnitt für Abschnitt"
   },
   "script": {
     "currentKeyword": "Aktuelles Schlüsselwort",
@@ -1228,9 +1243,6 @@
     "resultIntermediate": "Fortgeschritten — wir überspringen die Grundlagen.",
     "resultConfident": "Sicher — wir gehen direkt zum Polieren.",
     "done": "Fertig"
-  },
-  "listenMode": {
-    "tip": "2 Sek. pausieren, um die nächsten Wörter zu sehen"
   },
   "pauses": {
     "tipPrefix": "Tipp: Schreibe ein einzelnes",
