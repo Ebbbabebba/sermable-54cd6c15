@@ -749,7 +749,17 @@
     "proximityTitle": "Restez à moins de 2 mètres du micro",
     "proximitySubtitle": "Une distance plus courte améliore la reconnaissance vocale",
     "moveCloser": "Rapprochez-vous",
-    "withinRange": "Bonne distance"
+    "withinRange": "Bonne distance",
+    "wholeSpeechModeLabel": "Discours complet",
+    "scriptVisibilityTitle": "Texte à l'écran",
+    "scriptVisible": "Afficher le texte",
+    "scriptVisibleDesc": "Le texte défile pendant que vous parlez.",
+    "scriptHidden": "Masquer le texte",
+    "scriptHiddenDesc": "Écran vide — les mots apparaissent seulement en cas d'hésitation.",
+    "hiddenScriptIntro": "L'écran reste vide — les mots apparaissent seulement si vous bloquez.",
+    "micErrorTitle": "Erreur de micro",
+    "micErrorDesc": "Impossible d'accéder au micro. Vérifiez les autorisations.",
+    "processingFailed": "Échec de l'analyse"
   },
   "subscription": {
     "premium": "Premium",
@@ -780,24 +790,29 @@
     "startWithAudience": "Commencer avec le public",
     "unlockPremium": "Débloquer Premium",
     "switchModes": "Vous pouvez changer de mode à tout moment avant de commencer",
-    "wholeSpeechMode": "Mode Discours Complet",
+    "wholeSpeechMode": "Discours complet",
     "wholeSpeechModeDesc": "Mémorisation mot à mot avec des indices",
-    "selectWholeSpeech": "Sélectionner Discours Complet",
+    "selectWholeSpeech": "Choisir Discours complet",
     "listenMode": "Mode Écoute",
     "listenModeDesc": "Parlez librement. Marquez une pause de 2s pour voir les mots suivants.",
     "noFollowAlong": "Pas de suivi — écran vide",
     "hintOnPause": "Révèle les mots lorsque vous hésitez",
     "selectListen": "Sélectionner Mode Écoute",
-    "scriptMode": "Mode Script",
+    "scriptMode": "Mode script",
     "scriptModeDesc": "Lisez les passages, puis racontez à partir d'un mot de référence",
     "referenceWordAnchors": "Ancrages de mots de référence",
     "retellFromMemory": "Raconter de mémoire",
-    "selectScript": "Sélectionner Script",
+    "selectScript": "Choisir Mode script",
     "generalMode": "Mode Script",
     "generalModeDesc": "Apprenez via des mots de référence — lisez, rappelez, racontez",
     "keyWordsAnchors": "L'IA sélectionne un mot de référence par passage",
     "ownWordsStyle": "Racontez avec vos propres mots",
-    "selectGeneral": "Sélectionner Mode Script"
+    "selectGeneral": "Sélectionner Mode Script",
+    "recommended": "Recommandé",
+    "wholeSpeechModeDescV2": "Faites tout le discours du début à la fin et recevez un retour de l'IA.",
+    "wholeSpeechTrains": "Travaille : la présentation et la mémorisation mot à mot",
+    "scriptModeDescV2": "Lisez une partie, puis racontez-la à partir d'un mot-clé.",
+    "scriptModeTrains": "Travaille : le sens et la structure, partie par partie"
   },
   "script": {
     "currentKeyword": "Mot-clé actuel",
@@ -1228,9 +1243,6 @@
     "resultIntermediate": "Intermédiaire — on saute les bases.",
     "resultConfident": "Confiant — on passe directement au perfectionnement.",
     "done": "Terminé"
-  },
-  "listenMode": {
-    "tip": "Faites une pause de 2 s pour voir les mots suivants"
   },
   "pauses": {
     "tipPrefix": "Astuce : tapez un",

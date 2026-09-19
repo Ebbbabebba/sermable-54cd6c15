@@ -855,24 +855,29 @@
     "startWithAudience": "Starta med publik",
     "unlockPremium": "Lås upp Premium",
     "switchModes": "Du kan byta läge när som helst innan du startar",
-    "wholeSpeechMode": "Hela talet-läge",
+    "wholeSpeechMode": "Hela talet",
     "wholeSpeechModeDesc": "Memorera ord för ord med tips",
-    "selectWholeSpeech": "Välj Hela talet-läge",
+    "selectWholeSpeech": "Välj Hela talet",
     "listenMode": "Lyssna-läge",
     "listenModeDesc": "Tala fritt. Pausa 2s för att se nästa ord.",
     "noFollowAlong": "Ingen medföljning – tom skärm",
     "hintOnPause": "Visar ord när du tvekar",
     "selectListen": "Välj Lyssna-läge",
-    "scriptMode": "Skriptläge",
+    "scriptMode": "Manusläge",
     "scriptModeDesc": "Läs sekvenser och återberätta sedan från ett referensord",
     "referenceWordAnchors": "Referensordsfästen",
     "retellFromMemory": "Återberätta från minnet",
-    "selectScript": "Välj Skript",
+    "selectScript": "Välj Manusläge",
     "generalMode": "Skriptläge",
     "generalModeDesc": "Lär dig via referensord – läs, återkalla, återberätta",
     "keyWordsAnchors": "AI väljer ett referensord per sekvens",
     "ownWordsStyle": "Återberätta med egna ord",
-    "selectGeneral": "Välj Skriptläge"
+    "selectGeneral": "Välj Skriptläge",
+    "recommended": "Rekommenderat",
+    "wholeSpeechModeDescV2": "Kör hela talet från början till slut och få AI-feedback.",
+    "wholeSpeechTrains": "Tränar: framförande och ordagrann återgivning",
+    "scriptModeDescV2": "Läs ett avsnitt i taget och återberätta det från ett nyckelord.",
+    "scriptModeTrains": "Tränar: innehåll och struktur, avsnitt för avsnitt"
   },
   "script": {
     "currentKeyword": "Aktuellt nyckelord",
@@ -1027,7 +1032,17 @@
     "proximityTitle": "Stå max 2 meter från mikrofonen",
     "proximitySubtitle": "Närmare avstånd ger bättre röstigenkänning",
     "moveCloser": "Kom närmare",
-    "withinRange": "Bra avstånd"
+    "withinRange": "Bra avstånd",
+    "wholeSpeechModeLabel": "Hela talet",
+    "scriptVisibilityTitle": "Manus på skärmen",
+    "scriptVisible": "Visa manus",
+    "scriptVisibleDesc": "Texten följer med medan du talar.",
+    "scriptHidden": "Dölj manus",
+    "scriptHiddenDesc": "Tom skärm – ord dyker upp bara när du tvekar.",
+    "hiddenScriptIntro": "Skärmen är tom – ord dyker upp bara om du kör fast.",
+    "micErrorTitle": "Mikrofonfel",
+    "micErrorDesc": "Kunde inte använda mikrofonen. Kontrollera behörigheterna.",
+    "processingFailed": "Analysen misslyckades"
   },
   "sleepScheduling": {
     "morningRecall": "Morgontest",
@@ -1257,9 +1272,6 @@
     "resultIntermediate": "Medel — vi hoppar över grunderna.",
     "resultConfident": "Säker — vi går direkt till polering.",
     "done": "Klart"
-  },
-  "listenMode": {
-    "tip": "Pausa 2 s för att se nästa ord"
   },
   "pauses": {
     "tipPrefix": "Tips: skriv ett fristående",

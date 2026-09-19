@@ -749,7 +749,17 @@
     "proximityTitle": "Stai entro 2 metri dal microfono",
     "proximitySubtitle": "Una distanza minore migliora il riconoscimento vocale",
     "moveCloser": "Avvicinati",
-    "withinRange": "Buona distanza"
+    "withinRange": "Buona distanza",
+    "wholeSpeechModeLabel": "Discorso intero",
+    "scriptVisibilityTitle": "Testo sullo schermo",
+    "scriptVisible": "Mostra il testo",
+    "scriptVisibleDesc": "Il testo scorre mentre parli.",
+    "scriptHidden": "Nascondi il testo",
+    "scriptHiddenDesc": "Schermo vuoto: le parole compaiono solo se esiti.",
+    "hiddenScriptIntro": "Lo schermo resta vuoto: le parole compaiono solo se ti blocchi.",
+    "micErrorTitle": "Errore microfono",
+    "micErrorDesc": "Impossibile accedere al microfono. Controlla i permessi.",
+    "processingFailed": "Analisi non riuscita"
   },
   "subscription": {
     "premium": "Premium",
@@ -780,24 +790,29 @@
     "startWithAudience": "Inizia con il pubblico",
     "unlockPremium": "Sblocca Premium",
     "switchModes": "Puoi cambiare modalità in qualsiasi momento prima di iniziare",
-    "wholeSpeechMode": "Modalità Discorso Completo",
+    "wholeSpeechMode": "Discorso intero",
     "wholeSpeechModeDesc": "Memorizza parola per parola con suggerimenti",
-    "selectWholeSpeech": "Seleziona Discorso Completo",
+    "selectWholeSpeech": "Scegli Discorso intero",
     "listenMode": "Modalità Ascolto",
     "listenModeDesc": "Parla liberamente. Fai una pausa di 2s per vedere le parole successive.",
     "noFollowAlong": "Nessun accompagnamento — schermo vuoto",
     "hintOnPause": "Rivela le parole quando esiti",
     "selectListen": "Seleziona Modalità Ascolto",
-    "scriptMode": "Modalità Script",
+    "scriptMode": "Modalità copione",
     "scriptModeDesc": "Leggi i punti, poi ripeti da una parola di riferimento",
     "referenceWordAnchors": "Ancoraggi parole di riferimento",
     "retellFromMemory": "Ripeti a memoria",
-    "selectScript": "Seleziona Script",
+    "selectScript": "Scegli Modalità copione",
     "generalMode": "Modalità Script",
     "generalModeDesc": "Impara tramite parole di riferimento — leggi, ricorda, ripeti",
     "keyWordsAnchors": "L'AI sceglie una parola di riferimento per ogni punto",
     "ownWordsStyle": "Ripeti con le tue parole",
-    "selectGeneral": "Seleziona Modalità Script"
+    "selectGeneral": "Seleziona Modalità Script",
+    "recommended": "Consigliato",
+    "wholeSpeechModeDescV2": "Fai tutto il discorso dall'inizio alla fine e ricevi il feedback dell'IA.",
+    "wholeSpeechTrains": "Allena: l'esposizione e il ricordo parola per parola",
+    "scriptModeDescV2": "Leggi una parte e poi raccontala partendo da una parola chiave.",
+    "scriptModeTrains": "Allena: significato e struttura, parte per parte"
   },
   "script": {
     "currentKeyword": "Parola chiave attuale",
@@ -1228,9 +1243,6 @@
     "resultIntermediate": "Intermedio — saltiamo le basi.",
     "resultConfident": "Sicuro — andiamo dritti alla rifinitura.",
     "done": "Fatto"
-  },
-  "listenMode": {
-    "tip": "Fai una pausa di 2 s per vedere le parole successive"
   },
   "pauses": {
     "tipPrefix": "Consiglio: scrivi un",

@@ -749,7 +749,17 @@
     "proximityTitle": "Fique a menos de 2 metros do microfone",
     "proximitySubtitle": "Menor distância melhora o reconhecimento de voz",
     "moveCloser": "Aproxime-se",
-    "withinRange": "Boa distância"
+    "withinRange": "Boa distância",
+    "wholeSpeechModeLabel": "Discurso completo",
+    "scriptVisibilityTitle": "Texto no ecrã",
+    "scriptVisible": "Mostrar o texto",
+    "scriptVisibleDesc": "O texto acompanha enquanto fala.",
+    "scriptHidden": "Ocultar o texto",
+    "scriptHiddenDesc": "Ecrã vazio — as palavras só aparecem se hesitar.",
+    "hiddenScriptIntro": "O ecrã fica vazio — as palavras só aparecem se ficar preso.",
+    "micErrorTitle": "Erro do microfone",
+    "micErrorDesc": "Não foi possível aceder ao microfone. Verifique as permissões.",
+    "processingFailed": "A análise falhou"
   },
   "subscription": {
     "premium": "Premium",
@@ -780,24 +790,29 @@
     "startWithAudience": "Iniciar com audiência",
     "unlockPremium": "Desbloquear Premium",
     "switchModes": "Você pode mudar de modo a qualquer momento antes de começar",
-    "wholeSpeechMode": "Modo Discurso Completo",
+    "wholeSpeechMode": "Discurso completo",
     "wholeSpeechModeDesc": "Memorize palavra por palavra com dicas",
-    "selectWholeSpeech": "Selecionar Discurso Completo",
+    "selectWholeSpeech": "Escolher Discurso completo",
     "listenMode": "Modo Escuta",
     "listenModeDesc": "Fale livremente. Pause por 2s para ver as próximas palavras.",
     "noFollowAlong": "Sem acompanhamento — tela vazia",
     "hintOnPause": "Revela palavras quando você hesita",
     "selectListen": "Selecionar Modo Escuta",
-    "scriptMode": "Modo Roteiro",
+    "scriptMode": "Modo guião",
     "scriptModeDesc": "Leia trechos, depois reconte a partir de uma palavra de referência",
     "referenceWordAnchors": "Âncoras de palavras de referência",
     "retellFromMemory": "Recontar de memória",
-    "selectScript": "Selecionar Roteiro",
+    "selectScript": "Escolher Modo guião",
     "generalMode": "Modo Roteiro",
     "generalModeDesc": "Aprenda através de palavras de referência — leia, recorde, reconte",
     "keyWordsAnchors": "A IA escolhe uma palavra de referência por trecho",
     "ownWordsStyle": "Reconte com suas próprias palavras",
-    "selectGeneral": "Selecionar Modo Roteiro"
+    "selectGeneral": "Selecionar Modo Roteiro",
+    "recommended": "Recomendado",
+    "wholeSpeechModeDescV2": "Faça o discurso todo do início ao fim e receba feedback da IA.",
+    "wholeSpeechTrains": "Treina: a apresentação e a memorização palavra a palavra",
+    "scriptModeDescV2": "Leia uma parte e depois reconte-a a partir de uma palavra-chave.",
+    "scriptModeTrains": "Treina: sentido e estrutura, parte a parte"
   },
   "script": {
     "currentKeyword": "Palavra-chave atual",
@@ -1228,9 +1243,6 @@
     "resultIntermediate": "Intermédio — saltamos o básico.",
     "resultConfident": "Confiante — vamos direto ao polimento.",
     "done": "Concluído"
-  },
-  "listenMode": {
-    "tip": "Faz uma pausa de 2 s para ver as próximas palavras"
   },
   "pauses": {
     "tipPrefix": "Dica: escreve um",
