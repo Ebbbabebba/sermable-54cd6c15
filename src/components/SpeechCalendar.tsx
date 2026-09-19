@@ -109,18 +109,20 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
     const recall: Date[] = [];
     const test: Date[] = [];
     const presentation: Date[] = [];
+    const runthrough: Date[] = [];
     const completed: Date[] = [];
 
     for (const e of events) {
       const d = new Date(`${e.event_date}T00:00:00`);
       if (e.event_type === "presentation") presentation.push(d);
+      else if (e.event_type === "full_runthrough") runthrough.push(d);
       else if (e.event_type === "test") test.push(d);
       else if (e.event_type === "recall") recall.push(d);
       else practice.push(d);
       if (e.completed) completed.push(d);
     }
 
-    return { practice, recall, test, presentation, completed };
+    return { practice, recall, test, presentation, runthrough, completed };
   }, [events]);
 
   const modifiersClassNames = {
@@ -130,6 +132,8 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
       "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-amber-500",
     test:
       "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-orange-500",
+    runthrough:
+      "relative font-semibold after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-rose-500",
     presentation:
       "bg-gradient-to-br from-rose-500 to-orange-500 !text-white rounded-full font-semibold shadow-md",
     completed:
