@@ -258,6 +258,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animal-audience__character.is-celebrating,
+  .animal-audience__character.is-idle,
   .animal-confetti {
     animation-duration: 1ms;
     animation-iteration-count: 1;
