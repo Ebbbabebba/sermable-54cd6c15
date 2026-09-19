@@ -1,46 +1,35 @@
 project_id = "ktlbseweighlrhoxbjii"
 
-[functions.transcribe-audio]
-verify_jwt = true
-
-[functions.analyze-speech]
-verify_jwt = true
-
-[functions.analyze-presentation]
-verify_jwt = true
-
-[functions.whisper-stream]
-verify_jwt = true
-
-[functions.realtime-speech-training]
-verify_jwt = false
-
-[functions.update-adaptive-learning]
-verify_jwt = true
-
-[functions.update-adaptive-word-hiding]
-verify_jwt = true
-
-[functions.segment-speech]
-verify_jwt = false
-
-[functions.send-adaptive-notifications]
-verify_jwt = false
-
-[functions.send-due-now-notifications]
-verify_jwt = false
-
-[functions.update-segment-word-mastery]
-verify_jwt = true
-
-[functions.segment-speech-into-beats]
-verify_jwt = false
-
-[functions.delete-user-account]
-verify_jwt = false
-
-[functions.get-shared-speech]
-verify_jwt = false
-
-[functions.verify-apple-iap]
-verify_jwt = false
+[functions]
+  [functions.analyze-presentation]
+    verify_jwt = true
+  [functions.analyze-speech]
+    verify_jwt = true
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.delete-user-account]
+    verify_jwt = false
+  [functions.get-shared-speech]
+    verify_jwt = false
+  [functions.realtime-speech-training]
+    verify_jwt = false
+  [functions.segment-speech]
+    verify_jwt = false
+  [functions.segment-speech-into-beats]
+    verify_jwt = false
+  [functions.send-adaptive-notifications]
+    verify_jwt = false
+  [functions.send-due-now-notifications]
+    verify_jwt = false
+  [functions.transcribe-audio]
+    verify_jwt = true
+  [functions.update-adaptive-learning]
+    verify_jwt = true
+  [functions.update-adaptive-word-hiding]
+    verify_jwt = true
+  [functions.update-segment-word-mastery]
+    verify_jwt = true
+  [functions.verify-apple-iap]
+    verify_jwt = false
+  [functions.whisper-stream]
+    verify_jwt = true
