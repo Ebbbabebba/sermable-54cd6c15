@@ -1570,7 +1570,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const eligibleCount = overview ? keywordIndicesRef.current.size : words.length;
 
       // Established beats start deeper in; fresh recalls still start partly hidden.
-      const ratio = sessionNum >= 1 ? 0.4 : 0.25;
+      let ratio = sessionNum >= 1 ? 0.4 : 0.25;
+
+      // OVERDUE SUPPORT: coming back long after the due date means natural
+      // forgetting, not failure. Start with more of the script visible so the
+      // user re-anchors instead of face-planting into a blank screen.
+      const dueAt = activeBeat?.next_scheduled_recall_at
+        ? new Date(activeBeat.next_scheduled_recall_at).getTime()
+        : null;
+      if (dueAt) {
+        const overdueDays = (Date.now() - dueAt) / (1000 * 60 * 60 * 24);
+        if (overdueDays >= 7) ratio *= 0.4;
+        else if (overdueDays >= 3) ratio *= 0.6;
+        else if (overdueDays >= 1) ratio *= 0.8;
+      }
+
       const target = Math.max(3, Math.floor(eligibleCount * ratio));
 
       const easiestFirst = getEasiestWordIndices(activeBeat?.id, words.length, eligible);
