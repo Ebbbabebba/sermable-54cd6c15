@@ -58,11 +58,18 @@ const Settings = () => {
   const { notificationsEnabled, registerPushNotifications } = usePushNotifications();
   const isNativePlatform = Capacitor.isNativePlatform();
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(FORCE_PREMIUM ? 'regular' : 'free');
-  
+  const [supportOpen, setSupportOpen] = useState(false);
+
   const [practiceStartHour, setPracticeStartHour] = useState(8);
   const [practiceEndHour, setPracticeEndHour] = useState(22);
-  const [autoDetectTimezone, setAutoDetectTimezone] = useState(true);
-  const [instantDueNotifications, setInstantDueNotifications] = useState(true);
+
+  // Reminders are on by default — ask for permission silently on native.
+  useEffect(() => {
+    if (isNativePlatform && !notificationsEnabled) {
+      registerPushNotifications();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNativePlatform, notificationsEnabled]);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem('soundEnabled');
     return stored !== 'false';
