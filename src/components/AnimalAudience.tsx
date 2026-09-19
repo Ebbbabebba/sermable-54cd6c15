@@ -124,8 +124,8 @@ export const Animal = ({
       aria-hidden="true"
     >
       {/* Tail / back details behind the body */}
-      {kind === "fox" && <path d="M24 106 Q2 96 12 72 Q18 92 34 92" fill={palette.body} />}
-      {kind === "fox" && <circle cx="12" cy="72" r="6" fill={palette.belly} />}
+      {kind === "fox" && <path d="M30 112 Q4 108 6 82 Q10 66 22 70 Q14 88 34 94 Z" fill={palette.body} />}
+      {kind === "fox" && <circle cx="10" cy="74" r="7" fill={palette.belly} />}
       {kind === "cat" && <path d="M92 104 Q114 104 105 82" fill="none" stroke={palette.body} strokeWidth="9" strokeLinecap="round" />}
       {kind === "bunny" && <circle cx="92" cy="112" r="9" fill={palette.belly} />}
 
@@ -138,11 +138,11 @@ export const Animal = ({
       <ellipse cx="74" cy="134" rx="10" ry="5" fill={palette.accent} />
 
       {/* Stubby arms that rise with mood */}
-      <g style={{ transformOrigin: "34px 104px", transform: `rotate(${-armAngle}deg)`, transition }}>
-        <circle cx="32" cy="104" r="8.5" fill={palette.body} />
+      <g style={{ transformOrigin: "38px 106px", transform: `rotate(${-armAngle}deg)`, transition }}>
+        <circle cx="34" cy="106" r="8.5" fill={palette.body} />
       </g>
-      <g style={{ transformOrigin: "86px 104px", transform: `rotate(${armAngle}deg)`, transition }}>
-        <circle cx="88" cy="104" r="8.5" fill={palette.body} />
+      <g style={{ transformOrigin: "82px 106px", transform: `rotate(${armAngle}deg)`, transition }}>
+        <circle cx="86" cy="106" r="8.5" fill={palette.body} />
       </g>
 
       {/* Ears / eye bumps */}
@@ -150,7 +150,7 @@ export const Animal = ({
 
       {/* Big head */}
       {kind === "owl"
-        ? <path d="M24 50 Q26 22 60 26 Q94 22 96 50 L90 84 Q60 94 30 84 Z" fill={palette.body} />
+        ? <circle cx="60" cy="56" r="34" fill={palette.body} />
         : <circle cx="60" cy={kind === "frog" ? 62 : 56} r={kind === "bear" ? 36 : kind === "frog" ? 34 : 35} fill={palette.body} />}
 
       {/* Muzzle / face patches */}
