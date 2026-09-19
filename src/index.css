@@ -226,6 +226,15 @@ body {
   animation: animal-cheer 560ms cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
 }
 
+@keyframes animal-idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.6%); }
+}
+
+.animal-audience__character.is-idle {
+  animation: animal-idle-bob 3400ms ease-in-out infinite;
+}
+
 .animal-confetti {
   animation-iteration-count: infinite;
 }
