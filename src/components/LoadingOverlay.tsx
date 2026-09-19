@@ -123,7 +123,7 @@ const loadingCopy: Record<SupportedLanguage, { label: string; facts: string[] }>
 
 const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
   const { i18n } = useTranslation();
-  const [phase, setPhase] = useState<"blank" | "rich">("blank");
+  const [phase, setPhase] = useState<"blank" | "icon" | "rich">("blank");
   const [factIndex, setFactIndex] = useState(0);
   const language = i18n.resolvedLanguage?.split("-")[0] as SupportedLanguage | undefined;
   const copy = loadingCopy[language ?? "en"] ?? loadingCopy.en;
@@ -138,8 +138,12 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
 
     setFactIndex(initialFact);
 
-    const timer = setTimeout(() => setPhase("rich"), LONG_WAIT_MS);
-    return () => clearTimeout(timer);
+    const iconTimer = setTimeout(() => setPhase("icon"), ICON_WAIT_MS);
+    const factTimer = setTimeout(() => setPhase("rich"), FACT_WAIT_MS);
+    return () => {
+      clearTimeout(iconTimer);
+      clearTimeout(factTimer);
+    };
   }, [copy.facts.length, isVisible, initialFact]);
 
   useEffect(() => {
