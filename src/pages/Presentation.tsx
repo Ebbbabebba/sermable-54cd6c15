@@ -249,6 +249,7 @@ const Presentation = () => {
               originalText: speech!.text_original,
               speechId: speech!.id,
               durationSeconds: duration,
+              feedbackLanguage: i18n.language || speech?.speech_language || 'en',
             }
           });
 
@@ -558,6 +559,7 @@ const Presentation = () => {
           speechId: speech!.id,
           durationSeconds: duration,
           wordPerformance: data,
+          feedbackLanguage: i18n.language || speech?.speech_language || 'en',
         }
       });
 
