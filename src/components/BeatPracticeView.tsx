@@ -85,13 +85,15 @@ interface Beat {
   total_successful_recalls?: number;
 }
 
-// 2/3/5/7 spaced repetition intervals (days between sessions)
-const SPACED_REPETITION_INTERVALS = [0, 0, 2, 3, 5, 7, 7, 7]; // session 0-1 = same day (10min/evening/morning), then 2/3/5/7 day gaps
+// Expanding spaced-repetition ladder (days between sessions)
+// 10 min → same day → 1 → 3 → 7 → 14 → 30 days
+const SPACED_REPETITION_INTERVALS = [0, 0, 1, 3, 7, 14, 30, 30];
 
 /**
- * Calculate next recall date using 2/3/5/7 spaced repetition schedule.
+ * Calculate next recall date using the 1/3/7/14/30 day ladder.
  * Compresses intervals proportionally when a deadline is close.
  */
+
 const calculateNextRecallDate = (
   sessionNumber: number, 
   lastRecallAt: Date, 
