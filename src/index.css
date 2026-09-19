@@ -104,11 +104,11 @@ body {
 
     --radius: 1.25rem;
 
-    /* Brand accents kept for legacy components */
-    --sermable-teal: 186 72% 46%;
-    --sermable-indigo: 235 65% 60%;
-    --sermable-cyan: 192 85% 55%;
-    --sermable-mint: 168 60% 50%;
+    /* Brand accents kept for legacy components — remapped to the warm amber family */
+    --sermable-teal: 33 95% 48%;
+    --sermable-indigo: 24 95% 53%;
+    --sermable-cyan: 45 100% 51%;
+    --sermable-mint: 28 90% 44%;
     --word-bg: 38 30% 93%;
     --word-text: 30 6% 10%;
     --success-green: 160 70% 45%;
