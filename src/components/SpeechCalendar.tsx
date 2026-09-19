@@ -152,6 +152,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
     if (type === "practice") return t("calendar.practice");
     if (type === "recall") return t("calendar.recall");
     if (type === "test") return t("calendar.test");
+    if (type === "full_runthrough") return t("calendar.fullRunthrough");
     return t("calendar.presentationDay");
   };
 
@@ -170,6 +171,10 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-orange-500" />
           {t("calendar.test")}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-rose-500" />
+          {t("calendar.fullRunthrough")}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-gradient-to-br from-rose-500 to-orange-500" />
