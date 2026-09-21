@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 
@@ -80,34 +82,73 @@ export function subscribe(l: Listener) {
 
 const variantColor: Record<InlineVariant, string> = {
   default: "text-foreground",
-  success: "text-emerald-600 dark:text-emerald-400",
+  success: "text-success",
   error: "text-destructive",
-  info: "text-primary",
+  info: "text-info",
+};
+
+const variantSurface: Record<InlineVariant, string> = {
+  default: "border-border",
+  success: "border-success/30",
+  error: "border-destructive/30",
+  info: "border-info/30",
+};
+
+const variantIcon = {
+  default: Info,
+  success: CheckCircle2,
+  error: AlertCircle,
+  info: Info,
 };
 
 const InlineMessages = () => {
+  const { t } = useTranslation();
   const [msgs, setMsgs] = useState<InlineMessage[]>(messages);
   useEffect(() => subscribe(setMsgs), []);
   if (msgs.length === 0) return null;
-  const m = msgs[msgs.length - 1];
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-2 px-6 text-center bg-background"
-      role="status"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:items-end sm:px-5"
       aria-live="polite"
-      onClick={() => dismissMessage(m.id)}
+      aria-atomic="true"
     >
-      <Loader2 className={cn("h-5 w-5 animate-spin opacity-70", variantColor[m.variant])} />
-      {m.title && (
-        <div className={cn("text-base font-medium leading-snug animate-fade-in", variantColor[m.variant])}>
-          {m.title}
-        </div>
-      )}
-      {m.description && (
-        <div className="text-sm text-muted-foreground leading-snug max-w-sm animate-fade-in">
-          {m.description}
-        </div>
-      )}
+      {msgs.map((m) => {
+        const Icon = variantIcon[m.variant];
+        return (
+          <div
+            key={m.id}
+            className={cn(
+              "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border bg-popover px-4 py-3 text-left text-popover-foreground shadow-lg animate-fade-in",
+              variantSurface[m.variant]
+            )}
+            role={m.variant === "error" ? "alert" : "status"}
+          >
+            <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", variantColor[m.variant])} aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              {m.title && (
+                <div className="break-words text-sm font-semibold leading-snug">
+                  {m.title}
+                </div>
+              )}
+              {m.description && (
+                <div className="mt-0.5 break-words text-sm leading-snug text-muted-foreground">
+                  {m.description}
+                </div>
+              )}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="-mr-2 -mt-2 h-9 w-9 shrink-0 text-muted-foreground"
+              onClick={() => dismissMessage(m.id)}
+              aria-label={t("common.close")}
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+        );
+      })}
     </div>
   );
 };
