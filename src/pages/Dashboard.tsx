@@ -101,11 +101,42 @@ const Dashboard = () => {
     };
   }, []);
 
+  // Local ledger of days the user opened the app (kept 60 days).
+  const APP_OPEN_DAYS_KEY = 'streak-app-open-days';
+
+  const getAppOpenDays = (): number[] => {
+    try {
+      const raw = localStorage.getItem(APP_OPEN_DAYS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((n): n is number => typeof n === 'number');
+    } catch {
+      return [];
+    }
+  };
+
+  const recordAppOpenDay = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cutoff = today.getTime() - 60 * 24 * 60 * 60 * 1000;
+    const days = new Set(getAppOpenDays().filter(t => t >= cutoff));
+    days.add(today.getTime());
+    try {
+      localStorage.setItem(APP_OPEN_DAYS_KEY, JSON.stringify(Array.from(days)));
+    } catch {
+      /* storage full or unavailable — streak just falls back to sessions */
+    }
+  };
+
   const checkStreak = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) return;
+
+      // Opening the app counts as an active day, even before any practice.
+      recordAppOpenDay();
 
       // Check if we've already shown streak today using localStorage (persists across sessions)
       const lastShownDate = localStorage.getItem('streak-last-shown-date');
@@ -122,26 +153,23 @@ const Dashboard = () => {
         .select("id")
         .eq("user_id", user.id);
 
-      if (!userSpeeches || userSpeeches.length === 0) {
-        console.log('No speeches found for user');
-        return;
-      }
-
-      const userSpeechIds = userSpeeches.map(s => s.id);
+      const userSpeechIds = (userSpeeches || []).map(s => s.id);
 
       // Check both practice_sessions and presentation_sessions
-      const [practiceResult, presentationResult] = await Promise.all([
-        supabase
-          .from("practice_sessions")
-          .select("session_date, speech_id")
-          .in("speech_id", userSpeechIds)
-          .order("session_date", { ascending: false }),
-        supabase
-          .from("presentation_sessions")
-          .select("created_at, speech_id")
-          .in("speech_id", userSpeechIds)
-          .order("created_at", { ascending: false })
-      ]);
+      const [practiceResult, presentationResult] = userSpeechIds.length
+        ? await Promise.all([
+            supabase
+              .from("practice_sessions")
+              .select("session_date, speech_id")
+              .in("speech_id", userSpeechIds)
+              .order("session_date", { ascending: false }),
+            supabase
+              .from("presentation_sessions")
+              .select("created_at, speech_id")
+              .in("speech_id", userSpeechIds)
+              .order("created_at", { ascending: false })
+          ])
+        : [{ data: [] as { session_date: string }[] }, { data: [] as { created_at: string }[] }];
 
       // Combine all sessions
       const allSessions = [
@@ -151,7 +179,6 @@ const Dashboard = () => {
 
       console.log('All sessions found:', allSessions.length);
 
-      if (allSessions.length === 0) return;
 
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
@@ -164,23 +191,31 @@ const Dashboard = () => {
         uniqueDays.add(date.getTime());
       });
 
+      // Days the user simply opened the app count too — otherwise a daily
+      // visitor who hasn't finished a practice session loses the streak.
+      getAppOpenDays().forEach(t => uniqueDays.add(t));
+
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
+      if (sortedDays.length === 0) return;
       console.log('Unique days:', sortedDays.length, 'Most recent:', new Date(sortedDays[0]).toDateString());
 
-      // Calculate streak - count consecutive days ending with the most recent activity
+      // Count consecutive days backwards from today (yesterday still counts as
+      // alive until the day is over). Step with Date so DST shifts are safe.
+      const daySet = new Set(sortedDays);
+      const yesterday = new Date(todayDate);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      let cursor: Date | null = daySet.has(todayTime)
+        ? new Date(todayDate)
+        : daySet.has(yesterday.getTime())
+          ? yesterday
+          : null;
+
       let streak = 0;
-      const mostRecentDay = sortedDays[0];
-      
-      // Start from the most recent activity day and count backwards
-      for (let i = 0; i < sortedDays.length; i++) {
-        const expectedDay = new Date(mostRecentDay);
-        expectedDay.setDate(expectedDay.getDate() - i);
-        
-        if (sortedDays.includes(expectedDay.getTime())) {
-          streak++;
-        } else {
-          break;
-        }
+      while (cursor && daySet.has(cursor.getTime())) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+        cursor.setHours(0, 0, 0, 0);
       }
 
       console.log('Calculated streak:', streak);
