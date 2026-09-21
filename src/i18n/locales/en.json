@@ -806,7 +806,13 @@
     "self_rating_hint": "Your answer fine-tunes when this part comes back.",
     "self_rating_hard": "Tough",
     "self_rating_ok": "Okay",
-    "self_rating_solid": "Nailed it"
+    "self_rating_solid": "Nailed it",
+    "combine_title": "Sentence 1 + 2 together",
+    "combine_explainer": "Now say both sentences in a row, from the start, from memory.",
+    "combine_from_start": "From the start — both sentences",
+    "full_beat_title": "The whole part together",
+    "full_beat_explainer": "Now say all the sentences in a row, from the start, from memory.",
+    "full_beat_from_start": "From the start — the whole part"
   },
   "day_after_recall": {
     "title": "Day-After Recall",

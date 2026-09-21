@@ -707,7 +707,13 @@
     "self_rating_hint": "Ta réponse ajuste le moment du prochain rappel.",
     "self_rating_hard": "Difficile",
     "self_rating_ok": "Correct",
-    "self_rating_solid": "Parfait"
+    "self_rating_solid": "Parfait",
+    "combine_title": "Phrases 1 + 2 ensemble",
+    "combine_explainer": "Dis maintenant les deux phrases à la suite, depuis le début, de mémoire.",
+    "combine_from_start": "Depuis le début — les deux phrases",
+    "full_beat_title": "Toute la partie ensemble",
+    "full_beat_explainer": "Dis maintenant toutes les phrases à la suite, depuis le début, de mémoire.",
+    "full_beat_from_start": "Depuis le début — toute la partie"
   },
   "presentation": {
     "settings": "Paramètres de présentation",

@@ -707,7 +707,13 @@
     "self_rating_hint": "Deine Antwort steuert, wann dieser Teil wiederkommt.",
     "self_rating_hard": "Zäh",
     "self_rating_ok": "Okay",
-    "self_rating_solid": "Saß perfekt"
+    "self_rating_solid": "Saß perfekt",
+    "combine_title": "Satz 1 + 2 zusammen",
+    "combine_explainer": "Sprich jetzt beide Sätze nacheinander, von Anfang an, aus dem Gedächtnis.",
+    "combine_from_start": "Von Anfang an — beide Sätze",
+    "full_beat_title": "Der ganze Abschnitt zusammen",
+    "full_beat_explainer": "Sprich jetzt alle Sätze nacheinander, von Anfang an, aus dem Gedächtnis.",
+    "full_beat_from_start": "Von Anfang an — der ganze Abschnitt"
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",

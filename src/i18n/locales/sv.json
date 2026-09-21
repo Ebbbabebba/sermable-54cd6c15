@@ -990,7 +990,13 @@
     "self_rating_hint": "Ditt svar finjusterar när avsnittet kommer tillbaka.",
     "self_rating_hard": "Kämpigt",
     "self_rating_ok": "Okej",
-    "self_rating_solid": "Satt perfekt"
+    "self_rating_solid": "Satt perfekt",
+    "combine_title": "Mening 1 + 2 tillsammans",
+    "combine_explainer": "Säg nu båda meningarna i följd, från början, ur minnet.",
+    "combine_from_start": "Från början — båda meningarna",
+    "full_beat_title": "Hela stycket tillsammans",
+    "full_beat_explainer": "Säg nu alla meningarna i följd, från början, ur minnet.",
+    "full_beat_from_start": "Från början — hela stycket"
   },
   "presentation": {
     "settings": "Presentationsinställningar",
