@@ -707,7 +707,13 @@
     "self_rating_hint": "A tua resposta ajusta quando esta parte volta.",
     "self_rating_hard": "Difícil",
     "self_rating_ok": "Ok",
-    "self_rating_solid": "Perfeito"
+    "self_rating_solid": "Perfeito",
+    "combine_title": "Frases 1 + 2 juntas",
+    "combine_explainer": "Agora diz as duas frases seguidas, desde o início, de memória.",
+    "combine_from_start": "Desde o início — as duas frases",
+    "full_beat_title": "A parte toda junta",
+    "full_beat_explainer": "Agora diz todas as frases seguidas, desde o início, de memória.",
+    "full_beat_from_start": "Desde o início — a parte toda"
   },
   "presentation": {
     "settings": "Configurações de apresentação",

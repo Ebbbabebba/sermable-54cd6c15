@@ -562,6 +562,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Full-screen animal audience that cheers when a script-free sentence lands.
   const [audienceCelebrating, setAudienceCelebrating] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
+  // Explanatory line under the celebration headline, e.g. why the script
+  // restarts from the first sentence when 1 + 2 are combined.
+  const [celebrationDetail, setCelebrationDetail] = useState("");
   // Judgment-of-learning prompt shown right after a successful recall.
   // Its answer nudges the FSRS interval up or down one notch.
   const [selfRatingPrompt, setSelfRatingPrompt] = useState<
@@ -1088,6 +1091,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (phase.startsWith('sentences_1_2')) return 2; // Show as "after S2"
     if (phase.startsWith('sentence_3')) return 3;
     return uniqueCount; // beat_learning/fading
+  };
+
+  // Display-only progress value. The combine step (sentence 1 + 2) sits
+  // between sentence 2 and 3, so the dots show both first sentences as done
+  // instead of looking like the learner went back to sentence 2.
+  const getSentenceProgressValue = () => {
+    if (sessionMode === 'learn' && phase.startsWith('sentences_1_2')) return 2.5;
+    return getCurrentSentenceNumber();
   };
 
   // Get phase type (learning, fading, combining)
@@ -3378,14 +3389,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
 
     let message = t('beat_practice.excellent_next');
+    let detail = "";
     if (currentPhase === 'sentence_2_fading') {
-      message = t('beat_practice.lets_combine', "Let's combine them!");
+      message = t('beat_practice.combine_title');
+      detail = t('beat_practice.combine_explainer');
     } else if (currentPhase === 'sentences_1_2_fading') {
       message = t('beat_practice.next_sentence', "Now the next sentence!");
     } else if (currentPhase === 'sentence_3_fading') {
-      message = t('beat_practice.final_combine', "Now all together!");
+      message = t('beat_practice.full_beat_title');
+      detail = t('beat_practice.full_beat_explainer');
     }
     setCelebrationMessage(message);
+    setCelebrationDetail(detail);
 
     setTimeout(() => {
       setShowCelebration(true);
@@ -4724,7 +4739,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                       ? ((hiddenWordIndices.size / Math.max(words.length, 1)) * 100)
                       : phase.includes('beat') 
                         ? 100 
-                        : (getCurrentSentenceNumber() / 3) * 100}%` 
+                        : (getSentenceProgressValue() / 3) * 100}%` 
                 }}
               />
             </div>
@@ -4850,7 +4865,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             return (
               <div className="flex items-center justify-center gap-3">
                 {Array.from({ length: uniqueCount }, (_, i) => i + 1).map((sentenceNum) => {
-                  const currentSentence = getCurrentSentenceNumber();
+                  const currentSentence = getSentenceProgressValue();
                   const isComplete = sentenceNum < currentSentence;
                   const isCurrent = sentenceNum === currentSentence;
                   return (
@@ -4974,6 +4989,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </motion.p>
           )}
 
+          {/* Why the text starts over: combine steps run from the beginning */}
+          {sessionMode === 'learn' && !showCelebration && (phase.startsWith('sentences_1_2') || phase.startsWith('beat_')) && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-xs font-medium text-primary/80 -mt-1"
+            >
+              {phase.startsWith('sentences_1_2')
+                ? t('beat_practice.combine_from_start')
+                : t('beat_practice.full_beat_from_start')}
+            </motion.p>
+          )}
+
           {/* Main sentence card - clean and centered */}
           <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10 relative z-10">
             <AnimatePresence mode="wait">
@@ -4983,10 +5011,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.5, opacity: 0 }}
-                  className="flex flex-col items-center gap-6 py-8"
+                  className="flex flex-col items-center gap-4 py-8"
                 >
                   <PartyPopper className="h-16 w-16 text-primary animate-pulse" />
                   <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
+                  {celebrationDetail && (
+                    <p className="text-sm text-muted-foreground text-center max-w-xs leading-relaxed">
+                      {celebrationDetail}
+                    </p>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div

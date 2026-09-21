@@ -707,7 +707,13 @@
     "self_rating_hint": "Tu respuesta ajusta cuándo vuelve esta parte.",
     "self_rating_hard": "Costó",
     "self_rating_ok": "Bien",
-    "self_rating_solid": "Perfecto"
+    "self_rating_solid": "Perfecto",
+    "combine_title": "Frases 1 + 2 juntas",
+    "combine_explainer": "Ahora di las dos frases seguidas, desde el principio, de memoria.",
+    "combine_from_start": "Desde el principio — las dos frases",
+    "full_beat_title": "Toda la parte junta",
+    "full_beat_explainer": "Ahora di todas las frases seguidas, desde el principio, de memoria.",
+    "full_beat_from_start": "Desde el principio — toda la parte"
   },
   "presentation": {
     "settings": "Configuración de presentación",

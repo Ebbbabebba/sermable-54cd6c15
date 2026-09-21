@@ -707,7 +707,13 @@
     "self_rating_hint": "La tua risposta regola quando tornerà questa parte.",
     "self_rating_hard": "Faticoso",
     "self_rating_ok": "Ok",
-    "self_rating_solid": "Perfetto"
+    "self_rating_solid": "Perfetto",
+    "combine_title": "Frasi 1 + 2 insieme",
+    "combine_explainer": "Ora di' entrambe le frasi di seguito, dall'inizio, a memoria.",
+    "combine_from_start": "Dall'inizio — entrambe le frasi",
+    "full_beat_title": "Tutta la parte insieme",
+    "full_beat_explainer": "Ora di' tutte le frasi di seguito, dall'inizio, a memoria.",
+    "full_beat_from_start": "Dall'inizio — tutta la parte"
   },
   "presentation": {
     "settings": "Impostazioni presentazione",
