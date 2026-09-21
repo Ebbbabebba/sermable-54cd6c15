@@ -562,6 +562,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Full-screen animal audience that cheers when a script-free sentence lands.
   const [audienceCelebrating, setAudienceCelebrating] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState("");
+  // Explanatory line under the celebration headline, e.g. why the script
+  // restarts from the first sentence when 1 + 2 are combined.
+  const [celebrationDetail, setCelebrationDetail] = useState("");
   // Judgment-of-learning prompt shown right after a successful recall.
   // Its answer nudges the FSRS interval up or down one notch.
   const [selfRatingPrompt, setSelfRatingPrompt] = useState<
