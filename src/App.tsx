@@ -4,7 +4,6 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, ComponentType, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 
 // Fast route changes only get a warm background transition. The richer
 // loading screen is reserved for waits long enough to benefit from it.
@@ -30,9 +29,7 @@ const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
         <SuspenseProbe onReady={() => setContentReady(true)} />
         {children}
       </Suspense>
-      <AnimatePresence>
-        {showOverlay && !contentReady && <LoadingOverlay isVisible />}
-      </AnimatePresence>
+      <LoadingOverlay isVisible={showOverlay && !contentReady} />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
@@ -12,6 +12,7 @@ type SupportedLanguage = "en" | "sv" | "de" | "fr" | "es" | "it" | "pt";
 const ICON_WAIT_MS = 1000;
 const FACT_WAIT_MS = 5000;
 const FACT_ROTATION_MS = 5200;
+const FACT_MIN_VISIBLE_MS = 3000;
 
 const loadingCopy: Record<SupportedLanguage, { label: string; facts: string[] }> = {
   en: {
@@ -125,6 +126,7 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
   const { i18n } = useTranslation();
   const [phase, setPhase] = useState<"blank" | "icon" | "rich">("blank");
   const [factIndex, setFactIndex] = useState(0);
+  const richStartedAtRef = useRef<number | null>(null);
   const language = i18n.resolvedLanguage?.split("-")[0] as SupportedLanguage | undefined;
   const copy = loadingCopy[language ?? "en"] ?? loadingCopy.en;
 
@@ -132,7 +134,8 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
 
   useEffect(() => {
     if (!isVisible) {
-      setPhase("blank");
+      // Reset for the next load, unless the fact card is lingering.
+      setPhase((prev) => (prev === "rich" ? prev : "blank"));
       return;
     }
 
@@ -146,6 +149,28 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
     };
   }, [copy.facts.length, isVisible, initialFact]);
 
+  // Track when the "Did you know?" card first appears.
+  useEffect(() => {
+    if (phase === "rich") {
+      if (richStartedAtRef.current === null) richStartedAtRef.current = Date.now();
+    } else {
+      richStartedAtRef.current = null;
+    }
+  }, [phase]);
+
+  // If loading finishes while the fact card is up, keep it visible for at
+  // least FACT_MIN_VISIBLE_MS so it never flashes and disappears.
+  useEffect(() => {
+    if (isVisible || phase !== "rich") return;
+    const startedAt = richStartedAtRef.current ?? Date.now();
+    const remaining = Math.max(0, FACT_MIN_VISIBLE_MS - (Date.now() - startedAt));
+    const lingerTimer = setTimeout(() => {
+      setPhase("blank");
+      richStartedAtRef.current = null;
+    }, remaining);
+    return () => clearTimeout(lingerTimer);
+  }, [isVisible, phase]);
+
   useEffect(() => {
     if (phase !== "rich") return;
     const interval = setInterval(() => {
@@ -154,15 +179,18 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
     return () => clearInterval(interval);
   }, [copy.facts.length, phase]);
 
-  if (!isVisible) return null;
+  // Stay mounted (and visible) while the fact card is lingering after
+  // loading finished; fade out smoothly instead of vanishing instantly.
+  const shown = isVisible || phase === "rich";
 
   return (
     <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: shown ? 1 : 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="fixed inset-0 z-[80] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6"
+      className={`fixed inset-0 z-[80] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6 ${
+        shown ? "" : "pointer-events-none"
+      }`}
     >
       <AnimatePresence>
         {(phase === "icon" || phase === "rich") && (
