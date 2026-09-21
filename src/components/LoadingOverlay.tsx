@@ -126,16 +126,14 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
   const { i18n } = useTranslation();
   const [phase, setPhase] = useState<"blank" | "icon" | "rich">("blank");
   const [factIndex, setFactIndex] = useState(0);
+  const richStartedAtRef = useRef<number | null>(null);
   const language = i18n.resolvedLanguage?.split("-")[0] as SupportedLanguage | undefined;
   const copy = loadingCopy[language ?? "en"] ?? loadingCopy.en;
 
   const initialFact = useMemo(() => Math.floor(Math.random() * copy.facts.length), [copy.facts.length]);
 
   useEffect(() => {
-    if (!isVisible) {
-      setPhase("blank");
-      return;
-    }
+    if (!isVisible) return;
 
     setFactIndex(initialFact);
 
@@ -146,6 +144,28 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
       clearTimeout(factTimer);
     };
   }, [copy.facts.length, isVisible, initialFact]);
+
+  // Track when the "Did you know?" card first appears.
+  useEffect(() => {
+    if (phase === "rich") {
+      if (richStartedAtRef.current === null) richStartedAtRef.current = Date.now();
+    } else {
+      richStartedAtRef.current = null;
+    }
+  }, [phase]);
+
+  // If loading finishes while the fact card is up, keep it visible for at
+  // least FACT_MIN_VISIBLE_MS so it never flashes and disappears.
+  useEffect(() => {
+    if (isVisible || phase !== "rich") return;
+    const startedAt = richStartedAtRef.current ?? Date.now();
+    const remaining = Math.max(0, FACT_MIN_VISIBLE_MS - (Date.now() - startedAt));
+    const lingerTimer = setTimeout(() => {
+      setPhase("blank");
+      richStartedAtRef.current = null;
+    }, remaining);
+    return () => clearTimeout(lingerTimer);
+  }, [isVisible, phase]);
 
   useEffect(() => {
     if (phase !== "rich") return;
