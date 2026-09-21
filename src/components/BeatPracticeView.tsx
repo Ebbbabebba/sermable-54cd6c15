@@ -4739,7 +4739,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                       ? ((hiddenWordIndices.size / Math.max(words.length, 1)) * 100)
                       : phase.includes('beat') 
                         ? 100 
-                        : (getCurrentSentenceNumber() / 3) * 100}%` 
+                        : (getSentenceProgressValue() / 3) * 100}%` 
                 }}
               />
             </div>
