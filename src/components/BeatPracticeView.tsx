@@ -4998,10 +4998,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.5, opacity: 0 }}
-                  className="flex flex-col items-center gap-6 py-8"
+                  className="flex flex-col items-center gap-4 py-8"
                 >
                   <PartyPopper className="h-16 w-16 text-primary animate-pulse" />
                   <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
+                  {celebrationDetail && (
+                    <p className="text-sm text-muted-foreground text-center max-w-xs leading-relaxed">
+                      {celebrationDetail}
+                    </p>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div
