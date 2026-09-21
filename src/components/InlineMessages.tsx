@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,7 @@ const variantIcon = {
 };
 
 const InlineMessages = () => {
+  const { t } = useTranslation();
   const [msgs, setMsgs] = useState<InlineMessage[]>(messages);
   useEffect(() => subscribe(setMsgs), []);
   if (msgs.length === 0) return null;
@@ -140,7 +142,7 @@ const InlineMessages = () => {
               size="icon"
               className="-mr-2 -mt-2 h-9 w-9 shrink-0 text-muted-foreground"
               onClick={() => dismissMessage(m.id)}
-              aria-label="Dismiss"
+              aria-label={t("common.close")}
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </Button>
