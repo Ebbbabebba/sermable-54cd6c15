@@ -183,7 +183,6 @@ const Dashboard = () => {
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
       const todayTime = todayDate.getTime();
-      const DAY_MS = 24 * 60 * 60 * 1000;
 
       const uniqueDays = new Set<number>();
       allSessions.forEach(s => {
@@ -192,12 +191,12 @@ const Dashboard = () => {
         uniqueDays.add(date.getTime());
       });
 
-      // Opening the app counts as an active day too — otherwise a user who
-      // visits daily but hasn't finished a practice session loses the streak.
-      recordAppOpenDay();
+      // Days the user simply opened the app count too — otherwise a daily
+      // visitor who hasn't finished a practice session loses the streak.
       getAppOpenDays().forEach(t => uniqueDays.add(t));
 
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
+      if (sortedDays.length === 0) return;
       console.log('Unique days:', sortedDays.length, 'Most recent:', new Date(sortedDays[0]).toDateString());
 
       // Count consecutive days backwards from today (yesterday still counts as
