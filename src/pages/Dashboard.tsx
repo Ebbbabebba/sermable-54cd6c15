@@ -101,6 +101,34 @@ const Dashboard = () => {
     };
   }, []);
 
+  // Local ledger of days the user opened the app (kept 60 days).
+  const APP_OPEN_DAYS_KEY = 'streak-app-open-days';
+
+  const getAppOpenDays = (): number[] => {
+    try {
+      const raw = localStorage.getItem(APP_OPEN_DAYS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((n): n is number => typeof n === 'number');
+    } catch {
+      return [];
+    }
+  };
+
+  const recordAppOpenDay = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cutoff = today.getTime() - 60 * 24 * 60 * 60 * 1000;
+    const days = new Set(getAppOpenDays().filter(t => t >= cutoff));
+    days.add(today.getTime());
+    try {
+      localStorage.setItem(APP_OPEN_DAYS_KEY, JSON.stringify(Array.from(days)));
+    } catch {
+      /* storage full or unavailable — streak just falls back to sessions */
+    }
+  };
+
   const checkStreak = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
