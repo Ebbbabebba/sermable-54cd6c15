@@ -4865,7 +4865,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             return (
               <div className="flex items-center justify-center gap-3">
                 {Array.from({ length: uniqueCount }, (_, i) => i + 1).map((sentenceNum) => {
-                  const currentSentence = getCurrentSentenceNumber();
+                  const currentSentence = getSentenceProgressValue();
                   const isComplete = sentenceNum < currentSentence;
                   const isCurrent = sentenceNum === currentSentence;
                   return (
