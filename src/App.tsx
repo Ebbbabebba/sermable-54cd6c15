@@ -30,9 +30,7 @@ const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
         <SuspenseProbe onReady={() => setContentReady(true)} />
         {children}
       </Suspense>
-      <AnimatePresence>
-        {showOverlay && !contentReady && <LoadingOverlay isVisible />}
-      </AnimatePresence>
+      <LoadingOverlay isVisible={showOverlay && !contentReady} />
     </div>
   );
 };

@@ -175,15 +175,18 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
     return () => clearInterval(interval);
   }, [copy.facts.length, phase]);
 
-  if (!isVisible) return null;
+  // Stay mounted (and visible) while the fact card is lingering after
+  // loading finished; fade out smoothly instead of vanishing instantly.
+  const shown = isVisible || phase === "rich";
 
   return (
     <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: shown ? 1 : 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="fixed inset-0 z-[80] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6"
+      className={`fixed inset-0 z-[80] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6 ${
+        shown ? "" : "pointer-events-none"
+      }`}
     >
       <AnimatePresence>
         {(phase === "icon" || phase === "rich") && (
