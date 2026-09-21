@@ -1093,6 +1093,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return uniqueCount; // beat_learning/fading
   };
 
+  // Display-only progress value. The combine step (sentence 1 + 2) sits
+  // between sentence 2 and 3, so the dots show both first sentences as done
+  // instead of looking like the learner went back to sentence 2.
+  const getSentenceProgressValue = () => {
+    if (sessionMode === 'learn' && phase.startsWith('sentences_1_2')) return 2.5;
+    return getCurrentSentenceNumber();
+  };
+
   // Get phase type (learning, fading, combining)
   const getPhaseType = (): 'learning' | 'fading' | 'combining' => {
     if (sessionMode === 'recall') return 'fading'; // Recall = fully hidden
