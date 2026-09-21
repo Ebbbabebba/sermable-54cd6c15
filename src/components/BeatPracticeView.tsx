@@ -4989,6 +4989,19 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </motion.p>
           )}
 
+          {/* Why the text starts over: combine steps run from the beginning */}
+          {sessionMode === 'learn' && !showCelebration && (phase.startsWith('sentences_1_2') || phase.startsWith('beat_')) && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-xs font-medium text-primary/80 -mt-1"
+            >
+              {phase.startsWith('sentences_1_2')
+                ? t('beat_practice.combine_from_start')
+                : t('beat_practice.full_beat_from_start')}
+            </motion.p>
+          )}
+
           {/* Main sentence card - clean and centered */}
           <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10 relative z-10">
             <AnimatePresence mode="wait">
