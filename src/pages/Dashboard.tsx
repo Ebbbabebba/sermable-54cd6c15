@@ -135,6 +135,9 @@ const Dashboard = () => {
       const user = session?.user;
       if (!user) return;
 
+      // Opening the app counts as an active day, even before any practice.
+      recordAppOpenDay();
+
       // Check if we've already shown streak today using localStorage (persists across sessions)
       const lastShownDate = localStorage.getItem('streak-last-shown-date');
       const today = new Date().toDateString();
@@ -150,26 +153,23 @@ const Dashboard = () => {
         .select("id")
         .eq("user_id", user.id);
 
-      if (!userSpeeches || userSpeeches.length === 0) {
-        console.log('No speeches found for user');
-        return;
-      }
-
-      const userSpeechIds = userSpeeches.map(s => s.id);
+      const userSpeechIds = (userSpeeches || []).map(s => s.id);
 
       // Check both practice_sessions and presentation_sessions
-      const [practiceResult, presentationResult] = await Promise.all([
-        supabase
-          .from("practice_sessions")
-          .select("session_date, speech_id")
-          .in("speech_id", userSpeechIds)
-          .order("session_date", { ascending: false }),
-        supabase
-          .from("presentation_sessions")
-          .select("created_at, speech_id")
-          .in("speech_id", userSpeechIds)
-          .order("created_at", { ascending: false })
-      ]);
+      const [practiceResult, presentationResult] = userSpeechIds.length
+        ? await Promise.all([
+            supabase
+              .from("practice_sessions")
+              .select("session_date, speech_id")
+              .in("speech_id", userSpeechIds)
+              .order("session_date", { ascending: false }),
+            supabase
+              .from("presentation_sessions")
+              .select("created_at, speech_id")
+              .in("speech_id", userSpeechIds)
+              .order("created_at", { ascending: false })
+          ])
+        : [{ data: [] as { session_date: string }[] }, { data: [] as { created_at: string }[] }];
 
       // Combine all sessions
       const allSessions = [
@@ -179,7 +179,6 @@ const Dashboard = () => {
 
       console.log('All sessions found:', allSessions.length);
 
-      if (allSessions.length === 0) return;
 
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
