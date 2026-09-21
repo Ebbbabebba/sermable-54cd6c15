@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
@@ -12,6 +12,7 @@ type SupportedLanguage = "en" | "sv" | "de" | "fr" | "es" | "it" | "pt";
 const ICON_WAIT_MS = 1000;
 const FACT_WAIT_MS = 5000;
 const FACT_ROTATION_MS = 5200;
+const FACT_MIN_VISIBLE_MS = 3000;
 
 const loadingCopy: Record<SupportedLanguage, { label: string; facts: string[] }> = {
   en: {
