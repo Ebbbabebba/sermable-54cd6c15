@@ -133,7 +133,11 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
   const initialFact = useMemo(() => Math.floor(Math.random() * copy.facts.length), [copy.facts.length]);
 
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible) {
+      // Reset for the next load, unless the fact card is lingering.
+      setPhase((prev) => (prev === "rich" ? prev : "blank"));
+      return;
+    }
 
     setFactIndex(initialFact);
 
