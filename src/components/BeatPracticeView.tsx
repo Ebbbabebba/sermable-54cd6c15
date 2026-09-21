@@ -3389,14 +3389,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
 
     let message = t('beat_practice.excellent_next');
+    let detail = "";
     if (currentPhase === 'sentence_2_fading') {
-      message = t('beat_practice.lets_combine', "Let's combine them!");
+      message = t('beat_practice.combine_title');
+      detail = t('beat_practice.combine_explainer');
     } else if (currentPhase === 'sentences_1_2_fading') {
       message = t('beat_practice.next_sentence', "Now the next sentence!");
     } else if (currentPhase === 'sentence_3_fading') {
-      message = t('beat_practice.final_combine', "Now all together!");
+      message = t('beat_practice.full_beat_title');
+      detail = t('beat_practice.full_beat_explainer');
     }
     setCelebrationMessage(message);
+    setCelebrationDetail(detail);
 
     setTimeout(() => {
       setShowCelebration(true);
