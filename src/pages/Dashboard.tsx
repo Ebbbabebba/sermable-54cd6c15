@@ -156,6 +156,7 @@ const Dashboard = () => {
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
       const todayTime = todayDate.getTime();
+      const DAY_MS = 24 * 60 * 60 * 1000;
 
       const uniqueDays = new Set<number>();
       allSessions.forEach(s => {
@@ -164,22 +165,29 @@ const Dashboard = () => {
         uniqueDays.add(date.getTime());
       });
 
+      // Opening the app counts as an active day too — otherwise a user who
+      // visits daily but hasn't finished a practice session loses the streak.
+      recordAppOpenDay();
+      getAppOpenDays().forEach(t => uniqueDays.add(t));
+
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
       console.log('Unique days:', sortedDays.length, 'Most recent:', new Date(sortedDays[0]).toDateString());
 
-      // Calculate streak - count consecutive days ending with the most recent activity
+      // Count consecutive days backwards from today (yesterday still counts as
+      // alive until the day is over).
+      const daySet = new Set(sortedDays);
+      let anchor = daySet.has(todayTime)
+        ? todayTime
+        : daySet.has(todayTime - DAY_MS)
+          ? todayTime - DAY_MS
+          : null;
+
       let streak = 0;
-      const mostRecentDay = sortedDays[0];
-      
-      // Start from the most recent activity day and count backwards
-      for (let i = 0; i < sortedDays.length; i++) {
-        const expectedDay = new Date(mostRecentDay);
-        expectedDay.setDate(expectedDay.getDate() - i);
-        
-        if (sortedDays.includes(expectedDay.getTime())) {
+      if (anchor !== null) {
+        let cursor = anchor;
+        while (daySet.has(cursor)) {
           streak++;
-        } else {
-          break;
+          cursor -= DAY_MS;
         }
       }
 
