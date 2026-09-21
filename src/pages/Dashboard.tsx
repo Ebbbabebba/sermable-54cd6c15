@@ -174,21 +174,22 @@ const Dashboard = () => {
       console.log('Unique days:', sortedDays.length, 'Most recent:', new Date(sortedDays[0]).toDateString());
 
       // Count consecutive days backwards from today (yesterday still counts as
-      // alive until the day is over).
+      // alive until the day is over). Step with Date so DST shifts are safe.
       const daySet = new Set(sortedDays);
-      let anchor = daySet.has(todayTime)
-        ? todayTime
-        : daySet.has(todayTime - DAY_MS)
-          ? todayTime - DAY_MS
+      const yesterday = new Date(todayDate);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      let cursor: Date | null = daySet.has(todayTime)
+        ? new Date(todayDate)
+        : daySet.has(yesterday.getTime())
+          ? yesterday
           : null;
 
       let streak = 0;
-      if (anchor !== null) {
-        let cursor = anchor;
-        while (daySet.has(cursor)) {
-          streak++;
-          cursor -= DAY_MS;
-        }
+      while (cursor && daySet.has(cursor.getTime())) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+        cursor.setHours(0, 0, 0, 0);
       }
 
       console.log('Calculated streak:', streak);
