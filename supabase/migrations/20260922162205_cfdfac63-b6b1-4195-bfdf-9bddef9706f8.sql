@@ -1,0 +1,2 @@
+ALTER TABLE public.speech_calendar_events DROP CONSTRAINT IF EXISTS speech_calendar_events_event_type_check;
+ALTER TABLE public.speech_calendar_events ADD CONSTRAINT speech_calendar_events_event_type_check CHECK (event_type IN ('practice','recall','test','presentation','blank_run','full_runthrough'));
