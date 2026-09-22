@@ -116,6 +116,32 @@ const Dashboard = () => {
     }
   };
 
+  // Server-side ledger so the streak survives reinstalls and follows the account.
+  const recordServerActivityDay = async (userId: string) => {
+    const d = new Date();
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    await supabase
+      .from('user_activity_days')
+      .upsert({ user_id: userId, day }, { onConflict: 'user_id,day' });
+  };
+
+  const getServerActivityDays = async (userId: string): Promise<number[]> => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 60);
+    const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+    const { data } = await supabase
+      .from('user_activity_days')
+      .select('day')
+      .eq('user_id', userId)
+      .gte('day', cutoffStr);
+    return (data || []).map(row => {
+      const [y, m, dd] = (row.day as string).split('-').map(Number);
+      const date = new Date(y, m - 1, dd);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime();
+    });
+  };
+
   const recordAppOpenDay = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
