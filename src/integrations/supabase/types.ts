@@ -1399,6 +1399,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_days: {
+        Row: {
+          created_at: string
+          day: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_learning_analytics: {
         Row: {
           avg_hesitation_rate: number | null
