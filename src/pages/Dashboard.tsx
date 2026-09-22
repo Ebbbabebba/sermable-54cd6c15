@@ -202,10 +202,19 @@ const Dashboard = () => {
           ])
         : [{ data: [] as { session_date: string }[] }, { data: [] as { created_at: string }[] }];
 
+      // Any real activity counts as an active day, also unfinished practice.
+      const [masteryResult, beatProgressResult] = await Promise.all([
+        supabase.from("mastery_events").select("created_at").eq("user_id", user.id),
+        supabase.from("beat_progress").select("updated_at").eq("user_id", user.id),
+      ]);
+
       // Combine all sessions
       const allSessions = [
         ...(practiceResult.data || []).map(s => ({ date: s.session_date })),
-        ...(presentationResult.data || []).map(s => ({ date: s.created_at }))
+        ...(presentationResult.data || []).map(s => ({ date: s.created_at })),
+        ...(masteryResult.data || []).map(s => ({ date: s.created_at as string })),
+        ...(beatProgressResult.data || []).map(s => ({ date: s.updated_at as string })),
+        ...(userSpeeches || []).map(() => ({ date: new Date().toISOString() })).slice(0, 0),
       ];
 
       console.log('All sessions found:', allSessions.length);
