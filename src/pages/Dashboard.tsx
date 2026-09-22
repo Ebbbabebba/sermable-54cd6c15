@@ -226,6 +226,13 @@ const Dashboard = () => {
       // visitor who hasn't finished a practice session loses the streak.
       getAppOpenDays().forEach(t => uniqueDays.add(t));
 
+      // Same ledger from the account, so the streak survives reinstalls and new devices.
+      try {
+        (await getServerActivityDays(user.id)).forEach(t => uniqueDays.add(t));
+      } catch {
+        /* offline — fall back to local days only */
+      }
+
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
       if (sortedDays.length === 0) return;
       console.log('Unique days:', sortedDays.length, 'Most recent:', new Date(sortedDays[0]).toDateString());
