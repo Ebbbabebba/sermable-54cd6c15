@@ -116,6 +116,32 @@ const Dashboard = () => {
     }
   };
 
+  // Server-side ledger so the streak survives reinstalls and follows the account.
+  const recordServerActivityDay = async (userId: string) => {
+    const d = new Date();
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    await supabase
+      .from('user_activity_days')
+      .upsert({ user_id: userId, day }, { onConflict: 'user_id,day' });
+  };
+
+  const getServerActivityDays = async (userId: string): Promise<number[]> => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 60);
+    const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+    const { data } = await supabase
+      .from('user_activity_days')
+      .select('day')
+      .eq('user_id', userId)
+      .gte('day', cutoffStr);
+    return (data || []).map(row => {
+      const [y, m, dd] = (row.day as string).split('-').map(Number);
+      const date = new Date(y, m - 1, dd);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime();
+    });
+  };
+
   const recordAppOpenDay = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -137,6 +163,11 @@ const Dashboard = () => {
 
       // Opening the app counts as an active day, even before any practice.
       recordAppOpenDay();
+      try {
+        await recordServerActivityDay(user.id);
+      } catch {
+        /* offline — the local ledger still covers this device */
+      }
 
       // Check if we've already shown streak today using localStorage (persists across sessions)
       const lastShownDate = localStorage.getItem('streak-last-shown-date');
@@ -150,7 +181,7 @@ const Dashboard = () => {
       // Get user's speeches first
       const { data: userSpeeches } = await supabase
         .from("speeches")
-        .select("id")
+        .select("id, created_at, updated_at")
         .eq("user_id", user.id);
 
       const userSpeechIds = (userSpeeches || []).map(s => s.id);
@@ -171,10 +202,19 @@ const Dashboard = () => {
           ])
         : [{ data: [] as { session_date: string }[] }, { data: [] as { created_at: string }[] }];
 
+      // Any real activity counts as an active day, also unfinished practice.
+      const [masteryResult, beatProgressResult] = await Promise.all([
+        supabase.from("mastery_events").select("created_at").eq("user_id", user.id),
+        supabase.from("beat_progress").select("updated_at").eq("user_id", user.id),
+      ]);
+
       // Combine all sessions
       const allSessions = [
         ...(practiceResult.data || []).map(s => ({ date: s.session_date })),
-        ...(presentationResult.data || []).map(s => ({ date: s.created_at }))
+        ...(presentationResult.data || []).map(s => ({ date: s.created_at })),
+        ...(masteryResult.data || []).map(s => ({ date: s.created_at as string })),
+        ...(beatProgressResult.data || []).map(s => ({ date: s.updated_at as string })),
+        ...(userSpeeches || []).flatMap(s => [{ date: s.created_at }, { date: s.updated_at }]),
       ];
 
       console.log('All sessions found:', allSessions.length);
@@ -194,6 +234,13 @@ const Dashboard = () => {
       // Days the user simply opened the app count too — otherwise a daily
       // visitor who hasn't finished a practice session loses the streak.
       getAppOpenDays().forEach(t => uniqueDays.add(t));
+
+      // Same ledger from the account, so the streak survives reinstalls and new devices.
+      try {
+        (await getServerActivityDays(user.id)).forEach(t => uniqueDays.add(t));
+      } catch {
+        /* offline — fall back to local days only */
+      }
 
       const sortedDays = Array.from(uniqueDays).sort((a, b) => b - a);
       if (sortedDays.length === 0) return;
