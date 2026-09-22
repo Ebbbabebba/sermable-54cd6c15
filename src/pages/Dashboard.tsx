@@ -181,7 +181,7 @@ const Dashboard = () => {
       // Get user's speeches first
       const { data: userSpeeches } = await supabase
         .from("speeches")
-        .select("id")
+        .select("id, created_at, updated_at")
         .eq("user_id", user.id);
 
       const userSpeechIds = (userSpeeches || []).map(s => s.id);
@@ -214,7 +214,7 @@ const Dashboard = () => {
         ...(presentationResult.data || []).map(s => ({ date: s.created_at })),
         ...(masteryResult.data || []).map(s => ({ date: s.created_at as string })),
         ...(beatProgressResult.data || []).map(s => ({ date: s.updated_at as string })),
-        ...(userSpeeches || []).map(() => ({ date: new Date().toISOString() })).slice(0, 0),
+        ...(userSpeeches || []).flatMap(s => [{ date: s.created_at }, { date: s.updated_at }]),
       ];
 
       console.log('All sessions found:', allSessions.length);
