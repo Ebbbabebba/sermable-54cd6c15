@@ -163,6 +163,11 @@ const Dashboard = () => {
 
       // Opening the app counts as an active day, even before any practice.
       recordAppOpenDay();
+      try {
+        await recordServerActivityDay(user.id);
+      } catch {
+        /* offline — the local ledger still covers this device */
+      }
 
       // Check if we've already shown streak today using localStorage (persists across sessions)
       const lastShownDate = localStorage.getItem('streak-last-shown-date');
