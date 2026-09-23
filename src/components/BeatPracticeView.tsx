@@ -561,6 +561,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [showCelebration, setShowCelebration] = useState(false);
   // Full-screen animal audience that cheers when a script-free sentence lands.
   const [audienceCelebrating, setAudienceCelebrating] = useState(false);
+  const audienceWinCountRef = useRef(0);
+  const audienceHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (audienceHideTimerRef.current) clearTimeout(audienceHideTimerRef.current); }, []);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   // Explanatory line under the celebration headline, e.g. why the script
   // restarts from the first sentence when 1 + 2 are combined.
@@ -2481,7 +2484,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
 
     if (!hadErrors && isAllTargetHidden(hiddenWordIndicesRef.current)) {
-      setAudienceCelebrating(true);
+      // Only cheer on some sentences: first success, then every third.
+      audienceWinCountRef.current += 1;
+      if (audienceWinCountRef.current % 3 === 1) {
+        setAudienceCelebrating(true);
+        if (audienceHideTimerRef.current) clearTimeout(audienceHideTimerRef.current);
+        audienceHideTimerRef.current = setTimeout(() => setAudienceCelebrating(false), 2400);
+      }
     }
 
 
@@ -4594,7 +4603,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // In the fully script-free stage, the audience replaces the script and
   // reacts only to targetable words (pause markers never reduce progress).
   const audienceScriptFree = phase.includes('fading') || sessionMode === 'recall' || sessionMode === 'pre_beat_recall';
-  const audienceVisible = (audienceCelebrating || (audienceScriptFree && isAllTargetHidden(hiddenWordIndices))) && !activePause;
+  void audienceScriptFree;
+  // Animals only pop up briefly at the end of some sentences.
+  const audienceVisible = audienceCelebrating && !activePause;
   const audienceTargetIndices = isOverviewMode
     ? Array.from(keywordIndices)
     : words.map((_, index) => index).filter(index => !pauseWordMeta.has(index));
