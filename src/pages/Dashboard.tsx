@@ -122,7 +122,7 @@ const Dashboard = () => {
     const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     await supabase
       .from('user_activity_days')
-      .upsert({ user_id: userId, day }, { onConflict: 'user_id,day' });
+      .upsert({ user_id: userId, day }, { onConflict: 'user_id,day', ignoreDuplicates: true });
   };
 
   const getServerActivityDays = async (userId: string): Promise<number[]> => {
