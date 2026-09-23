@@ -219,7 +219,6 @@ const AnimalAudience = ({ celebrating = true, variant = 0, doneLabel, onExit }: 
     <div
       className="animal-audience fixed inset-0 z-30 flex items-end justify-center overflow-hidden bg-foreground/20 backdrop-blur-[2px] animate-fade-in"
       role="status"
-      onClick={onExit ? undefined : undefined}
     >
       <div className="pointer-events-none absolute inset-0">
         {Array.from({ length: 22 }, (_, index) => (
@@ -231,7 +230,7 @@ const AnimalAudience = ({ celebrating = true, variant = 0, doneLabel, onExit }: 
         ))}
       </div>
 
-      <div className="relative z-10 mx-3 mb-[calc(env(safe-area-inset-bottom,0px)+1rem)] w-full max-w-md animate-slide-in-bottom rounded-[2rem] bg-card px-6 pb-7 pt-5 text-center shadow-2xl ring-1 ring-border/50">
+      <div className="relative z-10 mx-3 mb-[calc(env(safe-area-inset-bottom,0px)+1rem)] w-full max-w-md animate-scale-in rounded-[2rem] bg-card px-6 pb-7 pt-5 text-center shadow-2xl ring-1 ring-border/50">
         <div className="-mt-20 mb-2 flex items-end justify-center gap-1">
           {trio.map((a, i) => (
             <div
