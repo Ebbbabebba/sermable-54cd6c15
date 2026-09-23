@@ -778,4 +778,4 @@ select {
     scroll-behavior: auto !important;
   }
 }
-\n@keyframes animal-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }\n
+@keyframes animal-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
