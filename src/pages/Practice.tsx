@@ -949,7 +949,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const setupSpeechRecognition = async () => {
     try {
       // Use stored language initially for INSTANT start, detect in background
-      let speechLang = speech?.speech_language || 'en';
+      const speechLang = speech?.speech_language || 'en';
       console.log('🌍 Quick start with language:', speechLang);
       
       // Start Web Speech API IMMEDIATELY for zero delay

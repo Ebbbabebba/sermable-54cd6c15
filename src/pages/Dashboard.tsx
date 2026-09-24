@@ -252,7 +252,7 @@ const Dashboard = () => {
       const yesterday = new Date(todayDate);
       yesterday.setDate(yesterday.getDate() - 1);
 
-      let cursor: Date | null = daySet.has(todayTime)
+      const cursor: Date | null = daySet.has(todayTime)
         ? new Date(todayDate)
         : daySet.has(yesterday.getTime())
           ? yesterday
