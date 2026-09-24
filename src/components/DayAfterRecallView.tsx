@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Medal, GraduationCap, RotateCcw, CheckCircle2 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
+import { stripStageDirections } from "@/utils/stageDirections";
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -84,10 +85,10 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
   // Get full text from all mastered beats
   const getFullText = useCallback(() => {
     const masteredBeats = beats.filter(b => b.is_mastered);
-    return masteredBeats
+    return stripStageDirections(masteredBeats
       .map(b => `${b.sentence_1_text} ${b.sentence_2_text} ${b.sentence_3_text}`)
       .join(' ')
-      .trim();
+      .trim());
   }, [beats]);
   
   const fullText = getFullText();

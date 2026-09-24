@@ -4,6 +4,7 @@ import "./SpeechTrainingLine.css";
 import { Check, Circle, Eye, Lightbulb } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
+import { stripPropCueMarkers } from "@/utils/propCues";
 
 // Phrase data from speech_phrases table for chunk-based recall visualization
 export interface PhraseInfo {
@@ -81,7 +82,9 @@ const BracketedTextDisplay = ({
   const [peekedBrackets, setPeekedBrackets] = useState<Set<number>>(new Set());
   const [expandedBrackets, setExpandedBrackets] = useState<Set<number>>(new Set());
   
-  const words = text.split(/\s+/).filter(w => w.trim());
+  // Defensive cleanup: raw storage text may still contain invisible prop-cue
+  // metadata, but it must never appear as a word in any practice view.
+  const words = stripPropCueMarkers(text).split(/\s+/).filter(w => w.trim());
   const totalWords = words.length;
   
   // Build a map of word indices to their problem phrase info (for chunk-based recall visualization)

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { pushMessage } from "@/components/InlineMessages";
 import { cn } from "@/lib/utils";
+import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface Beat {
   id: string;
@@ -65,9 +66,9 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
         all = data.map((r) => ({
           id: r.id,
           beat_index: r.beat_order,
-          text_original: [r.sentence_1_text, r.sentence_2_text, r.sentence_3_text]
+          text_original: stripPropCueMarkers([r.sentence_1_text, r.sentence_2_text, r.sentence_3_text]
             .filter((s) => s && s.trim().length > 0)
-            .join(" "),
+            .join(" ")),
         }));
       }
 
@@ -78,7 +79,7 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
           .select("text_original")
           .eq("id", speechId)
           .single();
-        const raw = (sp?.text_original ?? "").trim();
+        const raw = stripPropCueMarkers(sp?.text_original ?? "").trim();
         if (raw.length > 0) {
           const sentences = raw
             .split(/(?<=[.!?])\s+/)

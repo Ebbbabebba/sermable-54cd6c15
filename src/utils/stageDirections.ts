@@ -12,6 +12,7 @@
  */
 
 import { stripPauses } from "./pauses";
+import { stripPropCueMarkers } from "./propCues";
 
 // Legacy inline syntax (kept only for back-compat with older scripts).
 // New scripts attach directions via the selection-driven {{cue}}…{{/}} markers.
@@ -42,9 +43,7 @@ export type ScriptToken = WordToken | DirectionToken;
 export const stripStageDirections = (text: string): string => {
   if (!text) return "";
   // Strip prop-cue markers `{{cue}}…{{/}}` while keeping the inner words.
-  const noCueMarkers = text
-    .replace(/\{\{\/\}\}/g, "")
-    .replace(/\{\{[^{}]+\}\}/g, "");
+  const noCueMarkers = stripPropCueMarkers(text);
   const noDirections = noCueMarkers
     .replace(STAGE_DIRECTION_REGEX, " ")
     .replace(/\s+/g, " ")
