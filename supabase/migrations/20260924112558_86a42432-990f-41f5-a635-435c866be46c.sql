@@ -1,0 +1,1 @@
+ALTER TABLE public.practice_beats ADD COLUMN IF NOT EXISTS ladder_rung integer NOT NULL DEFAULT -1;

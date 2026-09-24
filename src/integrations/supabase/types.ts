@@ -610,6 +610,7 @@ export type Database = {
           fsrs_stability: number | null
           id: string
           is_mastered: boolean | null
+          ladder_rung: number
           last_due_notification_at: string | null
           last_failure_at: string | null
           last_merged_recall_at: string | null
@@ -646,6 +647,7 @@ export type Database = {
           fsrs_stability?: number | null
           id?: string
           is_mastered?: boolean | null
+          ladder_rung?: number
           last_due_notification_at?: string | null
           last_failure_at?: string | null
           last_merged_recall_at?: string | null
@@ -682,6 +684,7 @@ export type Database = {
           fsrs_stability?: number | null
           id?: string
           is_mastered?: boolean | null
+          ladder_rung?: number
           last_due_notification_at?: string | null
           last_failure_at?: string | null
           last_merged_recall_at?: string | null
