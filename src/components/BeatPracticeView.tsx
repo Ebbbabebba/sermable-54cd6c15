@@ -415,11 +415,13 @@ const isNewDay = (lastPractice: Date | null): boolean => {
 const INTAKE_FRACTION = 0.6;
 
 // Calculate how many beats we need per day given deadline
+// Cap on new beats per day — cramming more than this hurts retention.
+const MAX_NEW_BEATS_PER_DAY = 8;
 const calculateBeatsPerDay = (unmasteredCount: number, daysUntilDeadline: number): number => {
   if (unmasteredCount <= 0) return 0;
-  if (daysUntilDeadline <= 0) return unmasteredCount; // Deadline passed or today - learn all
+  if (daysUntilDeadline <= 0) return Math.min(unmasteredCount, MAX_NEW_BEATS_PER_DAY);
   const intakeDays = Math.max(1, Math.floor(daysUntilDeadline * INTAKE_FRACTION));
-  return Math.max(1, Math.ceil(unmasteredCount / intakeDays));
+  return Math.min(MAX_NEW_BEATS_PER_DAY, Math.max(1, Math.ceil(unmasteredCount / intakeDays)));
 };
 
 // PRIMACY + RECENCY: learning strictly front-to-back leaves the ending — the
@@ -1186,7 +1188,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const todayIsNewDay = isNewDay(lastPractice);
 
     // Calculate days until deadline
-    const goalDate = speechRow?.goal_date ? new Date(speechRow.goal_date) : null;
+    // Parse as a LOCAL calendar date (new Date("YYYY-MM-DD") is UTC midnight).
+    const goalDate = speechRow?.goal_date
+      ? (() => { const [y, m, d] = String(speechRow.goal_date).slice(0, 10).split('-').map(Number); return new Date(y, m - 1, d); })()
+      : null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const computedDaysUntilDeadline = goalDate 

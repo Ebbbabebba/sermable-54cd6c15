@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     const { data: beats, error } = await supabase
       .from("practice_beats")
       .select(
-        "id, speech_id, beat_order, next_scheduled_recall_at, recall_10min_at, recall_evening_at, recall_morning_at, last_due_notification_at, speeches!inner(id, title, user_id, profiles:user_id(id, push_token, notifications_enabled, instant_due_notifications, practice_start_hour, practice_end_hour, timezone, feedback_language))",
+        "id, speech_id, beat_order, next_scheduled_recall_at, recall_10min_at, recall_evening_at, recall_morning_at, last_due_notification_at, speeches!inner(id, title, user_id, goal_date, profiles:user_id(id, push_token, notifications_enabled, instant_due_notifications, practice_start_hour, practice_end_hour, timezone, feedback_language))",
       )
       .or(orFilter);
 
@@ -122,6 +122,15 @@ Deno.serve(async (req) => {
       const startH = profile.practice_start_hour ?? 8;
       const endH = profile.practice_end_hour ?? 22;
       if (h < startH || h >= endH) { skipped++; continue; }
+
+      // Deadline passed → no more reminders for this speech.
+      if (speech.goal_date) {
+        let today = new Date().toISOString().slice(0, 10);
+        try {
+          today = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+        } catch { /* keep UTC */ }
+        if (speech.goal_date < today) { skipped++; continue; }
+      }
 
       const { title, body } = tr(profile.feedback_language || "en", speech.title, due.kind);
       const r = await sendPush({
