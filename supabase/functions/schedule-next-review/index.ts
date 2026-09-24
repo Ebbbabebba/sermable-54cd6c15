@@ -150,18 +150,30 @@ function currentRung(prevIntervalMinutes: number): number {
   return rung;
 }
 
+// Compressed ladder for very short deadlines (≤2 days): 10 min → 1h → 3h → 8h.
+const SHORT_LADDER_MINUTES = [10, 60, 180, 480];
+
+// Calendar-day difference in the user's timezone (goal date is a local date).
+function daysUntilGoal(goalDate: string | null, tz: string | null): number | null {
+  if (!goalDate) return null;
+  let todayStr: string;
+  try {
+    todayStr = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz || "Europe/Stockholm",
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+  } catch {
+    todayStr = new Date().toISOString().slice(0, 10);
+  }
+  const a = Date.UTC(+todayStr.slice(0, 4), +todayStr.slice(5, 7) - 1, +todayStr.slice(8, 10));
+  const b = Date.UTC(+goalDate.slice(0, 4), +goalDate.slice(5, 7) - 1, +goalDate.slice(8, 10));
+  return Math.round((b - a) / 86400000);
+}
+
 // ---------- Deadline-aware interval capping ----------
-function capIntervalByDeadline(intervalMinutes: number, goalDate: string | null): number {
-  if (!goalDate) return intervalMinutes;
-  const daysUntil = Math.max(
-    0,
-    Math.round(
-      (new Date(`${goalDate}T00:00:00Z`).getTime() - Date.now()) /
-        (1000 * 60 * 60 * 24),
-    ),
-  );
+function capIntervalByDeadline(intervalMinutes: number, daysUntil: number | null): number {
+  if (daysUntil === null) return intervalMinutes;
   let maxMinutes: number;
-  // Final stretch: tighten hard so the speech is fresh on the day.
   if (daysUntil <= 1) maxMinutes = 4 * 60;
   else if (daysUntil <= 3) maxMinutes = 12 * 60;
   else if (daysUntil <= 7) maxMinutes = 24 * 60;
@@ -236,7 +248,7 @@ serve(async (req) => {
     const { data: beat, error: beatErr } = await supabase
       .from("practice_beats")
       .select(
-        "id, speech_id, fsrs_stability, fsrs_difficulty, fsrs_reps, fsrs_lapses, fsrs_last_review, next_scheduled_recall_at, speeches!inner(goal_date, user_id)",
+        "id, speech_id, ladder_rung, fsrs_stability, fsrs_difficulty, fsrs_reps, fsrs_lapses, fsrs_last_review, next_scheduled_recall_at, speeches!inner(goal_date, user_id)",
       )
       .eq("id", beatId)
       .single();
@@ -286,37 +298,47 @@ serve(async (req) => {
     }
 
     // ---- Compute next interval (fixed ladder, FSRS decides direction) ----
-    // Free-running FSRS exploded into month/year intervals after a few clean
-    // runs, which is useless for a speech with a date. Instead we snap to the
-    // classic expanding schedule: 10 min → 1 → 3 → 7 → 14 → 30 days.
-    const prevIntervalMin =
-      beat.fsrs_last_review && beat.next_scheduled_recall_at
-        ? (new Date(beat.next_scheduled_recall_at).getTime() -
-            new Date(beat.fsrs_last_review).getTime()) /
-          60000
-        : 0;
-    let rung = currentRung(prevIntervalMin);
+    // The rung is stored explicitly so deadline-capped intervals don't reset
+    // progress. Legacy beats fall back to inferring from the last interval.
+    const { data: prof } = await supabase
+      .from("profiles").select("timezone").eq("id", user.id).maybeSingle();
+    const daysUntil = daysUntilGoal(speech.goal_date, (prof as any)?.timezone ?? null);
 
-    if (rating === 1) rung = 0;                 // failed → back to 10 min
-    else if (rating === 2) rung = Math.max(0, rung); // shaky → repeat same step
-    else if (rating === 3) rung = rung + 1;     // solid → next step
-    else rung = rung + 2;                       // effortless → skip a step
+    let rung: number;
+    const stored = (beat as any).ladder_rung;
+    if (typeof stored === "number" && stored >= 0) {
+      rung = stored;
+    } else {
+      const prevIntervalMin =
+        beat.fsrs_last_review && beat.next_scheduled_recall_at
+          ? (new Date(beat.next_scheduled_recall_at).getTime() -
+              new Date(beat.fsrs_last_review).getTime()) / 60000
+          : 0;
+      rung = currentRung(prevIntervalMin);
+    }
 
-    // Still leaning on the script? Don't let the interval run away.
+    if (rating === 1) rung = 0;
+    else if (rating === 2) rung = Math.max(0, rung);
+    else if (rating === 3) rung = rung + 1;
+    else rung = rung + 2;
+
     if (visibilityPercent > 30) rung = Math.min(rung, 1);
+    rung = Math.min(rung, LADDER_MINUTES.length - 1);
 
-    let nextIntervalMin = LADDER_MINUTES[
-      Math.min(rung, LADDER_MINUTES.length - 1)
-    ];
-
-    // Apply deadline cap
-    nextIntervalMin = capIntervalByDeadline(nextIntervalMin, speech.goal_date);
-
-    // Floor: never less than 10 min, even for catastrophic fails
+    let nextIntervalMin: number;
+    const shortDeadline = daysUntil !== null && daysUntil >= 0 && daysUntil <= 2;
+    if (shortDeadline) {
+      nextIntervalMin = SHORT_LADDER_MINUTES[Math.min(rung, SHORT_LADDER_MINUTES.length - 1)];
+    } else {
+      nextIntervalMin = capIntervalByDeadline(LADDER_MINUTES[rung], daysUntil);
+    }
     nextIntervalMin = Math.max(10, nextIntervalMin);
 
-
-    const nextDueAt = new Date(Date.now() + nextIntervalMin * 60 * 1000);
+    // Deadline already passed: stop scheduling (user can still practice freely).
+    const deadlinePassed = daysUntil !== null && daysUntil < 0;
+    const nextDueAt = deadlinePassed
+      ? null
+      : new Date(Date.now() + nextIntervalMin * 60 * 1000);
 
     // ---- Write back to practice_beats (single source of truth) ----
     const { error: updErr } = await supabase
@@ -326,8 +348,9 @@ serve(async (req) => {
         fsrs_difficulty: d,
         fsrs_reps: reps,
         fsrs_lapses: newLapses,
+        ladder_rung: rung,
         fsrs_last_review: new Date().toISOString(),
-        next_scheduled_recall_at: nextDueAt.toISOString(),
+        next_scheduled_recall_at: nextDueAt ? nextDueAt.toISOString() : null,
         last_recall_at: new Date().toISOString(),
       })
       .eq("id", beatId);
@@ -357,8 +380,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        nextDueAt: nextDueAt.toISOString(),
-        intervalMinutes: nextIntervalMin,
+        nextDueAt: nextDueAt ? nextDueAt.toISOString() : null,
+        intervalMinutes: nextDueAt ? nextIntervalMin : 0,
+        rung,
+        deadlinePassed,
         stability: s,
         difficulty: d,
         reps,
