@@ -76,7 +76,8 @@ const SpeechDetail = () => {
   const daysLeft = speech.goal_date
     ? differenceInDays(new Date(speech.goal_date), new Date())
     : null;
-  const wordCount = speech.text_original.trim().split(/\s+/).filter(Boolean).length;
+  const cleanSpeechText = stripPropCueMarkers(speech.text_original);
+  const wordCount = cleanSpeechText.trim().split(/\s+/).filter(Boolean).length;
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
@@ -204,7 +205,7 @@ const SpeechDetail = () => {
                   {t("speechDetail.scriptPreview")}
                 </p>
                 <p className="text-sm leading-relaxed line-clamp-[12] whitespace-pre-wrap">
-                  {stripPropCueMarkers(speech.text_original)}
+                  {cleanSpeechText}
                 </p>
               </div>
 

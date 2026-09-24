@@ -41,6 +41,15 @@ const FILLER_WORDS = new Set([
   "i mean", "actually", "basically", "literally", "seriously"
 ]);
 
+const stripNonSpokenMarkup = (text: string): string => text
+  .replace(/\{\{\s*\/\s*\}\}/g, '')
+  .replace(/\{\{[^{}]*\}\}/g, '')
+  .replace(/\{\{[^\n{}]*(?=\n|$)/g, '')
+  .replace(/\([^()]*\)/g, ' ')
+  .replace(/(^|\s)-(?:\d{1,2}s?)?(?=\s|$)/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
 // Levenshtein distance for fuzzy word matching
 function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = [];
@@ -146,6 +155,7 @@ serve(async (req) => {
     console.log('User authenticated:', user.id);
 
     const { audio, originalText, speechId, userTier, language, skillLevel, strictness, learningMode, feedbackLanguage } = await req.json();
+    const cleanOriginalText = stripNonSpokenMarkup(originalText || '');
     const gradingMode: 'strict' | 'flow' = strictness === 'flow' ? 'flow' : 'strict';
     const isOverviewMode = learningMode === 'general_overview';
     
@@ -205,7 +215,7 @@ serve(async (req) => {
     console.log('Pre-analysis: Checking word overlap...');
     // Use regex that preserves Nordic/accented characters when cleaning words
     const cleanWord = (w: string) => w.replace(/[^\p{L}\p{N}]/gu, '');
-    const originalWords = originalText.toLowerCase().split(/\s+/).map(cleanWord).filter((w: string) => w.length > 1);
+    const originalWords = cleanOriginalText.toLowerCase().split(/\s+/).map(cleanWord).filter((w: string) => w.length > 1);
     const spokenWords = spokenText.toLowerCase().split(/\s+/).map(cleanWord).filter((w: string) => w.length > 1);
     
     // Remove filler words from spoken text
@@ -239,7 +249,7 @@ serve(async (req) => {
           connectorWords: [],
           difficultyScore: 50,
           analysis: "The spoken content doesn't match the original speech. Please speak the correct speech.",
-          cueText: originalText,
+          cueText: cleanOriginalText,
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -258,7 +268,7 @@ serve(async (req) => {
 
     const analysisPrompt = `Analyze this speech practice session and return ONLY valid JSON.
 
-Original FULL speech text: "${originalText}"
+Original FULL speech text: "${cleanOriginalText}"
 Spoken text: "${spokenText}"
 Language: ${audioLanguage}
 Speaker skill level: ${skillLevel || 'beginner'}${flowGuidance}
@@ -464,7 +474,7 @@ Return ONLY this JSON structure with no extra text:
     console.log('Generating adaptive cue text...');
     
     const problematicWords = [...analysis.missedWords, ...analysis.delayedWords];
-    let cueText = originalText; // Default to full text
+    let cueText = cleanOriginalText; // Default to clean spoken text
     
     // Determine if we should start removing words based on adaptive logic
     let shouldSimplify = false;
@@ -506,7 +516,7 @@ Return ONLY this JSON structure with no extra text:
     if (shouldSimplify && problematicWords.length > 0) {
       const cuePrompt = `Create a simplified cue text from this speech with adaptive difficulty.
 
-Original: "${originalText}"
+Original: "${cleanOriginalText}"
 Problem words: ${problematicWords.join(', ')}
 Simplification level: ${simplificationLevel}
 Current performance: ${analysis.accuracy}%
@@ -566,7 +576,7 @@ Return ONLY the simplified cue text, nothing else.`;
       console.log('Good performance, generating simplified text without problem words');
       const simpleCuePrompt = `Simplify this speech by removing only small connector words.
 
-Original: "${originalText}"
+Original: "${cleanOriginalText}"
 Simplification level: ${simplificationLevel}
 
 Remove small words like: and, but, the, a, an, of, in, on, at, to, for

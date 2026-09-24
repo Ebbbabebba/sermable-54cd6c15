@@ -195,7 +195,7 @@ const Presentation = () => {
 
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-presentation', {
         body: {
-          originalText: speech!.text_original,
+          originalText: stripStageDirections(speech!.text_original),
           speechId: speech!.id,
           durationSeconds: duration,
           wordPerformance: data,

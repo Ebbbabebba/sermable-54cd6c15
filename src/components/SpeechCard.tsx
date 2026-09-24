@@ -61,8 +61,8 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
   const daysRemaining = differenceInDays(goalDate, today);
   const isOverdue = daysRemaining < 0;
 
-  const originalWords = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
-  const currentWords = speech.text_current.split(/\s+/).filter(w => w.length > 0).length;
+  const originalWords = stripPropCueMarkers(speech.text_original).split(/\s+/).filter(w => w.length > 0).length;
+  const currentWords = stripPropCueMarkers(speech.text_current).split(/\s+/).filter(w => w.length > 0).length;
   const wordsMemorized = Math.max(0, originalWords - currentWords);
   const progress = originalWords > 0 ? Math.round((wordsMemorized / originalWords) * 100) : 0;
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { stripStageDirections } from "@/utils/stageDirections";
+import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface Beat {
   beat_index: number;
@@ -196,8 +197,8 @@ const ScriptPracticeView = ({
       if (!cacheError && cachedBeats && cachedBeats.length > 0) {
         const mapped: Beat[] = cachedBeats.map(b => ({
           beat_index: b.beat_index,
-          text: b.text,
-          reference_word: b.reference_word,
+          text: stripPropCueMarkers(b.text),
+          reference_word: stripPropCueMarkers(b.reference_word),
         }));
         setBeats(mapped);
         setAggregatedRange([0, 0]);
@@ -207,13 +208,17 @@ const ScriptPracticeView = ({
 
       // Extract fresh beats
       const { data, error } = await supabase.functions.invoke('extract-reference-words', {
-        body: { text: speechText, language: speechLanguage }
+        body: { text: stripPropCueMarkers(speechText), language: speechLanguage }
       });
 
       if (error) throw error;
       if (!data?.beats || data.beats.length === 0) throw new Error("No beats extracted");
 
-      setBeats(data.beats);
+      setBeats(data.beats.map((beat: Beat) => ({
+        ...beat,
+        text: stripPropCueMarkers(beat.text),
+        reference_word: stripPropCueMarkers(beat.reference_word),
+      })));
       setAggregatedRange([0, 0]);
       setPhase('reading');
 
@@ -243,8 +248,8 @@ const ScriptPracticeView = ({
   }, [loadOrExtractBeats]);
 
   const currentBeats = beats.slice(aggregatedRange[0], aggregatedRange[1] + 1);
-  const currentText = currentBeats.map(b => b.text).join(' ');
-  const currentReferenceWords = currentBeats.map(b => b.reference_word);
+  const currentText = currentBeats.map(b => stripPropCueMarkers(b.text)).join(' ');
+  const currentReferenceWords = currentBeats.map(b => stripPropCueMarkers(b.reference_word));
   const totalBeats = beats.length;
   const progressPercent = totalBeats > 0 ? ((aggregatedRange[1] + 1) / totalBeats) * 100 : 0;
   const activeBeat = beats[liveBeatIndex];
@@ -447,7 +452,9 @@ const ScriptPracticeView = ({
   const handleRecordingDone = async (audioBlob: Blob) => {
     setPhase('analyzing');
     const [analysisStart, analysisEnd] = recordingRangeRef.current;
-    const analysisText = beats.slice(analysisStart, analysisEnd + 1).map(b => b.text).join(' ') || currentText;
+    const analysisText = stripPropCueMarkers(
+      beats.slice(analysisStart, analysisEnd + 1).map(b => b.text).join(' ') || currentText,
+    );
 
     try {
       const reader = new FileReader();

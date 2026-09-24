@@ -25,6 +25,15 @@ interface FluencyTimelineEntry {
   timestamp: number;
 }
 
+const stripNonSpokenMarkup = (text: string): string => text
+  .replace(/\{\{\s*\/\s*\}\}/g, '')
+  .replace(/\{\{[^{}]*\}\}/g, '')
+  .replace(/\{\{[^\n{}]*(?=\n|$)/g, '')
+  .replace(/\([^()]*\)/g, ' ')
+  .replace(/(^|\s)-(?:\d{1,2}s?)?(?=\s|$)/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,10 +41,11 @@ serve(async (req) => {
 
   try {
     const { transcript, originalText, speechId, durationSeconds, wordPerformance, mode = 'strict', feedbackLanguage } = await req.json();
+    const cleanOriginalText = stripNonSpokenMarkup(originalText || '');
     
     console.log('Analyzing presentation:', { speechId, durationSeconds, hasWordPerformance: !!wordPerformance, mode });
 
-    const originalWords = originalText.toLowerCase().trim().split(/\s+/);
+    const originalWords = cleanOriginalText.toLowerCase().trim().split(/\s+/).filter(Boolean);
     let accuracy: number;
     let hesitations: number;
     let missedWords: string[] = [];
@@ -194,7 +204,7 @@ IMPORTANT:
               content: `Analyze this ${mode} presentation mode performance:
 ${performanceContext}
 
-Original speech excerpt: ${originalText.substring(0, 300)}...
+Original speech excerpt: ${cleanOriginalText.substring(0, 300)}...
 
 Provide specific, actionable feedback:
 1. A brief summary of the performance (2-3 sentences, be specific about what went well and what didn't)

@@ -5,6 +5,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const stripPropCueMarkers = (text: string): string => text
+  .replace(/\{\{\s*\/\s*\}\}/g, '')
+  .replace(/\{\{[^{}]*\}\}/g, '')
+  .replace(/\{\{[^\n{}]*(?=\n|$)/g, '')
+  .replace(/[ \t]{2,}/g, ' ')
+
 // ONLY true junk/filler words that can be hidden - very restrictive
 // These are words that add no semantic meaning and are easy to fill in
 const SIMPLE_WORDS = new Set([
@@ -171,7 +177,7 @@ Deno.serve(async (req) => {
       segment = segmentData
     }
 
-    const words = speech.text_original.split(/\s+/).filter((w: string) => w.trim())
+    const words = stripPropCueMarkers(speech.text_original).split(/\s+/).filter((w: string) => w.trim())
     const hiddenSet = new Set(hiddenIndices)
     const missedSet = new Set(missedIndices)
     const hesitatedSet = new Set(hesitatedIndices)
@@ -199,7 +205,7 @@ Deno.serve(async (req) => {
     console.log(`Total practice sessions for speech: ${totalSessions}`)
 
     // Parse existing text_current to find already-hidden words
-    const currentText = speech.text_current || speech.text_original
+    const currentText = stripPropCueMarkers(speech.text_current || speech.text_original)
     const alreadyHiddenIndices = new Set<number>()
     let wordIndex = 0
     const currentWords = currentText.split(/\s+/).filter((w: string) => w.trim())

@@ -43,8 +43,9 @@ export const stripStageDirections = (text: string): string => {
   if (!text) return "";
   // Strip prop-cue markers `{{cue}}…{{/}}` while keeping the inner words.
   const noCueMarkers = text
-    .replace(/\{\{\/\}\}/g, "")
-    .replace(/\{\{[^{}]+\}\}/g, "");
+    .replace(/\{\{\s*\/\s*\}\}/g, "")
+    .replace(/\{\{[^{}]*\}\}/g, "")
+    .replace(/\{\{[^\n{}]*(?=\n|$)/g, "");
   const noDirections = noCueMarkers
     .replace(STAGE_DIRECTION_REGEX, " ")
     .replace(/\s+/g, " ")

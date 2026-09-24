@@ -109,7 +109,8 @@ const SharedSpeech = () => {
     );
   }
 
-  const wordCount = speech.text_original.split(/\s+/).filter(w => w.length > 0).length;
+  const cleanSpeechText = stripPropCueMarkers(speech.text_original);
+  const wordCount = cleanSpeechText.split(/\s+/).filter(w => w.length > 0).length;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -126,8 +127,8 @@ const SharedSpeech = () => {
 
           <div className="bg-muted/50 rounded-xl p-4 max-h-48 overflow-y-auto">
             <p className="text-sm text-foreground/80 leading-relaxed">
-              {stripPropCueMarkers(speech.text_original).substring(0, 500)}
-              {speech.text_original.length > 500 && '...'}
+              {cleanSpeechText.substring(0, 500)}
+              {cleanSpeechText.length > 500 && '...'}
             </p>
           </div>
 

@@ -1443,7 +1443,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
           const { data, error } = await supabase.functions.invoke('analyze-speech', {
             body: {
               audio: base64Audio,
-              originalText: activeSegmentText || speech!.text_original, // Analyze active segment or full speech
+              originalText: cleanBracketNotation(activeSegmentText || speech!.text_original),
               speechId: speech!.id,
               userTier: subscriptionTier,
               language: speechLanguage,
@@ -1581,7 +1581,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           // Update segment word mastery with hidden word failure tracking
           // Map AI's missedWords (strings) back to indices for accurate tracking
-          const originalWords = (activeSegmentOriginalText || speech!.text_original).split(/\s+/).filter((w: string) => w.trim());
+          const originalWords = cleanBracketNotation(activeSegmentOriginalText || speech!.text_original)
+            .split(/\s+/)
+            .filter((w: string) => w.trim());
           
           const missedWordSet = new Set(
             (data.missedWords || []).map((w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''))

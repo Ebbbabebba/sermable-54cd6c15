@@ -18,7 +18,13 @@ const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
 /** Remove all prop-cue markers from text but keep the inner words. */
 export const stripPropCueMarkers = (text: string): string => {
   if (!text) return "";
-  return text.replace(/\{\{\/\}\}/g, "").replace(/\{\{[^{}]+\}\}/g, "");
+  return text
+    // Standard markers: {{laugh}}, {{/}}, including harmless whitespace.
+    .replace(/\{\{\s*\/\s*\}\}/g, "")
+    .replace(/\{\{[^{}]*\}\}/g, "")
+    // Be defensive about incomplete markers from older/AI-generated scripts.
+    .replace(/\{\{[^\n{}]*(?=\n|$)/g, "")
+    .replace(/[ \t]{2,}/g, " ");
 };
 
 export interface PropCueRange {
