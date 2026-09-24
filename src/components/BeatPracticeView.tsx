@@ -1384,6 +1384,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Calculate how many beats we can learn today based on deadline
       const computedBeatsPerDay = calculateBeatsPerDay(unmasteredCount, computedDaysUntilDeadline);
       setBeatsPerDay(computedBeatsPerDay);
+
+      // Warn once per speech/day when the deadline is too close for the remaining work.
+      if (goalDate && computedDaysUntilDeadline >= 0 && computedDaysUntilDeadline <= 2 && unmasteredCount > 4) {
+        const key = `sermable:tightDeadlineWarned:${speechId}:${new Date().toDateString()}`;
+        try {
+          if (!localStorage.getItem(key)) {
+            localStorage.setItem(key, '1');
+            toast({ description: t('beat_practice.tight_deadline', { count: unmasteredCount, days: Math.max(1, computedDaysUntilDeadline) }) });
+          }
+        } catch { /* ignore */ }
+      }
       
       // Count how many beats were already mastered today
       const beatsLearnedToday = rows.filter(b => {
