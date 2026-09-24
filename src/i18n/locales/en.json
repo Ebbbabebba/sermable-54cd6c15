@@ -732,6 +732,7 @@
     }
   },
   "beat_practice": {
+    "tight_deadline": "Tight deadline: {{count}} sections left with {{days}} day(s) to go. We'll focus on the start, the ending and the transitions — move the date if you can.",
     "beat_x_of_y": "Beat {{current}} of {{total}}",
     "progress": "{{mastered}}/{{total}} beats completed",
     "done_for_today": "Done for today!",

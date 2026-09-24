@@ -632,6 +632,7 @@
     "words": "mots"
   },
   "beat_practice": {
+    "tight_deadline": "Délai serré : {{count}} sections restantes pour {{days}} jour(s). On se concentre sur le début, la fin et les transitions — décale la date si possible.",
     "learned": "Appris",
     "remaining": "Restant",
     "progress": "{{mastered}}/{{total}} beats maîtrisés",

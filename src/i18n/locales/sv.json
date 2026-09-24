@@ -901,6 +901,7 @@
     "words": "ord"
   },
   "beat_practice": {
+    "tight_deadline": "Kort om tid: {{count}} avsnitt kvar och {{days}} dag(ar) till deadline. Vi fokuserar på början, slutet och övergångarna — flytta datumet om det går.",
     "learned": "Genomgångna",
     "progress": "{{mastered}}/{{total}} beats genomgångna",
     "done_for_today": "Klart för idag!",

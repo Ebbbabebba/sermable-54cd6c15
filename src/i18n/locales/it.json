@@ -632,6 +632,7 @@
     "words": "parole"
   },
   "beat_practice": {
+    "tight_deadline": "Scadenza vicina: {{count}} sezioni rimaste in {{days}} giorno/i. Ci concentriamo su inizio, finale e passaggi — sposta la data se puoi.",
     "learned": "Imparati",
     "remaining": "Rimanenti",
     "progress": "{{mastered}}/{{total}} beat padroneggiati",
