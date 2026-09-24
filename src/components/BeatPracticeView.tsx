@@ -2676,7 +2676,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       missedIndicesRef.current.forEach(idx => failedIndices.add(idx));
       
       // Reveal only the failed words
-      let newHidden = new Set(hiddenWordIndices);
+      const newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
       
       if (failedIndices.size > 0) {
@@ -2699,8 +2699,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const newSuccessCount = recallSuccessCount + 1;
       setRecallSuccessCount(newSuccessCount);
       
-      let newHidden = new Set(hiddenWordIndices);
-      let newOrder = [...hiddenWordOrder];
+      const newHidden = new Set(hiddenWordIndices);
+      const newOrder = [...hiddenWordOrder];
       
       for (let i = 0; i < wordsToHide; i++) {
         const nextToHide = getNextWordToHide(newHidden);
@@ -2979,7 +2979,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hesitatedIndicesRef.current.forEach(idx => failedIndices.add(idx));
       missedIndicesRef.current.forEach(idx => failedIndices.add(idx));
       
-      let newHidden = new Set(hiddenWordIndices);
+      const newHidden = new Set(hiddenWordIndices);
       let newOrder = [...hiddenWordOrder];
       
       if (failedIndices.size > 0) {
@@ -3002,8 +3002,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const newSuccessCount = preBeatRecallSuccessCount + 1;
       setPreBeatRecallSuccessCount(newSuccessCount);
       
-      let newHidden = new Set(hiddenWordIndices);
-      let newOrder = [...hiddenWordOrder];
+      const newHidden = new Set(hiddenWordIndices);
+      const newOrder = [...hiddenWordOrder];
       
       for (let i = 0; i < wordsToHide; i++) {
         const nextToHide = getNextWordToHide(newHidden);
@@ -3065,9 +3065,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allHidden = isAllTargetHidden(hiddenWordIndices);
 
     if (!allHidden) {
-      let newHidden = new Set(hiddenWordIndices);
-      let newOrder = [...hiddenWordOrder];
-      let newProtected = new Set(protectedWordIndices);
+      const newHidden = new Set(hiddenWordIndices);
+      const newOrder = [...hiddenWordOrder];
+      const newProtected = new Set(protectedWordIndices);
       
       // If there were errors, reveal EVERY word the user hesitated on or
       // missed this round (not just the first). They become "protected" so
@@ -3157,7 +3157,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // to jump to fewer visible words without grinding through every rep.
   const jumpHideAhead = useCallback(() => {
     if (showCelebration) return;
-    let newHidden = new Set(hiddenWordIndicesRef.current);
+    const newHidden = new Set(hiddenWordIndicesRef.current);
     const newOrder = [...hiddenWordOrder];
     const jumpSize = 5;
     let added = 0;

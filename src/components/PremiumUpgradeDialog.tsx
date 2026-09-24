@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Crown, Infinity, Zap, Users, Brain } from "lucide-react";
+import { Check, Crown, Infinity as InfinityIcon, Zap, Users, Brain } from "lucide-react";
 
 interface PremiumUpgradeDialogProps {
   open: boolean;
@@ -35,7 +35,7 @@ export const PremiumUpgradeDialog = ({
       title: "Upgrade to Premium",
       description: "Unlock the full potential of your speech memorization journey",
       benefits: [
-        { icon: Infinity, text: "Unlimited speeches per month" },
+        { icon: InfinityIcon, text: "Unlimited speeches per month" },
         { icon: Zap, text: "Up to 5000 words per speech" },
         { icon: Crown, text: "Priority AI feedback" },
       ],
