@@ -5,6 +5,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const stripPropCueMarkers = (text: string): string => text
+  .replace(/\{\{\s*\/\s*\}\}/g, '')
+  .replace(/\{\{[^{}]*\}\}/g, '')
+  .replace(/\{\{[^\n{}]*(?=\n|$)/g, '')
+  .replace(/[ \t]{2,}/g, ' ')
+
 // ONLY true junk/filler words that can be hidden IMMEDIATELY
 const SIMPLE_WORDS = new Set([
   // English conjunctions and short prepositions ONLY
@@ -143,7 +149,7 @@ Deno.serve(async (req) => {
 
     if (speechError) throw speechError
 
-    const words = speech.text_original.split(/\s+/).filter((w: string) => w.trim())
+    const words = stripPropCueMarkers(speech.text_original).split(/\s+/).filter((w: string) => w.trim())
     
     // Get current word performance from mastered_words table
     const { data: masteredWords } = await supabaseClient
