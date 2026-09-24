@@ -632,6 +632,7 @@
     "words": "palabras"
   },
   "beat_practice": {
+    "tight_deadline": "Plazo ajustado: quedan {{count}} secciones y {{days}} día(s). Nos centraremos en el inicio, el final y las transiciones; mueve la fecha si puedes.",
     "learned": "Aprendidos",
     "remaining": "Restantes",
     "session_complete": "¡Lección completada!",

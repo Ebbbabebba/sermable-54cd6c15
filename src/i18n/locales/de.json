@@ -632,6 +632,7 @@
     "words": "Wörter"
   },
   "beat_practice": {
+    "tight_deadline": "Knappe Frist: {{count}} Abschnitte übrig bei {{days}} Tag(en). Wir konzentrieren uns auf Anfang, Schluss und Übergänge – verschiebe das Datum, wenn möglich.",
     "learned": "Gelernt",
     "remaining": "Übrig",
     "progress": "{{mastered}}/{{total}} Beats gemeistert",

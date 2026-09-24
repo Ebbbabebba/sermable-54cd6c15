@@ -632,6 +632,7 @@
     "words": "palavras"
   },
   "beat_practice": {
+    "tight_deadline": "Prazo apertado: faltam {{count}} secções em {{days}} dia(s). Vamos focar no início, no fim e nas transições — muda a data se puderes.",
     "learned": "Aprendidos",
     "remaining": "Restantes",
     "progress": "{{mastered}}/{{total}} beats dominados",
