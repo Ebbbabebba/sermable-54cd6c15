@@ -3748,22 +3748,38 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             }
           }, 3000);
 
+          // Guard against overlapping native starts (watchdog + "stopped"
+          // listener + retry could otherwise fire start() concurrently, which
+          // locks up the iOS audio session) and cap retries with backoff.
+          let nativeStartInFlight = false;
+          let nativeFailCount = 0;
           const startNativeSession = async () => {
-            if (stopped || !isRecordingRef.current) return;
+            if (stopped || !isRecordingRef.current || nativeStartInFlight) return;
+            nativeStartInFlight = true;
             try {
-              await NativeSpeech.start({
+              await withSpeechTimeout(NativeSpeech.start({
                 language: lang,
                 maxResults: 5,
                 prompt: "",
                 partialResults: true,
                 popup: false,
-              });
+              }), 8000);
               lastActivityAt = Date.now();
+              nativeFailCount = 0;
             } catch (e) {
-              console.warn("Native start failed, retrying", e);
-              if (!stopped && isRecordingRef.current) {
-                setTimeout(startNativeSession, 300);
+              nativeFailCount++;
+              console.warn("Native start failed", nativeFailCount, e);
+              if (!stopped && isRecordingRef.current && nativeFailCount <= 5) {
+                setTimeout(() => { void startNativeSession(); }, 300 * nativeFailCount);
+              } else if (nativeFailCount > 5) {
+                toast({
+                  variant: "destructive",
+                  title: "Microphone problem",
+                  description: "Speech recognition could not start. Please try again.",
+                });
               }
+            } finally {
+              nativeStartInFlight = false;
             }
           };
 
@@ -3838,6 +3854,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           runningTranscriptRef.current = "";
           lastWordTimeRef.current = Date.now();
 
+          // If the user left / stopped while we were attaching listeners,
+          // tear everything down instead of leaking listeners + watchdog.
+          if (!isRecordingRef.current || recognitionRef.current === null) {
+            stopped = true;
+            clearInterval(watchdog);
+            try { await partialHandle?.remove?.(); await listenerHandle?.remove?.(); } catch {}
+            return;
+          }
           await startNativeSession();
           if (isRecordingRef.current) setIsSpeechReady(true);
         } catch (nativeErr) {
