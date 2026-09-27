@@ -580,6 +580,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   
   // Transcription using Web Speech API
   const recognitionRef = useRef<any>(null);
+  const startingRef = useRef(false);
+  const withSpeechTimeout = <T,>(p: Promise<T>, ms = 5000): Promise<T> =>
+    Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("native speech timeout")), ms))]);
   const transcriptRef = useRef<string>("");
   const transcriptWordsRef = useRef<string[]>([]);
   const runningTranscriptRef = useRef<string>("");
@@ -3666,7 +3669,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   // Start recording — uses native Speech Recognition on iOS/Android (Capacitor)
   // and Web Speech API on the browser. Native is far more responsive on mobile.
+  const startingRef_guard = startingRef;
   const startRecording = async () => {
+    if (recognitionRef.current || startingRef_guard.current) return;
+    startingRef_guard.current = true;
+    try { await startRecordingInner(); } finally { startingRef_guard.current = false; }
+  };
+  const startRecordingInner = async () => {
     if (recognitionRef.current) return;
 
     setIsSpeechReady(false);
@@ -3692,16 +3701,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // Use the warm-up cache when available so the first tap doesn't
           // pay for two extra Capacitor bridge round-trips.
           if (isNativeAvailableCached() === null) {
-            const { available } = await NativeSpeech.available();
+            const { available } = await withSpeechTimeout(NativeSpeech.available());
             if (!available) throw new Error("Native speech recognition unavailable");
           } else if (isNativeAvailableCached() === false) {
             throw new Error("Native speech recognition unavailable");
           }
 
           if (isNativePermissionGrantedCached() !== true) {
-            const perm = await NativeSpeech.checkPermissions();
+            const perm = await withSpeechTimeout(NativeSpeech.checkPermissions());
             if (perm.speechRecognition !== "granted") {
-              const req = await NativeSpeech.requestPermissions();
+              const req = await withSpeechTimeout(NativeSpeech.requestPermissions(), 30000);
               if (req.speechRecognition !== "granted") {
                 toast({
                   variant: "destructive",
@@ -4010,6 +4019,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       // Hesitation timer (shared between both engines)
+      if (hesitationTimerRef.current) clearInterval(hesitationTimerRef.current);
       hesitationTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - lastWordTimeRef.current;
         const idx = currentWordIndexRef.current;
