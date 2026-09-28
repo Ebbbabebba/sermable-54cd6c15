@@ -3751,24 +3751,36 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // Guard against overlapping native starts (watchdog + "stopped"
           // listener + retry could otherwise fire start() concurrently, which
           // locks up the iOS audio session) and cap retries with backoff.
+          // NOTE: on iOS, NativeSpeech.start() with partialResults may not
+          // resolve until the recognition session ENDS. Awaiting it (or timing
+          // it out) caused long stalls and needless restarts, so we fire it
+          // and treat the session as live as soon as results/state arrive.
           let nativeStartInFlight = false;
           let nativeFailCount = 0;
+          let startToken = 0;
           const startNativeSession = async () => {
             if (stopped || !isRecordingRef.current || nativeStartInFlight) return;
             nativeStartInFlight = true;
-            try {
-              await withSpeechTimeout(NativeSpeech.start({
-                language: lang,
-                maxResults: 5,
-                prompt: "",
-                partialResults: true,
-                popup: false,
-              }), 8000);
-              lastActivityAt = Date.now();
+            const token = ++startToken;
+            const startedAt = Date.now();
+            // Release the in-flight guard shortly after, regardless of when
+            // the promise settles (it may only settle when the session ends).
+            setTimeout(() => { if (token === startToken) nativeStartInFlight = false; }, 1200);
+            NativeSpeech.start({
+              language: lang,
+              maxResults: 5,
+              prompt: "",
+              partialResults: true,
+              popup: false,
+            }).then(() => {
               nativeFailCount = 0;
-            } catch (e) {
+            }).catch((e) => {
+              // If we got results after this start, the failure is just the
+              // session ending — not a real start failure.
+              if (lastActivityAt > startedAt) return;
               nativeFailCount++;
               console.warn("Native start failed", nativeFailCount, e);
+              if (token === startToken) nativeStartInFlight = false;
               if (!stopped && isRecordingRef.current && nativeFailCount <= 5) {
                 setTimeout(() => { void startNativeSession(); }, 300 * nativeFailCount);
               } else if (nativeFailCount > 5) {
@@ -3778,9 +3790,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   description: "Speech recognition could not start. Please try again.",
                 });
               }
-            } finally {
-              nativeStartInFlight = false;
-            }
+            });
+            lastActivityAt = Date.now();
           };
 
 
@@ -4457,8 +4468,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     return (
       <div
-        className="flex flex-col items-center h-full overflow-y-auto p-8 text-center gap-6"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}
+        className="flex flex-col items-center h-full overflow-y-auto px-8 text-center gap-6"
+        style={{
+          paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)",
+        }}
       >
         <motion.div
           initial={{ scale: 0 }}
