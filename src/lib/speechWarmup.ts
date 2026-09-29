@@ -20,68 +20,78 @@ const state: WarmupState = {
   webEnginePrimed: false,
 };
 
+let warmupPromise: Promise<void> | null = null;
+
 // Call on Practice page mount. Safe to call multiple times.
-export async function warmupSpeechRecognition(): Promise<void> {
-  if (Capacitor.isNativePlatform()) {
-    try {
-      if (state.nativeAvailable === null) {
-        const { available } = await NativeSpeech.available();
-        state.nativeAvailable = !!available;
+export function warmupSpeechRecognition(): Promise<void> {
+  if (warmupPromise) return warmupPromise;
+
+  warmupPromise = (async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        if (state.nativeAvailable === null) {
+          const { available } = await NativeSpeech.available();
+          state.nativeAvailable = !!available;
+        }
+        if (state.nativeAvailable && state.nativePermissionGranted !== true) {
+          const perm = await NativeSpeech.checkPermissions();
+          if (perm.speechRecognition === "granted") {
+            state.nativePermissionGranted = true;
+          } else {
+            const req = await NativeSpeech.requestPermissions();
+            state.nativePermissionGranted = req.speechRecognition === "granted";
+          }
+        }
+      } catch (e) {
+        console.warn("Native speech warm-up failed:", e);
       }
-      if (state.nativeAvailable && state.nativePermissionGranted !== true) {
-        const perm = await NativeSpeech.checkPermissions();
-        if (perm.speechRecognition === "granted") {
-          state.nativePermissionGranted = true;
-        } else {
-          const req = await NativeSpeech.requestPermissions();
-          state.nativePermissionGranted = req.speechRecognition === "granted";
+      return;
+    }
+
+    // ---- Web Speech path ----
+    try {
+      // Check mic permission cheaply via the Permissions API when supported.
+      if (state.webMicGranted === null && navigator.permissions?.query) {
+        try {
+          const status = await navigator.permissions.query({
+            name: "microphone" as PermissionName,
+          });
+          state.webMicGranted = status.state === "granted";
+          status.onchange = () => {
+            state.webMicGranted = status.state === "granted";
+          };
+        } catch {
+          // Some browsers (Safari) don't support 'microphone' here — leave null.
+        }
+      }
+
+      // Prime the Web Speech engine once: instantiating + immediately aborting
+      // a recognizer makes the browser load the underlying engine so the next
+      // .start() call is near-instant.
+      if (!state.webEnginePrimed) {
+        const SR =
+          (window as any).SpeechRecognition ||
+          (window as any).webkitSpeechRecognition;
+        if (SR) {
+          try {
+            const r = new SR();
+            r.continuous = false;
+            r.interimResults = false;
+            // Don't actually start — just constructing is enough on most engines
+            // to load the model. .abort() is a no-op when not started.
+            r.abort?.();
+            state.webEnginePrimed = true;
+          } catch {}
         }
       }
     } catch (e) {
-      console.warn("Native speech warm-up failed:", e);
+      console.warn("Web speech warm-up failed:", e);
     }
-    return;
-  }
+  })().finally(() => {
+    warmupPromise = null;
+  });
 
-  // ---- Web Speech path ----
-  try {
-    // Check mic permission cheaply via the Permissions API when supported.
-    if (state.webMicGranted === null && navigator.permissions?.query) {
-      try {
-        const status = await navigator.permissions.query({
-          name: "microphone" as PermissionName,
-        });
-        state.webMicGranted = status.state === "granted";
-        status.onchange = () => {
-          state.webMicGranted = status.state === "granted";
-        };
-      } catch {
-        // Some browsers (Safari) don't support 'microphone' here — leave null.
-      }
-    }
-
-    // Prime the Web Speech engine once: instantiating + immediately aborting
-    // a recognizer makes the browser load the underlying engine so the next
-    // .start() call is near-instant.
-    if (!state.webEnginePrimed) {
-      const SR =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
-      if (SR) {
-        try {
-          const r = new SR();
-          r.continuous = false;
-          r.interimResults = false;
-          // Don't actually start — just constructing is enough on most engines
-          // to load the model. .abort() is a no-op when not started.
-          r.abort?.();
-          state.webEnginePrimed = true;
-        } catch {}
-      }
-    }
-  } catch (e) {
-    console.warn("Web speech warm-up failed:", e);
-  }
+  return warmupPromise;
 }
 
 export function isNativeAvailableCached(): boolean | null {

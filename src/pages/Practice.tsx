@@ -663,6 +663,10 @@ const [liveTranscription, setLiveTranscription] = useState("");
   }, [speech?.id, speech?.goal_date]);
 
   const handleStartPractice = (bypassLock = false, bypassWarning = false, bypassSessionCheck = false, bypassKnowledgeTest = false) => {
+    // Keep permission/model preparation inside the user's tap on iOS. The
+    // practice view can then begin listening while its lesson data loads.
+    void warmupSpeechRecognition();
+
     // Show knowledge test first for users who marked "somewhat" or "confident" familiarity
     if (
       !bypassKnowledgeTest &&
@@ -2018,6 +2022,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             speechId={speech.id}
             subscriptionTier={subscriptionTier}
             fullSpeechText={speech.text_original}
+            speechLanguage={speech.speech_language}
             learningMode={speech.learning_mode}
             onComplete={async () => {
               setIsPracticing(false);
