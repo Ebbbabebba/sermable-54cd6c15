@@ -234,6 +234,7 @@ interface BeatPracticeViewProps {
   speechId: string;
   subscriptionTier?: 'free' | 'student' | 'regular' | 'enterprise';
   fullSpeechText?: string; // Full speech text for "Show Whole Speech" modal
+  speechLanguage?: string | null;
   learningMode?: string | null; // 'word_by_word' (default) or 'general_overview'
   onComplete?: () => void;
   onExit?: () => void;
@@ -451,7 +452,7 @@ const fragilityRank = (b: {
 };
 
 
-const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, learningMode = null, onComplete, onExit, onEditScript }: BeatPracticeViewProps) => {
+const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText, speechLanguage, learningMode = null, onComplete, onExit, onEditScript }: BeatPracticeViewProps) => {
   const { t } = useTranslation();
   const isPremium = FORCE_PREMIUM || subscriptionTier !== 'free';
   
@@ -466,7 +467,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [beats, setBeats] = useState<Beat[]>([]);
   const [currentBeatIndex, setCurrentBeatIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [speechLang, setSpeechLang] = useState<string>(() => (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
+  const [speechLang, setSpeechLang] = useState<string>(() => speechLanguage || (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
   const [practiceStrictness, setPracticeStrictness] = useState<'strict' | 'flow'>('strict');
   // Ref mirror so matching/completion callbacks never read a stale strictness.
   const practiceStrictnessRef = useRef<'strict' | 'flow'>('strict');
@@ -4209,7 +4210,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
   }, []);
 
-  // Auto-start listening (no button press)
+  // Start listening as soon as the practice view mounts. Beat planning and
+  // database loading then happen in parallel, so iOS is already listening by
+  // the time the first readable practice screen appears.
+  useEffect(() => {
+    startRecording();
+  }, []);
+
+  // Keep auto-starting after transitions that intentionally stop listening.
   useEffect(() => {
     if (loading) return;
     if (!currentBeat) return;
