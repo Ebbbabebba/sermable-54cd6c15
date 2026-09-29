@@ -4824,20 +4824,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           {sessionMode === 'recall' ? (
             <div className={cn(
               "shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border",
-              is10MinRecall 
-                ? "bg-orange-500/20 border-orange-500/40" 
-                : "bg-amber-500/20 border-amber-500/40"
+              "bg-amber-500/20 border-amber-500/40"
             )}>
-              <span className={cn(
-                "text-xs font-bold uppercase tracking-wide",
-                is10MinRecall ? "text-orange-500" : "text-amber-500"
-              )}>
-                {isMergedRecall ? "Full Speech" : (is10MinRecall && !newBeatToLearn) ? "10min" : "Recall"}
+              <span className="text-xs font-bold uppercase tracking-wide text-amber-500">
+                {isMergedRecall ? "Full Speech" : is10MinRecall ? "Recap" : "Recall"}
               </span>
-              <span className={cn(
-                "text-sm font-bold",
-                is10MinRecall ? "text-orange-400" : "text-amber-400"
-              )}>
+              <span className="text-sm font-bold text-amber-400">
                 {recallIndex + 1}/{beatsToRecall.length}
               </span>
             </div>
