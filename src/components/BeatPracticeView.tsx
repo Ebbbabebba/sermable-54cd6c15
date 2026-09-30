@@ -3409,7 +3409,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // and go straight to the beat-complete celebration.
     const isLastFade =
       uniqueCount === 1 ||
-      (uniqueCount === 2 && (currentPhase === 'sentence_2_fading' || currentPhase === 'sentences_1_2_fading')) ||
+      (uniqueCount === 2 && currentPhase === 'sentences_1_2_fading') ||
       (uniqueCount === 3 && currentPhase === 'beat_fading');
 
     if (isLastFade) {
@@ -3440,6 +3440,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         if (uniqueCount === 2) {
           if (currentPhase === 'sentence_1_fading') {
             transitionToPhase('sentence_2_learning');
+          } else if (currentPhase === 'sentence_2_fading') {
+            // Combine sentence 1 + 2 before the coffee break
+            transitionToPhase('sentences_1_2_learning');
           }
         } else {
           // 3 sentences - normal flow
