@@ -3695,7 +3695,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // speaking immediately after tapping the mic.
     ignoreResultsUntilRef.current = 0;
 
-    const isNative = Capacitor.isNativePlatform();
+    const hasWebSpeech = !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    const isNative = Capacitor.isNativePlatform() && !(forceWebSpeech && hasWebSpeech);
     const lang = getRecognitionLocale(speechLang);
 
     try {
@@ -3741,10 +3742,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           // Some Android builds silently stop listening without firing the
           // "stopped" status — this keeps recognition alive.
           let lastActivityAt = Date.now();
+          let gotAnyResult = false;
+          let silentRestarts = 0;
           const watchdog = setInterval(() => {
             if (stopped || !isRecordingRef.current) return;
             if (Date.now() - lastActivityAt > 15000) {
               lastActivityAt = Date.now();
+              // Some devices (seen on iPad) never deliver native results.
+              // After two silent cycles, switch to the WebView recognizer.
+              if (!gotAnyResult && ++silentRestarts >= 2 && hasWebSpeech && !forceWebSpeech) {
+                console.warn("Native speech produced no results — switching to Web Speech");
+                forceWebSpeech = true;
+                const r = recognitionRef.current;
+                recognitionRef.current = null;
+                Promise.resolve(r?.stop?.()).finally(() => {
+                  if (isRecordingRef.current) { isRecordingRef.current = false; void startRecording(); }
+                });
+                return;
+              }
               NativeSpeech.stop().catch(() => {});
               setTimeout(() => {
                 if (!stopped && isRecordingRef.current) startNativeSession();
@@ -3776,8 +3791,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               prompt: "",
               partialResults: true,
               popup: false,
-            }).then(() => {
+            }).then((res: any) => {
               nativeFailCount = 0;
+              // Some iOS devices only return results when start() resolves.
+              const m: string[] = res?.matches ?? [];
+              if (m.length && !stopped && isRecordingRef.current) {
+                gotAnyResult = true;
+                lastActivityAt = Date.now();
+                const best = pickBestAlternative(m);
+                nativeFinalsRef.current = (nativeFinalsRef.current + " " + best).trim();
+                processTranscriptionRef.current(nativeFinalsRef.current, false, repetitionIdRef.current, phaseEpochRef.current);
+              }
             }).catch((e) => {
               // If we got results after this start, the failure is just the
               // session ending — not a real start failure.
@@ -3808,6 +3832,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 ignoreResultIndexCutoffUntilRef.current = 0;
               }
               lastActivityAt = Date.now();
+              if ((data?.matches ?? []).length) gotAnyResult = true;
               setIsSpeechReady(true);
 
               const matches: string[] = data?.matches ?? [];
