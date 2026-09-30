@@ -4231,6 +4231,49 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     startRecording();
   }, [loading, currentBeat?.id, showCelebration, phase, sessionMode, recallIndex]);
 
+  // Coffee break: release the mic (iOS silently kills long idle sessions, which
+  // left a stale handle and froze the following recall) and persist the break
+  // so reopening the app shows the timer instead of jumping straight into recall.
+  const coffeeKey = `sermable:coffeeBreak:${speechId}`;
+  useEffect(() => {
+    if (sessionMode !== 'coffee_break' || !restUntilTime) return;
+    stopListening();
+    try {
+      localStorage.setItem(coffeeKey, JSON.stringify({
+        until: restUntilTime.getTime(),
+        beatId: beatsToRecall[0]?.id ?? null,
+        recallBeforeId: beatToRecallBeforeNext?.id ?? null,
+        nextId: nextBeatQueued?.id ?? null,
+        endOfSession: isEndOfSessionRecall,
+      }));
+    } catch { /* ignore */ }
+  }, [sessionMode, restUntilTime]);
+
+  // Restore an unfinished coffee break after reload / app reopen.
+  const coffeeRestoredRef = useRef(false);
+  useEffect(() => {
+    if (loading || coffeeRestoredRef.current || beats.length === 0) return;
+    coffeeRestoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(coffeeKey);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (!s?.until || s.until <= Date.now()) { localStorage.removeItem(coffeeKey); return; }
+      const byId = (id: string | null) => (id ? beats.find(b => b.id === id) ?? null : null);
+      const beat = byId(s.beatId);
+      if (!beat) return;
+      setBeatsToRecall([beat]);
+      setIsEndOfSessionRecall(!!s.endOfSession);
+      if (!s.endOfSession) {
+        setBeatToRecallBeforeNext(byId(s.recallBeforeId) ?? beat);
+        setNextBeatQueued(byId(s.nextId));
+      }
+      setRestUntilTime(new Date(s.until));
+      setRestMinutes(10);
+      setSessionMode('coffee_break');
+    } catch { /* ignore */ }
+  }, [loading, beats.length]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -4444,6 +4487,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const startCoffeeBreakRecall = () => {
       setRestUntilTime(null);
       setRestMinutes(0);
+      try { localStorage.removeItem(coffeeKey); } catch { /* ignore */ }
+      stopListening();
 
       // Between-beats: continue into the pre-beat recall flow we queued.
       if (!isEndOfSessionRecall && beatToRecallBeforeNext) {
