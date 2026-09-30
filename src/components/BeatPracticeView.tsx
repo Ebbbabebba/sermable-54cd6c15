@@ -246,6 +246,9 @@ type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning'
 // Session modes: recall (quick review of mastered beats), learn (learning a new beat), beat_rest (pause between beats), pre_beat_recall (recall previous beat before learning new), beat_preview (preview upcoming beat before learning)
 type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'pre_beat_recall' | 'beat_preview' | 'coffee_break' | 'session_complete';
 
+// Set once per app run when the native recognizer never yields results (iPad).
+let forceWebSpeech = false;
+
 // Always 10 minutes coffee break after mastering a beat
 // Follows spaced repetition: short break helps consolidation
 // After the break, a quick recall of the just-mastered beat is triggered automatically
