@@ -800,18 +800,8 @@ const UploadSpeechDialog = ({
             </div>
 
             {/* Card scroll area — center the card vertically when it fits */}
-            <div
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
-              onClick={(e) => {
-                if (e.target === e.currentTarget) onOpenChange(false);
-              }}
-            >
-              <div
-                className="min-h-full w-full flex items-center justify-center px-4 sm:px-5 py-4"
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) onOpenChange(false);
-                }}
-              >
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+              <div className="min-h-full w-full flex items-center justify-center px-4 sm:px-5 py-4">
                 <div
                   className="w-full max-w-2xl"
                   onClick={(e) => e.stopPropagation()}

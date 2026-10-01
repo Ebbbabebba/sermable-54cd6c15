@@ -159,6 +159,8 @@ export const AiSpeechBuilderDialog = ({
     <Dialog open={open} onOpenChange={closeAndReset}>
       <LoadingOverlay isVisible={showRichLoading} />
       <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
         overlayClassName="!z-[60] bg-background/65 backdrop-blur-none"
         className="!z-[70] !inset-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 !grid-rows-[auto_minmax(0,1fr)_auto] w-full max-w-[100dvw] h-[100dvh] min-h-0 sm:w-[calc(100%-2rem)] sm:max-w-2xl sm:h-auto sm:max-h-[min(86dvh,720px)] !translate-x-0 !translate-y-0 sm:!-translate-x-1/2 sm:!-translate-y-1/2 overflow-hidden rounded-none sm:rounded-3xl border-border/60 bg-card p-0 shadow-2xl backdrop-blur-none"
       >
