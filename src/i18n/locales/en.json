@@ -264,6 +264,7 @@
       "pickerDesc": "Tap the words you want, name the cue and save. Tap a highlighted word to remove its cue.",
       "pickerSave": "Add cue",
       "pickerSelected": "{{count}} words selected",
+      "pickerDone": "Done",
       "pickerEmpty": "Add some text first."
     },
     "autoDetectsLanguage": "Auto-detects language",

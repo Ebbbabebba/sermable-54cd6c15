@@ -242,6 +242,7 @@
       "pickerDesc": "Touchez les mots voulus, nommez l'indication et enregistrez. Touchez un mot surligné pour le retirer.",
       "pickerSave": "Ajouter",
       "pickerSelected": "{{count}} mots sélectionnés",
+      "pickerDone": "Terminé",
       "pickerEmpty": "Ajoutez d'abord du texte."
     },
     "autoDetectsLanguage": "Détection automatique de la langue",

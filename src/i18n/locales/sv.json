@@ -265,6 +265,7 @@
       "pickerDesc": "Tryck på orden du vill markera, namnge anvisningen och spara. Tryck på ett markerat ord för att ta bort det.",
       "pickerSave": "Lägg till",
       "pickerSelected": "{{count}} ord markerade",
+      "pickerDone": "Klar",
       "pickerEmpty": "Lägg till text först."
     },
     "autoDetectsLanguage": "Upptäcker språk automatiskt",

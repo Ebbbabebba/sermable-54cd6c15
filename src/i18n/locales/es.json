@@ -242,6 +242,7 @@
       "pickerDesc": "Toca las palabras que quieras, nombra la indicación y guarda. Toca una palabra resaltada para quitarla.",
       "pickerSave": "Añadir",
       "pickerSelected": "{{count}} palabras seleccionadas",
+      "pickerDone": "Listo",
       "pickerEmpty": "Añade texto primero."
     },
     "autoDetectsLanguage": "Detecta el idioma automáticamente",
