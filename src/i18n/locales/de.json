@@ -242,6 +242,7 @@
       "pickerDesc": "Tippe die gewünschten Wörter an, benenne den Hinweis und speichere. Tippe ein markiertes Wort an, um es zu entfernen.",
       "pickerSave": "Hinzufügen",
       "pickerSelected": "{{count}} Wörter ausgewählt",
+      "pickerDone": "Fertig",
       "pickerEmpty": "Füge zuerst Text hinzu."
     },
     "autoDetectsLanguage": "Sprache wird automatisch erkannt",
