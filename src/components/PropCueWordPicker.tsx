@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { X, Sparkle, Hand } from "lucide-react";
+import { X, Sparkle, Hand, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import {
@@ -35,6 +35,7 @@ const PropCueWordPicker = ({
   const { t } = useTranslation();
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [cue, setCue] = useState("");
+  const [savedInSession, setSavedInSession] = useState(false);
 
   const tokens = useMemo(() => tokenizeWords(value), [value]);
   const cueIndex = useMemo(
@@ -59,13 +60,19 @@ const PropCueWordPicker = ({
     onChange(applyPropCueToIndices(value, [...selected], cue));
     setSelected(new Set());
     setCue("");
+    setSavedInSession(true);
   };
 
   const close = () => {
     setSelected(new Set());
     setCue("");
+    setSavedInSession(false);
     onOpenChange(false);
   };
+
+  // The Done step appears once words have been marked — either in this
+  // session or from cues already saved on the text.
+  const showDone = savedInSession || cueIndex.size > 0;
 
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
@@ -178,6 +185,17 @@ const PropCueWordPicker = ({
                 {t("common.cancel")}
               </Button>
             </div>
+          )}
+
+          {showDone && (
+            <Button
+              type="button"
+              onClick={close}
+              className="w-full gap-1.5 h-11 text-base font-semibold"
+            >
+              <Check className="h-5 w-5" />
+              {t("upload.propCue.pickerDone", "Done")}
+            </Button>
           )}
         </div>
       </DialogContent>
