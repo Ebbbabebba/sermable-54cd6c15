@@ -630,7 +630,9 @@
     "delete": "Löschen",
     "close": "Schließen",
     "skip": "Überspringen",
-    "words": "Wörter"
+    "words": "Wörter",
+    "previous": "Zurück",
+    "next": "Weiter"
   },
   "beat_practice": {
     "tight_deadline": "Knappe Frist: {{count}} Abschnitte übrig bei {{days}} Tag(en). Wir konzentrieren uns auf Anfang, Schluss und Übergänge – verschiebe das Datum, wenn möglich.",
@@ -1261,5 +1263,16 @@
     "title": "Tage in Folge!",
     "subtitle": "Du bist auf Feuer! Übe jeden Tag, um deine Serie zu halten.",
     "button": "Super!"
+  },
+  "premiumDialog": {
+    "title": "Auf Premium upgraden",
+    "description": "Schöpfe das volle Potenzial beim Auswendiglernen deiner Rede aus",
+    "unlimited": "Unbegrenzte Reden pro Monat",
+    "words": "Bis zu 5000 Wörter pro Rede",
+    "priority": "Bevorzugtes KI-Feedback",
+    "startingAt": "Ab",
+    "perMonthStudents": "/Monat für Studierende",
+    "upgradeNow": "Jetzt upgraden",
+    "maybeLater": "Vielleicht später"
   }
 }

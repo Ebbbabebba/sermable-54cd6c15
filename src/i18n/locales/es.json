@@ -630,7 +630,9 @@
     "delete": "Eliminar",
     "close": "Cerrar",
     "skip": "Omitir",
-    "words": "palabras"
+    "words": "palabras",
+    "previous": "Anterior",
+    "next": "Siguiente"
   },
   "beat_practice": {
     "tight_deadline": "Plazo ajustado: quedan {{count}} secciones y {{days}} día(s). Nos centraremos en el inicio, el final y las transiciones; mueve la fecha si puedes.",
@@ -1261,5 +1263,16 @@
     "title": "¡Días seguidos!",
     "subtitle": "¡Estás que arde! Practica cada día para mantener tu racha.",
     "button": "¡Genial!"
+  },
+  "premiumDialog": {
+    "title": "Mejorar a Premium",
+    "description": "Desbloquea todo el potencial de la memorización de tus discursos",
+    "unlimited": "Discursos ilimitados al mes",
+    "words": "Hasta 5000 palabras por discurso",
+    "priority": "Comentarios de IA prioritarios",
+    "startingAt": "Desde",
+    "perMonthStudents": "/mes para estudiantes",
+    "upgradeNow": "Mejorar ahora",
+    "maybeLater": "Quizás más tarde"
   }
 }

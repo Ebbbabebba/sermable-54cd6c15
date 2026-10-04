@@ -899,7 +899,9 @@
     "delete": "Ta bort",
     "close": "Stäng",
     "skip": "Hoppa över",
-    "words": "ord"
+    "words": "ord",
+    "previous": "Föregående",
+    "next": "Nästa"
   },
   "beat_practice": {
     "tight_deadline": "Kort om tid: {{count}} avsnitt kvar och {{days}} dag(ar) till deadline. Vi fokuserar på början, slutet och övergångarna — flytta datumet om det går.",
@@ -1290,5 +1292,16 @@
     "title": "Dagar i rad!",
     "subtitle": "Du är på gång! Öva varje dag för att hålla din svit vid liv.",
     "button": "Härligt!"
+  },
+  "premiumDialog": {
+    "title": "Uppgradera till Premium",
+    "description": "Lås upp hela potentialen i din talinlärning",
+    "unlimited": "Obegränsat antal tal per månad",
+    "words": "Upp till 5000 ord per tal",
+    "priority": "Prioriterad AI-feedback",
+    "startingAt": "Från",
+    "perMonthStudents": "/månad för studenter",
+    "upgradeNow": "Uppgradera nu",
+    "maybeLater": "Kanske senare"
   }
 }

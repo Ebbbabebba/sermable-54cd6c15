@@ -630,7 +630,9 @@
     "delete": "Elimina",
     "close": "Chiudi",
     "skip": "Salta",
-    "words": "parole"
+    "words": "parole",
+    "previous": "Precedente",
+    "next": "Successivo"
   },
   "beat_practice": {
     "tight_deadline": "Scadenza vicina: {{count}} sezioni rimaste in {{days}} giorno/i. Ci concentriamo su inizio, finale e passaggi — sposta la data se puoi.",
@@ -1261,5 +1263,16 @@
     "title": "Giorni di fila!",
     "subtitle": "Sei in fiamme! Allenati ogni giorno per mantenere la serie.",
     "button": "Evviva!"
+  },
+  "premiumDialog": {
+    "title": "Passa a Premium",
+    "description": "Sblocca tutto il potenziale della memorizzazione dei tuoi discorsi",
+    "unlimited": "Discorsi illimitati al mese",
+    "words": "Fino a 5000 parole per discorso",
+    "priority": "Feedback IA prioritario",
+    "startingAt": "A partire da",
+    "perMonthStudents": "/mese per studenti",
+    "upgradeNow": "Passa ora",
+    "maybeLater": "Forse più tardi"
   }
 }

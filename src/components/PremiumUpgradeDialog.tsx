@@ -32,12 +32,12 @@ export const PremiumUpgradeDialog = ({
   // Feature-specific messaging
   const featureContent = {
     general: {
-      title: "Upgrade to Premium",
-      description: "Unlock the full potential of your speech memorization journey",
+      title: t('premiumDialog.title'),
+      description: t('premiumDialog.description'),
       benefits: [
-        { icon: InfinityIcon, text: "Unlimited speeches per month" },
-        { icon: Zap, text: "Up to 5000 words per speech" },
-        { icon: Crown, text: "Priority AI feedback" },
+        { icon: InfinityIcon, text: t('premiumDialog.unlimited') },
+        { icon: Zap, text: t('premiumDialog.words') },
+        { icon: Crown, text: t('premiumDialog.priority') },
       ],
     },
     audience_mode: {
@@ -93,7 +93,7 @@ export const PremiumUpgradeDialog = ({
         </div>
 
         <div className="text-center text-sm text-muted-foreground pb-2">
-          Starting at <span className="font-semibold text-foreground">€3.90/month</span> for students
+          {t('premiumDialog.startingAt')} <span className="font-semibold text-foreground">€3.90</span>{t('premiumDialog.perMonthStudents')}
         </div>
 
         <div className="flex flex-col gap-2 pt-2">
@@ -101,14 +101,14 @@ export const PremiumUpgradeDialog = ({
             onClick={handleContinue}
             className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
           >
-            Upgrade Now
+            {t('premiumDialog.upgradeNow')}
           </Button>
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
             className="w-full"
           >
-            Maybe later
+            {t('premiumDialog.maybeLater')}
           </Button>
         </div>
       </DialogContent>

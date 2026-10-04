@@ -630,7 +630,9 @@
     "delete": "Supprimer",
     "close": "Fermer",
     "skip": "Passer",
-    "words": "mots"
+    "words": "mots",
+    "previous": "Précédent",
+    "next": "Suivant"
   },
   "beat_practice": {
     "tight_deadline": "Délai serré : {{count}} sections restantes pour {{days}} jour(s). On se concentre sur le début, la fin et les transitions — décale la date si possible.",
@@ -1261,5 +1263,16 @@
     "title": "Jours de suite !",
     "subtitle": "Tu es en feu ! Entraîne-toi chaque jour pour garder ta série.",
     "button": "Génial !"
+  },
+  "premiumDialog": {
+    "title": "Passer à Premium",
+    "description": "Libérez tout le potentiel de la mémorisation de vos discours",
+    "unlimited": "Discours illimités par mois",
+    "words": "Jusqu’à 5000 mots par discours",
+    "priority": "Retour IA prioritaire",
+    "startingAt": "À partir de",
+    "perMonthStudents": "/mois pour les étudiants",
+    "upgradeNow": "Passer à Premium",
+    "maybeLater": "Plus tard"
   }
 }
