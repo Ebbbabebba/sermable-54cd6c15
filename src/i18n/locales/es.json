@@ -632,7 +632,17 @@
     "skip": "Omitir",
     "words": "palabras",
     "previous": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "micDenied": "Acceso al micrófono denegado",
+    "micDeniedDesc": "Permite el acceso al micrófono y al reconocimiento de voz.",
+    "notSupported": "No compatible",
+    "speechRecognitionNotSupported": "El reconocimiento de voz no es compatible con este navegador.",
+    "failedToProcess": "No se pudo procesar el texto",
+    "micError": "Error de micrófono",
+    "couldNotAccessMic": "No se pudo acceder al micrófono.",
+    "analysisFailed": "Error en el análisis",
+    "couldNotAnalyze": "No se pudo analizar la grabación",
+    "couldNotProcess": "No se pudo procesar la grabación"
   },
   "beat_practice": {
     "tight_deadline": "Plazo ajustado: quedan {{count}} secciones y {{days}} día(s). Nos centraremos en el inicio, el final y las transiciones; mueve la fecha si puedes.",
@@ -1274,5 +1284,29 @@
     "perMonthStudents": "/mes para estudiantes",
     "upgradeNow": "Mejorar ahora",
     "maybeLater": "Quizás más tarde"
+  },
+  "sharedSpeech": {
+    "sharedSpeech": "Discurso compartido",
+    "notFound": "Discurso no encontrado",
+    "notFoundDesc": "Es posible que este enlace para compartir haya caducado o se haya eliminado.",
+    "goToApp": "Ir a Sermable",
+    "addToMySpeeches": "Añadir a mis discursos",
+    "signUpAndAdd": "Regístrate y añade el discurso",
+    "createAccountHint": "Crea una cuenta gratis para practicar este discurso",
+    "imported": "¡Discurso importado!",
+    "importedDesc": "\"{{title}}\" se ha añadido a tus discursos.",
+    "importFailed": "Error al importar"
+  },
+  "deleteAccount": {
+    "title": "Eliminar cuenta y datos",
+    "description": "Solicita la eliminación de tu cuenta y todos los datos asociados, incluidos discursos, sesiones de práctica y progreso.",
+    "requestReceived": "Solicitud recibida",
+    "requestReceivedToastDesc": "Si existe una cuenta con este correo, se procesará. Inicia sesión en la app y elimina tu cuenta desde Ajustes > Cuenta.",
+    "submittedDesc": "Si has iniciado sesión, tu cuenta ha sido eliminada. Si no, inicia sesión en la app y ve a Ajustes → Cuenta → Eliminar cuenta.",
+    "goHome": "Ir al inicio",
+    "emailAddress": "Correo electrónico",
+    "warning": "Esto eliminará permanentemente tu cuenta, todos los discursos, el historial de práctica y los datos personales. Esta acción no se puede deshacer.",
+    "processing": "Procesando...",
+    "submit": "Solicitar eliminación de cuenta"
   }
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Download, FileText, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { stripPropCueMarkers } from "@/utils/propCues";
 
 interface SharedSpeechData {
@@ -19,6 +20,7 @@ const SharedSpeech = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [speech, setSpeech] = useState<SharedSpeechData | null>(null);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
@@ -77,10 +79,10 @@ const SharedSpeech = () => {
 
       if (error) throw error;
 
-      toast({ title: "Speech imported!", description: `"${speech.title}" has been added to your speeches.` });
+      toast({ title: t('sharedSpeech.imported'), description: t('sharedSpeech.importedDesc', { title: speech.title }) });
       navigate('/dashboard');
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Import failed", description: err.message });
+      toast({ variant: "destructive", title: t('sharedSpeech.importFailed'), description: err.message });
     } finally {
       setImporting(false);
     }
@@ -100,9 +102,9 @@ const SharedSpeech = () => {
         <Card className="max-w-md w-full border-0 shadow-apple-xl">
           <CardContent className="py-12 text-center space-y-4">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
-            <h2 className="text-xl font-semibold text-foreground">Speech not found</h2>
-            <p className="text-muted-foreground">This share link may have expired or been removed.</p>
-            <Button variant="apple" onClick={() => navigate('/')}>Go to Sermable</Button>
+            <h2 className="text-xl font-semibold text-foreground">{t('sharedSpeech.notFound')}</h2>
+            <p className="text-muted-foreground">{t('sharedSpeech.notFoundDesc')}</p>
+            <Button variant="apple" onClick={() => navigate('/')}>{t('sharedSpeech.goToApp')}</Button>
           </CardContent>
         </Card>
       </div>
@@ -116,12 +118,12 @@ const SharedSpeech = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <Card className="max-w-lg w-full border-0 shadow-apple-xl">
         <CardHeader className="text-center pb-2">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Shared Speech</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">{t('sharedSpeech.sharedSpeech')}</p>
           <CardTitle className="text-2xl capitalize">{speech.title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex justify-center gap-6 text-sm text-muted-foreground">
-            <span>{wordCount} words</span>
+            <span>{wordCount} {t('common.words')}</span>
             {speech.speech_type && <span className="capitalize">{speech.speech_type}</span>}
           </div>
 
@@ -135,12 +137,12 @@ const SharedSpeech = () => {
           <div className="space-y-3">
             <Button variant="apple" size="lg" className="w-full" onClick={handleImport} disabled={importing}>
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {isLoggedIn ? 'Add to My Speeches' : 'Sign Up & Add Speech'}
+              {isLoggedIn ? t('sharedSpeech.addToMySpeeches') : t('sharedSpeech.signUpAndAdd')}
             </Button>
 
             {!isLoggedIn && (
               <p className="text-xs text-muted-foreground text-center">
-                Create a free account to start practicing this speech
+                {t('sharedSpeech.createAccountHint')}
               </p>
             )}
           </div>

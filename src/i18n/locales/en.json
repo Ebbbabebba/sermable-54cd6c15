@@ -981,7 +981,17 @@
     "skip": "Skip",
     "words": "words",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "micDenied": "Microphone Access Denied",
+    "micDeniedDesc": "Please allow microphone & speech access.",
+    "notSupported": "Not Supported",
+    "speechRecognitionNotSupported": "Speech recognition is not supported in this browser.",
+    "failedToProcess": "Failed to process text",
+    "micError": "Microphone error",
+    "couldNotAccessMic": "Could not access microphone.",
+    "analysisFailed": "Analysis failed",
+    "couldNotAnalyze": "Could not analyze recording",
+    "couldNotProcess": "Could not process recording"
   },
   "presentation": {
     "settings": "Presentation Settings",
@@ -1256,5 +1266,29 @@
     "perMonthStudents": "/month for students",
     "upgradeNow": "Upgrade now",
     "maybeLater": "Maybe later"
+  },
+  "sharedSpeech": {
+    "sharedSpeech": "Shared Speech",
+    "notFound": "Speech not found",
+    "notFoundDesc": "This share link may have expired or been removed.",
+    "goToApp": "Go to Sermable",
+    "addToMySpeeches": "Add to My Speeches",
+    "signUpAndAdd": "Sign Up & Add Speech",
+    "createAccountHint": "Create a free account to start practicing this speech",
+    "imported": "Speech imported!",
+    "importedDesc": "\"{{title}}\" has been added to your speeches.",
+    "importFailed": "Import failed"
+  },
+  "deleteAccount": {
+    "title": "Delete Account & Data",
+    "description": "Request deletion of your account and all associated data including speeches, practice sessions, and progress.",
+    "requestReceived": "Request received",
+    "requestReceivedToastDesc": "If an account exists with this email, it will be processed. Please log in to the app and delete your account from Settings > Account.",
+    "submittedDesc": "If you're logged in, your account has been deleted. Otherwise, please log in to the app and go to Settings → Account → Delete Account.",
+    "goHome": "Go to Home",
+    "emailAddress": "Email address",
+    "warning": "This will permanently delete your account, all speeches, practice history, and personal data. This action cannot be undone.",
+    "processing": "Processing...",
+    "submit": "Request Account Deletion"
   }
 }
