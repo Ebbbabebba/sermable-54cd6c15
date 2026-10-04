@@ -979,7 +979,9 @@
     "delete": "Delete",
     "close": "Close",
     "skip": "Skip",
-    "words": "words"
+    "words": "words",
+    "previous": "Previous",
+    "next": "Next"
   },
   "presentation": {
     "settings": "Presentation Settings",
@@ -1243,5 +1245,16 @@
     "title": "Day Streak!",
     "subtitle": "You're on fire! Keep practicing every day to maintain your streak.",
     "button": "Yay!"
+  },
+  "premiumDialog": {
+    "title": "Upgrade to Premium",
+    "description": "Unlock the full potential of your speech memorization journey",
+    "unlimited": "Unlimited speeches per month",
+    "words": "Up to 5000 words per speech",
+    "priority": "Priority AI feedback",
+    "startingAt": "Starting at",
+    "perMonthStudents": "/month for students",
+    "upgradeNow": "Upgrade now",
+    "maybeLater": "Maybe later"
   }
 }
