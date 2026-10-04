@@ -632,7 +632,17 @@
     "skip": "Salta",
     "words": "parole",
     "previous": "Precedente",
-    "next": "Successivo"
+    "next": "Successivo",
+    "micDenied": "Accesso al microfono negato",
+    "micDeniedDesc": "Consenti l'accesso al microfono e al riconoscimento vocale.",
+    "notSupported": "Non supportato",
+    "speechRecognitionNotSupported": "Il riconoscimento vocale non è supportato in questo browser.",
+    "failedToProcess": "Impossibile elaborare il testo",
+    "micError": "Errore del microfono",
+    "couldNotAccessMic": "Impossibile accedere al microfono.",
+    "analysisFailed": "Analisi non riuscita",
+    "couldNotAnalyze": "Impossibile analizzare la registrazione",
+    "couldNotProcess": "Impossibile elaborare la registrazione"
   },
   "beat_practice": {
     "tight_deadline": "Scadenza vicina: {{count}} sezioni rimaste in {{days}} giorno/i. Ci concentriamo su inizio, finale e passaggi — sposta la data se puoi.",
@@ -1274,5 +1284,29 @@
     "perMonthStudents": "/mese per studenti",
     "upgradeNow": "Passa ora",
     "maybeLater": "Forse più tardi"
+  },
+  "sharedSpeech": {
+    "sharedSpeech": "Discorso condiviso",
+    "notFound": "Discorso non trovato",
+    "notFoundDesc": "Questo link di condivisione potrebbe essere scaduto o rimosso.",
+    "goToApp": "Vai a Sermable",
+    "addToMySpeeches": "Aggiungi ai miei discorsi",
+    "signUpAndAdd": "Registrati e aggiungi il discorso",
+    "createAccountHint": "Crea un account gratuito per esercitarti con questo discorso",
+    "imported": "Discorso importato!",
+    "importedDesc": "\"{{title}}\" è stato aggiunto ai tuoi discorsi.",
+    "importFailed": "Importazione non riuscita"
+  },
+  "deleteAccount": {
+    "title": "Elimina account e dati",
+    "description": "Richiedi l'eliminazione del tuo account e di tutti i dati associati, inclusi discorsi, sessioni di pratica e progressi.",
+    "requestReceived": "Richiesta ricevuta",
+    "requestReceivedToastDesc": "Se esiste un account con questa email, verrà elaborato. Accedi all'app ed elimina il tuo account da Impostazioni > Account.",
+    "submittedDesc": "Se hai effettuato l'accesso, il tuo account è stato eliminato. Altrimenti, accedi all'app e vai su Impostazioni → Account → Elimina account.",
+    "goHome": "Vai alla home",
+    "emailAddress": "Indirizzo email",
+    "warning": "Questo eliminerà definitivamente il tuo account, tutti i discorsi, la cronologia di pratica e i dati personali. Questa azione non può essere annullata.",
+    "processing": "Elaborazione...",
+    "submit": "Richiedi eliminazione account"
   }
 }

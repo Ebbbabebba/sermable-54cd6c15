@@ -632,7 +632,17 @@
     "skip": "Pular",
     "words": "palavras",
     "previous": "Anterior",
-    "next": "Seguinte"
+    "next": "Seguinte",
+    "micDenied": "Acesso ao microfone negado",
+    "micDeniedDesc": "Permita o acesso ao microfone e ao reconhecimento de voz.",
+    "notSupported": "Não suportado",
+    "speechRecognitionNotSupported": "O reconhecimento de voz não é suportado neste navegador.",
+    "failedToProcess": "Falha ao processar o texto",
+    "micError": "Erro de microfone",
+    "couldNotAccessMic": "Não foi possível aceder ao microfone.",
+    "analysisFailed": "Falha na análise",
+    "couldNotAnalyze": "Não foi possível analisar a gravação",
+    "couldNotProcess": "Não foi possível processar a gravação"
   },
   "beat_practice": {
     "tight_deadline": "Prazo apertado: faltam {{count}} secções em {{days}} dia(s). Vamos focar no início, no fim e nas transições — muda a data se puderes.",
@@ -1274,5 +1284,29 @@
     "perMonthStudents": "/mês para estudantes",
     "upgradeNow": "Atualizar agora",
     "maybeLater": "Talvez mais tarde"
+  },
+  "sharedSpeech": {
+    "sharedSpeech": "Discurso partilhado",
+    "notFound": "Discurso não encontrado",
+    "notFoundDesc": "Esta ligação de partilha pode ter expirado ou sido removida.",
+    "goToApp": "Ir para o Sermable",
+    "addToMySpeeches": "Adicionar aos meus discursos",
+    "signUpAndAdd": "Registar e adicionar discurso",
+    "createAccountHint": "Crie uma conta gratuita para praticar este discurso",
+    "imported": "Discurso importado!",
+    "importedDesc": "\"{{title}}\" foi adicionado aos seus discursos.",
+    "importFailed": "Falha na importação"
+  },
+  "deleteAccount": {
+    "title": "Eliminar conta e dados",
+    "description": "Solicite a eliminação da sua conta e de todos os dados associados, incluindo discursos, sessões de prática e progresso.",
+    "requestReceived": "Pedido recebido",
+    "requestReceivedToastDesc": "Se existir uma conta com este e-mail, será processada. Inicie sessão na aplicação e elimine a sua conta em Definições > Conta.",
+    "submittedDesc": "Se tiver sessão iniciada, a sua conta foi eliminada. Caso contrário, inicie sessão na aplicação e vá a Definições → Conta → Eliminar conta.",
+    "goHome": "Ir para o início",
+    "emailAddress": "Endereço de e-mail",
+    "warning": "Isto eliminará permanentemente a sua conta, todos os discursos, o histórico de prática e os dados pessoais. Esta ação não pode ser anulada.",
+    "processing": "A processar...",
+    "submit": "Solicitar eliminação da conta"
   }
 }

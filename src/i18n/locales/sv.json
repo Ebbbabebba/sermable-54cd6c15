@@ -901,7 +901,17 @@
     "skip": "Hoppa över",
     "words": "ord",
     "previous": "Föregående",
-    "next": "Nästa"
+    "next": "Nästa",
+    "micDenied": "Mikrofonåtkomst nekad",
+    "micDeniedDesc": "Tillåt åtkomst till mikrofon och röstigenkänning.",
+    "notSupported": "Stöds inte",
+    "speechRecognitionNotSupported": "Röstigenkänning stöds inte i den här webbläsaren.",
+    "failedToProcess": "Kunde inte bearbeta texten",
+    "micError": "Mikrofonfel",
+    "couldNotAccessMic": "Kunde inte komma åt mikrofonen.",
+    "analysisFailed": "Analysen misslyckades",
+    "couldNotAnalyze": "Kunde inte analysera inspelningen",
+    "couldNotProcess": "Kunde inte bearbeta inspelningen"
   },
   "beat_practice": {
     "tight_deadline": "Kort om tid: {{count}} avsnitt kvar och {{days}} dag(ar) till deadline. Vi fokuserar på början, slutet och övergångarna — flytta datumet om det går.",
@@ -1303,5 +1313,29 @@
     "perMonthStudents": "/månad för studenter",
     "upgradeNow": "Uppgradera nu",
     "maybeLater": "Kanske senare"
+  },
+  "sharedSpeech": {
+    "sharedSpeech": "Delat tal",
+    "notFound": "Talet hittades inte",
+    "notFoundDesc": "Den här delningslänken kan ha gått ut eller tagits bort.",
+    "goToApp": "Gå till Sermable",
+    "addToMySpeeches": "Lägg till i mina tal",
+    "signUpAndAdd": "Skapa konto & lägg till tal",
+    "createAccountHint": "Skapa ett gratiskonto för att börja öva på talet",
+    "imported": "Talet importerat!",
+    "importedDesc": "\"{{title}}\" har lagts till i dina tal.",
+    "importFailed": "Importen misslyckades"
+  },
+  "deleteAccount": {
+    "title": "Radera konto & data",
+    "description": "Begär radering av ditt konto och all tillhörande data, inklusive tal, övningstillfällen och framsteg.",
+    "requestReceived": "Begäran mottagen",
+    "requestReceivedToastDesc": "Om ett konto finns med den här e-postadressen behandlas det. Logga in i appen och radera kontot via Inställningar > Konto.",
+    "submittedDesc": "Om du är inloggad har ditt konto raderats. Annars, logga in i appen och gå till Inställningar → Konto → Radera konto.",
+    "goHome": "Gå till startsidan",
+    "emailAddress": "E-postadress",
+    "warning": "Detta raderar permanent ditt konto, alla tal, övningshistorik och personlig data. Åtgärden kan inte ångras.",
+    "processing": "Bearbetar...",
+    "submit": "Begär kontoradering"
   }
 }

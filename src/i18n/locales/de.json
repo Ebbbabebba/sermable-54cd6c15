@@ -632,7 +632,17 @@
     "skip": "Überspringen",
     "words": "Wörter",
     "previous": "Zurück",
-    "next": "Weiter"
+    "next": "Weiter",
+    "micDenied": "Mikrofonzugriff verweigert",
+    "micDeniedDesc": "Bitte erlaube Mikrofon- und Sprachzugriff.",
+    "notSupported": "Nicht unterstützt",
+    "speechRecognitionNotSupported": "Spracherkennung wird in diesem Browser nicht unterstützt.",
+    "failedToProcess": "Text konnte nicht verarbeitet werden",
+    "micError": "Mikrofonfehler",
+    "couldNotAccessMic": "Kein Zugriff auf das Mikrofon.",
+    "analysisFailed": "Analyse fehlgeschlagen",
+    "couldNotAnalyze": "Aufnahme konnte nicht analysiert werden",
+    "couldNotProcess": "Aufnahme konnte nicht verarbeitet werden"
   },
   "beat_practice": {
     "tight_deadline": "Knappe Frist: {{count}} Abschnitte übrig bei {{days}} Tag(en). Wir konzentrieren uns auf Anfang, Schluss und Übergänge – verschiebe das Datum, wenn möglich.",
@@ -1274,5 +1284,29 @@
     "perMonthStudents": "/Monat für Studierende",
     "upgradeNow": "Jetzt upgraden",
     "maybeLater": "Vielleicht später"
+  },
+  "sharedSpeech": {
+    "sharedSpeech": "Geteilte Rede",
+    "notFound": "Rede nicht gefunden",
+    "notFoundDesc": "Dieser Freigabelink ist möglicherweise abgelaufen oder wurde entfernt.",
+    "goToApp": "Zu Sermable",
+    "addToMySpeeches": "Zu meinen Reden hinzufügen",
+    "signUpAndAdd": "Registrieren & Rede hinzufügen",
+    "createAccountHint": "Erstelle ein kostenloses Konto, um diese Rede zu üben",
+    "imported": "Rede importiert!",
+    "importedDesc": "\"{{title}}\" wurde zu deinen Reden hinzugefügt.",
+    "importFailed": "Import fehlgeschlagen"
+  },
+  "deleteAccount": {
+    "title": "Konto & Daten löschen",
+    "description": "Beantrage die Löschung deines Kontos und aller zugehörigen Daten einschließlich Reden, Übungssitzungen und Fortschritt.",
+    "requestReceived": "Anfrage erhalten",
+    "requestReceivedToastDesc": "Falls ein Konto mit dieser E-Mail existiert, wird es bearbeitet. Bitte melde dich in der App an und lösche dein Konto unter Einstellungen > Konto.",
+    "submittedDesc": "Wenn du angemeldet bist, wurde dein Konto gelöscht. Andernfalls melde dich in der App an und gehe zu Einstellungen → Konto → Konto löschen.",
+    "goHome": "Zur Startseite",
+    "emailAddress": "E-Mail-Adresse",
+    "warning": "Dadurch werden dein Konto, alle Reden, der Übungsverlauf und persönliche Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "processing": "Wird verarbeitet...",
+    "submit": "Kontolöschung beantragen"
   }
 }
