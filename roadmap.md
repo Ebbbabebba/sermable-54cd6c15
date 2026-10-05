@@ -1,5 +1,11 @@
 # Roadmap
 
+## Klart: Fullständig översättning av kvarvarande skärmar
+
+- [x] Delade tal och kontoradering på alla sju språk
+- [x] Återblicken nästa dag och dess mikrofonmeddelanden på alla sju språk
+- [x] Manusläget, felmeddelanden och resultatsammanfattning på alla sju språk
+
 ## Klart: Mjukare och färgstarkare kärnupplevelse
 
 - [x] Grön standardaccent med tydliga kompletterande statusfärger

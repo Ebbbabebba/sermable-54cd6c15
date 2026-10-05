@@ -263,7 +263,7 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
       // Needs another attempt
       toast({
         title: t('day_after_recall.attempt_complete', 'Good! Let\'s try again'),
-        description: t('day_after_recall.fewer_stops', `You needed ${keywordsShownThisAttempt} keyword(s). Try to need fewer this time.`),
+          description: t('day_after_recall.fewer_stops', { count: keywordsShownThisAttempt }),
       });
       
       // Reset for next attempt
@@ -297,8 +297,8 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
             if (req.speechRecognition !== "granted") {
               toast({
                 variant: "destructive",
-                title: "Microphone Access Denied",
-                description: "Please allow microphone & speech access.",
+            title: t('common.micDenied'),
+            description: t('common.micDeniedDesc'),
               });
               return;
             }
@@ -370,8 +370,8 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
         if (!SpeechRecognition) {
           toast({
             variant: "destructive",
-            title: "Not Supported",
-            description: "Speech recognition is not supported in this browser.",
+            title: t('common.notSupported'),
+            description: t('common.speechRecognitionNotSupported'),
           });
           return;
         }
@@ -498,7 +498,7 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
         
         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
           <GraduationCap className="h-4 w-4" />
-          <span>{t('day_after_recall.attempts', `Completed in ${attemptNumber} attempt(s)`)}</span>
+          <span>{t('day_after_recall.attempts', { count: attemptNumber })}</span>
         </div>
         
         <Button onClick={onComplete || onExit} className="mt-6">
