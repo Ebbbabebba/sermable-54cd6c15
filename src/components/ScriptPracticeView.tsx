@@ -212,7 +212,7 @@ const ScriptPracticeView = ({
       });
 
       if (error) throw error;
-      if (!data?.beats || data.beats.length === 0) throw new Error("No beats extracted");
+      if (!data?.beats || data.beats.length === 0) throw new Error(t('script.noBeatsExtracted'));
 
       setBeats(data.beats.map((beat: Beat) => ({
         ...beat,
@@ -237,7 +237,7 @@ const ScriptPracticeView = ({
       toast({
         variant: "destructive",
         title: t('common.error', 'Error'),
-        description: getErrorMessage(err, "Failed to process text"),
+        description: getErrorMessage(err, t('common.failedToProcess')),
       });
     }
   }, [speechId, speechText, speechLanguage, t, toast]);
@@ -422,8 +422,8 @@ const ScriptPracticeView = ({
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Microphone error",
-        description: "Could not access microphone.",
+        title: t('common.micError'),
+        description: t('common.couldNotAccessMic'),
       });
     }
   };
@@ -526,12 +526,12 @@ const ScriptPracticeView = ({
           }]);
         } catch (err: unknown) {
           console.error("Analysis error:", err);
-          toast({ variant: "destructive", title: "Analysis failed", description: getErrorMessage(err, "Could not analyze recording") });
+          toast({ variant: "destructive", title: t('common.analysisFailed'), description: getErrorMessage(err, t('common.couldNotAnalyze')) });
           setPhase('reference');
         }
       };
     } catch (err: unknown) {
-      toast({ variant: "destructive", title: "Error", description: getErrorMessage(err, "Could not process recording") });
+      toast({ variant: "destructive", title: t('common.error'), description: getErrorMessage(err, t('common.couldNotProcess')) });
       setPhase('reference');
     }
   };
@@ -1036,12 +1036,12 @@ const ScriptPracticeView = ({
                       <CardContent className="p-3 flex items-center justify-between">
                         <span className="text-sm">
                           {sr.beatStart === sr.beatEnd
-                            ? `Beat ${sr.beatStart + 1}`
-                            : `Beats ${sr.beatStart + 1}–${sr.beatEnd + 1}`}
+                            ? t('script.beatNumber', { number: sr.beatStart + 1 })
+                            : t('script.beatRange', { start: sr.beatStart + 1, end: sr.beatEnd + 1 })}
                         </span>
                         <div className="flex items-center gap-3">
                           <span className="text-xs text-muted-foreground">
-                            {sr.content_coverage}% content · {sr.order_accuracy}% order
+                            {t('script.summaryMetrics', { content: sr.content_coverage, order: sr.order_accuracy })}
                           </span>
                           <span className={`text-sm font-bold ${getScoreColor(sr.score)}`}>
                             {sr.score}%

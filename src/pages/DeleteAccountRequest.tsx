@@ -7,10 +7,12 @@ import { Trash2, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const DeleteAccountRequest = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -46,8 +48,8 @@ const DeleteAccountRequest = () => {
       // If not logged in or different email, just show confirmation
       setSubmitted(true);
       toast({
-        title: "Request received",
-        description: "If an account exists with this email, it will be processed. Please log in to the app and delete your account from Settings > Account.",
+        title: t('deleteAccount.requestReceived'),
+        description: t('deleteAccount.requestReceivedToastDesc'),
       });
     } catch (error) {
       console.error('Error:', error);
@@ -65,9 +67,9 @@ const DeleteAccountRequest = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Trash2 className="h-10 w-10 text-destructive mx-auto mb-2" />
-          <CardTitle className="text-xl">Delete Account & Data</CardTitle>
+          <CardTitle className="text-xl">{t('deleteAccount.title')}</CardTitle>
           <CardDescription>
-            Request deletion of your account and all associated data including speeches, practice sessions, and progress.
+            {t('deleteAccount.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,19 +77,19 @@ const DeleteAccountRequest = () => {
             <div className="text-center space-y-4">
               <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
               <div>
-                <p className="font-medium">Request received</p>
+                <p className="font-medium">{t('deleteAccount.requestReceived')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  If you're logged in, your account has been deleted. Otherwise, please log in to the app and go to Settings → Account → Delete Account.
+                  {t('deleteAccount.submittedDesc')}
                 </p>
               </div>
               <Button variant="outline" onClick={() => navigate('/')} className="mt-4">
-                Go to Home
+                {t('deleteAccount.goHome')}
               </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">{t('deleteAccount.emailAddress')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -98,7 +100,7 @@ const DeleteAccountRequest = () => {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                This will permanently delete your account, all speeches, practice history, and personal data. This action cannot be undone.
+                {t('deleteAccount.warning')}
               </p>
               <Button
                 type="submit"
@@ -109,10 +111,10 @@ const DeleteAccountRequest = () => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
+                    {t('deleteAccount.processing')}
                   </>
                 ) : (
-                  "Request Account Deletion"
+                  t('deleteAccount.submit')
                 )}
               </Button>
             </form>
