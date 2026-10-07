@@ -41,20 +41,26 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const moved = useRef(false);
 
   const errors = useMemo(() => getSpeechWordErrors(speechId), [speechId]);
-  const keywordsFor = (si: number) => {
-    const words = sentences[si].split(/\s+/);
-    const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
-    // Words you actually missed/hesitated on in practice are always shown.
-    const hard = words.map((_, i) => i).filter((i) => err(i) > 0);
-    const kw = [...getKeywordIndices(words, STOP)].filter((i) => !hard.includes(i));
-    const ranked = [
-      ...hard.sort((a, b) => err(b) - err(a)),
-      ...kw.sort((a, b) => normalizeForKeyword(words[b]).length - normalizeForKeyword(words[a]).length),
-    ];
-    const n = Math.max(hard.length, Math.min(ranked.length, BASE + (levels[si] ?? 0) * STEP));
-    const chosen = new Set(ranked.slice(0, Math.max(1, n)));
-    return [...chosen].sort((a, b) => a - b).map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 }));
-  };
+  // Precompute keywords for every sentence once per level-change so swipe
+  // re-renders (every pointermove) stay cheap.
+  const allKeywords = useMemo(
+    () =>
+      sentences.map((sentence, si) => {
+        const words = sentence.split(/\s+/);
+        const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
+        // Words you actually missed/hesitated on in practice are always shown.
+        const hard = words.map((_, i) => i).filter((i) => err(i) > 0);
+        const kw = [...getKeywordIndices(words, STOP)].filter((i) => !hard.includes(i));
+        const ranked = [
+          ...hard.sort((a, b) => err(b) - err(a)),
+          ...kw.sort((a, b) => normalizeForKeyword(words[b]).length - normalizeForKeyword(words[a]).length),
+        ];
+        const n = Math.max(hard.length, Math.min(ranked.length, BASE + (levels[si] ?? 0) * STEP));
+        const chosen = new Set(ranked.slice(0, Math.max(1, n)));
+        return [...chosen].sort((a, b) => a - b).map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 }));
+      }),
+    [sentences, levels, errors]
+  );
 
   const done = pos >= order.length;
   const current = done ? -1 : order[pos];
