@@ -356,6 +356,38 @@ const Dashboard = () => {
     loadSpeeches();
   };
 
+  const currentExpired = expiredQueue[0] ?? null;
+
+  const handleKeepExpired = () => {
+    setExpiredQueue((prev) => prev.slice(1));
+  };
+
+  const handleDeleteExpired = async () => {
+    if (!currentExpired) return;
+    setDeletingExpired(true);
+    try {
+      const { error } = await supabase
+        .from("speeches")
+        .delete()
+        .eq("id", currentExpired.id);
+      if (error) throw error;
+      setSpeeches((prev) => prev.filter((s) => s.id !== currentExpired.id));
+      toast({
+        title: t('dashboard.deleted'),
+        description: t('dashboard.deletedDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: error.message,
+      });
+    } finally {
+      setDeletingExpired(false);
+      setExpiredQueue((prev) => prev.slice(1));
+    }
+  };
+
   // No full-screen loading blocker — show the shell immediately
 
   return (
