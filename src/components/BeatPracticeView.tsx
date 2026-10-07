@@ -2504,7 +2504,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hesitatedIndicesRef.current.forEach(i => repErrors.add(i));
       missedIndicesRef.current.forEach(i => repErrors.add(i));
       recordRepDifficulty(currentBeat?.id, words.length, repErrors);
-      recordSpeechWordErrors((currentBeat as any)?.speech_id, [...repErrors].map(i => words[i]).filter(Boolean));
+      recordSpeechWordErrors(speechId, [...repErrors].map(i => words[i]).filter(Boolean));
     }
 
     if (!hadErrors && isAllTargetHidden(hiddenWordIndicesRef.current)) {
