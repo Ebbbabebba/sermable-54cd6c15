@@ -130,7 +130,11 @@
     "beat": "Segmento",
     "inTime": "tra",
     "deleting": "Eliminazione del discorso...",
-    "readyNow": "Pronto ora"
+    "readyNow": "Pronto ora",
+    "expiredTitle": "Scadenza superata",
+    "expiredDesc": "La data limite per «{{title}}» è passata. Vuoi eliminare questo discorso?",
+    "expiredKeep": "Mantieni",
+    "expiredDelete": "Elimina discorso"
   },
   "onboarding": {
     "skip": "Salta",

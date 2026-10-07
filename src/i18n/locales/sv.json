@@ -155,7 +155,11 @@
     "beat": "Moment",
     "inTime": "om",
     "deleting": "Raderar tal...",
-    "readyNow": "Redo nu"
+    "readyNow": "Redo nu",
+    "expiredTitle": "Deadlinen har passerat",
+    "expiredDesc": "Måldatumet för \"{{title}}\" har passerat. Vill du radera talet?",
+    "expiredKeep": "Behåll",
+    "expiredDelete": "Radera tal"
   },
   "onboarding": {
     "skip": "Hoppa över",

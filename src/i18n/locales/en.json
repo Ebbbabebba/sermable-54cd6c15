@@ -154,7 +154,11 @@
     "beat": "Segment",
     "inTime": "in",
     "deleting": "Deleting speech...",
-    "readyNow": "Ready now"
+    "readyNow": "Ready now",
+    "expiredTitle": "Deadline passed",
+    "expiredDesc": "The goal date for \"{{title}}\" has passed. Do you want to delete this speech?",
+    "expiredKeep": "Keep",
+    "expiredDelete": "Delete speech"
   },
   "onboarding": {
     "skip": "Skip",
