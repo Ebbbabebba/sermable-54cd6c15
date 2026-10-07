@@ -392,6 +392,31 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Expired speech cleanup — asked once per login */}
+      <AlertDialog open={!!currentExpired} onOpenChange={(open) => { if (!open) handleKeepExpired(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('dashboard.expiredTitle', 'Deadline passed')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('dashboard.expiredDesc', {
+                title: currentExpired?.title ?? '',
+                defaultValue: 'The goal date for "{{title}}" has passed. Do you want to delete this speech?',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleKeepExpired} disabled={deletingExpired}>
+              {t('dashboard.expiredKeep', 'Keep')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteExpired} disabled={deletingExpired}>
+              {deletingExpired
+                ? t('common.loading', 'Loading...')
+                : t('dashboard.expiredDelete', 'Delete speech')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Streak Celebration */}
       {showStreakCelebration && (
         <StreakCelebration 
