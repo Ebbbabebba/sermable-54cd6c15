@@ -1357,6 +1357,8 @@
     "repeatHard": "Ripeti le schede difficili",
     "repeatAll": "Ripeti tutte",
     "sentence": "Frase {{n}}",
-    "tapToFlip": "Tocca per vedere la frase intera"
+    "tapToFlip": "Tocca per vedere la frase intera",
+    "knowIt": "Lo so",
+    "tryAgain": "Riprova"
   }
 }

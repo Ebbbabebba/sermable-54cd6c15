@@ -73,3 +73,30 @@ export function hasDifficultyHistory(beatId: string | undefined | null, wordCoun
   if (!beatId) return false;
   return read(beatId, wordCount).reps > 0;
 }
+
+/* ---- Per-speech word error memory (by normalized word, used by Keycards) ---- */
+const SPEECH_KEY = (speechId: string) => `sermable:speechWordErrors:${speechId}`;
+const norm = (w: string) =>
+  w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]+/gu, "");
+
+export function recordSpeechWordErrors(speechId: string | undefined | null, failedWords: string[]): void {
+  if (!speechId || !failedWords.length) return;
+  try {
+    const stats = getSpeechWordErrors(speechId);
+    for (const w of failedWords) {
+      const k = norm(w);
+      if (k) stats[k] = (stats[k] ?? 0) + 1;
+    }
+    localStorage.setItem(SPEECH_KEY(speechId), JSON.stringify(stats));
+  } catch {
+    /* best-effort */
+  }
+}
+
+export function getSpeechWordErrors(speechId: string): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(SPEECH_KEY(speechId)) || "{}") || {};
+  } catch {
+    return {};
+  }
+}

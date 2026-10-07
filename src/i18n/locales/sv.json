@@ -1386,6 +1386,8 @@
     "repeatHard": "Repetera svåra kort",
     "repeatAll": "Repetera alla",
     "sentence": "Mening {{n}}",
-    "tapToFlip": "Tryck för att visa hela meningen"
+    "tapToFlip": "Tryck för att visa hela meningen",
+    "knowIt": "Kan det",
+    "tryAgain": "Försök igen"
   }
 }

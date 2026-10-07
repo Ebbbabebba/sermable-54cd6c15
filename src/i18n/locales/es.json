@@ -1357,6 +1357,8 @@
     "repeatHard": "Repetir tarjetas difíciles",
     "repeatAll": "Repetir todas",
     "sentence": "Frase {{n}}",
-    "tapToFlip": "Toca para ver la frase completa"
+    "tapToFlip": "Toca para ver la frase completa",
+    "knowIt": "Lo sé",
+    "tryAgain": "Otra vez"
   }
 }

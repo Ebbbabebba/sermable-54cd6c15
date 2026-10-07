@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { stripStageDirections } from "@/utils/stageDirections";
 import { getKeywordIndices, normalizeForKeyword } from "@/utils/keywordExtraction";
+import { getSpeechWordErrors } from "@/utils/wordDifficulty";
 
 interface Props {
   speechId: string;
@@ -14,7 +15,7 @@ interface Props {
 
 const STOP = new Set(["och","att","det","som","en","ett","the","and","that","with","this","from","have","which","there","their","about","would","could","should","und","der","die","das","nicht","eine","pour","dans","avec","para","como","sono","della","para","porque"]);
 const LEVEL_KEY = (id: string) => `sermable:keycards:${id}`;
-const BASE = 2;
+const BASE = 4;
 const STEP = 2;
 
 type Swipe = { index: number; dir: "left" | "right" };
@@ -39,12 +40,20 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const start = useRef<number | null>(null);
   const moved = useRef(false);
 
+  const errors = useMemo(() => getSpeechWordErrors(speechId), [speechId]);
   const keywordsFor = (si: number) => {
     const words = sentences[si].split(/\s+/);
-    const idx = [...getKeywordIndices(words, STOP)];
-    const ranked = idx.sort((a, b) => normalizeForKeyword(words[b]).length - normalizeForKeyword(words[a]).length);
-    const n = Math.min(ranked.length, BASE + (levels[si] ?? 0) * STEP);
-    return ranked.slice(0, Math.max(1, n)).sort((a, b) => a - b).map((i) => words[i].replace(/[.,!?;:]+$/, ""));
+    const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
+    // Words you actually missed/hesitated on in practice are always shown.
+    const hard = words.map((_, i) => i).filter((i) => err(i) > 0);
+    const kw = [...getKeywordIndices(words, STOP)].filter((i) => !hard.includes(i));
+    const ranked = [
+      ...hard.sort((a, b) => err(b) - err(a)),
+      ...kw.sort((a, b) => normalizeForKeyword(words[b]).length - normalizeForKeyword(words[a]).length),
+    ];
+    const n = Math.max(hard.length, Math.min(ranked.length, BASE + (levels[si] ?? 0) * STEP));
+    const chosen = new Set(ranked.slice(0, Math.max(1, n)));
+    return [...chosen].sort((a, b) => a - b).map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 }));
   };
 
   const done = pos >= order.length;
@@ -64,7 +73,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       setFlipped(false);
       setDrag(0);
       setLeaving(null);
-    }, 220);
+    }, 300);
   };
 
   const undo = () => {
@@ -126,7 +135,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
               <div className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border border-border scale-95 translate-y-3 opacity-60" />
             )}
             <div
-              className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", !start.current && "transition-transform duration-200")}
+              key={`${pos}-${current}`}
+              className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", (leaving || drag === 0) && "transition-transform duration-300 ease-out")}
               style={{ transform: `translateX(${offset}px) rotate(${offset / 20}deg)`, perspective: "1200px" }}
               onPointerDown={(e) => { start.current = e.clientX; moved.current = false; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
               onPointerMove={(e) => { if (start.current === null) return; const d = e.clientX - start.current; if (Math.abs(d) > 6) moved.current = true; setDrag(d); }}
@@ -137,14 +147,20 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
               }}
             >
               <div className="absolute inset-0 transition-transform duration-500" style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "none" }}>
-                <div className={cn("absolute inset-0 rounded-[2rem] border-2 bg-card shadow-xl p-6 flex flex-col", offset < -40 ? "border-destructive" : offset > 40 ? "border-primary" : "border-border")}
+                <div className={cn("absolute inset-0 rounded-[2rem] border-2 bg-card shadow-xl p-6 flex flex-col", offset < -40 ? "border-destructive" : offset > 40 ? "border-[hsl(142_70%_40%)]" : "border-border")}
                   style={{ backfaceVisibility: "hidden" }}>
+                  <div className="absolute inset-0 rounded-[2rem] pointer-events-none flex items-start justify-between p-5 transition-opacity"
+                    style={{ opacity: Math.min(1, Math.abs(offset) / 120), background: offset > 0 ? "hsl(142 70% 45% / 0.18)" : "hsl(var(--destructive) / 0.18)" }}>
+                    {offset > 0
+                      ? <span className="ml-auto rounded-full border-2 px-3 py-1 text-sm font-bold rotate-12" style={{ color: "hsl(142 70% 35%)", borderColor: "hsl(142 70% 40%)" }}>{t("keycards.knowIt", "Know it")}</span>
+                      : <span className="rounded-full border-2 border-destructive px-3 py-1 text-sm font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>}
+                  </div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("keycards.sentence", { n: current + 1, defaultValue: "Sentence {{n}}" })}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
-                    {keywordsFor(current).map((w, i) => (
-                      <span key={i} className="rounded-full bg-primary/15 text-foreground px-4 py-2 text-lg font-bold">{w}</span>
+                    {keywordsFor(current).map(({ w, hard }, i) => (
+                      <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
                     ))}
                   </div>
                   <p className="text-center text-xs text-muted-foreground">{t("keycards.tapToFlip", "Tap to show the full sentence")}</p>
@@ -160,7 +176,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             <Button size="icon" variant="outline" className="h-16 w-16 rounded-full border-2 border-destructive text-destructive" onClick={() => commit("left")} aria-label={t("keycards.needSupport", "More support")}>
               <X className="h-7 w-7" />
             </Button>
-            <Button size="icon" variant="outline" className="h-16 w-16 rounded-full border-2 border-primary text-primary" onClick={() => commit("right")} aria-label={t("keycards.gotIt", "Got it")}>
+            <Button size="icon" variant="outline" className="h-16 w-16 rounded-full border-2 border-[hsl(142_70%_40%)] text-[hsl(142_70%_35%)]" onClick={() => commit("right")} aria-label={t("keycards.gotIt", "Got it")}>
               <Check className="h-7 w-7" />
             </Button>
           </div>
