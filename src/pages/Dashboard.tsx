@@ -53,6 +53,8 @@ const Dashboard = () => {
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
+  const [expiredQueue, setExpiredQueue] = useState<Speech[]>([]);
+  const [deletingExpired, setDeletingExpired] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
