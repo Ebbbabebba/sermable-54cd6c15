@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Undo2, Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,6 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const [pos, setPos] = useState(0);
   const [history, setHistory] = useState<Swipe[]>([]);
   const [flipped, setFlipped] = useState(false);
-  const [drag, setDrag] = useState(0);
-  const [leaving, setLeaving] = useState<"left" | "right" | null>(null);
   const start = useRef<number | null>(null);
   const moved = useRef(false);
 
@@ -65,9 +63,50 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const done = pos >= order.length;
   const current = done ? -1 : order[pos];
 
+  // Drag is handled entirely through refs + direct style writes (no React
+  // re-render per pointermove) so the card follows the finger at 60fps.
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const nextRef = useRef<HTMLDivElement | null>(null);
+  const greenRef = useRef<HTMLDivElement | null>(null);
+  const redRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const busy = useRef(false);
+
+  const apply = (offset: number, transition: string | null) => {
+    const tr = transition ?? "none";
+    const card = cardRef.current;
+    if (card) {
+      card.style.transition = tr;
+      card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 20}deg)`;
+    }
+    const g = greenRef.current, r = redRef.current;
+    if (g) { g.style.transition = transition ? "opacity 250ms ease-out" : "none"; g.style.opacity = String(Math.min(1, Math.max(0, offset) / 120)); }
+    if (r) { r.style.transition = transition ? "opacity 250ms ease-out" : "none"; r.style.opacity = String(Math.min(1, Math.max(0, -offset) / 120)); }
+    const n = nextRef.current;
+    if (n) {
+      const p = Math.min(1, Math.abs(offset) / 300);
+      n.style.transition = transition ? "transform 300ms ease-out, opacity 300ms ease-out" : "none";
+      n.style.transform = `translate3d(0,${12 - p * 12}px,0) scale(${0.95 + p * 0.05})`;
+      n.style.opacity = String(0.6 + p * 0.4);
+    }
+  };
+
+  // Reset positions whenever a new card becomes the top card.
+  useLayoutEffect(() => {
+    dragRef.current = 0;
+    busy.current = false;
+    apply(0, null);
+  }, [pos, order]);
+
+  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
+
   const commit = (dir: "left" | "right") => {
-    if (done) return;
-    setLeaving(dir);
+    if (done || busy.current) return;
+    busy.current = true;
+    start.current = null;
+    const w = (typeof window !== "undefined" ? window.innerWidth : 600) + 200;
+    apply(dir === "left" ? -w : w, "transform 320ms cubic-bezier(0.4, 0, 1, 1)");
     setTimeout(() => {
       if (dir === "left") {
         const next = { ...levels, [current]: (levels[current] ?? 0) + 1 };
@@ -77,9 +116,40 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       setHistory((h) => [...h, { index: current, dir }]);
       setPos((p) => p + 1);
       setFlipped(false);
-      setDrag(0);
-      setLeaving(null);
-    }, 400);
+    }, 320);
+  };
+
+  const onDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (busy.current) return;
+    start.current = e.clientX;
+    moved.current = false;
+    dragRef.current = 0;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* noop */ }
+  };
+  const onMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (start.current === null || busy.current) return;
+    const d = e.clientX - start.current;
+    if (Math.abs(d) > 6) moved.current = true;
+    dragRef.current = d;
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (!busy.current) apply(dragRef.current, null);
+      });
+    }
+  };
+  const onEnd = (cancelled: boolean) => {
+    if (start.current === null) return;
+    start.current = null;
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    const d = dragRef.current;
+    if (!cancelled && d < -100) commit("left");
+    else if (!cancelled && d > 100) commit("right");
+    else {
+      dragRef.current = 0;
+      apply(0, "transform 350ms cubic-bezier(0.2, 0.8, 0.2, 1)");
+      if (!cancelled && !moved.current) setFlipped((f) => !f);
+    }
   };
 
   const undo = () => {
@@ -103,7 +173,6 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
 
   const left = history.filter((h) => h.dir === "left").length;
   const right = history.length - left;
-  const offset = leaving ? (leaving === "left" ? -600 : 600) : drag;
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden"
@@ -138,12 +207,12 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
         <>
           <div className="flex-1 flex items-center justify-center px-6 relative">
             {pos + 1 < order.length && (() => {
-              const p = Math.min(1, Math.abs(offset) / 300);
               const next = order[pos + 1];
               return (
                 <div
+                  ref={nextRef}
                   className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
-                  style={{ transform: `scale(${0.95 + p * 0.05}) translateY(${12 - p * 12}px)`, opacity: 0.6 + p * 0.4 }}
+                  style={{ transform: "translate3d(0,12px,0) scale(0.95)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
@@ -158,24 +227,25 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             })()}
             <div
               key={`${pos}-${current}`}
-              className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", (leaving || drag === 0) && (leaving ? "transition-transform duration-[400ms] ease-in" : "transition-transform duration-300 ease-out"))}
-              style={{ transform: `translateX(${offset}px) rotate(${offset / 20}deg)`, perspective: "1200px", willChange: "transform" }}
-              onPointerDown={(e) => { start.current = e.clientX; moved.current = false; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
-              onPointerMove={(e) => { if (start.current === null) return; const d = e.clientX - start.current; if (Math.abs(d) > 6) moved.current = true; setDrag(d); }}
-              onPointerUp={() => {
-                const d = drag; start.current = null;
-                if (d < -100) commit("left"); else if (d > 100) commit("right");
-                else { setDrag(0); if (!moved.current) setFlipped((f) => !f); }
-              }}
+              ref={cardRef}
+              className="relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab"
+              style={{ perspective: "1200px", willChange: "transform" }}
+              onPointerDown={onDown}
+              onPointerMove={onMove}
+              onPointerUp={() => onEnd(false)}
+              onPointerCancel={() => onEnd(true)}
+              onLostPointerCapture={() => onEnd(false)}
             >
               <div className="absolute inset-0 transition-transform duration-500" style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "none" }}>
-                <div className={cn("absolute inset-0 rounded-[2rem] border-2 bg-card shadow-xl p-6 flex flex-col", offset < -40 ? "border-destructive" : offset > 40 ? "border-[hsl(142_70%_40%)]" : "border-border")}
+                <div className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex flex-col"
                   style={{ backfaceVisibility: "hidden" }}>
-                  <div className="absolute inset-0 rounded-[2rem] pointer-events-none flex items-center justify-center transition-opacity"
-                    style={{ opacity: Math.min(1, Math.abs(offset) / 120), background: offset > 0 ? "hsl(142 70% 45% / 0.18)" : "hsl(var(--destructive) / 0.18)" }}>
-                    {offset > 0
-                      ? <span className="rounded-full border-2 px-4 py-2 text-base font-bold rotate-12" style={{ color: "hsl(142 70% 35%)", borderColor: "hsl(142 70% 40%)" }}>{t("keycards.knowIt", "Know it")}</span>
-                      : <span className="rounded-full border-2 border-destructive px-4 py-2 text-base font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>}
+                  <div ref={greenRef} className="absolute inset-0 rounded-[2rem] border-2 pointer-events-none flex items-center justify-center"
+                    style={{ opacity: 0, background: "hsl(142 70% 45% / 0.18)", borderColor: "hsl(142 70% 40%)" }}>
+                    <span className="rounded-full border-2 px-4 py-2 text-base font-bold rotate-12" style={{ color: "hsl(142 70% 35%)", borderColor: "hsl(142 70% 40%)" }}>{t("keycards.knowIt", "Know it")}</span>
+                  </div>
+                  <div ref={redRef} className="absolute inset-0 rounded-[2rem] border-2 border-destructive pointer-events-none flex items-center justify-center"
+                    style={{ opacity: 0, background: "hsl(var(--destructive) / 0.18)" }}>
+                    <span className="rounded-full border-2 border-destructive px-4 py-2 text-base font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>
                   </div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("keycards.sentence", { n: current + 1, defaultValue: "Sentence {{n}}" })}
