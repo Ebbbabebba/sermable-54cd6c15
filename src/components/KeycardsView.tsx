@@ -41,20 +41,26 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const moved = useRef(false);
 
   const errors = useMemo(() => getSpeechWordErrors(speechId), [speechId]);
-  const keywordsFor = (si: number) => {
-    const words = sentences[si].split(/\s+/);
-    const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
-    // Words you actually missed/hesitated on in practice are always shown.
-    const hard = words.map((_, i) => i).filter((i) => err(i) > 0);
-    const kw = [...getKeywordIndices(words, STOP)].filter((i) => !hard.includes(i));
-    const ranked = [
-      ...hard.sort((a, b) => err(b) - err(a)),
-      ...kw.sort((a, b) => normalizeForKeyword(words[b]).length - normalizeForKeyword(words[a]).length),
-    ];
-    const n = Math.max(hard.length, Math.min(ranked.length, BASE + (levels[si] ?? 0) * STEP));
-    const chosen = new Set(ranked.slice(0, Math.max(1, n)));
-    return [...chosen].sort((a, b) => a - b).map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 }));
-  };
+  // Precompute keywords for every sentence once per level-change so swipe
+  // re-renders (every pointermove) stay cheap.
+  const allKeywords = useMemo(
+    () =>
+      sentences.map((sentence, si) => {
+        const words = sentence.split(/\s+/);
+        const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
+        // Words you actually missed/hesitated on in practice are always shown.
+        const hard = words.map((_, i) => i).filter((i) => err(i) > 0);
+        const kw = [...getKeywordIndices(words, STOP)].filter((i) => !hard.includes(i));
+        const ranked = [
+          ...hard.sort((a, b) => err(b) - err(a)),
+          ...kw.sort((a, b) => normalizeForKeyword(words[b]).length - normalizeForKeyword(words[a]).length),
+        ];
+        const n = Math.max(hard.length, Math.min(ranked.length, BASE + (levels[si] ?? 0) * STEP));
+        const chosen = new Set(ranked.slice(0, Math.max(1, n)));
+        return [...chosen].sort((a, b) => a - b).map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 }));
+      }),
+    [sentences, levels, errors]
+  );
 
   const done = pos >= order.length;
   const current = done ? -1 : order[pos];
@@ -143,7 +149,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                     {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
-                    {keywordsFor(next).map(({ w, hard }, i) => (
+                    {allKeywords[next].map(({ w, hard }, i) => (
                       <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
                     ))}
                   </div>
@@ -153,7 +159,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             <div
               key={`${pos}-${current}`}
               className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", (leaving || drag === 0) && (leaving ? "transition-transform duration-[400ms] ease-in" : "transition-transform duration-300 ease-out"))}
-              style={{ transform: `translateX(${offset}px) rotate(${offset / 20}deg)`, perspective: "1200px" }}
+              style={{ transform: `translateX(${offset}px) rotate(${offset / 20}deg)`, perspective: "1200px", willChange: "transform" }}
               onPointerDown={(e) => { start.current = e.clientX; moved.current = false; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
               onPointerMove={(e) => { if (start.current === null) return; const d = e.clientX - start.current; if (Math.abs(d) > 6) moved.current = true; setDrag(d); }}
               onPointerUp={() => {
@@ -175,7 +181,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                     {t("keycards.sentence", { n: current + 1, defaultValue: "Sentence {{n}}" })}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
-                    {keywordsFor(current).map(({ w, hard }, i) => (
+                    {allKeywords[current].map(({ w, hard }, i) => (
                       <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
                     ))}
                   </div>
