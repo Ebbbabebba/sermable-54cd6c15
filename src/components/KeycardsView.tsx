@@ -149,11 +149,11 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
               <div className="absolute inset-0 transition-transform duration-500" style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "none" }}>
                 <div className={cn("absolute inset-0 rounded-[2rem] border-2 bg-card shadow-xl p-6 flex flex-col", offset < -40 ? "border-destructive" : offset > 40 ? "border-[hsl(142_70%_40%)]" : "border-border")}
                   style={{ backfaceVisibility: "hidden" }}>
-                  <div className="absolute inset-0 rounded-[2rem] pointer-events-none flex items-start justify-between p-5 transition-opacity"
+                  <div className="absolute inset-0 rounded-[2rem] pointer-events-none flex items-center justify-center transition-opacity"
                     style={{ opacity: Math.min(1, Math.abs(offset) / 120), background: offset > 0 ? "hsl(142 70% 45% / 0.18)" : "hsl(var(--destructive) / 0.18)" }}>
                     {offset > 0
-                      ? <span className="ml-auto rounded-full border-2 px-3 py-1 text-sm font-bold rotate-12" style={{ color: "hsl(142 70% 35%)", borderColor: "hsl(142 70% 40%)" }}>{t("keycards.knowIt", "Know it")}</span>
-                      : <span className="rounded-full border-2 border-destructive px-3 py-1 text-sm font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>}
+                      ? <span className="rounded-full border-2 px-4 py-2 text-base font-bold rotate-12" style={{ color: "hsl(142 70% 35%)", borderColor: "hsl(142 70% 40%)" }}>{t("keycards.knowIt", "Know it")}</span>
+                      : <span className="rounded-full border-2 border-destructive px-4 py-2 text-base font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>}
                   </div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("keycards.sentence", { n: current + 1, defaultValue: "Sentence {{n}}" })}
