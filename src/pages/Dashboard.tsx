@@ -306,6 +306,19 @@ const Dashboard = () => {
       if (error) throw error;
       setSpeeches(data || []);
 
+      // Ask once per login about speeches whose goal date has passed.
+      const todayStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD local
+      const expired = (data || []).filter(
+        (s) => s.goal_date && s.goal_date < todayStr
+      );
+      if (expired.length > 0) {
+        setExpiredQueue((prev) => {
+          const askedIds = new Set(prev.map((p) => p.id));
+          const fresh = expired.filter((s) => !askedIds.has(s.id));
+          return prev.length > 0 ? prev : fresh;
+        });
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("subscription_tier")
