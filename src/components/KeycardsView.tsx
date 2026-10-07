@@ -131,9 +131,25 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       ) : (
         <>
           <div className="flex-1 flex items-center justify-center px-6 relative">
-            {pos + 1 < order.length && (
-              <div className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border border-border scale-95 translate-y-3 opacity-60" />
-            )}
+            {pos + 1 < order.length && (() => {
+              const p = Math.min(1, Math.abs(offset) / 300);
+              const next = order[pos + 1];
+              return (
+                <div
+                  className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
+                  style={{ transform: `scale(${0.95 + p * 0.05}) translateY(${12 - p * 12}px)`, opacity: 0.6 + p * 0.4 }}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
+                  </p>
+                  <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
+                    {keywordsFor(next).map(({ w, hard }, i) => (
+                      <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
             <div
               key={`${pos}-${current}`}
               className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", (leaving || drag === 0) && "transition-transform duration-300 ease-out")}
