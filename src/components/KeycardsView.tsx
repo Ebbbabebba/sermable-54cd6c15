@@ -149,7 +149,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                     {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
-                    {keywordsFor(next).map(({ w, hard }, i) => (
+                    {allKeywords[next].map(({ w, hard }, i) => (
                       <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
                     ))}
                   </div>
@@ -159,7 +159,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             <div
               key={`${pos}-${current}`}
               className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", (leaving || drag === 0) && (leaving ? "transition-transform duration-[400ms] ease-in" : "transition-transform duration-300 ease-out"))}
-              style={{ transform: `translateX(${offset}px) rotate(${offset / 20}deg)`, perspective: "1200px" }}
+              style={{ transform: `translateX(${offset}px) rotate(${offset / 20}deg)`, perspective: "1200px", willChange: "transform" }}
               onPointerDown={(e) => { start.current = e.clientX; moved.current = false; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
               onPointerMove={(e) => { if (start.current === null) return; const d = e.clientX - start.current; if (Math.abs(d) > 6) moved.current = true; setDrag(d); }}
               onPointerUp={() => {
@@ -181,7 +181,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                     {t("keycards.sentence", { n: current + 1, defaultValue: "Sentence {{n}}" })}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
-                    {keywordsFor(current).map(({ w, hard }, i) => (
+                    {allKeywords[current].map(({ w, hard }, i) => (
                       <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
                     ))}
                   </div>
