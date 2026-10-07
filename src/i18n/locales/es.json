@@ -832,7 +832,11 @@
     "wholeSpeechModeDescV2": "Haz todo el discurso de principio a fin y recibe comentarios de la IA.",
     "wholeSpeechTrains": "Entrena: la exposición y el recuerdo palabra por palabra",
     "scriptModeDescV2": "Lee una parte y luego cuéntala a partir de una palabra clave.",
-    "scriptModeTrains": "Entrena: el sentido y la estructura, parte por parte"
+    "scriptModeTrains": "Entrena: el sentido y la estructura, parte por parte",
+    "keycardsMode": "Tarjetas clave",
+    "keycardsModeDesc": "Desliza tarjetas con palabras clave — sin grabación.",
+    "keycardsTrains": "Entrena: recuerdo rápido de cada frase",
+    "selectKeycards": "Elegir tarjetas"
   },
   "script": {
     "currentKeyword": "Palabra clave actual",
@@ -1342,5 +1346,17 @@
     "warning": "Esto eliminará permanentemente tu cuenta, todos los discursos, el historial de práctica y los datos personales. Esta acción no se puede deshacer.",
     "processing": "Procesando...",
     "submit": "Solicitar eliminación de cuenta"
+  },
+  "keycards": {
+    "left": "Quedan {{count}}",
+    "undo": "Deshacer",
+    "doneTitle": "Ronda completada",
+    "gotIt": "Lo tengo",
+    "needSupport": "Más apoyo",
+    "supportAdded": "Se añadieron palabras clave a las frases que deslizaste a la izquierda.",
+    "repeatHard": "Repetir tarjetas difíciles",
+    "repeatAll": "Repetir todas",
+    "sentence": "Frase {{n}}",
+    "tapToFlip": "Toca para ver la frase completa"
   }
 }

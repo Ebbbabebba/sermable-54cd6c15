@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MonitorPlay, BookOpen } from "lucide-react";
+import { MonitorPlay, BookOpen, Layers } from "lucide-react";
 
 interface PresentationModeSelectorProps {
-  onSelectMode: (mode: 'strict' | 'overview') => void;
+  onSelectMode: (mode: 'strict' | 'overview' | 'keycards') => void;
 }
 
 export const PresentationModeSelector = ({
@@ -14,7 +14,7 @@ export const PresentationModeSelector = ({
 
   return (
     <div className="h-screen flex items-start md:items-center justify-center px-4 pb-6 pt-28 md:pt-8 bg-gradient-to-br from-background via-background to-primary/5 overflow-y-auto">
-      <div className="w-full max-w-3xl space-y-6">
+      <div className="w-full max-w-5xl space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             {t('presentationMode.chooseMode')}
@@ -24,7 +24,7 @@ export const PresentationModeSelector = ({
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           {/* Whole Speech Mode */}
           <Card
             className="p-5 rounded-3xl border-2 border-primary/40 hover:border-primary transition-all duration-200 cursor-pointer"
@@ -82,6 +82,24 @@ export const PresentationModeSelector = ({
 
               <Button className="w-full rounded-2xl" size="sm" variant="outline">
                 {t('presentationMode.selectScript', 'Select Script')}
+              </Button>
+            </div>
+          </Card>
+          <Card
+            className="p-5 rounded-3xl border-2 hover:border-primary/50 transition-all duration-200 cursor-pointer"
+            onClick={() => onSelectMode('keycards')}
+          >
+            <div className="space-y-4">
+              <div className="h-11 w-11 rounded-2xl bg-muted flex items-center justify-center">
+                <Layers className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-1">{t('presentationMode.keycardsMode', 'Keycards')}</h3>
+                <p className="text-muted-foreground text-xs">{t('presentationMode.keycardsModeDesc')}</p>
+                <p className="text-[11px] text-muted-foreground/80 mt-2">{t('presentationMode.keycardsTrains')}</p>
+              </div>
+              <Button className="w-full rounded-2xl" size="sm" variant="outline">
+                {t('presentationMode.selectKeycards', 'Select Keycards')}
               </Button>
             </div>
           </Card>
