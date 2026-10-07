@@ -11,6 +11,7 @@ import PresentationSummary from "@/components/PresentationSummary";
 import { PresentationModeSelector } from "@/components/PresentationModeSelector";
 import { CompactPresentationView } from "@/components/CompactPresentationView";
 import ScriptPracticeView from "@/components/ScriptPracticeView";
+import KeycardsView from "@/components/KeycardsView";
 import PresentationControls from "@/components/PresentationControls";
 import { ProximityGuide } from "@/components/ProximityGuide";
 import { stripStageDirections } from "@/utils/stageDirections";
@@ -43,7 +44,7 @@ const Presentation = () => {
   const [loading, setLoading] = useState(true);
 
   // Mode selection: 'strict' = whole speech run-through, 'script' = beat retelling
-  const [selectedMode, setSelectedMode] = useState<'strict' | 'script' | null>(null);
+  const [selectedMode, setSelectedMode] = useState<'strict' | 'script' | 'keycards' | null>(null);
   // Whether the script is visible on screen during the run-through
   const [scriptHidden, setScriptHidden] = useState(false);
 
@@ -172,7 +173,12 @@ const Presentation = () => {
     navigate('/dashboard');
   };
 
-  const handleModeSelect = (mode: 'strict' | 'overview') => {
+  const handleModeSelect = (mode: 'strict' | 'overview' | 'keycards') => {
+    if (mode === 'keycards') {
+      setSelectedMode('keycards');
+      setStage('live');
+      return;
+    }
     if (mode === 'overview') {
       setSelectedMode('script');
       setStage('live');
@@ -280,6 +286,16 @@ const Presentation = () => {
         feedbackAdvice={sessionResults.feedbackAdvice}
         feedbackNextStep={sessionResults.feedbackNextStep}
         onExit={handleExit}
+      />
+    );
+  }
+
+  if (selectedMode === 'keycards') {
+    return (
+      <KeycardsView
+        speechId={speech.id}
+        speechText={speech.text_original}
+        onBack={() => { setSelectedMode(null); setStage('mode-select'); }}
       />
     );
   }

@@ -958,7 +958,11 @@
     "wholeSpeechModeDescV2": "Run the whole speech from start to finish and get AI feedback.",
     "wholeSpeechTrains": "Trains: delivery and word-for-word recall",
     "scriptModeDescV2": "Read one beat at a time, then retell it from a reference word.",
-    "scriptModeTrains": "Trains: meaning and structure, beat by beat"
+    "scriptModeTrains": "Trains: meaning and structure, beat by beat",
+    "keycardsMode": "Keycards",
+    "keycardsModeDesc": "Swipe through keyword cards — no recording.",
+    "keycardsTrains": "Trains: quick recall of each sentence",
+    "selectKeycards": "Select Keycards"
   },
   "script": {
     "currentKeyword": "Current keyword",
@@ -1324,5 +1328,17 @@
     "warning": "This will permanently delete your account, all speeches, practice history, and personal data. This action cannot be undone.",
     "processing": "Processing...",
     "submit": "Request Account Deletion"
+  },
+  "keycards": {
+    "left": "{{count}} left",
+    "undo": "Undo",
+    "doneTitle": "Round complete",
+    "gotIt": "Got it",
+    "needSupport": "More support",
+    "supportAdded": "Extra keywords were added to the sentences you swiped left.",
+    "repeatHard": "Repeat difficult cards",
+    "repeatAll": "Repeat all",
+    "sentence": "Sentence {{n}}",
+    "tapToFlip": "Tap to show the full sentence"
   }
 }

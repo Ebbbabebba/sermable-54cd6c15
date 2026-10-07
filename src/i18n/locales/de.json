@@ -832,7 +832,11 @@
     "wholeSpeechModeDescV2": "Halte die ganze Rede von Anfang bis Ende und erhalte KI-Feedback.",
     "wholeSpeechTrains": "Trainiert: Vortrag und wortgenaues Erinnern",
     "scriptModeDescV2": "Lies einen Abschnitt und erzähle ihn aus einem Stichwort nach.",
-    "scriptModeTrains": "Trainiert: Inhalt und Struktur, Abschnitt für Abschnitt"
+    "scriptModeTrains": "Trainiert: Inhalt und Struktur, Abschnitt für Abschnitt",
+    "keycardsMode": "Stichwortkarten",
+    "keycardsModeDesc": "Wische durch Karten mit Stichwörtern — ohne Aufnahme.",
+    "keycardsTrains": "Trainiert: schnelles Abrufen jedes Satzes",
+    "selectKeycards": "Stichwortkarten wählen"
   },
   "script": {
     "currentKeyword": "Aktuelles Schlüsselwort",
@@ -1342,5 +1346,17 @@
     "warning": "Dadurch werden dein Konto, alle Reden, der Übungsverlauf und persönliche Daten dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
     "processing": "Wird verarbeitet...",
     "submit": "Kontolöschung beantragen"
+  },
+  "keycards": {
+    "left": "{{count}} übrig",
+    "undo": "Rückgängig",
+    "doneTitle": "Runde abgeschlossen",
+    "gotIt": "Sitzt",
+    "needSupport": "Mehr Hilfe",
+    "supportAdded": "Zu den nach links gewischten Sätzen wurden weitere Stichwörter hinzugefügt.",
+    "repeatHard": "Schwierige Karten wiederholen",
+    "repeatAll": "Alle wiederholen",
+    "sentence": "Satz {{n}}",
+    "tapToFlip": "Tippen, um den ganzen Satz zu zeigen"
   }
 }

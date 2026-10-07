@@ -832,7 +832,11 @@
     "wholeSpeechModeDescV2": "Faites tout le discours du début à la fin et recevez un retour de l'IA.",
     "wholeSpeechTrains": "Travaille : la présentation et la mémorisation mot à mot",
     "scriptModeDescV2": "Lisez une partie, puis racontez-la à partir d'un mot-clé.",
-    "scriptModeTrains": "Travaille : le sens et la structure, partie par partie"
+    "scriptModeTrains": "Travaille : le sens et la structure, partie par partie",
+    "keycardsMode": "Cartes mots-clés",
+    "keycardsModeDesc": "Balayez des cartes de mots-clés — sans enregistrement.",
+    "keycardsTrains": "Entraîne : rappel rapide de chaque phrase",
+    "selectKeycards": "Choisir les cartes"
   },
   "script": {
     "currentKeyword": "Mot-clé actuel",
@@ -1342,5 +1346,17 @@
     "warning": "Cela supprimera définitivement votre compte, tous vos discours, votre historique d'entraînement et vos données personnelles. Cette action est irréversible.",
     "processing": "Traitement...",
     "submit": "Demander la suppression du compte"
+  },
+  "keycards": {
+    "left": "{{count}} restantes",
+    "undo": "Annuler",
+    "doneTitle": "Tour terminé",
+    "gotIt": "Acquis",
+    "needSupport": "Plus d'aide",
+    "supportAdded": "Des mots-clés ont été ajoutés aux phrases balayées à gauche.",
+    "repeatHard": "Revoir les cartes difficiles",
+    "repeatAll": "Tout revoir",
+    "sentence": "Phrase {{n}}",
+    "tapToFlip": "Touchez pour voir la phrase entière"
   }
 }

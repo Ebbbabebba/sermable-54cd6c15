@@ -878,7 +878,11 @@
     "wholeSpeechModeDescV2": "Kör hela talet från början till slut och få AI-feedback.",
     "wholeSpeechTrains": "Tränar: framförande och ordagrann återgivning",
     "scriptModeDescV2": "Läs ett avsnitt i taget och återberätta det från ett nyckelord.",
-    "scriptModeTrains": "Tränar: innehåll och struktur, avsnitt för avsnitt"
+    "scriptModeTrains": "Tränar: innehåll och struktur, avsnitt för avsnitt",
+    "keycardsMode": "Stödkort",
+    "keycardsModeDesc": "Swipa genom kort med stödord — ingen inspelning.",
+    "keycardsTrains": "Tränar: snabb återkallning av varje mening",
+    "selectKeycards": "Välj stödkort"
   },
   "script": {
     "currentKeyword": "Aktuellt nyckelord",
@@ -1371,5 +1375,17 @@
     "warning": "Detta raderar permanent ditt konto, alla tal, övningshistorik och personlig data. Åtgärden kan inte ångras.",
     "processing": "Bearbetar...",
     "submit": "Begär kontoradering"
+  },
+  "keycards": {
+    "left": "{{count}} kvar",
+    "undo": "Ångra",
+    "doneTitle": "Omgången klar",
+    "gotIt": "Satt",
+    "needSupport": "Mer stöd",
+    "supportAdded": "Fler stödord har lagts till i meningarna du swipade åt vänster.",
+    "repeatHard": "Repetera svåra kort",
+    "repeatAll": "Repetera alla",
+    "sentence": "Mening {{n}}",
+    "tapToFlip": "Tryck för att visa hela meningen"
   }
 }

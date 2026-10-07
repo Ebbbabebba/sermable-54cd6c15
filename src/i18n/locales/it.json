@@ -832,7 +832,11 @@
     "wholeSpeechModeDescV2": "Fai tutto il discorso dall'inizio alla fine e ricevi il feedback dell'IA.",
     "wholeSpeechTrains": "Allena: l'esposizione e il ricordo parola per parola",
     "scriptModeDescV2": "Leggi una parte e poi raccontala partendo da una parola chiave.",
-    "scriptModeTrains": "Allena: significato e struttura, parte per parte"
+    "scriptModeTrains": "Allena: significato e struttura, parte per parte",
+    "keycardsMode": "Schede chiave",
+    "keycardsModeDesc": "Scorri schede con parole chiave — senza registrazione.",
+    "keycardsTrains": "Allena: richiamo rapido di ogni frase",
+    "selectKeycards": "Scegli le schede"
   },
   "script": {
     "currentKeyword": "Parola chiave attuale",
@@ -1342,5 +1346,17 @@
     "warning": "Questo eliminerà definitivamente il tuo account, tutti i discorsi, la cronologia di pratica e i dati personali. Questa azione non può essere annullata.",
     "processing": "Elaborazione...",
     "submit": "Richiedi eliminazione account"
+  },
+  "keycards": {
+    "left": "{{count}} rimaste",
+    "undo": "Annulla",
+    "doneTitle": "Giro completato",
+    "gotIt": "Ce l'ho",
+    "needSupport": "Più supporto",
+    "supportAdded": "Sono state aggiunte parole chiave alle frasi scorse a sinistra.",
+    "repeatHard": "Ripeti le schede difficili",
+    "repeatAll": "Ripeti tutte",
+    "sentence": "Frase {{n}}",
+    "tapToFlip": "Tocca per vedere la frase intera"
   }
 }
