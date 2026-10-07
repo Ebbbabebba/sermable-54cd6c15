@@ -1339,6 +1339,8 @@
     "repeatHard": "Repeat difficult cards",
     "repeatAll": "Repeat all",
     "sentence": "Sentence {{n}}",
-    "tapToFlip": "Tap to show the full sentence"
+    "tapToFlip": "Tap to show the full sentence",
+    "knowIt": "Know it",
+    "tryAgain": "Try again"
   }
 }

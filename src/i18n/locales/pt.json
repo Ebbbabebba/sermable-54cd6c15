@@ -1357,6 +1357,8 @@
     "repeatHard": "Repetir cartões difíceis",
     "repeatAll": "Repetir todos",
     "sentence": "Frase {{n}}",
-    "tapToFlip": "Toque para ver a frase inteira"
+    "tapToFlip": "Toque para ver a frase inteira",
+    "knowIt": "Já sei",
+    "tryAgain": "De novo"
   }
 }
