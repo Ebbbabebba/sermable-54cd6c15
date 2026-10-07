@@ -130,7 +130,11 @@
     "beat": "Abschnitt",
     "inTime": "in",
     "deleting": "Rede wird gelöscht...",
-    "readyNow": "Jetzt bereit"
+    "readyNow": "Jetzt bereit",
+    "expiredTitle": "Frist abgelaufen",
+    "expiredDesc": "Das Zieldatum für „{{title}}\" ist abgelaufen. Möchtest du diese Rede löschen?",
+    "expiredKeep": "Behalten",
+    "expiredDelete": "Rede löschen"
   },
   "onboarding": {
     "skip": "Überspringen",

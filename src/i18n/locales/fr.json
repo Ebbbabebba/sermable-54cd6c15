@@ -130,7 +130,11 @@
     "beat": "Segment",
     "inTime": "dans",
     "deleting": "Suppression du discours...",
-    "readyNow": "Prêt maintenant"
+    "readyNow": "Prêt maintenant",
+    "expiredTitle": "Date limite dépassée",
+    "expiredDesc": "La date limite de « {{title}} » est dépassée. Voulez-vous supprimer ce discours ?",
+    "expiredKeep": "Garder",
+    "expiredDelete": "Supprimer le discours"
   },
   "onboarding": {
     "skip": "Passer",

@@ -10,6 +10,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -43,6 +53,8 @@ const Dashboard = () => {
   const [showStreakCelebration, setShowStreakCelebration] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [sortBy, setSortBy] = useState<'deadline' | 'created' | 'updated'>('deadline');
+  const [expiredQueue, setExpiredQueue] = useState<Speech[]>([]);
+  const [deletingExpired, setDeletingExpired] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -294,6 +306,19 @@ const Dashboard = () => {
       if (error) throw error;
       setSpeeches(data || []);
 
+      // Ask once per login about speeches whose goal date has passed.
+      const todayStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD local
+      const expired = (data || []).filter(
+        (s) => s.goal_date && s.goal_date < todayStr
+      );
+      if (expired.length > 0) {
+        setExpiredQueue((prev) => {
+          const askedIds = new Set(prev.map((p) => p.id));
+          const fresh = expired.filter((s) => !askedIds.has(s.id));
+          return prev.length > 0 ? prev : fresh;
+        });
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("subscription_tier")
@@ -331,10 +356,67 @@ const Dashboard = () => {
     loadSpeeches();
   };
 
+  const currentExpired = expiredQueue[0] ?? null;
+
+  const handleKeepExpired = () => {
+    setExpiredQueue((prev) => prev.slice(1));
+  };
+
+  const handleDeleteExpired = async () => {
+    if (!currentExpired) return;
+    setDeletingExpired(true);
+    try {
+      const { error } = await supabase
+        .from("speeches")
+        .delete()
+        .eq("id", currentExpired.id);
+      if (error) throw error;
+      setSpeeches((prev) => prev.filter((s) => s.id !== currentExpired.id));
+      toast({
+        title: t('dashboard.deleted'),
+        description: t('dashboard.deletedDesc'),
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: error.message,
+      });
+    } finally {
+      setDeletingExpired(false);
+      setExpiredQueue((prev) => prev.slice(1));
+    }
+  };
+
   // No full-screen loading blocker — show the shell immediately
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Expired speech cleanup — asked once per login */}
+      <AlertDialog open={!!currentExpired} onOpenChange={(open) => { if (!open) handleKeepExpired(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('dashboard.expiredTitle', 'Deadline passed')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('dashboard.expiredDesc', {
+                title: currentExpired?.title ?? '',
+                defaultValue: 'The goal date for "{{title}}" has passed. Do you want to delete this speech?',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleKeepExpired} disabled={deletingExpired}>
+              {t('dashboard.expiredKeep', 'Keep')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteExpired} disabled={deletingExpired}>
+              {deletingExpired
+                ? t('common.loading', 'Loading...')
+                : t('dashboard.expiredDelete', 'Delete speech')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Streak Celebration */}
       {showStreakCelebration && (
         <StreakCelebration 
