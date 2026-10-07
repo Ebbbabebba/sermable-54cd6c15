@@ -73,7 +73,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       setFlipped(false);
       setDrag(0);
       setLeaving(null);
-    }, 300);
+    }, 400);
   };
 
   const undo = () => {
@@ -152,7 +152,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             })()}
             <div
               key={`${pos}-${current}`}
-              className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", (leaving || drag === 0) && "transition-transform duration-300 ease-out")}
+              className={cn("relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab", (leaving || drag === 0) && (leaving ? "transition-transform duration-[400ms] ease-in" : "transition-transform duration-300 ease-out"))}
               style={{ transform: `translateX(${offset}px) rotate(${offset / 20}deg)`, perspective: "1200px" }}
               onPointerDown={(e) => { start.current = e.clientX; moved.current = false; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
               onPointerMove={(e) => { if (start.current === null) return; const d = e.clientX - start.current; if (Math.abs(d) > 6) moved.current = true; setDrag(d); }}
