@@ -34,6 +34,7 @@ import { getKeywordIndices } from "@/utils/keywordExtraction";
 import { scheduleNextReview, type ScheduleNextReviewInput } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 import { recordRepDifficulty, recordSpeechWordErrors, getEasiestWordIndices } from "@/utils/wordDifficulty";
+import { scheduleNativeNotification } from "@/lib/nativeNotifications";
 
 
 // Web Speech API types
@@ -4279,6 +4280,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         endOfSession: isEndOfSessionRecall,
       }));
     } catch { /* ignore */ }
+    scheduleNativeNotification({
+      id: `speech-${speechId}-coffee-break`,
+      title: "Dags att repetera! ☕️",
+      body: "Det är dags att repetera ditt Coffee Break-tal.",
+      date: restUntilTime,
+    });
   }, [sessionMode, restUntilTime]);
 
   // Restore an unfinished coffee break after reload / app reopen.

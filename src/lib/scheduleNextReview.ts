@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { scheduleNativeNotification } from "@/lib/nativeNotifications";
 
 export interface ScheduleNextReviewInput {
   beatId: string;
@@ -25,6 +26,14 @@ export function scheduleNextReview(input: ScheduleNextReviewInput): void {
       if (error) {
         console.warn("[FSRS] schedule-next-review failed:", error);
       } else if (data) {
+        if (data.nextDueAt) {
+          scheduleNativeNotification({
+            id: `beat-${input.beatId}-review`,
+            title: "Dags att repetera! 🎤",
+            body: "Det är dags att repetera ditt tal.",
+            date: new Date(data.nextDueAt),
+          });
+        }
         console.log(
           `[FSRS] beat ${input.beatId.slice(0, 8)} → next in ${
             Math.round((data.intervalMinutes ?? 0) / 60)
