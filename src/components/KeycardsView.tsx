@@ -125,20 +125,12 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       const target = e.target as HTMLElement | null;
       if (e.touches.length > 1 || !target?.closest("[data-keycard-scroll]")) e.preventDefault();
     };
-    let lastTouchEnd = 0;
-    const blockDoubleTap = (e: TouchEvent) => {
-      const now = Date.now();
-      if (now - lastTouchEnd < 300) e.preventDefault();
-      lastTouchEnd = now;
-    };
     document.addEventListener("touchmove", blockTouch, { passive: false });
-    document.addEventListener("touchend", blockDoubleTap, { passive: false });
     document.addEventListener("gesturestart", block, { passive: false } as AddEventListenerOptions);
     document.addEventListener("gesturechange", block, { passive: false } as AddEventListenerOptions);
     document.addEventListener("gestureend", block, { passive: false } as AddEventListenerOptions);
     return () => {
       document.removeEventListener("touchmove", blockTouch);
-      document.removeEventListener("touchend", blockDoubleTap);
       document.removeEventListener("gesturestart", block);
       document.removeEventListener("gesturechange", block);
       document.removeEventListener("gestureend", block);
