@@ -78,7 +78,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
     const card = cardRef.current;
     if (card) {
       card.style.transition = tr;
-      card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 20}deg)`;
+      card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 35}deg)`;
     }
     const g = greenRef.current, r = redRef.current;
     if (g) { g.style.transition = transition ? "opacity 250ms ease-out" : "none"; g.style.opacity = String(Math.min(1, Math.max(0, offset) / 120)); }
