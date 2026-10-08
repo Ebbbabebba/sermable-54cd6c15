@@ -30,6 +30,27 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
     () => (stripStageDirections(speechText).match(/[^.!?]+[.!?]*/g) || []).map((s) => s.trim()).filter(Boolean),
     [speechText]
   );
+  // Group consecutive sentences into cards with roughly equal word counts,
+  // so a 1-word sentence never becomes its own near-empty card.
+  const cards = useMemo(() => {
+    const MIN_WORDS = 6;
+    const MAX_WORDS = 15;
+    const wc = (s: string) => s.split(/\s+/).filter(Boolean).length;
+    const groups: { text: string; first: number; last: number }[] = [];
+    let cur: string[] = [];
+    let first = 0;
+    sentences.forEach((s, i) => {
+      const curWords = cur.reduce((a, c) => a + wc(c), 0);
+      if (cur.length > 0 && curWords >= MIN_WORDS && curWords + wc(s) > MAX_WORDS) {
+        groups.push({ text: cur.join(" "), first, last: i - 1 });
+        cur = [];
+        first = i;
+      }
+      cur.push(s);
+    });
+    if (cur.length) groups.push({ text: cur.join(" "), first, last: sentences.length - 1 });
+    return groups;
+  }, [sentences]);
   const [levels, setLevels] = useState<Record<string, number>>(() => readLevels(speechId));
   const [order, setOrder] = useState<number[]>(() => sentences.map((_, i) => i));
   const [pos, setPos] = useState(0);
