@@ -74,11 +74,10 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const busy = useRef(false);
 
   const apply = (offset: number, transition: string | null) => {
-    const tr = transition ?? "none";
     const card = cardRef.current;
     if (card) {
-      card.style.transition = tr;
-      card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 20}deg)`;
+      card.style.transition = transition ?? "none";
+      card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 35}deg)`;
     }
     const g = greenRef.current, r = redRef.current;
     if (g) { g.style.transition = transition ? "opacity 250ms ease-out" : "none"; g.style.opacity = String(Math.min(1, Math.max(0, offset) / 120)); }
@@ -87,7 +86,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
     if (n) {
       const p = Math.min(1, Math.abs(offset) / 300);
       n.style.transition = transition ? "transform 300ms ease-out, opacity 300ms ease-out" : "none";
-      n.style.transform = `translate3d(0,${12 - p * 12}px,0) scale(${0.95 + p * 0.05})`;
+      n.style.transform = `translate3d(0,${10 - p * 10}px,0)`;
       n.style.opacity = String(0.6 + p * 0.4);
     }
   };
@@ -176,7 +175,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden"
-      style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)" }}>
+      style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
       <div className="flex items-center justify-between px-4">
         <Button variant="ghost" size="icon" className="rounded-full" onClick={onBack} aria-label={t("common.exit")}>
           <X className="h-5 w-5" />
@@ -212,7 +211,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                 <div
                   ref={nextRef}
                   className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
-                  style={{ transform: "translate3d(0,12px,0) scale(0.95)", opacity: 0.6, willChange: "transform, opacity" }}
+                  style={{ transform: "translate3d(0,10px,0)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
