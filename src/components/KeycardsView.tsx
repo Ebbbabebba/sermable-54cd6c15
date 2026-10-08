@@ -78,7 +78,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
         const chosen = new Set(ranked.slice(0, Math.max(1, n)));
         return [...chosen].sort((a, b) => a - b).map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 }));
       }),
-    [sentences, levels, errors]
+    [cards, levels, errors]
   );
 
   const done = pos >= order.length;
@@ -232,7 +232,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
 
   const restart = (onlyHard: boolean) => {
     const hard = history.filter((h) => h.dir === "left").map((h) => h.index);
-    setOrder(onlyHard && hard.length ? hard : sentences.map((_, i) => i));
+    setOrder(onlyHard && hard.length ? hard : cards.map((_, i) => i));
     setPos(0); setHistory([]); setFlipped(false);
   };
 
