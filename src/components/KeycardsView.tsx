@@ -30,8 +30,29 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
     () => (stripStageDirections(speechText).match(/[^.!?]+[.!?]*/g) || []).map((s) => s.trim()).filter(Boolean),
     [speechText]
   );
+  // Group consecutive sentences into cards with roughly equal word counts,
+  // so a 1-word sentence never becomes its own near-empty card.
+  const cards = useMemo(() => {
+    const MIN_WORDS = 6;
+    const MAX_WORDS = 15;
+    const wc = (s: string) => s.split(/\s+/).filter(Boolean).length;
+    const groups: { text: string; first: number; last: number }[] = [];
+    let cur: string[] = [];
+    let first = 0;
+    sentences.forEach((s, i) => {
+      const curWords = cur.reduce((a, c) => a + wc(c), 0);
+      if (cur.length > 0 && curWords >= MIN_WORDS && curWords + wc(s) > MAX_WORDS) {
+        groups.push({ text: cur.join(" "), first, last: i - 1 });
+        cur = [];
+        first = i;
+      }
+      cur.push(s);
+    });
+    if (cur.length) groups.push({ text: cur.join(" "), first, last: sentences.length - 1 });
+    return groups;
+  }, [sentences]);
   const [levels, setLevels] = useState<Record<string, number>>(() => readLevels(speechId));
-  const [order, setOrder] = useState<number[]>(() => sentences.map((_, i) => i));
+  const [order, setOrder] = useState<number[]>(() => cards.map((_, i) => i));
   const [pos, setPos] = useState(0);
   const [history, setHistory] = useState<Swipe[]>([]);
   const [flipped, setFlipped] = useState(false);
@@ -43,8 +64,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   // re-renders (every pointermove) stay cheap.
   const allKeywords = useMemo(
     () =>
-      sentences.map((sentence, si) => {
-        const words = sentence.split(/\s+/);
+      cards.map((card, si) => {
+        const words = card.text.split(/\s+/);
         const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
         // Words you actually missed/hesitated on in practice are always shown.
         const hard = words.map((_, i) => i).filter((i) => err(i) > 0);
@@ -57,7 +78,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
         const chosen = new Set(ranked.slice(0, Math.max(1, n)));
         return [...chosen].sort((a, b) => a - b).map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 }));
       }),
-    [sentences, levels, errors]
+    [cards, levels, errors]
   );
 
   const done = pos >= order.length;
@@ -211,12 +232,20 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
 
   const restart = (onlyHard: boolean) => {
     const hard = history.filter((h) => h.dir === "left").map((h) => h.index);
-    setOrder(onlyHard && hard.length ? hard : sentences.map((_, i) => i));
+    setOrder(onlyHard && hard.length ? hard : cards.map((_, i) => i));
     setPos(0); setHistory([]); setFlipped(false);
   };
 
   const left = history.filter((h) => h.dir === "left").length;
   const right = history.length - left;
+
+  const cardLabel = (ci: number) => {
+    const c = cards[ci];
+    if (!c) return "";
+    return c.first === c.last
+      ? t("keycards.sentence", { n: c.first + 1, defaultValue: "Sentence {{n}}" })
+      : t("keycards.sentencesRange", { a: c.first + 1, b: c.last + 1, defaultValue: "Sentences {{a}}–{{b}}" });
+  };
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background overflow-hidden select-none"
@@ -263,7 +292,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                   style={{ transform: "translate3d(0,10px,0)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
+                    {cardLabel(next)}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
                     {allKeywords[next].map(({ w, hard }, i) => (
@@ -296,7 +325,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                     <span className="rounded-full border-2 border-destructive px-4 py-2 text-base font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>
                   </div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("keycards.sentence", { n: current + 1, defaultValue: "Sentence {{n}}" })}
+                    {cardLabel(current)}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
                     {allKeywords[current].map(({ w, hard }, i) => (
@@ -307,7 +336,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                 </div>
                 <div data-keycard-scroll className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex items-center overflow-y-auto"
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                  <p className="text-xl leading-relaxed">{sentences[current]}</p>
+                  <p className="text-xl leading-relaxed">{cards[current]?.text}</p>
                 </div>
               </div>
             </div>

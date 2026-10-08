@@ -1361,6 +1361,7 @@
     "repeatHard": "Repetir cartões difíceis",
     "repeatAll": "Repetir todos",
     "sentence": "Frase {{n}}",
+    "sentencesRange": "Frases {{a}}–{{b}}",
     "tapToFlip": "Toque para ver a frase inteira",
     "knowIt": "Já sei",
     "tryAgain": "De novo"

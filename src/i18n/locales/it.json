@@ -1361,6 +1361,7 @@
     "repeatHard": "Ripeti le schede difficili",
     "repeatAll": "Ripeti tutte",
     "sentence": "Frase {{n}}",
+    "sentencesRange": "Frasi {{a}}–{{b}}",
     "tapToFlip": "Tocca per vedere la frase intera",
     "knowIt": "Lo so",
     "tryAgain": "Riprova"
