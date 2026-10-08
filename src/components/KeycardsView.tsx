@@ -100,6 +100,59 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
+  // Fully lock the screen while the deck is open: no page scroll, no rubber-band,
+  // no pinch / double-tap zoom (iOS Safari ignores user-scalable=no, so the
+  // gesture events must be cancelled manually).
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = {
+      htmlOverflow: html.style.overflow, htmlOverscroll: html.style.overscrollBehavior,
+      bodyOverflow: body.style.overflow, bodyPosition: body.style.position, bodyInset: body.style.inset,
+      bodyWidth: body.style.width, bodyTouch: body.style.touchAction, bodyOverscroll: body.style.overscrollBehavior,
+    };
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.inset = "0";
+    body.style.width = "100%";
+    body.style.touchAction = "none";
+    body.style.overscrollBehavior = "none";
+    const block = (e: Event) => e.preventDefault();
+    const blockTouch = (e: TouchEvent) => {
+      // Allow scrolling only inside the flipped card's full-sentence view.
+      const target = e.target as HTMLElement | null;
+      if (e.touches.length > 1 || !target?.closest("[data-keycard-scroll]")) e.preventDefault();
+    };
+    let lastTouchEnd = 0;
+    const blockDoubleTap = (e: TouchEvent) => {
+      const now = Date.now();
+      if (now - lastTouchEnd < 300) e.preventDefault();
+      lastTouchEnd = now;
+    };
+    document.addEventListener("touchmove", blockTouch, { passive: false });
+    document.addEventListener("touchend", blockDoubleTap, { passive: false });
+    document.addEventListener("gesturestart", block, { passive: false } as AddEventListenerOptions);
+    document.addEventListener("gesturechange", block, { passive: false } as AddEventListenerOptions);
+    document.addEventListener("gestureend", block, { passive: false } as AddEventListenerOptions);
+    return () => {
+      document.removeEventListener("touchmove", blockTouch);
+      document.removeEventListener("touchend", blockDoubleTap);
+      document.removeEventListener("gesturestart", block);
+      document.removeEventListener("gesturechange", block);
+      document.removeEventListener("gestureend", block);
+      html.style.overflow = prev.htmlOverflow;
+      html.style.overscrollBehavior = prev.htmlOverscroll;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.position = prev.bodyPosition;
+      body.style.inset = prev.bodyInset;
+      body.style.width = prev.bodyWidth;
+      body.style.touchAction = prev.bodyTouch;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+    };
+  }, []);
+
   const commit = (dir: "left" | "right") => {
     if (done || busy.current) return;
     busy.current = true;
