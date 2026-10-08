@@ -292,7 +292,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                   style={{ transform: "translate3d(0,10px,0)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
+                    {cardLabel(next)}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
                     {allKeywords[next].map(({ w, hard }, i) => (
@@ -325,7 +325,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                     <span className="rounded-full border-2 border-destructive px-4 py-2 text-base font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>
                   </div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("keycards.sentence", { n: current + 1, defaultValue: "Sentence {{n}}" })}
+                    {cardLabel(current)}
                   </p>
                   <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
                     {allKeywords[current].map(({ w, hard }, i) => (
@@ -336,7 +336,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                 </div>
                 <div data-keycard-scroll className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex items-center overflow-y-auto"
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                  <p className="text-xl leading-relaxed">{sentences[current]}</p>
+                  <p className="text-xl leading-relaxed">{cards[current]?.text}</p>
                 </div>
               </div>
             </div>
