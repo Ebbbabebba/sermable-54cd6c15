@@ -150,7 +150,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
     busy.current = true;
     start.current = null;
     const w = (typeof window !== "undefined" ? window.innerWidth : 600) + 200;
-    apply(dir === "left" ? -w : w, "transform 320ms cubic-bezier(0.4, 0, 1, 1)");
+    apply(dir === "left" ? -w : w, "transform 300ms cubic-bezier(0.3, 0.6, 0.4, 1)");
     setTimeout(() => {
       if (dir === "left") {
         const next = { ...levels, [current]: (levels[current] ?? 0) + 1 };
@@ -160,7 +160,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       setHistory((h) => [...h, { index: current, dir }]);
       setPos((p) => p + 1);
       setFlipped(false);
-    }, 320);
+    }, 300);
   };
 
   const onDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -311,6 +311,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                 </div>
               </div>
             </div>
+           </div>
           </div>
           <div className="flex justify-center gap-8 pb-4">
             <Button size="icon" variant="outline" className="h-16 w-16 rounded-full border-2 border-destructive text-destructive" onClick={() => commit("left")} aria-label={t("keycards.needSupport", "More support")}>
