@@ -175,7 +175,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden"
-      style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)" }}>
+      style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
       <div className="flex items-center justify-between px-4">
         <Button variant="ghost" size="icon" className="rounded-full" onClick={onBack} aria-label={t("common.exit")}>
           <X className="h-5 w-5" />
@@ -211,7 +211,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                 <div
                   ref={nextRef}
                   className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
-                  style={{ transform: "translate3d(0,12px,0) scale(0.95)", opacity: 0.6, willChange: "transform, opacity" }}
+                  style={{ transform: "translate3d(0,10px,0)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("keycards.sentence", { n: next + 1, defaultValue: "Sentence {{n}}" })}
