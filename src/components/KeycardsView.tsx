@@ -52,7 +52,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
     return groups;
   }, [sentences]);
   const [levels, setLevels] = useState<Record<string, number>>(() => readLevels(speechId));
-  const [order, setOrder] = useState<number[]>(() => sentences.map((_, i) => i));
+  const [order, setOrder] = useState<number[]>(() => cards.map((_, i) => i));
   const [pos, setPos] = useState(0);
   const [history, setHistory] = useState<Swipe[]>([]);
   const [flipped, setFlipped] = useState(false);
@@ -64,8 +64,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   // re-renders (every pointermove) stay cheap.
   const allKeywords = useMemo(
     () =>
-      sentences.map((sentence, si) => {
-        const words = sentence.split(/\s+/);
+      cards.map((card, si) => {
+        const words = card.text.split(/\s+/);
         const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
         // Words you actually missed/hesitated on in practice are always shown.
         const hard = words.map((_, i) => i).filter((i) => err(i) > 0);
