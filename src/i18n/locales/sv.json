@@ -1390,6 +1390,7 @@
     "repeatHard": "Repetera svåra kort",
     "repeatAll": "Repetera alla",
     "sentence": "Mening {{n}}",
+    "sentencesRange": "Mening {{a}}–{{b}}",
     "tapToFlip": "Tryck för att visa hela meningen",
     "knowIt": "Kan det",
     "tryAgain": "Försök igen"

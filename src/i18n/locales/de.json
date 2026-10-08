@@ -1361,6 +1361,7 @@
     "repeatHard": "Schwierige Karten wiederholen",
     "repeatAll": "Alle wiederholen",
     "sentence": "Satz {{n}}",
+    "sentencesRange": "Sätze {{a}}–{{b}}",
     "tapToFlip": "Tippen, um den ganzen Satz zu zeigen",
     "knowIt": "Kann ich",
     "tryAgain": "Nochmal"

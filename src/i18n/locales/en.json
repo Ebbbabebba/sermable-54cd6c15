@@ -1343,6 +1343,7 @@
     "repeatHard": "Repeat difficult cards",
     "repeatAll": "Repeat all",
     "sentence": "Sentence {{n}}",
+    "sentencesRange": "Sentences {{a}}–{{b}}",
     "tapToFlip": "Tap to show the full sentence",
     "knowIt": "Know it",
     "tryAgain": "Try again"
