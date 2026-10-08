@@ -219,8 +219,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const right = history.length - left;
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden"
-      style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
+    <div className="fixed inset-0 flex flex-col bg-background overflow-hidden select-none"
+      style={{ height: "100dvh", paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
       <div className="flex items-center justify-between px-4">
         <Button variant="ghost" size="icon" className="rounded-full" onClick={onBack} aria-label={t("common.exit")}>
           <X className="h-5 w-5" />
@@ -249,13 +249,17 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
         </div>
       ) : (
         <>
-          <div className="flex-1 flex items-center justify-center px-6 relative">
+          <div className="flex-1 min-h-0 flex items-center justify-center px-6 py-3">
+           <div
+             className="relative"
+             style={{ aspectRatio: "3 / 4", height: "min(100%, calc((100vw - 3rem) * 4 / 3), 38rem)" }}
+           >
             {pos + 1 < order.length && (() => {
               const next = order[pos + 1];
               return (
                 <div
                   ref={nextRef}
-                  className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
+                  className="absolute inset-0 rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
                   style={{ transform: "translate3d(0,10px,0)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -272,8 +276,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             <div
               key={`${pos}-${current}`}
               ref={cardRef}
-              className="relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab"
-              style={{ perspective: "1200px", willChange: "transform" }}
+              className="absolute inset-0 select-none touch-none cursor-grab"
+              style={{ perspective: "1200px", willChange: "transform", backfaceVisibility: "hidden", WebkitTapHighlightColor: "transparent" }}
               onPointerDown={onDown}
               onPointerMove={onMove}
               onPointerUp={() => onEnd(false)}
@@ -301,7 +305,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                   </div>
                   <p className="text-center text-xs text-muted-foreground">{t("keycards.tapToFlip", "Tap to show the full sentence")}</p>
                 </div>
-                <div className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex items-center overflow-y-auto"
+                <div data-keycard-scroll className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex items-center overflow-y-auto"
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
                   <p className="text-xl leading-relaxed">{sentences[current]}</p>
                 </div>
