@@ -239,6 +239,14 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const left = history.filter((h) => h.dir === "left").length;
   const right = history.length - left;
 
+  const cardLabel = (ci: number) => {
+    const c = cards[ci];
+    if (!c) return "";
+    return c.first === c.last
+      ? t("keycards.sentence", { n: c.first + 1, defaultValue: "Sentence {{n}}" })
+      : t("keycards.sentencesRange", { a: c.first + 1, b: c.last + 1, defaultValue: "Sentences {{a}}–{{b}}" });
+  };
+
   return (
     <div className="fixed inset-0 flex flex-col bg-background overflow-hidden select-none"
       style={{ height: "100dvh", paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
