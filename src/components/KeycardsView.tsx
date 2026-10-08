@@ -100,12 +100,57 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
 
   useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
+  // Fully lock the screen while the deck is open: no page scroll, no rubber-band,
+  // no pinch / double-tap zoom (iOS Safari ignores user-scalable=no, so the
+  // gesture events must be cancelled manually).
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = {
+      htmlOverflow: html.style.overflow, htmlOverscroll: html.style.overscrollBehavior,
+      bodyOverflow: body.style.overflow, bodyPosition: body.style.position, bodyInset: body.style.inset,
+      bodyWidth: body.style.width, bodyTouch: body.style.touchAction, bodyOverscroll: body.style.overscrollBehavior,
+    };
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.inset = "0";
+    body.style.width = "100%";
+    body.style.touchAction = "none";
+    body.style.overscrollBehavior = "none";
+    const block = (e: Event) => e.preventDefault();
+    const blockTouch = (e: TouchEvent) => {
+      // Allow scrolling only inside the flipped card's full-sentence view.
+      const target = e.target as HTMLElement | null;
+      if (e.touches.length > 1 || !target?.closest("[data-keycard-scroll]")) e.preventDefault();
+    };
+    document.addEventListener("touchmove", blockTouch, { passive: false });
+    document.addEventListener("gesturestart", block, { passive: false } as AddEventListenerOptions);
+    document.addEventListener("gesturechange", block, { passive: false } as AddEventListenerOptions);
+    document.addEventListener("gestureend", block, { passive: false } as AddEventListenerOptions);
+    return () => {
+      document.removeEventListener("touchmove", blockTouch);
+      document.removeEventListener("gesturestart", block);
+      document.removeEventListener("gesturechange", block);
+      document.removeEventListener("gestureend", block);
+      html.style.overflow = prev.htmlOverflow;
+      html.style.overscrollBehavior = prev.htmlOverscroll;
+      body.style.overflow = prev.bodyOverflow;
+      body.style.position = prev.bodyPosition;
+      body.style.inset = prev.bodyInset;
+      body.style.width = prev.bodyWidth;
+      body.style.touchAction = prev.bodyTouch;
+      body.style.overscrollBehavior = prev.bodyOverscroll;
+    };
+  }, []);
+
   const commit = (dir: "left" | "right") => {
     if (done || busy.current) return;
     busy.current = true;
     start.current = null;
     const w = (typeof window !== "undefined" ? window.innerWidth : 600) + 200;
-    apply(dir === "left" ? -w : w, "transform 320ms cubic-bezier(0.4, 0, 1, 1)");
+    apply(dir === "left" ? -w : w, "transform 300ms cubic-bezier(0.3, 0.6, 0.4, 1)");
     setTimeout(() => {
       if (dir === "left") {
         const next = { ...levels, [current]: (levels[current] ?? 0) + 1 };
@@ -115,7 +160,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       setHistory((h) => [...h, { index: current, dir }]);
       setPos((p) => p + 1);
       setFlipped(false);
-    }, 320);
+    }, 300);
   };
 
   const onDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -174,8 +219,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const right = history.length - left;
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden"
-      style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
+    <div className="fixed inset-0 flex flex-col bg-background overflow-hidden select-none"
+      style={{ height: "100dvh", paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
       <div className="flex items-center justify-between px-4">
         <Button variant="ghost" size="icon" className="rounded-full" onClick={onBack} aria-label={t("common.exit")}>
           <X className="h-5 w-5" />
@@ -204,13 +249,17 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
         </div>
       ) : (
         <>
-          <div className="flex-1 flex items-center justify-center px-6 relative">
+          <div className="flex-1 min-h-0 flex items-center justify-center px-6 py-3">
+           <div
+             className="relative"
+             style={{ aspectRatio: "3 / 4", height: "min(100%, calc((100vw - 3rem) * 4 / 3), 38rem)" }}
+           >
             {pos + 1 < order.length && (() => {
               const next = order[pos + 1];
               return (
                 <div
                   ref={nextRef}
-                  className="absolute w-full max-w-sm aspect-[3/4] rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
+                  className="absolute inset-0 rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
                   style={{ transform: "translate3d(0,10px,0)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -227,8 +276,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             <div
               key={`${pos}-${current}`}
               ref={cardRef}
-              className="relative w-full max-w-sm aspect-[3/4] select-none touch-none cursor-grab"
-              style={{ perspective: "1200px", willChange: "transform" }}
+              className="absolute inset-0 select-none touch-none cursor-grab"
+              style={{ perspective: "1200px", willChange: "transform", backfaceVisibility: "hidden", WebkitTapHighlightColor: "transparent" }}
               onPointerDown={onDown}
               onPointerMove={onMove}
               onPointerUp={() => onEnd(false)}
@@ -256,12 +305,13 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
                   </div>
                   <p className="text-center text-xs text-muted-foreground">{t("keycards.tapToFlip", "Tap to show the full sentence")}</p>
                 </div>
-                <div className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex items-center overflow-y-auto"
+                <div data-keycard-scroll className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex items-center overflow-y-auto"
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
                   <p className="text-xl leading-relaxed">{sentences[current]}</p>
                 </div>
               </div>
             </div>
+           </div>
           </div>
           <div className="flex justify-center gap-8 pb-4">
             <Button size="icon" variant="outline" className="h-16 w-16 rounded-full border-2 border-destructive text-destructive" onClick={() => commit("left")} aria-label={t("keycards.needSupport", "More support")}>
