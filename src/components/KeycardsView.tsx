@@ -74,10 +74,9 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   const busy = useRef(false);
 
   const apply = (offset: number, transition: string | null) => {
-    const tr = transition ?? "none";
     const card = cardRef.current;
     if (card) {
-      card.style.transition = tr;
+      card.style.transition = transition ?? "none";
       card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 35}deg)`;
     }
     const g = greenRef.current, r = redRef.current;
@@ -87,7 +86,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
     if (n) {
       const p = Math.min(1, Math.abs(offset) / 300);
       n.style.transition = transition ? "transform 300ms ease-out, opacity 300ms ease-out" : "none";
-      n.style.transform = `translate3d(0,${12 - p * 12}px,0) scale(${0.95 + p * 0.05})`;
+      n.style.transform = `translate3d(0,${10 - p * 10}px,0)`;
       n.style.opacity = String(0.6 + p * 0.4);
     }
   };
