@@ -241,10 +241,10 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
   return (
     <Card 
-      className="s-e5 s-8m s-mn s-6n s-71 s-qa s-4b s-r3 s-wr s-bp s-bu s-gn s-hg s-hq s-hs s-2d s-2a"
+      className="speech-row"
       onClick={handleCardClick}
     >
-      <CardHeader className="s-n4">
+      <CardHeader className="speech-row__header">
         <div className="s-c5 s-id s-if s-dp">
           <div className="s-c5 s-l8 s-c6 s-ib s-dp">
             <div className="icon-circle icon-circle-solid-primary s-fo s-xg s-r3">
@@ -259,7 +259,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
               </CardDescription>
             </div>
           </div>
-          <span className={`s-vj s-cx s-or s-oz s-qe s-r5 s-r3 ${
+          <span className={`speech-row__deadline ${
             isOverdue 
               ? "bg-destructive/12 s-u2 s-6l s-76" 
               : daysRemaining === 0
@@ -277,7 +277,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </div>
       </CardHeader>
 
-      <CardContent className="s-t1">
+      <CardContent className="speech-row__content">
         <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -333,7 +333,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </p>
       </CardContent>
 
-      <CardFooter className="s-c5 s-ib s-dn s-o9" onClick={(e) => e.stopPropagation()}>
+      <CardFooter className="speech-row__footer s-c5 s-ib s-dn" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="apple"
           onClick={handleCardClick}
