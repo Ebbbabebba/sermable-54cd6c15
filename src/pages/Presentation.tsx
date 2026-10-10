@@ -247,8 +247,8 @@ const Presentation = () => {
 
   if (loading) {
     return (
-      <div className="h-screen bg-background flex items-center justify-center overflow-hidden">
-        <div className="animate-pulse text-muted-foreground">{t('common.loading', 'Loading...')}</div>
+      <div className="s-gi s-3v s-c5 s-ib s-ig s-mn">
+        <div className="s-30 s-ul">{t('common.loading', 'Loading...')}</div>
       </div>
     );
   }
@@ -258,14 +258,14 @@ const Presentation = () => {
   // Mode selector
   if (stage === 'mode-select') {
     return (
-      <div className="h-screen bg-background overflow-hidden" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
-        <div className="absolute left-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+      <div className="s-gi s-3v s-mn" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+        <div className="s-26 s-iw s-ye" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="gap-2 bg-background/80 backdrop-blur-sm rounded-full"
+            className="s-dn s-40 s-3h s-qe"
           >
-            <X className="h-4 w-4" />
+            <X className="s-fz s-xt" />
             {t('common.exit')}
           </Button>
         </div>
@@ -319,47 +319,47 @@ const Presentation = () => {
   // Prep screen (whole speech mode)
   if (stage === 'prep') {
     return (
-      <div className="min-h-screen bg-background p-6 md:p-8" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 2rem)' }}>
-        <div className="absolute right-4 z-10" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+      <div className="s-l6 s-3v s-my s-kc" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 2rem)' }}>
+        <div className="s-26 s-pi s-ye" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)}>
-            <Settings className="h-5 w-5" />
+            <Settings className="s-g1 s-xv" />
           </Button>
         </div>
 
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="s-jc s-m9 s-t3">
           <Button
             variant="ghost"
             onClick={() => setStage('mode-select')}
-            className="mb-2 rounded-full"
+            className="s-jy s-qe"
           >
-            <X className="h-4 w-4 mr-2" />
+            <X className="s-fz s-xt s-lp" />
             {t('presentation.backToModeSelection')}
           </Button>
 
-          <div className="space-y-2">
-            <h1 className="text-3xl md:text-4xl font-bold capitalize">{speech.title}</h1>
-            <p className="text-muted-foreground">
+          <div className="s-sy">
+            <h1 className="s-ta s-kk s-cx s-8i">{speech.title}</h1>
+            <p className="s-ul">
               {t('presentation.wholeSpeechModeLabel', 'Whole Speech Mode')} • {t('presentation.wordsCount', { count: stripStageDirections(speech.text_original).split(/\s+/).filter(Boolean).length })}
             </p>
           </div>
 
           {/* Script visibility choice */}
-          <div className="p-4 bg-muted/40 rounded-3xl border border-border space-y-3">
-            <p className="text-sm font-medium">{t('presentation.scriptVisibilityTitle', 'Script on screen')}</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="s-mw s-55 s-qa s-6l s-6x s-t0">
+            <p className="s-v9 s-d0">{t('presentation.scriptVisibilityTitle', 'Script on screen')}</p>
+            <div className="s-e0 s-e2 s-dn">
               <button
                 type="button"
                 onClick={() => setScriptHidden(false)}
                 className={cn(
-                  "rounded-2xl border-2 p-3 text-left transition-colors",
-                  !scriptHidden ? "border-primary bg-primary/10" : "border-border bg-background"
+                  "s-q9 s-6n s-mv s-uj s-ws",
+                  !scriptHidden ? "s-7n s-5e" : "s-6x s-3v"
                 )}
               >
-                <span className="flex items-center gap-2 font-medium text-sm">
-                  <Eye className="h-4 w-4" />
+                <span className="s-c5 s-ib s-dn s-d0 s-v9">
+                  <Eye className="s-fz s-xt" />
                   {t('presentation.scriptVisible', 'Show script')}
                 </span>
-                <span className="block text-xs text-muted-foreground mt-1">
+                <span className="s-6i s-vj s-ul s-lt">
                   {t('presentation.scriptVisibleDesc', 'Teleprompter follows along as you speak.')}
                 </span>
               </button>
@@ -367,42 +367,42 @@ const Presentation = () => {
                 type="button"
                 onClick={() => setScriptHidden(true)}
                 className={cn(
-                  "rounded-2xl border-2 p-3 text-left transition-colors",
-                  scriptHidden ? "border-primary bg-primary/10" : "border-border bg-background"
+                  "s-q9 s-6n s-mv s-uj s-ws",
+                  scriptHidden ? "s-7n s-5e" : "s-6x s-3v"
                 )}
               >
-                <span className="flex items-center gap-2 font-medium text-sm">
-                  <EyeOff className="h-4 w-4" />
+                <span className="s-c5 s-ib s-dn s-d0 s-v9">
+                  <EyeOff className="s-fz s-xt" />
                   {t('presentation.scriptHidden', 'Hide script')}
                 </span>
-                <span className="block text-xs text-muted-foreground mt-1">
+                <span className="s-6i s-vj s-ul s-lt">
                   {t('presentation.scriptHiddenDesc', 'Empty screen — words appear only when you hesitate.')}
                 </span>
               </button>
             </div>
           </div>
 
-          <div className="p-6 bg-primary/5 rounded-3xl border border-primary/20 space-y-4">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">1</div>
+          <div className="s-my s-5j s-qa s-6l s-7p s-t1">
+            <div className="s-t1">
+              <div className="s-c5 s-id s-dp">
+                <div className="s-ca s-xy s-g4 s-qe s-5e s-c5 s-ib s-ig s-v9 s-d3 s-uw">1</div>
                 <div>
-                  <p className="font-medium text-sm">{t('presentation.step1Title')}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t('presentation.step1Desc')}</p>
+                  <p className="s-d0 s-v9">{t('presentation.step1Title')}</p>
+                  <p className="s-vj s-ul s-ls">{t('presentation.step1Desc')}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">2</div>
+              <div className="s-c5 s-id s-dp">
+                <div className="s-ca s-xy s-g4 s-qe s-5e s-c5 s-ib s-ig s-v9 s-d3 s-uw">2</div>
                 <div>
-                  <p className="font-medium text-sm">{t('presentation.step2Title')}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t('presentation.step2Desc')}</p>
+                  <p className="s-d0 s-v9">{t('presentation.step2Title')}</p>
+                  <p className="s-vj s-ul s-ls">{t('presentation.step2Desc')}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">3</div>
+              <div className="s-c5 s-id s-dp">
+                <div className="s-ca s-xy s-g4 s-qe s-5e s-c5 s-ib s-ig s-v9 s-d3 s-uw">3</div>
                 <div>
-                  <p className="font-medium text-sm">{t('presentation.step3Title')}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t('presentation.step3Desc')}</p>
+                  <p className="s-d0 s-v9">{t('presentation.step3Title')}</p>
+                  <p className="s-vj s-ul s-ls">{t('presentation.step3Desc')}</p>
                 </div>
               </div>
             </div>
@@ -414,9 +414,9 @@ const Presentation = () => {
             size="xl"
             variant="apple"
             onClick={handleStartPresentation}
-            className="w-full"
+            className="s-y7"
           >
-            <Play className="h-5 w-5 mr-2" />
+            <Play className="s-g1 s-xv s-lp" />
             {t('presentation.startPresentation')}
           </Button>
         </div>
@@ -452,14 +452,14 @@ const Presentation = () => {
         sentenceStartDelay={sentenceStartDelay}
       />
 
-      <div className="fixed right-4 z-50" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+      <div className="s-c4 s-pi s-yh" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setShowSettings(true)}
-          className="bg-background/50 backdrop-blur-sm rounded-full"
+          className="s-3x s-3h s-qe"
         >
-          <Settings className="h-5 w-5" />
+          <Settings className="s-g1 s-xv" />
         </Button>
       </div>
 

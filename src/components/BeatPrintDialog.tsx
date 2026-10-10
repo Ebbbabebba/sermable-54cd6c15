@@ -202,7 +202,7 @@ export const BeatPrintDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="s-jq">
         <DialogHeader>
           <DialogTitle>{t("beatPrint.title", "Skriv ut manus")}</DialogTitle>
           <DialogDescription>
@@ -216,21 +216,21 @@ export const BeatPrintDialog = ({
         <RadioGroup
           value={layout}
           onValueChange={(v) => setLayout(v as Layout)}
-          className="space-y-3 py-2"
+          className="s-t0 s-p3"
         >
           <label
             htmlFor="layout-per-page"
-            className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-accent/40"
+            className="s-c5 s-id s-dp s-qh s-6l s-mv s-8m s-gq"
           >
-            <RadioGroupItem id="layout-per-page" value="per-page" className="mt-1" />
-            <div className="space-y-0.5">
+            <RadioGroupItem id="layout-per-page" value="per-page" className="s-lt" />
+            <div className="s-sv">
               <Label
                 htmlFor="layout-per-page"
-                className="font-medium cursor-pointer"
+                className="s-d0 s-8m"
               >
                 {t("beatPrint.optionPerPage", "En beat per sida")}
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="s-vj s-ul">
                 {t(
                   "beatPrint.optionPerPageDesc",
                   "Stort typsnitt, luftig layout. Bra för podium/scen.",
@@ -241,17 +241,17 @@ export const BeatPrintDialog = ({
 
           <label
             htmlFor="layout-continuous"
-            className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-accent/40"
+            className="s-c5 s-id s-dp s-qh s-6l s-mv s-8m s-gq"
           >
-            <RadioGroupItem id="layout-continuous" value="continuous" className="mt-1" />
-            <div className="space-y-0.5">
+            <RadioGroupItem id="layout-continuous" value="continuous" className="s-lt" />
+            <div className="s-sv">
               <Label
                 htmlFor="layout-continuous"
-                className="font-medium cursor-pointer"
+                className="s-d0 s-8m"
               >
                 {t("beatPrint.optionContinuous", "Löpande sidor")}
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="s-vj s-ul">
                 {t(
                   "beatPrint.optionContinuousDesc",
                   "Kompakt utskrift, beats efter varandra. Sparar papper.",
@@ -271,9 +271,9 @@ export const BeatPrintDialog = ({
           </Button>
           <Button onClick={handlePrint} disabled={loading}>
             {loading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="s-fz s-xt s-lp s-32" />
             ) : (
-              <Printer className="h-4 w-4 mr-2" />
+              <Printer className="s-fz s-xt s-lp" />
             )}
             {t("beatPrint.printButton", "Skriv ut")}
           </Button>

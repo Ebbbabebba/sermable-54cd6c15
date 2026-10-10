@@ -167,18 +167,18 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
   return createPortal(
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 bg-background/70 backdrop-blur-xl flex flex-col"
+        className="s-c4 s-i5 s-yh s-3z s-3i s-c5 s-c7"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         style={{ height: "100dvh" }}
       >
         <div
-          className="flex items-center justify-between px-4 pb-3"
+          className="s-c5 s-ib s-if s-os s-n6"
           style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
         >
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="h-4 w-4 text-primary" />
+          <div className="s-c5 s-ib s-dn s-v9 s-ul">
+            <Sparkles className="s-fz s-xt s-uw" />
             {!finished && beats && beats.length > 0 && (
               <span>
                 {idx + 1} / {beats.length}
@@ -188,53 +188,53 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-card border border-border/50 flex items-center justify-center"
+            className="s-y2 s-g8 s-qe s-4b s-6l s-70 s-c5 s-ib s-ig"
             aria-label="Close"
           >
-            <X className="h-4 w-4" />
+            <X className="s-fz s-xt" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-6 flex items-center justify-center">
-          <div className="w-full max-w-xl rounded-3xl border border-border/60 bg-card/95 p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="s-c6 s-mq s-os s-n9 s-c5 s-ib s-ig">
+          <div className="s-y7 s-jt s-qa s-6l s-71 s-4f s-my s-s7 s-r4 s-t3">
             {loading && (
-              <p className="text-center text-sm text-muted-foreground py-10">
+              <p className="s-u0 s-v9 s-ul s-p0">
                 …
               </p>
             )}
 
             {!loading && !finished && current && (
               <>
-                <div className="text-center space-y-1">
-                  <p className="text-xs font-medium uppercase tracking-wider text-primary/80">
-                    <HelpCircle className="inline h-3.5 w-3.5 mr-1" />
+                <div className="s-u0 s-sw">
+                  <p className="s-vj s-d0 s-x1 s-wj s-uy">
+                    <HelpCircle className="s-i2 s-fx s-xq s-ln" />
                     {t("knowledgeTest.question")}
                   </p>
-                  <h3 className="text-lg font-semibold">
+                  <h3 className="s-uk s-d3">
                     {t("knowledgeTest.bannerTitle")}
                   </h3>
                 </div>
-                <div className="rounded-2xl bg-muted/50 border border-border/40 p-5 text-base leading-relaxed font-serif whitespace-pre-wrap">
+                <div className="s-q9 s-56 s-6l s-6z s-mx s-tw s-ip s-d4 s-yd">
                   {partial}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="s-e0 s-e1 s-rm s-dn">
                   <Button
                     variant="outline"
                     onClick={() => answer("no")}
-                    className="gap-2"
+                    className="s-dn"
                   >
-                    <ThumbsDown className="h-4 w-4" />
+                    <ThumbsDown className="s-fz s-xt" />
                     {t("knowledgeTest.no")}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => answer("partial")}
-                    className="gap-2"
+                    className="s-dn"
                   >
                     {t("knowledgeTest.partial")}
                   </Button>
-                  <Button onClick={() => answer("yes")} className="gap-2">
-                    <ThumbsUp className="h-4 w-4" />
+                  <Button onClick={() => answer("yes")} className="s-dn">
+                    <ThumbsUp className="s-fz s-xt" />
                     {t("knowledgeTest.yes")}
                   </Button>
                 </div>
@@ -242,12 +242,12 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
             )}
 
             {!loading && finished && (
-              <div className="text-center space-y-5">
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold">
+              <div className="s-u0 s-t2">
+                <div className="s-sw">
+                  <h3 className="s-vi s-cx">
                     {t("knowledgeTest.resultTitle")}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="s-v9 s-ul">
                     {t(
                       `knowledgeTest.result${level.charAt(0).toUpperCase() + level.slice(1)}`
                     )}
@@ -257,7 +257,7 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
                   size="lg"
                   onClick={finish}
                   disabled={saving}
-                  className="min-w-40"
+                  className="s-lb"
                 >
                   {t("knowledgeTest.done")}
                 </Button>
@@ -265,7 +265,7 @@ const KnowledgeTestDialog = ({ open, onClose, speechId, onCompleted }: Props) =>
             )}
 
             {!loading && !finished && beats && beats.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-10">
+              <p className="s-u0 s-v9 s-ul s-p0">
                 —
               </p>
             )}

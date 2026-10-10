@@ -32,7 +32,7 @@ export const PauseCountdownOverlay = ({
       {visible && (
         <motion.div
           key="pause-overlay"
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-background/85 backdrop-blur-sm"
+          className="s-c4 s-i5 s-yl s-c5 s-ib s-ig s-41 s-3h"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -45,7 +45,7 @@ export const PauseCountdownOverlay = ({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.85, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="relative flex items-center justify-center"
+            className="s-pd s-c5 s-ib s-ig"
           >
             <svg width={size} height={size} className="-rotate-90">
               <circle
@@ -70,12 +70,12 @@ export const PauseCountdownOverlay = ({
                 style={{ transition: "stroke-dashoffset 100ms linear" }}
               />
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <Pause className="h-7 w-7 text-primary" fill="currentColor" />
-              <div className="text-6xl font-bold tabular-nums text-foreground">
+            <div className="s-26 s-i5 s-c5 s-c7 s-ib s-ig s-dn">
+              <Pause className="s-g4 s-xy s-uw" fill="currentColor" />
+              <div className="s-td s-cx tabular-nums s-u9">
                 {Math.ceil(safeRemaining)}
               </div>
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">
+              <div className="s-vj s-x1 s-wk s-ul">
                 pause
               </div>
             </div>

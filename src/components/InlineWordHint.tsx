@@ -27,10 +27,10 @@ const InlineWordHint = ({ word, hintLevel, isVisible, className }: InlineWordHin
           exit={{ opacity: 0, y: 5, scale: 0.95 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className={cn(
-            "inline-flex items-center px-2 py-0.5 rounded-md text-sm font-medium",
-            hintLevel === 1 && "bg-primary/10 text-primary border border-primary/30",
-            hintLevel === 2 && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500/40",
-            hintLevel === 3 && "bg-yellow-500/30 text-yellow-800 dark:text-yellow-300 border-2 border-yellow-500 font-bold",
+            "s-i4 s-ib s-op s-ox s-qi s-v9 s-d0",
+            hintLevel === 1 && "s-5e s-uw s-6l s-7r",
+            hintLevel === 2 && "s-6f s-vm s-8y s-6l s-88",
+            hintLevel === 3 && "s-6h s-vn s-8x s-6n s-87 s-cx",
             className
           )}
         >

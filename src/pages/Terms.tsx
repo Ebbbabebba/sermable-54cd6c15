@@ -6,20 +6,20 @@ const Terms = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="container mx-auto px-4 py-4">
+    <div className="s-l6 s-3v">
+      <header className="s-6v s-4b s-t7 s-w1 s-ye" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="s-8j s-m9 s-os s-p7">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="s-fz s-xt s-lp" />
             Back
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <article className="prose prose-neutral dark:prose-invert max-w-none">
+      <main className="s-8j s-m9 s-os s-pb s-jd">
+        <article className="prose prose-neutral dark:prose-invert s-jr">
           <h1>Terms of Use (EULA)</h1>
-          <p className="text-muted-foreground">Last updated: May 1, 2026</p>
+          <p className="s-ul">Last updated: May 1, 2026</p>
 
           <h2>1. Acceptance of Terms</h2>
           <p>
@@ -80,7 +80,7 @@ const Terms = () => {
               <strong>Refunds:</strong> All refund requests for In-App Purchases are handled by Apple
               in accordance with the Apple Media Services Terms and Conditions. To request a refund,
               visit{" "}
-              <a href="https://reportaproblem.apple.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a href="https://reportaproblem.apple.com" target="_blank" rel="noopener noreferrer" className="s-uw s-i1">
                 reportaproblem.apple.com
               </a>.
             </li>
@@ -143,7 +143,7 @@ const Terms = () => {
           <h2>13. Contact</h2>
           <p>
             For questions about these Terms, contact us at{" "}
-            <a href="mailto:support@sermable.com" className="text-primary hover:underline">
+            <a href="mailto:support@sermable.com" className="s-uw s-i1">
               support@sermable.com
             </a>
           </p>

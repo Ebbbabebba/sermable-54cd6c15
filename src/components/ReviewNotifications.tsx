@@ -90,8 +90,8 @@ const ReviewNotifications = () => {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-6">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <CardContent className="s-c5 s-ib s-ig s-p9">
+          <Loader2 className="s-g2 s-xw s-32 s-ul" />
         </CardContent>
       </Card>
     );
@@ -107,16 +107,16 @@ const ReviewNotifications = () => {
   const grouped = Array.from(bySpeech.values());
 
   return (
-    <Card className="border border-border/60 rounded-3xl bg-card shadow-sm">
+    <Card className="s-6l s-71 s-qa s-4b s-r3">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary">
-              <Bell className="h-4 w-4" />
+        <div className="s-c5 s-ib s-if">
+          <div className="s-c5 s-ib s-dn">
+            <div className="s-i4 s-ib s-ig s-g6 s-y0 s-qe s-5e s-uw">
+              <Bell className="s-fz s-xt" />
             </div>
             <CardTitle>{t('dashboard.dueForPractice', 'Redo att öva')}</CardTitle>
           </div>
-          <Badge variant="secondary" className="ml-2 rounded-full">
+          <Badge variant="secondary" className="s-lk s-qe">
             {grouped.length}
           </Badge>
         </div>
@@ -124,7 +124,7 @@ const ReviewNotifications = () => {
           {t('dashboard.dueForPracticeDescription', 'Dessa moment är optimala att öva på just nu')}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="s-t0">
         {grouped.map((b) => {
           const dueMs = new Date(b.due_at).getTime();
           const createdMs = b.speech_created_at
@@ -141,20 +141,20 @@ const ReviewNotifications = () => {
             <button
               key={b.beat_id}
               onClick={() => navigate(`/practice/${b.speech_id}`)}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-secondary/60 hover:bg-secondary transition-colors text-left"
+              className="s-y7 s-c5 s-ib s-if s-mw s-q9 s-5w s-h9 s-ws s-uj"
             >
-              <div className="flex-1 min-w-0 mr-4">
-                <h4 className="font-semibold truncate">{b.speech_title}</h4>
-                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+              <div className="s-c6 s-l8 s-lr">
+                <h4 className="s-d3 truncate">{b.speech_title}</h4>
+                <div className="s-c5 s-ib s-dp s-lt s-v9 s-ul">
                   <span>
                     {t('dashboard.beat', 'Moment')} {b.beat_order + 1}
                   </span>
                   {isOverdue ? (
-                    <Badge variant="destructive" className="text-xs rounded-full">
+                    <Badge variant="destructive" className="s-vj s-qe">
                       {t('dashboard.overdue', 'Försenad')}
                     </Badge>
                   ) : isDueNow ? (
-                    <Badge variant="secondary" className="text-xs rounded-full">
+                    <Badge variant="secondary" className="s-vj s-qe">
                       {t('dashboard.readyNow', 'Redo nu')}
                     </Badge>
                   ) : (
@@ -164,7 +164,7 @@ const ReviewNotifications = () => {
                   )}
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="s-g1 s-xv s-ul" />
             </button>
           );
         })}

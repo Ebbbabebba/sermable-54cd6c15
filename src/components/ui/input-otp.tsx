@@ -8,8 +8,8 @@ const InputOTP = React.forwardRef<React.ElementRef<typeof OTPInput>, React.Compo
   ({ className, containerClassName, ...props }, ref) => (
     <OTPInput
       ref={ref}
-      containerClassName={cn("flex items-center gap-2 has-[:disabled]:opacity-50", containerClassName)}
-      className={cn("disabled:cursor-not-allowed", className)}
+      containerClassName={cn("s-c5 s-ib s-dn s-gk", containerClassName)}
+      className={cn("s-bi", className)}
       {...props}
     />
   ),
@@ -17,7 +17,7 @@ const InputOTP = React.forwardRef<React.ElementRef<typeof OTPInput>, React.Compo
 InputOTP.displayName = "InputOTP";
 
 const InputOTPGroup = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(
-  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex items-center", className)} {...props} />,
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("s-c5 s-ib", className)} {...props} />,
 );
 InputOTPGroup.displayName = "InputOTPGroup";
 
@@ -32,16 +32,16 @@ const InputOTPSlot = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md",
-        isActive && "z-10 ring-2 ring-ring ring-offset-background",
+        "s-pd s-c5 s-fn s-xf s-ib s-ig s-86 s-7v s-7g s-v9 s-wr s-c3 s-c2 s-ik",
+        isActive && "s-ye s-pm s-q1 s-pu",
         className,
       )}
       {...props}
     >
       {char}
       {hasFakeCaret && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="animate-caret-blink h-4 w-px bg-foreground duration-1000" />
+        <div className="s-nx s-26 s-i5 s-c5 s-ib s-ig">
+          <div className="animate-caret-blink s-fz s-y9 s-4p s-bn" />
         </div>
       )}
     </div>

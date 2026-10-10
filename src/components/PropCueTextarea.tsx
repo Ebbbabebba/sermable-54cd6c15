@@ -145,8 +145,8 @@ const PropCueTextarea = ({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="relative">
+    <div className="s-t0">
+      <div className="s-pd">
         <Textarea
           ref={taRef}
           value={displayValue}
@@ -157,7 +157,7 @@ const PropCueTextarea = ({
           placeholder={placeholder}
           rows={rows}
           disabled={disabled}
-          className={cn("resize-none text-base", className)}
+          className={cn("resize-none s-tw", className)}
         />
 
         {/* Floating action when there's a selection */}
@@ -168,7 +168,7 @@ const PropCueTextarea = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="fixed z-50 left-0 right-0 flex justify-center pointer-events-none px-3"
+              className="s-c4 s-yh s-is s-pe s-c5 s-ig s-nx s-or"
               style={{ top: Math.max(8, pos.top) }}
             >
               <Button
@@ -176,13 +176,13 @@ const PropCueTextarea = ({
                 size="sm"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setEditing(true)}
-                className="gap-1.5 shadow-lg max-w-full pointer-events-auto whitespace-nowrap"
+                className="s-dm s-qx s-jn s-nw s-yb"
                 style={{
                   backgroundColor: "hsl(var(--prop-cue-fg))",
                   color: "hsl(var(--background))",
                 }}
               >
-                <Sparkle className="h-3.5 w-3.5 shrink-0" />
+                <Sparkle className="s-fx s-xq s-r5" />
                 <span className="truncate">
                   {t("upload.propCue.addButton", "Add prop cue")}
                 </span>
@@ -199,10 +199,10 @@ const PropCueTextarea = ({
         size="sm"
         disabled={disabled || !value.trim()}
         onClick={() => setPickerOpen((v) => !v)}
-        className="gap-1.5 rounded-full"
+        className="s-dm s-qe"
         aria-expanded={pickerOpen}
       >
-        <Hand className="h-4 w-4" />
+        <Hand className="s-fz s-xt" />
         {t("upload.propCue.pickerButton", "Mark words by tapping")}
       </Button>
       <PropCueWordPicker
@@ -220,10 +220,10 @@ const PropCueTextarea = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
+            className="s-mn"
           >
             <div
-              className="flex items-center gap-2 p-3 rounded-xl border"
+              className="s-c5 s-ib s-dn s-mv s-qo s-6l"
               style={{
                 backgroundColor: "hsl(var(--prop-cue-bg))",
                 borderColor: "hsl(var(--prop-cue-fg) / 0.4)",
@@ -247,7 +247,7 @@ const PropCueTextarea = ({
                     setCueDraft("");
                   }
                 }}
-                className="flex-1"
+                className="s-c6"
                 maxLength={32}
               />
               <Button
@@ -256,7 +256,7 @@ const PropCueTextarea = ({
                 onClick={wrapSelection}
                 disabled={!cueDraft.trim()}
               >
-                <Check className="h-4 w-4" />
+                <Check className="s-fz s-xt" />
               </Button>
               <Button
                 type="button"
@@ -267,10 +267,10 @@ const PropCueTextarea = ({
                   setCueDraft("");
                 }}
               >
-                <X className="h-4 w-4" />
+                <X className="s-fz s-xt" />
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1.5 px-1">
+            <p className="s-vj s-ul s-lu s-ol">
               "{displayValue.slice(sel.start, sel.end)}"
             </p>
           </motion.div>

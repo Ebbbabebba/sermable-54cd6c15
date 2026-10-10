@@ -120,33 +120,33 @@ const AccountSettings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="s-l6 s-3v">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+      <header className="s-t7 s-w1 s-yh s-43 s-3d s-t8 s-6v" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="s-jc s-m9 s-os s-p6 s-c5 s-ib s-dp">
           <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="s-g1 s-xv" />
           </Button>
-          <h1 className="text-lg font-semibold">{t('settings.account.title')}</h1>
+          <h1 className="s-uk s-d3">{t('settings.account.title')}</h1>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-4 space-y-3">
+      <main className="s-jc s-m9 s-os s-p7 s-t0">
         {/* Combined Info Card */}
         <Card>
-          <CardContent className="pt-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <User className="h-5 w-5 text-primary mt-0.5" />
+          <CardContent className="s-od s-t0">
+            <div className="s-c5 s-id s-dp">
+              <User className="s-g1 s-xv s-uw s-ls" />
               <div>
-                <p className="font-medium text-sm">{t('settings.account.personalizedLearning')}</p>
-                <p className="text-xs text-muted-foreground">{t('settings.account.personalizedLearningDesc')}</p>
+                <p className="s-d0 s-v9">{t('settings.account.personalizedLearning')}</p>
+                <p className="s-vj s-ul">{t('settings.account.personalizedLearningDesc')}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <Shield className="h-5 w-5 text-primary mt-0.5" />
+            <div className="s-c5 s-id s-dp">
+              <Shield className="s-g1 s-xv s-uw s-ls" />
               <div>
-                <p className="font-medium text-sm">{t('settings.account.dataPrivacy')}</p>
-                <p className="text-xs text-muted-foreground">{t('settings.account.dataPrivacyDesc')}</p>
+                <p className="s-d0 s-v9">{t('settings.account.dataPrivacy')}</p>
+                <p className="s-vj s-ul">{t('settings.account.dataPrivacyDesc')}</p>
               </div>
             </div>
           </CardContent>
@@ -154,16 +154,16 @@ const AccountSettings = () => {
 
         {/* Change Password */}
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base">{t('settings.account.changePassword', 'Change Password')}</CardTitle>
+          <CardHeader className="s-n4">
+            <div className="s-c5 s-ib s-dn">
+              <Lock className="s-g1 s-xv s-uw" />
+              <CardTitle className="s-tw">{t('settings.account.changePassword', 'Change Password')}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="new-password" className="text-xs">{t('settings.account.newPassword', 'New password')}</Label>
-              <div className="relative">
+          <CardContent className="s-t0">
+            <div className="s-sx">
+              <Label htmlFor="new-password" className="s-vj">{t('settings.account.newPassword', 'New password')}</Label>
+              <div className="s-pd">
                 <Input
                   id="new-password"
                   type={showNewPassword ? "text" : "password"}
@@ -174,16 +174,16 @@ const AccountSettings = () => {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="s-26 s-ph s-w4 s-9 s-ul s-hv"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
-                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showNewPassword ? <EyeOff className="s-fz s-xt" /> : <Eye className="s-fz s-xt" />}
                 </button>
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirm-password" className="text-xs">{t('settings.account.confirmPassword', 'Confirm password')}</Label>
-              <div className="relative">
+            <div className="s-sx">
+              <Label htmlFor="confirm-password" className="s-vj">{t('settings.account.confirmPassword', 'Confirm password')}</Label>
+              <div className="s-pd">
                 <Input
                   id="confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
@@ -194,22 +194,22 @@ const AccountSettings = () => {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="s-26 s-ph s-w4 s-9 s-ul s-hv"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? <EyeOff className="s-fz s-xt" /> : <Eye className="s-fz s-xt" />}
                 </button>
               </div>
             </div>
             <Button
               onClick={handleChangePassword}
               disabled={isChangingPassword || !newPassword || !confirmPassword}
-              className="w-full"
+              className="s-y7"
               size="sm"
             >
               {isChangingPassword ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="s-fz s-xt s-lp s-32" />
                   {t('common.loading')}
                 </>
               ) : (
@@ -217,9 +217,9 @@ const AccountSettings = () => {
               )}
             </Button>
             {passwordChanged && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20 animate-fade-in">
-                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+              <div className="s-c5 s-ib s-dn s-mv s-qh s-4w s-6l s-7d s-2y">
+                <CheckCircle2 className="s-g1 s-xv s-ud s-r5" />
+                <p className="s-v9 s-d0 s-ue s-8s">
                   {t('settings.account.passwordChanged', 'Your password has been updated')} ✓
                 </p>
               </div>
@@ -227,24 +227,24 @@ const AccountSettings = () => {
           </CardContent>
         </Card>
         {/* Danger Zone */}
-        <Card className="border-destructive/50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Trash2 className="h-4 w-4 text-destructive" />
-              <p className="font-medium text-sm text-destructive">{t('settings.account.dangerZone')}</p>
+        <Card className="s-79">
+          <CardContent className="s-od">
+            <div className="s-c5 s-ib s-dn s-jy">
+              <Trash2 className="s-fz s-xt s-u2" />
+              <p className="s-d0 s-v9 s-u2">{t('settings.account.dangerZone')}</p>
             </div>
-            <p className="text-xs text-muted-foreground mb-3">{t('settings.account.dangerZoneDesc')}</p>
+            <p className="s-vj s-ul s-jz">{t('settings.account.dangerZoneDesc')}</p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm" className="w-full" disabled={isDeleting}>
+                <Button variant="destructive" size="sm" className="s-y7" disabled={isDeleting}>
                   {isDeleting ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="s-fz s-xt s-lp s-32" />
                       {t('common.loading')}
                     </>
                   ) : (
                     <>
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="s-fz s-xt s-lp" />
                       {t('settings.account.deleteAccount')}
                     </>
                   )}
@@ -261,7 +261,7 @@ const AccountSettings = () => {
                   <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDeleteAccount}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    className="s-4h s-u3 s-gx"
                   >
                     {t('settings.account.confirmDelete')}
                   </AlertDialogAction>
@@ -272,10 +272,10 @@ const AccountSettings = () => {
         </Card>
 
         {/* Deletion Request Link */}
-        <div className="text-center pt-2">
+        <div className="s-u0 s-o9">
           <button
             onClick={() => navigate('/delete-account')}
-            className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+            className="s-vj s-ul s-wy s-hv s-ws"
           >
             {t('settings.account.requestDeletion', 'Request account & data deletion')}
           </button>

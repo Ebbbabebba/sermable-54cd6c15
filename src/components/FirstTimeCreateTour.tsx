@@ -53,10 +53,10 @@ const ScriptDemo = ({
         <span
           key={i++}
           className={cn(
-            "mx-0.5 px-1.5 py-0.5 rounded font-semibold",
-            highlight === "hidden"
-              ? "bg-primary/30 text-primary ring-1 ring-primary/60"
-              : "bg-muted/50 text-muted-foreground/70",
+            "s-m3 s-om s-ox s-q8 s-d3",
+            highlight === "s-gm"
+              ? "s-5h s-uw s-pl s-q0"
+              : "s-56 s-up",
           )}
         >
           {"•".repeat(Math.max(1, Math.ceil(m[2].length / 2)))}
@@ -69,10 +69,10 @@ const ScriptDemo = ({
         <span
           key={i++}
           className={cn(
-            "mx-1 italic text-sm",
+            "s-m4 italic s-v9",
             highlight === "direction"
-              ? "text-primary font-semibold"
-              : "text-muted-foreground/80",
+              ? "s-uw s-d3"
+              : "s-uq",
           )}
         >
           ({m[3]})
@@ -85,10 +85,10 @@ const ScriptDemo = ({
         <span
           key={i++}
           className={cn(
-            "mx-1 px-2 py-0.5 rounded-full text-xs",
+            "s-m4 s-op s-ox s-qe s-vj",
             highlight === "pause"
-              ? "bg-primary/20 text-primary ring-1 ring-primary"
-              : "bg-muted/40 text-muted-foreground",
+              ? "s-5g s-uw s-pl s-pw"
+              : "s-55 s-ul",
           )}
         >
           —
@@ -104,8 +104,8 @@ const ScriptDemo = ({
       <span
         key={i++}
         className={cn(
-          "px-0.5",
-          cueActive && highlight === "cue" && "rounded",
+          "s-ok",
+          cueActive && highlight === "cue" && "s-q8",
         )}
         style={
           cueActive && highlight === "cue"
@@ -117,7 +117,7 @@ const ScriptDemo = ({
       </span>,
     );
   }
-  return <p className="text-base md:text-lg leading-loose">{nodes}</p>;
+  return <p className="s-tw s-kp s-in">{nodes}</p>;
 };
 
 const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTourProps) => {
@@ -153,8 +153,8 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       bodyFallback:
         "Learn Sermable's text features to make your practice and presentation come alive.",
       demo: () => (
-        <div className="flex items-center justify-center">
-          <Lightbulb className="h-16 w-16 text-primary animate-pulse" />
+        <div className="s-c5 s-ib s-ig">
+          <Lightbulb className="s-fr s-xj s-uw s-30" />
         </div>
       ),
     },
@@ -194,8 +194,8 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
       bodyFallback:
         "Mix any of these marks freely. You can edit them later in the script too.",
       demo: () => (
-        <div className="flex items-center justify-center">
-          <Check className="h-16 w-16 text-primary" />
+        <div className="s-c5 s-ib s-ig">
+          <Check className="s-fr s-xj s-uw" />
         </div>
       ),
     },
@@ -211,7 +211,7 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
     <AnimatePresence>
       <motion.div
         key="tour-overlay"
-        className="fixed inset-0 z-[60] bg-background/90 backdrop-blur-xl flex flex-col"
+        className="s-c4 s-i5 s-yk s-42 s-3i s-c5 s-c7"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -219,23 +219,23 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
         style={{ height: "100dvh" }}
       >
         <div
-          className="flex-shrink-0 flex items-center justify-between px-4"
+          className="s-ca s-c5 s-ib s-if s-os"
           style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
         >
-          <div className="text-xs text-muted-foreground">
+          <div className="s-vj s-ul">
             {step + 1} / {steps.length}
           </div>
           <button
             type="button"
             onClick={close}
-            className="w-9 h-9 rounded-full bg-card/70 border border-border/50 flex items-center justify-center"
+            className="s-y2 s-g8 s-qe s-4d s-6l s-70 s-c5 s-ib s-ig"
             aria-label="Close tour"
           >
-            <X className="h-4 w-4" />
+            <X className="s-fz s-xt" />
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6 flex items-center justify-center">
+        <div className="s-c6 s-ku s-mq s-os s-p9 s-c5 s-ib s-ig">
           <AnimatePresence mode="wait">
             <motion.div
               key={s.id}
@@ -243,16 +243,16 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.3 }}
-              className="w-full max-w-xl space-y-6 text-center"
+              className="s-y7 s-jt s-t3 s-u0"
             >
-              <div className="rounded-2xl border border-border/60 bg-card/80 p-6 min-h-[140px] flex items-center justify-center">
+              <div className="s-q9 s-6l s-71 s-4e s-my s-kz s-c5 s-ib s-ig">
                 {s.demo()}
               </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              <div className="s-sy">
+                <h2 className="s-t9 s-sh s-cx s-wh">
                   {t(s.titleKey, s.titleFallback)}
                 </h2>
-                <p className="text-muted-foreground text-base leading-relaxed">
+                <p className="s-ul s-tw s-ip">
                   {t(s.bodyKey, s.bodyFallback)}
                 </p>
               </div>
@@ -260,41 +260,41 @@ const FirstTimeCreateTour = ({ forceOpen = false, onClose }: FirstTimeCreateTour
           </AnimatePresence>
         </div>
 
-        <div className="flex-shrink-0 border-t border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="s-ca s-82 s-70 s-40 s-3i">
           <div
-            className="max-w-xl mx-auto flex items-center justify-between gap-3 px-4 pt-3"
+            className="s-jt s-m9 s-c5 s-ib s-if s-dp s-os s-oc"
             style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
           >
             <Button
               variant="ghost"
               onClick={() => setStep((p) => Math.max(0, p - 1))}
               disabled={isFirst}
-              className="gap-1.5"
+              className="s-dm"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="s-xt s-fz" />
               {t("tour.back", "Back")}
             </Button>
             <button
               type="button"
               onClick={close}
-              className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+              className="s-vj s-ul s-wz s-i1"
             >
               {t("tour.skip", "Skip")}
             </button>
             <Button
               onClick={() => (isLast ? close() : setStep((p) => p + 1))}
               size="lg"
-              className="gap-1.5 min-w-28"
+              className="s-dm s-l9"
             >
               {isLast ? (
                 <>
-                  <Check className="w-4 h-4" />
+                  <Check className="s-xt s-fz" />
                   {t("tour.done", "Got it")}
                 </>
               ) : (
                 <>
                   {t("tour.next", "Next")}
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="s-xt s-fz" />
                 </>
               )}
             </Button>

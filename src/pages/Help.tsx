@@ -159,43 +159,43 @@ const Help = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="s-l6 s-3v">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
+      <header className="s-t7 s-w1 s-yh s-43 s-3d s-t8 s-6v" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="s-jc s-m9 s-os s-p7 s-c5 s-ib s-dq">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="s-g1 s-xv" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold">{t('help.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('help.subtitle')}</p>
+            <h1 className="s-vi s-cx">{t('help.title')}</h1>
+            <p className="s-v9 s-ul">{t('help.subtitle')}</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <main className="s-jc s-m9 s-os s-p9 s-t3">
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-primary" />
+            <CardTitle className="s-c5 s-ib s-dn">
+              <MessageCircle className="s-g1 s-xv s-uw" />
               {t('help.needMoreHelp')}
             </CardTitle>
             <CardDescription>{t('help.contactDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
+            <div className="s-c5 s-dn">
               <Button
                 asChild
                 variant="outline"
-                className="flex-1 justify-start min-w-0"
+                className="s-c6 s-ii s-l8"
               >
                 <a
                   href={buildMailtoUrl(SUPPORT_EMAIL)}
                   target="_blank"
                   rel="external noopener"
                 >
-                  <Mail className="h-4 w-4 mr-2 shrink-0" />
+                  <Mail className="s-fz s-xt s-lp s-r5" />
                   <span className="truncate">{SUPPORT_EMAIL}</span>
                 </a>
               </Button>
@@ -205,13 +205,13 @@ const Help = () => {
                 aria-label="Copy email address"
                 onClick={handleCopy}
               >
-                {copied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="s-fz s-xt s-uw" /> : <Copy className="s-fz s-xt" />}
               </Button>
             </div>
             {copied && (
-              <p className="text-xs text-primary mt-2">{SUPPORT_EMAIL} copied</p>
+              <p className="s-vj s-uw s-lv">{SUPPORT_EMAIL} copied</p>
             )}
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="s-vj s-ul s-lx">
               We typically respond within 24–48 hours on business days (Monday–Friday, CET).
               Account, billing and subscription issues are prioritised.
             </p>
@@ -219,28 +219,28 @@ const Help = () => {
         </Card>
 
         {/* FAQ Categories */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <HelpCircle className="h-5 w-5 text-primary" />
+        <div className="s-t1">
+          <h2 className="s-uk s-d3 s-c5 s-ib s-dn">
+            <HelpCircle className="s-g1 s-xv s-uw" />
             {t('help.frequentlyAsked')}
           </h2>
 
           {faqCategories.map((category) => (
             <Card key={category.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <category.icon className="h-4 w-4 text-primary" />
+              <CardHeader className="s-n4">
+                <CardTitle className="s-tw s-c5 s-ib s-dn">
+                  <category.icon className="s-fz s-xt s-uw" />
                   {category.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="single" collapsible className="s-y7">
                   {category.faqs.map((faq, index) => (
                     <AccordionItem key={index} value={`${category.id}-${index}`}>
-                      <AccordionTrigger className="text-left text-sm">
+                      <AccordionTrigger className="s-uj s-v9">
                         {faq.question}
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground text-sm">
+                      <AccordionContent className="s-ul s-v9">
                         {faq.answer}
                       </AccordionContent>
                     </AccordionItem>
@@ -252,22 +252,22 @@ const Help = () => {
         </div>
 
         {/* Troubleshooting */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
+        <div className="s-t1">
+          <h2 className="s-uk s-d3 s-c5 s-ib s-dn">
+            <Settings className="s-g1 s-xv s-uw" />
             {t('help.troubleshootingTitle')}
           </h2>
 
           {troubleshooting.map((issue, index) => (
             <Card key={index}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <issue.icon className="h-4 w-4 text-primary" />
+              <CardHeader className="s-n4">
+                <CardTitle className="s-tw s-c5 s-ib s-dn">
+                  <issue.icon className="s-fz s-xt s-uw" />
                   {issue.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                <ol className="s-j1 s-j2 s-sy s-v9 s-ul">
                   {issue.steps.map((step, stepIndex) => (
                     <li key={stepIndex}>{step}</li>
                   ))}
@@ -278,9 +278,9 @@ const Help = () => {
         </div>
 
         {/* App Version */}
-        <div className="text-center text-sm text-muted-foreground py-4">
+        <div className="s-u0 s-v9 s-ul s-p7">
           <p>Sermable v1.0.0</p>
-          <p className="mt-1">{t('help.madeWithLove')}</p>
+          <p className="s-lt">{t('help.madeWithLove')}</p>
         </div>
       </main>
     </div>

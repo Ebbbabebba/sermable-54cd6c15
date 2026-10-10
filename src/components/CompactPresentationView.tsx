@@ -700,41 +700,41 @@ export const CompactPresentationView = ({
   const seconds = elapsedTime % 60;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="s-l6 s-3v s-pd s-mn">
       {/* Exit Button */}
       {onExit && (
         <Button
           variant="ghost"
           size="sm"
           onClick={onExit}
-          className="fixed left-4 z-50 gap-2" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}
+          className="s-c4 s-iw s-yh s-dn" style={{ top: 'max(env(safe-area-inset-top, 0px), 1rem)' }}
         >
-          <X className="h-4 w-4" />
+          <X className="s-fz s-xt" />
           {t('common.exit')}
         </Button>
       )}
 
       {/* Status Bar */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-background/95 backdrop-blur-sm px-6 py-3 rounded-full border border-border shadow-lg">
-        <div className="flex items-center gap-2">
+      <div className="s-c4 s-w8 s-iu s-8 s-yh s-c5 s-ib s-dq s-43 s-3h s-ou s-p6 s-qe s-6l s-6x s-qx">
+        <div className="s-c5 s-ib s-dn">
           {isRecording ? (
             <>
-              <div className="w-3 h-3 rounded-full bg-destructive animate-pulse" />
-              <span className="text-sm font-medium">{t('presentation.recording')}</span>
+              <div className="s-xp s-fw s-qe s-4h s-30" />
+              <span className="s-v9 s-d0">{t('presentation.recording')}</span>
             </>
           ) : (
             <>
-              <div className="w-3 h-3 rounded-full bg-muted" />
-              <span className="text-sm font-medium text-muted-foreground">{t('presentation.ready')}</span>
+              <div className="s-xp s-fw s-qe s-50" />
+              <span className="s-v9 s-d0 s-ul">{t('presentation.ready')}</span>
             </>
           )}
         </div>
-        <div className="text-sm font-mono">
+        <div className="s-v9 s-d1">
           {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
         </div>
         {isRecording && (
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">
+          <div className="s-c5 s-ib s-dl">
+            <span className="s-vj s-ul">
               {currentWordIndex}/{words.length}
             </span>
           </div>
@@ -742,22 +742,22 @@ export const CompactPresentationView = ({
       </div>
 
       {/* Main Content - Sentence Teleprompter */}
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 py-24">
+      <div className="s-l6 s-c5 s-c7 s-ib s-ig s-ou s-p5">
         {!isRecording ? (
-          <div className="text-center space-y-4">
-            <p className="text-xl text-muted-foreground">{t('presentation.pressToStart')}</p>
-            <p className="text-sm text-muted-foreground/60">
+          <div className="s-u0 s-t1">
+            <p className="s-vi s-ul">{t('presentation.pressToStart')}</p>
+            <p className="s-v9 s-uo">
               {scriptHidden
                 ? t('presentation.hiddenScriptIntro', 'The screen stays empty — words appear only if you get stuck.')
                 : t('presentation.speechAppearSentence')}
             </p>
           </div>
         ) : (
-          <div className="w-full max-w-2xl space-y-8">
+          <div className="s-y7 s-jc s-t4">
             {/* Progress bar */}
-            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="s-y7 s-fm s-50 s-qe s-mn">
               <motion.div
-                className="h-full bg-primary rounded-full"
+                className="s-gg s-5c s-qe"
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3 }}
               />
@@ -767,14 +767,14 @@ export const CompactPresentationView = ({
                 same size and position so the text doesn't reflow as the user
                 speaks. Spoken words are dimmed in place; the current word is
                 emphasized with weight + color only, never size. */}
-            <div className="min-h-[300px] flex flex-col items-center justify-center">
+            <div className="s-l2 s-c5 s-c7 s-ib s-ig">
               <StageDirectionCue
                 directions={getActiveDirections(directionsByAfterIndex, currentWordIndex)}
-                className="mb-2"
+                className="s-jy"
               />
               <PropCueOverlay
                 cue={getActivePropCue(propCues, currentWordIndex)}
-                className="mb-2"
+                className="s-jy"
               />
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
@@ -783,7 +783,7 @@ export const CompactPresentationView = ({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-3 text-2xl md:text-4xl leading-relaxed font-semibold"
+                  className="s-c5 s-cb s-ia s-ig s-dv s-dz s-t9 s-kk s-ip s-d3"
                 >
                   {(() => {
                     const sentence = sentences[displayedSentenceIndex];
@@ -803,19 +803,19 @@ export const CompactPresentationView = ({
                         <span
                           key={`w-${globalIndex}`}
                           className={cn(
-                            "inline-block transition-colors duration-700 ease-out relative",
+                            "s-i3 s-ws s-br s-bu s-pd",
                             isConcealed
-                              ? "text-transparent select-none"
+                              ? "s-vd s-qq"
                               : isCurrent
-                                ? "text-foreground"
+                                ? "s-u9"
                                 : isSpoken
-                                  ? "text-muted-foreground/25"
-                                  : "text-muted-foreground/70",
+                                  ? "s-um"
+                                  : "s-up",
                           )}
                         >
                           {isCurrent && (isHesitating || isShowingHint) && (
                             <motion.span
-                              className="absolute inset-0 rounded-lg pointer-events-none"
+                              className="s-26 s-i5 s-qh s-nx"
                               animate={{
                                 boxShadow: [
                                   "0 0 8px hsl(var(--primary) / 0.2)",
@@ -826,13 +826,13 @@ export const CompactPresentationView = ({
                               transition={{ duration: 1.2, repeat: Infinity }}
                             />
                           )}
-                          <span className="relative">
+                          <span className="s-pd">
                             {isCurrent && isShowingHint ? (
                               <motion.span
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.2 }}
-                                className="text-primary"
+                                className="s-uw"
                               >
                                 {word}
                               </motion.span>
@@ -856,7 +856,7 @@ export const CompactPresentationView = ({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="mt-6 text-sm text-muted-foreground"
+                    className="s-m0 s-v9 s-ul"
                   >
                     {t('presentation.tryToSayIt')}
                   </motion.p>
@@ -865,7 +865,7 @@ export const CompactPresentationView = ({
             </div>
 
             {/* Sentence indicator */}
-            <p className="text-center text-xs text-muted-foreground/50">
+            <p className="s-u0 s-vj s-un">
               {currentSentenceIndex + 1} / {sentences.length}
             </p>
           </div>
@@ -874,7 +874,7 @@ export const CompactPresentationView = ({
       </div>
 
       {/* Bottom Controls */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4">
+      <div className="s-c4 s-8f s-iu s-8 s-yh s-c5 s-ib s-dq">
         <Button
           size="lg"
           variant="outline"
@@ -888,19 +888,19 @@ export const CompactPresentationView = ({
             setShowHint(null);
           }}
           disabled={currentSentenceIndex === 0}
-          className="rounded-full h-12 w-12 p-0 shadow-md"
+          className="s-qe s-fp s-xh s-mr s-qy"
           aria-label={t('common.previous', 'Previous')}
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="s-g1 s-xv" />
         </Button>
         <Button
           size="lg"
           variant={isRecording ? "destructive" : "default"}
           onClick={handleToggleRecording}
           disabled={isProcessing}
-          className="rounded-full h-16 w-16 p-0 shadow-lg"
+          className="s-qe s-fr s-xj s-mr s-qx"
         >
-          {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+          {isRecording ? <Square className="s-g2 s-xw" /> : <Mic className="s-g2 s-xw" />}
         </Button>
         <Button
           size="lg"
@@ -915,10 +915,10 @@ export const CompactPresentationView = ({
             setShowHint(null);
           }}
           disabled={currentSentenceIndex >= sentences.length - 1}
-          className="rounded-full h-12 w-12 p-0 shadow-md"
+          className="s-qe s-fp s-xh s-mr s-qy"
           aria-label={t('common.next', 'Next')}
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="s-g1 s-xv" />
         </Button>
       </div>
 
@@ -926,10 +926,10 @@ export const CompactPresentationView = ({
 
       {/* Processing Overlay */}
       {isProcessing && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-            <p className="text-lg font-medium">{t('presentation.analyzing')}</p>
+        <div className="s-c4 s-i5 s-40 s-3h s-yh s-c5 s-ib s-ig">
+          <div className="s-u0 s-t1">
+            <div className="s-32 s-qe s-fp s-xh s-6w s-7n s-m9" />
+            <p className="s-uk s-d0">{t('presentation.analyzing')}</p>
           </div>
         </div>
       )}

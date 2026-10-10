@@ -127,17 +127,17 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
 
   const modifiersClassNames = {
     practice:
-      "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-primary",
+      "s-pd after:content-[''] s-2h s-2m s-2r s-2g s-2o s-2u s-2t s-2k",
     recall:
-      "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-amber-500",
+      "s-pd after:content-[''] s-2h s-2m s-2r s-2g s-2o s-2u s-2t s-2i",
     test:
-      "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-orange-500",
+      "s-pd after:content-[''] s-2h s-2m s-2r s-2g s-2o s-2u s-2t s-2j",
     runthrough:
-      "relative font-semibold after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-rose-500",
+      "s-pd s-d3 after:content-[''] s-2h s-2m s-2r s-2g s-2p s-2v s-2t s-2l",
     presentation:
-      "bg-gradient-to-br from-rose-500 to-orange-500 !text-white rounded-full font-semibold shadow-md",
+      "s-4s from-rose-500 to-orange-500 s-3 s-qe s-d3 s-qy",
     completed:
-      "ring-2 ring-emerald-500/50 ring-offset-1 ring-offset-background",
+      "s-pm s-pq s-ps s-pu",
   } as const;
 
   const todayKey = format(new Date(), "yyyy-MM-dd");
@@ -157,49 +157,49 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
   };
 
   return (
-    <div className="space-y-4">
+    <div className="s-t1">
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-primary" />
+      <div className="s-c5 s-cb s-dp s-vj s-ul">
+        <span className="s-c5 s-ib s-dm">
+          <span className="s-fs s-xk s-qe s-5c" />
           {t("calendar.practice")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-amber-500" />
+        <span className="s-c5 s-ib s-dm">
+          <span className="s-fs s-xk s-qe s-3r" />
           {t("calendar.recall")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-orange-500" />
+        <span className="s-c5 s-ib s-dm">
+          <span className="s-fs s-xk s-qe s-58" />
           {t("calendar.test")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-rose-500" />
+        <span className="s-c5 s-ib s-dm">
+          <span className="s-fs s-xk s-qe s-5r" />
           {t("calendar.fullRunthrough")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-gradient-to-br from-rose-500 to-orange-500" />
+        <span className="s-c5 s-ib s-dm">
+          <span className="s-fs s-xk s-qe s-4s from-rose-500 to-orange-500" />
           {t("calendar.presentationDay")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full ring-2 ring-emerald-500/60 ring-offset-1" />
+        <span className="s-c5 s-ib s-dm">
+          <span className="s-fs s-xk s-qe s-pm s-pr s-ps" />
           {t("calendar.completed")}
         </span>
       </div>
 
-      <Card className="border-0 bg-card/60">
-        <CardContent className="p-2 sm:p-4">
+      <Card className="s-6m s-4c">
+        <CardContent className="s-mu s-s6">
           {loading || generating ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="s-c5 s-c7 s-ib s-ig s-dp s-p1">
+              <Loader2 className="s-g2 s-xw s-32 s-ul" />
               {generating && (
-                <p className="text-sm text-muted-foreground">
+                <p className="s-v9 s-ul">
                   {t("calendar.generating")}
                 </p>
               )}
             </div>
           ) : events.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-              <p className="text-sm text-muted-foreground max-w-xs">
+            <div className="s-c5 s-c7 s-ib s-ig s-dp s-p0 s-u0">
+              <p className="s-v9 s-ul s-ju">
                 {goalDate ? t("calendar.empty") : t("calendar.noDeadlineDescription")}
               </p>
             </div>
@@ -212,7 +212,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
               onMonthChange={setMonth}
               modifiers={modifiers}
               modifiersClassNames={modifiersClassNames}
-              className={cn("p-3 pointer-events-auto mx-auto")}
+              className={cn("s-mv s-nw s-m9")}
             />
           )}
         </CardContent>
@@ -220,14 +220,14 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
 
       {/* Day detail */}
       {selectedDate && events.length > 0 && (
-        <Card className="border-0 bg-card/60">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
+        <Card className="s-6m s-4c">
+          <CardContent className="s-mw s-t0">
+            <div className="s-c5 s-ib s-if">
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="s-v9 s-ul">
                   {format(selectedDate, "EEEE, d MMM yyyy")}
                 </p>
-                <p className="text-base font-semibold">
+                <p className="s-tw s-d3">
                   {isSelectedToday
                     ? t("calendar.today")
                     : selectedEvents.length > 0
@@ -238,7 +238,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
             </div>
 
             {selectedEvents.length > 0 ? (
-              <div className="space-y-2">
+              <div className="s-sy">
                 {selectedEvents.map((e) => {
                   const Icon = EVENT_ICONS[e.event_type];
                   const isPresentation = e.event_type === "presentation";
@@ -246,32 +246,32 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                     <div
                       key={e.id}
                       className={cn(
-                        "flex items-center gap-3 p-3 rounded-xl border bg-background/40",
-                        e.completed && "opacity-60",
+                        "s-c5 s-ib s-dp s-mv s-qo s-6l s-3w",
+                        e.completed && "s-mh",
                         isPresentation &&
-                          "bg-gradient-to-r from-rose-500/10 to-orange-500/10 border-rose-500/30",
+                          "s-4t s-dj s-vv s-7y",
                       )}
                     >
                       <div
                         className={cn(
-                          "p-2 rounded-lg",
-                          e.event_type === "practice" && "bg-primary/10 text-primary",
-                          e.event_type === "recall" && "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-                          e.event_type === "test" && "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-                          e.event_type === "full_runthrough" && "bg-rose-500/15 text-rose-600 dark:text-rose-400",
-                          isPresentation && "bg-gradient-to-br from-rose-500 to-orange-500 text-white",
+                          "s-mu s-qh",
+                          e.event_type === "practice" && "s-5e s-uw",
+                          e.event_type === "recall" && "s-3t s-tu s-8p",
+                          e.event_type === "test" && "s-59 s-ut s-8t",
+                          e.event_type === "full_runthrough" && "s-5s s-v5 s-8w",
+                          isPresentation && "s-4s from-rose-500 to-orange-500 s-vg",
                         )}
                       >
-                        <Icon className="h-4 w-4" />
+                        <Icon className="s-fz s-xt" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{renderEventLabel(e.event_type)}</p>
+                      <div className="s-c6 s-l8">
+                        <p className="s-v9 s-d0">{renderEventLabel(e.event_type)}</p>
                         {isPresentation && (
-                          <p className="text-xs text-muted-foreground truncate">{speechTitle}</p>
+                          <p className="s-vj s-ul truncate">{speechTitle}</p>
                         )}
                       </div>
                       {e.completed ? (
-                        <Badge variant="outline" className="text-emerald-600 border-emerald-500/40">
+                        <Badge variant="outline" className="s-u8 s-7b">
                           {t("calendar.done")}
                         </Badge>
                       ) : isSelectedToday && !isPresentation ? (
@@ -279,7 +279,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                           size="sm"
                           onClick={() => navigate(`/practice/${speechId}`)}
                         >
-                          <Play className="h-3.5 w-3.5 mr-1" />
+                          <Play className="s-fx s-xq s-ln" />
                           {t("calendar.start")}
                         </Button>
                       ) : null}
@@ -288,7 +288,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">{t("calendar.restDay")}</p>
+              <p className="s-v9 s-ul">{t("calendar.restDay")}</p>
             )}
           </CardContent>
         </Card>

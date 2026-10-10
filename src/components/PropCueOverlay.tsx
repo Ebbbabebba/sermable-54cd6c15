@@ -16,7 +16,7 @@ const PropCueOverlay = ({ cue, className }: PropCueOverlayProps) => {
   return (
     <div
       className={cn(
-        "pointer-events-none flex justify-center min-h-[2.25rem] w-full",
+        "s-nx s-c5 s-ig s-l0 s-y7",
         className,
       )}
       aria-live="polite"
@@ -43,7 +43,7 @@ const PropCueOverlay = ({ cue, className }: PropCueOverlayProps) => {
               scale: { duration: 0.3 },
               boxShadow: { duration: 2.2, repeat: Infinity, ease: "easeInOut" },
             }}
-            className="px-4 py-1.5 rounded-full text-sm md:text-base font-semibold tracking-wide uppercase backdrop-blur-sm"
+            className="s-os s-oz s-qe s-v9 s-ko s-d3 s-wi s-x1 s-3h"
             style={{
               backgroundColor: "hsl(var(--prop-cue-bg-strong))",
               color: "hsl(var(--prop-cue-fg))",

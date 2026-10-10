@@ -19,7 +19,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "s-c4 s-i5 s-yh s-45 s-am s-a4 s-a6 s-ar",
       className,
     )}
     {...props}
@@ -29,16 +29,16 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  "s-c4 s-yh s-dq s-3v s-my s-qx s-wl s-bs s-am s-a4 s-a5 s-aq",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        top: "s-i6 s-w1 s-6v s-ad s-az",
         bottom:
-          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+          "s-i6 s-8b s-82 s-a8 s-av",
+        left: "s-i8 s-is s-gg s-xr s-7v s-a9 s-aw s-s1",
         right:
-          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+          "s-i8 s-pe s-gg s-xr  s-7h s-ab s-ay s-s1",
       },
     },
     defaultVariants: {
@@ -57,9 +57,9 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
       <SheetOverlay />
       <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
         {children}
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-full opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+        <SheetPrimitive.Close className="s-26 s-pi s-w8 s-qe s-mi s-pu s-wt s-ap s-hn s-cq s-cr s-ct s-cs s-bl">
+          <X className="s-fz s-xt" />
+          <span className="s-t6">Close</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
@@ -68,12 +68,12 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />
+  <div className={cn("s-c5 s-c7 s-sy s-u0 s-sk", className)} {...props} />
 );
 SheetHeader.displayName = "SheetHeader";
 
 const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
+  <div className={cn("s-c5 s-c8 s-rj s-rt s-se", className)} {...props} />
 );
 SheetFooter.displayName = "SheetFooter";
 
@@ -81,7 +81,7 @@ const SheetTitle = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <SheetPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-foreground", className)} {...props} />
+  <SheetPrimitive.Title ref={ref} className={cn("s-uk s-d3 s-u9", className)} {...props} />
 ));
 SheetTitle.displayName = SheetPrimitive.Title.displayName;
 
@@ -89,7 +89,7 @@ const SheetDescription = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <SheetPrimitive.Description ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+  <SheetPrimitive.Description ref={ref} className={cn("s-v9 s-ul", className)} {...props} />
 ));
 SheetDescription.displayName = SheetPrimitive.Description.displayName;
 

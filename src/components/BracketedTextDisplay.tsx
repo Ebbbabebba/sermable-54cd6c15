@@ -217,7 +217,7 @@ const BracketedTextDisplay = ({
   }, [currentWordIndex, naturalPhrases]);
 
   return (
-    <div className={cn("speech-line flex flex-wrap gap-1.5 items-center leading-relaxed", className)}>
+    <div className={cn("speech-line s-c5 s-cb s-dm s-ib s-ip", className)}>
       {finalSegments.map((segment, segmentIndex) => {
         if (segment.isVisible) {
           return segment.words.map((word, wordIndex) => {
@@ -252,11 +252,11 @@ const BracketedTextDisplay = ({
                         opacity: { duration: 0.5, ease: "easeOut" }
                       }}
                       className={cn(
-                        "word-block relative inline-block",
+                        "word-block s-pd s-i3",
                         // Smooth fade transition for all states
-                        "transition-all duration-500 ease-out",
+                        "s-wr s-bq s-bu",
                         // Problem phrase indicator (chunk-based recall) - subtle underline
-                        isInProblemPhrase && !isRecording && "border-b-2 border-dashed border-orange-400/60",
+                        isInProblemPhrase && !isRecording && "s-6w s-74 s-7m",
                         // Current word - gentle pulse, no scale change for stability
                         isCurrent && "current-word-gentle",
                         // Current phrase highlight (soft background)
@@ -280,13 +280,13 @@ const BracketedTextDisplay = ({
                             exit={{ opacity: 0, y: -10, scale: 0.9 }}
                             transition={{ duration: 0.3, ease: "easeOut" }}
                             className={cn(
-                              "absolute left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-semibold z-20",
-                              hintLevel === 1 && "bg-primary/20 text-primary border border-primary/40",
-                              hintLevel === 2 && "bg-yellow-400/30 text-yellow-700 dark:text-yellow-300 border border-yellow-500/50",
-                              hintLevel >= 3 && "bg-yellow-500 text-yellow-900 border-2 border-yellow-600 shadow-lg"
+                              "s-26 s-iu s-8 s-yb s-or s-oz s-qh s-v9 s-d3 s-yf",
+                              hintLevel === 1 && "s-5g s-uw s-6l s-7s",
+                              hintLevel === 2 && "s-6c s-vm s-8x s-6l s-89",
+                              hintLevel >= 3 && "s-6d s-vo s-6n s-8a s-qx"
                             )}
                           >
-                            <Lightbulb className="inline w-3 h-3 mr-1" />
+                            <Lightbulb className="s-i2 s-xp s-fw s-ln" />
                             {getWordHint(word, hintLevel)}
                           </motion.span>
                         )}
@@ -294,7 +294,7 @@ const BracketedTextDisplay = ({
                     </motion.span>
                   </TooltipTrigger>
                   {(isMissed || isHesitated || isInProblemPhrase) && (
-                    <TooltipContent side="top" className="text-xs">
+                    <TooltipContent side="top" className="s-vj">
                       {isMissed ? "Skipped or incorrect" : 
                        isHesitated ? "Hesitated here" :
                        `Focus area (missed ${problemPhraseInfo?.timesMissed || 0}x)`}
@@ -357,17 +357,17 @@ const BracketedTextDisplay = ({
               layout
               onClick={() => !isRecording && handleBracketTap(segmentIndex, segment.startIndex)}
               className={cn(
-                "bracket-container px-3 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 cursor-pointer select-none relative",
+                "bracket-container s-or s-p3 s-qo s-wr s-bp s-c5 s-ib s-dn s-8m s-qq s-pd",
                 // Problem phrase indicator for brackets (chunk-based recall)
-                bracketProblemPhraseInfo.isInProblemPhrase && !isRecording && "ring-2 ring-orange-400/50 ring-offset-1",
-                bracketState === "complete" && "bg-green-500/20 border-2 border-green-500 shadow-green-500/30 shadow-md",
-                bracketState === "error" && "bg-muted/30 border-2 border-muted-foreground/50",
-                bracketState === "filling" && "bg-primary/15 border-2 border-primary/60",
-                bracketState === "peeked" && "bg-yellow-500/10 border-2 border-yellow-500/50",
-                bracketState === "expanded" && "bg-yellow-500/20 border-2 border-yellow-500",
-                bracketState === "empty" && isCurrentBracket && "bracket-active bg-primary/20 border-4 border-primary shadow-xl shadow-primary/40 scale-105",
-                bracketState === "empty" && !isCurrentBracket && "bg-muted/20 border-2 border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/5",
-                hasHintingWord && "ring-2 ring-yellow-500 ring-offset-2"
+                bracketProblemPhraseInfo.isInProblemPhrase && !isRecording && "s-pm s-pv s-ps",
+                bracketState === "complete" && "s-4y s-6n s-7c s-qw s-qy",
+                bracketState === "error" && "s-54 s-6n s-7l",
+                bracketState === "filling" && "s-5f s-6n s-7t",
+                bracketState === "peeked" && "s-6e s-6n s-89",
+                bracketState === "expanded" && "s-6f s-6n s-87",
+                bracketState === "empty" && isCurrentBracket && "bracket-active s-5g s-6o s-7n s-r4 s-r2 s-qp",
+                bracketState === "empty" && !isCurrentBracket && "s-53 s-6n s-7k s-hi s-h6",
+                hasHintingWord && "s-pm s-q4 s-pt"
               )}
               title={bracketProblemPhraseInfo.isInProblemPhrase ? `Focus area (missed ${bracketProblemPhraseInfo.timesMissed}x)` : undefined}
             >
@@ -379,13 +379,13 @@ const BracketedTextDisplay = ({
                     animate={{ opacity: 1, y: -45, scale: 1 }}
                     exit={{ opacity: 0, y: -10 }}
                     className={cn(
-                      "absolute left-1/2 -translate-x-1/2 top-0 px-4 py-2 rounded-lg font-semibold z-30 whitespace-nowrap",
-                      hintLevel === 1 && "bg-primary text-primary-foreground",
-                      hintLevel === 2 && "bg-yellow-400 text-yellow-900",
-                      hintLevel >= 3 && "bg-yellow-500 text-yellow-900 text-lg shadow-xl border-2 border-yellow-600"
+                      "s-26 s-iu s-8 s-w1 s-os s-p3 s-qh s-d3 s-yg s-yb",
+                      hintLevel === 1 && "s-5c s-ux",
+                      hintLevel === 2 && "s-6b s-vo",
+                      hintLevel >= 3 && "s-6d s-vo s-uk s-r4 s-6n s-8a"
                     )}
                   >
-                    <Lightbulb className="inline w-4 h-4 mr-1.5" />
+                    <Lightbulb className="s-i2 s-xt s-fz s-lo" />
                     {getWordHint(segment.words[hintingWordInBracket], hintLevel)}
                   </motion.div>
                 )}
@@ -393,22 +393,22 @@ const BracketedTextDisplay = ({
 
               {/* Peek indicator */}
               {!isRecording && bracketState === "empty" && !isCurrentBracket && (
-                <Eye className="w-3 h-3 text-muted-foreground/50 absolute top-1 right-1" />
+                <Eye className="s-xp s-fw s-un s-26 s-w2 s-pf" />
               )}
               
               {bracketState === "complete" && (
-                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <Check className="s-xt s-fz s-ue s-8s" />
               )}
               {bracketState === "filling" && (
-                <Circle className="w-3 h-3 text-primary animate-pulse" />
+                <Circle className="s-xp s-fw s-uw s-30" />
               )}
               
               
               {/* Content based on state */}
               {bracketState === "empty" && !isPeeked && !isExpanded && (
                 <span className={cn(
-                  "flex items-center gap-1",
-                  isCurrentBracket && "text-primary font-semibold"
+                  "s-c5 s-ib s-dl",
+                  isCurrentBracket && "s-uw s-d3"
                 )}>
                   {isCurrentBracket ? (
                     // Show dots for words, highlight current
@@ -418,13 +418,13 @@ const BracketedTextDisplay = ({
                         animate={idx === currentWordInBracket ? { scale: [1, 1.3, 1] } : {}}
                         transition={{ repeat: Infinity, duration: 0.8 }}
                         className={cn(
-                          "w-2 h-2 rounded-full",
-                          idx === currentWordInBracket ? "bg-primary" : "bg-muted-foreground/40"
+                          "s-xk s-fs s-qe",
+                          idx === currentWordInBracket ? "s-5c" : "s-52"
                         )}
                       />
                     ))
                   ) : (
-                    <span className="text-xs font-medium bg-muted/60 px-2 py-0.5 rounded-full">
+                    <span className="s-vj s-d0 s-57 s-op s-ox s-qe">
                       {segment.words.length}
                     </span>
                   )}
@@ -432,9 +432,9 @@ const BracketedTextDisplay = ({
               )}
               
               {bracketState === "peeked" && (
-                <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400 flex gap-1">
+                <span className="s-vj s-d0 s-vl s-8y s-c5 s-dl">
                   {segment.words.map((word, idx) => (
-                    <span key={idx} className="bg-yellow-500/20 px-1.5 py-0.5 rounded">
+                    <span key={idx} className="s-6f s-om s-ox s-q8">
                       {word.slice(0, 2)}...
                     </span>
                   ))}
@@ -442,9 +442,9 @@ const BracketedTextDisplay = ({
               )}
               
               {bracketState === "expanded" && (
-                <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300 flex gap-1.5 flex-wrap">
+                <span className="s-v9 s-d0 s-vm s-8x s-c5 s-dm s-cb">
                   {segment.words.map((word, idx) => (
-                    <span key={idx} className="bg-yellow-500/30 px-2 py-0.5 rounded border border-yellow-500/50">
+                    <span key={idx} className="s-6h s-op s-ox s-q8 s-6l s-89">
                       {word}
                     </span>
                   ))}
@@ -452,26 +452,26 @@ const BracketedTextDisplay = ({
               )}
               
               {bracketState === "filling" && (
-                <span className="text-xs font-semibold text-primary">
+                <span className="s-vj s-d3 s-uw">
                   {processedCount}/{segment.words.length}
                 </span>
               )}
               
               {visibleErrorWords.length > 0 && bracketState === "error" && (
-                <div className="flex items-center gap-1 flex-wrap">
+                <div className="s-c5 s-ib s-dl s-cb">
                   {visibleErrorWords.map((errorWord, idx) => (
                     <TooltipProvider key={`${errorWord.globalIndex}-${idx}`}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span className={cn(
-                            "text-sm px-2 py-0.5 rounded font-semibold",
-                            errorWord.isMissed && "bg-red-500/25 text-red-700 dark:text-red-400 border border-red-500/50",
-                            !errorWord.isMissed && "bg-yellow-500/25 text-yellow-700 dark:text-yellow-400 border border-yellow-500/50"
+                            "s-v9 s-op s-ox s-q8 s-d3",
+                            errorWord.isMissed && "s-5q s-v3 s-8v s-6l s-7x",
+                            !errorWord.isMissed && "s-6g s-vm s-8y s-6l s-89"
                           )}>
                             {errorWord.word}
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="text-xs">
+                        <TooltipContent side="top" className="s-vj">
                           {errorWord.isMissed ? "Missed" : "Hesitated"}
                         </TooltipContent>
                       </Tooltip>

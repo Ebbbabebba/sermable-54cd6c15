@@ -76,13 +76,13 @@ const PropCueWordPicker = ({
 
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
-      <DialogContent className="max-w-none w-screen h-[100dvh] sm:w-[92vw] sm:h-[92vh] sm:max-w-3xl sm:rounded-3xl rounded-none p-0 gap-0 flex flex-col overflow-hidden">
-        <div className="px-5 pt-5 pb-3 pr-14 border-b border-border/60">
-          <h2 className="text-base font-semibold flex items-center gap-1.5">
-            <Hand className="h-4 w-4" style={{ color: "hsl(var(--prop-cue-fg))" }} />
+      <DialogContent className="s-jr s-ya s-g9 s-sq s-rn s-ry s-sd s-qj s-mr s-dk s-c5 s-c7 s-mn">
+        <div className="s-ot s-oe s-n6 s-nz s-6v s-71">
+          <h2 className="s-tw s-d3 s-c5 s-ib s-dm">
+            <Hand className="s-fz s-xt" style={{ color: "hsl(var(--prop-cue-fg))" }} />
             {t("upload.propCue.pickerTitle", "Tap words to add stage directions")}
           </h2>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="s-vj s-ul s-lt">
             {t(
               "upload.propCue.pickerDesc",
               "Tap the words you want, name the cue and save. Tap a highlighted word to remove its cue.",
@@ -90,13 +90,13 @@ const PropCueWordPicker = ({
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-6">
+        <div className="s-c6 s-mq s-ot s-p9">
           {tokens.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="s-v9 s-ul">
               {t("upload.propCue.pickerEmpty", "Add some text first.")}
             </p>
           ) : (
-            <div className="flex flex-wrap items-end gap-x-1.5 gap-y-2">
+            <div className="s-c5 s-cb s-ic s-du s-dy">
               {tokens.map((tk) => {
                 const existing = cueIndex.get(tk.index);
                 const isSelected = selected.has(tk.index);
@@ -106,11 +106,11 @@ const PropCueWordPicker = ({
                     key={tk.index}
                     type="button"
                     onClick={() => toggle(tk.index)}
-                    className="flex flex-col items-start max-w-full"
+                    className="s-c5 s-c7 s-id s-jn"
                   >
                     {isCueStart && (
                       <span
-                        className="mb-0.5 max-w-[9rem] truncate px-1.5 py-[1px] rounded-full text-[10px] font-bold uppercase tracking-wider"
+                        className="s-jv s-jl truncate s-om s-pc s-qe s-tl s-cx s-x1 s-wj"
                         style={{
                           backgroundColor: "hsl(var(--prop-cue-fg))",
                           color: "hsl(var(--background))",
@@ -121,9 +121,9 @@ const PropCueWordPicker = ({
                     )}
                     <span
                       className={cn(
-                        "block px-2 py-1 rounded-lg text-base transition-colors max-w-full break-words text-left",
-                        !existing && !isSelected && "hover:bg-muted",
-                        isSelected && "bg-primary text-primary-foreground",
+                        "s-6i s-op s-oy s-qh s-tw s-ws s-jn s-8h s-uj",
+                        !existing && !isSelected && "s-h0",
+                        isSelected && "s-5c s-ux",
                       )}
                       style={
                         existing && !isSelected
@@ -144,8 +144,8 @@ const PropCueWordPicker = ({
         </div>
 
 
-        <div className="border-t border-border/60 px-5 py-4 space-y-3 bg-card/60 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <div className="flex items-center gap-2">
+        <div className="s-82 s-71 s-ot s-p7 s-t0 s-4c s-nb">
+          <div className="s-c5 s-ib s-dn">
             <Input
               value={cue}
               onChange={(e) => setCue(e.target.value)}
@@ -160,28 +160,28 @@ const PropCueWordPicker = ({
                   save();
                 }
               }}
-              className="flex-1"
+              className="s-c6"
             />
             <Button
               type="button"
               onClick={save}
               disabled={!cue.trim() || selected.size === 0}
-              className="gap-1.5"
+              className="s-dm"
             >
-              <Sparkle className="h-4 w-4" />
+              <Sparkle className="s-fz s-xt" />
               {t("upload.propCue.pickerSave", "Add cue")}
             </Button>
           </div>
 
           {selected.size > 0 && (
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground px-1">
+            <div className="s-c5 s-ib s-if">
+              <p className="s-vj s-ul s-ol">
                 {t("upload.propCue.pickerSelected", "{{count}} words selected", {
                   count: selected.size,
                 })}
               </p>
               <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
-                <X className="h-4 w-4 mr-1" />
+                <X className="s-fz s-xt s-ln" />
                 {t("common.cancel")}
               </Button>
             </div>
@@ -191,9 +191,9 @@ const PropCueWordPicker = ({
             <Button
               type="button"
               onClick={close}
-              className="w-full gap-1.5 h-11 text-base font-semibold"
+              className="s-y7 s-dm s-fo s-tw s-d3"
             >
-              <Check className="h-5 w-5" />
+              <Check className="s-g1 s-xv" />
               {t("upload.propCue.pickerDone", "Done")}
             </Button>
           )}

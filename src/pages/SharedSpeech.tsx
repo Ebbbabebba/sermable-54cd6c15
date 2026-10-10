@@ -90,20 +90,20 @@ const SharedSpeech = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="s-l6 s-3v s-c5 s-ib s-ig">
+        <Loader2 className="s-g6 s-y0 s-32 s-uw" />
       </div>
     );
   }
 
   if (error || !speech) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <Card className="max-w-md w-full border-0 shadow-apple-xl">
-          <CardContent className="py-12 text-center space-y-4">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
-            <h2 className="text-xl font-semibold text-foreground">{t('sharedSpeech.notFound')}</h2>
-            <p className="text-muted-foreground">{t('sharedSpeech.notFoundDesc')}</p>
+      <div className="s-l6 s-3v s-c5 s-ib s-ig s-my">
+        <Card className="s-jq s-y7 s-6m shadow-apple-xl">
+          <CardContent className="s-p1 s-u0 s-t1">
+            <FileText className="s-fp s-xh s-ul s-m9" />
+            <h2 className="s-vi s-d3 s-u9">{t('sharedSpeech.notFound')}</h2>
+            <p className="s-ul">{t('sharedSpeech.notFoundDesc')}</p>
             <Button variant="apple" onClick={() => navigate('/')}>{t('sharedSpeech.goToApp')}</Button>
           </CardContent>
         </Card>
@@ -115,33 +115,33 @@ const SharedSpeech = () => {
   const wordCount = cleanSpeechText.split(/\s+/).filter(w => w.length > 0).length;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <Card className="max-w-lg w-full border-0 shadow-apple-xl">
-        <CardHeader className="text-center pb-2">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">{t('sharedSpeech.sharedSpeech')}</p>
-          <CardTitle className="text-2xl capitalize">{speech.title}</CardTitle>
+    <div className="s-l6 s-3v s-c5 s-ib s-ig s-my">
+      <Card className="s-jo s-y7 s-6m shadow-apple-xl">
+        <CardHeader className="s-u0 s-n4">
+          <p className="s-vj s-ul s-x1 s-wj s-jy">{t('sharedSpeech.sharedSpeech')}</p>
+          <CardTitle className="s-t9 s-8i">{speech.title}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex justify-center gap-6 text-sm text-muted-foreground">
+        <CardContent className="s-t3">
+          <div className="s-c5 s-ig s-ds s-v9 s-ul">
             <span>{wordCount} {t('common.words')}</span>
-            {speech.speech_type && <span className="capitalize">{speech.speech_type}</span>}
+            {speech.speech_type && <span className="s-8i">{speech.speech_type}</span>}
           </div>
 
-          <div className="bg-muted/50 rounded-xl p-4 max-h-48 overflow-y-auto">
-            <p className="text-sm text-foreground/80 leading-relaxed">
+          <div className="s-56 s-qo s-mw s-j5 s-mq">
+            <p className="s-v9 s-ub s-ip">
               {cleanSpeechText.substring(0, 500)}
               {cleanSpeechText.length > 500 && '...'}
             </p>
           </div>
 
-          <div className="space-y-3">
-            <Button variant="apple" size="lg" className="w-full" onClick={handleImport} disabled={importing}>
-              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          <div className="s-t0">
+            <Button variant="apple" size="lg" className="s-y7" onClick={handleImport} disabled={importing}>
+              {importing ? <Loader2 className="s-fz s-xt s-32" /> : <Download className="s-fz s-xt" />}
               {isLoggedIn ? t('sharedSpeech.addToMySpeeches') : t('sharedSpeech.signUpAndAdd')}
             </Button>
 
             {!isLoggedIn && (
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="s-vj s-ul s-u0">
                 {t('sharedSpeech.createAccountHint')}
               </p>
             )}

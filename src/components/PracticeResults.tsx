@@ -109,7 +109,7 @@ const PracticeResults = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="s-c5 s-ib s-dn">
           {t('practice.results.title')}
           <Badge variant={accuracy >= 80 ? "default" : accuracy >= 60 ? "secondary" : "destructive"}>
             {Number(accuracy.toFixed(0))}% {t('practice.results.accuracy')}
@@ -117,54 +117,54 @@ const PracticeResults = ({
         </CardTitle>
         <CardDescription>{t('practice.results.aiAnalysis')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t('practice.results.overallPerformance')}</span>
-            <span className="font-medium">{Number(accuracy.toFixed(0))}%</span>
+      <CardContent className="s-t3">
+        <div className="s-sy">
+          <div className="s-c5 s-if s-v9">
+            <span className="s-ul">{t('practice.results.overallPerformance')}</span>
+            <span className="s-d0">{Number(accuracy.toFixed(0))}%</span>
           </div>
           <Progress value={accuracy} />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              <div className="text-2xl font-bold">{Math.round(accuracy)}%</div>
+        <div className="s-e0 s-e3 s-dq">
+          <div className="s-u0 s-mw s-54 s-qh">
+            <div className="s-c5 s-ib s-ig s-dn s-jw">
+              <CheckCircle2 className="s-fz s-xt s-va" />
+              <div className="s-t9 s-cx">{Math.round(accuracy)}%</div>
             </div>
-            <div className="text-sm text-muted-foreground">{t('practice.results.correct')}</div>
+            <div className="s-v9 s-ul">{t('practice.results.correct')}</div>
           </div>
 
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-yellow-600" />
-              <div className="text-2xl font-bold text-yellow-600">{hesitatedTotal}</div>
+          <div className="s-u0 s-mw s-54 s-qh">
+            <div className="s-c5 s-ib s-ig s-dn s-jw">
+              <Clock className="s-fz s-xt s-vl" />
+              <div className="s-t9 s-cx s-vl">{hesitatedTotal}</div>
             </div>
-            <div className="text-sm text-muted-foreground">{t('practice.results.hesitated')}</div>
+            <div className="s-v9 s-ul">{t('practice.results.hesitated')}</div>
           </div>
 
-          <div className="text-center p-4 bg-muted/30 rounded-lg">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <AlertCircle className="h-4 w-4 text-destructive" />
-              <div className="text-2xl font-bold text-destructive">{missedTotal}</div>
+          <div className="s-u0 s-mw s-54 s-qh">
+            <div className="s-c5 s-ib s-ig s-dn s-jw">
+              <AlertCircle className="s-fz s-xt s-u2" />
+              <div className="s-t9 s-cx s-u2">{missedTotal}</div>
             </div>
-            <div className="text-sm text-muted-foreground">{t('practice.results.missed')}</div>
+            <div className="s-v9 s-ul">{t('practice.results.missed')}</div>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <h4 className="font-semibold">{t('practice.results.feedback')}</h4>
-          <p className="text-sm text-muted-foreground">{analysis}</p>
+        <div className="s-sy">
+          <h4 className="s-d3">{t('practice.results.feedback')}</h4>
+          <p className="s-v9 s-ul">{analysis}</p>
         </div>
 
         {(missedWords.length > 0 || delayedWords.length > 0) && (
-          <div className="space-y-3">
-            <h4 className="font-semibold">{t('practice.results.wordsToPractice')}</h4>
+          <div className="s-t0">
+            <h4 className="s-d3">{t('practice.results.wordsToPractice')}</h4>
             
             {missedWords.length > 0 && (
               <div>
-                <p className="text-sm text-muted-foreground mb-2">{t('practice.results.missedWords')}:</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="s-v9 s-ul s-jy">{t('practice.results.missedWords')}:</p>
+                <div className="s-c5 s-cb s-dn">
                   {missedWords.map((word, i) => (
                     <Badge key={i} variant="destructive">{word}</Badge>
                   ))}
@@ -174,10 +174,10 @@ const PracticeResults = ({
 
             {delayedWords.length > 0 && (
               <div>
-                <p className="text-sm text-muted-foreground mb-2">{t('practice.results.delayedWords')}:</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="s-v9 s-ul s-jy">{t('practice.results.delayedWords')}:</p>
+                <div className="s-c5 s-cb s-dn">
                   {delayedWords.map((word, i) => (
-                    <Badge key={i} variant="secondary" className="bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-300">
+                    <Badge key={i} variant="secondary" className="s-6a s-vo s-8n s-8x">
                       {word}
                     </Badge>
                   ))}
@@ -187,11 +187,11 @@ const PracticeResults = ({
           </div>
         )}
 
-        <div className="space-y-3 pt-4 border-t">
-          <h4 className="font-semibold">{t('practice.results.wordByWord')}</h4>
-          <p className="text-xs text-muted-foreground mb-3">{t('practice.results.comparingPerformance')}</p>
-          <div className="bg-muted/20 rounded-lg p-6 leading-relaxed">
-            <div className="flex flex-wrap gap-2 items-center justify-center">
+        <div className="s-t0 s-od s-82">
+          <h4 className="s-d3">{t('practice.results.wordByWord')}</h4>
+          <p className="s-vj s-ul s-jz">{t('practice.results.comparingPerformance')}</p>
+          <div className="s-53 s-qh s-my s-ip">
+            <div className="s-c5 s-cb s-dn s-ib s-ig">
               {originalWords.map((word, index) => {
                 const status = getWordStatus(word, index);
                 const wasHiddenDuringPractice = hiddenIndices.has(index);
@@ -200,11 +200,11 @@ const PracticeResults = ({
                   <span
                     key={index}
                     className={cn(
-                      "inline-block px-2.5 py-1 rounded-md font-medium transition-all",
-                      status === 'missed' && "bg-destructive/20 text-destructive border border-destructive/40",
-                      status === 'hesitated' && "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border border-yellow-500/40",
-                      status === 'correct' && !wasHiddenDuringPractice && "bg-success/10 text-success-foreground/80",
-                      status === 'correct' && wasHiddenDuringPractice && "bg-muted/40 text-muted-foreground/50 text-sm opacity-60",
+                      "s-i3 s-oq s-oy s-qi s-d0 s-wr",
+                      status === 'missed' && "s-4k s-u2 s-6l s-78",
+                      status === 'hesitated' && "s-6f s-vm s-8y s-6l s-88",
+                      status === 'correct' && !wasHiddenDuringPractice && "s-60 s-vc",
+                      status === 'correct' && wasHiddenDuringPractice && "s-55 s-un s-v9 s-mh",
                     )}
                     style={{
                       fontSize: wasHiddenDuringPractice && status === 'correct' ? '0.875rem' : '1rem',
@@ -216,29 +216,29 @@ const PracticeResults = ({
               })}
             </div>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-3">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-success/10 border border-success/40"></div>
+          <div className="s-c5 s-cb s-dq s-vj s-ul s-lx">
+            <div className="s-c5 s-ib s-dn">
+              <div className="s-xt s-fz s-q8 s-60 s-6l s-81"></div>
               <span>{t('practice.results.spokenCorrectly')}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-yellow-500/20 border border-yellow-500/40"></div>
+            <div className="s-c5 s-ib s-dn">
+              <div className="s-xt s-fz s-q8 s-6f s-6l s-88"></div>
               <span>{t('practice.results.hesitated')}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-destructive/20 border border-destructive/40"></div>
+            <div className="s-c5 s-ib s-dn">
+              <div className="s-xt s-fz s-q8 s-4k s-6l s-78"></div>
               <span>{t('practice.results.missed')}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-muted/40 opacity-60"></div>
+            <div className="s-c5 s-ib s-dn">
+              <div className="s-xt s-fz s-q8 s-55 s-mh"></div>
               <span>{t('practice.results.hiddenCue')}</span>
             </div>
           </div>
         </div>
 
-        <div className="space-y-2 pt-4 border-t">
-          <h4 className="font-semibold text-sm">{t('practice.results.whatYouSaid')}</h4>
-          <p className="text-sm text-muted-foreground italic">"{transcription}"</p>
+        <div className="s-sy s-od s-82">
+          <h4 className="s-d3 s-v9">{t('practice.results.whatYouSaid')}</h4>
+          <p className="s-v9 s-ul italic">"{transcription}"</p>
         </div>
       </CardContent>
     </Card>

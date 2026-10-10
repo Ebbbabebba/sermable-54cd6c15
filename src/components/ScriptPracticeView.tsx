@@ -581,15 +581,15 @@ const ScriptPracticeView = ({
   const canDisaggregate = aggregatedRange[1] > aggregatedRange[0];
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    return 'text-red-500';
+    if (score >= 80) return 's-ud';
+    if (score >= 60) return 's-vk';
+    return 's-v1';
   };
 
   const getScoreIcon = (score: number) => {
-    if (score >= 80) return <CheckCircle2 className="h-6 w-6 text-green-500" />;
-    if (score >= 60) return <AlertCircle className="h-6 w-6 text-yellow-500" />;
-    return <XCircle className="h-6 w-6 text-red-500" />;
+    if (score >= 80) return <CheckCircle2 className="s-g2 s-xw s-ud" />;
+    if (score >= 60) return <AlertCircle className="s-g2 s-xw s-vk" />;
+    return <XCircle className="s-g2 s-xw s-v1" />;
   };
 
   // Summary calculations
@@ -601,26 +601,26 @@ const ScriptPracticeView = ({
   // Loading state
   if (phase === 'loading') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">{t('script.analyzing', 'Analyzing your text...')}</p>
+      <div className="s-l6 s-3v s-c5 s-ib s-ig">
+        <div className="s-u0 s-t1">
+          <Loader2 className="s-fn s-xf s-32 s-uw s-m9" />
+          <p className="s-ul">{t('script.analyzing', 'Analyzing your text...')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="s-l6 s-3v s-c5 s-c7">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 p-4 backdrop-blur-sm" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
-        <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
+      <div className="s-t7 s-w1 s-ye s-c5 s-ib s-if s-6v s-6x s-43 s-mw s-3h" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+        <Button variant="ghost" size="sm" onClick={onBack} className="s-dn">
+          <ArrowLeft className="s-fz s-xt" />
           {t('common.back', 'Back')}
         </Button>
-        <div className="text-center">
-          <p className="text-sm font-medium truncate max-w-[200px]">{speechTitle}</p>
-          <p className="text-xs text-muted-foreground">
+        <div className="s-u0">
+          <p className="s-v9 s-d0 truncate s-ji">{speechTitle}</p>
+          <p className="s-vj s-ul">
             {phase !== 'summary' && t('script.beatOf', 'Beat {{current}} of {{total}}', {
               current: aggregatedRange[1] + 1,
               total: totalBeats,
@@ -628,15 +628,15 @@ const ScriptPracticeView = ({
             {canDisaggregate && ` (${currentBeats.length} ${t('script.combined', 'combined')})`}
           </p>
         </div>
-        <div className="w-20" />
+        <div className="s-xn" />
       </div>
 
       {/* Progress */}
-      {phase !== 'summary' && <Progress value={progressPercent} className="h-1 rounded-none" />}
+      {phase !== 'summary' && <Progress value={progressPercent} className="s-fl s-qj" />}
 
       {/* Main content */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-2xl">
+      <div className="s-c6 s-c5 s-ib s-ig s-my">
+        <div className="s-y7 s-jc">
           <AnimatePresence mode="wait">
             {/* PHASE: Reading */}
             {phase === 'reading' && (
@@ -645,16 +645,16 @@ const ScriptPracticeView = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-8"
+                className="s-t4"
               >
-                <div className="flex items-center gap-3 text-primary">
-                  <BookOpen className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold">{t('script.readCarefully', 'Read carefully')}</h2>
+                <div className="s-c5 s-ib s-dp s-uw">
+                  <BookOpen className="s-g1 s-xv" />
+                  <h2 className="s-uk s-d3">{t('script.readCarefully', 'Read carefully')}</h2>
                 </div>
 
-                <Card className="border-2 border-primary/20">
-                  <CardContent className="p-6">
-                    <p className="text-xl leading-relaxed font-medium">
+                <Card className="s-6n s-7p">
+                  <CardContent className="s-my">
+                    <p className="s-vi s-ip s-d0">
                       {currentText}
                     </p>
                   </CardContent>
@@ -662,11 +662,11 @@ const ScriptPracticeView = ({
 
                 <Button
                   size="lg"
-                  className="w-full"
+                  className="s-y7"
                   onClick={handleContinueToReference}
                 >
                   {t('script.ready', "I've read it")}
-                  <ChevronRight className="h-5 w-5 ml-2" />
+                  <ChevronRight className="s-g1 s-xv s-lk" />
                 </Button>
               </motion.div>
             )}
@@ -678,14 +678,14 @@ const ScriptPracticeView = ({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="space-y-8 text-center"
+                className="s-t4 s-u0"
               >
-                <div className="flex items-center justify-center gap-3 text-primary">
-                  <KeyRound className="h-5 w-5" />
-                  <h2 className="text-lg font-semibold">{t('script.referenceWord', 'Reference word')}</h2>
+                <div className="s-c5 s-ib s-ig s-dp s-uw">
+                  <KeyRound className="s-g1 s-xv" />
+                  <h2 className="s-uk s-d3">{t('script.referenceWord', 'Reference word')}</h2>
                 </div>
 
-                <div className="space-y-4">
+                <div className="s-t1">
                   {currentReferenceWords.map((word, i) => (
                     <motion.div
                       key={i}
@@ -693,23 +693,23 @@ const ScriptPracticeView = ({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.2 }}
                     >
-                      <span className="inline-block text-4xl md:text-5xl font-bold text-primary px-6 py-3 rounded-xl bg-primary/10 border-2 border-primary/20">
+                      <span className="s-i3 s-tb s-kl s-cx s-uw s-ou s-p6 s-qo s-5e s-6n s-7p">
                         {word}
                       </span>
                     </motion.div>
                   ))}
                 </div>
 
-                <p className="text-muted-foreground">
+                <p className="s-ul">
                   {t('script.retellPrompt', 'Now try to retell the text in your own words')}
                 </p>
 
                 <Button
                   size="lg"
-                  className="w-full gap-3"
+                  className="s-y7 s-dp"
                   onClick={handleStartRecording}
                 >
-                  <Mic className="h-5 w-5" />
+                  <Mic className="s-g1 s-xv" />
                   {t('script.startRecording', 'Start recording')}
                 </Button>
               </motion.div>
@@ -722,29 +722,29 @@ const ScriptPracticeView = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="space-y-8 text-center"
+                className="s-t4 s-u0"
               >
-                <div className="space-y-5">
-                  <div className="flex items-center justify-center gap-2 flex-wrap">
+                <div className="s-t2">
+                  <div className="s-c5 s-ib s-ig s-dn s-cb">
                     {beats.map((beat, beatPosition) => (
                       <button
                         key={`${beat.beat_index}-${beatPosition}`}
                         type="button"
                         onClick={() => moveLiveCursor(beatPosition)}
                         aria-label={`${t('script.nextKeyword', 'Next')}: ${beat.reference_word}`}
-                        className={`h-2.5 rounded-full transition-all cursor-pointer hover:opacity-80 ${
+                        className={`s-ft s-qe s-wr s-8m s-ho ${
                           beatPosition === liveBeatIndex
-                            ? 'w-8 bg-primary'
+                            ? 's-y0 s-5c'
                             : coveredBeatIndexes.has(beatPosition)
-                              ? 'w-2.5 bg-primary/45'
-                              : 'w-2.5 bg-muted'
+                              ? 's-xl s-5i'
+                              : 's-xl s-50'
                         }`}
                       />
                     ))}
                   </div>
 
-                  <div className="space-y-3">
-                    <p className="text-xs font-medium uppercase text-muted-foreground">
+                  <div className="s-t0">
+                    <p className="s-vj s-d0 s-x1 s-ul">
                       {t('script.currentKeyword', 'Current keyword')}
                     </p>
                     <motion.button
@@ -753,10 +753,10 @@ const ScriptPracticeView = ({
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       onClick={() => moveLiveCursor(liveBeatIndex + 1)}
-                      className="inline-flex min-h-24 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 px-8 py-5 transition hover:bg-primary/15 active:scale-[0.98] cursor-pointer"
+                      className="s-i4 s-kv s-ib s-ig s-qh s-6l s-7q s-5e s-ov s-p8 s-wl s-h5 s-29 s-8m"
                       aria-label={t('script.tapToAdvance', 'Tap to advance')}
                     >
-                      <span className="text-5xl md:text-6xl font-bold text-primary">
+                      <span className="s-tc s-km s-cx s-uw">
                         {activeBeat?.reference_word || currentReferenceWords[0]}
                       </span>
                     </motion.button>
@@ -764,7 +764,7 @@ const ScriptPracticeView = ({
                       <button
                         type="button"
                         onClick={() => moveLiveCursor(liveBeatIndex + 1)}
-                        className="text-sm text-muted-foreground hover:text-foreground transition"
+                        className="s-v9 s-ul s-hv s-wl"
                       >
                         {t('script.nextKeyword', 'Next')}: {nextBeat.reference_word} →
                       </button>
@@ -775,21 +775,21 @@ const ScriptPracticeView = ({
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
-                  className="w-24 h-24 rounded-full bg-destructive/10 border-4 border-destructive flex items-center justify-center mx-auto"
+                  className="s-xo s-fv s-qe s-4i s-6o s-75 s-c5 s-ib s-ig s-m9"
                 >
-                  <Mic className="h-10 w-10 text-destructive" />
+                  <Mic className="s-fn s-xf s-u2" />
                 </motion.div>
 
-                <div className="space-y-2">
-                  <p className="text-muted-foreground">
+                <div className="s-sy">
+                  <p className="s-ul">
                     {t('script.speakingNowLive', 'Speak naturally — keywords advance as you mention them.')}
                   </p>
                   {liveTranscript && (
-                    <p className="mx-auto max-w-xl truncate text-xs italic text-muted-foreground/80">
+                    <p className="s-m9 s-jt truncate s-vj italic s-uq">
                       “{liveTranscript}”
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="s-vj s-ul">
                     {t('script.keywordsCovered', '{{covered}} of {{total}} keywords', {
                       covered: coveredCount,
                       total: totalBeats,
@@ -797,14 +797,14 @@ const ScriptPracticeView = ({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-[1fr_auto] gap-3">
+                <div className="s-e0 s-e4 s-dp">
                   <Button
                     size="lg"
                     variant="destructive"
-                    className="gap-3"
+                    className="s-dp"
                     onClick={handleStopRecording}
                   >
-                    <Square className="h-5 w-5" />
+                    <Square className="s-g1 s-xv" />
                     {t('script.stopRecording', 'Done speaking')}
                   </Button>
                   <Button
@@ -813,7 +813,7 @@ const ScriptPracticeView = ({
                     onClick={() => moveLiveCursor(liveBeatIndex + 1)}
                     aria-label={t('script.nextKeyword', 'Next')}
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="s-g1 s-xv" />
                   </Button>
                 </div>
               </motion.div>
@@ -826,10 +826,10 @@ const ScriptPracticeView = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-center space-y-4"
+                className="s-u0 s-t1"
               >
-                <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-                <p className="text-muted-foreground">{t('script.analyzing_retelling', 'Analyzing your retelling...')}</p>
+                <Loader2 className="s-fn s-xf s-32 s-uw s-m9" />
+                <p className="s-ul">{t('script.analyzing_retelling', 'Analyzing your retelling...')}</p>
               </motion.div>
             )}
 
@@ -840,33 +840,33 @@ const ScriptPracticeView = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-6"
+                className="s-t3"
               >
                 {/* Score header */}
-                <div className="text-center space-y-3">
+                <div className="s-u0 s-t0">
                   {getScoreIcon(result.score)}
                   <div>
-                    <span className={`text-5xl font-bold ${getScoreColor(result.score)}`}>
+                    <span className={`s-tc s-cx ${getScoreColor(result.score)}`}>
                       {result.score}%
                     </span>
-                    <p className="text-muted-foreground mt-1">{result.feedback}</p>
+                    <p className="s-ul s-lt">{result.feedback}</p>
                   </div>
                 </div>
 
                 {/* Metrics */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="s-e0 s-e2 s-dp">
                   <Card>
-                    <CardContent className="p-4 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">{t('script.content', 'Content')}</p>
-                      <p className={`text-2xl font-bold ${getScoreColor(result.content_coverage)}`}>
+                    <CardContent className="s-mw s-u0">
+                      <p className="s-vj s-ul s-jw">{t('script.content', 'Content')}</p>
+                      <p className={`s-t9 s-cx ${getScoreColor(result.content_coverage)}`}>
                         {result.content_coverage}%
                       </p>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardContent className="p-4 text-center">
-                      <p className="text-xs text-muted-foreground mb-1">{t('script.order', 'Order')}</p>
-                      <p className={`text-2xl font-bold ${getScoreColor(result.order_accuracy)}`}>
+                    <CardContent className="s-mw s-u0">
+                      <p className="s-vj s-ul s-jw">{t('script.order', 'Order')}</p>
+                      <p className={`s-t9 s-cx ${getScoreColor(result.order_accuracy)}`}>
                         {result.order_accuracy}%
                       </p>
                     </CardContent>
@@ -875,33 +875,33 @@ const ScriptPracticeView = ({
 
                 {/* Transcript comparison */}
                 {lastTranscript && (
-                  <Card className="border border-border">
-                    <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{t('script.yourRetelling', 'What you said')}</p>
+                  <Card className="s-6l s-6x">
+                    <CardContent className="s-mw s-t0">
+                      <div className="s-c5 s-ib s-if">
+                        <p className="s-v9 s-d0">{t('script.yourRetelling', 'What you said')}</p>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setShowOriginal(!showOriginal)}
-                          className="gap-1.5 text-xs"
+                          className="s-dm s-vj"
                         >
-                          {showOriginal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          {showOriginal ? <EyeOff className="s-fx s-xq" /> : <Eye className="s-fx s-xq" />}
                           {showOriginal
                             ? t('script.hideOriginal', 'Hide original')
                             : t('script.showOriginal', 'Show original')}
                         </Button>
                       </div>
-                      <p className="text-sm text-muted-foreground italic leading-relaxed">
+                      <p className="s-v9 s-ul italic s-ip">
                         "{lastTranscript}"
                       </p>
                       {showOriginal && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
-                          className="pt-3 border-t border-border"
+                          className="s-oc s-82 s-6x"
                         >
-                          <p className="text-xs font-medium text-muted-foreground mb-1">{t('script.original', 'Original')}</p>
-                          <p className="text-sm leading-relaxed">{currentText}</p>
+                          <p className="s-vj s-d0 s-ul s-jw">{t('script.original', 'Original')}</p>
+                          <p className="s-v9 s-ip">{currentText}</p>
                         </motion.div>
                       )}
                     </CardContent>
@@ -910,14 +910,14 @@ const ScriptPracticeView = ({
 
                 {/* Key words */}
                 {result.key_words_hit.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4" />
+                  <div className="s-sy">
+                    <p className="s-v9 s-d0 s-ue s-8s s-c5 s-ib s-dm">
+                      <CheckCircle2 className="s-fz s-xt" />
                       {t('script.wordsHit', 'Words you nailed')}
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="s-c5 s-cb s-dm">
                       {result.key_words_hit.map((w, i) => (
-                        <span key={i} className="px-2 py-1 text-xs rounded-md bg-green-500/10 text-green-700 dark:text-green-300 border border-green-500/20">
+                        <span key={i} className="s-op s-oy s-vj s-qi s-4w s-uf s-8r s-6l s-7d">
                           {w}
                         </span>
                       ))}
@@ -926,14 +926,14 @@ const ScriptPracticeView = ({
                 )}
 
                 {result.key_words_missed.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-red-600 dark:text-red-400 flex items-center gap-1.5">
-                      <XCircle className="h-4 w-4" />
+                  <div className="s-sy">
+                    <p className="s-v9 s-d0 s-v2 s-8v s-c5 s-ib s-dm">
+                      <XCircle className="s-fz s-xt" />
                       {t('script.wordsMissed', 'Words you missed')}
                     </p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="s-c5 s-cb s-dm">
                       {result.key_words_missed.map((w, i) => (
-                        <span key={i} className="px-2 py-1 text-xs rounded-md bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20">
+                        <span key={i} className="s-op s-oy s-vj s-qi s-5o s-v3 s-8u s-6l s-7w">
                           {w}
                         </span>
                       ))}
@@ -942,13 +942,13 @@ const ScriptPracticeView = ({
                 )}
 
                 {/* Action buttons */}
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <Button variant="outline" onClick={handleRepeat} className="gap-2">
-                    <RotateCcw className="h-4 w-4" />
+                <div className="s-e0 s-e2 s-dp s-o9">
+                  <Button variant="outline" onClick={handleRepeat} className="s-dn">
+                    <RotateCcw className="s-fz s-xt" />
                     {t('script.repeat', 'Repeat')}
                   </Button>
-                  <Button onClick={handleNextBeat} className="gap-2">
-                    <ChevronRight className="h-4 w-4" />
+                  <Button onClick={handleNextBeat} className="s-dn">
+                    <ChevronRight className="s-fz s-xt" />
                     {aggregatedRange[1] + 1 < totalBeats
                       ? t('script.nextBeat', 'Next beat')
                       : t('script.finish', 'Finish')}
@@ -957,7 +957,7 @@ const ScriptPracticeView = ({
 
                 {/* Aggregate / Disaggregate with tooltips */}
                 <TooltipProvider>
-                  <div className="flex gap-3 pt-1">
+                  <div className="s-c5 s-dp s-o7">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -965,12 +965,12 @@ const ScriptPracticeView = ({
                           size="sm"
                           onClick={handleAggregate}
                           disabled={!canAggregate}
-                          className="flex-1 gap-2 text-xs"
+                          className="s-c6 s-dn s-vj"
                         >
-                          <Merge className="h-4 w-4" />
+                          <Merge className="s-fz s-xt" />
                           {t('script.aggregate', 'Add next beat')}
                           {canAggregate && (
-                            <span className="text-muted-foreground">
+                            <span className="s-ul">
                               ({aggregatedRange[0] + 1}–{aggregatedRange[1] + 2})
                             </span>
                           )}
@@ -987,9 +987,9 @@ const ScriptPracticeView = ({
                           size="sm"
                           onClick={handleDisaggregate}
                           disabled={!canDisaggregate}
-                          className="flex-1 gap-2 text-xs"
+                          className="s-c6 s-dn s-vj"
                         >
-                          <Split className="h-4 w-4" />
+                          <Split className="s-fz s-xt" />
                           {t('script.disaggregate', 'Single beat only')}
                         </Button>
                       </TooltipTrigger>
@@ -1008,42 +1008,42 @@ const ScriptPracticeView = ({
                 key="summary"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="space-y-6"
+                className="s-t3"
               >
-                <div className="text-center space-y-4">
-                  <Trophy className="h-12 w-12 text-primary mx-auto" />
-                  <h2 className="text-2xl font-bold">{t('script.sessionComplete', 'Lesson Complete!')}</h2>
+                <div className="s-u0 s-t1">
+                  <Trophy className="s-fp s-xh s-uw s-m9" />
+                  <h2 className="s-t9 s-cx">{t('script.sessionComplete', 'Lesson Complete!')}</h2>
                   <div>
-                    <span className={`text-5xl font-bold ${getScoreColor(overallScore)}`}>
+                    <span className={`s-tc s-cx ${getScoreColor(overallScore)}`}>
                       {overallScore}%
                     </span>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="s-ul s-lt">
                       {t('script.averageScore', 'Average score')}
                     </p>
                   </div>
                   {totalTimeMinutes > 0 && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="s-v9 s-ul">
                       {t('script.timeSpent', '{{minutes}} min', { minutes: totalTimeMinutes })}
                     </p>
                   )}
                 </div>
 
                 {/* Per-beat breakdown */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{t('script.perBeat', 'Per beat')}</p>
+                <div className="s-sy">
+                  <p className="s-v9 s-d0">{t('script.perBeat', 'Per beat')}</p>
                   {sessionResults.map((sr, i) => (
                     <Card key={i}>
-                      <CardContent className="p-3 flex items-center justify-between">
-                        <span className="text-sm">
+                      <CardContent className="s-mv s-c5 s-ib s-if">
+                        <span className="s-v9">
                           {sr.beatStart === sr.beatEnd
                             ? t('script.beatNumber', { number: sr.beatStart + 1 })
                             : t('script.beatRange', { start: sr.beatStart + 1, end: sr.beatEnd + 1 })}
                         </span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground">
+                        <div className="s-c5 s-ib s-dp">
+                          <span className="s-vj s-ul">
                             {t('script.summaryMetrics', { content: sr.content_coverage, order: sr.order_accuracy })}
                           </span>
-                          <span className={`text-sm font-bold ${getScoreColor(sr.score)}`}>
+                          <span className={`s-v9 s-cx ${getScoreColor(sr.score)}`}>
                             {sr.score}%
                           </span>
                         </div>
@@ -1052,7 +1052,7 @@ const ScriptPracticeView = ({
                   ))}
                 </div>
 
-                <Button size="lg" className="w-full" onClick={onBack}>
+                <Button size="lg" className="s-y7" onClick={onBack}>
                   {t('common.done', 'Done')}
                 </Button>
               </motion.div>

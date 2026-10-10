@@ -23,29 +23,29 @@ const PresentationControls = ({
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex items-start justify-center pt-20 px-4">
-      <Card className="w-full max-w-md shadow-lg rounded-3xl">
+    <div className="s-c4 s-i5 s-40 s-3h s-yk s-c5 s-id s-ig s-oa s-os">
+      <Card className="s-y7 s-jq s-qx s-qa">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="s-c5 s-ib s-if">
             <CardTitle>{t('presentation.settings')}</CardTitle>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
             >
-              <X className="h-4 w-4" />
+              <X className="s-fz s-xt" />
             </Button>
           </div>
           <CardDescription>
             {t('presentation.customizeExperience')}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="s-t3">
           {/* Word Hint Delay */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="s-sy">
+            <div className="s-c5 s-ib s-if">
               <Label htmlFor="hint-delay">{t('presentation.wordHintDelay')}</Label>
-              <span className="text-sm text-muted-foreground">
+              <span className="s-v9 s-ul">
                 {(hintDelay / 1000).toFixed(1)}s
               </span>
             </div>
@@ -56,18 +56,18 @@ const PresentationControls = ({
               step={250}
               value={[hintDelay]}
               onValueChange={(value) => setHintDelay(value[0])}
-              className="w-full"
+              className="s-y7"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="s-vj s-ul">
               {t('presentation.wordHintDelayDesc')}
             </p>
           </div>
 
           {/* Sentence Start Delay */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="s-sy">
+            <div className="s-c5 s-ib s-if">
               <Label htmlFor="sentence-delay">{t('presentation.sentenceStartDelay')}</Label>
-              <span className="text-sm text-muted-foreground">
+              <span className="s-v9 s-ul">
                 {(sentenceStartDelay / 1000).toFixed(1)}s
               </span>
             </div>
@@ -78,9 +78,9 @@ const PresentationControls = ({
               step={500}
               value={[sentenceStartDelay]}
               onValueChange={(value) => setSentenceStartDelay(value[0])}
-              className="w-full"
+              className="s-y7"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="s-vj s-ul">
               {t('presentation.sentenceStartDelayDesc')}
             </p>
           </div>

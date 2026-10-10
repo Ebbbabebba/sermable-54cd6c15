@@ -62,11 +62,11 @@ const ResetPassword = () => {
 
   if (!isRecovery) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground">{t('auth.invalidResetLink')}</p>
-            <Button className="mt-4" onClick={() => navigate("/auth")}>{t('auth.backToSignIn')}</Button>
+      <div className="s-l6 s-c5 s-ib s-ig s-mw">
+        <Card className="s-y7 s-jq">
+          <CardContent className="s-of s-u0">
+            <p className="s-ul">{t('auth.invalidResetLink')}</p>
+            <Button className="s-ly" onClick={() => navigate("/auth")}>{t('auth.backToSignIn')}</Button>
           </CardContent>
         </Card>
       </div>
@@ -74,34 +74,34 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-3xl text-center">{t('auth.setNewPassword')}</CardTitle>
-          <CardDescription className="text-center">{t('auth.setNewPasswordDesc')}</CardDescription>
+    <div className="s-l6 s-c5 s-ib s-ig s-mw s-oh s-nd">
+      <Card className="s-y7 s-jq s-2y">
+        <CardHeader className="s-sy">
+          <CardTitle className="s-ta s-u0">{t('auth.setNewPassword')}</CardTitle>
+          <CardDescription className="s-u0">{t('auth.setNewPasswordDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleSubmit} className="s-t1">
+            <div className="s-sy">
               <Label htmlFor="password">{t('auth.newPassword')}</Label>
               <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
-            <div className="space-y-2">
+            <div className="s-sy">
               <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
               <Input id="confirmPassword" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="s-y7" disabled={loading}>
               {loading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('auth.loading')}</>
+                <><Loader2 className="s-lp s-fz s-xt s-32" />{t('auth.loading')}</>
               ) : (
                 t('auth.updatePassword')
               )}
             </Button>
             {formError && (
-              <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+              <p className="s-v9 s-u2 s-u0" role="alert">{formError}</p>
             )}
             {formInfo && (
-              <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+              <p className="s-v9 s-u8 s-8q s-u0" role="status">{formInfo}</p>
             )}
           </form>
         </CardContent>

@@ -391,7 +391,7 @@ const Dashboard = () => {
   // No full-screen loading blocker — show the shell immediately
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="s-l6 s-3v">
       {/* Expired speech cleanup — asked once per login */}
       <AlertDialog open={!!currentExpired} onOpenChange={(open) => { if (!open) handleKeepExpired(); }}>
         <AlertDialogContent>
@@ -425,26 +425,26 @@ const Dashboard = () => {
         />
       )}
 
-      <header className="sticky top-0 z-50 bg-background/95 border-b border-border/50 backdrop-blur-md" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
-        <div className="px-4 h-14 flex items-center justify-between gap-3 max-w-2xl mx-auto">
-          <span className="flex items-center gap-2.5 font-display font-bold text-lg tracking-tight">
-            <span className="h-3.5 w-3.5 rounded-full bg-gradient-to-br from-primary to-duo-yellow shadow-[0_0_0_5px_hsl(var(--primary)/0.14)]" aria-hidden="true" />
+      <header className="s-t7 s-w1 s-yh s-43 s-6v s-70 s-3f" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
+        <div className="s-os s-fq s-c5 s-ib s-if s-dp s-jc s-m9">
+          <span className="s-c5 s-ib s-do s-cy s-cx s-uk s-wh">
+            <span className="s-fx s-xq s-qe s-4s from-primary to-duo-yellow s-qt" aria-hidden="true" />
             Sermable
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="s-c5 s-ib s-dn">
             <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="sm">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('nav.newSpeech')}</span>
+              <Plus className="s-fz s-xt" />
+              <span className="s-gm s-rp">{t('nav.newSpeech')}</span>
             </Button>
 
             {!isMobile && (
               <>
                 <Button variant="ghost" size="icon" aria-label={t('nav.settings')} onClick={() => navigate("/settings")}>
-                  <Settings className="h-5 w-5" />
+                  <Settings className="s-g1 s-xv" />
                 </Button>
                 <Button variant="ghost" size="icon" aria-label={t('nav.signOut')} onClick={handleLogout}>
-                  <LogOut className="h-5 w-5" />
+                  <LogOut className="s-g1 s-xv" />
                 </Button>
               </>
             )}
@@ -454,26 +454,26 @@ const Dashboard = () => {
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label={t('nav.menu')}>
-                    <Menu className="h-5 w-5" />
+                    <Menu className="s-g1 s-xv" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="bg-background border-l border-border rounded-l-3xl" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
+                <SheetContent className="s-3v s-7h s-6x s-qf" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
                   <SheetHeader>
-                    <SheetTitle className="text-left">{t('nav.menu')}</SheetTitle>
+                    <SheetTitle className="s-uj">{t('nav.menu')}</SheetTitle>
                   </SheetHeader>
-                  <div className="flex flex-col gap-3 mt-8">
-                    <Button variant="ghost" className="justify-start" onClick={() => {
+                  <div className="s-c5 s-c7 s-dp s-m1">
+                    <Button variant="ghost" className="s-ii" onClick={() => {
                       navigate("/settings");
                       setMobileMenuOpen(false);
                     }}>
-                      <Settings className="h-4 w-4 mr-3" />
+                      <Settings className="s-fz s-xt s-lq" />
                       {t('nav.settings')}
                     </Button>
-                    <Button variant="ghost" className="justify-start text-destructive" onClick={() => {
+                    <Button variant="ghost" className="s-ii s-u2" onClick={() => {
                       handleLogout();
                       setMobileMenuOpen(false);
                     }}>
-                      <LogOut className="h-4 w-4 mr-3" />
+                      <LogOut className="s-fz s-xt s-lq" />
                       {t('nav.signOut')}
                     </Button>
                   </div>
@@ -484,10 +484,10 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="px-4 py-7 pb-28">
-        <div className="max-w-2xl mx-auto space-y-9">
+      <main className="s-os s-pa s-n5">
+        <div className="s-jc s-m9 s-t5">
           {/* Welcome Section - Large, clean typography */}
-          <section className="animate-fade-in">
+          <section className="s-2y">
             {(() => {
               const hour = new Date().getHours();
               const rawName = user?.user_metadata?.full_name?.split(' ')[0] || "";
@@ -524,13 +524,13 @@ const Dashboard = () => {
 
               return (
                 <>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                  <p className="s-vj s-d3 s-x1 s-wf s-ul s-jz">
                     {dateLabel}
                   </p>
-                  <h1 className="text-4xl sm:text-5xl font-display font-semibold text-foreground mb-2 leading-[1.1]">
+                  <h1 className="s-tb s-si s-cy s-d3 s-u9 s-jy s-im">
                     {greetingText}
                   </h1>
-                  <p className="text-muted-foreground text-lg">
+                  <p className="s-ul s-uk">
                     {t('dashboard.continueOrStart')}
                   </p>
                 </>
@@ -542,28 +542,28 @@ const Dashboard = () => {
           <ReviewNotifications />
 
           {/* Speeches Section */}
-          <section className="space-y-5">
-            <div className="flex items-center justify-between">
+          <section className="s-t2">
+            <div className="s-c5 s-ib s-if">
               <div>
-                <h3 className="text-xl font-semibold text-foreground">{t('dashboard.yourSpeeches')}</h3>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <h3 className="s-vi s-d3 s-u9">{t('dashboard.yourSpeeches')}</h3>
+                <p className="s-v9 s-ul s-ls">
                   {t('dashboard.manageSpeeches')}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="s-c5 s-ib s-dn">
                 {speeches.length > 0 && (
-                  <span className="text-xs text-muted-foreground bg-secondary px-3 py-1.5 rounded-full">
+                  <span className="s-vj s-ul s-5t s-or s-oz s-qe">
                     {speeches.length} {speeches.length === 1 ? t('dashboard.speech') : t('dashboard.speeches')}
                   </span>
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="gap-1.5">
-                      <ArrowUpDown className="w-4 h-4" />
-                      <span className="text-xs hidden sm:inline">{t('dashboard.sort')}</span>
+                    <Button variant="ghost" size="sm" className="s-dm">
+                      <ArrowUpDown className="s-xt s-fz" />
+                      <span className="s-vj s-gm s-rp">{t('dashboard.sort')}</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border border-border">
+                  <DropdownMenuContent align="end" className="s-4b s-6l s-6x">
                     <DropdownMenuItem onClick={() => setSortBy('deadline')}>
                       {t('dashboard.byDeadline')}
                     </DropdownMenuItem>
@@ -579,33 +579,33 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-              <div className="flex flex-col gap-5">
+              <div className="s-c5 s-c7 s-dr">
                 {[1, 2, 3].map(i => (
-                  <Card key={i} className="border border-border/60 shadow-sm animate-pulse">
-                    <CardContent className="p-6 space-y-4">
-                      <div className="h-5 bg-muted rounded w-3/4" />
-                      <div className="h-4 bg-muted rounded w-1/2" />
-                      <div className="h-3 bg-muted rounded w-full" />
-                      <div className="h-3 bg-muted rounded w-2/3" />
+                  <Card key={i} className="s-6l s-71 s-r3 s-30">
+                    <CardContent className="s-my s-t1">
+                      <div className="s-g1 s-50 s-q8 s-xr" />
+                      <div className="s-fz s-50 s-q8 s-xe" />
+                      <div className="s-fw s-50 s-q8 s-y7" />
+                      <div className="s-fw s-50 s-q8 s-xm" />
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : speeches.length === 0 ? (
-              <Card className="border border-border/60 shadow-sm animate-fade-in">
-                <CardContent className="py-16 text-center">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{t('dashboard.noSpeeches')}</h3>
-                  <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
+              <Card className="s-6l s-71 s-r3 s-2y">
+                <CardContent className="s-p2 s-u0">
+                  <h3 className="s-vi s-d3 s-u9 s-jy">{t('dashboard.noSpeeches')}</h3>
+                  <p className="s-ul s-k2 s-js s-m9 s-ip">
                     {t('dashboard.noSpeechesDesc')}
                   </p>
                   <Button onClick={() => setUploadDialogOpen(true)} variant="apple" size="lg">
-                    <Plus className="h-5 w-5" />
+                    <Plus className="s-g1 s-xv" />
                     {t('dashboard.uploadFirst')}
                   </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="s-c5 s-c7 s-dq">
                 {(() => {
                   const sortedSpeeches = [...speeches].sort((a, b) => {
                     if (sortBy === 'deadline') {
@@ -623,7 +623,7 @@ const Dashboard = () => {
                   return sortedSpeeches.map((speech, index) => (
                     <div 
                       key={speech.id}
-                      className="animate-fade-in"
+                      className="s-2y"
                       style={{ animationDelay: `${index * 70}ms`, animationFillMode: 'both' }}
                     >
                       <SpeechCard 

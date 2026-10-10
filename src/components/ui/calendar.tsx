@@ -11,39 +11,39 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3 pointer-events-auto", className)}
+      className={cn("s-mv s-nw", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
+        months: "s-c5 s-c7 s-rj s-t1 s-sf s-sg",
+        month: "s-t1",
+        caption: "s-c5 s-ig s-o7 s-pd s-ib",
+        caption_label: "s-v9 s-d0",
+        nav: "s-ss s-c5 s-ib",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+          "s-g4 s-xy s-61 s-mr s-mg s-hn",
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
+        nav_button_previous: "s-26 s-it",
+        nav_button_next: "s-26 s-pf",
+        table: "s-y7 s-72 s-sw",
         head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal aria-selected:opacity-100"),
+        head_cell: "s-ul s-qi s-y2 s-d2 s-tk",
+        row: "s-c5 s-y7 s-lv",
+        cell: "s-g8 s-y2 s-u0 s-v9 s-mr s-pd s-f s-e s-d s-c1 s-ij s-cl s-cm",
+        day: cn(buttonVariants({ variant: "ghost" }), "s-g8 s-y2 s-mr s-d2 s-37"),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
+          "s-5c s-ux s-h3 s-hx s-co s-cv",
+        day_today: "s-3p s-tr",
         day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+          "day-outside s-ul s-mg s-36 s-3a s-38",
+        day_disabled: "s-ul s-mg",
+        day_range_middle: "s-35 s-39",
         day_hidden: "invisible",
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        IconLeft: ({ ..._props }) => <ChevronLeft className="s-fz s-xt" />,
+        IconRight: ({ ..._props }) => <ChevronRight className="s-fz s-xt" />,
       }}
       {...props}
     />

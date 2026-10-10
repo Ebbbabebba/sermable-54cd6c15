@@ -8,7 +8,7 @@ const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
     role="navigation"
     aria-label="pagination"
-    className={cn("mx-auto flex w-full justify-center", className)}
+    className={cn("s-m9 s-c5 s-y7 s-ig", className)}
     {...props}
   />
 );
@@ -16,7 +16,7 @@ Pagination.displayName = "Pagination";
 
 const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
   ({ className, ...props }, ref) => (
-    <ul ref={ref} className={cn("flex flex-row items-center gap-1", className)} {...props} />
+    <ul ref={ref} className={cn("s-c5 s-c9 s-ib s-dl", className)} {...props} />
   ),
 );
 PaginationContent.displayName = "PaginationContent";
@@ -47,25 +47,25 @@ const PaginationLink = ({ className, isActive, size = "icon", ...props }: Pagina
 PaginationLink.displayName = "PaginationLink";
 
 const PaginationPrevious = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink aria-label="Go to previous page" size="default" className={cn("gap-1 pl-2.5", className)} {...props}>
-    <ChevronLeft className="h-4 w-4" />
+  <PaginationLink aria-label="Go to previous page" size="default" className={cn("s-dl s-ns", className)} {...props}>
+    <ChevronLeft className="s-fz s-xt" />
     <span>Previous</span>
   </PaginationLink>
 );
 PaginationPrevious.displayName = "PaginationPrevious";
 
 const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink aria-label="Go to next page" size="default" className={cn("gap-1 pr-2.5", className)} {...props}>
+  <PaginationLink aria-label="Go to next page" size="default" className={cn("s-dl s-o1", className)} {...props}>
     <span>Next</span>
-    <ChevronRight className="h-4 w-4" />
+    <ChevronRight className="s-fz s-xt" />
   </PaginationLink>
 );
 PaginationNext.displayName = "PaginationNext";
 
 const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
-  <span aria-hidden className={cn("flex h-9 w-9 items-center justify-center", className)} {...props}>
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
+  <span aria-hidden className={cn("s-c5 s-g8 s-y2 s-ib s-ig", className)} {...props}>
+    <MoreHorizontal className="s-fz s-xt" />
+    <span className="s-t6">More pages</span>
   </span>
 );
 PaginationEllipsis.displayName = "PaginationEllipsis";

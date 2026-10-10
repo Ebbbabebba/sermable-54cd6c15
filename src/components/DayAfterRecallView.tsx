@@ -470,8 +470,8 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
   
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="s-c5 s-ib s-ig s-g3">
+        <div className="s-32 s-qe s-g6 s-y0 s-6w s-7n" />
       </div>
     );
   }
@@ -479,29 +479,29 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
   // Success screen
   if (isStable) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+      <div className="s-c5 s-c7 s-ib s-ig s-gg s-mz s-u0 s-ds">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
         >
-          <Medal className="h-20 w-20 text-primary" />
+          <Medal className="s-fu s-xn s-uw" />
         </motion.div>
         
-        <h2 className="text-2xl font-bold">
+        <h2 className="s-t9 s-cx">
           {t('day_after_recall.stable', 'Speech is stable!')}
         </h2>
         
-        <p className="text-muted-foreground max-w-md">
+        <p className="s-ul s-jq">
           {t('day_after_recall.stable_desc', 'You completed the entire speech without needing any keyword support. Your memory is consolidated!')}
         </p>
         
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-          <GraduationCap className="h-4 w-4" />
+        <div className="s-c5 s-ib s-dn s-v9 s-ul s-ly">
+          <GraduationCap className="s-fz s-xt" />
           <span>{t('day_after_recall.attempts', { count: attemptNumber })}</span>
         </div>
         
-        <Button onClick={onComplete || onExit} className="mt-6">
+        <Button onClick={onComplete || onExit} className="s-m0">
           {t('common.done', 'Done')}
         </Button>
       </div>
@@ -510,32 +510,32 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
   
   return (
     <div 
-      className="flex flex-col h-full p-4 relative"
+      className="s-c5 s-c7 s-gg s-mw s-pd"
       onClick={handleTap}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-blue-500/20 text-blue-500">
+      <div className="s-c5 s-ib s-if s-k1">
+        <div className="s-c5 s-ib s-dn">
+          <div className="s-or s-oz s-qe s-v9 s-d0 s-49 s-ty">
             {t('day_after_recall.title', 'Day-After Recall')}
           </div>
-          <span className="text-sm text-muted-foreground">
+          <span className="s-v9 s-ul">
             {t('day_after_recall.attempt', 'Attempt')} {attemptNumber}
           </span>
         </div>
         
         {keywordsShownThisAttempt > 0 && (
-          <div className="text-sm text-muted-foreground">
+          <div className="s-v9 s-ul">
             {t('day_after_recall.keywords_shown', 'Keywords shown')}: {keywordsShownThisAttempt}
           </div>
         )}
       </div>
       
       {/* Main area - Blue pacing pulse only */}
-      <div className="flex-1 flex flex-col items-center justify-center relative">
+      <div className="s-c6 s-c5 s-c7 s-ib s-ig s-pd">
         {/* Blue pacing pulse indicator */}
         <motion.div
-          className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-8"
+          className="s-xj s-fr s-qe s-49 s-c5 s-ib s-ig s-k2"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.6, 1, 0.6],
@@ -546,11 +546,11 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
             ease: "easeInOut",
           }}
         >
-          <div className="w-8 h-8 rounded-full bg-blue-500" />
+          <div className="s-y0 s-g6 s-qe s-46" />
         </motion.div>
         
         {/* Progress indicator */}
-        <div className="text-sm text-muted-foreground mb-4">
+        <div className="s-v9 s-ul s-k0">
           {currentWordIndex} / {words.length} {t('day_after_recall.words', 'words')}
         </div>
         
@@ -561,9 +561,9 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute bottom-32 left-1/2 -translate-x-1/2"
+              className="s-26 s-8e s-iu s-8"
             >
-              <div className="text-lg text-muted-foreground font-normal px-4 py-2">
+              <div className="s-uk s-ul s-d2 s-os s-p3">
                 {showKeyword}
               </div>
             </motion.div>
@@ -571,13 +571,13 @@ const DayAfterRecallView = ({ speechId, onComplete, onExit }: DayAfterRecallView
         </AnimatePresence>
         
         {/* Tap hint */}
-        <div className="absolute bottom-16 text-xs text-muted-foreground/60">
+        <div className="s-26 s-8c s-vj s-uo">
           {t('day_after_recall.tap_hint', 'Tap anywhere for keyword hint')}
         </div>
       </div>
       
       {/* Exit button */}
-      <div className="flex justify-center">
+      <div className="s-c5 s-ig">
         <Button variant="ghost" onClick={onExit}>
           {t('common.exit', 'Exit')}
         </Button>

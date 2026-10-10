@@ -81,17 +81,17 @@ export function subscribe(l: Listener) {
 }
 
 const variantColor: Record<InlineVariant, string> = {
-  default: "text-foreground",
-  success: "text-success",
-  error: "text-destructive",
-  info: "text-info",
+  default: "s-u9",
+  success: "s-va",
+  error: "s-u2",
+  info: "s-uh",
 };
 
 const variantSurface: Record<InlineVariant, string> = {
-  default: "border-border",
-  success: "border-success/30",
-  error: "border-destructive/30",
-  info: "border-info/30",
+  default: "s-6x",
+  success: "s-80",
+  error: "s-77",
+  info: "s-7f",
 };
 
 const variantIcon = {
@@ -108,7 +108,7 @@ const InlineMessages = () => {
   if (msgs.length === 0) return null;
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:items-end sm:px-5"
+      className="s-nx s-c4 s-i6 s-8b s-yk s-c5 s-c7 s-ib s-dn s-or s-nc s-rs s-s9"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -118,20 +118,20 @@ const InlineMessages = () => {
           <div
             key={m.id}
             className={cn(
-              "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border bg-popover px-4 py-3 text-left text-popover-foreground shadow-lg animate-fade-in",
+              "s-nw s-c5 s-y7 s-js s-id s-dp s-q9 s-6l s-5b s-os s-p6 s-uj s-uv s-qx s-2y",
               variantSurface[m.variant]
             )}
             role={m.variant === "error" ? "alert" : "status"}
           >
-            <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", variantColor[m.variant])} aria-hidden="true" />
-            <div className="min-w-0 flex-1">
+            <Icon className={cn("s-ls s-g1 s-xv s-r5", variantColor[m.variant])} aria-hidden="true" />
+            <div className="s-l8 s-c6">
               {m.title && (
-                <div className="break-words text-sm font-semibold leading-snug">
+                <div className="s-8h s-v9 s-d3 s-iq">
                   {m.title}
                 </div>
               )}
               {m.description && (
-                <div className="mt-0.5 break-words text-sm leading-snug text-muted-foreground">
+                <div className="s-ls s-8h s-v9 s-iq s-ul">
                   {m.description}
                 </div>
               )}
@@ -140,11 +140,11 @@ const InlineMessages = () => {
               type="button"
               variant="ghost"
               size="icon"
-              className="-mr-2 -mt-2 h-9 w-9 shrink-0 text-muted-foreground"
+              className="-mr-2 -mt-2 s-g8 s-y2 s-r5 s-ul"
               onClick={() => dismissMessage(m.id)}
               aria-label={t("common.close")}
             >
-              <X className="h-4 w-4" aria-hidden="true" />
+              <X className="s-fz s-xt" aria-hidden="true" />
             </Button>
           </div>
         );

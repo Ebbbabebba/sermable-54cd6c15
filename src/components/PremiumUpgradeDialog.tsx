@@ -64,49 +64,49 @@ export const PremiumUpgradeDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mb-4">
+      <DialogContent className="s-s0">
+        <DialogHeader className="s-u0">
+          <div className="s-m9 s-xj s-fr s-q9 s-4s s-db s-vw s-c5 s-ib s-ig s-k0">
             {feature === 'audience_mode' ? (
-              <Users className="w-8 h-8 text-amber-500" />
+              <Users className="s-y0 s-g6 s-tt" />
             ) : (
-              <Crown className="w-8 h-8 text-amber-500" />
+              <Crown className="s-y0 s-g6 s-tt" />
             )}
           </div>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+          <DialogTitle className="s-t9 s-cx s-4t from-amber-500 to-orange-500 s-4g s-vd">
             {content.title}
           </DialogTitle>
-          <DialogDescription className="text-base">
+          <DialogDescription className="s-tw">
             {content.description}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 py-4">
+        <div className="s-t0 s-p7">
           {content.benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <benefit.icon className="w-5 h-5 text-primary" />
+            <div key={index} className="s-c5 s-ib s-dp s-mv s-qo s-5v">
+              <div className="s-xf s-fn s-qo s-5e s-c5 s-ib s-ig">
+                <benefit.icon className="s-xv s-g1 s-uw" />
               </div>
-              <span className="font-medium">{benefit.text}</span>
+              <span className="s-d0">{benefit.text}</span>
             </div>
           ))}
         </div>
 
-        <div className="text-center text-sm text-muted-foreground pb-2">
-          {t('premiumDialog.startingAt')} <span className="font-semibold text-foreground">€3.90</span>{t('premiumDialog.perMonthStudents')}
+        <div className="s-u0 s-v9 s-ul s-n4">
+          {t('premiumDialog.startingAt')} <span className="s-d3 s-u9">€3.90</span>{t('premiumDialog.perMonthStudents')}
         </div>
 
-        <div className="flex flex-col gap-2 pt-2">
+        <div className="s-c5 s-c7 s-dn s-o9">
           <Button
             onClick={handleContinue}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+            className="s-y7 s-4t from-amber-500 to-orange-500 s-hl s-hz s-vg"
           >
             {t('premiumDialog.upgradeNow')}
           </Button>
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full"
+            className="s-y7"
           >
             {t('premiumDialog.maybeLater')}
           </Button>

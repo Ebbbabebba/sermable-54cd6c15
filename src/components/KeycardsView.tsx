@@ -101,12 +101,12 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 35}deg)`;
     }
     const g = greenRef.current, r = redRef.current;
-    if (g) { g.style.transition = transition ? "opacity 250ms ease-out" : "none"; g.style.opacity = String(Math.min(1, Math.max(0, offset) / 120)); }
-    if (r) { r.style.transition = transition ? "opacity 250ms ease-out" : "none"; r.style.opacity = String(Math.min(1, Math.max(0, -offset) / 120)); }
+    if (g) { g.style.transition = transition ? "opacity 250ms s-bu" : "none"; g.style.opacity = String(Math.min(1, Math.max(0, offset) / 120)); }
+    if (r) { r.style.transition = transition ? "opacity 250ms s-bu" : "none"; r.style.opacity = String(Math.min(1, Math.max(0, -offset) / 120)); }
     const n = nextRef.current;
     if (n) {
       const p = Math.min(1, Math.abs(offset) / 300);
-      n.style.transition = transition ? "transform 300ms ease-out, opacity 300ms ease-out" : "none";
+      n.style.transition = transition ? "transform 300ms ease-out, opacity 300ms s-bu" : "none";
       n.style.transform = `translate3d(0,${10 - p * 10}px,0)`;
       n.style.opacity = String(0.6 + p * 0.4);
     }
@@ -248,39 +248,39 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background overflow-hidden select-none"
+    <div className="s-c4 s-i5 s-c5 s-c7 s-3v s-mn s-qq"
       style={{ height: "100dvh", paddingTop: "max(env(safe-area-inset-top, 0px), 1rem)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1rem)", touchAction: "none", overscrollBehavior: "none" }}>
-      <div className="flex items-center justify-between px-4">
-        <Button variant="ghost" size="icon" className="rounded-full" onClick={onBack} aria-label={t("common.exit")}>
-          <X className="h-5 w-5" />
+      <div className="s-c5 s-ib s-if s-os">
+        <Button variant="ghost" size="icon" className="s-qe" onClick={onBack} aria-label={t("common.exit")}>
+          <X className="s-g1 s-xv" />
         </Button>
-        <span className="text-sm font-semibold text-muted-foreground">
+        <span className="s-v9 s-d3 s-ul">
           {t("keycards.left", { count: Math.max(0, order.length - pos), defaultValue: "{{count}} left" })}
         </span>
-        <Button variant="ghost" size="sm" className="rounded-full gap-1" onClick={undo} disabled={!history.length || done}>
-          <Undo2 className="h-4 w-4" /> {t("keycards.undo", "Undo")}
+        <Button variant="ghost" size="sm" className="s-qe s-dl" onClick={undo} disabled={!history.length || done}>
+          <Undo2 className="s-fz s-xt" /> {t("keycards.undo", "Undo")}
         </Button>
       </div>
 
       {done ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center space-y-6">
-          <h2 className="text-3xl font-bold">{t("keycards.doneTitle", "Round complete")}</h2>
-          <div className="flex gap-4">
-            <div className="rounded-3xl bg-primary/10 px-6 py-4"><p className="text-3xl font-bold text-primary">{right}</p><p className="text-xs text-muted-foreground">{t("keycards.gotIt", "Got it")}</p></div>
-            <div className="rounded-3xl bg-destructive/10 px-6 py-4"><p className="text-3xl font-bold text-destructive">{left}</p><p className="text-xs text-muted-foreground">{t("keycards.needSupport", "More support")}</p></div>
+        <div className="s-c6 s-c5 s-c7 s-ib s-ig s-ou s-u0 s-t3">
+          <h2 className="s-ta s-cx">{t("keycards.doneTitle", "Round complete")}</h2>
+          <div className="s-c5 s-dq">
+            <div className="s-qa s-5e s-ou s-p7"><p className="s-ta s-cx s-uw">{right}</p><p className="s-vj s-ul">{t("keycards.gotIt", "Got it")}</p></div>
+            <div className="s-qa s-4i s-ou s-p7"><p className="s-ta s-cx s-u2">{left}</p><p className="s-vj s-ul">{t("keycards.needSupport", "More support")}</p></div>
           </div>
-          {left > 0 && <p className="text-sm text-muted-foreground max-w-xs">{t("keycards.supportAdded", "Extra keywords were added to the sentences you swiped left.")}</p>}
-          <div className="w-full max-w-xs space-y-2">
-            {left > 0 && <Button className="w-full rounded-2xl" onClick={() => restart(true)}><RotateCcw className="h-4 w-4 mr-2" />{t("keycards.repeatHard", "Repeat difficult cards")}</Button>}
-            <Button variant="outline" className="w-full rounded-2xl" onClick={() => restart(false)}>{t("keycards.repeatAll", "Repeat all")}</Button>
-            <Button variant="ghost" className="w-full rounded-2xl" onClick={onBack}>{t("common.exit")}</Button>
+          {left > 0 && <p className="s-v9 s-ul s-ju">{t("keycards.supportAdded", "Extra keywords were added to the sentences you swiped left.")}</p>}
+          <div className="s-y7 s-ju s-sy">
+            {left > 0 && <Button className="s-y7 s-q9" onClick={() => restart(true)}><RotateCcw className="s-fz s-xt s-lp" />{t("keycards.repeatHard", "Repeat difficult cards")}</Button>}
+            <Button variant="outline" className="s-y7 s-q9" onClick={() => restart(false)}>{t("keycards.repeatAll", "Repeat all")}</Button>
+            <Button variant="ghost" className="s-y7 s-q9" onClick={onBack}>{t("common.exit")}</Button>
           </div>
         </div>
       ) : (
         <>
-          <div className="flex-1 min-h-0 flex items-center justify-center px-6 py-3">
+          <div className="s-c6 s-ku s-c5 s-ib s-ig s-ou s-p6">
            <div
-             className="relative"
+             className="s-pd"
              style={{ aspectRatio: "3 / 4", height: "min(100%, calc((100vw - 3rem) * 4 / 3), 38rem)" }}
            >
             {pos + 1 < order.length && (() => {
@@ -288,15 +288,15 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
               return (
                 <div
                   ref={nextRef}
-                  className="absolute inset-0 rounded-[2rem] bg-card border-2 border-border shadow-lg p-6 flex flex-col pointer-events-none"
+                  className="s-26 s-i5 s-qc s-4b s-6n s-6x s-qx s-my s-c5 s-c7 s-nx"
                   style={{ transform: "translate3d(0,10px,0)", opacity: 0.6, willChange: "transform, opacity" }}
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="s-vj s-d3 s-x1 s-wi s-ul">
                     {cardLabel(next)}
                   </p>
-                  <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
+                  <div className="s-c6 s-c5 s-cb content-center s-ig s-dn">
                     {allKeywords[next].map(({ w, hard }, i) => (
-                      <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
+                      <span key={i} className={cn("s-qe s-or s-oz s-tw s-cx", hard ? "s-4j s-u2" : "s-5f s-u9")}>{w}</span>
                     ))}
                   </div>
                 </div>
@@ -305,7 +305,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
             <div
               key={`${pos}-${current}`}
               ref={cardRef}
-              className="absolute inset-0 select-none touch-none cursor-grab"
+              className="s-26 s-i5 s-qq s-wd s-8l"
               style={{ perspective: "1200px", willChange: "transform", backfaceVisibility: "hidden", WebkitTapHighlightColor: "transparent" }}
               onPointerDown={onDown}
               onPointerMove={onMove}
@@ -313,41 +313,41 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
               onPointerCancel={() => onEnd(true)}
               onLostPointerCapture={() => onEnd(false)}
             >
-              <div className="absolute inset-0 transition-transform duration-500" style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "none" }}>
-                <div className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex flex-col"
+              <div className="s-26 s-i5 s-wu s-bq" style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "none" }}>
+                <div className="s-26 s-i5 s-qc s-6n s-6x s-4b s-r4 s-my s-c5 s-c7"
                   style={{ backfaceVisibility: "hidden" }}>
-                  <div ref={greenRef} className="absolute inset-0 rounded-[2rem] border-2 pointer-events-none flex items-center justify-center"
+                  <div ref={greenRef} className="s-26 s-i5 s-qc s-6n s-nx s-c5 s-ib s-ig"
                     style={{ opacity: 0, background: "hsl(142 70% 45% / 0.18)", borderColor: "hsl(142 70% 40%)" }}>
-                    <span className="rounded-full border-2 px-4 py-2 text-base font-bold rotate-12" style={{ color: "hsl(142 70% 35%)", borderColor: "hsl(142 70% 40%)" }}>{t("keycards.knowIt", "Know it")}</span>
+                    <span className="s-qe s-6n s-os s-p3 s-tw s-cx s-q5" style={{ color: "hsl(142 70% 35%)", borderColor: "hsl(142 70% 40%)" }}>{t("keycards.knowIt", "Know it")}</span>
                   </div>
-                  <div ref={redRef} className="absolute inset-0 rounded-[2rem] border-2 border-destructive pointer-events-none flex items-center justify-center"
+                  <div ref={redRef} className="s-26 s-i5 s-qc s-6n s-75 s-nx s-c5 s-ib s-ig"
                     style={{ opacity: 0, background: "hsl(var(--destructive) / 0.18)" }}>
-                    <span className="rounded-full border-2 border-destructive px-4 py-2 text-base font-bold text-destructive -rotate-12">{t("keycards.tryAgain", "Try again")}</span>
+                    <span className="s-qe s-6n s-75 s-os s-p3 s-tw s-cx s-u2 -rotate-12">{t("keycards.tryAgain", "Try again")}</span>
                   </div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="s-vj s-d3 s-x1 s-wi s-ul">
                     {cardLabel(current)}
                   </p>
-                  <div className="flex-1 flex flex-wrap content-center justify-center gap-2">
+                  <div className="s-c6 s-c5 s-cb content-center s-ig s-dn">
                     {allKeywords[current].map(({ w, hard }, i) => (
-                      <span key={i} className={cn("rounded-full px-3 py-1.5 text-base font-bold", hard ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-foreground")}>{w}</span>
+                      <span key={i} className={cn("s-qe s-or s-oz s-tw s-cx", hard ? "s-4j s-u2" : "s-5f s-u9")}>{w}</span>
                     ))}
                   </div>
-                  <p className="text-center text-xs text-muted-foreground">{t("keycards.tapToFlip", "Tap to show the full sentence")}</p>
+                  <p className="s-u0 s-vj s-ul">{t("keycards.tapToFlip", "Tap to show the full sentence")}</p>
                 </div>
-                <div data-keycard-scroll className="absolute inset-0 rounded-[2rem] border-2 border-border bg-card shadow-xl p-6 flex items-center overflow-y-auto"
+                <div data-keycard-scroll className="s-26 s-i5 s-qc s-6n s-6x s-4b s-r4 s-my s-c5 s-ib s-mq"
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                  <p className="text-xl leading-relaxed">{cards[current]?.text}</p>
+                  <p className="s-vi s-ip">{cards[current]?.text}</p>
                 </div>
               </div>
             </div>
            </div>
           </div>
-          <div className="flex justify-center gap-8 pb-4">
-            <Button size="icon" variant="outline" className="h-16 w-16 rounded-full border-2 border-destructive text-destructive" onClick={() => commit("left")} aria-label={t("keycards.needSupport", "More support")}>
-              <X className="h-7 w-7" />
+          <div className="s-c5 s-ig s-dt s-n8">
+            <Button size="icon" variant="outline" className="s-fr s-xj s-qe s-6n s-75 s-u2" onClick={() => commit("left")} aria-label={t("keycards.needSupport", "More support")}>
+              <X className="s-g4 s-xy" />
             </Button>
-            <Button size="icon" variant="outline" className="h-16 w-16 rounded-full border-2 border-[hsl(142_70%_40%)] text-[hsl(142_70%_35%)]" onClick={() => commit("right")} aria-label={t("keycards.gotIt", "Got it")}>
-              <Check className="h-7 w-7" />
+            <Button size="icon" variant="outline" className="s-fr s-xj s-qe s-6n s-6r s-to" onClick={() => commit("right")} aria-label={t("keycards.gotIt", "Got it")}>
+              <Check className="s-g4 s-xy" />
             </Button>
           </div>
         </>

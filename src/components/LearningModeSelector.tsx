@@ -35,11 +35,11 @@ export const LearningModeSelector = ({
   ];
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <label className="text-sm font-medium">
+    <div className={cn("s-sy", className)}>
+      <label className="s-v9 s-d0">
         {t("upload.learningMode.title")}
       </label>
-      <div className="grid gap-3">
+      <div className="s-e0 s-dp">
         {modes.map((mode) => {
           const active = value === mode.id;
           const Icon = mode.icon;
@@ -49,39 +49,39 @@ export const LearningModeSelector = ({
               type="button"
               onClick={() => onChange(mode.id)}
               className={cn(
-                "w-full text-left px-5 py-4 rounded-2xl border-2 transition-colors flex items-center gap-4",
+                "s-y7 s-uj s-ot s-p7 s-q9 s-6n s-ws s-c5 s-ib s-dq",
                 active
-                  ? "border-primary bg-primary/5"
-                  : "border-border bg-card hover:border-primary/40"
+                  ? "s-7n s-5j"
+                  : "s-6x s-4b s-hh"
               )}
             >
               <div
                 className={cn(
-                  "shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-colors",
+                  "s-r5 s-xg s-fo s-qo s-c5 s-ib s-ig s-ws",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                    ? "s-5c s-ux"
+                    : "s-50 s-ul"
                 )}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="s-xv s-g1" />
               </div>
-              <div className="flex-1 min-w-0">
-                <span className="font-semibold text-sm sm:text-base block">
+              <div className="s-c6 s-l8">
+                <span className="s-d3 s-v9 s-sj s-6i">
                   {mode.label}
                 </span>
-                <span className="text-xs sm:text-sm text-muted-foreground mt-0.5 leading-snug block">
+                <span className="s-vj s-sl s-ul s-ls s-iq s-6i">
                   {mode.description}
                 </span>
               </div>
               <div
                 className={cn(
-                  "shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                  active ? "border-primary bg-primary" : "border-border"
+                  "s-r5 s-xw s-g2 s-qe s-6n s-c5 s-ib s-ig s-ws",
+                  active ? "s-7n s-5c" : "s-6x"
                 )}
               >
                 {active && (
                   <Check
-                    className="w-3.5 h-3.5 text-primary-foreground"
+                    className="s-xq s-fx s-ux"
                     strokeWidth={3.5}
                   />
                 )}
