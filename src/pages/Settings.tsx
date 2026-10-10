@@ -247,7 +247,7 @@ const Settings = () => {
             <Section>
               <Row onClick={() => navigate("/settings/payment")} last>
                 <div className="s-c5 s-ib s-dp">
-                  <div className="s-xy s-g4 s-qi s-4s from-primary s-vz s-c5 s-ib s-ig">
+                  <div className="s-xy s-g4 s-qi s-5c s-c5 s-ib s-ig">
                     <CreditCard className="s-fz s-xt s-ux" />
                   </div>
                   <div>

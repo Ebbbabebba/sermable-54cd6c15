@@ -190,10 +190,10 @@ const PaymentSettings = () => {
           </div>
 
           {isPremium ? (
-            <Card className="s-6m s-4s s-da via-background s-vv">
+            <Card className="s-6m s-5e">
               <CardHeader>
                 <div className="s-c5 s-ib s-dp">
-                  <div className="s-mu s-qo s-4s from-amber-500 to-orange-500 s-qx">
+                  <div className="s-mu s-qo s-5c s-qx">
                     <Crown className="s-g1 s-xv s-vg" />
                   </div>
                   <div>
@@ -218,12 +218,12 @@ const PaymentSettings = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="s-6m s-4s s-df via-background s-vu s-mn s-pd">
+            <Card className="s-6m s-5e s-mn s-pd">
               <div className="s-26 s-w1 s-pe s-xs s-fy s-5e s-qe s-6k" />
 
               <CardHeader className="s-pd s-n4">
                 <div className="s-c5 s-ib s-dp">
-                  <div className="s-mu s-qo s-4s from-primary s-vz s-qx">
+                  <div className="s-mu s-qo s-5c s-qx">
                     <Crown className="s-g1 s-xv s-ux" />
                   </div>
                   <div>
@@ -302,7 +302,7 @@ const PaymentSettings = () => {
 
                 <Button
                   size="lg"
-                  className="s-y7 s-4t from-amber-500 to-orange-500 s-hl s-hz s-vg"
+                  className="s-y7 s-5c s-vg"
                   onClick={handleUpgrade}
                   disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
                 >

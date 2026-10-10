@@ -29,7 +29,7 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
         >
           {/* Animated flame */}
           <motion.div
-            className="s-m9 s-k1 s-xo s-fv s-qe s-4s from-orange-400 to-red-500 s-c5 s-ib s-ig"
+            className="s-m9 s-k1 s-xo s-fv s-qe s-5c s-c5 s-ib s-ig"
             animate={{ 
               scale: [1, 1.1, 1],
             }}
@@ -67,7 +67,7 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
           <Button 
             onClick={onClose}
             size="lg"
-            className="s-y7 s-uk s-cx s-p9 s-qo s-4t from-primary s-w0 s-hm s-i0"
+            className="s-y7 s-uk s-cx s-p9 s-qo s-5c"
           >
             {t("streak.button")}
           </Button>

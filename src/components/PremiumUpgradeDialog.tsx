@@ -66,14 +66,14 @@ export const PremiumUpgradeDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="s-s0">
         <DialogHeader className="s-u0">
-          <div className="s-m9 s-xj s-fr s-q9 s-4s s-db s-vw s-c5 s-ib s-ig s-k0">
+          <div className="s-m9 s-xj s-fr s-q9 s-5e s-c5 s-ib s-ig s-k0">
             {feature === 'audience_mode' ? (
               <Users className="s-y0 s-g6 s-tt" />
             ) : (
               <Crown className="s-y0 s-g6 s-tt" />
             )}
           </div>
-          <DialogTitle className="s-t9 s-cx s-4t from-amber-500 to-orange-500 s-4g s-vd">
+          <DialogTitle className="s-t9 s-cx s-5c s-4g s-vd">
             {content.title}
           </DialogTitle>
           <DialogDescription className="s-tw">
@@ -99,7 +99,7 @@ export const PremiumUpgradeDialog = ({
         <div className="s-c5 s-c7 s-dn s-o9">
           <Button
             onClick={handleContinue}
-            className="s-y7 s-4t from-amber-500 to-orange-500 s-hl s-hz s-vg"
+            className="s-y7 s-5c s-vg"
           >
             {t('premiumDialog.upgradeNow')}
           </Button>

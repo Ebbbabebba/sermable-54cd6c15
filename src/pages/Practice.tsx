@@ -2094,7 +2094,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Automatic Schedule Info */}
           {adaptiveScheduleResult && (
-            <Card className="s-m1 s-7r s-4t s-df s-vx s-2y">
+            <Card className="s-m1 s-7r s-5e s-2y">
               <CardContent className="s-of">
                 <div className="s-u0 s-t1">
                   <div className="s-c5 s-ib s-ig s-dn s-uw">
@@ -2287,7 +2287,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Fully complete card — speech mastered and deadline passed */}
           {isFullyComplete && (
-            <div className="s-pd s-mn s-qa s-6l s-71 s-4s s-dh via-background to-background s-my s-r3 s-u0 s-t0">
+            <div className="s-pd s-mn s-qa s-6l s-71 s-5e s-my s-r3 s-u0 s-t0">
               <div className="s-m9 s-xi s-fq s-qe s-5e s-pl s-py s-c5 s-ib s-ig">
                 <CheckCircle2 className="s-g4 s-xy s-uw" />
               </div>
@@ -2300,7 +2300,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Session Card - only show for active (non-complete) sessions */}
           {!todaySessionDone && !isFullyComplete && (
-            <div className="s-pd s-mn s-qa s-6l s-71 s-4s s-dg via-background to-background s-mx s-r3">
+            <div className="s-pd s-mn s-qa s-6l s-71 s-5e s-mx s-r3">
               <div className="s-c5 s-ib s-dp">
                 <div className="s-xg s-fo s-q9 s-c5 s-ib s-ig s-5e s-pl s-py">
                   <Target className="s-g1 s-xv s-uw" />

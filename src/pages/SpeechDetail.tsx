@@ -187,7 +187,7 @@ const SpeechDetail = () => {
                         when: t("speechDetail.plan.on", {
                           date: format(new Date(speech.goal_date as string), "d MMM"),
                         }),
-                        dot: "s-4s from-rose-500 to-orange-500",
+                        dot: "s-5c",
                       },
                     ].map((row) => (
                       <li key={row.key} className="s-c5 s-ib s-dp">

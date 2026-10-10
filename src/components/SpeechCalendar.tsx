@@ -135,7 +135,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
     runthrough:
       "s-pd s-d3 after:content-[''] s-2h s-2m s-2r s-2g s-2p s-2v s-2t s-2l",
     presentation:
-      "s-4s from-rose-500 to-orange-500 s-3 s-qe s-d3 s-qy",
+      "s-5c s-3 s-qe s-d3 s-qy",
     completed:
       "s-pm s-pq s-ps s-pu",
   } as const;
@@ -177,7 +177,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
           {t("calendar.fullRunthrough")}
         </span>
         <span className="s-c5 s-ib s-dm">
-          <span className="s-fs s-xk s-qe s-4s from-rose-500 to-orange-500" />
+          <span className="s-fs s-xk s-qe s-5c" />
           {t("calendar.presentationDay")}
         </span>
         <span className="s-c5 s-ib s-dm">
@@ -249,7 +249,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                         "s-c5 s-ib s-dp s-mv s-qo s-6l s-3w",
                         e.completed && "s-mh",
                         isPresentation &&
-                          "s-4t s-dj s-vv s-7y",
+                          "s-5e s-7y",
                       )}
                     >
                       <div
@@ -259,7 +259,7 @@ const SpeechCalendar = ({ speechId, goalDate, speechTitle }: SpeechCalendarProps
                           e.event_type === "recall" && "s-3t s-tu s-8p",
                           e.event_type === "test" && "s-59 s-ut s-8t",
                           e.event_type === "full_runthrough" && "s-5s s-v5 s-8w",
-                          isPresentation && "s-4s from-rose-500 to-orange-500 s-vg",
+                          isPresentation && "s-5c s-vg",
                         )}
                       >
                         <Icon className="s-fz s-xt" />

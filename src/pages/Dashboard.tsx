@@ -428,7 +428,7 @@ const Dashboard = () => {
       <header className="s-t7 s-w1 s-yh s-43 s-6v s-70 s-3f" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
         <div className="s-os s-fq s-c5 s-ib s-if s-dp s-jc s-m9">
           <span className="s-c5 s-ib s-do s-cy s-cx s-uk s-wh">
-            <span className="s-fx s-xq s-qe s-4s from-primary to-duo-yellow s-qt" aria-hidden="true" />
+            <span className="s-fx s-xq s-qe s-5c s-qt" aria-hidden="true" />
             Sermable
           </span>
 
