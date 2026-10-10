@@ -161,15 +161,15 @@ export const AiSpeechBuilderDialog = ({
       <DialogContent
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
-        overlayClassName="!z-[60] bg-background/65 backdrop-blur-none"
-        className="!z-[70] !inset-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 !grid-rows-[auto_minmax(0,1fr)_auto] w-full max-w-[100dvw] h-[100dvh] min-h-0 sm:w-[calc(100%-2rem)] sm:max-w-2xl sm:h-auto sm:max-h-[min(86dvh,720px)] !translate-x-0 !translate-y-0 sm:!-translate-x-1/2 sm:!-translate-y-1/2 overflow-hidden rounded-none sm:rounded-3xl border-border/60 bg-card p-0 shadow-2xl backdrop-blur-none"
+        overlayClassName="s-6 s-3y s-3g"
+        className="s-7 s-2 s-r9 s-ra s-rb s-0 s-y7 s-jh s-g9 s-ku s-sr s-rx s-ro s-rw s-4 s-5 s-r7 s-r8 s-mn s-qj s-sd s-71 s-4b s-mr s-qr s-3g"
       >
-        <DialogHeader className="min-w-0 px-[max(1.25rem,env(safe-area-inset-left))] pr-[max(3.5rem,calc(1.25rem+env(safe-area-inset-right)))] sm:px-6 pt-[max(1.25rem,env(safe-area-inset-top))] sm:pt-6 pb-3 border-b border-border/60 shrink-0 text-left">
-          <DialogTitle className="flex min-w-0 items-center gap-2 leading-snug">
-            <Wand2 className="h-5 w-5 text-primary" />
+        <DialogHeader className="s-l8 s-ow s-o5 s-sa s-oj s-s8 s-n6 s-6v s-71 s-r5 s-uj">
+          <DialogTitle className="s-c5 s-l8 s-ib s-dn s-iq">
+            <Wand2 className="s-g1 s-xv s-uw" />
             {t("aiBuilder.title", "Bygg tal med AI")}
           </DialogTitle>
-          <DialogDescription className="leading-snug">
+          <DialogDescription className="s-iq">
             {step === "prompt" &&
               t(
                 "aiBuilder.promptDesc",
@@ -188,9 +188,9 @@ export const AiSpeechBuilderDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain px-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] sm:px-6 py-4 [-webkit-overflow-scrolling:touch]">
+        <div className="s-ku s-l8 s-mp s-mq overscroll-contain s-ow s-o4 s-sa s-p7 s-1z">
         {step === "prompt" && (
-          <div className="space-y-3 py-2">
+          <div className="s-t0 s-p3">
             <Label htmlFor="ai-prompt">
               {t("aiBuilder.promptLabel", "Vad är det för tal?")}
             </Label>
@@ -203,24 +203,24 @@ export const AiSpeechBuilderDialog = ({
                 "Skriv ett tal till min brors bröllop. Han är 32, jag har känt honom hela mitt liv. Vill att det ska vara varmt och lite roligt.",
               )}
               rows={6}
-              className="min-h-36 resize-none"
+              className="s-kw resize-none"
               disabled={loading}
             />
-            <div className="space-y-2 pt-2">
+            <div className="s-sy s-o9">
               <Label>
                 {t("aiBuilder.lengthLabel", "Ungefärlig längd")}
               </Label>
-              <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+              <div className="s-e0 s-e3 s-dn s-rh s-rk">
                 {lengthOptions.map((m) => (
                   <button
                     key={m}
                     type="button"
                     onClick={() => setTargetMinutes(m)}
                     disabled={loading}
-                    className={`min-w-0 px-2 py-2 rounded-full border text-sm transition ${
+                    className={`s-l8 s-op s-p3 s-qe s-6l s-v9 s-wl ${
                       targetMinutes === m
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background border-border hover:bg-muted"
+                        ? "s-5c s-ux s-7n"
+                        : "s-3v s-6x s-h0"
                     }`}
                   >
                     {m} {t("aiBuilder.minutesShort", "min")}
@@ -232,10 +232,10 @@ export const AiSpeechBuilderDialog = ({
         )}
 
         {step === "questions" && (
-          <div className="space-y-4 py-2">
+          <div className="s-t1 s-p3">
             {qa.map((item, i) => (
-              <div key={i} className="space-y-2">
-                <Label htmlFor={`q-${i}`} className="leading-snug">
+              <div key={i} className="s-sy">
+                <Label htmlFor={`q-${i}`} className="s-iq">
                   {item.question}
                 </Label>
                 <Textarea
@@ -257,8 +257,8 @@ export const AiSpeechBuilderDialog = ({
         )}
 
         {step === "preview" && (
-          <div className="space-y-3 py-2">
-            <div className="space-y-2">
+          <div className="s-t0 s-p3">
+            <div className="s-sy">
               <Label htmlFor="draft-title">
                 {t("aiBuilder.draftTitleLabel", "Titel")}
               </Label>
@@ -266,10 +266,10 @@ export const AiSpeechBuilderDialog = ({
                 id="draft-title"
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
-                className="flex h-10 w-full max-w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background"
+                className="s-c5 s-fn s-y7 s-jn s-qi s-6l s-7g s-3v s-or s-p3 s-tw s-kq s-pu"
               />
             </div>
-            <div className="space-y-2">
+            <div className="s-sy">
               <Label htmlFor="draft-speech">
                 {t("aiBuilder.draftSpeechLabel", "Talet")}
               </Label>
@@ -278,9 +278,9 @@ export const AiSpeechBuilderDialog = ({
                 value={draftSpeech}
                 onChange={(e) => setDraftSpeech(e.target.value)}
                 rows={10}
-                 className="min-h-48 max-h-none resize-none overflow-y-auto font-serif leading-relaxed sm:min-h-64 sm:max-h-[34dvh]"
+                 className="s-kx s-ja resize-none s-mq s-d4 s-ip s-s2 s-rv"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="s-vj s-ul">
                 {draftSpeech.split(/\s+/).filter(Boolean).length}{" "}
                 {t("dashboard.words", "ord")}
               </p>
@@ -289,22 +289,22 @@ export const AiSpeechBuilderDialog = ({
         )}
         </div>
 
-        <DialogFooter className="grid grid-cols-2 gap-2 px-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-border/60 shrink-0 bg-card sm:flex sm:px-6 sm:py-4">
+        <DialogFooter className="s-e0 s-e2 s-dn s-ow s-o4 s-oc s-nf s-82 s-71 s-r5 s-4b s-rh s-sa s-sb">
           {step === "prompt" && (
             <>
               <Button
                 variant="ghost"
                 onClick={() => closeAndReset(false)}
                 disabled={loading}
-                className="min-w-0"
+                className="s-l8"
               >
                 {t("common.cancel", "Avbryt")}
               </Button>
-              <Button onClick={fetchQuestions} disabled={loading} className="min-w-0">
+              <Button onClick={fetchQuestions} disabled={loading} className="s-l8">
                 {loading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="s-fz s-xt s-lp s-32" />
                 ) : (
-                  <Wand2 className="h-4 w-4 mr-2" />
+                  <Wand2 className="s-fz s-xt s-lp" />
                 )}
                 {t("aiBuilder.getQuestions", "Fortsätt")}
               </Button>
@@ -316,16 +316,16 @@ export const AiSpeechBuilderDialog = ({
                 variant="ghost"
                 onClick={() => setStep("prompt")}
                 disabled={loading}
-                className="min-w-0"
+                className="s-l8"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="s-fz s-xt s-lp" />
                 {t("common.back", "Tillbaka")}
               </Button>
-              <Button onClick={() => fetchDraft(qa)} disabled={loading} className="min-w-0">
+              <Button onClick={() => fetchDraft(qa)} disabled={loading} className="s-l8">
                 {loading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="s-fz s-xt s-lp s-32" />
                 ) : (
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="s-fz s-xt s-lp" />
                 )}
                 {t("aiBuilder.writeSpeech", "Skriv talet")}
               </Button>
@@ -337,13 +337,13 @@ export const AiSpeechBuilderDialog = ({
                 variant="ghost"
                 onClick={() => setStep("questions")}
                 disabled={loading}
-                className="min-w-0 px-2"
+                className="s-l8 s-op"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
+                <ArrowLeft className="s-fz s-xt s-lp" />
                 {t("aiBuilder.regenerate", "Ändra svar")}
               </Button>
-              <Button onClick={handleAccept} disabled={!draftSpeech.trim()} className="min-w-0">
-                <Check className="h-4 w-4 mr-2" />
+              <Button onClick={handleAccept} disabled={!draftSpeech.trim()} className="s-l8">
+                <Check className="s-fz s-xt s-lp" />
                 {t("aiBuilder.useDraft", "Använd")}
               </Button>
             </>

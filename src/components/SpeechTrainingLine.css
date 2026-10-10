@@ -200,7 +200,7 @@
   min-width: 2rem;
   padding: 4px 8px;
   border-radius: 8px;
-  background: linear-gradient(135deg, hsl(217 91% 60% / 0.12), hsl(217 91% 60% / 0.08));
+  background: hsl(var(--info) / 0.12);
   border: 1.5px dashed hsl(217 91% 60% / 0.35);
   color: hsl(217 91% 60%);
   font-weight: 600;
@@ -209,7 +209,7 @@
 }
 
 .hidden-bracket:hover {
-  background: linear-gradient(135deg, hsl(217 91% 60% / 0.2), hsl(217 91% 60% / 0.12));
+  background: hsl(var(--info) / 0.12);
   border-color: hsl(217 91% 60% / 0.5);
   transform: scale(1.03);
 }

@@ -36,7 +36,7 @@ export const CircularProgress = ({
     : `${Math.round(value)}%`;
 
   return (
-    <div className={cn("relative inline-flex items-center justify-center", className)}>
+    <div className={cn("s-pd s-i4 s-ib s-ig", className)}>
       <svg
         width={size}
         height={size}
@@ -50,7 +50,7 @@ export const CircularProgress = ({
           fill="none"
           stroke={trackColor}
           strokeWidth={strokeWidth}
-          className="opacity-30"
+          className="s-mf"
         />
         {/* Progress arc */}
         <circle
@@ -63,16 +63,16 @@ export const CircularProgress = ({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           strokeLinecap="round"
-          className="transition-all duration-300 ease-out"
+          className="s-wr s-bp s-bu"
         />
       </svg>
       
       {showValue && (
         <div className={cn(
-          "absolute inset-0 flex items-center justify-center",
+          "s-26 s-i5 s-c5 s-ib s-ig",
           valueClassName
         )}>
-          <span className="text-2xl font-bold tabular-nums">
+          <span className="s-t9 s-cx tabular-nums">
             {displayValue}
           </span>
         </div>

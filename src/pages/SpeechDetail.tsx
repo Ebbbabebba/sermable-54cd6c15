@@ -55,18 +55,18 @@ const SpeechDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="s-l6 s-c5 s-ib s-ig s-3v">
+        <Loader2 className="s-g2 s-xw s-32 s-ul" />
       </div>
     );
   }
 
   if (!speech) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-3">
-        <p className="text-muted-foreground">{t("speechDetail.notFound")}</p>
+      <div className="s-l6 s-c5 s-c7 s-ib s-ig s-3v s-dp">
+        <p className="s-ul">{t("speechDetail.notFound")}</p>
         <Button variant="outline" onClick={() => navigate("/dashboard")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="s-fz s-xt s-lp" />
           {t("common.back")}
         </Button>
       </div>
@@ -80,41 +80,41 @@ const SpeechDetail = () => {
   const wordCount = cleanSpeechText.trim().split(/\s+/).filter(Boolean).length;
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div className="s-c5 s-c7 s-gi s-3v s-mn">
       <header
-        className="flex-shrink-0 sticky top-0 z-10 border-b bg-card/95 backdrop-blur"
+        className="s-ca s-t7 s-w1 s-ye s-6v s-4f s-3d"
         style={{ paddingTop: "max(8px, env(safe-area-inset-top))" }}
       >
         <div
-          className="mx-auto w-full max-w-3xl flex items-center justify-between gap-2 py-3"
+          className="s-m9 s-y7 s-jd s-c5 s-ib s-if s-dn s-p6"
           style={{
             paddingLeft: "max(16px, env(safe-area-inset-left))",
             paddingRight: "max(16px, env(safe-area-inset-right))",
           }}
         >
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="shrink-0">
-            <ArrowLeft className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">{t("common.back")}</span>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="s-r5">
+            <ArrowLeft className="s-fz s-xt s-s3" />
+            <span className="s-gm s-rp">{t("common.back")}</span>
           </Button>
-          <div className="flex gap-1.5 min-w-0">
+          <div className="s-c5 s-dm s-l8">
             <Button size="sm" variant="ghost" onClick={() => setPrintOpen(true)} aria-label={t("beatPrint.title", "Skriv ut manus")}>
-              <Printer className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">{t("speechDetail.print", "Skriv ut")}</span>
+              <Printer className="s-fz s-xt s-s3" />
+              <span className="s-gm s-rp">{t("speechDetail.print", "Skriv ut")}</span>
             </Button>
             <Button size="sm" variant="outline" onClick={() => navigate(`/presentation/${speech.id}`)}>
-              <Presentation className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">{t("speechDetail.present")}</span>
+              <Presentation className="s-fz s-xt s-s3" />
+              <span className="s-gm s-rp">{t("speechDetail.present")}</span>
             </Button>
             <Button size="sm" onClick={() => navigate(`/practice/${speech.id}`)}>
-              <Play className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">{t("speechDetail.practice")}</span>
+              <Play className="s-fz s-xt s-s3" />
+              <span className="s-gm s-rp">{t("speechDetail.practice")}</span>
             </Button>
           </div>
         </div>
       </header>
 
       <main
-        className="flex-1 overflow-y-auto mx-auto w-full max-w-3xl space-y-6 py-6"
+        className="s-c6 s-mq s-m9 s-y7 s-jd s-t3 s-p9"
         style={{
           paddingLeft: "max(16px, env(safe-area-inset-left))",
           paddingRight: "max(16px, env(safe-area-inset-right))",
@@ -122,8 +122,8 @@ const SpeechDetail = () => {
         }}
       >
         <div>
-          <h1 className="text-3xl font-bold mb-1">{speech.title}</h1>
-          <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+          <h1 className="s-ta s-cx s-jw">{speech.title}</h1>
+          <div className="s-c5 s-cb s-dp s-v9 s-ul">
             <span>{t("speechDetail.wordCount", { count: wordCount })}</span>
             {daysLeft !== null && daysLeft >= 0 && (
               <span>· {t("speechDetail.daysLeft", { count: daysLeft })}</span>
@@ -136,26 +136,26 @@ const SpeechDetail = () => {
 
 
 
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="grid grid-cols-2 w-full max-w-sm">
+        <Tabs value={tab} onValueChange={setTab} className="s-y7">
+          <TabsList className="s-e0 s-e2 s-y7 s-js">
             <TabsTrigger value="overview">
-              <Info className="h-4 w-4 mr-2" />
+              <Info className="s-fz s-xt s-lp" />
               {t("speechDetail.tabs.overview")}
             </TabsTrigger>
             <TabsTrigger value="calendar">
-              <CalendarIcon className="h-4 w-4 mr-2" />
+              <CalendarIcon className="s-fz s-xt s-lp" />
               {t("speechDetail.tabs.calendar")}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6">
-            <div className="space-y-4">
+          <TabsContent value="overview" className="s-m0">
+            <div className="s-t1">
               {daysLeft !== null && daysLeft >= 1 && (
-                <div className="rounded-xl border bg-card/60 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
+                <div className="s-qo s-6l s-4c s-mw">
+                  <p className="s-vj s-x1 s-wi s-ul s-jz">
                     {t("speechDetail.plan.title")}
                   </p>
-                  <ol className="space-y-2.5">
+                  <ol className="s-sz">
                     {[
                       {
                         key: "learning",
@@ -163,7 +163,7 @@ const SpeechDetail = () => {
                         when: t("speechDetail.plan.until", {
                           date: format(addDays(new Date(), Math.max(1, Math.floor(daysLeft * 0.6))), "d MMM"),
                         }),
-                        dot: "bg-primary",
+                        dot: "s-5c",
                       },
                       {
                         key: "review",
@@ -171,7 +171,7 @@ const SpeechDetail = () => {
                         when: t("speechDetail.plan.from", {
                           date: format(addDays(new Date(), Math.max(1, Math.floor(daysLeft * 0.6)) + 1), "d MMM"),
                         }),
-                        dot: "bg-amber-500",
+                        dot: "s-3r",
                       },
                       {
                         key: "runthrough",
@@ -179,7 +179,7 @@ const SpeechDetail = () => {
                         when: t("speechDetail.plan.on", {
                           date: format(addDays(new Date(), Math.max(1, daysLeft - 1)), "d MMM"),
                         }),
-                        dot: "bg-rose-500",
+                        dot: "s-5r",
                       },
                       {
                         key: "performance",
@@ -187,36 +187,36 @@ const SpeechDetail = () => {
                         when: t("speechDetail.plan.on", {
                           date: format(new Date(speech.goal_date as string), "d MMM"),
                         }),
-                        dot: "bg-gradient-to-br from-rose-500 to-orange-500",
+                        dot: "s-5c",
                       },
                     ].map((row) => (
-                      <li key={row.key} className="flex items-center gap-3">
-                        <span className={`h-2 w-2 rounded-full shrink-0 ${row.dot}`} />
-                        <span className="text-sm flex-1 min-w-0 truncate">{row.label}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{row.when}</span>
+                      <li key={row.key} className="s-c5 s-ib s-dp">
+                        <span className={`s-fs s-xk s-qe s-r5 ${row.dot}`} />
+                        <span className="s-v9 s-c6 s-l8 truncate">{row.label}</span>
+                        <span className="s-vj s-ul s-r5">{row.when}</span>
                       </li>
                     ))}
                   </ol>
                 </div>
               )}
 
-              <div className="rounded-xl border bg-card/60 p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+              <div className="s-qo s-6l s-4c s-mw">
+                <p className="s-vj s-x1 s-wi s-ul s-jw">
                   {t("speechDetail.scriptPreview")}
                 </p>
-                <p className="text-sm leading-relaxed line-clamp-[12] whitespace-pre-wrap">
+                <p className="s-v9 s-ip s-j0 s-yd">
                   {cleanSpeechText}
                 </p>
               </div>
 
-              <div className="rounded-xl border bg-card/60 p-4">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+              <div className="s-qo s-6l s-4c s-mw">
+                <p className="s-vj s-x1 s-wi s-ul s-jw">
                   {t("speechDetail.strictness.title")}
                 </p>
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className="s-vj s-ul s-jz">
                   {t("speechDetail.strictness.description")}
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="s-e0 s-e2 s-dn">
                   {(["strict", "flow"] as const).map((mode) => {
                     const active = (speech.practice_strictness ?? "strict") === mode;
                     return (
@@ -236,19 +236,19 @@ const SpeechDetail = () => {
                             setSpeech({ ...speech, practice_strictness: prev });
                           }
                         }}
-                        className={`text-left rounded-lg border p-3 transition-colors ${
+                        className={`s-uj s-qh s-6l s-mv s-ws ${
                           active
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:bg-muted/50"
+                            ? "s-7n s-5e"
+                            : "s-6x s-h1"
                         }`}
                       >
-                        <div className="text-sm font-medium">
+                        <div className="s-v9 s-d0">
                           {t(`speechDetail.strictness.${mode}`)}
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="s-vj s-ul s-lt">
                           {t(`speechDetail.strictness.${mode}Desc`)}
                         </div>
-                        <div className="text-[11px] text-muted-foreground/80 mt-2 leading-relaxed">
+                        <div className="s-tm s-uq s-lv s-ip">
                           {t(`speechDetail.strictness.${mode}Help`)}
                         </div>
                       </button>
@@ -259,7 +259,7 @@ const SpeechDetail = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="calendar" className="mt-6">
+          <TabsContent value="calendar" className="s-m0">
             <SpeechCalendar
               speechId={speech.id}
               goalDate={speech.goal_date}

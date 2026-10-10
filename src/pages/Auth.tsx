@@ -112,15 +112,15 @@ const Auth = () => {
 
   if (isForgotPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
-        <Card className="w-full max-w-md animate-fade-in">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-3xl text-center">{t('auth.resetPassword')}</CardTitle>
-            <CardDescription className="text-center">{t('auth.resetPasswordDesc')}</CardDescription>
+      <div className="s-l6 s-c5 s-ib s-ig s-mw s-oh s-nd">
+        <Card className="s-y7 s-jq s-2y">
+          <CardHeader className="s-sy">
+            <CardTitle className="s-ta s-u0">{t('auth.resetPassword')}</CardTitle>
+            <CardDescription className="s-u0">{t('auth.resetPasswordDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleForgotPassword} className="s-t1">
+              <div className="s-sy">
                 <Label htmlFor="email">{t('auth.email')}</Label>
                 <Input
                   id="email"
@@ -131,22 +131,22 @@ const Auth = () => {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="s-y7" disabled={loading}>
                 {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('auth.loading')}</>
+                  <><Loader2 className="s-lp s-fz s-xt s-32" />{t('auth.loading')}</>
                 ) : (
                   t('auth.sendResetLink')
                 )}
               </Button>
               {formError && (
-                <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+                <p className="s-v9 s-u2 s-u0" role="alert">{formError}</p>
               )}
               {formInfo && (
-                <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+                <p className="s-v9 s-u8 s-8q s-u0" role="status">{formInfo}</p>
               )}
             </form>
-            <div className="mt-4 text-center text-sm">
-              <button type="button" onClick={() => setIsForgotPassword(false)} className="text-primary hover:underline">
+            <div className="s-ly s-u0 s-v9">
+              <button type="button" onClick={() => setIsForgotPassword(false)} className="s-uw s-i1">
                 {t('auth.backToSignIn')}
               </button>
             </div>
@@ -157,42 +157,42 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-3xl text-center">
+    <div className="s-l6 s-c5 s-ib s-ig s-mw s-oh s-nd">
+      <Card className="s-y7 s-jq s-2y">
+        <CardHeader className="s-sy">
+          <CardTitle className="s-ta s-u0">
             {isLogin ? t('auth.welcomeBack') : t('auth.getStarted')}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="s-u0">
             {isLogin ? t('auth.signInToContinue') : t('auth.createAccount')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="s-t1">
             {!isLogin && (
-              <div className="space-y-2">
+              <div className="s-sy">
                 <Label htmlFor="fullName">{t('auth.fullName')}</Label>
                 <Input id="fullName" type="text" placeholder={t('auth.yourName')} value={fullName} onChange={(e) => setFullName(e.target.value)} required={!isLogin} />
               </div>
             )}
-            <div className="space-y-2">
+            <div className="s-sy">
               <Label htmlFor="email">{t('auth.email')}</Label>
               <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+            <div className="s-sy">
+              <div className="s-c5 s-ib s-if">
                 <Label htmlFor="password">{t('auth.password')}</Label>
                 {isLogin && (
-                  <button type="button" onClick={() => setIsForgotPassword(true)} className="text-xs text-primary hover:underline">
+                  <button type="button" onClick={() => setIsForgotPassword(true)} className="s-vj s-uw s-i1">
                     {t('auth.forgotPassword')}
                   </button>
                 )}
               </div>
               <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="s-y7" disabled={loading}>
               {loading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('auth.loading')}</>
+                <><Loader2 className="s-lp s-fz s-xt s-32" />{t('auth.loading')}</>
               ) : isLogin ? (
                 t('auth.signIn')
               ) : (
@@ -200,14 +200,14 @@ const Auth = () => {
               )}
             </Button>
             {formError && (
-              <p className="text-sm text-destructive text-center" role="alert">{formError}</p>
+              <p className="s-v9 s-u2 s-u0" role="alert">{formError}</p>
             )}
             {formInfo && (
-              <p className="text-sm text-emerald-600 dark:text-emerald-400 text-center" role="status">{formInfo}</p>
+              <p className="s-v9 s-u8 s-8q s-u0" role="status">{formInfo}</p>
             )}
           </form>
-          <div className="mt-4 text-center text-sm">
-            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline">
+          <div className="s-ly s-u0 s-v9">
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className="s-uw s-i1">
               {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
             </button>
           </div>

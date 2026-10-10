@@ -32,22 +32,22 @@ export const SupportContactDialog = ({ open, onOpenChange, email = SUPPORT_EMAIL
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="inset-x-4 top-1/2 bottom-auto -translate-y-1/2 w-auto max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-3xl p-6 pt-8 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-          <Mail className="h-6 w-6 text-primary" />
+      <DialogContent className="s-i7 s-w4 s-8g s-9 s-y6 s-jm s-s1 s-qa s-my s-og s-u0">
+        <div className="s-m9 s-c5 s-fq s-xi s-ib s-ig s-qe s-5e">
+          <Mail className="s-g2 s-xw s-uw" />
         </div>
 
-        <DialogHeader className="space-y-1.5 pt-2">
-          <DialogTitle className="text-center">{t('settings.support.title', 'Support')}</DialogTitle>
-          <DialogDescription className="text-center">
+        <DialogHeader className="s-sx s-o9">
+          <DialogTitle className="s-u0">{t('settings.support.title', 'Support')}</DialogTitle>
+          <DialogDescription className="s-u0">
             {t('settings.support.dialogDesc', 'Mejla oss så svarar vi vanligtvis inom 24–48 timmar.')}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 pt-1">
-          <Button asChild className="w-full rounded-2xl h-12">
+        <div className="s-t0 s-o7">
+          <Button asChild className="s-y7 s-q9 s-fp">
             <a href={buildMailtoUrl(email)} target="_blank" rel="external noopener">
-              <Mail className="h-4 w-4 mr-2" />
+              <Mail className="s-fz s-xt s-lp" />
               {t('settings.support.openMail', 'Öppna e-postappen')}
             </a>
           </Button>
@@ -55,17 +55,17 @@ export const SupportContactDialog = ({ open, onOpenChange, email = SUPPORT_EMAIL
           <button
             type="button"
             onClick={handleCopy}
-            className="mx-auto flex items-center gap-2 rounded-full bg-secondary/60 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary"
+            className="s-m9 s-c5 s-ib s-dn s-qe s-5w s-os s-p3 s-v9 s-ul s-ws s-h9"
           >
             <span className="truncate">{email}</span>
             {copied ? (
-              <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+              <Check className="s-fx s-xq s-uw s-r5" />
             ) : (
-              <Copy className="h-3.5 w-3.5 shrink-0" />
+              <Copy className="s-fx s-xq s-r5" />
             )}
           </button>
 
-          <p className={`text-xs text-primary transition-opacity ${copied ? "opacity-100" : "opacity-0"}`}>
+          <p className={`s-vj s-uw s-wt ${copied ? "s-me" : "s-md"}`}>
             {t('settings.support.copied', 'Adressen är kopierad')}
           </p>
         </div>

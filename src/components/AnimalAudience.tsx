@@ -116,7 +116,7 @@ export const Animal = ({
   return (
     <svg
       viewBox="0 0 120 140"
-      className="h-full w-full overflow-visible drop-shadow-xl"
+      className="s-gg s-y7 s-mo drop-shadow-xl"
       style={{
         transform: celebrating ? "scale(1.05)" : `translateY(${(1 - mood) * 2.5}%) scale(${0.96 + mood * 0.04})`,
         transition,
@@ -217,10 +217,10 @@ const AnimalAudience = ({ celebrating = true, variant = 0, doneLabel, onExit }: 
 
   return (
     <div
-      className="animal-audience fixed inset-0 z-30 flex items-end justify-center overflow-hidden bg-foreground/20 backdrop-blur-[2px] animate-fade-in"
+      className="animal-audience s-c4 s-i5 s-yg s-c5 s-ic s-ig s-mn s-4q s-3e s-2y"
       role="status"
     >
-      <div className="pointer-events-none absolute inset-0">
+      <div className="s-nx s-26 s-i5">
         {Array.from({ length: 22 }, (_, index) => (
           <span
             key={index}
@@ -230,8 +230,8 @@ const AnimalAudience = ({ celebrating = true, variant = 0, doneLabel, onExit }: 
         ))}
       </div>
 
-      <div className="relative z-10 mx-3 mb-[calc(env(safe-area-inset-bottom,0px)+1rem)] w-full max-w-md animate-scale-in rounded-[2rem] bg-card px-6 pb-7 pt-5 text-center shadow-2xl ring-1 ring-border/50">
-        <div className="-mt-20 mb-2 flex items-end justify-center gap-1">
+      <div className="s-pd s-ye s-m6 s-k3 s-y7 s-jq s-31 s-qc s-4b s-ou s-na s-oe s-u0 s-qr s-pl s-po">
+        <div className="-mt-20 s-jy s-c5 s-ic s-ig s-dl">
           {trio.map((a, i) => (
             <div
               key={a.kind}
@@ -242,9 +242,9 @@ const AnimalAudience = ({ celebrating = true, variant = 0, doneLabel, onExit }: 
             </div>
           ))}
         </div>
-        <p className="text-3xl font-extrabold tracking-tight text-success">{doneLabel}</p>
-        <div className="mx-auto mt-4 h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-full origin-left rounded-full bg-success animate-[animal-timer_2.4s_linear_forwards]" />
+        <p className="s-ta s-cz s-wh s-va">{doneLabel}</p>
+        <div className="s-m9 s-ly s-fm s-xo s-mn s-qe s-50">
+          <div className="s-gg s-y7 s-ml s-qe s-5z s-2x" />
         </div>
       </div>
     </div>

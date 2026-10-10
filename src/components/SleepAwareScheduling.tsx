@@ -143,66 +143,66 @@ const SleepAwareScheduling = () => {
   const getIcon = () => {
     switch (suggestion.icon) {
       case 'moon':
-        return <Moon className="h-5 w-5 text-indigo-400" />;
+        return <Moon className="s-g1 s-xv s-ug" />;
       case 'sun':
-        return <Sun className="h-5 w-5 text-amber-400" />;
+        return <Sun className="s-g1 s-xv s-ts" />;
       case 'brain':
-        return <Brain className="h-5 w-5 text-purple-400" />;
+        return <Brain className="s-g1 s-xv s-uz" />;
       case 'clock':
-        return <Clock className="h-5 w-5 text-blue-400" />;
+        return <Clock className="s-g1 s-xv s-tx" />;
       default:
-        return <Lightbulb className="h-5 w-5 text-primary" />;
+        return <Lightbulb className="s-g1 s-xv s-uw" />;
     }
   };
 
-  const getGradient = () => {
+  const getSurface = () => {
     switch (suggestion.icon) {
       case 'moon':
-        return 'from-indigo-500/10 via-purple-500/5 to-transparent';
+        return 's-4z';
       case 'sun':
-        return 'from-amber-500/10 via-orange-500/5 to-transparent';
+        return 's-3u';
       case 'brain':
-        return 'from-purple-500/10 via-pink-500/5 to-transparent';
+        return 's-5n';
       case 'clock':
-        return 'from-blue-500/10 via-cyan-500/5 to-transparent';
+        return 's-49';
       default:
-        return 'from-primary/10 to-transparent';
+        return 's-5e';
     }
   };
 
   return (
-    <Card className={`border-0 bg-gradient-to-br ${getGradient()} shadow-apple animate-fade-in overflow-hidden`}>
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
+    <Card className={`s-6m ${getSurface()} s-2y s-mn`}>
+      <CardContent className="s-mw">
+        <div className="s-c5 s-id s-dq">
           {/* Icon */}
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-            suggestion.icon === 'moon' ? 'bg-indigo-500/20' :
-            suggestion.icon === 'sun' ? 'bg-amber-500/20' :
-            suggestion.icon === 'brain' ? 'bg-purple-500/20' :
-            'bg-blue-500/20'
+          <div className={`s-xf s-fn s-qo s-c5 s-ib s-ig s-r5 ${
+            suggestion.icon === 'moon' ? 's-4z' :
+            suggestion.icon === 'sun' ? 's-3u' :
+            suggestion.icon === 'brain' ? 's-5n' :
+            's-49'
           }`}>
             {getIcon()}
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-foreground">{suggestion.message}</h4>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+          <div className="s-c6 s-l8">
+            <div className="s-c5 s-ib s-dn s-jw">
+              <h4 className="s-d3 s-u9">{suggestion.message}</h4>
+              <span className="s-vj s-op s-ox s-qe s-5e s-uw s-d0">
                 {t('sleepScheduling.scienceBacked', 'Science-backed')}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="s-v9 s-ul s-ip">
               {suggestion.subMessage}
             </p>
           </div>
 
           {/* Action */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="s-c5 s-ib s-dn s-r5">
             <Button
               variant="ghost"
               size="sm"
-              className="text-muted-foreground hover:text-foreground"
+              className="s-ul s-hv"
               onClick={handleDismiss}
             >
               {t('common.later', 'Later')}
@@ -211,13 +211,13 @@ const SleepAwareScheduling = () => {
               variant="apple"
               size="sm"
               onClick={handleStartPractice}
-              className="gap-1"
+              className="s-dl"
             >
               {suggestion.type === 'morning_recall' 
                 ? t('sleepScheduling.testRecall', 'Test Recall')
                 : t('sleepScheduling.practiceNow', 'Practice Now')
               }
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="s-fz s-xt" />
             </Button>
           </div>
         </div>

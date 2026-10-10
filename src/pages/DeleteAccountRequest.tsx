@@ -60,35 +60,35 @@ const DeleteAccountRequest = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-      <Card className="w-full max-w-md relative">
-        <CardHeader className="text-center">
-          <Button variant="ghost" size="icon" className="absolute left-4 top-4" onClick={() => window.history.back()}>
-            <ArrowLeft className="h-5 w-5" />
+    <div className="s-l6 s-3v s-c5 s-ib s-ig s-mw" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <Card className="s-y7 s-jq s-pd">
+        <CardHeader className="s-u0">
+          <Button variant="ghost" size="icon" className="s-26 s-iw s-w8" onClick={() => window.history.back()}>
+            <ArrowLeft className="s-g1 s-xv" />
           </Button>
-          <Trash2 className="h-10 w-10 text-destructive mx-auto mb-2" />
-          <CardTitle className="text-xl">{t('deleteAccount.title')}</CardTitle>
+          <Trash2 className="s-fn s-xf s-u2 s-m9 s-jy" />
+          <CardTitle className="s-vi">{t('deleteAccount.title')}</CardTitle>
           <CardDescription>
             {t('deleteAccount.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {submitted ? (
-            <div className="text-center space-y-4">
-              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+            <div className="s-u0 s-t1">
+              <CheckCircle2 className="s-fp s-xh s-ud s-m9" />
               <div>
-                <p className="font-medium">{t('deleteAccount.requestReceived')}</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="s-d0">{t('deleteAccount.requestReceived')}</p>
+                <p className="s-v9 s-ul s-lt">
                   {t('deleteAccount.submittedDesc')}
                 </p>
               </div>
-              <Button variant="outline" onClick={() => navigate('/')} className="mt-4">
+              <Button variant="outline" onClick={() => navigate('/')} className="s-ly">
                 {t('deleteAccount.goHome')}
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="s-t1">
+              <div className="s-sy">
                 <Label htmlFor="email">{t('deleteAccount.emailAddress')}</Label>
                 <Input
                   id="email"
@@ -99,18 +99,18 @@ const DeleteAccountRequest = () => {
                   required
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="s-vj s-ul">
                 {t('deleteAccount.warning')}
               </p>
               <Button
                 type="submit"
                 variant="destructive"
-                className="w-full"
+                className="s-y7"
                 disabled={isSubmitting || !email}
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="s-fz s-xt s-lp s-32" />
                     {t('deleteAccount.processing')}
                   </>
                 ) : (

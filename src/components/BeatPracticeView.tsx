@@ -299,10 +299,10 @@ const RestCountdown = ({
   const progress = 1 - (timeLeft / (restMinutes * 60));
   
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative w-32 h-32">
+    <div className="s-c5 s-c7 s-ib s-dq">
+      <div className="s-pd s-xs s-fy">
         {/* Background circle */}
-        <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+        <svg className="s-xs s-fy -rotate-90" viewBox="0 0 100 100">
           <circle
             cx="50"
             cy="50"
@@ -310,7 +310,7 @@ const RestCountdown = ({
             fill="none"
             stroke="currentColor"
             strokeWidth="8"
-            className="text-muted/20"
+            className="s-ur"
           />
           <circle
             cx="50"
@@ -320,13 +320,13 @@ const RestCountdown = ({
             stroke="currentColor"
             strokeWidth="8"
             strokeDasharray={`${progress * 283} 283`}
-            className="text-amber-500 transition-all duration-1000"
+            className="s-tt s-wr s-bn"
             strokeLinecap="round"
           />
         </svg>
         {/* Time display */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-3xl font-bold tabular-nums">
+        <div className="s-26 s-i5 s-c5 s-ib s-ig">
+          <span className="s-ta s-cx tabular-nums">
             {minutes}:{seconds.toString().padStart(2, '0')}
           </span>
         </div>
@@ -4321,7 +4321,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [stopListening]);
 
   if (loading) {
-    return <div className="h-64" />;
+    return <div className="s-g3" />;
   }
 
   // Beat preview screen - show upcoming beat before learning
@@ -4333,35 +4333,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const beatNumber = beats.findIndex(b => b.id === newBeatToLearn.id) + 1;
     
     return (
-      <div className="flex flex-col h-full bg-background">
+      <div className="s-c5 s-c7 s-gg s-3v">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
+        <div className="s-t7 s-w1 s-ye s-3v s-os s-p6 s-6v s-6y" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
+          <div className="s-c5 s-ib s-if s-jc s-m9">
             {/* Exit button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={onExit}
-              className="shrink-0 rounded-full hover:bg-muted"
+              className="s-r5 s-qe s-h0"
             >
-              <X className="h-5 w-5 text-muted-foreground" />
+              <X className="s-g1 s-xv s-ul" />
             </Button>
             
             {/* Full Speech Button */}
             {fullSpeechText && (
               <Sheet open={showFullSpeechModal} onOpenChange={setShowFullSpeechModal}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    <span className="text-xs">{t('beat_practice.full_speech', 'Full Speech')}</span>
+                  <Button variant="ghost" size="sm" className="s-dn">
+                    <BookOpen className="s-fz s-xt" />
+                    <span className="s-vj">{t('beat_practice.full_speech', 'Full Speech')}</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-[80vh]">
+                <SheetContent side="bottom" className="s-gb">
                   <SheetHeader>
                     <SheetTitle>{t('beat_practice.full_speech', 'Full Speech')}</SheetTitle>
                   </SheetHeader>
-                  <ScrollArea className="h-[calc(80vh-80px)] mt-4">
-                    <p className="text-base leading-relaxed whitespace-pre-wrap pr-4">
+                  <ScrollArea className="s-gc s-ly">
+                    <p className="s-tw s-ip s-yd s-o2">
                       {stripPropCueMarkers(fullSpeechText)}
                     </p>
                   </ScrollArea>
@@ -4370,28 +4370,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             )}
             
             {/* Beat badge */}
-            <div className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary">
+            <div className="s-r5 s-or s-oy s-qe s-vj s-d3 s-5g s-uw">
               {t('beat_practice.beat_number', { number: beatNumber, defaultValue: `Beat ${beatNumber}` })}
             </div>
           </div>
         </div>
 
         {/* Main content - Preview card - scrollable for long text */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
+        <div className="s-c6 s-mq s-os s-p9">
+          <div className="s-y7 s-jc s-m9 s-t3 s-l5 s-c5 s-c7 s-ig">
             {/* Preview header */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="s-c5 s-c7 s-ib s-dn">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <Eye className="h-12 w-12 text-primary" />
+                <Eye className="s-fp s-xh s-uw" />
               </motion.div>
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="s-vi s-d3 s-u9">
                 {t('beat_practice.coming_up', 'Coming up...')}
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="s-v9 s-ul">
                 {t('beat_practice.read_through', 'Read through once, then practice')}
               </p>
             </div>
@@ -4401,9 +4401,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10"
+              className="s-4b s-qa s-6l s-70 s-qx s-my s-kb"
             >
-              <p className="text-lg md:text-xl leading-relaxed text-foreground text-left">
+              <p className="s-uk s-kr s-ip s-u9 s-uj">
                 {previewBeatText}
               </p>
             </motion.div>
@@ -4413,17 +4413,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="flex flex-col items-center gap-3"
+              className="s-c5 s-c7 s-ib s-dp"
             >
               <Button
                 size="lg"
-                className="w-full max-w-sm"
+                className="s-y7 s-js"
                 onClick={() => {
                   setSessionMode('learn');
                   transitionToPhase('sentence_1_learning');
                 }}
               >
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="s-fz s-xt s-lp" />
                 {t('beat_practice.ready_to_practice', "I'm Ready to Practice")}
               </Button>
               
@@ -4441,11 +4441,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const nextBeatNumber = nextBeatQueued ? beats.findIndex(b => b.id === nextBeatQueued.id) + 1 : null;
     
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
+      <div className="s-c5 s-c7 s-ib s-ig s-gg s-mz s-u0 s-ds">
         {/* Exit button */}
-        <div className="absolute left-4" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-          <Button variant="ghost" size="icon" onClick={onExit} className="rounded-full hover:bg-muted">
-            <X className="h-5 w-5 text-muted-foreground" />
+        <div className="s-26 s-iw" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
+          <Button variant="ghost" size="icon" onClick={onExit} className="s-qe s-h0">
+            <X className="s-g1 s-xv s-ul" />
           </Button>
         </div>
         
@@ -4453,13 +4453,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 200, damping: 15, duration: 0.6 }}
-          className="w-20 h-20 rounded-full bg-purple-500/20 flex items-center justify-center"
+          className="s-xn s-fu s-qe s-5n s-c5 s-ib s-ig"
         >
-          <RotateCcw className="h-10 w-10 text-purple-500" />
+          <RotateCcw className="s-fn s-xf s-v0" />
         </motion.div>
         
         <motion.h2 
-          className="text-2xl font-bold"
+          className="s-t9 s-cx"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -4468,7 +4468,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         </motion.h2>
         
         <motion.p 
-          className="text-muted-foreground max-w-sm"
+          className="s-ul s-js"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -4483,17 +4483,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="bg-muted/50 rounded-xl px-4 py-3 max-w-sm"
+          className="s-56 s-qo s-os s-p6 s-js"
         >
-          <p className="text-xs text-muted-foreground flex items-center gap-2">
-            <Eye className="h-3.5 w-3.5 shrink-0" />
+          <p className="s-vj s-ul s-c5 s-ib s-dn">
+            <Eye className="s-fx s-xq s-r5" />
             {t('beat_practice.recall_intro_hint', "Words will progressively hide as you speak correctly. Common words are pre-hidden.")}
           </p>
         </motion.div>
         
         {nextBeatNumber && (
           <motion.p
-            className="text-xs text-muted-foreground/60"
+            className="s-vj s-uo"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}
@@ -4509,10 +4509,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         >
           <Button 
             onClick={() => { setShowPreBeatRecallIntro(false); resetForNextRep(); }}
-            className="mt-2 gap-2"
+            className="s-lv s-dn"
             size="lg"
           >
-            <Play className="h-4 w-4" />
+            <Play className="s-fz s-xt" />
             {t('beat_practice.start_recall', "Start Recall")}
           </Button>
         </motion.div>
@@ -4560,7 +4560,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
     return (
       <div
-        className="flex flex-col items-center h-full overflow-y-auto px-8 text-center gap-6"
+        className="s-c5 s-c7 s-ib s-gg s-mq s-ov s-u0 s-ds"
         style={{
           paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)",
@@ -4570,13 +4570,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200, damping: 15 }}
-          className="text-7xl"
+          className="s-te"
         >
-          <Coffee className="h-16 w-16 text-amber-600 dark:text-amber-400" />
+          <Coffee className="s-fr s-xj s-tu s-8p" />
         </motion.div>
         
         <motion.h2 
-          className="text-2xl font-bold"
+          className="s-t9 s-cx"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -4585,7 +4585,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         </motion.h2>
         
         <motion.p 
-          className="text-muted-foreground max-w-md"
+          className="s-ul s-jq"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -4607,23 +4607,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         </motion.div>
         
         <motion.div 
-          className="flex flex-col gap-2 mt-4"
+          className="s-c5 s-c7 s-dn s-ly"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <Bell className="h-4 w-4" />
+          <p className="s-v9 s-ul s-c5 s-ib s-dn">
+            <Bell className="s-fz s-xt" />
             {t('beat_practice.coffee_notification', "You'll receive a notification when it's time to practice")}
           </p>
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
+          <p className="s-v9 s-ul s-c5 s-ib s-dn">
+            <GraduationCap className="s-fz s-xt" />
             {t('beat_practice.coffee_tip', "Tip: Take a short walk or grab a coffee!")}
           </p>
         </motion.div>
         
-        <Button variant="ghost" onClick={handleSkipClick} className="mt-4 text-muted-foreground">
-          <Play className="h-4 w-4 mr-2" />
+        <Button variant="ghost" onClick={handleSkipClick} className="s-ly s-ul">
+          <Play className="s-fz s-xt s-lp" />
           {t('beat_practice.skip_break', "Start recall now")}
         </Button>
 
@@ -4633,22 +4633,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="bg-warning/10 border border-warning/30 rounded-2xl p-4 max-w-sm"
+              className="s-63 s-6l s-85 s-q9 s-mw s-js"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="h-5 w-5 text-warning" />
-                <span className="font-semibold text-warning text-sm">
+              <div className="s-c5 s-ib s-dn s-jy">
+                <AlertTriangle className="s-g1 s-xv s-ve" />
+                <span className="s-d3 s-ve s-v9">
                   {t('beat_practice.skip_warning_title', "Are you sure?")}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mb-3">
+              <p className="s-vj s-ul s-jz">
                 {t('beat_practice.skip_warning_desc', "The 10-minute break helps your brain consolidate what you just learned. Skipping it may reduce retention.")}
               </p>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => setShowSkipWarning(false)} className="flex-1">
+              <div className="s-c5 s-dn">
+                <Button size="sm" variant="outline" onClick={() => setShowSkipWarning(false)} className="s-c6">
                   {t('beat_practice.keep_waiting', "Keep waiting")}
                 </Button>
-                <Button size="sm" variant="default" onClick={startCoffeeBreakRecall} className="flex-1">
+                <Button size="sm" variant="default" onClick={startCoffeeBreakRecall} className="s-c6">
                   {t('beat_practice.skip_anyway', "Skip anyway")}
                 </Button>
               </div>
@@ -4666,31 +4666,31 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     const allMastered = masteredCount === totalBeats;
 
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-6">
-        <Medal className="h-20 w-20 text-primary animate-pulse" />
-        <h2 className="text-2xl font-bold">
+      <div className="s-c5 s-c7 s-ib s-ig s-gg s-mz s-u0 s-ds">
+        <Medal className="s-fu s-xn s-uw s-30" />
+        <h2 className="s-t9 s-cx">
           {allMastered 
             ? t('beat_practice.all_completed', "All beats completed!")
             : t('beat_practice.session_complete', "Lesson Complete!")}
         </h2>
-        <p className="text-muted-foreground max-w-md">
+        <p className="s-ul s-jq">
           {allMastered 
             ? t('beat_practice.all_completed_desc', "Great work! Practice again later to reinforce your memory.")
             : masteredCount === 0
               ? t('beat_practice.no_beats_yet', { total: totalBeats, defaultValue: `You have ${totalBeats} beats to learn. Complete all phases of a beat to mark it as mastered!` })
               : t('beat_practice.come_back', { current: masteredCount, total: totalBeats, defaultValue: `You've mastered ${masteredCount}/${totalBeats} beats. Come back in a few hours to learn the next one!` })}
         </p>
-        <div className="flex flex-col gap-2 mt-4">
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <GraduationCap className="h-4 w-4" />
+        <div className="s-c5 s-c7 s-dn s-ly">
+          <p className="s-v9 s-ul s-c5 s-ib s-dn">
+            <GraduationCap className="s-fz s-xt" />
             {t('beat_practice.science_tip', "Sleep strengthens memories more than repetition")}
           </p>
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <FileText className="h-4 w-4" />
+          <p className="s-v9 s-ul s-c5 s-ib s-dn">
+            <FileText className="s-fz s-xt" />
             {t('beat_practice.morning_tip', "Morning recall = memory consolidation boost")}
           </p>
         </div>
-        <Button onClick={onComplete || onExit} className="mt-6">
+        <Button onClick={onComplete || onExit} className="s-m0">
           {t('common.done', 'Done')}
         </Button>
       </div>
@@ -4699,9 +4699,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
   if (!currentBeat) {
     return (
-      <div className="text-center p-8">
-        <p className="text-muted-foreground">No beats found</p>
-        <Button onClick={onExit} className="mt-4">
+      <div className="s-u0 s-mz">
+        <p className="s-ul">No beats found</p>
+        <Button onClick={onExit} className="s-ly">
           {t('common.back')}
         </Button>
       </div>
@@ -4783,35 +4783,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="s-c5 s-c7 s-gg s-3v">
       {selfRatingPrompt && (
-        <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-xl border border-border">
-            <p className="text-center text-base font-semibold text-foreground">
+        <div className="s-c4 s-i5 s-ym s-c5 s-ic s-rr s-ig s-4r s-3h s-mw">
+          <div className="s-y7 s-js s-qa s-4b s-my s-r4 s-6l s-6x">
+            <p className="s-u0 s-tw s-d3 s-u9">
               {t('beat_practice.self_rating_title', 'How did that feel?')}
             </p>
-            <p className="mt-1 text-center text-sm text-muted-foreground">
+            <p className="s-lt s-u0 s-v9 s-ul">
               {t('beat_practice.self_rating_hint', 'Your answer fine-tunes when this part comes back.')}
             </p>
-            <div className="mt-5 grid grid-cols-3 gap-2">
+            <div className="s-lz s-e0 s-e3 s-dn">
               <button
                 type="button"
                 onClick={() => submitSelfRating(1)}
-                className="rounded-2xl bg-muted px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+                className="s-q9 s-50 s-or s-p6 s-v9 s-d0 s-u9 s-ws s-h2"
               >
                 {t('beat_practice.self_rating_hard', 'Tough')}
               </button>
               <button
                 type="button"
                 onClick={() => submitSelfRating(2)}
-                className="rounded-2xl bg-muted px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+                className="s-q9 s-50 s-or s-p6 s-v9 s-d0 s-u9 s-ws s-h2"
               >
                 {t('beat_practice.self_rating_ok', 'Okay')}
               </button>
               <button
                 type="button"
                 onClick={() => submitSelfRating(3)}
-                className="rounded-2xl bg-primary px-3 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="s-q9 s-5c s-or s-p6 s-v9 s-d0 s-ux s-ws s-h8"
               >
                 {t('beat_practice.self_rating_solid', 'Nailed it')}
               </button>
@@ -4838,8 +4838,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         totalSeconds={activePause?.totalSeconds ?? 1}
       />
       {/* Duolingo-style header with progress */}
-      <div className="sticky top-0 z-10 bg-background px-4 py-3 border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
-        <div className="flex items-center gap-4 max-w-2xl mx-auto">
+      <div className="s-t7 s-w1 s-ye s-3v s-os s-p6 s-6v s-6y" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
+        <div className="s-c5 s-ib s-dq s-jc s-m9">
           {/* Exit button */}
           <Button
             variant="ghost"
@@ -4849,9 +4849,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               await saveCheckpoint();
               onExit?.();
             }}
-            className="shrink-0 rounded-full hover:bg-muted"
+            className="s-r5 s-qe s-h0"
           >
-            <X className="h-5 w-5 text-muted-foreground" />
+            <X className="s-g1 s-xv s-ul" />
           </Button>
           
           {/* Edit script — exits the session and opens the inline edit dialog */}
@@ -4864,26 +4864,26 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 await saveCheckpoint();
                 onEditScript();
               }}
-              className="shrink-0 rounded-full hover:bg-muted"
+              className="s-r5 s-qe s-h0"
               title={t('practice.editScriptTitle', 'Redigera manus')}
             >
-              <Pencil className="h-4 w-4 text-muted-foreground" />
+              <Pencil className="s-fz s-xt s-ul" />
             </Button>
           )}
           {/* Full Speech Button */}
           {fullSpeechText && (
             <Sheet open={showFullSpeechModal} onOpenChange={setShowFullSpeechModal}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-muted">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <Button variant="ghost" size="icon" className="s-r5 s-qe s-h0">
+                  <BookOpen className="s-fz s-xt s-ul" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[80vh]">
+              <SheetContent side="bottom" className="s-gb">
                 <SheetHeader>
                   <SheetTitle>{t('beat_practice.full_speech', 'Full Speech')}</SheetTitle>
                 </SheetHeader>
-                <ScrollArea className="h-[calc(80vh-80px)] mt-4">
-                  <p className="text-base leading-relaxed whitespace-pre-wrap pr-4">
+                <ScrollArea className="s-gc s-ly">
+                  <p className="s-tw s-ip s-yd s-o2">
                     {stripPropCueMarkers(fullSpeechText)}
                   </p>
                 </ScrollArea>
@@ -4892,12 +4892,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           )}
           
           {/* Progress bar */}
-          <div className="flex-1">
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
+          <div className="s-c6">
+            <div className="s-fw s-50 s-qe s-mn">
               <div 
                 className={cn(
-                  "h-full rounded-full transition-all duration-500",
-                  sessionMode === 'recall' ? "bg-amber-500" : sessionMode === 'pre_beat_recall' ? "bg-purple-500" : "bg-primary"
+                  "s-gg s-qe s-wr s-bq",
+                  sessionMode === 'recall' ? "s-3r" : sessionMode === 'pre_beat_recall' ? "s-5l" : "s-5c"
                 )}
                 style={{ 
                   width: `${sessionMode === 'recall' 
@@ -4915,24 +4915,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           {/* Session badge */}
           {sessionMode === 'recall' ? (
             <div className={cn(
-              "shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border",
-              "bg-amber-500/20 border-amber-500/40"
+              "s-r5 s-c5 s-ib s-dn s-or s-oz s-qe s-6l",
+              "s-3u s-6u"
             )}>
-              <span className="text-xs font-bold uppercase tracking-wide text-amber-500">
+              <span className="s-vj s-cx s-x1 s-wi s-tt">
                 {isMergedRecall ? "Full Speech" : is10MinRecall ? "Recap" : "Recall"}
               </span>
-              <span className="text-sm font-bold text-amber-400">
+              <span className="s-v9 s-cx s-ts">
                 {recallIndex + 1}/{beatsToRecall.length}
               </span>
             </div>
           ) : sessionMode === 'pre_beat_recall' ? (
-            <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/40">
-              <span className="text-xs font-bold text-purple-500 uppercase tracking-wide">Recall Time</span>
+            <div className="s-r5 s-c5 s-ib s-dn s-or s-oz s-qe s-5n s-6l s-7u">
+              <span className="s-vj s-cx s-v0 s-x1 s-wi">Recall Time</span>
             </div>
           ) : (
             <div className={cn(
-              "shrink-0 px-3 py-1 rounded-full text-xs font-semibold",
-              "bg-primary/20 text-primary"
+              "s-r5 s-or s-oy s-qe s-vj s-d3",
+              "s-5g s-uw"
             )}>
               {progressInfo.sublabel}
             </div>
@@ -4941,7 +4941,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         {/* Beat timeline — all beats in this speech */}
         {beats.length > 0 && (
-          <div className="flex items-center justify-center gap-1.5 mt-2 max-w-2xl mx-auto">
+          <div className="s-c5 s-ib s-ig s-dm s-lv s-jc s-m9">
             {(() => {
               const activeIdx = currentBeat
                 ? beats.findIndex((b) => b.id === currentBeat.id)
@@ -4953,15 +4953,15 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   <div
                     key={b.id}
                     className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all",
-                      isMastered && "bg-green-500 text-white",
-                      isCurrent && !isMastered && "bg-primary text-primary-foreground ring-2 ring-primary",
-                      !isCurrent && !isMastered && "bg-muted text-muted-foreground"
+                      "s-xw s-g2 s-qe s-c5 s-ib s-ig s-tl s-cx s-wr",
+                      isMastered && "s-4v s-vg",
+                      isCurrent && !isMastered && "s-5c s-ux s-pm s-pw",
+                      !isCurrent && !isMastered && "s-50 s-ul"
                     )}
                     title={isMastered ? `Beat ${idx + 1} — mastered` : isCurrent ? `Beat ${idx + 1} — current` : `Beat ${idx + 1}`}
                   >
                     {isMastered ? (
-                      <CheckCircle2 className="h-3 w-3" />
+                      <CheckCircle2 className="s-fw s-xp" />
                     ) : (
                       idx + 1
                     )}
@@ -4975,7 +4975,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
       {/* Main content area - scrollable when text overflows */}
       <div
-        className="flex-1 overflow-y-auto px-4 py-6"
+        className="s-c6 s-mq s-os s-p9"
         onTouchStart={(e) => {
           const t0 = e.touches[0];
           (e.currentTarget as any)._swipeStart = { x: t0.clientX, y: t0.clientY, t: Date.now(), st: (e.currentTarget as HTMLDivElement).scrollTop };
@@ -4996,21 +4996,21 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
         }}
       >
-        <div className="w-full max-w-2xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
+        <div className="s-y7 s-jc s-m9 s-t3 s-l5 s-c5 s-c7 s-ig">
           {isRecording && !isSpeechReady && !showCelebration && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex justify-center"
+              className="s-c5 s-ig"
             >
-              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary ring-1 ring-primary/20">
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span className="s-i4 s-ib s-dn s-qe s-5e s-os s-p3 s-v9 s-d3 s-uw s-pl s-py">
+                <span className="s-fs s-xk s-qe s-5c s-30" />
                 {t('beat_practice.listening_starting', 'Preparing microphone...')}
               </span>
             </motion.div>
           )}
           {isRecording && isSpeechReady && !showCelebration && (
-            <span className="sr-only" aria-live="polite">
+            <span className="s-t6" aria-live="polite">
               {t('beat_practice.listening_ready', 'Listening')}
             </span>
           )}
@@ -5022,7 +5022,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             if (uniqueCount <= 1) return null;
             
             return (
-              <div className="flex items-center justify-center gap-3">
+              <div className="s-c5 s-ib s-ig s-dp">
                 {Array.from({ length: uniqueCount }, (_, i) => i + 1).map((sentenceNum) => {
                   const currentSentence = getSentenceProgressValue();
                   const isComplete = sentenceNum < currentSentence;
@@ -5031,13 +5031,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                     <div
                       key={sentenceNum}
                       className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
-                        isComplete && "bg-primary text-primary-foreground",
-                        isCurrent && "bg-primary/20 text-primary ring-2 ring-primary",
-                        !isComplete && !isCurrent && "bg-muted text-muted-foreground"
+                        "s-xf s-fn s-qe s-c5 s-ib s-ig s-v9 s-d3 s-wr",
+                        isComplete && "s-5c s-ux",
+                        isCurrent && "s-5g s-uw s-pm s-pw",
+                        !isComplete && !isCurrent && "s-50 s-ul"
                       )}
                     >
-                      {isComplete ? <CheckCircle2 className="h-5 w-5" /> : sentenceNum}
+                      {isComplete ? <CheckCircle2 className="s-g1 s-xv" /> : sentenceNum}
                     </div>
                   );
                 })}
@@ -5047,8 +5047,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           
           {/* Beat phase indicator - show progress towards mastery */}
           {sessionMode === 'learn' && (
-            <div className="flex justify-center mb-2">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <div className="s-c5 s-ig s-jy">
+              <div className="s-c5 s-ib s-dl s-vj s-ul">
                 {(() => {
                   const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
                   // Calculate phase progress: S1 → S2 → S1+S2 → S3 → Full beat → Mastered
@@ -5065,42 +5065,42 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                     <div 
                       key={p} 
                       className={cn(
-                        "w-2 h-2 rounded-full transition-all",
-                        idx < currentIdx ? "bg-primary" : 
-                        idx === currentIdx ? "bg-primary/50 ring-1 ring-primary" : 
-                        "bg-muted"
+                        "s-xk s-fs s-qe s-wr",
+                        idx < currentIdx ? "s-5c" : 
+                        idx === currentIdx ? "s-5k s-pl s-pw" : 
+                        "s-50"
                       )}
                       title={p === 'mastered' ? 'Beat mastered' : p === 'beat' ? 'Full beat' : `Sentence ${p.split('_')[1]}`}
                     />
                   ));
                 })()}
-                <span className="ml-2">{phase.includes('beat') ? t('beat_practice.final_phase', 'Final phase!') : ''}</span>
+                <span className="s-lk">{phase.includes('beat') ? t('beat_practice.final_phase', 'Final phase!') : ''}</span>
               </div>
             </div>
           )}
 
           {/* Phase pill */}
-          <div className="flex justify-center items-center gap-2">
+          <div className="s-c5 s-ig s-ib s-dn">
             <span className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium",
-              sessionMode === 'pre_beat_recall' && "bg-purple-500/10 text-purple-500",
-              sessionMode !== 'pre_beat_recall' && getPhaseType() === 'learning' && "bg-blue-500/10 text-blue-500",
-              sessionMode !== 'pre_beat_recall' && getPhaseType() === 'fading' && "bg-amber-500/10 text-amber-500",
-              sessionMode !== 'pre_beat_recall' && getPhaseType() === 'combining' && "bg-purple-500/10 text-purple-500"
+              "s-i4 s-ib s-dn s-os s-p3 s-qe s-v9 s-d0",
+              sessionMode === 'pre_beat_recall' && "s-5m s-v0",
+              sessionMode !== 'pre_beat_recall' && getPhaseType() === 'learning' && "s-47 s-ty",
+              sessionMode !== 'pre_beat_recall' && getPhaseType() === 'fading' && "s-3s s-tt",
+              sessionMode !== 'pre_beat_recall' && getPhaseType() === 'combining' && "s-5m s-v0"
             )}>
               {sessionMode === 'pre_beat_recall' ? (
                 <>
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="s-fz s-xt" />
                   {t('beat_practice.recall_previous', 'Recall previous beat')} · {words.length - hiddenWordIndices.size} words visible
                 </>
               ) : getPhaseType() === 'learning' ? (
                 <>
-                  <Circle className="h-3 w-3 fill-current" />
+                  <Circle className="s-fw s-xp s-c0" />
                   Read aloud {repetitionCount}/{requiredLearningReps}
                 </>
               ) : getPhaseType() === 'fading' ? (
                 <>
-                  <GraduationCap className="h-4 w-4" />
+                  <GraduationCap className="s-fz s-xt" />
                   {words.length - hiddenWordIndices.size} words visible
                 </>
               ) : (
@@ -5112,11 +5112,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 type="button"
                 onClick={jumpHideAhead}
                 disabled={showCelebration}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+                className="s-i4 s-ib s-dl s-or s-p3 s-qe s-vj s-d3 s-3s s-tu s-gt s-ws s-bj"
                 aria-label={t('beat_practice.skip_hide_ahead', 'Skip ahead')}
                 title={t('beat_practice.skip_hide_ahead_tooltip', 'Hide more words now')}
               >
-                <FastForward className="h-3.5 w-3.5" />
+                <FastForward className="s-fx s-xq" />
                 {t('beat_practice.skip_hide_ahead', 'Skip ahead')}
               </button>
             )}
@@ -5125,11 +5125,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 type="button"
                 onClick={jumpHideAllRecall}
                 disabled={showCelebration}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+                className="s-i4 s-ib s-dl s-or s-p3 s-qe s-vj s-d3 s-3s s-tu s-gt s-ws s-bj"
                 aria-label={t('beat_practice.recall_hide_all', 'Hide all & test')}
                 title={t('beat_practice.recall_hide_all_tooltip', 'Hide every word — recite the whole beat from memory')}
               >
-                <FastForward className="h-3.5 w-3.5" />
+                <FastForward className="s-fx s-xq" />
                 {t('beat_practice.recall_hide_all', 'Hide all & test')}
               </button>
             )}
@@ -5142,7 +5142,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             <motion.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center text-xs text-muted-foreground/60 -mt-3"
+              className="s-u0 s-vj s-uo -mt-3"
             >
               {t('beat_practice.hidden_words_explanation', 'Common words are pre-hidden to test your recall')}
             </motion.p>
@@ -5153,7 +5153,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center text-xs font-medium text-primary/80 -mt-1"
+              className="s-u0 s-vj s-d0 s-uy -mt-1"
             >
               {phase.startsWith('sentences_1_2')
                 ? t('beat_practice.combine_from_start')
@@ -5162,7 +5162,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           )}
 
           {/* Main sentence card - clean and centered */}
-          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-6 md:p-10 relative z-10">
+          <div className="s-4b s-qa s-6l s-70 s-qx s-my s-kb s-pd s-ye">
             <AnimatePresence mode="wait">
               {showCelebration ? (
                 <motion.div
@@ -5170,12 +5170,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.5, opacity: 0 }}
-                  className="flex flex-col items-center gap-4 py-8"
+                  className="s-c5 s-c7 s-ib s-dq s-pb"
                 >
-                  <PartyPopper className="h-16 w-16 text-primary animate-pulse" />
-                  <p className="text-2xl font-bold text-primary text-center">{celebrationMessage}</p>
+                  <PartyPopper className="s-fr s-xj s-uw s-30" />
+                  <p className="s-t9 s-cx s-uw s-u0">{celebrationMessage}</p>
                   {celebrationDetail && (
-                    <p className="text-sm text-muted-foreground text-center max-w-xs leading-relaxed">
+                    <p className="s-v9 s-ul s-u0 s-ju s-ip">
                       {celebrationDetail}
                     </p>
                   )}
@@ -5186,11 +5186,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="w-full flex flex-col items-center"
+                  className="s-y7 s-c5 s-c7 s-ib"
                 >
                   <PropCueOverlay
                     cue={getActivePropCue(propCues, currentWordIndex)}
-                    className="mb-2"
+                    className="s-jy"
                   />
                   <SentenceDisplay
                     text={currentText}
@@ -5219,10 +5219,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="mt-4 flex items-center justify-center"
+                      className="s-ly s-c5 s-ib s-ig"
                     >
-                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-semibold">
-                        <CheckCircle2 className="h-4 w-4" />
+                      <span className="s-i4 s-ib s-dn s-os s-p3 s-qe s-4o s-u8 s-8q s-v9 s-d3">
+                        <CheckCircle2 className="s-fz s-xt" />
                         {t('beat_practice.one_more_time', 'Great! One more to lock it in')}
                       </span>
                     </motion.div>
@@ -5230,9 +5230,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
                   {/* Progress indicator for fading/recall modes */}
                   {(sessionMode === 'recall' || sessionMode === 'pre_beat_recall' || phase.includes('fading')) && (
-                    <div className="mt-8 flex items-center justify-center gap-3">
-                      <div className="relative w-12 h-12">
-                        <svg className="w-12 h-12 -rotate-90">
+                    <div className="s-m1 s-c5 s-ib s-ig s-dp">
+                      <div className="s-pd s-xh s-fp">
+                        <svg className="s-xh s-fp -rotate-90">
                           <circle
                             cx="24" cy="24" r="20"
                             fill="none"
@@ -5246,14 +5246,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                             strokeWidth="3"
                             strokeLinecap="round"
                             strokeDasharray={`${(hiddenWordIndices.size / Math.max(words.length, 1)) * 126} 126`}
-                            className="transition-all duration-300"
+                            className="s-wr s-bp"
                           />
                         </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                        <span className="s-26 s-i5 s-c5 s-ib s-ig s-vj s-cx">
                           {Math.round((hiddenWordIndices.size / Math.max(words.length, 1)) * 100)}%
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="s-v9 s-ul">
                         {hiddenWordIndices.size === words.length 
                           ? sessionMode === 'pre_beat_recall' 
                             ? t('beat_practice.recall_complete_almost', 'Perfect! Moving on...')
@@ -5276,8 +5276,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       <AlertDialog open={showSoftCapDialog} onOpenChange={setShowSoftCapDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
+            <AlertDialogTitle className="s-c5 s-ib s-dn">
+              <GraduationCap className="s-g1 s-xv s-uw" />
               {t('beat_practice.soft_cap_title', "Du har gjort jättebra ifrån dig!")}
             </AlertDialogTitle>
             <AlertDialogDescription>

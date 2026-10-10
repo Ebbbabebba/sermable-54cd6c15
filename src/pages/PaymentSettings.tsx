@@ -170,31 +170,31 @@ const PaymentSettings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card sticky top-0 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="container mx-auto px-4 py-4">
+    <div className="s-l6 s-3v">
+      <header className="s-6v s-4b s-t7 s-w1 s-ye" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="s-8j s-m9 s-os s-p7">
           <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="s-fz s-xt s-lp" />
             {t('common.back')}
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="space-y-6">
-          <div className="animate-fade-in">
-            <h1 className="text-4xl font-bold mb-2">{t('paymentSettings.pageTitle')}</h1>
-            <p className="text-muted-foreground">
+      <main className="s-8j s-m9 s-os s-pb s-jc">
+        <div className="s-t3">
+          <div className="s-2y">
+            <h1 className="s-tb s-cx s-jy">{t('paymentSettings.pageTitle')}</h1>
+            <p className="s-ul">
               {t('paymentSettings.pageSubtitle')}
             </p>
           </div>
 
           {isPremium ? (
-            <Card className="border-0 bg-gradient-to-br from-amber-500/10 via-background to-orange-500/10">
+            <Card className="s-6m s-5e">
               <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
-                    <Crown className="h-5 w-5 text-white" />
+                <div className="s-c5 s-ib s-dp">
+                  <div className="s-mu s-qo s-5c s-qx">
+                    <Crown className="s-g1 s-xv s-vg" />
                   </div>
                   <div>
                     <CardTitle>{t('paymentSettings.youArePremium')}</CardTitle>
@@ -207,121 +207,121 @@ const PaymentSettings = () => {
               <CardContent>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="s-y7"
                   onClick={() => {
                     window.open('https://apps.apple.com/account/subscriptions', '_blank');
                   }}
                 >
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                  <ExternalLink className="s-fz s-xt s-lp" />
                   {t('paymentSettings.manageInAppStore')}
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+            <Card className="s-6m s-5e s-mn s-pd">
+              <div className="s-26 s-w1 s-pe s-xs s-fy s-5e s-qe s-6k" />
 
-              <CardHeader className="relative pb-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
-                    <Crown className="h-5 w-5 text-primary-foreground" />
+              <CardHeader className="s-pd s-n4">
+                <div className="s-c5 s-ib s-dp">
+                  <div className="s-mu s-qo s-5c s-qx">
+                    <Crown className="s-g1 s-xv s-ux" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl">{t('paymentSettings.upgradeTitle')}</CardTitle>
-                    <CardDescription className="text-xs">
+                    <CardTitle className="s-vi">{t('paymentSettings.upgradeTitle')}</CardTitle>
+                    <CardDescription className="s-vj">
                       {t('paymentSettings.upgradeDesc')}
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-5 relative">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                    <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                      <FileStack className="h-4 w-4 text-primary" />
+              <CardContent className="s-t2 s-pd">
+                <div className="s-e0 s-e2 s-dp">
+                  <div className="s-c5 s-id s-do s-mv s-qo s-4e s-6l">
+                    <div className="s-mt s-qh s-5e s-r5">
+                      <FileStack className="s-fz s-xt s-uw" />
                     </div>
-                    <p className="text-sm font-medium">{t('paymentSettings.featUnlimited')}</p>
+                    <p className="s-v9 s-d0">{t('paymentSettings.featUnlimited')}</p>
                   </div>
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                    <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
-                      <Presentation className="h-4 w-4 text-accent-foreground" />
+                  <div className="s-c5 s-id s-do s-mv s-qo s-4e s-6l">
+                    <div className="s-mt s-qh s-3q s-r5">
+                      <Presentation className="s-fz s-xt s-tr" />
                     </div>
-                    <p className="text-sm font-medium">{t('paymentSettings.featPresentation')}</p>
+                    <p className="s-v9 s-d0">{t('paymentSettings.featPresentation')}</p>
                   </div>
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                    <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
-                      <Zap className="h-4 w-4 text-primary" />
+                  <div className="s-c5 s-id s-do s-mv s-qo s-4e s-6l">
+                    <div className="s-mt s-qh s-5e s-r5">
+                      <Zap className="s-fz s-xt s-uw" />
                     </div>
-                    <p className="text-sm font-medium">{t('paymentSettings.featAnytime')}</p>
+                    <p className="s-v9 s-d0">{t('paymentSettings.featAnytime')}</p>
                   </div>
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-card/80 border">
-                    <div className="p-1.5 rounded-lg bg-accent/20 shrink-0">
-                      <BarChart3 className="h-4 w-4 text-accent-foreground" />
+                  <div className="s-c5 s-id s-do s-mv s-qo s-4e s-6l">
+                    <div className="s-mt s-qh s-3q s-r5">
+                      <BarChart3 className="s-fz s-xt s-tr" />
                     </div>
-                    <p className="text-sm font-medium">{t('paymentSettings.featAnalytics')}</p>
+                    <p className="s-v9 s-d0">{t('paymentSettings.featAnalytics')}</p>
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-2">
+                <div className="s-t0 s-o9">
                   <button
                     onClick={() => setSelectedPlan('yearly')}
-                    className={`w-full p-4 rounded-2xl transition-all text-left relative overflow-hidden ${
+                    className={`s-y7 s-mw s-q9 s-wr s-uj s-pd s-mn ${
                       selectedPlan === 'yearly'
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                        : 'bg-card border-2 border-border hover:border-primary/50'
+                        ? 's-5c s-ux s-qx s-r0'
+                        : 's-4b s-6n s-6x s-hi'
                     }`}
                   >
-                    <div className={`absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full font-medium ${
-                      selectedPlan === 'yearly' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary text-primary-foreground'
+                    <div className={`s-26 s-w6 s-ph s-vj s-op s-ox s-qe s-d0 ${
+                      selectedPlan === 'yearly' ? 's-5d s-ux' : 's-5c s-ux'
                     }`}>
                       {t('paymentSettings.bestValue')}
                     </div>
-                    <p className="text-sm font-medium opacity-80">{t('paymentSettings.yearly')}</p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <p className="text-3xl font-bold">{prices.yearly ?? fallbackPrices.yearly}</p>
-                      <p className="text-sm opacity-70">{t('paymentSettings.perYear')}</p>
+                    <p className="s-v9 s-d0 s-mj">{t('paymentSettings.yearly')}</p>
+                    <div className="s-c5 s-ia s-dn s-lt">
+                      <p className="s-ta s-cx">{prices.yearly ?? fallbackPrices.yearly}</p>
+                      <p className="s-v9 s-mi">{t('paymentSettings.perYear')}</p>
                     </div>
                   </button>
 
                   <button
                     onClick={() => setSelectedPlan('monthly')}
-                    className={`w-full p-4 rounded-2xl transition-all text-left ${
+                    className={`s-y7 s-mw s-q9 s-wr s-uj ${
                       selectedPlan === 'monthly'
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                        : 'bg-card border-2 border-border hover:border-primary/50'
+                        ? 's-5c s-ux s-qx s-r0'
+                        : 's-4b s-6n s-6x s-hi'
                     }`}
                   >
-                    <p className="text-sm font-medium opacity-80">{t('paymentSettings.monthly')}</p>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <p className="text-3xl font-bold">{prices.monthly ?? fallbackPrices.monthly}</p>
-                      <p className="text-sm opacity-70">{t('paymentSettings.perMonth')}</p>
+                    <p className="s-v9 s-d0 s-mj">{t('paymentSettings.monthly')}</p>
+                    <div className="s-c5 s-ia s-dn s-lt">
+                      <p className="s-ta s-cx">{prices.monthly ?? fallbackPrices.monthly}</p>
+                      <p className="s-v9 s-mi">{t('paymentSettings.perMonth')}</p>
                     </div>
                   </button>
                 </div>
 
                 <Button
                   size="lg"
-                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  className="s-y7 s-5c s-vg"
                   onClick={handleUpgrade}
                   disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
                 >
                   {purchaseState === 'processing' || purchaseState === 'verifying' ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="s-fz s-xt s-lp s-32" />
                       {purchaseState === 'verifying' ? t('paymentSettings.verifying') : t('paymentSettings.processing')}
                     </>
                   ) : (
                     <>
-                      <Crown className="h-4 w-4 mr-2" />
+                      <Crown className="s-fz s-xt s-lp" />
                       {isIOS ? t('paymentSettings.subscribe') : t('paymentSettings.getPremium')}
                     </>
                   )}
                 </Button>
 
                 {purchaseState === 'error' && purchaseError && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div className="s-c5 s-id s-dn s-mv s-qh s-4i s-6l s-76 s-v9 s-u2">
+                    <AlertCircle className="s-fz s-xt s-ls s-r5" />
                     <p>{purchaseError}</p>
                   </div>
                 )}
@@ -330,7 +330,7 @@ const PaymentSettings = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full"
+                    className="s-y7"
                     onClick={handleRestore}
                     disabled={purchaseState === 'processing' || purchaseState === 'verifying'}
                   >
@@ -340,20 +340,20 @@ const PaymentSettings = () => {
 
 
                 {!isIOS && (
-                  <p className="text-xs text-center text-muted-foreground">
+                  <p className="s-vj s-u0 s-ul">
                     {t('paymentSettings.subsInAppShort')}
                   </p>
                 )}
 
-                <div className="space-y-1.5 pt-2 text-xs text-muted-foreground">
+                <div className="s-sx s-o9 s-vj s-ul">
                   <p>
                     {t('paymentSettings.legalDisclosure')}
                   </p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
-                    <Link to="/terms" className="underline hover:text-foreground">
+                  <div className="s-c5 s-cb s-dw s-dx s-o7">
+                    <Link to="/terms" className="s-wy s-hv">
                       {t('paymentSettings.termsEula')}
                     </Link>
-                    <Link to="/privacy" className="underline hover:text-foreground">
+                    <Link to="/privacy" className="s-wy s-hv">
                       {t('paymentSettings.privacyPolicy')}
                     </Link>
                   </div>

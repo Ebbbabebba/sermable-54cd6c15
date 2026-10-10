@@ -18,7 +18,7 @@ type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
 // iOS-style section wrapper
 const Section = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`mx-4 rounded-xl bg-card overflow-hidden ${className}`}>
+  <div className={`s-m8 s-qo s-4b s-mn ${className}`}>
     {children}
   </div>
 );
@@ -26,7 +26,7 @@ const Section = ({ children, className = "" }: { children: React.ReactNode; clas
 // iOS-style row
 const Row = ({ children, onClick, last = false }: { children: React.ReactNode; onClick?: () => void; last?: boolean }) => (
   <div
-    className={`flex items-center justify-between px-4 py-3 min-h-[44px] ${!last ? 'border-b border-border/40 ml-4 pl-0' : ''} ${onClick ? 'active:bg-muted/60 cursor-pointer' : ''}`}
+    className={`s-c5 s-ib s-if s-os s-p6 s-l3 ${!last ? 's-6v s-6z s-ll s-nq' : ''} ${onClick ? 's-27 s-8m' : ''}`}
     onClick={onClick}
   >
     {children}
@@ -35,15 +35,15 @@ const Row = ({ children, onClick, last = false }: { children: React.ReactNode; o
 
 // Section header label
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-8 pt-6 pb-1.5">
-    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</span>
+  <div className="s-ov s-of s-n2">
+    <span className="s-vj s-d0 s-x1 s-wi s-ul">{children}</span>
   </div>
 );
 
 // Section footer hint
 const SectionFooter = ({ children }: { children: React.ReactNode }) => (
-  <div className="px-8 pt-1.5 pb-2">
-    <span className="text-xs text-muted-foreground leading-tight">{children}</span>
+  <div className="s-ov s-o8 s-n4">
+    <span className="s-vj s-ul s-ir">{children}</span>
   </div>
 );
 
@@ -227,35 +227,35 @@ const Settings = () => {
 
 
   return (
-    <div className="min-h-screen bg-secondary/30">
+    <div className="s-l6 s-5u">
       {/* iOS-style navigation bar */}
-      <header className="sticky top-0 z-10 backdrop-blur-xl bg-secondary/60 border-b border-border/30" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="flex items-center h-11 px-4">
-          <Button variant="ghost" size="sm" className="text-primary -ml-2 gap-1 px-2" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4" />
+      <header className="s-t7 s-w1 s-ye s-3i s-5w s-6v s-6y" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="s-c5 s-ib s-fo s-os">
+          <Button variant="ghost" size="sm" className="s-uw -ml-2 s-dl s-op" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="s-fz s-xt" />
             {t('common.back')}
           </Button>
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-[17px] font-semibold">{t('settings.title')}</h1>
+          <h1 className="s-26 s-iu s-8 s-tn s-d3">{t('settings.title')}</h1>
         </div>
       </header>
 
-      <div className="pb-12 overflow-y-auto" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 3rem)' }}>
+      <div className="s-n3 s-mq" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 3rem)' }}>
         {/* Subscription — hidden while payments are disabled */}
         {!FORCE_PREMIUM && (
           <>
             <SectionLabel>{t('settings.payment.title')}</SectionLabel>
             <Section>
               <Row onClick={() => navigate("/settings/payment")} last>
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                    <CreditCard className="h-4 w-4 text-primary-foreground" />
+                <div className="s-c5 s-ib s-dp">
+                  <div className="s-xy s-g4 s-qi s-5c s-c5 s-ib s-ig">
+                    <CreditCard className="s-fz s-xt s-ux" />
                   </div>
                   <div>
-                    <span className="text-sm font-medium">{isPremium ? t('settings.payment.managePlan') : t('settings.payment.viewPlans')}</span>
+                    <span className="s-v9 s-d0">{isPremium ? t('settings.payment.managePlan') : t('settings.payment.viewPlans')}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <div className="s-c5 s-ib s-dn">
+                  <ChevronRight className="s-fz s-xt s-ul" />
                 </div>
               </Row>
             </Section>
@@ -266,11 +266,11 @@ const Settings = () => {
         <SectionLabel>{t('settings.appearance.title')}</SectionLabel>
         <Section>
           <Row last>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-pink-500/15 flex items-center justify-center">
-                {soundEnabled ? <Volume2 className="h-4 w-4 text-pink-500" /> : <VolumeX className="h-4 w-4 text-pink-500" />}
+            <div className="s-c5 s-ib s-dp">
+              <div className="s-xy s-g4 s-qi s-5a s-c5 s-ib s-ig">
+                {soundEnabled ? <Volume2 className="s-fz s-xt s-uu" /> : <VolumeX className="s-fz s-xt s-uu" />}
               </div>
-              <span className="text-sm">{t('settings.appearance.sounds', 'Sound effects')}</span>
+              <span className="s-v9">{t('settings.appearance.sounds', 'Sound effects')}</span>
             </div>
             <Switch
               checked={soundEnabled}
@@ -286,14 +286,14 @@ const Settings = () => {
         <SectionLabel>{t('settings.language.title')}</SectionLabel>
         <Section>
           <Row last>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-green-500/15 flex items-center justify-center">
-                <Languages className="h-4 w-4 text-green-600" />
+            <div className="s-c5 s-ib s-dp">
+              <div className="s-xy s-g4 s-qi s-4x s-c5 s-ib s-ig">
+                <Languages className="s-fz s-xt s-ue" />
               </div>
-              <span className="text-sm">{t('settings.language.appLanguage')}</span>
+              <span className="s-v9">{t('settings.language.appLanguage')}</span>
             </div>
             <Select value={currentLanguage} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="w-auto min-w-[120px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+              <SelectTrigger className="s-y6 s-ld s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
                 <SelectValue>
                   {languages.find(l => l.code === currentLanguage)?.name}
                 </SelectValue>
@@ -313,22 +313,22 @@ const Settings = () => {
         {/* Streak / Profile */}
         <SectionLabel>{t('settings.profile.title')}</SectionLabel>
         <Section>
-          <div className="grid grid-cols-2 divide-x divide-border/40">
-            <div className="p-4 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-                <Flame className="h-3.5 w-3.5" />
-                <span className="text-xs">{t('settings.profile.currentStreak')}</span>
+          <div className="s-e0 s-e2 divide-x s-bm">
+            <div className="s-mw s-u0">
+              <div className="s-c5 s-ib s-ig s-dm s-ul s-jw">
+                <Flame className="s-fx s-xq" />
+                <span className="s-vj">{t('settings.profile.currentStreak')}</span>
               </div>
-              <div className="text-2xl font-bold">{currentStreak}</div>
-              <div className="text-[10px] text-muted-foreground">{t('settings.profile.days')}</div>
+              <div className="s-t9 s-cx">{currentStreak}</div>
+              <div className="s-tl s-ul">{t('settings.profile.days')}</div>
             </div>
-            <div className="p-4 text-center">
-              <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-                <Trophy className="h-3.5 w-3.5" />
-                <span className="text-xs">{t('settings.profile.bestStreak')}</span>
+            <div className="s-mw s-u0">
+              <div className="s-c5 s-ib s-ig s-dm s-ul s-jw">
+                <Trophy className="s-fx s-xq" />
+                <span className="s-vj">{t('settings.profile.bestStreak')}</span>
               </div>
-              <div className="text-2xl font-bold">{bestStreak}</div>
-              <div className="text-[10px] text-muted-foreground">{t('settings.profile.days')}</div>
+              <div className="s-t9 s-cx">{bestStreak}</div>
+              <div className="s-tl s-ul">{t('settings.profile.days')}</div>
             </div>
           </div>
         </Section>
@@ -338,14 +338,14 @@ const Settings = () => {
         <SectionLabel>{t('settings.practiceHours.title')}</SectionLabel>
         <Section>
           <Row>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-orange-500/15 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-orange-500" />
+            <div className="s-c5 s-ib s-dp">
+              <div className="s-xy s-g4 s-qi s-59 s-c5 s-ib s-ig">
+                <Clock className="s-fz s-xt s-us" />
               </div>
-              <span className="text-sm">{t('settings.practiceHours.startTime')}</span>
+              <span className="s-v9">{t('settings.practiceHours.startTime')}</span>
             </div>
             <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
-              <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+              <SelectTrigger className="s-y6 s-lf s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -358,14 +358,14 @@ const Settings = () => {
             </Select>
           </Row>
           <Row last>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-orange-500/15 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-orange-500" />
+            <div className="s-c5 s-ib s-dp">
+              <div className="s-xy s-g4 s-qi s-59 s-c5 s-ib s-ig">
+                <Clock className="s-fz s-xt s-us" />
               </div>
-              <span className="text-sm">{t('settings.practiceHours.endTime')}</span>
+              <span className="s-v9">{t('settings.practiceHours.endTime')}</span>
             </div>
             <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
-              <SelectTrigger className="w-auto min-w-[80px] h-8 border-0 bg-transparent text-sm text-muted-foreground justify-end gap-1">
+              <SelectTrigger className="s-y6 s-lf s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -385,13 +385,13 @@ const Settings = () => {
         <SectionLabel>{t('settings.support.title')}</SectionLabel>
         <Section>
           <Row onClick={() => setSupportOpen(true)} last>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-blue-500/15 flex items-center justify-center">
-                <Mail className="h-4 w-4 text-blue-500" />
+            <div className="s-c5 s-ib s-dp">
+              <div className="s-xy s-g4 s-qi s-48 s-c5 s-ib s-ig">
+                <Mail className="s-fz s-xt s-ty" />
               </div>
-              <span className="text-sm">{t('settings.support.emailSupport')}</span>
+              <span className="s-v9">{t('settings.support.emailSupport')}</span>
             </div>
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            <ExternalLink className="s-fz s-xt s-ul" />
           </Row>
         </Section>
 
@@ -399,35 +399,35 @@ const Settings = () => {
         <SectionLabel>{t('settings.legal.termsTitle')}</SectionLabel>
         <Section>
           <Row onClick={() => window.open('/terms', '_blank')}>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-gray-500/15 flex items-center justify-center">
-                <FileText className="h-4 w-4 text-gray-500" />
+            <div className="s-c5 s-ib s-dp">
+              <div className="s-xy s-g4 s-qi s-4u s-c5 s-ib s-ig">
+                <FileText className="s-fz s-xt s-uc" />
               </div>
-              <span className="text-sm">{t('settings.legal.termsOfService')}</span>
+              <span className="s-v9">{t('settings.legal.termsOfService')}</span>
             </div>
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            <ExternalLink className="s-fz s-xt s-ul" />
           </Row>
           <Row onClick={() => window.open('/privacy', '_blank')}>
-            <span className="text-sm ml-10">{t('settings.legal.privacyPolicy')}</span>
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            <span className="s-v9 s-lj">{t('settings.legal.privacyPolicy')}</span>
+            <ExternalLink className="s-fz s-xt s-ul" />
           </Row>
           <Row onClick={() => window.open('/refund-policy', '_blank')} last>
-            <span className="text-sm ml-10">{t('settings.legal.refundPolicy')}</span>
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+            <span className="s-v9 s-lj">{t('settings.legal.refundPolicy')}</span>
+            <ExternalLink className="s-fz s-xt s-ul" />
           </Row>
         </Section>
 
         {/* Account */}
         <SectionLabel>{t('settings.account.title')}</SectionLabel>
-        <Section className="mb-8">
+        <Section className="s-k2">
           <Row onClick={() => navigate('/settings/account')} last>
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-md bg-red-500/15 flex items-center justify-center">
-                <Trash2 className="h-4 w-4 text-red-500" />
+            <div className="s-c5 s-ib s-dp">
+              <div className="s-xy s-g4 s-qi s-5p s-c5 s-ib s-ig">
+                <Trash2 className="s-fz s-xt s-v1" />
               </div>
-              <span className="text-sm">{t('settings.account.manageAccount')}</span>
+              <span className="s-v9">{t('settings.account.manageAccount')}</span>
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="s-fz s-xt s-ul" />
           </Row>
         </Section>
       </div>

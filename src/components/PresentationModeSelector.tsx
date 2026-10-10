@@ -10,25 +10,25 @@ interface PresentationModeSelectorProps {
 // Each mode gets its own distinct color family
 const modeThemes = {
   strict: {
-    border: "border-primary/40 hover:border-primary",
-    iconTile: "bg-primary/10",
-    icon: "text-primary",
-    title: "text-foreground",
-    button: "bg-primary text-primary-foreground hover:bg-primary/90",
+    border: "s-7s s-hf",
+    iconTile: "s-5e",
+    icon: "s-uw",
+    title: "s-u9",
+    button: "s-5c s-ux s-h8",
   },
   overview: {
-    border: "border-success/40 hover:border-success",
-    iconTile: "bg-success/10",
-    icon: "text-success",
-    title: "text-foreground",
-    button: "bg-success text-success-foreground hover:bg-success/90",
+    border: "s-81 s-hj",
+    iconTile: "s-60",
+    icon: "s-va",
+    title: "s-u9",
+    button: "s-5z s-vb s-hc",
   },
   keycards: {
-    border: "border-duo-purple/40 hover:border-duo-purple",
-    iconTile: "bg-duo-purple/10",
-    icon: "text-duo-purple",
-    title: "text-foreground",
-    button: "bg-duo-purple text-duo-purple-foreground hover:bg-duo-purple/90",
+    border: "s-7a s-he",
+    iconTile: "s-4n",
+    icon: "s-u5",
+    title: "s-u9",
+    button: "s-4m s-u6 s-gy",
   },
 } as const;
 
@@ -38,43 +38,43 @@ export const PresentationModeSelector = ({
   const { t } = useTranslation();
 
   return (
-    <div className="h-screen flex items-start md:items-center justify-center px-4 pb-6 pt-28 md:pt-8 bg-gradient-to-br from-background via-background to-primary/5 overflow-y-auto">
-      <div className="w-full max-w-5xl space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+    <div className="s-gi s-c5 s-id s-k8 s-ig s-os s-n9 s-ob s-ki s-40 s-mq">
+      <div className="s-y7 s-jf s-t3">
+        <div className="s-u0 s-sy">
+          <h1 className="s-ta s-kk s-cx s-u9">
             {t('presentationMode.chooseMode')}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="s-ul">
             {t('presentationMode.selectHow')}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="s-e0 s-k7 s-dq">
           {/* Whole Speech Mode — amber */}
           <Card
-            className={`p-5 rounded-3xl border-2 ${modeThemes.strict.border} transition-all duration-200 cursor-pointer`}
+            className={`s-mx s-qa s-6n ${modeThemes.strict.border} s-wr s-bo s-8m`}
             onClick={() => onSelectMode('strict')}
           >
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className={`h-11 w-11 rounded-2xl ${modeThemes.strict.iconTile} flex items-center justify-center`}>
-                  <MonitorPlay className={`h-5 w-5 ${modeThemes.strict.icon}`} />
+            <div className="s-t1">
+              <div className="s-c5 s-ib s-dp">
+                <div className={`s-fo s-xg s-q9 ${modeThemes.strict.iconTile} s-c5 s-ib s-ig`}>
+                  <MonitorPlay className={`s-g1 s-xv ${modeThemes.strict.icon}`} />
                 </div>
               </div>
 
               <div>
-                <h3 className={`text-lg font-bold mb-1 ${modeThemes.strict.title}`}>
+                <h3 className={`s-uk s-cx s-jw ${modeThemes.strict.title}`}>
                   {t('presentationMode.wholeSpeechMode', 'Whole Speech Mode')}
                 </h3>
-                <p className="text-muted-foreground text-xs">
+                <p className="s-ul s-vj">
                   {t('presentationMode.wholeSpeechModeDescV2', 'Run the whole speech from start to finish and get AI feedback.')}
                 </p>
-                <p className="text-[11px] text-muted-foreground/80 mt-2">
+                <p className="s-tm s-uq s-lv">
                   {t('presentationMode.wholeSpeechTrains', 'Trains: delivery and word-for-word recall')}
                 </p>
               </div>
 
-              <Button className={`w-full rounded-2xl ${modeThemes.strict.button}`} size="sm">
+              <Button className={`s-y7 s-q9 ${modeThemes.strict.button}`} size="sm">
                 {t('presentationMode.selectWholeSpeech', 'Select Whole Speech')}
               </Button>
             </div>
@@ -82,29 +82,29 @@ export const PresentationModeSelector = ({
 
           {/* Script Mode — green */}
           <Card
-            className={`p-5 rounded-3xl border-2 ${modeThemes.overview.border} transition-all duration-200 cursor-pointer`}
+            className={`s-mx s-qa s-6n ${modeThemes.overview.border} s-wr s-bo s-8m`}
             onClick={() => onSelectMode('overview')}
           >
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className={`h-11 w-11 rounded-2xl ${modeThemes.overview.iconTile} flex items-center justify-center`}>
-                  <BookOpen className={`h-5 w-5 ${modeThemes.overview.icon}`} />
+            <div className="s-t1">
+              <div className="s-c5 s-ib s-dp">
+                <div className={`s-fo s-xg s-q9 ${modeThemes.overview.iconTile} s-c5 s-ib s-ig`}>
+                  <BookOpen className={`s-g1 s-xv ${modeThemes.overview.icon}`} />
                 </div>
               </div>
 
               <div>
-                <h3 className={`text-lg font-bold mb-1 ${modeThemes.overview.title}`}>
+                <h3 className={`s-uk s-cx s-jw ${modeThemes.overview.title}`}>
                   {t('presentationMode.scriptMode', 'Script Mode')}
                 </h3>
-                <p className="text-muted-foreground text-xs">
+                <p className="s-ul s-vj">
                   {t('presentationMode.scriptModeDescV2', 'Read one beat at a time, then retell it from a reference word.')}
                 </p>
-                <p className="text-[11px] text-muted-foreground/80 mt-2">
+                <p className="s-tm s-uq s-lv">
                   {t('presentationMode.scriptModeTrains', 'Trains: meaning and structure, beat by beat')}
                 </p>
               </div>
 
-              <Button className={`w-full rounded-2xl ${modeThemes.overview.button}`} size="sm">
+              <Button className={`s-y7 s-q9 ${modeThemes.overview.button}`} size="sm">
                 {t('presentationMode.selectScript', 'Select Script')}
               </Button>
             </div>
@@ -112,30 +112,30 @@ export const PresentationModeSelector = ({
 
           {/* Keycards — purple */}
           <Card
-            className={`p-5 rounded-3xl border-2 ${modeThemes.keycards.border} transition-all duration-200 cursor-pointer`}
+            className={`s-mx s-qa s-6n ${modeThemes.keycards.border} s-wr s-bo s-8m`}
             onClick={() => onSelectMode('keycards')}
           >
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className={`h-11 w-11 rounded-2xl ${modeThemes.keycards.iconTile} flex items-center justify-center`}>
-                  <Layers className={`h-5 w-5 ${modeThemes.keycards.icon}`} />
+            <div className="s-t1">
+              <div className="s-c5 s-ib s-dp">
+                <div className={`s-fo s-xg s-q9 ${modeThemes.keycards.iconTile} s-c5 s-ib s-ig`}>
+                  <Layers className={`s-g1 s-xv ${modeThemes.keycards.icon}`} />
                 </div>
               </div>
               <div>
-                <h3 className={`text-lg font-bold mb-1 ${modeThemes.keycards.title}`}>
+                <h3 className={`s-uk s-cx s-jw ${modeThemes.keycards.title}`}>
                   {t('presentationMode.keycardsMode', 'Keycards')}
                 </h3>
-                <p className="text-muted-foreground text-xs">{t('presentationMode.keycardsModeDesc')}</p>
-                <p className="text-[11px] text-muted-foreground/80 mt-2">{t('presentationMode.keycardsTrains')}</p>
+                <p className="s-ul s-vj">{t('presentationMode.keycardsModeDesc')}</p>
+                <p className="s-tm s-uq s-lv">{t('presentationMode.keycardsTrains')}</p>
               </div>
-              <Button className={`w-full rounded-2xl ${modeThemes.keycards.button}`} size="sm">
+              <Button className={`s-y7 s-q9 ${modeThemes.keycards.button}`} size="sm">
                 {t('presentationMode.selectKeycards', 'Select Keycards')}
               </Button>
             </div>
           </Card>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="s-u0 s-v9 s-ul">
           {t('presentationMode.switchModes')}
         </p>
       </div>

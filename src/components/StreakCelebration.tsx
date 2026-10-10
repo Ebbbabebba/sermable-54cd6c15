@@ -16,7 +16,7 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+        className="s-c4 s-i5 s-yh s-c5 s-ib s-ig s-40 s-3h"
         onClick={onClose}
       >
         <motion.div
@@ -24,12 +24,12 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 50 }}
           transition={{ type: "spring", damping: 15, stiffness: 300 }}
-          className="bg-card border-2 border-primary rounded-3xl shadow-2xl px-12 py-10 text-center max-w-sm mx-4"
+          className="s-4b s-6n s-7n s-qa s-qr s-oo s-p0 s-u0 s-js s-m8"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Animated flame */}
           <motion.div
-            className="mx-auto mb-6 w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center"
+            className="s-m9 s-k1 s-xo s-fv s-qe s-5c s-c5 s-ib s-ig"
             animate={{ 
               scale: [1, 1.1, 1],
             }}
@@ -41,13 +41,13 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
               }}
               transition={{ duration: 0.5, repeat: Infinity }}
             >
-              <Flame className="h-14 w-14 text-white" fill="currentColor" />
+              <Flame className="s-fq s-xi s-vg" fill="currentColor" />
             </motion.div>
           </motion.div>
           
           {/* Streak number */}
           <motion.div 
-            className="text-6xl font-black text-primary mb-2"
+            className="s-td s-cw s-uw s-jy"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", damping: 10 }}
@@ -55,11 +55,11 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
             {streak}
           </motion.div>
           
-          <div className="text-2xl font-bold mb-2">
+          <div className="s-t9 s-cx s-jy">
             {t("streak.title")}
           </div>
 
-          <p className="text-muted-foreground mb-8">
+          <p className="s-ul s-k2">
             {t("streak.subtitle")}
           </p>
           
@@ -67,7 +67,7 @@ const StreakCelebration = ({ streak, onClose }: StreakCelebrationProps) => {
           <Button 
             onClick={onClose}
             size="lg"
-            className="w-full text-lg font-bold py-6 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+            className="s-y7 s-uk s-cx s-p9 s-qo s-5c"
           >
             {t("streak.button")}
           </Button>

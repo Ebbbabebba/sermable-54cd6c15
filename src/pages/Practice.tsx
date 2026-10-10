@@ -1964,7 +1964,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
 
   if (loading) {
-    return <div className="h-screen overflow-hidden" />;
+    return <div className="s-gi s-mn" />;
   }
 
   if (!speech) return null;
@@ -1973,27 +1973,27 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Day-After Recall Mode
   if (isDayAfterRecall && !showResults) {
     return (
-      <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="s-gi s-3v s-c5 s-c7 s-mn">
         {/* Minimal header with exit */}
-        <header className="flex items-center justify-between p-4 border-b border-border/50" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
+        <header className="s-c5 s-ib s-if s-mw s-6v s-70" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
               setIsDayAfterRecall(false);
             }}
-            className="gap-2"
+            className="s-dn"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="s-fz s-xt" />
             {t('common.exit')}
           </Button>
-          <h1 className="text-sm font-medium text-muted-foreground truncate max-w-[50%]">
+          <h1 className="s-v9 s-d0 s-ul truncate s-jk">
             {speech.title}
           </h1>
-          <div className="w-16" />
+          <div className="s-xj" />
         </header>
         
-        <div className="flex-1 flex flex-col">
+        <div className="s-c6 s-c5 s-c7">
           <DayAfterRecallView
             speechId={speech.id}
             onComplete={() => {
@@ -2015,9 +2015,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Focus Mode: Beat-based sentence-by-sentence practice
   if (isPracticing && !showResults) {
     return (
-      <div className="h-screen bg-background flex flex-col">
+      <div className="s-gi s-3v s-c5 s-c7">
         {/* Full-height beat practice - BeatPracticeView has its own header */}
-        <div className="flex-1 flex flex-col">
+        <div className="s-c6 s-c5 s-c7">
           <BeatPracticeView
             speechId={speech.id}
             subscriptionTier={subscriptionTier}
@@ -2057,28 +2057,28 @@ const [liveTranscription, setLiveTranscription] = useState("");
   // Analysis screen: Clean, minimal results view
   if (showResults && sessionResults) {
     return (
-      <div className="h-screen bg-background overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <div className="s-gi s-3v s-mn" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <LoadingOverlay isVisible={isProcessing} />
         
-        <div className="absolute left-4 z-10" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
+        <div className="s-26 s-iw s-ye" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/dashboard")}
-            className="rounded-full hover:bg-card/80"
+            className="s-qe s-gv"
           >
-            <X className="h-5 w-5" />
+            <X className="s-g1 s-xv" />
           </Button>
         </div>
 
         {/* Centered analysis content */}
-        <div className="container mx-auto px-4 py-16 max-w-4xl">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">{t('practice.results.title')}</h1>
-            <p className="text-lg text-muted-foreground">{t('practice.results.feedback')}</p>
+        <div className="s-8j s-m9 s-os s-p2 s-je">
+          <div className="s-u0 s-k2">
+            <h1 className="s-ta s-cx s-jy">{t('practice.results.title')}</h1>
+            <p className="s-uk s-ul">{t('practice.results.feedback')}</p>
           </div>
 
-          <div ref={resultsRef} className="animate-fade-in">
+          <div ref={resultsRef} className="s-2y">
             <PracticeResults
               accuracy={sessionResults.accuracy}
               missedWords={sessionResults.missedWords}
@@ -2094,15 +2094,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Automatic Schedule Info */}
           {adaptiveScheduleResult && (
-            <Card className="mt-8 border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 animate-fade-in">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <div className="flex items-center justify-center gap-2 text-primary">
-                    <Target className="h-5 w-5" />
-                    <span className="font-semibold text-lg">{t('practice.nextPractice')}</span>
+            <Card className="s-m1 s-7r s-5e s-2y">
+              <CardContent className="s-of">
+                <div className="s-u0 s-t1">
+                  <div className="s-c5 s-ib s-ig s-dn s-uw">
+                    <Target className="s-g1 s-xv" />
+                    <span className="s-d3 s-uk">{t('practice.nextPractice')}</span>
                   </div>
                   
-                  <div className="text-3xl font-bold">
+                  <div className="s-ta s-cx">
                     {adaptiveScheduleResult.intervalMinutes < 60 
                       ? `${Math.round(adaptiveScheduleResult.intervalMinutes)} min`
                       : adaptiveScheduleResult.intervalMinutes < 24 * 60
@@ -2110,31 +2110,31 @@ const [liveTranscription, setLiveTranscription] = useState("");
                       : `${(adaptiveScheduleResult.intervalMinutes / (24 * 60)).toFixed(1)} days`}
                   </div>
                   
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  <p className="s-v9 s-ul s-jq s-m9">
                     {adaptiveScheduleResult.recommendation}
                   </p>
 
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border/50">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Target className="h-3 w-3" />
-                        <span className="text-xs">{t('practice.weightedScore')}</span>
+                  <div className="s-e0 s-e3 s-dq s-od s-82 s-70">
+                    <div className="s-u0">
+                      <div className="s-c5 s-ib s-ig s-dl s-ul s-jw">
+                        <Target className="s-fw s-xp" />
+                        <span className="s-vj">{t('practice.weightedScore')}</span>
                       </div>
-                      <span className="font-semibold">{Math.round(adaptiveScheduleResult.weightedAccuracy)}%</span>
+                      <span className="s-d3">{Math.round(adaptiveScheduleResult.weightedAccuracy)}%</span>
                     </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Eye className="h-3 w-3" />
-                        <span className="text-xs">{t('practice.scriptVisible')}</span>
+                    <div className="s-u0">
+                      <div className="s-c5 s-ib s-ig s-dl s-ul s-jw">
+                        <Eye className="s-fw s-xp" />
+                        <span className="s-vj">{t('practice.scriptVisible')}</span>
                       </div>
-                      <span className="font-semibold">{Math.round(speech.base_word_visibility_percent || 100)}%</span>
+                      <span className="s-d3">{Math.round(speech.base_word_visibility_percent || 100)}%</span>
                     </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Target className="h-3 w-3" />
-                        <span className="text-xs">{t('practice.stage')}</span>
+                    <div className="s-u0">
+                      <div className="s-c5 s-ib s-ig s-dl s-ul s-jw">
+                        <Target className="s-fw s-xp" />
+                        <span className="s-vj">{t('practice.stage')}</span>
                       </div>
-                      <span className="font-semibold capitalize">{adaptiveScheduleResult.learningStage}</span>
+                      <span className="s-d3 s-8i">{adaptiveScheduleResult.learningStage}</span>
                     </div>
                   </div>
                 </div>
@@ -2143,13 +2143,13 @@ const [liveTranscription, setLiveTranscription] = useState("");
           )}
 
 
-          <div className="flex justify-center mt-8">
+          <div className="s-c5 s-ig s-m1">
             <Button
               size="lg"
               onClick={() => navigate("/dashboard")}
-              className="rounded-full px-8"
+              className="s-qe s-ov"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="s-fz s-xt s-lp" />
               {t('practice.results.dashboard')}
             </Button>
           </div>
@@ -2182,51 +2182,51 @@ const [liveTranscription, setLiveTranscription] = useState("");
   const isLockedEffective = isLocked && !isFullyComplete;
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-auto">
+    <div className="s-gi s-3v s-c5 s-c7 s-mm">
       <LoadingOverlay isVisible={isProcessing} />
       
       {/* Duolingo-style header with progress bar */}
-      <header className="sticky top-0 z-10 bg-background border-b border-border/30" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
+      <header className="s-t7 s-w1 s-ye s-3v s-6v s-6y" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
+        <div className="s-8j s-m9 s-os s-p6">
+          <div className="s-c5 s-ib s-dp">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/dashboard")}
-              className="shrink-0 rounded-full hover:bg-muted"
+              className="s-r5 s-qe s-h0"
             >
-              <X className="h-5 w-5 text-muted-foreground" />
+              <X className="s-g1 s-xv s-ul" />
             </Button>
             
-            <div className="flex-1">
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
+            <div className="s-c6">
+              <div className="s-fw s-50 s-qe s-mn">
                 <div 
-                  className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                  className="s-gg s-5c s-qe s-wr s-br s-bu"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
             </div>
             
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="s-c5 s-ib s-dl s-r5">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(`/presentation/${id}`)}
-                className="rounded-full"
+                className="s-qe"
               >
-                <Presentation className="h-4 w-4" />
+                <Presentation className="s-fz s-xt" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Settings className="w-4 h-4" />
+                  <Button variant="ghost" size="icon" className="s-qe">
+                    <Settings className="s-xt s-fz" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuContent align="end" className="s-xx">
                   <DropdownMenuLabel>{t('practice.settings.title')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <div
-                    className="px-2 py-2"
+                    className="s-op s-p3"
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                   >
@@ -2235,12 +2235,12 @@ const [liveTranscription, setLiveTranscription] = useState("");
                   <DropdownMenuSeparator />
                   {subscriptionTier !== 'free' && (
                     <DropdownMenuItem onClick={handleOpenEditScript}>
-                      <Pencil className="mr-2 h-4 w-4" />
+                      <Pencil className="s-lp s-fz s-xt" />
                       {t('practice.editScriptTitle')}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={handleOpenSpeechSettings}>
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Settings className="s-lp s-fz s-xt" />
                     {t('nav.settings')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -2251,15 +2251,15 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </header>
 
       {/* Main content - centered and focused */}
-      <main className="flex-1 flex flex-col items-center justify-start px-4 pt-4 pb-32">
-        <div className="w-full max-w-md space-y-4">
+      <main className="s-c6 s-c5 s-c7 s-ib s-ii s-os s-od s-n7">
+        <div className="s-y7 s-jq s-t1">
 
           {/* Compact hero — title + goal in a tight stack, no oversized mascot */}
           {speech && (
-            <div className="text-center space-y-1 pt-1">
-              <h1 className="text-xl font-semibold tracking-tight truncate">{speech.title}</h1>
+            <div className="s-u0 s-sw s-o7">
+              <h1 className="s-vi s-d3 s-wh truncate">{speech.title}</h1>
               {speech.goal_date && (
-                <p className="text-xs text-muted-foreground">
+                <p className="s-vj s-ul">
                   {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
                 </p>
               )}
@@ -2267,32 +2267,32 @@ const [liveTranscription, setLiveTranscription] = useState("");
           )}
 
           {/* Compact inline stat row — no SVG arcs, Apple-style density */}
-          <div className="flex items-center justify-center gap-6 py-1">
-            <div className="flex flex-col items-center">
-              <span className="text-xl font-semibold tabular-nums">{masteredBeats}</span>
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('beat_practice.learned')}</span>
+          <div className="s-c5 s-ib s-ig s-ds s-oy">
+            <div className="s-c5 s-c7 s-ib">
+              <span className="s-vi s-d3 tabular-nums">{masteredBeats}</span>
+              <span className="s-tl s-x1 s-wi s-ul">{t('beat_practice.learned')}</span>
             </div>
-            <div className="h-8 w-px bg-border" />
-            <div className="flex flex-col items-center">
-              <span className="text-xl font-semibold tabular-nums text-primary">{masteryPercent}%</span>
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('beat_practice.mastery', 'Mastery')}</span>
+            <div className="s-g6 s-y9 s-4a" />
+            <div className="s-c5 s-c7 s-ib">
+              <span className="s-vi s-d3 tabular-nums s-uw">{masteryPercent}%</span>
+              <span className="s-tl s-x1 s-wi s-ul">{t('beat_practice.mastery', 'Mastery')}</span>
             </div>
-            <div className="h-8 w-px bg-border" />
-            <div className="flex flex-col items-center">
-              <span className="text-xl font-semibold tabular-nums">{totalBeats - masteredBeats}</span>
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{t('beat_practice.remaining')}</span>
+            <div className="s-g6 s-y9 s-4a" />
+            <div className="s-c5 s-c7 s-ib">
+              <span className="s-vi s-d3 tabular-nums">{totalBeats - masteredBeats}</span>
+              <span className="s-tl s-x1 s-wi s-ul">{t('beat_practice.remaining')}</span>
             </div>
           </div>
 
 
           {/* Fully complete card — speech mastered and deadline passed */}
           {isFullyComplete && (
-            <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.08] via-background to-background p-6 shadow-sm text-center space-y-3">
-              <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-                <CheckCircle2 className="h-7 w-7 text-primary" />
+            <div className="s-pd s-mn s-qa s-6l s-71 s-5e s-my s-r3 s-u0 s-t0">
+              <div className="s-m9 s-xi s-fq s-qe s-5e s-pl s-py s-c5 s-ib s-ig">
+                <CheckCircle2 className="s-g4 s-xy s-uw" />
               </div>
-              <h2 className="text-lg font-bold">{t('practice.speech_complete_title', 'You know your speech!')}</h2>
-              <p className="text-sm text-muted-foreground leading-snug">
+              <h2 className="s-uk s-cx">{t('practice.speech_complete_title', 'You know your speech!')}</h2>
+              <p className="s-v9 s-ul s-iq">
                 {t('practice.speech_complete_desc', 'All parts are mastered and your deadline has passed. Great job!')}
               </p>
             </div>
@@ -2300,18 +2300,18 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Session Card - only show for active (non-complete) sessions */}
           {!todaySessionDone && !isFullyComplete && (
-            <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-primary/10 ring-1 ring-primary/20">
-                  <Target className="h-5 w-5 text-primary" />
+            <div className="s-pd s-mn s-qa s-6l s-71 s-5e s-mx s-r3">
+              <div className="s-c5 s-ib s-dp">
+                <div className="s-xg s-fo s-q9 s-c5 s-ib s-ig s-5e s-pl s-py">
+                  <Target className="s-g1 s-xv s-uw" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold leading-tight">
+                <div className="s-c6 s-l8">
+                  <h3 className="s-d3 s-ir">
                     {masteredBeats === 0
                       ? t('beat_practice.todays_session')
                       : t('beat_practice.active_session')}
                   </h3>
-                  <p className="text-xs text-muted-foreground leading-snug">
+                  <p className="s-vj s-ul s-iq">
                     {masteredBeats > 0
                       ? t('beat_practice.session_desc_recall')
                       : t('beat_practice.session_desc_start')}
@@ -2320,16 +2320,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
               </div>
 
               {(masteredBeats > 0 || nextBeatNumber <= totalBeats) && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
+                <div className="s-c5 s-cb s-dm s-lx">
                   {masteredBeats > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-medium">
-                      <RotateCcw className="h-3 w-3" />
+                    <span className="s-i4 s-ib s-dm s-oq s-oy s-qe s-3s s-tu s-8p s-tm s-d0">
+                      <RotateCcw className="s-fw s-xp" />
                       {masteredBeats} {t('beat_practice.to_recall')}
                     </span>
                   )}
                   {nextBeatNumber <= totalBeats && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
-                      <Flame className="h-3 w-3" />
+                    <span className="s-i4 s-ib s-dm s-oq s-oy s-qe s-5e s-uw s-tm s-d0">
+                      <Flame className="s-fw s-xp" />
                       {t('beat_practice.beat_to_learn', { num: nextBeatNumber })}
                     </span>
                   )}
@@ -2340,27 +2340,27 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
           {/* Beat Timeline - horizontal dots with connecting progress track */}
           {hasBeats && (
-            <div className="pt-2 pb-1">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+            <div className="s-o9 s-n1">
+              <div className="s-c5 s-ib s-if s-jy s-ol">
+                <span className="s-tl s-x1 s-wj s-ul s-d0">
                   {t('beat_practice.beats', 'Beats')}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium tabular-nums">
+                <span className="s-tl s-x1 s-wj s-ul s-d0 tabular-nums">
                   {masteredBeats}/{totalBeats}
                 </span>
               </div>
-              <div className="relative">
+              <div className="s-pd">
                 {/* Track */}
-                <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-0.5 bg-muted rounded-full" />
+                <div className="s-26 s-iw s-pi s-w4 s-9 s-fk s-50 s-qe" />
                 <div
-                  className="absolute left-4 top-1/2 -translate-y-1/2 h-0.5 bg-primary rounded-full transition-all duration-500"
+                  className="s-26 s-iw s-w4 s-9 s-fk s-5c s-qe s-wr s-bq"
                   style={{
                     width: totalBeats > 1
                       ? `calc((100% - 2rem) * ${Math.min(masteredBeats / (totalBeats - 1), 1)})`
                       : masteredBeats > 0 ? 'calc(100% - 2rem)' : '0px'
                   }}
                 />
-                <div className="relative flex items-center justify-between">
+                <div className="s-pd s-c5 s-ib s-if">
                   {segments.map((segment, idx) => {
                     const isCurrent = !segment.is_mastered && idx === masteredBeats;
                     const isLast = idx === totalBeats - 1;
@@ -2370,9 +2370,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
                       return (
                         <div
                           key={segment.id}
-                          className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center"
+                          className="s-pd s-ye s-y0 s-g6 s-qe s-c5 s-ib s-ig"
                         >
-                          <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                          <div className="s-xk s-fs s-qe s-51" />
                         </div>
                       );
                     }
@@ -2381,16 +2381,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
                       <div
                         key={segment.id}
                         className={`
-                          relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all
+                          s-pd s-ye s-y0 s-g6 s-qe s-c5 s-ib s-ig s-vj s-d3 s-wr
                           ${segment.is_mastered
-                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                            ? 's-5c s-ux s-r3 s-r1'
                             : isCurrent
-                              ? 'bg-background text-primary border-2 border-primary ring-4 ring-primary/15'
-                              : 'bg-muted text-muted-foreground border border-border'}
+                              ? 's-3v s-uw s-6n s-7n s-pn s-px'
+                              : 's-50 s-ul s-6l s-6x'}
                         `}
                       >
                         {segment.is_mastered ? (
-                          <CheckCircle2 className="h-4 w-4" />
+                          <CheckCircle2 className="s-fz s-xt" />
                         ) : (
                           idx + 1
                         )}
@@ -2408,25 +2408,25 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </main>
 
       {/* Fixed bottom CTA - Duolingo style */}
-        <div className="fixed bottom-0 left-0 right-0 px-4 pt-3 pb-6 bg-background/95 backdrop-blur-md border-t border-border/40" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
-          <div className="max-w-md mx-auto space-y-2">
+        <div className="s-c4 s-8b s-is s-pe s-os s-oc s-n9 s-43 s-3f s-82 s-6z" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
+          <div className="s-jq s-m9 s-sy">
             {isFullyComplete ? (
               <>
                 <Button
                   size="lg"
                   onClick={() => navigate('/dashboard')}
-                  className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                  className="s-y7 s-fq s-q9 s-uk s-cx s-qx s-r0 s-hr s-wr"
                 >
-                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  <CheckCircle2 className="s-g1 s-xv s-lp" />
                   {t('practice.back_to_overview', 'Back to overview')}
                 </Button>
                 <Button
                   variant="outline"
                   size="lg"
                   onClick={() => navigate(`/presentation/${id}`)}
-                  className="w-full h-12 rounded-2xl font-semibold"
+                  className="s-y7 s-fp s-q9 s-d3"
                 >
-                  <Presentation className="h-4 w-4 mr-2" />
+                  <Presentation className="s-fz s-xt s-lp" />
                   {t('practice.rehearse_presentation', 'Rehearse for the big day')}
                 </Button>
               </>
@@ -2435,9 +2435,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 size="lg" 
                 variant="outline"
                 onClick={() => navigate('/dashboard')}
-                className={`w-full h-14 rounded-2xl text-lg font-bold bg-background ${masteryPercent >= 100 ? 'border-green-500/30 text-green-600 hover:bg-green-500/10' : 'border-amber-500/30 text-amber-600 hover:bg-amber-500/10'}`}
+                className={`s-y7 s-fq s-q9 s-uk s-cx s-3v ${masteryPercent >= 100 ? 's-7e s-ue s-gz' : 's-6t s-tu s-gs'}`}
               >
-              {masteryPercent >= 100 ? <CheckCircle2 className="h-5 w-5 mr-2" /> : <Clock className="h-5 w-5 mr-2" />}
+              {masteryPercent >= 100 ? <CheckCircle2 className="s-g1 s-xv s-lp" /> : <Clock className="s-g1 s-xv s-lp" />}
               {nextReviewDate && nextReviewDate.toDateString() === new Date().toDateString()
                 ? t('beat_practice.done_for_now', "Done for now!")
                 : t('beat_practice.done_for_today', "Done for today!")}
@@ -2447,9 +2447,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
               size="lg" 
               onClick={() => handleStartPractice()}
               disabled={isLockedEffective}
-              className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+              className="s-y7 s-fq s-q9 s-uk s-cx s-qx s-r0 s-hr s-wr"
             >
-              <Play className="h-5 w-5 mr-2" />
+              <Play className="s-g1 s-xv s-lp" />
               {isLockedEffective 
                 ? t('practice.locked') 
                 : masteredBeats === 0
@@ -2463,9 +2463,9 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <button
               type="button"
               onClick={() => setShowTimingWarning(true)}
-              className="mx-auto flex items-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:underline hover:text-foreground transition-colors pt-1"
+              className="s-m9 s-c5 s-ib s-dm s-v9 s-ul s-x0 s-i1 s-hv s-ws s-o7"
             >
-              <Clock className="h-3.5 w-3.5" />
+              <Clock className="s-fx s-xq" />
               {t('practice.practiceAnyway')}
             </button>
           )}
@@ -2477,21 +2477,21 @@ const [liveTranscription, setLiveTranscription] = useState("");
       <AlertDialog open={showTimingWarning} onOpenChange={setShowTimingWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
+            <AlertDialogTitle className="s-c5 s-ib s-dn">
+              <AlertTriangle className="s-g1 s-xv s-tt" />
               {t('practice.practicingEarly')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-3">
+              <div className="s-t0">
                 <p>
                   {t('practice.aiRecommendsWaiting')}<strong><LockCountdown nextReviewDate={nextReviewDate!} /></strong>
                 </p>
-                <p className="text-muted-foreground">
+                <p className="s-ul">
                   {t('practice.spacedRepetitionEffective')}
                 </p>
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-4">
-                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                <div className="s-c5 s-id s-dn s-mv s-qh s-3s s-6l s-6s s-ly">
+                  <AlertTriangle className="s-fz s-xt s-tt s-r5 s-ls" />
+                  <p className="s-vj s-tv s-8p">
                     {t('practice.practiceAnywayWarning', 'Practicing early may reduce long-term retention. Use this sparingly for best results.')}
                   </p>
                 </div>
@@ -2509,8 +2509,8 @@ const [liveTranscription, setLiveTranscription] = useState("");
 
       {/* Edit Script Dialog */}
       <Dialog open={isEditingScript} onOpenChange={setIsEditingScript}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="pr-10">
+        <DialogContent className="s-jc s-j9 s-mq">
+          <DialogHeader className="s-ny">
             <DialogTitle>{t('practice.editScriptTitle')}</DialogTitle>
             <DialogDescription>
               {t('practice.editScriptDesc')}
@@ -2520,16 +2520,16 @@ const [liveTranscription, setLiveTranscription] = useState("");
             value={editedScriptText}
             onChange={setEditedScriptText}
             rows={12}
-            className="min-h-[300px] text-sm"
+            className="s-l2 s-v9"
             placeholder={t('practice.enterSpeechText')}
           />
-          <div className="mt-3">
+          <div className="s-lx">
             <PauseSlidersList
               text={editedScriptText}
               onChange={setEditedScriptText}
             />
           </div>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="s-dn">
             <Button variant="outline" onClick={() => setIsEditingScript(false)}>
               {t('common.cancel')}
             </Button>
@@ -2541,30 +2541,30 @@ const [liveTranscription, setLiveTranscription] = useState("");
       </Dialog>
 
       <Dialog open={showSpeechSettings} onOpenChange={setShowSpeechSettings}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="pr-10">
+        <DialogContent className="s-jc s-j9 s-mq">
+          <DialogHeader className="s-ny">
             <DialogTitle>{t('nav.settings')}</DialogTitle>
             <DialogDescription>
               {t('practice.speechSettingsDesc', 'Update practice mode and deadline.')}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="s-t3">
             <LearningModeSelector value={editingLearningMode} onChange={setEditingLearningMode} />
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('upload.goalDate', 'Deadline')}</label>
+            <div className="s-sy">
+              <label className="s-v9 s-d0">{t('upload.goalDate', 'Deadline')}</label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="s-y7 s-ii s-uj s-d2"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="s-lp s-fz s-xt" />
                     {editingDeadline ? format(editingDeadline, 'PPP') : <span>{t('upload.goalDate', 'Select deadline')}</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="s-y6 s-mr" align="start">
                   <Calendar
                     mode="single"
                     selected={editingDeadline}
@@ -2576,7 +2576,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="s-dn">
             <Button variant="outline" onClick={() => setShowSpeechSettings(false)}>
               {t('common.cancel')}
             </Button>
@@ -2591,48 +2591,48 @@ const [liveTranscription, setLiveTranscription] = useState("");
       <AlertDialog open={showSpacedRepetitionInfo} onOpenChange={setShowSpacedRepetitionInfo}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
+            <AlertDialogTitle className="s-c5 s-ib s-dn">
+              <GraduationCap className="s-g1 s-xv s-uw" />
               {t('practice.spacedRepetitionTitle', 'Spaced Repetition Learning')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-4">
-                <p className="text-foreground">
+              <div className="s-t1">
+                <p className="s-u9">
                   {t('practice.spacedRepetitionExplain', 'This app uses spaced repetition - a scientifically proven method that optimizes your memory retention.')}
                 </p>
                 
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-sm text-muted-foreground">
+                <div className="s-sy">
+                  <div className="s-c5 s-id s-dn">
+                    <CheckCircle2 className="s-fz s-xt s-uw s-r5 s-ls" />
+                    <p className="s-v9 s-ul">
                       {t('practice.spacedBenefit1', 'Reviews are scheduled at optimal intervals for long-term memory')}
                     </p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-sm text-muted-foreground">
+                  <div className="s-c5 s-id s-dn">
+                    <CheckCircle2 className="s-fz s-xt s-uw s-r5 s-ls" />
+                    <p className="s-v9 s-ul">
                       {t('practice.spacedBenefit2', 'Practicing too early can reduce retention effectiveness')}
                     </p>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <p className="text-sm text-muted-foreground">
+                  <div className="s-c5 s-id s-dn">
+                    <CheckCircle2 className="s-fz s-xt s-uw s-r5 s-ls" />
+                    <p className="s-v9 s-ul">
                       {t('practice.spacedBenefit3', 'Trust the AI scheduling for best results')}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                <div className="s-c5 s-id s-dn s-mv s-qh s-3s s-6l s-6s">
+                  <AlertTriangle className="s-fz s-xt s-tt s-r5 s-ls" />
+                  <p className="s-vj s-tv s-8p">
                     {t('practice.spacedWarning', 'Recalling too early disrupts the memory consolidation process and may weaken long-term retention.')}
                   </p>
                 </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel onClick={handleSpacedRepetitionPracticeAnyway} className="border-muted-foreground/20">
+          <AlertDialogFooter className="s-c7 s-rj s-dn">
+            <AlertDialogCancel onClick={handleSpacedRepetitionPracticeAnyway} className="s-7j">
               {t('practice.practiceAnyway', 'Practice Anyway')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleSpacedRepetitionContinue}>
@@ -2673,12 +2673,12 @@ const HesitationSliderControl = () => {
   const [valueMs, setValueMs] = useState<number>(() => getHesitationThresholdMs());
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs">
-        <span className="font-medium text-foreground">
+    <div className="s-sy">
+      <div className="s-c5 s-ib s-if s-vj">
+        <span className="s-d0 s-u9">
           {t('practice.settings.hesitationTime', 'Hesitation time')}
         </span>
-        <span className="tabular-nums text-muted-foreground">
+        <span className="tabular-nums s-ul">
           {(valueMs / 1000).toFixed(1)}s
         </span>
       </div>

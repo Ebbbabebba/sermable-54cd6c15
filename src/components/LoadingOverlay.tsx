@@ -188,8 +188,8 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: shown ? 1 : 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className={`fixed inset-0 z-[80] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background/95 px-6 ${
-        shown ? "" : "pointer-events-none"
+      className={`s-c4 s-i5 s-yl s-c5 s-ky s-c7 s-ib s-ig s-mn s-43 s-ou ${
+        shown ? "" : "s-nx"
       }`}
     >
       <AnimatePresence>
@@ -199,15 +199,15 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: -8 }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="flex w-full max-w-sm flex-col items-center"
+            className="s-c5 s-y7 s-js s-c7 s-ib"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 shadow-sm">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+            <div className="s-c5 s-fr s-xj s-ib s-ig s-qa s-5e s-r3">
+              <Loader2 className="s-g6 s-y0 s-32 s-uw" aria-hidden="true" />
             </div>
 
             {phase === "rich" && (
-              <div className="mt-8 rounded-3xl border border-primary/10 bg-card/80 px-6 py-5 text-center shadow-lg backdrop-blur-sm">
-                <span className="block text-xs font-bold uppercase tracking-wide text-primary">{copy.label}</span>
+              <div className="s-m1 s-qa s-6l s-7o s-4e s-ou s-p8 s-u0 s-qx s-3h">
+                <span className="s-6i s-vj s-cx s-x1 s-wi s-uw">{copy.label}</span>
                 <AnimatePresence mode="wait">
                   <motion.p
                     key={factIndex}
@@ -215,7 +215,7 @@ const LoadingOverlay = ({ isVisible }: LoadingOverlayProps) => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className="mt-2 text-sm leading-relaxed text-muted-foreground"
+                    className="s-lv s-v9 s-ip s-ul"
                   >
                     {copy.facts[factIndex]}
                   </motion.p>

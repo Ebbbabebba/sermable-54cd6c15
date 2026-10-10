@@ -112,12 +112,12 @@ const SentenceDisplay = ({
             layout: { duration: 0.3, ease: "easeInOut" },
           }}
           className={cn(
-            "inline-flex items-center justify-center mx-1 px-3 py-0.5 rounded-full text-base align-middle",
+            "s-i4 s-ib s-ig s-m4 s-or s-ox s-qe s-tw align-middle",
             state.isCurrent && !state.isSpoken
-              ? "bg-primary/15 text-primary ring-1 ring-primary/40 font-semibold"
+              ? "s-5f s-uw s-pl s-pz s-d3"
               : state.isSpoken
-                ? "bg-muted/40 text-muted-foreground/60"
-                : "bg-primary/10 text-primary",
+                ? "s-55 s-uo"
+                : "s-5e s-uw",
           )}
           aria-label="pause"
         >
@@ -137,8 +137,8 @@ const SentenceDisplay = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={smoothTransition}
           className={cn(
-            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
-            "bg-destructive/20 text-destructive font-medium ring-1 ring-destructive/40"
+            "s-i3 s-m4 s-op s-ox s-q8 s-8m",
+            "s-4k s-u2 s-d0 s-pl s-pp"
           )}
         >
           {state.text}
@@ -157,8 +157,8 @@ const SentenceDisplay = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={smoothTransition}
           className={cn(
-            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer",
-            "bg-warning/20 text-warning font-medium ring-1 ring-warning/40"
+            "s-i3 s-m4 s-op s-ox s-q8 s-8m",
+            "s-64 s-ve s-d0 s-pl s-q3"
           )}
         >
           {state.text}
@@ -183,10 +183,10 @@ const SentenceDisplay = ({
               : { duration: 0.25 },
           }}
           className={cn(
-            "inline-block mx-1 px-2 py-0.5 rounded cursor-pointer transition-colors duration-200",
+            "s-i3 s-m4 s-op s-ox s-q8 s-8m s-ws s-bo",
             state.isCurrent &&
-              "ring-2 ring-primary bg-primary/20 text-primary font-semibold shadow-[0_0_12px_hsl(var(--primary)/0.4)]",
-            !state.isCurrent && "text-muted-foreground/60 hover:bg-muted"
+              "s-pm s-pw s-5g s-uw s-d3 s-qu",
+            !state.isCurrent && "s-uo s-h0"
           )}
         >
           {"•".repeat(dotCount)}
@@ -212,24 +212,24 @@ const SentenceDisplay = ({
           layout: { duration: 0.3, ease: "easeInOut" },
         }}
         className={cn(
-          "inline-block mx-0.5 px-1 py-0.5 rounded transition-colors duration-200",
+          "s-i3 s-m3 s-ol s-ox s-q8 s-ws s-bo",
           // Prop-cue background — soft warm highlight on the wrapped sequence
-          propCueIndices?.has(index + wordIndexOffset) && "bg-[hsl(var(--prop-cue-bg))]",
+          propCueIndices?.has(index + wordIndexOffset) && "s-3o",
           // Subtle marker for current word (blue pulse)
-          state.isCurrent && !state.isSpoken && "relative text-primary font-medium bg-primary/10 border-b-2 border-primary/60",
+          state.isCurrent && !state.isSpoken && "s-pd s-uw s-d0 s-5e s-6w s-7t",
           // Spoken word gets muted styling (gray)
-          state.isSpoken && "text-muted-foreground/50",
+          state.isSpoken && "s-un",
           // NOTE: Visible words never turn red (per project rule). Red is reserved
           // for hidden words that were missed (handled in the !isVisible branch above).
           // Hesitated visible word (yellow) — allowed: user paused on a visible word.
-          state.isHesitated && "bg-warning/20 text-warning",
+          state.isHesitated && "s-64 s-ve",
         )}
       >
         {state.text}
         {/* Subtle pulse indicator for current word */}
         {state.isCurrent && !state.isSpoken && (
           <motion.span
-            className="absolute -bottom-2 left-1/2 w-1.5 h-1.5 rounded-full bg-primary"
+            className="s-26 -bottom-2 s-iu s-xd s-fm s-qe s-5c"
             initial={{ opacity: 0.6, scale: 0.8 }}
             animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
             transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
@@ -245,7 +245,7 @@ const SentenceDisplay = ({
     <LayoutGroup>
       <div
         ref={containerRef}
-        className="text-xl md:text-2xl lg:text-3xl leading-relaxed text-center p-6 select-none"
+        className="s-vi s-kj s-iy s-ip s-u0 s-my s-qq"
       >
         <AnimatePresence mode="sync">
           {words.map((_, index) => renderWord(index))}

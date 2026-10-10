@@ -11,11 +11,11 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">{t("notFound.title")}</p>
-        <a href="/" className="text-primary underline hover:opacity-80">
+    <div className="s-c5 s-l6 s-ib s-ig s-3v">
+      <div className="s-u0">
+        <h1 className="s-k0 s-tb s-cx">404</h1>
+        <p className="s-k0 s-vi s-ul">{t("notFound.title")}</p>
+        <a href="/" className="s-uw s-wy s-ho">
           {t("notFound.back")}
         </a>
       </div>

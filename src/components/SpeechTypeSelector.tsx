@@ -24,27 +24,27 @@ export const SpeechTypeSelector = ({
   const { t } = useTranslation();
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <label className="text-sm font-medium">{t('upload.speechType.label')}</label>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+    <div className={cn("s-sy", className)}>
+      <label className="s-v9 s-d0">{t('upload.speechType.label')}</label>
+      <div className="s-e0 s-e2 s-rm s-dn">
         {SPEECH_TYPE_OPTIONS.map((type) => (
           <button
             key={type.value}
             type="button"
             onClick={() => onChange(type.value)}
             className={cn(
-              "flex items-center gap-2 p-3 rounded-lg border transition-all",
-              "hover:border-primary/50 hover:bg-accent/50",
+              "s-c5 s-ib s-dn s-mv s-qh s-6l s-wr",
+              "s-hi s-gr",
               value === type.value
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-card"
+                ? "s-7n s-5e s-uw"
+                : "s-6x s-4b"
             )}
           >
-            <span className="text-sm font-medium">{t(`upload.speechType.${type.value}`)}</span>
+            <span className="s-v9 s-d0">{t(`upload.speechType.${type.value}`)}</span>
           </button>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground mt-1">
+      <p className="s-vj s-ul s-lt">
         {t('upload.speechType.hint')}
       </p>
     </div>

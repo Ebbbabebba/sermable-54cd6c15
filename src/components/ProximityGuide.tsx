@@ -19,69 +19,69 @@ export function ProximityGuide() {
   );
 
   return (
-    <div className="w-full rounded-3xl bg-muted/50 border border-border p-5 animate-fade-in">
-      <h3 className="text-base font-semibold text-foreground text-center">
+    <div className="s-y7 s-qa s-56 s-6l s-6x s-mx s-2y">
+      <h3 className="s-tw s-d3 s-u9 s-u0">
         {t("presentation.proximityTitle")}
       </h3>
-      <p className="text-xs text-muted-foreground text-center mt-1">
+      <p className="s-vj s-ul s-u0 s-lt">
         {t("presentation.proximitySubtitle")}
       </p>
 
       <div
-        className="relative mx-auto mt-5"
+        className="s-pd s-m9 s-lz"
         style={{ width: CONTAINER_WIDTH, height: 96 }}
       >
         {/* Distance zones */}
         <div
-          className="absolute top-1/2 left-0 -translate-y-1/2 rounded-l-xl bg-primary/10"
+          className="s-26 s-w4 s-is s-9 s-qg s-5e"
           style={{ width: TWO_METERS_X, height: 32 }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 rounded-r-xl bg-destructive/10"
+          className="s-26 s-w4 s-9 s-qk s-4i"
           style={{ left: TWO_METERS_X, width: CONTAINER_WIDTH - TWO_METERS_X, height: 32 }}
         />
 
         {/* Center line */}
-        <div className="absolute top-1/2 left-0 right-0 h-px bg-border -translate-y-1/2" />
+        <div className="s-26 s-w4 s-is s-pe s-gh s-4a s-9" />
 
         {/* Microphone at 0 m */}
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
-          <div className="p-2 rounded-full bg-background border border-border shadow-sm">
-            <Mic className="h-4 w-4 text-foreground" />
+        <div className="s-26 s-w4 s-is s-9 s-8 s-c5 s-c7 s-ib s-dl">
+          <div className="s-mu s-qe s-3v s-6l s-6x s-r3">
+            <Mic className="s-fz s-xt s-u9" />
           </div>
-          <span className="text-[10px] text-muted-foreground font-medium">0 m</span>
+          <span className="s-tl s-ul s-d0">0 m</span>
         </div>
 
         {/* 1 m marker */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center gap-1"
+          className="s-26 s-w4 s-9 s-c5 s-c7 s-ib s-dl"
           style={{ left: (1 / 3) * CONTAINER_WIDTH }}
         >
-          <div className="w-px h-3 bg-border" />
-          <span className="text-[10px] text-muted-foreground font-medium">1 m</span>
+          <div className="s-y9 s-fw s-4a" />
+          <span className="s-tl s-ul s-d0">1 m</span>
         </div>
 
         {/* 2 m marker */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center gap-1"
+          className="s-26 s-w4 s-9 s-c5 s-c7 s-ib s-dl"
           style={{ left: TWO_METERS_X }}
         >
-          <div className="w-px h-4 bg-primary" />
-          <span className="text-[10px] text-primary font-semibold">2 m</span>
+          <div className="s-y9 s-fz s-5c" />
+          <span className="s-tl s-uw s-d3">2 m</span>
         </div>
 
         {/* 3 m marker */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center gap-1"
+          className="s-26 s-w4 s-9 s-c5 s-c7 s-ib s-dl"
           style={{ left: CONTAINER_WIDTH }}
         >
-          <div className="w-px h-3 bg-border" />
-          <span className="text-[10px] text-muted-foreground font-medium">3 m</span>
+          <div className="s-y9 s-fw s-4a" />
+          <span className="s-tl s-ul s-d0">3 m</span>
         </div>
 
         {/* Moving person */}
         <motion.div
-          className="absolute top-1/2 -translate-y-1/2 z-10"
+          className="s-26 s-w4 s-9 s-ye"
           style={{ x, color }}
           animate={{
             x: [20, CONTAINER_WIDTH - 16, 20],
@@ -92,8 +92,8 @@ export function ProximityGuide() {
             ease: "easeInOut",
           }}
         >
-          <div className="p-2 rounded-full bg-background border border-current shadow-sm -translate-x-1/2">
-            <User className="h-5 w-5" />
+          <div className="s-mu s-qe s-3v s-6l s-73 s-r3 s-8">
+            <User className="s-g1 s-xv" />
           </div>
         </motion.div>
       </div>

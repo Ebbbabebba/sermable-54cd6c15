@@ -241,32 +241,32 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
 
   return (
     <Card 
-      className="group cursor-pointer overflow-hidden border-2 border-border/60 rounded-3xl bg-card shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0 active:scale-[0.995]"
+      className="s-e5 s-8m s-mn s-6n s-71 s-qa s-4b s-r3 s-wr s-bp s-bu s-gn s-hg s-hq s-hs s-2d s-2a"
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div className="icon-circle icon-circle-solid-primary h-11 w-11 shadow-sm">
-              <Mic className="h-5 w-5" />
+      <CardHeader className="s-n4">
+        <div className="s-c5 s-id s-if s-dp">
+          <div className="s-c5 s-l8 s-c6 s-ib s-dp">
+            <div className="icon-circle icon-circle-solid-primary s-fo s-xg s-r3">
+              <Mic className="s-g1 s-xv" />
             </div>
-            <div className="min-w-0 flex-1">
-              <CardTitle className="font-display text-lg font-semibold truncate capitalize text-foreground">
+            <div className="s-l8 s-c6">
+              <CardTitle className="s-cy s-uk s-d3 truncate s-8i s-u9">
                 {speech.title}
               </CardTitle>
-              <CardDescription className="text-xs mt-1">
+              <CardDescription className="s-vj s-lt">
                 {format(new Date(speech.created_at), "MMM dd, yyyy")}
               </CardDescription>
             </div>
           </div>
-          <span className={`text-xs font-bold px-3 py-1.5 rounded-full shrink-0 shadow-sm ${
+          <span className={`s-vj s-cx s-or s-oz s-qe s-r5 s-r3 ${
             isOverdue 
-              ? "bg-destructive/12 text-destructive border border-destructive/20" 
+              ? "bg-destructive/12 s-u2 s-6l s-76" 
               : daysRemaining === 0
-                ? "bg-warning text-warning-foreground border border-warning/30"
+                ? "s-62 s-vf s-6l s-85"
                 : daysRemaining <= 3
-                  ? "bg-primary/12 text-primary border border-primary/20"
-                  : "bg-secondary text-muted-foreground border border-border/60"
+                  ? "bg-primary/12 s-uw s-6l s-7p"
+                  : "s-5t s-ul s-6l s-71"
           }`}>
             {isOverdue
               ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
@@ -277,70 +277,70 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="s-t1">
         <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
           <PopoverTrigger asChild>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 -ml-3 gap-2 px-3 text-xs text-muted-foreground hover:text-foreground"
+              className="s-g6 -ml-3 s-dn s-or s-vj s-ul s-hv"
               onClick={(e) => e.stopPropagation()}
             >
-              <CalendarIcon className="h-3.5 w-3.5" />
+              <CalendarIcon className="s-fx s-xq" />
               <span>{t('dashboard.goal')}: {format(goalDate, "MMM dd, yyyy")}</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start" onClick={(e) => e.stopPropagation()}>
+          <PopoverContent className="s-y6 s-mr" align="start" onClick={(e) => e.stopPropagation()}>
             <Calendar
               mode="single"
               selected={goalDate}
               onSelect={handleDeadlineChange}
               initialFocus
-              className={cn("p-3 pointer-events-auto")}
+              className={cn("s-mv s-nw")}
             />
           </PopoverContent>
         </Popover>
 
         {isLocked && nextReviewDate && (
-          <div className="flex items-center gap-2 p-3 bg-secondary rounded-2xl">
-            <Clock className="h-4 w-4 text-primary" />
-            <div className="flex-1 text-xs">
-              <span className="text-muted-foreground">{t('dashboard.nextPractice')} </span>
-              <LockCountdown nextReviewDate={nextReviewDate} className="text-primary font-medium" />
+          <div className="s-c5 s-ib s-dn s-mv s-5t s-q9">
+            <Clock className="s-fz s-xt s-uw" />
+            <div className="s-c6 s-vj">
+              <span className="s-ul">{t('dashboard.nextPractice')} </span>
+              <LockCountdown nextReviewDate={nextReviewDate} className="s-uw s-d0" />
             </div>
           </div>
         )}
 
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">{t('dashboard.progress')}</span>
-            <span className="font-medium text-foreground">{progress}%</span>
+        <div className="s-sy">
+          <div className="s-c5 s-if s-vj">
+            <span className="s-ul">{t('dashboard.progress')}</span>
+            <span className="s-d0 s-u9">{progress}%</span>
           </div>
-          <Progress value={progress} className="h-3 bg-primary/12" />
+          <Progress value={progress} className="s-fw bg-primary/12" />
           {masteryPercent !== null && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <Target className="h-3 w-3 text-emerald-500" />
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+            <div className="s-c5 s-ib s-dm s-vj">
+              <Target className="s-fw s-xp s-u7" />
+              <span className="s-u8 s-8q s-d0">
                 {t('dashboard.mastery', 'Mastery')}: {masteryPercent}%
               </span>
             </div>
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+        <p className="s-v9 s-ul s-iz s-ip">
           {stripPropCueMarkers(speech.text_original).substring(0, 140)}...
         </p>
       </CardContent>
 
-      <CardFooter className="flex items-center gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
+      <CardFooter className="s-c5 s-ib s-dn s-o9" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="apple"
           onClick={handleCardClick}
-          className="flex-1"
+          className="s-c6"
           size="sm"
         >
-          <Play className="h-4 w-4" />
+          <Play className="s-fz s-xt" />
           {t('dashboard.practice')}
         </Button>
 
@@ -356,30 +356,30 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             }
           }}
         >
-          <Presentation className="h-4 w-4" />
+          <Presentation className="s-fz s-xt" />
         </Button>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" aria-label={t('common.delete')}>
-              <Trash2 className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="s-g8 s-y2 s-ul s-hu" aria-label={t('common.delete')}>
+              <Trash2 className="s-fz s-xt" />
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="bg-card border-border">
+          <AlertDialogContent className="s-4b s-6x">
             <AlertDialogHeader>
               <AlertDialogTitle>{t('dashboard.deleteSpeech')}</AlertDialogTitle>
               <AlertDialogDescription asChild>
-                <div className="space-y-3">
+                <div className="s-t0">
                   <p>{t('dashboard.deleteSpeechDesc', { title: speech.title })}</p>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="border-border" disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogCancel className="s-6x" disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => { e.preventDefault(); handleDelete(); }}
                 disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                className="s-4h s-u3 s-gx"
               >
                 {isDeleting ? t('dashboard.deleting') : t('common.delete')}
               </AlertDialogAction>

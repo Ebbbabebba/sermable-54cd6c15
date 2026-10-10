@@ -17,7 +17,7 @@ const StageDirectionCue = ({ directions, className }: StageDirectionCueProps) =>
   return (
     <div
       className={cn(
-        "pointer-events-none flex justify-center min-h-[2.5rem] w-full",
+        "s-nx s-c5 s-ig s-l1 s-y7",
         className,
       )}
       aria-live="polite"
@@ -30,7 +30,7 @@ const StageDirectionCue = ({ directions, className }: StageDirectionCueProps) =>
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            className="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm md:text-base italic font-medium shadow-sm backdrop-blur-sm"
+            className="s-os s-oz s-qe s-5e s-6l s-7r s-uw s-v9 s-ko italic s-d0 s-r3 s-3h"
           >
             {directions!.map((d, i) => (
               <span key={i}>
