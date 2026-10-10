@@ -101,12 +101,12 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
       card.style.transform = `translate3d(${offset}px,0,0) rotate(${offset / 35}deg)`;
     }
     const g = greenRef.current, r = redRef.current;
-    if (g) { g.style.transition = transition ? "opacity 250ms s-bu" : "none"; g.style.opacity = String(Math.min(1, Math.max(0, offset) / 120)); }
-    if (r) { r.style.transition = transition ? "opacity 250ms s-bu" : "none"; r.style.opacity = String(Math.min(1, Math.max(0, -offset) / 120)); }
+    if (g) { g.style.transition = transition ? "opacity 250ms ease-out" : "none"; g.style.opacity = String(Math.min(1, Math.max(0, offset) / 120)); }
+    if (r) { r.style.transition = transition ? "opacity 250ms ease-out" : "none"; r.style.opacity = String(Math.min(1, Math.max(0, -offset) / 120)); }
     const n = nextRef.current;
     if (n) {
       const p = Math.min(1, Math.abs(offset) / 300);
-      n.style.transition = transition ? "transform 300ms ease-out, opacity 300ms s-bu" : "none";
+      n.style.transition = transition ? "transform 300ms ease-out, opacity 300ms ease-out" : "none";
       n.style.transform = `translate3d(0,${10 - p * 10}px,0)`;
       n.style.opacity = String(0.6 + p * 0.4);
     }
