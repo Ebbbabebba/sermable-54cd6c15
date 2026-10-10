@@ -3,219 +3,61 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MessageCircle, GraduationCap, TrendingUp, Theater } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-type StepTheme = {
-  key: string;
-  icon: typeof MessageCircle | null;
-  // Full vibrant background gradient
-  bg: string;
-  // Accent circle behind icon
-  accent: string;
-  // CTA button colors
-  buttonBg: string;
-  buttonText: string;
-  // Foreground text color
-  text: string;
-  subtext: string;
-};
-
-const ONBOARDING_STEPS: StepTheme[] = [
-  {
-    key: "welcome",
-    icon: null,
-    bg: "bg-gradient-to-br from-[#FDBA2D] via-[#F59E0B] to-[#D97706]",
-    accent: "bg-white/15",
-    buttonBg: "bg-white hover:bg-white/95",
-    buttonText: "text-[#D97706]",
-    text: "text-white",
-    subtext: "text-white/90",
-  },
-  {
-    key: "practice",
-    icon: MessageCircle,
-    bg: "bg-gradient-to-br from-[#FB923C] via-[#F97316] to-[#EA580C]",
-    accent: "bg-white/15",
-    buttonBg: "bg-white hover:bg-white/95",
-    buttonText: "text-[#EA580C]",
-    text: "text-white",
-    subtext: "text-white/90",
-  },
-  {
-    key: "adaptive",
-    icon: GraduationCap,
-    bg: "bg-gradient-to-br from-[#F59E0B] via-[#D97706] to-[#B45309]",
-    accent: "bg-white/15",
-    buttonBg: "bg-white hover:bg-white/95",
-    buttonText: "text-[#B45309]",
-    text: "text-white",
-    subtext: "text-white/90",
-  },
-  {
-    key: "learning",
-    icon: TrendingUp,
-    bg: "bg-gradient-to-br from-[#FACC15] via-[#EAB308] to-[#CA8A04]",
-    accent: "bg-white/15",
-    buttonBg: "bg-white hover:bg-white/95",
-    buttonText: "text-[#CA8A04]",
-    text: "text-white",
-    subtext: "text-white/90",
-  },
-  {
-    key: "presentation",
-    icon: Theater,
-    bg: "bg-gradient-to-br from-[#FCA55C] via-[#F97316] to-[#C2410C]",
-    accent: "bg-white/15",
-    buttonBg: "bg-white hover:bg-white/95",
-    buttonText: "text-[#C2410C]",
-    text: "text-white",
-    subtext: "text-white/90",
-  },
+const STEPS = [
+  { key: "welcome", icon: null },
+  { key: "practice", icon: MessageCircle },
+  { key: "adaptive", icon: GraduationCap },
+  { key: "learning", icon: TrendingUp },
+  { key: "presentation", icon: Theater },
 ];
-
 const Onboarding = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const { t } = useTranslation();
-
-  const step = ONBOARDING_STEPS[currentStep];
+  const reducedMotion = useReducedMotion();
+  const step = STEPS[currentStep] ?? STEPS[0];
   const Icon = step.icon;
-  const isLastStep = currentStep === ONBOARDING_STEPS.length - 1;
-
-  const handleNext = () => {
-    if (isLastStep) {
-      localStorage.setItem("onboarding_complete", "true");
-      navigate("/auth");
-    } else {
-      setCurrentStep((p) => p + 1);
-    }
-  };
-
-  const handleSkip = () => {
-    localStorage.setItem("onboarding_complete", "true");
-    navigate("/auth");
-  };
-
-  // Swipe support
+  const isLastStep = currentStep === STEPS.length - 1;
+  const finish = () => { localStorage.setItem("onboarding_complete", "true"); navigate("/auth"); };
+  const next = () => { if (isLastStep) finish(); else setCurrentStep(p => p + 1); };
   useEffect(() => {
     let startX = 0;
-    const onStart = (e: TouchEvent) => (startX = e.touches[0].clientX);
-    const onEnd = (e: TouchEvent) => {
-      const dx = e.changedTouches[0].clientX - startX;
-      if (dx < -60 && currentStep < ONBOARDING_STEPS.length - 1) setCurrentStep((p) => p + 1);
-      if (dx > 60 && currentStep > 0) setCurrentStep((p) => p - 1);
+    const start = (e: TouchEvent) => { startX = e.touches[0]?.clientX ?? 0; };
+    const end = (e: TouchEvent) => {
+      const x = e.changedTouches[0]?.clientX;
+      if (x === undefined) return;
+      const dx = x - startX;
+      if (dx < -60) setCurrentStep(p => Math.min(p + 1, STEPS.length - 1));
+      if (dx > 60) setCurrentStep(p => Math.max(p - 1, 0));
     };
-    window.addEventListener("touchstart", onStart, { passive: true });
-    window.addEventListener("touchend", onEnd, { passive: true });
-    return () => {
-      window.removeEventListener("touchstart", onStart);
-      window.removeEventListener("touchend", onEnd);
-    };
-  }, [currentStep]);
-
+    window.addEventListener("touchstart", start, { passive: true });
+    window.addEventListener("touchend", end, { passive: true });
+    return () => { window.removeEventListener("touchstart", start); window.removeEventListener("touchend", end); };
+  }, []);
   return (
-    <div className={`fixed inset-0 flex flex-col overflow-hidden transition-colors duration-500 ${step.bg}`}>
-      {/* Floating shapes for playful feel */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute -top-20 -left-16 w-72 h-72 rounded-full bg-white/10 blur-2xl"
-          animate={{ x: [0, 20, 0], y: [0, 30, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-32 -right-20 w-80 h-80 rounded-full bg-white/10 blur-2xl"
-          animate={{ x: [0, -25, 0], y: [0, -20, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
-
-      {/* Top bar: progress + skip */}
-      <div
-        className="relative z-10 flex items-center gap-3 px-5 pt-4"
-        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
-      >
-        <div className="flex-1 flex gap-1.5">
-          {ONBOARDING_STEPS.map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full bg-white/25 overflow-hidden">
-              <motion.div
-                className="h-full bg-white rounded-full"
-                initial={false}
-                animate={{ width: i < currentStep ? "100%" : i === currentStep ? "100%" : "0%" }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              />
-            </div>
-          ))}
+    <div className={`onboarding onboarding--${step.key}`}>
+      <header className="onboarding__header">
+        <div className="onboarding__progress" role="progressbar" aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={currentStep + 1} aria-label={t("onboarding.continue")}>
+          {STEPS.map((s, i) => <span key={s.key} className={`onboarding__track ${i <= currentStep ? "is-complete" : ""}`} />)}
         </div>
-        <button
-          onClick={handleSkip}
-          className={`text-sm font-bold ${step.text} opacity-80 hover:opacity-100 transition-opacity`}
-        >
-          {t("onboarding.skip")}
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-6">
+        <Button variant="ghost" size="sm" className="onboarding__skip" onClick={finish}>{t("onboarding.skip")}</Button>
+      </header>
+      <main className="onboarding__main">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={step.key}
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -30, scale: 0.95 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col items-center text-center max-w-sm w-full"
-          >
-            {/* Big bouncy icon (omitted on welcome step for a typographic intro) */}
-            {Icon && (
-              <motion.div
-                className={`relative w-40 h-40 rounded-full ${step.accent} flex items-center justify-center mb-10 shadow-2xl`}
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                {/* Pulse ring */}
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-white/20"
-                  animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
-                />
-                <Icon className={`w-20 h-20 ${step.text}`} strokeWidth={2.2} />
-              </motion.div>
-            )}
-
-            <h2
-              className={`font-extrabold tracking-tight mb-4 ${step.text} ${
-                Icon ? "text-3xl md:text-4xl" : "text-5xl md:text-7xl leading-[1.05]"
-              }`}
-            >
-              {t(`onboarding.steps.${step.key}.title`)}
-            </h2>
-            <p
-              className={`leading-relaxed ${step.subtext} ${
-                Icon ? "text-base md:text-lg" : "text-lg md:text-2xl mt-2"
-              }`}
-            >
-              {t(`onboarding.steps.${step.key}.message`)}
-            </p>
+          <motion.div key={step.key} className="onboarding__content" initial={{ opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: reducedMotion ? 1 : 0 }} transition={{ duration: reducedMotion ? 0 : 0.18 }}>
+            <span className="onboarding__step">{String(currentStep + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}</span>
+            {Icon && <div className="onboarding__icon"><Icon aria-hidden="true" /></div>}
+            <h1 className={`onboarding__title ${Icon ? "" : "onboarding__title--brand"}`}>{t(`onboarding.steps.${step.key}.title`)}</h1>
+            <p className="onboarding__message">{t(`onboarding.steps.${step.key}.message`)}</p>
           </motion.div>
         </AnimatePresence>
-      </div>
-
-      {/* CTA */}
-      <div
-        className="relative z-10 px-6 pb-6 max-w-md w-full mx-auto"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)" }}
-      >
-        <Button
-          size="lg"
-          onClick={handleNext}
-          className={`w-full text-base font-extrabold py-7 rounded-2xl uppercase tracking-wide shadow-[0_4px_0_0_rgba(0,0,0,0.18)] active:translate-y-[2px] active:shadow-[0_2px_0_0_rgba(0,0,0,0.18)] transition-all ${step.buttonBg} ${step.buttonText}`}
-        >
-          {isLastStep ? t("onboarding.getStarted") : t("onboarding.continue")}
-          <ChevronRight className="ml-1 h-5 w-5" />
-        </Button>
-      </div>
+      </main>
+      <footer className="onboarding__footer">
+        <Button size="lg" className="onboarding__next" onClick={next}>{isLastStep ? t("onboarding.getStarted") : t("onboarding.continue")}<ChevronRight aria-hidden="true" /></Button>
+      </footer>
     </div>
   );
 };
-
 export default Onboarding;
