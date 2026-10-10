@@ -1,10 +1,10 @@
 # Roadmap
 
-## Current: Apple-inspired graphite refinement
+## Complete: Apple-inspired graphite refinement
 
-- [ ] Apply graphite tokens and Apple system typography across the app
-- [ ] Refine dashboard into clean iPhone-style lists and restrained controls
-- [ ] Verify navigation, dialogs and screen fit in the browser
+- [x] Apply graphite tokens and Apple system typography across the app
+- [x] Refine dashboard into clean iPhone-style lists and restrained controls
+- [x] Verify navigation, dialogs and screen fit in the browser
 
 ## Complete: Flat app-wide design without Tailwind
 
