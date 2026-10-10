@@ -1,30 +1,30 @@
 /* Sermable: solid surfaces, deliberate typography and native-sized controls. */
 :root {
-  --background: 240 11% 96.5%;
-  --foreground: 240 3.4% 11.4%;
+  --background: 220 20% 98%;
+  --foreground: 225 8% 18%;
   --card: 0 0% 100%;
   --popover: 0 0% 100%;
   --card-foreground: var(--foreground);
   --popover-foreground: var(--foreground);
-  --secondary: 240 10.6% 90.8%;
+  --secondary: 215 30% 95%;
   --secondary-foreground: var(--foreground);
-  --muted: 240 10.6% 90.8%;
-  --muted-foreground: 240 1.5% 39.4%;
-  --accent: 240 10.6% 94%;
-  --accent-foreground: var(--foreground);
-  --primary: 240 3.4% 11.4%;
+  --muted: 220 16% 96%;
+  --muted-foreground: 225 5% 43%;
+  --accent: 211 60% 95%;
+  --accent-foreground: 211 62% 36%;
+  --primary: 211 68% 43%;
   --primary-foreground: 0 0% 100%;
   --primary-shadow: var(--primary);
-  --border: 240 10.6% 90.8%;
-  --input: 240 6% 84%;
-  --ring: 240 1.5% 39.4%;
+  --border: 220 16% 92%;
+  --input: 220 14% 86%;
+  --ring: var(--primary);
   --sermable-teal: var(--primary);
   --sermable-indigo: var(--primary);
   --sermable-cyan: var(--muted-foreground);
   --sermable-mint: var(--muted-foreground);
   --word-bg: var(--secondary);
   --word-text: var(--foreground);
-  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif;
   --shadow-xs: none;
   --shadow-sm: none;
   --shadow-md: 0 2px 8px hsl(var(--foreground) / 0.04);
@@ -39,8 +39,8 @@
   --onboarding-learning: var(--background);
   --onboarding-presentation: var(--background);
 }
-html,body { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-system); }
-h1,h2,h3,h4,h5,h6,.s-cy { font-family: var(--font-system); letter-spacing: 0; }
+html,body { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-system); font-feature-settings:normal; }
+h1,h2,h3,h4,h5,h6,.s-cy,.s-d4 { font-family: var(--font-system); letter-spacing: 0; }
 .duo-btn { box-shadow: none; }
 .duo-btn:active { box-shadow: none; transform: translateY(1px); }
 .sermable-card,.sermable-card-elevated { border: 1px solid hsl(var(--border)); box-shadow: var(--shadow-xs); }
@@ -140,7 +140,7 @@ input,textarea,select { font-family:var(--font-system); }
 .dashboard__greeting h1 { font-size:28px; line-height:1.2; font-weight:600; }
 .dashboard__greeting p:first-child { text-transform:none; margin-bottom:8px; }
 .dashboard__section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
-.dashboard__section-heading h3 { font-size:28px; font-weight:700; line-height:1.2; }
+.dashboard__section-heading h3 { font-size:28px; font-weight:600; line-height:1.2; }
 .dashboard__section-heading p { display:none; }
 .dashboard__section-heading > div { min-width:0; }
 .dashboard__section-heading > div:last-child { flex-shrink:0; }
@@ -150,14 +150,14 @@ input,textarea,select { font-family:var(--font-system); }
 .speech-row:hover { transform:none; box-shadow:none; background:hsl(var(--accent)); }
 .dashboard__list > div + div { border-top:1px solid hsl(var(--border)); }
 .speech-row__header { padding:20px 20px 8px; }
-.speech-row__header .icon-circle { width:32px; height:32px; background:transparent; color:hsl(var(--muted-foreground)); }
+.speech-row__header .icon-circle { width:32px; height:32px; background:hsl(var(--accent)); color:hsl(var(--accent-foreground)); }
 .speech-row__header h3 { font-size:19px; font-weight:600; color:hsl(var(--foreground)); text-transform:none; }
 .speech-row__deadline { background:transparent; border:0; padding:0; border-radius:0; font-size:12px; font-weight:400; white-space:normal; text-align:right; max-width:110px; }
 .speech-row__content { padding:0 20px 12px 64px; }
 .speech-row__content > p { margin-top:12px; font-size:14px; }
 .speech-row__content [role="progressbar"] { height:4px; background:hsl(var(--secondary)); }
 .speech-row__footer { padding:0 20px 16px 64px; }
-.speech-row__footer .ui-button--apple { flex:0 1 auto; padding-left:0; padding-right:16px; background:transparent; color:hsl(var(--foreground)); font-weight:600; }
+.speech-row__footer .ui-button--apple { flex:0 1 auto; padding-left:0; padding-right:16px; background:transparent; color:hsl(var(--primary)); font-weight:500; }
 .speech-row__footer .ui-button--secondary { background:transparent; color:hsl(var(--muted-foreground)); }
 .dashboard__empty { border:0; border-radius:0; box-shadow:none; background:transparent; }
 .dashboard__empty > div { padding:40px 0; text-align:left; }
