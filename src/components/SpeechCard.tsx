@@ -260,13 +260,13 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             </div>
           </div>
           <span className={`speech-row__deadline ${
-            isOverdue 
-              ? "bg-destructive/12 s-u2 s-6l s-76" 
+            isOverdue
+              ? "speech-row__deadline--overdue"
               : daysRemaining === 0
-                ? "s-62 s-vf s-6l s-85"
+                ? "speech-row__deadline--today"
                 : daysRemaining <= 3
-                  ? "bg-primary/12 s-uw s-6l s-7p"
-                  : "s-5t s-ul s-6l s-71"
+                  ? "speech-row__deadline--soon"
+                  : ""
           }`}>
             {isOverdue
               ? t(Math.abs(daysRemaining) === 1 ? 'dashboard.daysOverdue' : 'dashboard.daysOverduePlural', { count: Math.abs(daysRemaining) })
@@ -317,7 +317,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             <span className="s-ul">{t('dashboard.progress')}</span>
             <span className="s-d0 s-u9">{progress}%</span>
           </div>
-          <Progress value={progress} className="s-fw bg-primary/12" />
+          <Progress value={progress} className="s-fw" />
           {masteryPercent !== null && (
             <div className="s-c5 s-ib s-dm s-vj">
               <Target className="s-fw s-xp s-u7" />
