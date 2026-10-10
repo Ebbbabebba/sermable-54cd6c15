@@ -10,18 +10,26 @@
   --secondary-foreground: var(--foreground);
   --muted: 220 16% 96%;
   --muted-foreground: 225 5% 43%;
-  --accent: 211 60% 95%;
-  --accent-foreground: 211 62% 36%;
-  --primary: 211 68% 43%;
+  --accent: 211 100% 95%;
+  --accent-foreground: 211 100% 38%;
+  --primary: 211 100% 46%;
   --primary-foreground: 0 0% 100%;
   --primary-shadow: var(--primary);
   --border: 220 16% 92%;
   --input: 220 14% 86%;
   --ring: var(--primary);
-  --sermable-teal: var(--primary);
-  --sermable-indigo: var(--primary);
-  --sermable-cyan: var(--muted-foreground);
-  --sermable-mint: var(--muted-foreground);
+  --ios-blue: 211 100% 46%;
+  --ios-green: 138 62% 40%;
+  --ios-indigo: 239 62% 59%;
+  --ios-orange: 35 100% 48%;
+  --ios-pink: 349 100% 56%;
+  --ios-purple: 266 78% 60%;
+  --ios-teal: 191 82% 46%;
+  --ios-yellow: 45 100% 44%;
+  --sermable-teal: var(--ios-teal);
+  --sermable-indigo: var(--ios-indigo);
+  --sermable-cyan: var(--ios-teal);
+  --sermable-mint: var(--ios-green);
   --word-bg: var(--secondary);
   --word-text: var(--foreground);
   --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif;
@@ -33,11 +41,11 @@
   --shadow-glow: none;
   --shadow-teal: none;
   --radius: 0.5rem;
-  --onboarding-welcome: var(--background);
-  --onboarding-practice: var(--background);
-  --onboarding-adaptive: var(--background);
-  --onboarding-learning: var(--background);
-  --onboarding-presentation: var(--background);
+  --onboarding-welcome: 211 100% 97%;
+  --onboarding-practice: 150 55% 96%;
+  --onboarding-adaptive: 35 100% 96%;
+  --onboarding-learning: 266 70% 97%;
+  --onboarding-presentation: 349 100% 97%;
 }
 html,body { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: var(--font-system); font-feature-settings:normal; }
 h1,h2,h3,h4,h5,h6,.s-cy,.s-d4 { font-family: var(--font-system); letter-spacing: 0; }
@@ -80,8 +88,13 @@ h1,h2,h3,h4,h5,h6,.s-cy,.s-d4 { font-family: var(--font-system); letter-spacing:
 .onboarding__main { flex:1; min-height:0; display:flex; align-items:center; padding:2rem; overflow-y:auto; }
 .onboarding__content { width:100%; max-width:60rem; margin:0 auto; text-align:left; }
 .onboarding__step { display:block; font-size:0.8125rem; font-weight:600; margin-bottom:2rem; }
-.onboarding__icon { width:4rem; height:4rem; margin-bottom:1.5rem; }
-.onboarding__icon svg { width:100%; height:100%; stroke-width:1.5; }
+  .onboarding__icon { width:4rem; height:4rem; margin-bottom:1.5rem; }
+  .onboarding__icon svg { width:100%; height:100%; stroke-width:1.5; }
+  .onboarding--welcome .onboarding__icon svg { color:hsl(var(--ios-blue)); }
+  .onboarding--practice .onboarding__icon svg { color:hsl(var(--ios-green)); }
+  .onboarding--adaptive .onboarding__icon svg { color:hsl(var(--ios-orange)); }
+  .onboarding--learning .onboarding__icon svg { color:hsl(var(--ios-purple)); }
+  .onboarding--presentation .onboarding__icon svg { color:hsl(var(--ios-pink)); }
 .onboarding__title { font-family:var(--font-system); font-size:3rem; font-weight:600; line-height:1.12; max-width:18ch; overflow-wrap:anywhere; margin:0 0 1.5rem; }
 .onboarding__title--brand { font-size:5rem; line-height:0.95; }
 .onboarding__message { font-size:1.125rem; line-height:1.65; max-width:36rem; }
@@ -117,7 +130,13 @@ h1,h2,h3,h4,h5,h6,.s-cy,.s-d4 { font-family: var(--font-system); letter-spacing:
 
 /* Native-like page chrome. Practice signals retain their own semantic colors. */
 .icon-circle { border-radius:10px; box-shadow:none; }
-.icon-circle-solid-primary { background:hsl(var(--secondary)); color:hsl(var(--foreground)); }
+.icon-circle-solid-primary { background:hsl(var(--accent)); color:hsl(var(--accent-foreground)); }
+.dashboard__list > div:nth-child(6n+1) .icon-circle-solid-primary { background:hsl(211 100% 94%); color:hsl(211 100% 40%); }
+.dashboard__list > div:nth-child(6n+2) .icon-circle-solid-primary { background:hsl(138 55% 92%); color:hsl(138 62% 30%); }
+.dashboard__list > div:nth-child(6n+3) .icon-circle-solid-primary { background:hsl(35 100% 93%); color:hsl(35 90% 38%); }
+.dashboard__list > div:nth-child(6n+4) .icon-circle-solid-primary { background:hsl(349 100% 95%); color:hsl(349 85% 45%); }
+.dashboard__list > div:nth-child(6n+5) .icon-circle-solid-primary { background:hsl(266 70% 95%); color:hsl(266 65% 48%); }
+.dashboard__list > div:nth-child(6n+6) .icon-circle-solid-primary { background:hsl(185 70% 92%); color:hsl(190 80% 32%); }
 .ui-card { border-radius:var(--radius); background:hsl(var(--card)); color:hsl(var(--card-foreground)); }
 .settings-page { background:hsl(var(--background)); }
 .settings-page > header { background:hsl(var(--background)); backdrop-filter:none; border-color:hsl(var(--border)); }
