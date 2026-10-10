@@ -391,7 +391,7 @@ const Dashboard = () => {
   // No full-screen loading blocker — show the shell immediately
 
   return (
-    <div className="s-l6 s-3v">
+    <div className="dashboard">
       {/* Expired speech cleanup — asked once per login */}
       <AlertDialog open={!!currentExpired} onOpenChange={(open) => { if (!open) handleKeepExpired(); }}>
         <AlertDialogContent>
@@ -425,10 +425,9 @@ const Dashboard = () => {
         />
       )}
 
-      <header className="s-t7 s-w1 s-yh s-43 s-6v s-70 s-3f" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
-        <div className="s-os s-fq s-c5 s-ib s-if s-dp s-jc s-m9">
-          <span className="s-c5 s-ib s-do s-cy s-cx s-uk s-wh">
-            <span className="s-fx s-xq s-qe s-5c s-qt" aria-hidden="true" />
+      <header className="dashboard__header" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="dashboard__toolbar">
+          <span className="dashboard__brand">
             Sermable
           </span>
 
@@ -484,10 +483,10 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <main className="s-os s-pa s-n5">
-        <div className="s-jc s-m9 s-t5">
+      <main className="dashboard__main">
+        <div className="dashboard__content">
           {/* Welcome Section - Large, clean typography */}
-          <section className="s-2y">
+          <section className="dashboard__greeting">
             {(() => {
               const hour = new Date().getHours();
               const rawName = user?.user_metadata?.full_name?.split(' ')[0] || "";
@@ -542,8 +541,8 @@ const Dashboard = () => {
           <ReviewNotifications />
 
           {/* Speeches Section */}
-          <section className="s-t2">
-            <div className="s-c5 s-ib s-if">
+          <section>
+            <div className="dashboard__section-heading">
               <div>
                 <h3 className="s-vi s-d3 s-u9">{t('dashboard.yourSpeeches')}</h3>
                 <p className="s-v9 s-ul s-ls">
@@ -558,7 +557,7 @@ const Dashboard = () => {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="s-dm">
+                    <Button variant="ghost" size="sm" className="s-dm" aria-label={t('dashboard.sort')}>
                       <ArrowUpDown className="s-xt s-fz" />
                       <span className="s-vj s-gm s-rp">{t('dashboard.sort')}</span>
                     </Button>
@@ -592,7 +591,7 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : speeches.length === 0 ? (
-              <Card className="s-6l s-71 s-r3 s-2y">
+              <Card className="dashboard__empty">
                 <CardContent className="s-p2 s-u0">
                   <h3 className="s-vi s-d3 s-u9 s-jy">{t('dashboard.noSpeeches')}</h3>
                   <p className="s-ul s-k2 s-js s-m9 s-ip">
@@ -605,7 +604,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="s-c5 s-c7 s-dq">
+              <div className="dashboard__list">
                 {(() => {
                   const sortedSpeeches = [...speeches].sort((a, b) => {
                     if (sortBy === 'deadline') {
@@ -620,11 +619,9 @@ const Dashboard = () => {
                     }
                   });
 
-                  return sortedSpeeches.map((speech, index) => (
+                  return sortedSpeeches.map((speech) => (
                     <div 
                       key={speech.id}
-                      className="s-2y"
-                      style={{ animationDelay: `${index * 70}ms`, animationFillMode: 'both' }}
                     >
                       <SpeechCard 
                         speech={speech} 
