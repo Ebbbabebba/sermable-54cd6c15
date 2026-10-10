@@ -1,5 +1,12 @@
 # Roadmap
 
+## Current: Flat app-wide design without Tailwind
+
+- [ ] Replace the Tailwind build dependency with standalone CSS while retaining existing screen layouts
+- [ ] Remove gradients across app styling and graphics
+- [ ] Refine shared controls and non-centered welcome/onboarding compositions
+- [ ] Verify browser rendering, navigation, and responsive layouts
+
 ## Klart: Fullständig översättning av kvarvarande skärmar
 
 - [x] Delade tal och kontoradering på alla sju språk
