@@ -54,7 +54,7 @@ const ScriptDemo = ({
           key={i++}
           className={cn(
             "s-m3 s-om s-ox s-q8 s-d3",
-            highlight === "s-gm"
+            highlight === "hidden"
               ? "s-5h s-uw s-pl s-q0"
               : "s-56 s-up",
           )}
