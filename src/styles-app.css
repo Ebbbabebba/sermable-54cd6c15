@@ -118,6 +118,14 @@ h1,h2,h3,h4,h5,h6,.s-cy { font-family: var(--font-system); letter-spacing: 0; }
 /* Native-like page chrome. Practice signals retain their own semantic colors. */
 .icon-circle { border-radius:10px; box-shadow:none; }
 .icon-circle-solid-primary { background:hsl(var(--secondary)); color:hsl(var(--foreground)); }
+.ui-card { border-radius:var(--radius); background:hsl(var(--card)); color:hsl(var(--card-foreground)); }
+.settings-page { background:hsl(var(--background)); }
+.settings-page > header { background:hsl(var(--background)); backdrop-filter:none; border-color:hsl(var(--border)); }
+.settings-page > div { max-width:48rem; margin:0 auto; }
+.settings-section { border-radius:12px; background:hsl(var(--card)); }
+.settings-section .s-qi { background:hsl(var(--secondary)); border-radius:8px; }
+.settings-section .s-qi svg { color:hsl(var(--muted-foreground)); }
+.settings-page .s-wi { text-transform:none; }
 .ui-button[class*="duo-btn"] { box-shadow:none; }
 input,textarea,select { font-family:var(--font-system); }
 [role="dialog"],[role="alertdialog"] { box-shadow:var(--shadow-lg); }

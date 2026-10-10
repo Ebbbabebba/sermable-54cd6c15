@@ -18,7 +18,7 @@ type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
 
 // iOS-style section wrapper
 const Section = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`s-m8 s-qo s-4b s-mn ${className}`}>
+   <div className={`settings-section s-m8 s-qo s-4b s-mn ${className}`}>
     {children}
   </div>
 );
@@ -227,7 +227,7 @@ const Settings = () => {
 
 
   return (
-    <div className="s-l6 s-5u">
+    <div className="settings-page s-l6 s-5u">
       {/* iOS-style navigation bar */}
       <header className="s-t7 s-w1 s-ye s-3i s-5w s-6v s-6y" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="s-c5 s-ib s-fo s-os">

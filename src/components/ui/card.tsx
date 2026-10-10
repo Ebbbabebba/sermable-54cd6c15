@@ -7,7 +7,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
     <div
       ref={ref}
       className={cn(
-        "s-q9 s-4b s-tz shadow-apple-lg s-wr s-bp",
+        "ui-card",
         className
       )}
       {...props}
