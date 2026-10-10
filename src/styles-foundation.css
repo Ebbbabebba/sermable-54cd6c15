@@ -4084,7 +4084,7 @@ select {
   .glass,
   .glass-strong,
   [class*="backdrop-blur-2xl"],
-  [class*="backdrop-blur-xl"] {
+  [class*="s-3i"] {
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
   }
