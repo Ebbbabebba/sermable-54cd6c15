@@ -155,23 +155,23 @@ const SleepAwareScheduling = () => {
     }
   };
 
-  const getGradient = () => {
+  const getSurface = () => {
     switch (suggestion.icon) {
       case 'moon':
-        return 's-dd s-x9 to-transparent';
+        return 's-4z';
       case 'sun':
-        return 's-da s-x7 to-transparent';
+        return 's-3u';
       case 'brain':
-        return 's-di s-x8 to-transparent';
+        return 's-5n';
       case 'clock':
-        return 's-dc s-x6 to-transparent';
+        return 's-49';
       default:
-        return 's-de to-transparent';
+        return 's-5e';
     }
   };
 
   return (
-    <Card className={`s-6m s-4s ${getGradient()} shadow-apple s-2y s-mn`}>
+    <Card className={`s-6m ${getSurface()} s-2y s-mn`}>
       <CardContent className="s-mw">
         <div className="s-c5 s-id s-dq">
           {/* Icon */}

@@ -38,10 +38,10 @@ export const PresentationModeSelector = ({
   const { t } = useTranslation();
 
   return (
-    <div className="s-gi s-c5 s-id s-k8 s-ig s-os s-n9 s-ob s-ki s-4s from-background via-background s-vy s-mq">
+    <div className="s-gi s-c5 s-id s-k8 s-ig s-os s-n9 s-ob s-ki s-40 s-mq">
       <div className="s-y7 s-jf s-t3">
         <div className="s-u0 s-sy">
-          <h1 className="s-ta s-kk s-cx s-4t from-primary s-vz s-4g s-vd">
+          <h1 className="s-ta s-kk s-cx s-u9">
             {t('presentationMode.chooseMode')}
           </h1>
           <p className="s-ul">
