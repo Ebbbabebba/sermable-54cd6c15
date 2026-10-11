@@ -2508,15 +2508,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       recordSpeechWordErrors(speechId, [...repErrors].map(i => words[i]).filter(Boolean));
     }
 
-    if (!hadErrors && isAllTargetHidden(hiddenWordIndicesRef.current)) {
-      // Only cheer on some sentences: first success, then every third.
-      audienceWinCountRef.current += 1;
-      if (audienceWinCountRef.current % 3 === 1) {
-        setAudienceCelebrating(true);
-        if (audienceHideTimerRef.current) clearTimeout(audienceHideTimerRef.current);
-        audienceHideTimerRef.current = setTimeout(() => setAudienceCelebrating(false), 2400);
-      }
-    }
 
 
     // Handle recall mode completion (morning recall of mastered beats)
@@ -4760,8 +4751,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // reacts only to targetable words (pause markers never reduce progress).
   const audienceScriptFree = phase.includes('fading') || sessionMode === 'recall' || sessionMode === 'pre_beat_recall';
   void audienceScriptFree;
-  // Animals only pop up briefly at the end of some sentences.
-  const audienceVisible = audienceCelebrating && !activePause;
+  // Full-screen audience replaces the script once every word is hidden.
+  const audienceVisible = words.length > 0 && isAllTargetHidden(hiddenWordIndices) && !activePause;
+  void audienceCelebrating;
   const audienceTargetIndices = isOverviewMode
     ? Array.from(keywordIndices)
     : words.map((_, index) => index).filter(index => !pauseWordMeta.has(index));
