@@ -209,42 +209,52 @@ export const Animal = ({
   );
 };
 
-const AnimalAudience = ({ celebrating = true, variant = 0, doneLabel, onExit }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, variant = 0, promptLabel, onExit }: AnimalAudienceProps) => {
   const trio = useMemo(() => {
     const base = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return [0, 1, 2].map(o => ANIMALS[(base + o * 2) % ANIMALS.length]);
   }, [variant]);
+  const mood = clamp01(progress);
+  const done = mood >= 1;
 
   return (
     <div
-      className="animal-audience s-c4 s-i5 s-yg s-c5 s-ic s-ig s-mn s-4q s-3e s-2y"
       role="status"
+      style={{
+        position: "fixed", inset: 0, zIndex: 60, display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: 32,
+        background: "hsl(var(--background))",
+        padding: "max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom))",
+      }}
     >
-      <div className="s-nx s-26 s-i5">
-        {Array.from({ length: 22 }, (_, index) => (
-          <span
-            key={index}
-            className={`animal-confetti animal-confetti--${index % 3}`}
-            style={{ left: `${4 + ((index * 29) % 92)}%`, animationDelay: `${(index % 7) * 60}ms`, transform: `rotate(${index * 31}deg)` }}
-          />
+      {onExit && (
+        <button
+          type="button"
+          onClick={() => onExit()}
+          aria-label="Exit"
+          style={{ position: "absolute", top: "max(16px, env(safe-area-inset-top))", right: 16, padding: 10, borderRadius: 999, background: "hsl(var(--muted))", color: "hsl(var(--foreground))", border: 0 }}
+        >
+          <X size={20} />
+        </button>
+      )}
+      <p style={{ fontSize: 20, fontWeight: 600, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 420 }}>
+        {promptLabel}
+      </p>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, width: "100%", maxWidth: 560 }}>
+        {trio.map((a, i) => (
+          <div
+            key={a.kind}
+            className={done ? "animal-audience__character is-celebrating" : undefined}
+            style={{ flex: i === 1 ? 1.3 : 1, aspectRatio: "120 / 140", animationDelay: `${i * 120}ms` }}
+          >
+            <Animal kind={a.kind} palette={a.palette} mood={mood} celebrating={done} />
+          </div>
         ))}
       </div>
-
-      <div className="s-pd s-ye s-m6 s-k3 s-y7 s-jq s-31 s-qc s-4b s-ou s-na s-oe s-u0 s-qr s-pl s-po">
-        <div className="-mt-20 s-jy s-c5 s-ic s-ig s-dl">
-          {trio.map((a, i) => (
-            <div
-              key={a.kind}
-              className="animal-audience__character is-celebrating"
-              style={{ width: i === 1 ? 128 : 96, height: i === 1 ? 150 : 112, animationDelay: `${i * 120}ms` }}
-            >
-              <Animal kind={a.kind} palette={a.palette} mood={1} celebrating={celebrating} />
-            </div>
-          ))}
-        </div>
-        <p className="s-ta s-cz s-wh s-va">{doneLabel}</p>
-        <div className="s-m9 s-ly s-fm s-xo s-mn s-qe s-50">
-          <div className="s-gg s-y7 s-ml s-qe s-5z s-2x" />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "hsl(var(--muted-foreground))" }}>
+        <Mic size={18} />
+        <div style={{ width: 160, height: 6, borderRadius: 999, background: "hsl(var(--muted))", overflow: "hidden" }}>
+          <div style={{ width: `${mood * 100}%`, height: "100%", background: "hsl(var(--primary))", transition: "width 250ms ease" }} />
         </div>
       </div>
     </div>
