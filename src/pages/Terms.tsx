@@ -17,7 +17,7 @@ const Terms = () => {
       </header>
 
       <main className="s-8j s-m9 s-os s-pb s-jd">
-        <article className="prose prose-neutral dark:prose-invert s-jr">
+        <article className="policy-document">
           <h1>Terms of Use (EULA)</h1>
           <p className="s-ul">Last updated: May 1, 2026</p>
 
