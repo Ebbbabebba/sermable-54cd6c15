@@ -1,5 +1,11 @@
 # Roadmap
 
+## Pågående: Naturlig apptypografi
+
+- [ ] Förfina hemskärmens rubriker och text med Apples systemstil
+- [ ] Ge textdisplayer och övningar lugnare, konsekvent typografi utan ändrade övningsregler
+- [ ] Kontrollera hemskärm och övningsvy i webbläsaren
+
 ## Complete: Apple-inspired graphite refinement
 
 - [x] Apply graphite tokens and Apple system typography across the app
