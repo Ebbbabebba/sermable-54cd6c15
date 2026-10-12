@@ -17,7 +17,7 @@ const Privacy = () => {
       </header>
 
       <main className="s-8j s-m9 s-os s-pb s-jd">
-        <article className="prose prose-neutral dark:prose-invert s-jr">
+        <article className="policy-document">
           <h1>Privacy Policy</h1>
           <p className="s-ul">Last updated: April 15, 2026</p>
 
