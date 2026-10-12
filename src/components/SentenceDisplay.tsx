@@ -245,7 +245,7 @@ const SentenceDisplay = ({
     <LayoutGroup>
       <div
         ref={containerRef}
-        className="s-vi s-kj s-iy s-ip s-u0 s-my s-qq"
+        className="practice-reading-text s-vi s-kj s-iy s-ip s-u0 s-my s-qq"
       >
         <AnimatePresence mode="sync">
           {words.map((_, index) => renderWord(index))}

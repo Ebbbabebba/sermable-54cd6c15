@@ -194,3 +194,27 @@ input,textarea,select { font-family:var(--font-system); }
 @media(prefers-reduced-motion:reduce) {
  .ui-button,.onboarding,.speech-row { transition:none; }
 }
+
+/* Native app hierarchy: semibold chrome, unembellished reading text. */
+.app-typography { font-family:var(--font-system); letter-spacing:0; }
+.app-typography :is(.s-cx,.s-cz,.s-cw) { font-weight:600; }
+.app-typography .s-x1 { text-transform:none; letter-spacing:0; }
+.app-typography :is(h1,h2,h3) { font-weight:600; line-height:1.25; }
+.dashboard__greeting h1 { font-size:26px; }
+.dashboard__section-heading h3 { font-size:22px; }
+.speech-row__header h3 { font-size:17px; line-height:1.35; }
+.welcome__tagline { font-size:18px; line-height:1.5; }
+.app-typography .welcome__brand { line-height:0.95; }
+.app-typography .onboarding__title--brand { line-height:0.95; }
+.app-typography .practice-reading-text {
+  width:100%; font-family:var(--font-system); font-size:21px;
+  font-weight:400; line-height:1.6; text-align:left; letter-spacing:0;
+}
+.app-typography .presentation-reading-text {
+  font-family:var(--font-system); font-size:28px; font-weight:400;
+  line-height:1.5; justify-content:flex-start; text-align:left; letter-spacing:0;
+}
+@media(min-width:768px) {
+  .app-typography .practice-reading-text { font-size:24px; }
+  .app-typography .presentation-reading-text { font-size:32px; }
+}

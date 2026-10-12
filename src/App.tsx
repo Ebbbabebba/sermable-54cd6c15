@@ -24,7 +24,7 @@ const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <div className="s-ky s-3v">
+    <div className="app-typography s-ky s-3v">
       <Suspense fallback={null}>
         <SuspenseProbe onReady={() => setContentReady(true)} />
         {children}

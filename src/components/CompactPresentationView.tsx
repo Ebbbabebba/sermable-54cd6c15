@@ -783,7 +783,7 @@ export const CompactPresentationView = ({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="s-c5 s-cb s-ia s-ig s-dv s-dz s-t9 s-kk s-ip s-d3"
+                  className="presentation-reading-text s-c5 s-cb s-ia s-ig s-dv s-dz s-t9 s-kk s-ip s-d3"
                 >
                   {(() => {
                     const sentence = sentences[displayedSentenceIndex];
