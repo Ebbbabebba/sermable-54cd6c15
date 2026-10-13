@@ -1364,6 +1364,10 @@
     "sentencesRange": "Frases {{a}}–{{b}}",
     "tapToFlip": "Toque para ver a frase inteira",
     "knowIt": "Já sei",
-    "tryAgain": "De novo"
+    "tryAgain": "De novo",
+    "print": "Imprimir ou partilhar",
+    "printSentence": "Frase {{n}}",
+    "printSentences": "Frases {{a}}–{{b}}",
+    "printCounter": "Cartão {{i}} de {{n}}"
   }
 }
