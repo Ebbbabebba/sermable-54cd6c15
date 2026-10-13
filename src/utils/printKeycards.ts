@@ -52,3 +52,44 @@ export function printKeycards(html: string) {
     }
   }, 250);
 }
+
+import { stripStageDirections } from "@/utils/stageDirections";
+import { getKeywordIndices, normalizeForKeyword } from "@/utils/keywordExtraction";
+import { getSpeechWordErrors } from "@/utils/wordDifficulty";
+
+type T = (key: string, opts: Record<string, unknown>) => string;
+const STOP = new Set(["och","att","det","som","en","ett","the","and","that","with","this","from","have","which","there","their","about","would","could","should","und","der","die","das","nicht","eine","pour","dans","avec","para","como","sono","della","porque"]);
+
+/** Builds keycards from a speech using the words the user actually missed or hesitated on in practice. */
+export function printSpeechKeycards(speechId: string, speechText: string, t: T) {
+  const sentences = (stripStageDirections(speechText).match(/[^.!?]+[.!?]*/g) || []).map((s) => s.trim()).filter(Boolean);
+  const wc = (s: string) => s.split(/\s+/).filter(Boolean).length;
+  const groups: { text: string; first: number; last: number }[] = [];
+  let cur: string[] = []; let first = 0;
+  sentences.forEach((s, i) => {
+    const n = cur.reduce((a, c) => a + wc(c), 0);
+    if (cur.length && n >= 6 && n + wc(s) > 15) { groups.push({ text: cur.join(" "), first, last: i - 1 }); cur = []; first = i; }
+    cur.push(s);
+  });
+  if (cur.length) groups.push({ text: cur.join(" "), first, last: sentences.length - 1 });
+  let levels: Record<string, number> = {};
+  try { levels = JSON.parse(localStorage.getItem(`sermable:keycards:${speechId}`) || "{}"); } catch { /* ignore */ }
+  const errors = getSpeechWordErrors(speechId);
+  const cards: PrintableCard[] = groups.map((g, si) => {
+    const words = g.text.split(/\s+/);
+    const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
+    const hard = words.map((_, i) => i).filter((i) => err(i) > 0).sort((a, b) => err(b) - err(a));
+    const kw = [...getKeywordIndices(words, STOP)].filter((i) => !hard.includes(i))
+      .sort((a, b) => normalizeForKeyword(words[b]).length - normalizeForKeyword(words[a]).length);
+    const n = Math.max(1, hard.length, Math.min(hard.length + kw.length, 4 + (levels[si] ?? 0) * 2));
+    const chosen = [...new Set([...hard, ...kw].slice(0, n))].sort((a, b) => a - b);
+    return {
+      label: g.first === g.last
+        ? t("keycards.printSentence", { n: g.first + 1, defaultValue: "Sentence {{n}}" })
+        : t("keycards.printSentences", { a: g.first + 1, b: g.last + 1, defaultValue: "Sentence {{a}}–{{b}}" }),
+      keywords: chosen.map((i) => ({ w: words[i].replace(/[.,!?;:]+$/, ""), hard: err(i) > 0 })),
+      text: g.text,
+    };
+  });
+  printKeycards(buildKeycardsHtml("Sermable", cards, (i, n) => t("keycards.printCounter", { i, n, defaultValue: "Card {{i}} of {{n}}" })));
+}
