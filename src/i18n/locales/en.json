@@ -1346,6 +1346,10 @@
     "sentencesRange": "Sentences {{a}}–{{b}}",
     "tapToFlip": "Tap to show the full sentence",
     "knowIt": "Know it",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "print": "Print or share",
+    "printSentence": "Sentence {{n}}",
+    "printSentences": "Sentence {{a}}–{{b}}",
+    "printCounter": "Card {{i}} of {{n}}"
   }
 }

@@ -1393,6 +1393,10 @@
     "sentencesRange": "Mening {{a}}–{{b}}",
     "tapToFlip": "Tryck för att visa hela meningen",
     "knowIt": "Kan det",
-    "tryAgain": "Försök igen"
+    "tryAgain": "Försök igen",
+    "print": "Skriv ut eller dela",
+    "printSentence": "Mening {{n}}",
+    "printSentences": "Mening {{a}}–{{b}}",
+    "printCounter": "Kort {{i}} av {{n}}"
   }
 }
