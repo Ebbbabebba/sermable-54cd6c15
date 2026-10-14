@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Undo2, Check, RotateCcw, Printer } from "lucide-react";
-import { buildKeycardsHtml, printKeycards } from "@/utils/printKeycards";
+import { printSpeechKeycards } from "@/utils/printKeycards";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { stripStageDirections } from "@/utils/stageDirections";
@@ -260,10 +260,7 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
         </span>
         <div className="s-c5 s-ib">
         <Button variant="ghost" size="icon" className="s-qe" aria-label={t("keycards.print", "Print or share")}
-          onClick={() => printKeycards(buildKeycardsHtml("Sermable", cards.map((c, i) => ({
-            label: c.first === c.last ? t("keycards.printSentence", { n: c.first + 1, defaultValue: "Sentence {{n}}" }) : t("keycards.printSentences", { a: c.first + 1, b: c.last + 1, defaultValue: "Sentence {{a}}–{{b}}" }),
-            keywords: allKeywords[i], text: c.text,
-          })), (i, n) => t("keycards.printCounter", { i, n, defaultValue: "Card {{i}} of {{n}}" })))}>
+          onClick={() => printSpeechKeycards(speechId, speechText, t as never)}>
           <Printer className="s-fz s-xt" />
         </Button>
         <Button variant="ghost" size="sm" className="s-qe s-dl" onClick={undo} disabled={!history.length || done}>
