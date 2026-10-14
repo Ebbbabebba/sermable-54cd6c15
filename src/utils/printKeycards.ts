@@ -4,53 +4,53 @@ export interface PrintableCard {
   text: string;
 }
 
-const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+type Counter = (i: number, n: number) => string;
+const safe = (s: string) => s.replace(/[\u2013\u2014]/g, "-");
 
-export function buildKeycardsHtml(title: string, cards: PrintableCard[], counter: (i: number, n: number) => string) {
-  const body = cards
-    .map(
-      (c, i) => `<section class="card">
-  <header><div class="logo"><span>SERM</span><span>ABLE</span></div><div class="meta">${esc(c.label)}<br>${esc(counter(i + 1, cards.length))}</div></header>
-  <div class="kw">${c.keywords.map((k) => `<span class="${k.hard ? "hard" : ""}">${esc(k.w)}</span>`).join(" ")}</div>
-  <footer>${esc(c.text)}</footer>
-</section>`
-    )
-    .join("");
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>
-@page{size:A4;margin:10mm}
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;color:#111}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.card{height:138mm;padding:8mm;border:1px dashed #bbb;display:flex;flex-direction:column;break-inside:avoid;page-break-inside:avoid}
-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6mm}
-.logo{display:flex;flex-direction:column;font-weight:800;letter-spacing:.08em;font-size:11pt;line-height:1}
-.logo span:last-child{color:#2f6fe4}
-.meta{font-size:8pt;color:#666;text-align:right}
-.kw{flex:1;font-size:17pt;font-weight:600;line-height:1.5}
-.kw span{margin-right:.35em}
-.kw .hard{color:#c62828;text-decoration:underline}
-footer{border-top:1px dashed #ccc;padding-top:3mm;font-size:8pt;color:#777;line-height:1.4}
-</style></head><body><div class="grid">${body}</div></body></html>`;
-}
-
-export function printKeycards(html: string) {
-  const iframe = document.createElement("iframe");
-  iframe.setAttribute("aria-hidden", "true");
-  Object.assign(iframe.style, { position: "fixed", right: "0", bottom: "0", width: "0", height: "0", border: "0" });
-  document.body.appendChild(iframe);
-  const doc = iframe.contentDocument!;
-  doc.open();
-  doc.write(html);
-  doc.close();
-  setTimeout(() => {
-    try {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-    } finally {
-      setTimeout(() => iframe.remove(), 60000);
+/** Renders the cards to an A4 PDF (4 cut-out cards per page) and opens the native share sheet
+ *  (Print, AirDrop, Mail, Save to Files) when available, otherwise downloads/opens the PDF. */
+export async function printKeycards(cards: PrintableCard[], counter: Counter) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const W = 210, H = 297, M = 10, cw = (W - 2 * M) / 2, ch = (H - 2 * M) / 2, pad = 7;
+  cards.forEach((c, i) => {
+    const slot = i % 4;
+    if (i > 0 && slot === 0) doc.addPage();
+    const x = M + (slot % 2) * cw, y = M + Math.floor(slot / 2) * ch;
+    doc.setLineDashPattern([2, 2], 0); doc.setDrawColor(190); doc.rect(x, y, cw, ch);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(17);
+    doc.text("SERM", x + pad, y + pad + 4); doc.setTextColor(47, 111, 228); doc.text("ABLE", x + pad, y + pad + 8.5);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(110);
+    doc.text([safe(c.label), safe(counter(i + 1, cards.length))], x + cw - pad, y + pad + 4, { align: "right" });
+    // keywords, wrapped manually so hard words can be red
+    doc.setFont("helvetica", "bold"); doc.setFontSize(17);
+    let cx = x + pad, cy = y + pad + 24; const maxX = x + cw - pad, lh = 9;
+    const footerTop = y + ch - pad - 22;
+    for (const k of c.keywords) {
+      const w = safe(k.w), ww = doc.getTextWidth(w), sp = doc.getTextWidth(" ");
+      if (cx + ww > maxX && cx > x + pad) { cx = x + pad; cy += lh; }
+      if (cy > footerTop - 2) break;
+      if (k.hard) doc.setTextColor(198, 40, 40); else doc.setTextColor(17);
+      doc.text(w, cx, cy);
+      if (k.hard) { doc.setDrawColor(198, 40, 40); doc.setLineDashPattern([], 0); doc.line(cx, cy + 1, cx + ww, cy + 1); }
+      cx += ww + sp;
     }
-  }, 250);
+    doc.setLineDashPattern([1, 1], 0); doc.setDrawColor(200); doc.line(x + pad, footerTop, maxX, footerTop);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120);
+    doc.text(doc.splitTextToSize(safe(c.text), cw - 2 * pad).slice(0, 5), x + pad, footerTop + 5);
+  });
+  const blob = doc.output("blob");
+  const file = new File([blob], "sermable-keycards.pdf", { type: "application/pdf" });
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  if (nav.share && nav.canShare?.({ files: [file] })) {
+    try { await nav.share({ files: [file], title: "Sermable" }); return; }
+    catch (e) { if ((e as Error)?.name === "AbortError") return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "sermable-keycards.pdf"; a.target = "_blank"; a.rel = "noopener";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 import { stripStageDirections } from "@/utils/stageDirections";
@@ -91,5 +91,5 @@ export function printSpeechKeycards(speechId: string, speechText: string, t: T) 
       text: g.text,
     };
   });
-  printKeycards(buildKeycardsHtml("Sermable", cards, (i, n) => t("keycards.printCounter", { i, n, defaultValue: "Card {{i}} of {{n}}" })));
+  return printKeycards(cards, (i, n) => t("keycards.printCounter", { i, n, defaultValue: "Card {{i}} of {{n}}" }));
 }

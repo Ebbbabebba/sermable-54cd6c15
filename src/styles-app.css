@@ -166,7 +166,8 @@ input,textarea,select { font-family:var(--font-system); }
 .dashboard__section-heading > div:last-child > span { background:transparent; padding:0; font-size:12px; white-space:nowrap; }
 .dashboard__list { background:hsl(var(--card)); border-radius:12px; overflow:hidden; }
 .speech-row { cursor:pointer; background:transparent; border:0; border-radius:0; box-shadow:none; transition:background-color 160ms; }
-.speech-row:hover { transform:none; box-shadow:none; background:hsl(var(--accent)); }
+.speech-row:hover { transform:none; box-shadow:none; background:transparent; }
+.speech-row__footer button:hover, .speech-row__content button:hover { background:hsl(var(--accent)); border-radius:8px; }
 .dashboard__list > div + div { border-top:1px solid hsl(var(--border)); }
 .speech-row__header { padding:20px 20px 8px; }
 .speech-row__header .icon-circle { width:32px; height:32px; background:hsl(var(--accent)); color:hsl(var(--accent-foreground)); }
