@@ -22,6 +22,14 @@ const state: WarmupState = {
 
 let warmupPromise: Promise<void> | null = null;
 
+// Native bridge calls can hang forever on some iOS devices; a stuck call
+// must never block the practice screen.
+const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
+  Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error("speech warm-up timeout")), ms)),
+  ]);
+
 // Call on Practice page mount. Safe to call multiple times.
 export function warmupSpeechRecognition(): Promise<void> {
   if (warmupPromise) return warmupPromise;
@@ -30,15 +38,15 @@ export function warmupSpeechRecognition(): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       try {
         if (state.nativeAvailable === null) {
-          const { available } = await NativeSpeech.available();
+          const { available } = await withTimeout(NativeSpeech.available(), 5000);
           state.nativeAvailable = !!available;
         }
         if (state.nativeAvailable && state.nativePermissionGranted !== true) {
-          const perm = await NativeSpeech.checkPermissions();
+          const perm = await withTimeout(NativeSpeech.checkPermissions(), 5000);
           if (perm.speechRecognition === "granted") {
             state.nativePermissionGranted = true;
           } else {
-            const req = await NativeSpeech.requestPermissions();
+            const req = await withTimeout(NativeSpeech.requestPermissions(), 30000);
             state.nativePermissionGranted = req.speechRecognition === "granted";
           }
         }
@@ -53,9 +61,10 @@ export function warmupSpeechRecognition(): Promise<void> {
       // Check mic permission cheaply via the Permissions API when supported.
       if (state.webMicGranted === null && navigator.permissions?.query) {
         try {
-          const status = await navigator.permissions.query({
-            name: "microphone" as PermissionName,
-          });
+          const status = await withTimeout(
+            navigator.permissions.query({ name: "microphone" as PermissionName }),
+            2000,
+          );
           state.webMicGranted = status.state === "granted";
           status.onchange = () => {
             state.webMicGranted = status.state === "granted";
@@ -77,8 +86,6 @@ export function warmupSpeechRecognition(): Promise<void> {
             const r = new SR();
             r.continuous = false;
             r.interimResults = false;
-            // Don't actually start — just constructing is enough on most engines
-            // to load the model. .abort() is a no-op when not started.
             r.abort?.();
             state.webEnginePrimed = true;
           } catch {}
@@ -92,6 +99,21 @@ export function warmupSpeechRecognition(): Promise<void> {
   });
 
   return warmupPromise;
+}
+
+/**
+ * Wait (bounded) for an in-flight warm-up so the practice view never fires
+ * a second, concurrent permission request at the native plugin — two
+ * overlapping requests can lock up the iOS speech bridge.
+ */
+export async function waitForSpeechWarmup(maxMs = 3000): Promise<void> {
+  const p = warmupPromise;
+  if (!p) return;
+  try {
+    await withTimeout(p, maxMs);
+  } catch {
+    // Give up waiting; the caller continues with its own guarded checks.
+  }
 }
 
 export function isNativeAvailableCached(): boolean | null {
