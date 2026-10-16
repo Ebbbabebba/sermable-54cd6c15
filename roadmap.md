@@ -1,5 +1,12 @@
 # Roadmap
 
+## Klart: Övningen får aldrig frysa
+
+- [x] Stäng-knappen lämnar direkt, sparning sker i bakgrunden
+- [x] Tidsgräns på mikrofon- och inloggningssteg
+- [x] Laddning visar alltid stängknapp och Försök igen
+- [ ] Testa på iPhone/iPad (väntar på användaren)
+
 ## Klart: Naturlig apptypografi
 
 - [x] Förfina hemskärmens rubriker och text med Apples systemstil
