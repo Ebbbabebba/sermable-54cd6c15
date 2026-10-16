@@ -3846,7 +3846,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 phaseEpochRef.current
               );
             }
-          );
+          ));
 
           listenerHandle = await withSpeechTimeout(NativeSpeech.addListener(
             "listeningState" as any,
@@ -3865,7 +3865,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 queueMicrotask(() => { if (!stopped && isRecordingRef.current) startNativeSession(); });
               }
             }
-          );
+          ));
 
           // We expose a thin "recognition object" so the rest of the component
           // (which reads recognitionRef.current to know it's running) keeps working.
