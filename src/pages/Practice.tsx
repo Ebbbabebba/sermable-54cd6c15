@@ -1968,7 +1968,26 @@ const [liveTranscription, setLiveTranscription] = useState("");
     return <div className="s-gi s-mn" />;
   }
 
-  if (!speech) return null;
+  // A failed load (e.g. "Load failed" on a flaky connection) used to leave a
+  // blank, untappable screen. Always offer retry and a way back.
+  if (!speech) {
+    return (
+      <div className="practice-loading s-gi">
+        <div className="practice-loading__bar" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="s-dn">
+            <ArrowLeft className="s-fz s-xt" />
+            {t('common.back')}
+          </Button>
+        </div>
+        <div className="practice-loading__body">
+          <p className="practice-loading__text">{t('practice.loadFailed')}</p>
+          <Button onClick={() => { setLoading(true); void loadSpeech(); }}>
+            {t('common.retry')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
 
   // Day-After Recall Mode

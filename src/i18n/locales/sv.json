@@ -481,7 +481,8 @@
       "inMinutes": "om {{minutes}} minut",
       "inMinutesPlural": "om {{minutes}} minuter",
       "inLessThanMinute": "om mindre än en minut"
-    }
+    },
+    "loadFailed": "Kunde inte ladda talet. Kontrollera anslutningen och försök igen."
   },
   "settings": {
     "title": "Inställningar",
@@ -953,7 +954,8 @@
     "couldNotAccessMic": "Kunde inte komma åt mikrofonen.",
     "analysisFailed": "Analysen misslyckades",
     "couldNotAnalyze": "Kunde inte analysera inspelningen",
-    "couldNotProcess": "Kunde inte bearbeta inspelningen"
+    "couldNotProcess": "Kunde inte bearbeta inspelningen",
+    "retry": "Försök igen"
   },
   "beat_practice": {
     "tight_deadline": "Kort om tid: {{count}} avsnitt kvar och {{days}} dag(ar) till deadline. Vi fokuserar på början, slutet och övergångarna — flytta datumet om det går.",
@@ -1052,7 +1054,8 @@
     "combine_from_start": "Från början — båda meningarna",
     "full_beat_title": "Hela stycket tillsammans",
     "full_beat_explainer": "Säg nu alla meningarna i följd, från början, ur minnet.",
-    "full_beat_from_start": "Från början — hela stycket"
+    "full_beat_from_start": "Från början — hela stycket",
+    "loading_slow": "Det här tar längre tid än vanligt."
   },
   "presentation": {
     "settings": "Presentationsinställningar",

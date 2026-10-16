@@ -234,3 +234,10 @@ input,textarea,select { font-family:var(--font-system); }
 .policy-document strong { font-weight:600; }
 .policy-document a { color:hsl(var(--primary)); text-decoration:underline; text-underline-offset:3px; }
 .policy-document a:focus-visible { outline:2px solid hsl(var(--ring)); outline-offset:3px; }
+
+/* Practice loading and load-failure states: always offer a way out. */
+.practice-loading { display:flex; flex-direction:column; height:100%; min-height:100%; background:hsl(var(--background)); }
+.practice-loading__bar { display:flex; align-items:center; padding:0.5rem 0.75rem; }
+.practice-loading__body { flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:1rem; padding:1.5rem; max-width:28rem; margin:0 auto; width:100%; }
+.practice-loading__spinner { width:28px; height:28px; border-radius:50%; border:3px solid hsl(var(--muted)); border-top-color:hsl(var(--primary)); animation:spin 0.9s linear infinite; }
+.practice-loading__text { font-size:15px; line-height:1.45; color:hsl(var(--muted-foreground)); }
