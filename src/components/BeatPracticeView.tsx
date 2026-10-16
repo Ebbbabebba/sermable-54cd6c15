@@ -472,6 +472,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [beats, setBeats] = useState<Beat[]>([]);
   const [currentBeatIndex, setCurrentBeatIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadSlow, setLoadSlow] = useState(false);
   const [speechLang, setSpeechLang] = useState<string>(() => speechLanguage || (typeof navigator !== 'undefined' ? navigator.language : 'en-US'));
   const [practiceStrictness, setPracticeStrictness] = useState<'strict' | 'flow'>('strict');
   // Ref mirror so matching/completion callbacks never read a stale strictness.
@@ -1129,7 +1130,22 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     loadOrCreateBeats();
   }, [speechId]);
 
+  // Wrapper: if loading stalls or fails, show a retry + exit instead of a
+  // blank, unresponsive screen.
   const loadOrCreateBeats = async () => {
+    setLoadSlow(false);
+    const slowTimer = setTimeout(() => setLoadSlow(true), 12000);
+    try {
+      await loadOrCreateBeatsInner();
+    } catch (err) {
+      console.error('Loading lesson failed:', err);
+      setLoadSlow(true);
+    } finally {
+      clearTimeout(slowTimer);
+    }
+  };
+
+  const loadOrCreateBeatsInner = async () => {
     setLoading(true);
 
     // Fetch speech language, last practice time, deadline, and familiarity level
@@ -1158,7 +1174,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Source 1: user_learning_analytics.preferred_practice_hours (best-performing slots)
     // Source 2: profiles.practice_start_hour (user-set window start) as fallback
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // A stuck session lookup must not hold the whole lesson hostage.
+      const { data: { session } } = await withSpeechTimeout(supabase.auth.getSession(), 5000);
       const user = session?.user;
       if (user) {
         const [analyticsRes, profileRes] = await Promise.all([
