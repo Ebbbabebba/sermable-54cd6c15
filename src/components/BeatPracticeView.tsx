@@ -24,6 +24,7 @@ import {
   isWebMicGrantedCached,
   markNativePermissionGranted,
   markWebMicGranted,
+  waitForSpeechWarmup,
 } from "@/lib/speechWarmup";
 
 import { PauseCountdownOverlay } from "./PauseCountdownOverlay";
@@ -3699,6 +3700,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (isNative) {
         // ---- Native (iOS/Android) path ----
         try {
+          // Don't race the page-level warm-up: two overlapping permission
+          // requests can lock up the iOS speech bridge.
+          await waitForSpeechWarmup(3000);
           // Use the warm-up cache when available so the first tap doesn't
           // pay for two extra Capacitor bridge round-trips.
           if (isNativeAvailableCached() === null) {
@@ -3819,7 +3823,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           };
 
 
-          partialHandle = await NativeSpeech.addListener(
+          partialHandle = await withSpeechTimeout(NativeSpeech.addListener(
             "partialResults" as any,
             (data: any) => {
               if (showCelebrationRef.current) return;
@@ -3844,7 +3848,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             }
           );
 
-          listenerHandle = await NativeSpeech.addListener(
+          listenerHandle = await withSpeechTimeout(NativeSpeech.addListener(
             "listeningState" as any,
             async (data: any) => {
               if (data?.status === "started" || data?.status === "listening") {
@@ -3929,7 +3933,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         if (isWebMicGrantedCached() !== true) {
           try {
             if (navigator.mediaDevices?.getUserMedia) {
-              const stream = await navigator.mediaDevices.getUserMedia({
+              // iOS web views can leave getUserMedia pending forever; cap it.
+              const stream = await withSpeechTimeout(navigator.mediaDevices.getUserMedia({
                 audio: {
                   // Dictation-tuned capture: browser noise suppression and echo
                   // cancellation gate quiet/distant speech and clip word onsets,
@@ -3940,7 +3945,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   autoGainControl: true,
                   channelCount: 1,
                 } as MediaTrackConstraints,
-              });
+              }), 15000);
 
               // Release immediately — Web Speech will open its own handle, but
               // the browser remembers permission + applied processing.
@@ -4346,7 +4351,38 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [audienceEligible, showCelebration]);
 
   if (loading) {
-    return <div className="s-g3" />;
+    // Never show a dead blank screen: keep a way out while lessons load.
+    return (
+      <div className="practice-loading">
+        <div className="practice-loading__bar" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('common.exit', 'Exit')}
+            onClick={() => {
+              stopListening();
+              onExit?.();
+            }}
+            className="s-r5 s-qe s-h0"
+          >
+            <X className="s-g1 s-xv s-ul" />
+          </Button>
+        </div>
+        <div className="practice-loading__body">
+          <div className="practice-loading__spinner" aria-hidden="true" />
+          {loadSlow && (
+            <>
+              <p className="practice-loading__text">
+                {t('beat_practice.loading_slow', 'This is taking longer than usual.')}
+              </p>
+              <Button variant="outline" onClick={() => { void loadOrCreateBeats(); }}>
+                {t('common.retry', 'Try again')}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
   }
 
   // Beat preview screen - show upcoming beat before learning
@@ -4836,9 +4872,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           variant={currentBeatIndex + phase.length}
           doneLabel={t('beat_practice.sentence_done', 'Sentence done!')}
           promptLabel={t('beat_practice.say_sentence_prompt', 'Say the sentence out loud from memory')}
-          onExit={async () => {
+          onExit={() => {
             stopListening();
-            await saveCheckpoint();
+            void saveCheckpoint();
             onExit?.();
           }}
         />
@@ -4854,9 +4890,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           <Button
             variant="ghost"
             size="icon"
-            onClick={async () => {
+            onClick={() => {
+              // Leave immediately; saving must never block the exit button.
               stopListening();
-              await saveCheckpoint();
+              void saveCheckpoint();
               onExit?.();
             }}
             className="s-r5 s-qe s-h0"
