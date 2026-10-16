@@ -4752,8 +4752,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const audienceScriptFree = phase.includes('fading') || sessionMode === 'recall' || sessionMode === 'pre_beat_recall';
   void audienceScriptFree;
   // Full-screen audience replaces the script once every word is hidden.
-  const audienceVisible = words.length > 0 && isAllTargetHidden(hiddenWordIndices) && !activePause;
-  void audienceCelebrating;
+  const audienceEligible = words.length > 0 && isAllTargetHidden(hiddenWordIndices) && !activePause;
+  // While cheering, keep the animals on screen; otherwise step aside as soon
+  // as the sentence is done so the celebration and next step are reachable.
+  const audienceVisible = audienceCelebrating || (audienceEligible && !showCelebration);
   const audienceTargetIndices = isOverviewMode
     ? Array.from(keywordIndices)
     : words.map((_, index) => index).filter(index => !pauseWordMeta.has(index));
@@ -4761,7 +4763,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     (count, index) => count + (spokenIndices.has(index) ? 1 : 0),
     0
   );
-  const audienceProgress = Math.min(1, audienceSpokenTargets / Math.max(1, audienceTargetIndices.length));
+  const audienceProgress = audienceCelebrating
+    ? 1
+    : Math.min(1, audienceSpokenTargets / Math.max(1, audienceTargetIndices.length));
+  const audienceWasEligibleRef = useRef(false);
+  if (audienceEligible && !showCelebration) audienceWasEligibleRef.current = true;
+  useEffect(() => {
+    if (audienceCelebrating) return;
+    const finished = audienceWasEligibleRef.current && (showCelebration || (audienceEligible && audienceProgress >= 1));
+    if (!finished) return;
+    audienceWasEligibleRef.current = false;
+    setAudienceCelebrating(true);
+    if (audienceHideTimerRef.current) clearTimeout(audienceHideTimerRef.current);
+    audienceHideTimerRef.current = setTimeout(() => setAudienceCelebrating(false), 1800);
+  }, [showCelebration, audienceEligible, audienceProgress, audienceCelebrating]);
+  useEffect(() => {
+    if (!audienceEligible && !showCelebration) audienceWasEligibleRef.current = false;
+  }, [audienceEligible, showCelebration]);
 
   const submitSelfRating = (value: 1 | 2 | 3) => {
     if (selfRatingTimerRef.current) {
