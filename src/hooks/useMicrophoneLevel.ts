@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { requestMicrophoneAccess } from "@/utils/microphone";
 
 const ANALYSIS_INTERVAL_MS = 150;
@@ -21,7 +22,9 @@ export function useMicrophoneLevel(isRecording: boolean) {
   const silenceStartRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!isRecording) {
+    // In the native app a second mic stream fights the speech recognizer for
+    // the audio session, which makes the mic cut in and out. Skip it there.
+    if (!isRecording || Capacitor.isNativePlatform()) {
       setIsTooLow(false);
       levelRef.current = 0;
       lowStartRef.current = null;
