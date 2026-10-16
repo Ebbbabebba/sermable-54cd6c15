@@ -3763,7 +3763,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           let silentRestarts = 0;
           const watchdog = setInterval(() => {
             if (stopped || !isRecordingRef.current) return;
-            if (Date.now() - lastActivityAt > 15000) {
+            // Silence alone is not a failure — restarting a live session makes
+            // the mic audibly switch off/on. Only force a restart after a long gap.
+            if (Date.now() - lastActivityAt > 30000) {
               lastActivityAt = Date.now();
               // Some devices (seen on iPad) never deliver native results.
               // After two silent cycles, switch to the WebView recognizer.
@@ -3869,17 +3871,20 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             "listeningState" as any,
             async (data: any) => {
               if (data?.status === "started" || data?.status === "listening") {
+                lastActivityAt = Date.now();
                 setIsSpeechReady(true);
               }
               if (data?.status === "stopped" && !stopped && isRecordingRef.current) {
+                const hadSpeech = !!lastNativeInterim.trim();
                 // Promote whatever interim was last seen into finals so we keep history.
-                if (lastNativeInterim.trim()) {
+                if (hadSpeech) {
                   nativeFinalsRef.current = (nativeFinalsRef.current + " " + lastNativeInterim).trim();
                   lastNativeInterim = "";
                 }
-                // Restart immediately to emulate continuous listening.
-                // Restart on the next microtask for the snappiest gap-fill.
-                queueMicrotask(() => { if (!stopped && isRecordingRef.current) startNativeSession(); });
+                // Restart right away after speech; after a silent session, wait a
+                // moment so iOS doesn't toggle the mic on and off in a tight loop.
+                const delay = hadSpeech ? 0 : 700;
+                setTimeout(() => { if (!stopped && isRecordingRef.current) startNativeSession(); }, delay);
               }
             }
           ));
