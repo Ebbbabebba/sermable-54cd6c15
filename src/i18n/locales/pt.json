@@ -456,7 +456,8 @@
     "premiumFeature3": "Discursos ilimitados",
     "sessionCompleteTitle": "Lição de Hoje Concluída!",
     "sessionCompleteDesc": "Bom trabalho! O seu cérebro precisa de tempo para consolidar o que aprendeu. Volte mais tarde para uma melhor retenção.",
-    "restHelpsMemory": "O descanso ajuda na consolidação da memória"
+    "restHelpsMemory": "O descanso ajuda na consolidação da memória",
+    "loadFailed": "Não foi possível carregar o discurso. Verifica a ligação e tenta novamente."
   },
   "settings": {
     "title": "Configurações",
@@ -646,7 +647,8 @@
     "couldNotAccessMic": "Não foi possível aceder ao microfone.",
     "analysisFailed": "Falha na análise",
     "couldNotAnalyze": "Não foi possível analisar a gravação",
-    "couldNotProcess": "Não foi possível processar a gravação"
+    "couldNotProcess": "Não foi possível processar a gravação",
+    "retry": "Tentar novamente"
   },
   "beat_practice": {
     "tight_deadline": "Prazo apertado: faltam {{count}} secções em {{days}} dia(s). Vamos focar no início, no fim e nas transições — muda a data se puderes.",
@@ -731,7 +733,8 @@
     "combine_from_start": "Desde o início — as duas frases",
     "full_beat_title": "A parte toda junta",
     "full_beat_explainer": "Agora diz todas as frases seguidas, desde o início, de memória.",
-    "full_beat_from_start": "Desde o início — a parte toda"
+    "full_beat_from_start": "Desde o início — a parte toda",
+    "loading_slow": "Isto está a demorar mais do que o normal."
   },
   "presentation": {
     "settings": "Configurações de apresentação",

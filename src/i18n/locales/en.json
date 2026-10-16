@@ -480,7 +480,8 @@
       "inMinutes": "in {{minutes}} minute",
       "inMinutesPlural": "in {{minutes}} minutes",
       "inLessThanMinute": "in less than a minute"
-    }
+    },
+    "loadFailed": "Couldn't load your speech. Check your connection and try again."
   },
   "settings": {
     "title": "Settings",
@@ -818,7 +819,8 @@
     "combine_from_start": "From the start — both sentences",
     "full_beat_title": "The whole part together",
     "full_beat_explainer": "Now say all the sentences in a row, from the start, from memory.",
-    "full_beat_from_start": "From the start — the whole part"
+    "full_beat_from_start": "From the start — the whole part",
+    "loading_slow": "This is taking longer than usual."
   },
   "day_after_recall": {
     "title": "Day-After Recall",
@@ -1033,7 +1035,8 @@
     "couldNotAccessMic": "Could not access microphone.",
     "analysisFailed": "Analysis failed",
     "couldNotAnalyze": "Could not analyze recording",
-    "couldNotProcess": "Could not process recording"
+    "couldNotProcess": "Could not process recording",
+    "retry": "Try again"
   },
   "presentation": {
     "settings": "Presentation Settings",
