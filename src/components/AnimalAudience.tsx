@@ -209,13 +209,13 @@ export const Animal = ({
   );
 };
 
-const AnimalAudience = ({ progress, variant = 0, promptLabel, onExit }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit }: AnimalAudienceProps) => {
   const trio = useMemo(() => {
     const base = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return [0, 1, 2].map(o => ANIMALS[(base + o * 2) % ANIMALS.length]);
   }, [variant]);
   const mood = clamp01(progress);
-  const done = mood >= 1;
+  const done = celebrating || mood >= 1;
 
   return (
     <div
@@ -238,7 +238,7 @@ const AnimalAudience = ({ progress, variant = 0, promptLabel, onExit }: AnimalAu
         </button>
       )}
       <p style={{ fontSize: 20, fontWeight: 600, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 420 }}>
-        {promptLabel}
+        {done && doneLabel ? doneLabel : promptLabel}
       </p>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, width: "100%", maxWidth: 560 }}>
         {trio.map((a, i) => (
