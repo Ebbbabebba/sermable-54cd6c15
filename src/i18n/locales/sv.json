@@ -1,5 +1,7 @@
 {
   "playful": {
+    "preparingMic": "Förbereder mikrofonen…",
+    "visibleWords": "{{count}} synliga ord",
     "nextSpeech": "Nästa tal",
     "days": "{{count}} dagar kvar",
     "reviews": "Repetition",
