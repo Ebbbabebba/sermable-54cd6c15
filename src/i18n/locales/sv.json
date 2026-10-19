@@ -41,7 +41,8 @@
       "start": "Börja"
     },
     "mySpeeches": "Mina tal",
-    "progress": "Framsteg"
+    "progress": "Framsteg",
+    "accuracy": "Träffsäkerhet"
   },
   "app": {
     "name": "Sermable",

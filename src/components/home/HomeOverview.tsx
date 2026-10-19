@@ -95,3 +95,25 @@ export function SpeechesGlance({ speeches, beats, onOpen }: { speeches: { id: st
     return <li key={s.id}><button type="button" className="glance-item" onClick={onOpen}><span className="glance-item__text"><strong>{s.title}</strong>{days !== null && <span>{days < 0 ? t('dashboard.daysOverduePlural', { count: Math.abs(days) }) : days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`}</span>}<span className="glance-item__bar" aria-hidden="true"><span style={{ width: `${percent}%` }} /></span></span><span className="glance-item__pct">{percent}%</span></button></li>;
   })}</ul></section>;
 }
+
+export function SpeechProgress({ speech, beats, sessions }: { speech: { id: string; title: string; goal_date: string | null }; beats: OverviewBeat[]; sessions: { id: string; session_date: string; score: number | null }[] }) {
+  const { t, i18n } = useTranslation();
+  const mastered = beats.filter(b => b.is_mastered).length;
+  const percent = beats.length ? Math.round(mastered / beats.length * 100) : 0;
+  const scored = sessions.filter(x => x.score !== null);
+  const avg = scored.length ? Math.round(scored.reduce((a, x) => a + (x.score ?? 0), 0) / scored.length) : null;
+  const days = speech.goal_date ? differenceInCalendarDays(parseISO(speech.goal_date), new Date()) : null;
+  const fmt = dateFormatter(i18n.language, { day: 'numeric', month: 'short' });
+  return <article className="speech-progress">
+    <header><SpeechMascot value={percent} /><div><h2>{speech.title}</h2><p>{t(`playful.mascot.${mascotMood(percent)}`)}</p></div></header>
+    <div className="speech-progress__tiles">
+      <span className="tile tile--mint"><Trophy /><b>{mastered}/{beats.length}</b><small>{t('playful.beats')}</small></span>
+      <span className="tile tile--bubblegum"><Target /><b>{avg === null ? '—' : `${avg}%`}</b><small>{t('playful.accuracy')}</small></span>
+      <span className="tile tile--sun"><CalendarDays /><b>{days === null ? '—' : Math.max(days, 0)}</b><small>{t('playful.daysUnit')}</small></span>
+    </div>
+    {beats.length > 0 && <BeatChips beats={beats} onSelect={() => {}} />}
+    {beats.length > 0 && <ReviewTimeline beats={beats} goalDate={speech.goal_date ?? undefined} />}
+    <h3>{t('playful.recentSessions')}</h3>
+    {sessions.length ? <ul className="session-history">{sessions.slice(0, 5).map(x => <li key={x.id}><span>{fmt.format(new Date(x.session_date))}</span><strong>{x.score === null ? '—' : `${Math.round(x.score)}%`}</strong></li>)}</ul> : <p className="speech-progress__empty">{t('playful.noSessions')}</p>}
+  </article>;
+}

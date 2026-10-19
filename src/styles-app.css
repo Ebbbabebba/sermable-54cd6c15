@@ -423,3 +423,18 @@ input,textarea,select { font-family:var(--font-system); }
 .today-task__fun > span { display:flex; flex-direction:column; gap:2px; min-width:0; }
 .today-task__fun b { font-size:14px; font-weight:800; }
 .today-task__fun small { font-size:13px; font-weight:700; color:hsl(var(--muted-foreground)); }
+
+.speech-progress { display:flex; flex-direction:column; gap:14px; background:hsl(var(--card)); border-radius:24px; padding:18px; box-shadow:var(--shadow-sm); margin-top:16px; }
+.speech-progress header { display:flex; align-items:center; gap:12px; }
+.speech-progress header .speech-mascot { width:56px; height:56px; flex:none; position:static; transform:none; }
+.speech-progress h2 { font-size:19px; font-weight:800; overflow-wrap:anywhere; }
+.speech-progress header p { font-size:13px; font-weight:700; color:hsl(var(--muted-foreground)); }
+.speech-progress h3 { font-size:15px; font-weight:800; }
+.speech-progress__tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.speech-progress .tile { display:flex; flex-direction:column; align-items:flex-start; gap:2px; border-radius:16px; padding:10px 12px; }
+.speech-progress .tile svg { width:16px; height:16px; }
+.speech-progress .tile b { font-size:20px; font-weight:800; }
+.speech-progress .tile small { font-size:12px; font-weight:700; }
+.tile--mint { background:hsl(var(--mint)); } .tile--bubblegum { background:hsl(var(--bubblegum)); } .tile--sun { background:hsl(var(--sun)); }
+.speech-progress .beat-chips, .speech-progress .review-section { box-shadow:none; padding:0; background:transparent; }
+.speech-progress__empty { font-size:14px; color:hsl(var(--muted-foreground)); }
