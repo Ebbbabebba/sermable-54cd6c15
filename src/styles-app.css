@@ -258,10 +258,14 @@ input,textarea,select { font-family:var(--font-system); }
 .home-overview { display:flex; flex-direction:column; gap:24px; }
 .home-overview__title span { color:hsl(var(--muted-foreground)); font-size:13px; font-weight:700; }
 .home-overview__title h1 { font-size:28px; font-weight:800; margin-top:4px; overflow-wrap:anywhere; }
-.countdown-card { display:flex; align-items:center; gap:14px; background:hsl(var(--card)); padding:18px 20px; border-radius:24px; box-shadow:var(--shadow-md); }
-.countdown-card > svg { width:40px; height:40px; padding:8px; border-radius:12px; color:hsl(var(--sun-foreground)); background:hsl(var(--sun)); }
-.countdown-card strong { font-size:20px; font-weight:800; display:block; }
-.countdown-card span { font-size:13px; color:hsl(var(--muted-foreground)); }
+.countdown-card { display:flex; align-items:center; gap:16px; background:hsl(var(--card)); padding:16px; border-radius:24px; box-shadow:var(--shadow-md); }
+.countdown-card__badge { width:56px; height:56px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:16px; background:hsl(var(--sun)); color:hsl(var(--sun-foreground, var(--foreground))); }
+.countdown-card__badge strong { font-size:20px; font-weight:900; line-height:1; }
+.countdown-card__badge span { font-size:10px; font-weight:800; }
+.countdown-card__text { min-width:0; }
+.countdown-card__text p { display:flex; align-items:center; gap:4px; margin:0; font-size:12px; font-weight:700; color:hsl(var(--muted-foreground)); }
+.countdown-card__text p svg { width:14px; height:14px; }
+.countdown-card__text h2 { margin:0; font-size:18px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .home-overview__mastery { display:flex; align-items:center; flex-direction:column; padding:0 0 6px; }
 .home-overview__mastery h2 { font-size:18px; font-weight:800; margin-top:8px; }
 .home-overview__mastery p { font-size:13px; color:hsl(var(--muted-foreground)); margin-top:4px; }

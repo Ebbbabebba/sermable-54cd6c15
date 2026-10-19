@@ -24,7 +24,8 @@
     "recentSessions": "Prácticas recientes",
     "noSessions": "Todavía no hay sesiones.",
     "noBeats": "Tus fragmentos aparecerán después de la primera práctica.",
-    "beatCount": "{{count}} de {{total}} fragmentos completados"
+    "beatCount": "{{count}} de {{total}} fragmentos completados",
+    "daysUnit": "días"
   },
   "app": {
     "name": "Sermable",

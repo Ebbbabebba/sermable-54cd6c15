@@ -24,7 +24,8 @@
     "recentSessions": "Recent practice",
     "noSessions": "No practice sessions yet.",
     "noBeats": "Your beats appear after your first practice.",
-    "beatCount": "{{count}} of {{total}} beats completed"
+    "beatCount": "{{count}} of {{total}} beats completed",
+    "daysUnit": "days"
   },
   "app": {
     "name": "Sermable",

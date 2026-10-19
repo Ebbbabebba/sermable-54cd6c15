@@ -24,7 +24,8 @@
     "recentSessions": "Práticas recentes",
     "noSessions": "Ainda não há sessões.",
     "noBeats": "Seus trechos aparecem após a primeira prática.",
-    "beatCount": "{{count}} de {{total}} trechos concluídos"
+    "beatCount": "{{count}} de {{total}} trechos concluídos",
+    "daysUnit": "dias"
   },
   "app": {
     "name": "Sermable",
