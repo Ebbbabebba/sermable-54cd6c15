@@ -25,7 +25,14 @@
     "noSessions": "Aucune séance pour le moment.",
     "noBeats": "Vos passages apparaîtront après la première séance.",
     "beatCount": "{{count}} passages terminés sur {{total}}",
-    "daysUnit": "jours"
+    "daysUnit": "jours",
+    "hello": "Salut ! 👋",
+    "mascot": {
+      "nervous": "On avance beat par beat !",
+      "learning": "Ça progresse – continue !",
+      "confident": "Tu as l'air sûr de toi – presque !",
+      "ready": "Tu es prêt à briller ! ⭐"
+    }
   },
   "app": {
     "name": "Sermable",

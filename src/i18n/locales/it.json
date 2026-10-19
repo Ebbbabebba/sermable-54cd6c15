@@ -25,7 +25,14 @@
     "noSessions": "Nessuna sessione ancora.",
     "noBeats": "I brani appariranno dopo la prima sessione.",
     "beatCount": "{{count}} brani completati su {{total}}",
-    "daysUnit": "giorni"
+    "daysUnit": "giorni",
+    "hello": "Ciao! 👋",
+    "mascot": {
+      "nervous": "Andiamo un beat alla volta!",
+      "learning": "Stai migliorando, continua!",
+      "confident": "Sembri sicuro, ci sei quasi!",
+      "ready": "Sei pronto a brillare! ⭐"
+    }
   },
   "app": {
     "name": "Sermable",

@@ -25,7 +25,14 @@
     "noSessions": "Noch keine Übungseinheiten.",
     "noBeats": "Deine Abschnitte erscheinen nach der ersten Übung.",
     "beatCount": "{{count}} von {{total}} Abschnitten abgeschlossen",
-    "daysUnit": "Tage"
+    "daysUnit": "Tage",
+    "hello": "Hallo! 👋",
+    "mascot": {
+      "nervous": "Wir gehen es Beat für Beat an!",
+      "learning": "Es wird – mach weiter so!",
+      "confident": "Du klingst sicher – fast geschafft!",
+      "ready": "Du bist bereit zu glänzen! ⭐"
+    }
   },
   "app": {
     "name": "Sermable",

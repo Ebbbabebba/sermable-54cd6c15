@@ -256,6 +256,10 @@ input,textarea,select { font-family:var(--font-system); }
 .dashboard__greeting p:first-child { font-size:12px; }
 .dashboard__greeting p:last-child { display:none; }
 .home-overview { display:flex; flex-direction:column; gap:24px; }
+.home-overview__date { text-transform:capitalize; }
+.home-overview__speech { margin-top:4px; font-weight:700; color:hsl(var(--muted-foreground)); }
+.mascot-bubble { position:relative; background:hsl(var(--card)); color:hsl(var(--foreground)); border-radius:16px; padding:8px 16px; font-size:14px; font-weight:700; box-shadow:var(--shadow-sm); margin-bottom:10px; text-align:center; }
+.mascot-bubble::after { content:''; position:absolute; left:50%; bottom:-6px; width:12px; height:12px; background:hsl(var(--card)); transform:translateX(-50%) rotate(45deg); }
 .home-overview__title span { color:hsl(var(--muted-foreground)); font-size:13px; font-weight:700; }
 .home-overview__title h1 { font-size:28px; font-weight:800; margin-top:4px; overflow-wrap:anywhere; }
 .countdown-card { display:flex; align-items:center; gap:16px; background:hsl(var(--card)); padding:16px; border-radius:24px; box-shadow:var(--shadow-md); }
