@@ -138,10 +138,10 @@ export const Animal = ({
       <ellipse cx="74" cy="134" rx="10" ry="5" fill={palette.accent} />
 
       {/* Stubby arms that rise with mood */}
-      <g style={{ transformOrigin: "38px 106px", transform: `rotate(${-armAngle}deg)`, transition }}>
+      <g className={celebrating ? "animal-arm animal-arm--left" : undefined} style={{ transformOrigin: "38px 106px", transform: `rotate(${-armAngle}deg)`, transition }}>
         <circle cx="34" cy="106" r="8.5" fill={palette.body} />
       </g>
-      <g style={{ transformOrigin: "82px 106px", transform: `rotate(${armAngle}deg)`, transition }}>
+      <g className={celebrating ? "animal-arm animal-arm--right" : undefined} style={{ transformOrigin: "82px 106px", transform: `rotate(${armAngle}deg)`, transition }}>
         <circle cx="86" cy="106" r="8.5" fill={palette.body} />
       </g>
 
@@ -162,6 +162,7 @@ export const Animal = ({
       </>}
 
       {/* Eyes */}
+      <g className="animal-eyes" style={{ transformOrigin: `60px ${eyeY}px` }}>
       {kind === "owl" ? <>
         <circle cx="45" cy={54 - mood * 1.5} r={eyeR - 1} fill={palette.detail} />
         <circle cx="75" cy={54 - mood * 1.5} r={eyeR - 1} fill={palette.detail} />
@@ -177,6 +178,7 @@ export const Animal = ({
           <rect x={eyeRX - 9} y={eyeY - 10} width="18" height={lidHeight} rx="4" fill={palette.body} style={{ transition }} />
         </>}
       </>}
+      </g>
 
       {/* Blush cheeks */}
       {kind !== "owl" && <>
@@ -244,8 +246,15 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
         {trio.map((a, i) => (
           <div
             key={a.kind}
-            className={done ? "animal-audience__character is-celebrating" : undefined}
-            style={{ flex: i === 1 ? 1.3 : 1, aspectRatio: "120 / 140", animationDelay: `${i * 120}ms` }}
+            className={`animal-audience__character ${done ? "is-celebrating" : "is-idle"}`}
+            style={{
+              flex: i === 1 ? 1.3 : 1,
+              aspectRatio: "120 / 140",
+              animationDelay: `${i * (done ? 120 : 420)}ms`,
+              // Bob faster and higher the closer the speaker gets to finishing.
+              animationDuration: done ? undefined : `${Math.round(3200 - mood * 2000)}ms`,
+              ["--bob-height" as string]: `${-1.5 - mood * 5}%`,
+            }}
           >
             <Animal kind={a.kind} palette={a.palette} mood={mood} celebrating={done} />
           </div>
