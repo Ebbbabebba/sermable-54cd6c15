@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MasteryRing } from './MasteryRing';
 import type { OverviewBeat } from '@/hooks/useSpeechOverview';
 import { buildSchedule } from '@/lib/reviewSchedule';
+import { dateFormatter } from '@/lib/dateFormat';
 
 export function CountdownCard({ title, date }: { title: string; date: string }) {
   const { t } = useTranslation();
@@ -37,8 +38,8 @@ export function ReviewTimeline({ beats, goalDate }: { beats: OverviewBeat[]; goa
   // Planned (visual) dates, anchored on the first 10-minute recall and compressed toward the presentation date.
   const firstRecall = beats.map(b => b.recall_10min_at).filter((d): d is string => !!d).sort()[0];
   const planned = firstRecall ? buildSchedule(new Date(new Date(firstRecall).getTime() - 10 * 60 * 1000), goalDate ? new Date(`${goalDate}T09:00:00`) : undefined) : null;
-  const fmt = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short' });
-  return <section className="review-section"><h2>{t('playful.reviews')}</h2><ol className="review-timeline">{stages.map((stage, i) => <li key={stage} className={complete[i] ? 'is-complete' : i === next && dates.length ? 'is-next' : ''}><span className="review-timeline__dot">{complete[i] ? <Check /> : i + 1}</span><span>{t(`playful.${stage}`)}</span>{planned && <small className="review-timeline__date">{fmt.format(planned[i])}</small>}</li>)}</ol>{dates[0] && <p className="review-section__due"><Clock3 />{t('dashboard.nextPractice')} · {new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dates[0]))}</p>}</section>;
+  const fmt = dateFormatter(i18n.language, { day: 'numeric', month: 'short' });
+  return <section className="review-section"><h2>{t('playful.reviews')}</h2><ol className="review-timeline">{stages.map((stage, i) => <li key={stage} className={complete[i] ? 'is-complete' : i === next && dates.length ? 'is-next' : ''}><span className="review-timeline__dot">{complete[i] ? <Check /> : i + 1}</span><span>{t(`playful.${stage}`)}</span>{planned && <small className="review-timeline__date">{fmt.format(planned[i])}</small>}</li>)}</ol>{dates[0] && <p className="review-section__due"><Clock3 />{t('dashboard.nextPractice')} · {dateFormatter(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dates[0]))}</p>}</section>;
 }
 
 export function StatsCards({ streak, accuracy, mastered, total }: { streak: number; accuracy: number | null; mastered: number; total: number }) {

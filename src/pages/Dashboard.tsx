@@ -32,6 +32,7 @@ import StreakCelebration from "@/components/StreakCelebration";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { waitForStableSession } from "@/lib/authSession";
 import { HomeOverview, StatsCards } from '@/components/home/HomeOverview';
+import { dateFormatter } from '@/lib/dateFormat';
 import { BottomNav, type HomeTab } from '@/components/home/BottomNav';
 import { SpeechMascot } from '@/components/home/SpeechMascot';
 import { useSpeechOverview } from '@/hooks/useSpeechOverview';
@@ -523,7 +524,7 @@ const Dashboard = () => {
               // Mark this period as shown
               sessionStorage.setItem('greeting_period', currentPeriod);
               
-              const dateLabel = new Intl.DateTimeFormat(i18n.language, {
+              const dateLabel = dateFormatter(i18n.language, {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
@@ -549,7 +550,7 @@ const Dashboard = () => {
           <ReviewNotifications />
 
           {activeTab === 'home' && nextSpeech && <HomeOverview speech={nextSpeech} beats={nextBeats} streak={currentStreak} accuracy={nextScore} ready={overview.ready} onPractice={() => navigate(`/practice/${nextSpeech.id}`)} />}
-          {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.stats')}</h1><StatsCards streak={currentStreak} accuracy={averageAccuracy} mastered={overview.beats.filter(b => b.is_mastered).length} total={overview.beats.length} /><h2>{t('playful.recentSessions')}</h2>{overview.sessions.length ? <ul className="session-history">{overview.sessions.map(session => <li key={session.id}><div><strong>{speeches.find(s => s.id === session.speech_id)?.title}</strong><span>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(session.session_date))}</span></div><strong>{session.score === null ? '—' : `${Math.round(session.score)}%`}</strong></li>)}</ul> : <p>{t('playful.noSessions')}</p>}</section>}
+          {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.stats')}</h1><StatsCards streak={currentStreak} accuracy={averageAccuracy} mastered={overview.beats.filter(b => b.is_mastered).length} total={overview.beats.length} /><h2>{t('playful.recentSessions')}</h2>{overview.sessions.length ? <ul className="session-history">{overview.sessions.map(session => <li key={session.id}><div><strong>{speeches.find(s => s.id === session.speech_id)?.title}</strong><span>{dateFormatter(undefined, { dateStyle: 'medium' }).format(new Date(session.session_date))}</span></div><strong>{session.score === null ? '—' : `${Math.round(session.score)}%`}</strong></li>)}</ul> : <p>{t('playful.noSessions')}</p>}</section>}
 
           {/* Speeches Section */}
           <section hidden={activeTab === 'stats' || (activeTab === 'home' && !!nextSpeech)}>
