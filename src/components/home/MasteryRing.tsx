@@ -2,7 +2,7 @@ import { SpeechMascot } from './SpeechMascot';
 
 export function MasteryRing({ value, label, size = 230 }: { value: number; label: string; size?: number }) {
   const percent = Math.round(Math.max(0, Math.min(100, value)));
-  const stroke = 18;
+  const stroke = size < 100 ? 6 : 18;
   const r = (size - stroke) / 2;
   return <div className="mastery-ring" style={{ width: size, height: size }} role="progressbar" aria-label={label} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
     <svg className="mastery-ring__svg" width={size} height={size} aria-hidden="true">

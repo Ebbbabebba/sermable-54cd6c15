@@ -407,3 +407,5 @@ input,textarea,select { font-family:var(--font-system); }
 .glance-item__text { display:flex; flex-direction:column; min-width:0; }
 .glance-item__text strong { font-weight:800; overflow-wrap:anywhere; }
 .glance-item__text span { font-size:13px; font-weight:700; color:hsl(var(--muted-foreground)); }
+.glance-item .mastery-ring__value { font-size:13px; }
+.glance-item .mastery-ring__value small { font-size:9px; }
