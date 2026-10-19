@@ -31,7 +31,7 @@ import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { waitForStableSession } from "@/lib/authSession";
-import { HomeOverview, StatsCards } from '@/components/home/HomeOverview';
+import { HomeOverview, StatsCards, TodayTasks, todayTasks } from '@/components/home/HomeOverview';
 import { dateFormatter } from '@/lib/dateFormat';
 import { BottomNav, type HomeTab } from '@/components/home/BottomNav';
 import { SpeechMascot } from '@/components/home/SpeechMascot';
