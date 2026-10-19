@@ -2289,7 +2289,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <h1 className="s-vi s-d3 s-wh truncate">{speech.title}</h1>
               {speech.goal_date && (
                 <p className="s-vj s-ul">
-                  {t('practice.goal')}: {format(new Date(speech.goal_date), "PPP")}
+                  {t('practice.goal')}: {new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long' }).format(new Date(speech.goal_date))}
                 </p>
               )}
             </div>
@@ -2304,7 +2304,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
             <div className="s-g6 s-y9 s-4a" />
             <div className="s-c5 s-c7 s-ib">
               <span className="s-vi s-d3 tabular-nums s-uw">{masteryPercent}%</span>
-              <span className="s-tl s-x1 s-wi s-ul">{t('beat_practice.mastery', 'Mastery')}</span>
+              <span className="s-tl s-x1 s-wi s-ul">{t('playful.completed')}</span>
             </div>
             <div className="s-g6 s-y9 s-4a" />
             <div className="s-c5 s-c7 s-ib">
@@ -2590,7 +2590,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     className="s-y7 s-ii s-uj s-d2"
                   >
                     <CalendarIcon className="s-lp s-fz s-xt" />
-                    {editingDeadline ? format(editingDeadline, 'PPP') : <span>{t('upload.goalDate', 'Select deadline')}</span>}
+                    {editingDeadline ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long' }).format(editingDeadline) : <span>{t('upload.goalDate', 'Select deadline')}</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="s-y6 s-mr" align="start">

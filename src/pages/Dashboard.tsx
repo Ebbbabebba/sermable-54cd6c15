@@ -47,7 +47,7 @@ interface Speech {
 }
 
 const Dashboard = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [speeches, setSpeeches] = useState<Speech[]>([]);
   const [loading, setLoading] = useState(true);
@@ -523,7 +523,7 @@ const Dashboard = () => {
               // Mark this period as shown
               sessionStorage.setItem('greeting_period', currentPeriod);
               
-              const dateLabel = new Intl.DateTimeFormat(undefined, {
+              const dateLabel = new Intl.DateTimeFormat(i18n.language, {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',

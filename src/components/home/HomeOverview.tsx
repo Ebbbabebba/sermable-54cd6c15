@@ -44,7 +44,7 @@ export function HomeOverview({ speech, beats, streak, accuracy, ready, onPractic
   const percent = beats.length ? Math.round(mastered / beats.length * 100) : 0;
   return <div className="home-overview"><div className="home-overview__title"><span>{t('playful.nextSpeech')}</span><h1>{speech.title}</h1></div>
     {speech.goal_date && <CountdownCard date={speech.goal_date} />}
-    <div className="home-overview__mastery"><MasteryRing value={percent} label={t('dashboard.mastery')} /><h2>{t('dashboard.mastery')}</h2><p>{ready ? t('playful.beatCount', { count: mastered, total: beats.length }) : t('common.loading')}</p></div>
+    <div className="home-overview__mastery"><MasteryRing value={percent} label={t('playful.completed')} /><h2>{t('playful.completed')}</h2><p>{ready ? t('playful.beatCount', { count: mastered, total: beats.length }) : t('common.loading')}</p></div>
     <ReviewTimeline beats={beats} />
     <section className="home-beats"><h2>{t('playful.beats')}</h2><BeatChips beats={beats} onSelect={onPractice} />{!beats.length && <p>{t('playful.noBeats')}</p>}</section>
     <StatsCards streak={streak} accuracy={accuracy} mastered={mastered} total={beats.length} />
