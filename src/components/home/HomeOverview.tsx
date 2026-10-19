@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { MasteryRing } from './MasteryRing';
-import { mascotMood } from './SpeechMascot';
+import { mascotMood, SpeechMascot } from './SpeechMascot';
 import type { OverviewBeat } from '@/hooks/useSpeechOverview';
 import { buildSchedule } from '@/lib/reviewSchedule';
 import { dateFormatter } from '@/lib/dateFormat';
@@ -64,7 +64,7 @@ export function HomeOverview({ speech, beats, streak, accuracy, ready, onPractic
     <section className="home-beats"><BeatChips beats={beats} onSelect={onPractice} />{!beats.length && <p>{t('playful.noBeats')}</p>}</section>
   </div>;
 }
-export type TodayTask = { id: string; title: string; goal_date: string | null; kind: 'review' | 'learn' | 'start'; percent: number };
+export type TodayTask = { id: string; title: string; goal_date: string | null; kind: 'review' | 'learn' | 'start'; percent: number; mastered: number; total: number };
 export function todayTasks(speeches: { id: string; title: string; goal_date: string | null }[], beats: OverviewBeat[], now = new Date()): TodayTask[] {
   const todayKey = now.toLocaleDateString('sv-SE');
   const end = new Date(now); end.setHours(23, 59, 59, 999);
@@ -75,14 +75,14 @@ export function todayTasks(speeches: { id: string; title: string; goal_date: str
     const due = own.some(b => b.next_scheduled_recall_at && new Date(b.next_scheduled_recall_at) <= end);
     const learning = own.some(b => !b.is_mastered && !b.next_scheduled_recall_at);
     const kind: TodayTask['kind'] | null = !own.length ? 'start' : due ? 'review' : learning ? 'learn' : null;
-    return kind ? { id: s.id, title: s.title, goal_date: s.goal_date, kind, percent } : null;
+    return kind ? { id: s.id, title: s.title, goal_date: s.goal_date, kind, percent, mastered, total: own.length } : null;
   }).filter((x): x is TodayTask => !!x).sort((a, b) => (a.goal_date || '9999').localeCompare(b.goal_date || '9999'));
 }
 export function TodayTasks({ tasks, onPractice }: { tasks: TodayTask[]; onPractice: (id: string) => void }) {
   const { t } = useTranslation();
   return <section className="today-tasks"><h2>{t('playful.todayTitle')}</h2>{tasks.length ? <ul>{tasks.map(task => {
     const days = task.goal_date ? differenceInCalendarDays(parseISO(task.goal_date), new Date()) : null;
-    return <li key={task.id}><button type="button" className={`today-task today-task--${task.kind}`} onClick={() => onPractice(task.id)}><span className="today-task__badge">{t(`playful.task.${task.kind}`)}</span><strong>{task.title}</strong><span className="today-task__meta">{days !== null && <><CalendarDays />{days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`} · </>}{task.percent}%</span><span className="today-task__go"><Mic /></span></button></li>;
+    return <li key={task.id}><button type="button" className={`today-task today-task--${task.kind}`} onClick={() => onPractice(task.id)}><span className="today-task__badge">{t(`playful.task.${task.kind}`)}</span><strong>{task.title}</strong><span className="today-task__meta">{days !== null && <><CalendarDays />{days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`} · </>}{task.percent}%</span><span className="today-task__go"><Mic /></span><span className="today-task__fun"><SpeechMascot value={task.percent} /><span><b>{t(`playful.mascot.${mascotMood(task.percent)}`)}</b><small>{task.total ? t('playful.beatCount', { count: task.mastered, total: task.total }) : t('playful.noBeats')}</small></span></span></button></li>;
   })}</ul> : <p className="today-tasks__done"><Check />{t('playful.allDone')}</p>}</section>;
 }
 
