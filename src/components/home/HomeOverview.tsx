@@ -82,6 +82,6 @@ export function TodayTasks({ tasks, onPractice }: { tasks: TodayTask[]; onPracti
   const { t } = useTranslation();
   return <section className="today-tasks"><h2>{t('playful.todayTitle')}</h2>{tasks.length ? <ul>{tasks.map(task => {
     const days = task.goal_date ? differenceInCalendarDays(parseISO(task.goal_date), new Date()) : null;
-    return <li key={task.id}><button type="button" className={`today-task today-task--${task.kind}`} onClick={() => onPractice(task.id)}><span className="today-task__badge">{t(`playful.task.${task.kind}`)}</span><strong>{task.title}</strong><span className="today-task__meta">{days !== null && <><CalendarDays />{days === 0 ? t('playful.presentationDay') : `${days} ${t('playful.daysUnit')}`} · </>}{task.percent}%</span><span className="today-task__go"><Mic /></span></button></li>;
+    return <li key={task.id}><button type="button" className={`today-task today-task--${task.kind}`} onClick={() => onPractice(task.id)}><span className="today-task__badge">{t(`playful.task.${task.kind}`)}</span><strong>{task.title}</strong><span className="today-task__meta">{days !== null && <><CalendarDays />{days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`} · </>}{task.percent}%</span><span className="today-task__go"><Mic /></span></button></li>;
   })}</ul> : <p className="today-tasks__done"><Check />{t('playful.allDone')}</p>}</section>;
 }
