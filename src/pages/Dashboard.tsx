@@ -547,10 +547,8 @@ const Dashboard = () => {
           </section>
 
           {/* Review Notifications */}
-          {activeTab === 'home' && <ReviewNotifications />}
 
           {activeTab === 'home' && speeches.length > 0 && <TodayTasks tasks={todayTasks(speeches, overview.beats)} onPractice={id => navigate(`/practice/${id}`)} />}
-          {activeTab === 'home' && nextSpeech && <h2 className="home-section-label">{t('playful.nextSpeech')}</h2>}
           {activeTab === 'home' && nextSpeech && <HomeOverview speech={nextSpeech} beats={nextBeats} streak={currentStreak} accuracy={nextScore} ready={overview.ready} onPractice={() => navigate(`/practice/${nextSpeech.id}`)} />}
           {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.progress')}</h1><StatsCards streak={currentStreak} accuracy={averageAccuracy} mastered={overview.beats.filter(b => b.is_mastered).length} total={overview.beats.length} /><h2>{t('playful.recentSessions')}</h2>{overview.sessions.length ? <ul className="session-history">{overview.sessions.map(session => <li key={session.id}><div><strong>{speeches.find(s => s.id === session.speech_id)?.title}</strong><span>{dateFormatter(undefined, { dateStyle: 'medium' }).format(new Date(session.session_date))}</span></div><strong>{session.score === null ? '—' : `${Math.round(session.score)}%`}</strong></li>)}</ul> : <p>{t('playful.noSessions')}</p>}</section>}
 
