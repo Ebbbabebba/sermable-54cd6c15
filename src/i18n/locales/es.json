@@ -1419,5 +1419,21 @@
     "printSentence": "Frase {{n}}",
     "printSentences": "Frases {{a}}–{{b}}",
     "printCounter": "Tarjeta {{i}} de {{n}}"
+  },
+  "designer": {
+    "title": "Diseña tus tarjetas",
+    "select": "Elegir palabras",
+    "move": "Mover",
+    "draw": "Dibujar",
+    "share": "Imprimir / compartir",
+    "empty": "Aún no hay tarjetas",
+    "theme": "Tema de color",
+    "prev": "Tarjeta anterior",
+    "next": "Tarjeta siguiente",
+    "clear": "Borrar dibujo",
+    "hint_select": "Toca una palabra para quitarla. Desliza para cambiar de tarjeta.",
+    "hint_move": "Arrastra las palabras para colocarlas.",
+    "hint_draw": "Dibuja en la tarjeta con el dedo.",
+    "addWords": "Toca para volver a añadirla"
   }
 }

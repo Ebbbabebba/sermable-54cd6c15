@@ -1419,5 +1419,21 @@
     "printSentence": "Frase {{n}}",
     "printSentences": "Frases {{a}}–{{b}}",
     "printCounter": "Cartão {{i}} de {{n}}"
+  },
+  "designer": {
+    "title": "Crie os seus cartões",
+    "select": "Escolher palavras",
+    "move": "Mover",
+    "draw": "Desenhar",
+    "share": "Imprimir / partilhar",
+    "empty": "Ainda sem cartões",
+    "theme": "Tema de cor",
+    "prev": "Cartão anterior",
+    "next": "Próximo cartão",
+    "clear": "Apagar desenho",
+    "hint_select": "Toque numa palavra para a remover. Deslize para trocar de cartão.",
+    "hint_move": "Arraste as palavras para as posicionar.",
+    "hint_draw": "Desenhe no cartão com o dedo.",
+    "addWords": "Toque para voltar a adicionar"
   }
 }

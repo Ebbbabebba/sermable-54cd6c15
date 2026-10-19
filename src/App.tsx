@@ -107,6 +107,7 @@ const Onboarding = lazyWithRetry(() => import("./pages/Onboarding"));
 const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
 const Practice = lazyWithRetry(() => import("./pages/Practice"));
 const Presentation = lazyWithRetry(() => import("./pages/Presentation"));
+const KeycardDesigner = lazyWithRetry(() => import("./pages/KeycardDesigner"));
 const SpeechDetail = lazyWithRetry(() => import("./pages/SpeechDetail"));
 const Settings = lazyWithRetry(() => import("./pages/Settings"));
 const PaymentSettings = lazyWithRetry(() => import("./pages/PaymentSettings"));
@@ -135,6 +136,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/practice/:id" element={<Practice />} />
             <Route path="/presentation/:id" element={<Presentation />} />
+            <Route path="/keycards/:id/design" element={<KeycardDesigner />} />
             <Route path="/speech/:id" element={<SpeechDetail />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/settings/payment" element={<PaymentSettings />} />

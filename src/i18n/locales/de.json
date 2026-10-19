@@ -1419,5 +1419,21 @@
     "printSentence": "Satz {{n}}",
     "printSentences": "Satz {{a}}–{{b}}",
     "printCounter": "Karte {{i}} von {{n}}"
+  },
+  "designer": {
+    "title": "Gestalte deine Karten",
+    "select": "Wörter wählen",
+    "move": "Verschieben",
+    "draw": "Zeichnen",
+    "share": "Drucken / teilen",
+    "empty": "Noch keine Karten",
+    "theme": "Farbthema",
+    "prev": "Vorherige Karte",
+    "next": "Nächste Karte",
+    "clear": "Zeichnung löschen",
+    "hint_select": "Tippe auf ein Wort, um es zu entfernen. Wische, um die Karte zu wechseln.",
+    "hint_move": "Ziehe die Wörter an ihren Platz.",
+    "hint_draw": "Zeichne mit dem Finger auf die Karte.",
+    "addWords": "Tippen, um es wieder hinzuzufügen"
   }
 }

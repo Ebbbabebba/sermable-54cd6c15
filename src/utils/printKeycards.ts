@@ -39,7 +39,11 @@ export async function printKeycards(cards: PrintableCard[], counter: Counter) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120);
     doc.text(doc.splitTextToSize(safe(c.text), cw - 2 * pad).slice(0, 5), x + pad, footerTop + 5);
   });
-  const blob = doc.output("blob");
+  await sharePdf(doc.output("blob"));
+}
+
+/** Opens the native share sheet (Print, AirDrop, Mail, Files) or downloads the PDF. */
+export async function sharePdf(blob: Blob) {
   const file = new File([blob], "sermable-keycards.pdf", { type: "application/pdf" });
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (nav.share && nav.canShare?.({ files: [file] })) {
@@ -61,7 +65,7 @@ type T = (key: string, opts: Record<string, unknown>) => string;
 const STOP = new Set(["och","att","det","som","en","ett","the","and","that","with","this","from","have","which","there","their","about","would","could","should","und","der","die","das","nicht","eine","pour","dans","avec","para","como","sono","della","porque"]);
 
 /** Builds keycards from a speech using the words the user actually missed or hesitated on in practice. */
-export function printSpeechKeycards(speechId: string, speechText: string, t: T) {
+export function buildSpeechCards(speechId: string, speechText: string, t: T): PrintableCard[] {
   const sentences = (stripStageDirections(speechText).match(/[^.!?]+[.!?]*/g) || []).map((s) => s.trim()).filter(Boolean);
   const wc = (s: string) => s.split(/\s+/).filter(Boolean).length;
   const groups: { text: string; first: number; last: number }[] = [];
@@ -75,7 +79,7 @@ export function printSpeechKeycards(speechId: string, speechText: string, t: T) 
   let levels: Record<string, number> = {};
   try { levels = JSON.parse(localStorage.getItem(`sermable:keycards:${speechId}`) || "{}"); } catch { /* ignore */ }
   const errors = getSpeechWordErrors(speechId);
-  const cards: PrintableCard[] = groups.map((g, si) => {
+  return groups.map((g, si) => {
     const words = g.text.split(/\s+/);
     const err = (i: number) => errors[normalizeForKeyword(words[i])] ?? 0;
     const hard = words.map((_, i) => i).filter((i) => err(i) > 0).sort((a, b) => err(b) - err(a));
@@ -91,5 +95,8 @@ export function printSpeechKeycards(speechId: string, speechText: string, t: T) 
       text: g.text,
     };
   });
-  return printKeycards(cards, (i, n) => t("keycards.printCounter", { i, n, defaultValue: "Card {{i}} of {{n}}" }));
+}
+
+export function printSpeechKeycards(speechId: string, speechText: string, t: T) {
+  return printKeycards(buildSpeechCards(speechId, speechText, t), (i, n) => t("keycards.printCounter", { i, n, defaultValue: "Card {{i}} of {{n}}" }));
 }

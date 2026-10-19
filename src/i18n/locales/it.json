@@ -1419,5 +1419,21 @@
     "printSentence": "Frase {{n}}",
     "printSentences": "Frasi {{a}}–{{b}}",
     "printCounter": "Scheda {{i}} di {{n}}"
+  },
+  "designer": {
+    "title": "Progetta le tue schede",
+    "select": "Scegli parole",
+    "move": "Sposta",
+    "draw": "Disegna",
+    "share": "Stampa / condividi",
+    "empty": "Ancora nessuna scheda",
+    "theme": "Tema colore",
+    "prev": "Scheda precedente",
+    "next": "Scheda successiva",
+    "clear": "Cancella disegno",
+    "hint_select": "Tocca una parola per rimuoverla. Scorri per cambiare scheda.",
+    "hint_move": "Trascina le parole per posizionarle.",
+    "hint_draw": "Disegna sulla scheda con il dito.",
+    "addWords": "Tocca per rimetterla sulla scheda"
   }
 }

@@ -1401,5 +1401,21 @@
     "printSentence": "Sentence {{n}}",
     "printSentences": "Sentence {{a}}–{{b}}",
     "printCounter": "Card {{i}} of {{n}}"
+  },
+  "designer": {
+    "title": "Design your cards",
+    "select": "Choose words",
+    "move": "Move",
+    "draw": "Draw",
+    "share": "Print / share",
+    "empty": "No cards yet",
+    "theme": "Colour theme",
+    "prev": "Previous card",
+    "next": "Next card",
+    "clear": "Clear drawing",
+    "hint_select": "Tap a word to remove it. Swipe the card to switch.",
+    "hint_move": "Drag words to place them.",
+    "hint_draw": "Draw on the card with your finger.",
+    "addWords": "Tap to add back to the card"
   }
 }
