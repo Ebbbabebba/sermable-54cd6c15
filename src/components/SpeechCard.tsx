@@ -356,7 +356,7 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
           }}
         >
           <Presentation />
-          <span>{t('settings.subscription.presentationMode', 'Presentation Mode')}</span>
+          <span>{t('playful.present')}</span>
         </Button>
 
         <AlertDialog>
