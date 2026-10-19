@@ -68,3 +68,10 @@
 - [ ] `analyze-speech` edge – läs `learning_mode`, betygsätt täckning i översiktsläge
 - [ ] `UploadSpeechDialog.tsx` + `LearningModeSelector.tsx` – ren Duolingo-kortdesign
 - [ ] Verifiera: tsgo + build OK
+
+## Klart: Bottenmenyn med Öva-fliken
+
+- [x] Flikarna heter Hem, Öva (mikrofonikon), Statistik, Inställn. på alla sju språk
+- [x] Öva-fliken öppnar listan av tal att öva på
+- [x] Datumformatering kraschar inte vid udda webbläsarspråk (safeLocale + test)
+- [x] Verifierad i mobilvy på svenska och engelska
