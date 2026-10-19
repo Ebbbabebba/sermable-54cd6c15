@@ -31,7 +31,7 @@ import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { waitForStableSession } from "@/lib/authSession";
-import { HomeOverview, StatsCards } from '@/components/home/HomeOverview';
+import { HomeOverview, StatsCards, TodayTasks, todayTasks } from '@/components/home/HomeOverview';
 import { dateFormatter } from '@/lib/dateFormat';
 import { BottomNav, type HomeTab } from '@/components/home/BottomNav';
 import { SpeechMascot } from '@/components/home/SpeechMascot';
@@ -498,7 +498,7 @@ const Dashboard = () => {
       <main className="dashboard__main">
         <div className="dashboard__content">
           {/* Welcome Section - Large, clean typography */}
-          <section className="dashboard__greeting">
+          <section className="dashboard__greeting" hidden={activeTab !== 'home'}>
             {(() => {
               const hour = new Date().getHours();
               const rawName = user?.user_metadata?.full_name?.split(' ')[0] || "";
@@ -547,16 +547,16 @@ const Dashboard = () => {
           </section>
 
           {/* Review Notifications */}
-          <ReviewNotifications />
 
+          {activeTab === 'home' && speeches.length > 0 && <TodayTasks tasks={todayTasks(speeches, overview.beats)} onPractice={id => navigate(`/practice/${id}`)} />}
           {activeTab === 'home' && nextSpeech && <HomeOverview speech={nextSpeech} beats={nextBeats} streak={currentStreak} accuracy={nextScore} ready={overview.ready} onPractice={() => navigate(`/practice/${nextSpeech.id}`)} />}
-          {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.stats')}</h1><StatsCards streak={currentStreak} accuracy={averageAccuracy} mastered={overview.beats.filter(b => b.is_mastered).length} total={overview.beats.length} /><h2>{t('playful.recentSessions')}</h2>{overview.sessions.length ? <ul className="session-history">{overview.sessions.map(session => <li key={session.id}><div><strong>{speeches.find(s => s.id === session.speech_id)?.title}</strong><span>{dateFormatter(undefined, { dateStyle: 'medium' }).format(new Date(session.session_date))}</span></div><strong>{session.score === null ? '—' : `${Math.round(session.score)}%`}</strong></li>)}</ul> : <p>{t('playful.noSessions')}</p>}</section>}
+          {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.progress')}</h1><StatsCards streak={currentStreak} accuracy={averageAccuracy} mastered={overview.beats.filter(b => b.is_mastered).length} total={overview.beats.length} /><h2>{t('playful.recentSessions')}</h2>{overview.sessions.length ? <ul className="session-history">{overview.sessions.map(session => <li key={session.id}><div><strong>{speeches.find(s => s.id === session.speech_id)?.title}</strong><span>{dateFormatter(undefined, { dateStyle: 'medium' }).format(new Date(session.session_date))}</span></div><strong>{session.score === null ? '—' : `${Math.round(session.score)}%`}</strong></li>)}</ul> : <p>{t('playful.noSessions')}</p>}</section>}
 
           {/* Speeches Section */}
           <section hidden={activeTab === 'stats' || (activeTab === 'home' && !!nextSpeech)}>
             <div className="dashboard__section-heading">
               <div>
-                <h3 className="s-vi s-d3 s-u9">{t('dashboard.yourSpeeches')}</h3>
+                <h1 className="s-vi s-d3 s-u9">{t('playful.mySpeeches')}</h1>
                 <p className="s-v9 s-ul s-ls">
                   {t('dashboard.manageSpeeches')}
                 </p>
@@ -650,7 +650,7 @@ const Dashboard = () => {
           </section>
         </div>
       </main>
-      <BottomNav active={activeTab} onChange={setActiveTab} onSettings={() => navigate('/settings')} />
+      <BottomNav active={activeTab} onChange={tab => { setActiveTab(tab); window.scrollTo?.(0, 0); }} />
 
 
       <Suspense fallback={null}>
