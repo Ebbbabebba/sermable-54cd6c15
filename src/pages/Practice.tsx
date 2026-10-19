@@ -13,7 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ArrowLeft, Play, RotateCcw, Presentation, X, Square, Eye, Target, Pencil, Clock, Lock, AlertTriangle, GraduationCap, Infinity as InfinityIcon, ChevronRight, CheckCircle2, Circle, Flame, Sunrise, Mic, Headphones, Brain, BookOpen, ArrowLeftRight, Settings, CalendarIcon, Printer } from "lucide-react";
-import { printSpeechKeycards } from "@/utils/printKeycards";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2233,7 +2232,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                 variant="ghost"
                 size="icon"
                 aria-label={t("keycards.print", "Print or share")}
-                onClick={() => speech && printSpeechKeycards(speech.id, speech.text_original, t as never)}
+                onClick={() => speech && navigate(`/keycards/${speech.id}/design`)}
                 className="s-qe"
               >
                 <Printer className="s-fz s-xt" />

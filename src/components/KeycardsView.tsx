@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Undo2, Check, RotateCcw, Printer } from "lucide-react";
-import { printSpeechKeycards } from "@/utils/printKeycards";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { stripStageDirections } from "@/utils/stageDirections";
@@ -26,6 +26,7 @@ const readLevels = (id: string): Record<string, number> => {
 };
 
 export default function KeycardsView({ speechId, speechText, onBack }: Props) {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const sentences = useMemo(
     () => (stripStageDirections(speechText).match(/[^.!?]+[.!?]*/g) || []).map((s) => s.trim()).filter(Boolean),
@@ -260,7 +261,8 @@ export default function KeycardsView({ speechId, speechText, onBack }: Props) {
         </span>
         <div className="s-c5 s-ib">
         <Button variant="ghost" size="icon" className="s-qe" aria-label={t("keycards.print", "Print or share")}
-          onClick={() => printSpeechKeycards(speechId, speechText, t as never)}>
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => navigate(`/keycards/${speechId}/design`)}>
           <Printer className="s-fz s-xt" />
         </Button>
         <Button variant="ghost" size="sm" className="s-qe s-dl" onClick={undo} disabled={!history.length || done}>
