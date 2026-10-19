@@ -32,7 +32,17 @@
       "learning": "You're getting there – keep going!",
       "confident": "Looking confident – almost there!",
       "ready": "You're ready to shine! ⭐"
-    }
+    },
+    "todayTitle": "To practise today",
+    "allDone": "All done for today!",
+    "task": {
+      "review": "Review",
+      "learn": "Keep learning",
+      "start": "Start"
+    },
+    "mySpeeches": "My speeches",
+    "progress": "Progress",
+    "presentationDay": ""
   },
   "app": {
     "name": "Sermable",

@@ -32,7 +32,17 @@
       "learning": "Det går framåt – fortsätt så!",
       "confident": "Du låter säker – nästan där!",
       "ready": "Du är redo att glänsa! ⭐"
-    }
+    },
+    "todayTitle": "Att öva idag",
+    "allDone": "Allt klart för idag!",
+    "task": {
+      "review": "Repetition",
+      "learn": "Fortsätt lära",
+      "start": "Börja"
+    },
+    "mySpeeches": "Mina tal",
+    "progress": "Framsteg",
+    "presentationDay": ""
   },
   "app": {
     "name": "Sermable",

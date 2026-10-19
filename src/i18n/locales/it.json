@@ -32,7 +32,17 @@
       "learning": "Stai migliorando, continua!",
       "confident": "Sembri sicuro, ci sei quasi!",
       "ready": "Sei pronto a brillare! ⭐"
-    }
+    },
+    "todayTitle": "Da esercitare oggi",
+    "allDone": "Tutto fatto per oggi!",
+    "task": {
+      "review": "Ripasso",
+      "learn": "Continua",
+      "start": "Inizia"
+    },
+    "mySpeeches": "I miei discorsi",
+    "progress": "Progressi",
+    "presentationDay": ""
   },
   "app": {
     "name": "Sermable",

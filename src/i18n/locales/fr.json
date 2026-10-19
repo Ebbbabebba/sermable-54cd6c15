@@ -32,7 +32,17 @@
       "learning": "Ça progresse – continue !",
       "confident": "Tu as l'air sûr de toi – presque !",
       "ready": "Tu es prêt à briller ! ⭐"
-    }
+    },
+    "todayTitle": "À pratiquer aujourd'hui",
+    "allDone": "Tout est fait pour aujourd'hui !",
+    "task": {
+      "review": "Révision",
+      "learn": "Continuer",
+      "start": "Commencer"
+    },
+    "mySpeeches": "Mes discours",
+    "progress": "Progrès",
+    "presentationDay": ""
   },
   "app": {
     "name": "Sermable",
