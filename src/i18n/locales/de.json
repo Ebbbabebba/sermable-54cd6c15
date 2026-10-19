@@ -41,7 +41,8 @@
       "start": "Starten"
     },
     "mySpeeches": "Meine Reden",
-    "progress": "Fortschritt"
+    "progress": "Fortschritt",
+    "accuracy": "Genauigkeit"
   },
   "app": {
     "name": "Sermable",
