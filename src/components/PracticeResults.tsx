@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { stripPropCueMarkers } from "@/utils/propCues";
 import { stripStageDirections } from "@/utils/stageDirections";
@@ -126,35 +126,24 @@ const PracticeResults = ({
           <Progress value={accuracy} />
         </div>
 
-        <div className="s-e0 s-e3 s-dq">
-          <div className="s-u0 s-mw s-54 s-qh">
-            <div className="s-c5 s-ib s-ig s-dn s-jw">
-              <CheckCircle2 className="s-fz s-xt s-va" />
-              <div className="s-t9 s-cx">{Math.round(accuracy)}%</div>
-            </div>
-            <div className="s-v9 s-ul">{t('practice.results.correct')}</div>
+        <div className="feedback-tiles">
+          <div className="feedback-tile feedback-tile--mint">
+            <CheckCircle2 strokeWidth={2.5} />
+            <div><p className="feedback-tile__value">{Math.round(accuracy)}%</p><p className="feedback-tile__label">{t('practice.results.correct')}</p></div>
           </div>
-
-          <div className="s-u0 s-mw s-54 s-qh">
-            <div className="s-c5 s-ib s-ig s-dn s-jw">
-              <Clock className="s-fz s-xt s-vl" />
-              <div className="s-t9 s-cx s-vl">{hesitatedTotal}</div>
-            </div>
-            <div className="s-v9 s-ul">{t('practice.results.hesitated')}</div>
+          <div className="feedback-tile feedback-tile--sun">
+            <Clock strokeWidth={2.5} />
+            <div><p className="feedback-tile__value">{hesitatedTotal}</p><p className="feedback-tile__label">{t('practice.results.hesitated')}</p></div>
           </div>
-
-          <div className="s-u0 s-mw s-54 s-qh">
-            <div className="s-c5 s-ib s-ig s-dn s-jw">
-              <AlertCircle className="s-fz s-xt s-u2" />
-              <div className="s-t9 s-cx s-u2">{missedTotal}</div>
-            </div>
-            <div className="s-v9 s-ul">{t('practice.results.missed')}</div>
+          <div className="feedback-tile feedback-tile--bubblegum">
+            <AlertCircle strokeWidth={2.5} />
+            <div><p className="feedback-tile__value">{missedTotal}</p><p className="feedback-tile__label">{t('practice.results.missed')}</p></div>
           </div>
         </div>
 
-        <div className="s-sy">
-          <h4 className="s-d3">{t('practice.results.feedback')}</h4>
-          <p className="s-v9 s-ul">{analysis}</p>
+        <div className="feedback-tip">
+          <Lightbulb strokeWidth={2.5} />
+          <p>{analysis}</p>
         </div>
 
         {(missedWords.length > 0 || delayedWords.length > 0) && (
