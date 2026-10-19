@@ -399,3 +399,13 @@ input,textarea,select { font-family:var(--font-system); }
 .today-tasks__done { display:flex; align-items:center; gap:8px; background:hsl(var(--mint)); border-radius:20px; padding:14px 16px; font-weight:800; }
 .today-tasks__done svg { width:18px; height:18px; }
 .home-section-label { font-size:20px; font-weight:800; margin-top:8px; }
+
+.glance-list { display:flex; flex-direction:column; gap:8px; }
+.glance-item { width:100%; display:flex; align-items:center; gap:12px; background:hsl(var(--card)); border:0; border-radius:18px; padding:10px 14px; box-shadow:var(--shadow-sm); text-align:left; color:hsl(var(--foreground)); cursor:pointer; }
+.glance-item .mastery-ring { width:48px; height:48px; flex:none; }
+.glance-item .speech-mascot, .glance-item .mastery-ring__label { display:none; }
+.glance-item__text { display:flex; flex-direction:column; min-width:0; }
+.glance-item__text strong { font-weight:800; overflow-wrap:anywhere; }
+.glance-item__text span { font-size:13px; font-weight:700; color:hsl(var(--muted-foreground)); }
+.glance-item .mastery-ring__value { font-size:13px; }
+.glance-item .mastery-ring__value small { font-size:9px; }
