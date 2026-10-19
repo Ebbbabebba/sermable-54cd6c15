@@ -42,7 +42,8 @@
     },
     "mySpeeches": "Mis discursos",
     "progress": "Progreso",
-    "accuracy": "Precisión"
+    "accuracy": "Precisión",
+    "present": "Presentar"
   },
   "app": {
     "name": "Sermable",

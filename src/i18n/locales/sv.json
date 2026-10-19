@@ -42,7 +42,8 @@
     },
     "mySpeeches": "Mina tal",
     "progress": "Framsteg",
-    "accuracy": "Träffsäkerhet"
+    "accuracy": "Träffsäkerhet",
+    "present": "Presentera"
   },
   "app": {
     "name": "Sermable",

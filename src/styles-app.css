@@ -438,3 +438,12 @@ input,textarea,select { font-family:var(--font-system); }
 .tile--mint { background:hsl(var(--mint)); } .tile--bubblegum { background:hsl(var(--bubblegum)); } .tile--sun { background:hsl(var(--sun)); }
 .speech-progress .beat-chips, .speech-progress .review-section { box-shadow:none; padding:0; background:transparent; }
 .speech-progress__empty { font-size:14px; color:hsl(var(--muted-foreground)); }
+
+.speech-actions { display:flex; align-items:center; gap:8px; }
+.speech-action.ui-button { height:46px; border-radius:999px; font-size:15px; font-weight:800; gap:8px; padding:0 18px; transition:transform .12s; }
+.speech-action.ui-button:active { transform:scale(.95); }
+.speech-action.ui-button svg { width:18px; height:18px; stroke-width:2.5; }
+.speech-action--practice.ui-button { flex:1; background:hsl(var(--primary)); color:hsl(var(--primary-foreground)); box-shadow:0 4px 0 hsl(var(--primary) / .35); }
+.speech-action--present.ui-button { flex:1; background:hsl(var(--lavender)); color:hsl(var(--foreground)); box-shadow:0 4px 0 hsl(var(--lavender-foreground, var(--foreground)) / .15); min-width:0; }
+.speech-action--present span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.speech-action--delete.ui-button { width:46px; flex:none; padding:0; background:hsl(var(--bubblegum) / .45); color:hsl(var(--foreground)); }

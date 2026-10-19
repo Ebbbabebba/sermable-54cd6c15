@@ -333,20 +333,19 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
         </p>
       </CardContent>
 
-      <CardFooter className="speech-row__footer s-c5 s-ib s-dn" onClick={(e) => e.stopPropagation()}>
+      <CardFooter className="speech-row__footer speech-actions" onClick={(e) => e.stopPropagation()}>
         <Button
           variant="apple"
           onClick={handleCardClick}
-          className="s-c6"
-          size="sm"
+          className="speech-action speech-action--practice"
         >
-          <Play className="s-fz s-xt" />
+          <Play />
           {t('dashboard.practice')}
         </Button>
 
         <Button
           variant="secondary"
-          size="sm"
+          className="speech-action speech-action--present"
           aria-label={t('settings.subscription.presentationMode', 'Presentation Mode')}
           onClick={(e) => {
             e.preventDefault();
@@ -356,13 +355,14 @@ const SpeechCard = ({ speech, onUpdate, subscriptionTier = 'free', totalSpeeches
             }
           }}
         >
-          <Presentation className="s-fz s-xt" />
+          <Presentation />
+          <span>{t('playful.present')}</span>
         </Button>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="s-g8 s-y2 s-ul s-hu" aria-label={t('common.delete')}>
-              <Trash2 className="s-fz s-xt" />
+            <Button variant="ghost" size="icon" className="speech-action speech-action--delete" aria-label={t('common.delete')}>
+              <Trash2 />
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent className="s-4b s-6x">

@@ -42,7 +42,8 @@
     },
     "mySpeeches": "Meine Reden",
     "progress": "Fortschritt",
-    "accuracy": "Genauigkeit"
+    "accuracy": "Genauigkeit",
+    "present": "Vortragen"
   },
   "app": {
     "name": "Sermable",
