@@ -1,20 +1,41 @@
-export function mascotMood(value: number) {
+export type Mood = 'nervous' | 'learning' | 'confident' | 'ready';
+
+export function mascotMood(value: number): Mood {
   if (value < 25) return 'nervous';
   if (value < 60) return 'learning';
   if (value < 90) return 'confident';
   return 'ready';
 }
 
+const mouths: Record<Mood, string> = {
+  nervous: 'M38 58 Q50 50 62 58',
+  learning: 'M40 56 H60',
+  confident: 'M38 53 Q50 65 62 53',
+  ready: 'M36 52 Q50 70 64 52 Z',
+};
+
+const fills: Record<Mood, string> = {
+  nervous: 'hsl(var(--lavender))',
+  learning: 'hsl(var(--sun))',
+  confident: 'hsl(var(--bubblegum))',
+  ready: 'hsl(var(--mint))',
+};
+
 export function SpeechMascot({ value = 0 }: { value?: number }) {
   const mood = mascotMood(value);
-  return <svg className={`speech-mascot speech-mascot--${mood}`} viewBox="0 0 140 140" aria-hidden="true">
-    <path className="speech-mascot__shadow" d="M30 117 Q70 105 110 117 Q110 128 70 128 Q30 128 30 117" />
-    <path className="speech-mascot__body" d="M27 31 Q70 12 112 34 Q128 50 117 86 Q108 107 79 105 L53 121 L54 102 Q20 99 20 64 Q20 43 27 31Z" />
-    <path className="speech-mascot__shine" d="M33 46 Q36 35 48 34" />
-    <ellipse className="speech-mascot__cheek" cx="43" cy="76" rx="9" ry="5" />
-    <ellipse className="speech-mascot__cheek" cx="97" cy="76" rx="9" ry="5" />
-    <path className="speech-mascot__face" d={mood === 'ready' ? 'M45 62 Q51 53 57 62 M83 62 Q89 53 95 62' : 'M51 58 L51 64 M89 58 L89 64'} />
-    <path className="speech-mascot__face" d={mood === 'nervous' ? 'M62 83 Q70 75 78 83' : mood === 'learning' ? 'M62 78 Q70 84 78 78' : 'M57 77 Q70 95 83 77'} />
-    {mood === 'ready' && <path className="speech-mascot__star" d="M114 14 L118 24 L129 27 L118 31 L114 41 L110 31 L100 27 L110 24Z" />}
+  const ink = 'hsl(var(--foreground))';
+  return <svg className={`speech-mascot speech-mascot--${mood}`} viewBox="0 0 100 100" aria-hidden="true">
+    <path d="M20 15 H80 Q92 15 92 27 V60 Q92 72 80 72 H56 L44 90 L42 72 H20 Q8 72 8 60 V27 Q8 15 20 15 Z" fill={fills[mood]} />
+    <circle cx="27" cy="55" r="5" fill="hsl(var(--bubblegum))" opacity="0.6" />
+    <circle cx="73" cy="55" r="5" fill="hsl(var(--bubblegum))" opacity="0.6" />
+    {mood === 'ready' ? <>
+      <path d="M31 42 Q36 35 41 42" stroke={ink} strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M59 42 Q64 35 69 42" stroke={ink} strokeWidth="3" fill="none" strokeLinecap="round" />
+    </> : <>
+      <circle cx="36" cy="41" r="4" fill={ink} />
+      <circle cx="64" cy="41" r="4" fill={ink} />
+    </>}
+    {mood === 'nervous' && <path d="M78 24 q4 6 0 9 q-4 -3 0 -9" fill="hsl(var(--primary))" />}
+    <path d={mouths[mood]} stroke={ink} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill={mood === 'ready' ? 'hsl(var(--bubblegum))' : 'none'} />
   </svg>;
 }
