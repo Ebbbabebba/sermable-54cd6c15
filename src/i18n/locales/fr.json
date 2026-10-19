@@ -1419,5 +1419,21 @@
     "printSentence": "Phrase {{n}}",
     "printSentences": "Phrases {{a}}–{{b}}",
     "printCounter": "Carte {{i}} sur {{n}}"
+  },
+  "designer": {
+    "title": "Créez vos fiches",
+    "select": "Choisir des mots",
+    "move": "Déplacer",
+    "draw": "Dessiner",
+    "share": "Imprimer / partager",
+    "empty": "Pas encore de fiches",
+    "theme": "Thème de couleur",
+    "prev": "Fiche précédente",
+    "next": "Fiche suivante",
+    "clear": "Effacer le dessin",
+    "hint_select": "Touchez un mot pour le retirer. Balayez pour changer de fiche.",
+    "hint_move": "Faites glisser les mots pour les placer.",
+    "hint_draw": "Dessinez sur la fiche avec le doigt.",
+    "addWords": "Touchez pour le remettre sur la fiche"
   }
 }

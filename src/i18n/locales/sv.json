@@ -1448,5 +1448,21 @@
     "printSentence": "Mening {{n}}",
     "printSentences": "Mening {{a}}–{{b}}",
     "printCounter": "Kort {{i}} av {{n}}"
+  },
+  "designer": {
+    "title": "Designa dina talkort",
+    "select": "Välj ord",
+    "move": "Flytta",
+    "draw": "Rita",
+    "share": "Skriv ut / dela",
+    "empty": "Inga kort än",
+    "theme": "Färgtema",
+    "prev": "Föregående kort",
+    "next": "Nästa kort",
+    "clear": "Sudda ritning",
+    "hint_select": "Tryck på ett ord för att ta bort det. Swipa kortet för att byta.",
+    "hint_move": "Dra orden dit du vill ha dem.",
+    "hint_draw": "Rita på kortet med fingret.",
+    "addWords": "Tryck för att lägga tillbaka på kortet"
   }
 }
