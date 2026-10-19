@@ -314,14 +314,14 @@ input,textarea,select { font-family:var(--font-system); }
 .beat-chip--learning.ui-button { background:hsl(var(--sun)); color:hsl(var(--sun-foreground)); }
 .beat-chip--complete.ui-button { background:hsl(var(--mint)); color:hsl(var(--mint-foreground)); }
 .home-beats p { font-size:13px; color:hsl(var(--muted-foreground)); }
-.stats-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
-.stat-card { min-width:0; display:flex; align-items:center; flex-direction:column; justify-content:center; gap:7px; padding:16px 8px; border-radius:24px; background:hsl(var(--card)); box-shadow:var(--shadow-sm); }
+.stats-cards { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+.stat-card { min-width:0; display:flex; align-items:center; flex-direction:row; justify-content:center; gap:12px; padding:14px 18px; border-radius:20px; background:hsl(var(--card)); box-shadow:var(--shadow-sm); }
 .stat-card svg { width:28px; height:28px; border-radius:10px; padding:5px; }
 .stat-card--sun svg { background:hsl(var(--sun)); color:hsl(var(--sun-foreground)); }
 .stat-card--bubblegum svg { background:hsl(var(--bubblegum)); color:hsl(var(--bubblegum-foreground)); }
 .stat-card--mint svg { background:hsl(var(--mint)); color:hsl(var(--mint-foreground)); }
 .stat-card strong { font-size:23px; line-height:1.2; font-weight:800; font-variant-numeric:tabular-nums; }
-.stat-card span { font-size:11px; line-height:1.35; text-align:center; color:hsl(var(--muted-foreground)); overflow-wrap:anywhere; }
+.stat-card span { font-size:11px; line-height:1.35; text-align:left; color:hsl(var(--muted-foreground)); overflow-wrap:anywhere; }
 .home-practice { display:flex; align-items:center; flex-direction:column; gap:10px; padding:4px 0 8px; }
 .home-practice__mic.ui-button { width:76px; height:76px; border-radius:50%; box-shadow:0 6px 0 hsl(var(--accent-foreground) / .24),var(--shadow-md); }
 .home-practice__mic.ui-button svg { width:32px; height:32px; stroke-width:2.5; }

@@ -68,8 +68,6 @@ const Dashboard = () => {
   const todayKey = new Date().toLocaleDateString('sv-SE');
   const nextSpeech = [...speeches].filter(s => !s.goal_date || s.goal_date >= todayKey).sort((a, b) => (a.goal_date || '9999').localeCompare(b.goal_date || '9999'))[0] ?? speeches[0];
   const nextBeats = overview.beats.filter(b => b.speech_id === nextSpeech?.id);
-  const scoredSessions = overview.sessions.filter(s => s.score !== null);
-  const averageAccuracy = scoredSessions.length ? scoredSessions.reduce((sum, s) => sum + (s.score ?? 0), 0) / scoredSessions.length : null;
   const nextScore = overview.sessions.find(s => s.speech_id === nextSpeech?.id && s.score !== null)?.score ?? null;
 
   useEffect(() => {
@@ -550,7 +548,7 @@ const Dashboard = () => {
 
           {activeTab === 'home' && speeches.length > 0 && <TodayTasks tasks={todayTasks(speeches, overview.beats)} onPractice={id => navigate(`/practice/${id}`)} />}
           {activeTab === 'home' && speeches.length > 0 && <SpeechesGlance speeches={speeches} beats={overview.beats} onOpen={() => setActiveTab('speeches')} />}
-          {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.progress')}</h1><StatsCards streak={currentStreak} accuracy={averageAccuracy} mastered={overview.beats.filter(b => b.is_mastered).length} total={overview.beats.length} />{speeches.map(sp => <SpeechProgress key={sp.id} speech={sp} beats={overview.beats.filter(b => b.speech_id === sp.id)} sessions={overview.sessions.filter(x => x.speech_id === sp.id)} />)}</section>}
+          {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.progress')}</h1><StatsCards streak={currentStreak} />{speeches.map(sp => <SpeechProgress key={sp.id} speech={sp} beats={overview.beats.filter(b => b.speech_id === sp.id)} sessions={overview.sessions.filter(x => x.speech_id === sp.id)} />)}</section>}
 
           {/* Speeches Section */}
           <section hidden={activeTab === 'stats' || (activeTab === 'home' && speeches.length > 0)}>

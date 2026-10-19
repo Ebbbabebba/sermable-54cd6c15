@@ -43,13 +43,9 @@ export function ReviewTimeline({ beats, goalDate }: { beats: OverviewBeat[]; goa
   return <section className="review-section"><h2>{t('playful.reviews')}</h2><ol className="review-timeline">{stages.map((stage, i) => <li key={stage} className={complete[i] ? 'is-complete' : i === next && dates.length ? 'is-next' : ''}><span className="review-timeline__dot">{complete[i] ? <Check /> : i + 1}</span><span>{t(`playful.${stage}`)}</span>{planned && <small className="review-timeline__date">{fmt.format(planned[i])}</small>}</li>)}</ol>{dates[0] && <p className="review-section__due"><Clock3 />{t('dashboard.nextPractice')} · {dateFormatter(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dates[0]))}</p>}</section>;
 }
 
-export function StatsCards({ streak, accuracy, mastered, total }: { streak: number; accuracy: number | null; mastered: number; total: number }) {
+export function StatsCards({ streak }: { streak: number }) {
   const { t } = useTranslation();
-  return <div className="stats-cards">{[
-    { icon: Flame, value: streak || '—', label: t('playful.streak'), tone: 'sun' },
-    { icon: Target, value: accuracy === null ? '—' : `${Math.round(accuracy)}%`, label: t('practice.results.accuracy'), tone: 'bubblegum' },
-    { icon: Trophy, value: `${mastered}/${total}`, label: t('playful.completed'), tone: 'mint' },
-  ].map(item => <div className={`stat-card stat-card--${item.tone}`} key={item.label}><item.icon /><strong>{item.value}</strong><span>{item.label}</span></div>)}</div>;
+  return <div className="stats-cards"><div className="stat-card stat-card--sun"><Flame /><strong>{streak || '—'}</strong><span>{t('playful.streak')}</span></div></div>;
 }
 
 export function HomeOverview({ speech, beats, streak, accuracy, ready, onPractice }: { speech: { title: string; goal_date: string }; beats: OverviewBeat[]; streak: number; accuracy: number | null; ready: boolean; onPractice: () => void }) {
