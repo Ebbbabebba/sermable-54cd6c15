@@ -1,2 +1,39 @@
 @import "./styles-foundation.css";
 @import "./styles-app.css";
+
+/* Semantic palette entry point; application styles consume these HSL tokens. */
+:root {
+  --background: 199 85% 96%;
+  --foreground: 216 48% 23%;
+  --primary: 199 89% 58%;
+  --primary-foreground: 216 65% 16%;
+  --accent: 199 90% 91%;
+  --accent-foreground: 204 75% 28%;
+  --secondary: 199 64% 93%;
+  --muted: 199 48% 94%;
+  --muted-foreground: 215 23% 42%;
+  --card: 0 0% 100%;
+  --border: 199 46% 88%;
+  --input: 199 40% 79%;
+  --bubblegum: 337 88% 88%;
+  --bubblegum-foreground: 336 62% 32%;
+  --sun: 46 100% 82%;
+  --sun-foreground: 36 71% 28%;
+  --mint: 157 59% 83%;
+  --mint-foreground: 161 65% 25%;
+  --lavender: 258 76% 91%;
+  --lavender-foreground: 258 40% 39%;
+  --success: var(--mint);
+  --success-foreground: var(--mint-foreground);
+  --warning: var(--sun);
+  --warning-foreground: var(--sun-foreground);
+  --destructive: var(--bubblegum);
+  --destructive-foreground: var(--bubblegum-foreground);
+  --info: var(--primary);
+  --info-foreground: var(--primary-foreground);
+  --radius: 1.5rem;
+  --font-system: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  --shadow-sm: 0 4px 14px hsl(204 60% 50% / 0.08);
+  --shadow-md: 0 8px 24px hsl(204 60% 50% / 0.1);
+  --shadow-lg: 0 12px 36px hsl(204 60% 50% / 0.15);
+}

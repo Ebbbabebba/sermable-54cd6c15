@@ -31,6 +31,10 @@ import ReviewNotifications from "@/components/ReviewNotifications";
 import StreakCelebration from "@/components/StreakCelebration";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
 import { waitForStableSession } from "@/lib/authSession";
+import { HomeOverview, StatsCards } from '@/components/home/HomeOverview';
+import { BottomNav, type HomeTab } from '@/components/home/BottomNav';
+import { SpeechMascot } from '@/components/home/SpeechMascot';
+import { useSpeechOverview } from '@/hooks/useSpeechOverview';
 
 interface Speech {
   id: string;
@@ -58,6 +62,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState<HomeTab>('home');
+  const overview = useSpeechOverview(speeches.map(s => s.id));
+  const todayKey = new Date().toLocaleDateString('sv-SE');
+  const nextSpeech = [...speeches].filter(s => !s.goal_date || s.goal_date >= todayKey).sort((a, b) => (a.goal_date || '9999').localeCompare(b.goal_date || '9999'))[0] ?? speeches[0];
+  const nextBeats = overview.beats.filter(b => b.speech_id === nextSpeech?.id);
+  const scoredSessions = overview.sessions.filter(s => s.score !== null);
+  const averageAccuracy = scoredSessions.length ? scoredSessions.reduce((sum, s) => sum + (s.score ?? 0), 0) / scoredSessions.length : null;
+  const nextScore = overview.sessions.find(s => s.speech_id === nextSpeech?.id && s.score !== null)?.score ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -186,8 +198,7 @@ const Dashboard = () => {
       const today = new Date().toDateString();
       
       if (lastShownDate === today) {
-        console.log('Streak already shown today');
-        return; // Already shown today
+        // Still calculate the streak for the home stats; only suppress the popup.
       }
 
       // Get user's speeches first
@@ -283,7 +294,7 @@ const Dashboard = () => {
       // (we show their current streak to encourage continuation)
       if (streak > 0) {
         setCurrentStreak(streak);
-        setShowStreakCelebration(true);
+        setShowStreakCelebration(lastShownDate !== today);
         localStorage.setItem('streak-last-shown-date', today);
         console.log('Showing streak celebration:', streak);
       }
@@ -508,9 +519,6 @@ const Dashboard = () => {
               const lastShownPeriod = sessionStorage.getItem('greeting_period');
               const greetingText = name ? `${greeting}, ${name}` : greeting;
               
-              if (lastShownPeriod === currentPeriod) {
-                return null;
-              }
               
               // Mark this period as shown
               sessionStorage.setItem('greeting_period', currentPeriod);
@@ -540,8 +548,11 @@ const Dashboard = () => {
           {/* Review Notifications */}
           <ReviewNotifications />
 
+          {activeTab === 'home' && nextSpeech && <HomeOverview speech={nextSpeech} beats={nextBeats} streak={currentStreak} accuracy={nextScore} ready={overview.ready} onPractice={() => navigate(`/practice/${nextSpeech.id}`)} />}
+          {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.stats')}</h1><StatsCards streak={currentStreak} accuracy={averageAccuracy} mastered={overview.beats.filter(b => b.is_mastered).length} total={overview.beats.length} /><h2>{t('playful.recentSessions')}</h2>{overview.sessions.length ? <ul className="session-history">{overview.sessions.map(session => <li key={session.id}><div><strong>{speeches.find(s => s.id === session.speech_id)?.title}</strong><span>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(session.session_date))}</span></div><strong>{session.score === null ? '—' : `${Math.round(session.score)}%`}</strong></li>)}</ul> : <p>{t('playful.noSessions')}</p>}</section>}
+
           {/* Speeches Section */}
-          <section>
+          <section hidden={activeTab === 'stats' || (activeTab === 'home' && !!nextSpeech)}>
             <div className="dashboard__section-heading">
               <div>
                 <h3 className="s-vi s-d3 s-u9">{t('dashboard.yourSpeeches')}</h3>
@@ -593,6 +604,7 @@ const Dashboard = () => {
             ) : speeches.length === 0 ? (
               <Card className="dashboard__empty">
                 <CardContent className="s-p2 s-u0">
+                  <SpeechMascot value={0} />
                   <h3 className="s-vi s-d3 s-u9 s-jy">{t('dashboard.noSpeeches')}</h3>
                   <p className="s-ul s-k2 s-js s-m9 s-ip">
                     {t('dashboard.noSpeechesDesc')}
@@ -637,6 +649,7 @@ const Dashboard = () => {
           </section>
         </div>
       </main>
+      <BottomNav active={activeTab} onChange={setActiveTab} onSettings={() => navigate('/settings')} />
 
 
       <Suspense fallback={null}>

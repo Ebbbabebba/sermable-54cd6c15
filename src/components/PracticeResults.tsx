@@ -107,7 +107,7 @@ const PracticeResults = ({
   };
 
   return (
-    <Card>
+    <Card className="feedback-card">
       <CardHeader>
         <CardTitle className="s-c5 s-ib s-dn">
           {t('practice.results.title')}

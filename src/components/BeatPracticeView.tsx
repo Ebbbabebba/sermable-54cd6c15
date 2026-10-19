@@ -4851,7 +4851,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   return (
-    <div className="s-c5 s-c7 s-gg s-3v">
+    <div className="practice-view s-c5 s-c7 s-gg s-3v">
       {selfRatingPrompt && (
         <div className="s-c4 s-i5 s-ym s-c5 s-ic s-rr s-ig s-4r s-3h s-mw">
           <div className="s-y7 s-js s-qa s-4b s-my s-r4 s-6l s-6x">
@@ -5079,7 +5079,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </motion.div>
           )}
           {isRecording && isSpeechReady && !showCelebration && (
-            <span className="s-t6" aria-live="polite">
+            <span className="practice-listening" aria-live="polite">
               {t('beat_practice.listening_ready', 'Listening')}
             </span>
           )}
