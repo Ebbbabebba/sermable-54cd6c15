@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { FORCE_PREMIUM, effectiveTier } from "@/lib/premiumOverride";
+import { dateFormatter } from "@/lib/dateFormat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -2289,7 +2290,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
               <h1 className="s-vi s-d3 s-wh truncate">{speech.title}</h1>
               {speech.goal_date && (
                 <p className="s-vj s-ul">
-                  {t('practice.goal')}: {new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long' }).format(new Date(speech.goal_date))}
+                  {t('practice.goal')}: {dateFormatter(i18n.language, { dateStyle: 'long' }).format(new Date(speech.goal_date))}
                 </p>
               )}
             </div>
@@ -2590,7 +2591,7 @@ const [liveTranscription, setLiveTranscription] = useState("");
                     className="s-y7 s-ii s-uj s-d2"
                   >
                     <CalendarIcon className="s-lp s-fz s-xt" />
-                    {editingDeadline ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long' }).format(editingDeadline) : <span>{t('upload.goalDate', 'Select deadline')}</span>}
+                    {editingDeadline ? dateFormatter(i18n.language, { dateStyle: 'long' }).format(editingDeadline) : <span>{t('upload.goalDate', 'Select deadline')}</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="s-y6 s-mr" align="start">
