@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { MasteryRing } from './MasteryRing';
+import { mascotMood } from './SpeechMascot';
 import type { OverviewBeat } from '@/hooks/useSpeechOverview';
 import { buildSchedule } from '@/lib/reviewSchedule';
 import { dateFormatter } from '@/lib/dateFormat';
@@ -52,15 +53,16 @@ export function StatsCards({ streak, accuracy, mastered, total }: { streak: numb
 }
 
 export function HomeOverview({ speech, beats, streak, accuracy, ready, onPractice }: { speech: { title: string; goal_date: string }; beats: OverviewBeat[]; streak: number; accuracy: number | null; ready: boolean; onPractice: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const mastered = beats.filter(b => b.is_mastered).length;
   const percent = beats.length ? Math.round(mastered / beats.length * 100) : 0;
-  return <div className="home-overview"><div className="home-overview__title"><span>{t('playful.nextSpeech')}</span><h1>{speech.title}</h1></div>
+  const today = (() => { try { return new Intl.DateTimeFormat(i18n.language, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()); } catch { return new Date().toDateString(); } })();
+  return <div className="home-overview"><div className="home-overview__title"><span className="home-overview__date">{today}</span><h1>{t('playful.hello')}</h1>{!speech.goal_date && <p className="home-overview__speech">{speech.title}</p>}</div>
     {speech.goal_date && <CountdownCard title={speech.title} date={speech.goal_date} />}
-    <div className="home-overview__mastery"><MasteryRing value={percent} label={t('playful.completed')} /><h2>{t('playful.completed')}</h2><p>{ready ? t('playful.beatCount', { count: mastered, total: beats.length }) : t('common.loading')}</p></div>
+    <div className="home-overview__mastery"><p className="mascot-bubble">{ready ? t(`playful.mascot.${mascotMood(percent)}`) : t('common.loading')}</p><MasteryRing value={percent} label={t('playful.completed')} /><p>{ready ? t('playful.beatCount', { count: mastered, total: beats.length }) : ''}</p></div>
+    <div className="home-practice"><Button className="home-practice__mic" size="icon" onClick={onPractice} aria-label={t('playful.practice')}><Mic /></Button><strong>{t('playful.practice')}</strong></div>
+    <StatsCards streak={streak} accuracy={accuracy} mastered={mastered} total={beats.length} />
     <ReviewTimeline beats={beats} goalDate={speech.goal_date} />
     <section className="home-beats"><BeatChips beats={beats} onSelect={onPractice} />{!beats.length && <p>{t('playful.noBeats')}</p>}</section>
-    <StatsCards streak={streak} accuracy={accuracy} mastered={mastered} total={beats.length} />
-    <div className="home-practice"><Button className="home-practice__mic" size="icon" onClick={onPractice} aria-label={t('playful.practice')}><Mic /></Button><strong>{t('playful.practice')}</strong></div>
   </div>;
 }

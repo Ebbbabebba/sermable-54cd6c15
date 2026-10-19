@@ -25,7 +25,14 @@
     "noSessions": "Ainda não há sessões.",
     "noBeats": "Seus trechos aparecem após a primeira prática.",
     "beatCount": "{{count}} de {{total}} trechos concluídos",
-    "daysUnit": "dias"
+    "daysUnit": "dias",
+    "hello": "Olá! 👋",
+    "mascot": {
+      "nervous": "Vamos beat a beat!",
+      "learning": "Está a progredir, continua!",
+      "confident": "Pareces confiante, quase lá!",
+      "ready": "Estás pronto para brilhar! ⭐"
+    }
   },
   "app": {
     "name": "Sermable",

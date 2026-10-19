@@ -25,7 +25,14 @@
     "noSessions": "Inga övningspass ännu.",
     "noBeats": "Dina beats visas efter första övningen.",
     "beatCount": "{{count}} av {{total}} beats genomgångna",
-    "daysUnit": "dagar"
+    "daysUnit": "dagar",
+    "hello": "Hej där! 👋",
+    "mascot": {
+      "nervous": "Vi tar det beat för beat!",
+      "learning": "Det går framåt – fortsätt så!",
+      "confident": "Du låter säker – nästan där!",
+      "ready": "Du är redo att glänsa! ⭐"
+    }
   },
   "app": {
     "name": "Sermable",

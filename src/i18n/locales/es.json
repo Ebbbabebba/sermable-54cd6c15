@@ -25,7 +25,14 @@
     "noSessions": "Todavía no hay sesiones.",
     "noBeats": "Tus fragmentos aparecerán después de la primera práctica.",
     "beatCount": "{{count}} de {{total}} fragmentos completados",
-    "daysUnit": "días"
+    "daysUnit": "días",
+    "hello": "¡Hola! 👋",
+    "mascot": {
+      "nervous": "¡Vamos beat a beat!",
+      "learning": "¡Vas avanzando, sigue así!",
+      "confident": "¡Suenas seguro, casi lo tienes!",
+      "ready": "¡Listo para brillar! ⭐"
+    }
   },
   "app": {
     "name": "Sermable",

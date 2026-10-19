@@ -25,7 +25,14 @@
     "noSessions": "No practice sessions yet.",
     "noBeats": "Your beats appear after your first practice.",
     "beatCount": "{{count}} of {{total}} beats completed",
-    "daysUnit": "days"
+    "daysUnit": "days",
+    "hello": "Hi there! 👋",
+    "mascot": {
+      "nervous": "Let's take it beat by beat!",
+      "learning": "You're getting there – keep going!",
+      "confident": "Looking confident – almost there!",
+      "ready": "You're ready to shine! ⭐"
+    }
   },
   "app": {
     "name": "Sermable",
