@@ -24,7 +24,8 @@
     "recentSessions": "Letzte Übungen",
     "noSessions": "Noch keine Übungseinheiten.",
     "noBeats": "Deine Abschnitte erscheinen nach der ersten Übung.",
-    "beatCount": "{{count}} von {{total}} Abschnitten abgeschlossen"
+    "beatCount": "{{count}} von {{total}} Abschnitten abgeschlossen",
+    "daysUnit": "Tage"
   },
   "app": {
     "name": "Sermable",

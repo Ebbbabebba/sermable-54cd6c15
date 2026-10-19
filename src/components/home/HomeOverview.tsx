@@ -6,11 +6,14 @@ import { MasteryRing } from './MasteryRing';
 import type { OverviewBeat } from '@/hooks/useSpeechOverview';
 import { buildSchedule } from '@/lib/reviewSchedule';
 
-export function CountdownCard({ date }: { date: string }) {
-  const { t, i18n } = useTranslation();
+export function CountdownCard({ title, date }: { title: string; date: string }) {
+  const { t } = useTranslation();
   const days = differenceInCalendarDays(parseISO(date), new Date());
   if (!Number.isFinite(days)) return null;
-  return <div className="countdown-card"><CalendarDays /><div><strong>{days === 0 ? t('dashboard.presentationDay') : days < 0 ? t('dashboard.daysOverduePlural', { count: Math.abs(days) }) : t('playful.days', { count: days })}</strong><span>{new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'long' }).format(parseISO(date))}</span></div></div>;
+  return <div className="countdown-card">
+    <div className="countdown-card__badge"><strong>{Math.abs(days)}</strong><span>{t('playful.daysUnit')}</span></div>
+    <div className="countdown-card__text"><p><CalendarDays />{days === 0 ? t('dashboard.presentationDay') : days < 0 ? t('dashboard.daysOverduePlural', { count: Math.abs(days) }) : t('playful.nextSpeech')}</p><h2>{title}</h2></div>
+  </div>;
 }
 
 export function BeatChips({ beats, onSelect }: { beats: OverviewBeat[]; onSelect: () => void }) {
@@ -48,7 +51,7 @@ export function HomeOverview({ speech, beats, streak, accuracy, ready, onPractic
   const mastered = beats.filter(b => b.is_mastered).length;
   const percent = beats.length ? Math.round(mastered / beats.length * 100) : 0;
   return <div className="home-overview"><div className="home-overview__title"><span>{t('playful.nextSpeech')}</span><h1>{speech.title}</h1></div>
-    {speech.goal_date && <CountdownCard date={speech.goal_date} />}
+    {speech.goal_date && <CountdownCard title={speech.title} date={speech.goal_date} />}
     <div className="home-overview__mastery"><MasteryRing value={percent} label={t('playful.completed')} /><h2>{t('playful.completed')}</h2><p>{ready ? t('playful.beatCount', { count: mastered, total: beats.length }) : t('common.loading')}</p></div>
     <ReviewTimeline beats={beats} goalDate={speech.goal_date} />
     <section className="home-beats"><h2>{t('playful.beats')}</h2><BeatChips beats={beats} onSelect={onPractice} />{!beats.length && <p>{t('playful.noBeats')}</p>}</section>

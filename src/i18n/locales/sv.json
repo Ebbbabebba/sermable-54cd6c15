@@ -24,7 +24,8 @@
     "recentSessions": "Senaste övningarna",
     "noSessions": "Inga övningspass ännu.",
     "noBeats": "Dina beats visas efter första övningen.",
-    "beatCount": "{{count}} av {{total}} beats genomgångna"
+    "beatCount": "{{count}} av {{total}} beats genomgångna",
+    "daysUnit": "dagar"
   },
   "app": {
     "name": "Sermable",

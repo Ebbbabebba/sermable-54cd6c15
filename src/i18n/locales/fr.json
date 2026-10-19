@@ -24,7 +24,8 @@
     "recentSessions": "Dernières séances",
     "noSessions": "Aucune séance pour le moment.",
     "noBeats": "Vos passages apparaîtront après la première séance.",
-    "beatCount": "{{count}} passages terminés sur {{total}}"
+    "beatCount": "{{count}} passages terminés sur {{total}}",
+    "daysUnit": "jours"
   },
   "app": {
     "name": "Sermable",

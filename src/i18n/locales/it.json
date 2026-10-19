@@ -24,7 +24,8 @@
     "recentSessions": "Sessioni recenti",
     "noSessions": "Nessuna sessione ancora.",
     "noBeats": "I brani appariranno dopo la prima sessione.",
-    "beatCount": "{{count}} brani completati su {{total}}"
+    "beatCount": "{{count}} brani completati su {{total}}",
+    "daysUnit": "giorni"
   },
   "app": {
     "name": "Sermable",
