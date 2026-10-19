@@ -92,6 +92,6 @@ export function SpeechesGlance({ speeches, beats, onOpen }: { speeches: { id: st
     const own = beats.filter(b => b.speech_id === s.id);
     const percent = own.length ? Math.round(own.filter(b => b.is_mastered).length / own.length * 100) : 0;
     const days = s.goal_date ? differenceInCalendarDays(parseISO(s.goal_date), new Date()) : null;
-    return <li key={s.id}><button type="button" className="glance-item" onClick={onOpen}><MasteryRing value={percent} size={48} label="" /><span className="glance-item__text"><strong>{s.title}</strong>{days !== null && <span>{days < 0 ? t('dashboard.daysOverduePlural', { count: Math.abs(days) }) : days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`}</span>}</span></button></li>;
+    return <li key={s.id}><button type="button" className="glance-item" onClick={onOpen}><span className="glance-item__text"><strong>{s.title}</strong>{days !== null && <span>{days < 0 ? t('dashboard.daysOverduePlural', { count: Math.abs(days) }) : days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`}</span>}<span className="glance-item__bar" aria-hidden="true"><span style={{ width: `${percent}%` }} /></span></span><span className="glance-item__pct">{percent}%</span></button></li>;
   })}</ul></section>;
 }
