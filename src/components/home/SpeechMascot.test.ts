@@ -1,6 +1,7 @@
-import { expect, test } from 'bun:test';
+import { test } from 'node:test';
+import { strict as assert } from 'node:assert';
 import { mascotMood } from './SpeechMascot';
-test('mascot is nervous below 25 percent', () => { expect(mascotMood(24)).toBe('nervous'); });
-test('mascot learns from 25 to below 60 percent', () => { expect(mascotMood(25)).toBe('learning'); expect(mascotMood(59)).toBe('learning'); });
-test('mascot is confident from 60 to below 90 percent', () => { expect(mascotMood(60)).toBe('confident'); expect(mascotMood(89)).toBe('confident'); });
-test('mascot is ready at 90 percent and above', () => { expect(mascotMood(90)).toBe('ready'); expect(mascotMood(100)).toBe('ready'); });
+test('mascot is nervous below 25 percent', () => { assert.equal(mascotMood(24), 'nervous'); });
+test('mascot learns from 25 to below 60 percent', () => { assert.equal(mascotMood(25), 'learning'); assert.equal(mascotMood(59), 'learning'); });
+test('mascot is confident from 60 to below 90 percent', () => { assert.equal(mascotMood(60), 'confident'); assert.equal(mascotMood(89), 'confident'); });
+test('mascot is ready at 90 percent and above', () => { assert.equal(mascotMood(90), 'ready'); assert.equal(mascotMood(100), 'ready'); });

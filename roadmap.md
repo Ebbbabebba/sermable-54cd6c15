@@ -1,12 +1,12 @@
 # Roadmap
 
-## Pågående: Lekfull mobilförnyelse
+## Klart: Lekfull mobilförnyelse
 
-- [ ] Pastellfärger, Nunito och delade kort-/knappstilar
-- [ ] Hem med verkligt tal, nedräkning, maskotring, beats och repetition
-- [ ] Hem/Tal/Statistik/Inställningar och verkliga statistikvärden
-- [ ] Förfina övningsord, mikrofon och befintlig feedback utan regeländringar
-- [ ] Verifiera mobil, iPad och övningsnavigering
+- [x] Pastellfärger, Nunito och delade kort-/knappstilar
+- [x] Hem med verkligt tal, nedräkning, maskotring, beats och repetition
+- [x] Hem/Tal/Statistik/Inställningar och verkliga statistikvärden
+- [x] Förfina övningsord, mikrofon och befintlig feedback utan regeländringar
+- [x] Verifiera mobil, iPad och övningsnavigering i webbläsaren
 
 ## Klart: Övningen får aldrig frysa
 

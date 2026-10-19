@@ -5074,7 +5074,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             >
               <span className="s-i4 s-ib s-dn s-qe s-5e s-os s-p3 s-v9 s-d3 s-uw s-pl s-py">
                 <span className="s-fs s-xk s-qe s-5c s-30" />
-                {t('beat_practice.listening_starting', 'Preparing microphone...')}
+                {t('playful.preparingMic')}
               </span>
             </motion.div>
           )}
@@ -5160,7 +5160,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               {sessionMode === 'pre_beat_recall' ? (
                 <>
                   <RotateCcw className="s-fz s-xt" />
-                  {t('beat_practice.recall_previous', 'Recall previous beat')} · {words.length - hiddenWordIndices.size} words visible
+                  {t('beat_practice.recall_previous', 'Recall previous beat')} · {t('playful.visibleWords', { count: words.length - hiddenWordIndices.size })}
                 </>
               ) : getPhaseType() === 'learning' ? (
                 <>
@@ -5170,7 +5170,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               ) : getPhaseType() === 'fading' ? (
                 <>
                   <GraduationCap className="s-fz s-xt" />
-                  {words.length - hiddenWordIndices.size} words visible
+                  {t('playful.visibleWords', { count: words.length - hiddenWordIndices.size })}
                 </>
               ) : (
                 'Combining sentences'
