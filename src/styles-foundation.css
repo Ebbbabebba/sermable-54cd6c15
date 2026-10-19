@@ -3940,12 +3940,40 @@ select {
 
 @keyframes animal-idle-bob {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-1.6%); }
+  50% { transform: translateY(var(--bob-height, -1.6%)) scaleY(1.02); }
+}
+
+.animal-audience__character {
+  will-change: transform;
 }
 
 .animal-audience__character.is-idle {
-  animation: animal-idle-bob 3400ms ease-in-out infinite;
+  animation: animal-idle-bob 3200ms ease-in-out infinite;
 }
+
+@keyframes animal-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.animal-eyes {
+  animation: animal-blink 4200ms ease-in-out infinite;
+}
+
+.animal-audience__character:nth-child(2) .animal-eyes { animation-delay: 1300ms; }
+.animal-audience__character:nth-child(3) .animal-eyes { animation-delay: 2600ms; }
+
+@keyframes animal-wave-left {
+  0%, 100% { transform: rotate(-85deg); }
+  50% { transform: rotate(-120deg); }
+}
+@keyframes animal-wave-right {
+  0%, 100% { transform: rotate(85deg); }
+  50% { transform: rotate(120deg); }
+}
+
+.animal-arm--left { animation: animal-wave-left 420ms ease-in-out infinite; }
+.animal-arm--right { animation: animal-wave-right 420ms ease-in-out infinite 210ms; }
 
 .animal-confetti {
   animation-iteration-count: infinite;
@@ -3971,6 +3999,8 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .animal-audience__character.is-celebrating,
   .animal-audience__character.is-idle,
+  .animal-eyes,
+  .animal-arm,
   .animal-confetti {
     animation-duration: 1ms;
     animation-iteration-count: 1;
