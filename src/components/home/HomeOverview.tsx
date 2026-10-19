@@ -85,3 +85,13 @@ export function TodayTasks({ tasks, onPractice }: { tasks: TodayTask[]; onPracti
     return <li key={task.id}><button type="button" className={`today-task today-task--${task.kind}`} onClick={() => onPractice(task.id)}><span className="today-task__badge">{t(`playful.task.${task.kind}`)}</span><strong>{task.title}</strong><span className="today-task__meta">{days !== null && <><CalendarDays />{days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`} · </>}{task.percent}%</span><span className="today-task__go"><Mic /></span></button></li>;
   })}</ul> : <p className="today-tasks__done"><Check />{t('playful.allDone')}</p>}</section>;
 }
+
+export function SpeechesGlance({ speeches, beats, onOpen }: { speeches: { id: string; title: string; goal_date: string | null }[]; beats: OverviewBeat[]; onOpen: () => void }) {
+  const { t } = useTranslation();
+  return <section className="today-tasks"><h2>{t('playful.mySpeeches')}</h2><ul className="glance-list">{speeches.map(s => {
+    const own = beats.filter(b => b.speech_id === s.id);
+    const percent = own.length ? Math.round(own.filter(b => b.is_mastered).length / own.length * 100) : 0;
+    const days = s.goal_date ? differenceInCalendarDays(parseISO(s.goal_date), new Date()) : null;
+    return <li key={s.id}><button type="button" className="glance-item" onClick={onOpen}><MasteryRing value={percent} size={48} label="" /><span className="glance-item__text"><strong>{s.title}</strong>{days !== null && <span>{days < 0 ? t('dashboard.daysOverduePlural', { count: Math.abs(days) }) : days === 0 ? t('dashboard.presentationDay') : `${days} ${t('playful.daysUnit')}`}</span>}</span></button></li>;
+  })}</ul></section>;
+}
