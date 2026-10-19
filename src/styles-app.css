@@ -295,8 +295,17 @@ input,textarea,select { font-family:var(--font-system); }
 .review-timeline .is-next .review-timeline__dot { border-color:hsl(var(--primary)); color:hsl(var(--accent-foreground)); animation:review-pulse 2s ease-in-out infinite; }
 .review-section__due { display:flex; gap:6px; align-items:center; font-size:12px; color:hsl(var(--muted-foreground)); margin-top:14px; }
 .review-section__due svg { width:14px; height:14px; flex-shrink:0; }
+.beat-chips-card { background:hsl(var(--card)); border-radius:24px; padding:16px; box-shadow:var(--shadow-sm); }
+.beat-chips-card__head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }
+.beat-chips-card__head p { margin:0; font-size:14px; font-weight:800; }
+.beat-chips-card__legend { display:flex; gap:10px; font-size:10px; font-weight:800; color:hsl(var(--muted-foreground)); }
+.beat-chips-card__legend-item { display:flex; align-items:center; gap:4px; }
+.beat-chips-card__legend-dot { width:10px; height:10px; border-radius:50%; }
+.beat-chips-card__legend-dot--new { background:hsl(var(--lavender)); }
+.beat-chips-card__legend-dot--learning { background:hsl(var(--sun)); }
+.beat-chips-card__legend-dot--complete { background:hsl(var(--mint)); }
 .beat-chips { display:flex; flex-wrap:wrap; gap:10px; }
-.beat-chip.ui-button { width:44px; height:44px; min-height:44px; padding:0; border-radius:14px; font-size:17px; font-weight:800; }
+.beat-chip.ui-button { width:40px; height:40px; min-height:40px; padding:0; border-radius:50%; font-size:14px; font-weight:900; }
 .beat-chip--new.ui-button { background:hsl(var(--lavender)); color:hsl(var(--lavender-foreground)); }
 .beat-chip--learning.ui-button { background:hsl(var(--sun)); color:hsl(var(--sun-foreground)); }
 .beat-chip--complete.ui-button { background:hsl(var(--mint)); color:hsl(var(--mint-foreground)); }
