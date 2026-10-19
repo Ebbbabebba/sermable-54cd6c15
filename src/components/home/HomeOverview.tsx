@@ -18,9 +18,13 @@ export function CountdownCard({ title, date }: { title: string; date: string }) 
 
 export function BeatChips({ beats, onSelect }: { beats: OverviewBeat[]; onSelect: () => void }) {
   const { t } = useTranslation();
-  return <div className="beat-chips">{beats.map((beat, index) => <Button key={beat.id} variant="ghost" className={`beat-chip beat-chip--${beat.is_mastered ? 'complete' : beat.practice_stage && beat.practice_stage !== 'new' ? 'learning' : 'new'}`} onClick={onSelect} aria-label={`${t('playful.beat')} ${index + 1}`} title={t(beat.is_mastered ? 'playful.completed' : beat.practice_stage && beat.practice_stage !== 'new' ? 'playful.learning' : 'playful.new')}>
-    {beat.is_mastered ? <Check /> : index + 1}
-  </Button>)}</div>;
+  const statusOf = (beat: OverviewBeat) => beat.is_mastered ? 'complete' : beat.practice_stage && beat.practice_stage !== 'new' ? 'learning' : 'new';
+  return <div className="beat-chips-card">
+    <div className="beat-chips-card__head"><p>{t('playful.beats')}</p><div className="beat-chips-card__legend">{(['new', 'learning', 'complete'] as const).map(status => <span key={status} className="beat-chips-card__legend-item"><span className={`beat-chips-card__legend-dot beat-chips-card__legend-dot--${status}`} />{t(status === 'complete' ? 'playful.completed' : `playful.${status}`)}</span>)}</div></div>
+    <div className="beat-chips">{beats.map((beat, index) => <Button key={beat.id} variant="ghost" className={`beat-chip beat-chip--${statusOf(beat)}`} onClick={onSelect} aria-label={`${t('playful.beat')} ${index + 1}`} title={t(statusOf(beat) === 'complete' ? 'playful.completed' : `playful.${statusOf(beat)}`)}>
+      {beat.is_mastered ? <Check /> : index + 1}
+    </Button>)}</div>
+  </div>;
 }
 
 export function ReviewTimeline({ beats, goalDate }: { beats: OverviewBeat[]; goalDate?: string }) {
@@ -54,7 +58,7 @@ export function HomeOverview({ speech, beats, streak, accuracy, ready, onPractic
     {speech.goal_date && <CountdownCard title={speech.title} date={speech.goal_date} />}
     <div className="home-overview__mastery"><MasteryRing value={percent} label={t('playful.completed')} /><h2>{t('playful.completed')}</h2><p>{ready ? t('playful.beatCount', { count: mastered, total: beats.length }) : t('common.loading')}</p></div>
     <ReviewTimeline beats={beats} goalDate={speech.goal_date} />
-    <section className="home-beats"><h2>{t('playful.beats')}</h2><BeatChips beats={beats} onSelect={onPractice} />{!beats.length && <p>{t('playful.noBeats')}</p>}</section>
+    <section className="home-beats"><BeatChips beats={beats} onSelect={onPractice} />{!beats.length && <p>{t('playful.noBeats')}</p>}</section>
     <StatsCards streak={streak} accuracy={accuracy} mastered={mastered} total={beats.length} />
     <div className="home-practice"><Button className="home-practice__mic" size="icon" onClick={onPractice} aria-label={t('playful.practice')}><Mic /></Button><strong>{t('playful.practice')}</strong></div>
   </div>;
