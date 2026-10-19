@@ -4851,7 +4851,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   return (
-    <div className="s-c5 s-c7 s-gg s-3v">
+    <div className="practice-view s-c5 s-c7 s-gg s-3v">
       {selfRatingPrompt && (
         <div className="s-c4 s-i5 s-ym s-c5 s-ic s-rr s-ig s-4r s-3h s-mw">
           <div className="s-y7 s-js s-qa s-4b s-my s-r4 s-6l s-6x">
@@ -5074,12 +5074,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             >
               <span className="s-i4 s-ib s-dn s-qe s-5e s-os s-p3 s-v9 s-d3 s-uw s-pl s-py">
                 <span className="s-fs s-xk s-qe s-5c s-30" />
-                {t('beat_practice.listening_starting', 'Preparing microphone...')}
+                {t('playful.preparingMic')}
               </span>
             </motion.div>
           )}
           {isRecording && isSpeechReady && !showCelebration && (
-            <span className="s-t6" aria-live="polite">
+            <span className="practice-listening" aria-live="polite">
               {t('beat_practice.listening_ready', 'Listening')}
             </span>
           )}
@@ -5160,7 +5160,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               {sessionMode === 'pre_beat_recall' ? (
                 <>
                   <RotateCcw className="s-fz s-xt" />
-                  {t('beat_practice.recall_previous', 'Recall previous beat')} · {words.length - hiddenWordIndices.size} words visible
+                  {t('beat_practice.recall_previous', 'Recall previous beat')} · {t('playful.visibleWords', { count: words.length - hiddenWordIndices.size })}
                 </>
               ) : getPhaseType() === 'learning' ? (
                 <>
@@ -5170,7 +5170,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               ) : getPhaseType() === 'fading' ? (
                 <>
                   <GraduationCap className="s-fz s-xt" />
-                  {words.length - hiddenWordIndices.size} words visible
+                  {t('playful.visibleWords', { count: words.length - hiddenWordIndices.size })}
                 </>
               ) : (
                 'Combining sentences'

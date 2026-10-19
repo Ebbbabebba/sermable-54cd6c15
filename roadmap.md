@@ -1,5 +1,13 @@
 # Roadmap
 
+## Klart: Lekfull mobilförnyelse
+
+- [x] Pastellfärger, Nunito och delade kort-/knappstilar
+- [x] Hem med verkligt tal, nedräkning, maskotring, beats och repetition
+- [x] Hem/Tal/Statistik/Inställningar och verkliga statistikvärden
+- [x] Förfina övningsord, mikrofon och befintlig feedback utan regeländringar
+- [x] Verifiera mobil, iPad och övningsnavigering i webbläsaren
+
 ## Klart: Övningen får aldrig frysa
 
 - [x] Stäng-knappen lämnar direkt, sparning sker i bakgrunden

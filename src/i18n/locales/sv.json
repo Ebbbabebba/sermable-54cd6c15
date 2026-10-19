@@ -1,4 +1,31 @@
 {
+  "playful": {
+    "preparingMic": "Förbereder mikrofonen…",
+    "visibleWords": "{{count}} synliga ord",
+    "nextSpeech": "Nästa tal",
+    "days": "{{count}} dagar kvar",
+    "reviews": "Repetition",
+    "tenMinutes": "10 min",
+    "tonight": "Ikväll",
+    "tomorrow": "Imorgon",
+    "twoDays": "2 dagar",
+    "threeDays": "3 dagar",
+    "fiveDays": "5 dagar",
+    "sevenDays": "7 dagar",
+    "beat": "Beat",
+    "beats": "Beats",
+    "completed": "Genomgångna",
+    "learning": "Övar",
+    "new": "Nya",
+    "streak": "Streak",
+    "practice": "Öva",
+    "speeches": "Tal",
+    "stats": "Statistik",
+    "recentSessions": "Senaste övningarna",
+    "noSessions": "Inga övningspass ännu.",
+    "noBeats": "Dina beats visas efter första övningen.",
+    "beatCount": "{{count}} av {{total}} beats genomgångna"
+  },
   "app": {
     "name": "Sermable",
     "tagline": "Memorera ditt tal med repetitionsträning — redo till presentationsdagen."

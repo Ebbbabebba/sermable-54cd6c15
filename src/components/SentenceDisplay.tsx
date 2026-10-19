@@ -138,7 +138,7 @@ const SentenceDisplay = ({
           transition={smoothTransition}
           className={cn(
             "s-i3 s-m4 s-op s-ox s-q8 s-8m",
-            "s-4k s-u2 s-d0 s-pl s-pp"
+            "practice-word practice-word--missed s-4k s-u2 s-d0 s-pl s-pp"
           )}
         >
           {state.text}
@@ -158,7 +158,7 @@ const SentenceDisplay = ({
           transition={smoothTransition}
           className={cn(
             "s-i3 s-m4 s-op s-ox s-q8 s-8m",
-            "s-64 s-ve s-d0 s-pl s-q3"
+            "practice-word practice-word--hesitated s-64 s-ve s-d0 s-pl s-q3"
           )}
         >
           {state.text}
@@ -183,7 +183,7 @@ const SentenceDisplay = ({
               : { duration: 0.25 },
           }}
           className={cn(
-            "s-i3 s-m4 s-op s-ox s-q8 s-8m s-ws s-bo",
+            "practice-word practice-word--hidden s-i3 s-m4 s-op s-ox s-q8 s-8m s-ws s-bo",
             state.isCurrent &&
               "s-pm s-pw s-5g s-uw s-d3 s-qu",
             !state.isCurrent && "s-uo s-h0"
@@ -207,12 +207,14 @@ const SentenceDisplay = ({
           y: 0,
         }}
         transition={{
-          opacity: { duration: 0.3, ease: "easeInOut" },
+          opacity: { duration: 0.7, ease: "easeInOut" },
           scale: { duration: 0.3, ease: "easeInOut" },
           layout: { duration: 0.3, ease: "easeInOut" },
         }}
         className={cn(
-          "s-i3 s-m3 s-ol s-ox s-q8 s-ws s-bo",
+          "practice-word s-i3 s-m3 s-ol s-ox s-q8 s-ws s-bo",
+          state.isSpoken && "practice-word--correct",
+          state.isHesitated && "practice-word--hesitated",
           // Prop-cue background — soft warm highlight on the wrapped sequence
           propCueIndices?.has(index + wordIndexOffset) && "s-3o",
           // Subtle marker for current word (blue pulse)

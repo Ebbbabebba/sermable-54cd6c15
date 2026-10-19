@@ -1,4 +1,31 @@
 {
+  "playful": {
+    "preparingMic": "Mikrofon wird vorbereitet…",
+    "visibleWords": "{{count}} sichtbare Wörter",
+    "nextSpeech": "Nächste Rede",
+    "days": "Noch {{count}} Tage",
+    "reviews": "Wiederholung",
+    "tenMinutes": "10 Min.",
+    "tonight": "Heute Abend",
+    "tomorrow": "Morgen",
+    "twoDays": "2 Tage",
+    "threeDays": "3 Tage",
+    "fiveDays": "5 Tage",
+    "sevenDays": "7 Tage",
+    "beat": "Abschnitt",
+    "beats": "Abschnitte",
+    "completed": "Abgeschlossen",
+    "learning": "In Übung",
+    "new": "Neu",
+    "streak": "Serie",
+    "practice": "Üben",
+    "speeches": "Reden",
+    "stats": "Statistik",
+    "recentSessions": "Letzte Übungen",
+    "noSessions": "Noch keine Übungseinheiten.",
+    "noBeats": "Deine Abschnitte erscheinen nach der ersten Übung.",
+    "beatCount": "{{count}} von {{total}} Abschnitten abgeschlossen"
+  },
   "app": {
     "name": "Sermable",
     "tagline": "Lerne deine Rede mit verteiltem Wiederholen — bereit zum Präsentationstag."

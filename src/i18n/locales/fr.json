@@ -1,4 +1,31 @@
 {
+  "playful": {
+    "preparingMic": "Préparation du microphone…",
+    "visibleWords": "{{count}} mots visibles",
+    "nextSpeech": "Prochain discours",
+    "days": "{{count}} jours restants",
+    "reviews": "Révisions",
+    "tenMinutes": "10 min",
+    "tonight": "Ce soir",
+    "tomorrow": "Demain",
+    "twoDays": "2 jours",
+    "threeDays": "3 jours",
+    "fiveDays": "5 jours",
+    "sevenDays": "7 jours",
+    "beat": "Passage",
+    "beats": "Passages",
+    "completed": "Terminés",
+    "learning": "En cours",
+    "new": "Nouveaux",
+    "streak": "Série",
+    "practice": "Pratiquer",
+    "speeches": "Discours",
+    "stats": "Statistiques",
+    "recentSessions": "Dernières séances",
+    "noSessions": "Aucune séance pour le moment.",
+    "noBeats": "Vos passages apparaîtront après la première séance.",
+    "beatCount": "{{count}} passages terminés sur {{total}}"
+  },
   "app": {
     "name": "Sermable",
     "tagline": "Mémorisez votre discours par répétition espacée — prêt le jour J."
