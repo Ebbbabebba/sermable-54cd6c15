@@ -1,4 +1,29 @@
 {
+  "playful": {
+    "nextSpeech": "Prossimo discorso",
+    "days": "{{count}} giorni rimasti",
+    "reviews": "Ripassi",
+    "tenMinutes": "10 min",
+    "tonight": "Stasera",
+    "tomorrow": "Domani",
+    "twoDays": "2 giorni",
+    "threeDays": "3 giorni",
+    "fiveDays": "5 giorni",
+    "sevenDays": "7 giorni",
+    "beat": "Brano",
+    "beats": "Brani",
+    "completed": "Completati",
+    "learning": "In pratica",
+    "new": "Nuovi",
+    "streak": "Serie",
+    "practice": "Esercitati",
+    "speeches": "Discorsi",
+    "stats": "Statistiche",
+    "recentSessions": "Sessioni recenti",
+    "noSessions": "Nessuna sessione ancora.",
+    "noBeats": "I brani appariranno dopo la prima sessione.",
+    "beatCount": "{{count}} brani completati su {{total}}"
+  },
   "app": {
     "name": "Sermable",
     "tagline": "Memorizza il tuo discorso con la ripetizione spaziata — pronto per il giorno della presentazione."
