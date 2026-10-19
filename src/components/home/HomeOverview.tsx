@@ -4,6 +4,7 @@ import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { MasteryRing } from './MasteryRing';
 import type { OverviewBeat } from '@/hooks/useSpeechOverview';
+import { buildSchedule } from '@/lib/reviewSchedule';
 
 export function CountdownCard({ date }: { date: string }) {
   const { t, i18n } = useTranslation();
