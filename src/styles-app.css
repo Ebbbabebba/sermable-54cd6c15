@@ -315,7 +315,7 @@ input,textarea,select { font-family:var(--font-system); }
 .beat-chip--complete.ui-button { background:hsl(var(--mint)); color:hsl(var(--mint-foreground)); }
 .home-beats p { font-size:13px; color:hsl(var(--muted-foreground)); }
 .stats-cards { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
-.stat-card { min-width:0; display:flex; align-items:center; flex-direction:row; justify-content:flex-start; gap:12px; padding:14px 18px; border-radius:20px; background:hsl(var(--card)); box-shadow:var(--shadow-sm); }
+.stat-card { min-width:0; display:flex; align-items:center; flex-direction:row; justify-content:center; gap:12px; padding:14px 18px; border-radius:20px; background:hsl(var(--card)); box-shadow:var(--shadow-sm); }
 .stat-card svg { width:28px; height:28px; border-radius:10px; padding:5px; }
 .stat-card--sun svg { background:hsl(var(--sun)); color:hsl(var(--sun-foreground)); }
 .stat-card--bubblegum svg { background:hsl(var(--bubblegum)); color:hsl(var(--bubblegum-foreground)); }
