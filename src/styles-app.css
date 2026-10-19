@@ -343,3 +343,12 @@ input,textarea,select { font-family:var(--font-system); }
 @media(min-width:768px) { .home-overview { display:grid; grid-template-columns:1fr 1fr; align-items:start; gap:24px; } .home-overview__title,.home-overview .countdown-card,.home-overview .review-section,.home-overview .home-beats { grid-column:1; } .home-overview__mastery { grid-column:2; grid-row:2 / span 3; align-self:center; } .home-overview .stats-cards,.home-overview .home-practice { grid-column:1 / -1; } }
 @media(max-width:360px) { .dashboard__main { padding-left:16px; padding-right:16px; } .stats-cards { gap:8px; } .review-timeline li { font-size:9px; } .home-overview__title h1 { font-size:25px; } }
 @media(prefers-reduced-motion:reduce) { .mastery-ring,.speech-mascot,.review-timeline .is-next .review-timeline__dot,.practice-listening::before { animation:none; } .mastery-ring__fill,.ui-button { transition:none; } .practice-reading-text * { animation:none !important; transition:none !important; } }
+
+/* Mic pulse: expanding water-blue ring while listening */
+@keyframes mic-pulse {
+  0% { box-shadow:0 0 0 0 hsl(var(--primary) / .55); }
+  70% { box-shadow:0 0 0 22px hsl(var(--primary) / 0); }
+  100% { box-shadow:0 0 0 0 hsl(var(--primary) / 0); }
+}
+.animate-mic-pulse,.practice-listening::before { animation:mic-pulse 1.4s ease-out infinite; }
+@media(prefers-reduced-motion:reduce) { .animate-mic-pulse,.practice-listening::before { animation:none; } }
