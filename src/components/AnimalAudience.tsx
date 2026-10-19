@@ -125,8 +125,11 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
       {kind === "owl" && <><circle cx="45" cy="58" r="15" fill={palette.belly} /><circle cx="75" cy="58" r="15" fill={palette.belly} /></>}
 
       {/* Brows */}
+      {kind !== "frog" && <>
       <path d={`M${eyeLX - 7} ${eyeY - brow + browTilt} Q${eyeLX} ${eyeY - brow - 3} ${eyeLX + 7} ${eyeY - brow}`} fill="none" stroke={OUTLINE} strokeWidth="2.5" strokeLinecap="round" style={{ transition }} />
       <path d={`M${eyeRX - 7} ${eyeY - brow} Q${eyeRX} ${eyeY - brow - 3} ${eyeRX + 7} ${eyeY - brow + browTilt}`} fill="none" stroke={OUTLINE} strokeWidth="2.5" strokeLinecap="round" style={{ transition }} />
+
+      </>}
 
       {/* Eyes */}
       <g className="animal-eyes" style={{ transformOrigin: `60px ${eyeY}px` }}>
