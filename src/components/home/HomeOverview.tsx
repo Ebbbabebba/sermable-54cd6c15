@@ -4,6 +4,7 @@ import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { MasteryRing } from './MasteryRing';
 import type { OverviewBeat } from '@/hooks/useSpeechOverview';
+import { buildSchedule } from '@/lib/reviewSchedule';
 
 export function CountdownCard({ date }: { date: string }) {
   const { t, i18n } = useTranslation();
@@ -19,14 +20,18 @@ export function BeatChips({ beats, onSelect }: { beats: OverviewBeat[]; onSelect
   </Button>)}</div>;
 }
 
-export function ReviewTimeline({ beats }: { beats: OverviewBeat[] }) {
+export function ReviewTimeline({ beats, goalDate }: { beats: OverviewBeat[]; goalDate?: string }) {
   const { t, i18n } = useTranslation();
   // Checkpoint completion is read from real records, not inferred from elapsed time.
   const stages = ['tenMinutes', 'tonight', 'tomorrow', 'twoDays', 'threeDays', 'fiveDays', 'sevenDays'];
   const complete = [beats.length > 0 && beats.every(b => !!b.recall_10min_at), beats.length > 0 && beats.every(b => !!b.recall_evening_at), beats.length > 0 && beats.every(b => !!b.recall_morning_at), ...[4, 5, 6, 7].map(rung => beats.length > 0 && beats.every(b => b.ladder_rung >= rung))];
   const dates = beats.map(b => b.next_scheduled_recall_at).filter((date): date is string => !!date).sort();
   const next = complete.findIndex(done => !done);
-  return <section className="review-section"><h2>{t('playful.reviews')}</h2><ol className="review-timeline">{stages.map((stage, i) => <li key={stage} className={complete[i] ? 'is-complete' : i === next && dates.length ? 'is-next' : ''}><span className="review-timeline__dot">{complete[i] ? <Check /> : i + 1}</span><span>{t(`playful.${stage}`)}</span></li>)}</ol>{dates[0] && <p className="review-section__due"><Clock3 />{t('dashboard.nextPractice')} · {new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dates[0]))}</p>}</section>;
+  // Planned (visual) dates, anchored on the first 10-minute recall and compressed toward the presentation date.
+  const firstRecall = beats.map(b => b.recall_10min_at).filter((d): d is string => !!d).sort()[0];
+  const planned = firstRecall ? buildSchedule(new Date(new Date(firstRecall).getTime() - 10 * 60 * 1000), goalDate ? new Date(`${goalDate}T09:00:00`) : undefined) : null;
+  const fmt = new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short' });
+  return <section className="review-section"><h2>{t('playful.reviews')}</h2><ol className="review-timeline">{stages.map((stage, i) => <li key={stage} className={complete[i] ? 'is-complete' : i === next && dates.length ? 'is-next' : ''}><span className="review-timeline__dot">{complete[i] ? <Check /> : i + 1}</span><span>{t(`playful.${stage}`)}</span>{planned && <small className="review-timeline__date">{fmt.format(planned[i])}</small>}</li>)}</ol>{dates[0] && <p className="review-section__due"><Clock3 />{t('dashboard.nextPractice')} · {new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dates[0]))}</p>}</section>;
 }
 
 export function StatsCards({ streak, accuracy, mastered, total }: { streak: number; accuracy: number | null; mastered: number; total: number }) {
@@ -45,7 +50,7 @@ export function HomeOverview({ speech, beats, streak, accuracy, ready, onPractic
   return <div className="home-overview"><div className="home-overview__title"><span>{t('playful.nextSpeech')}</span><h1>{speech.title}</h1></div>
     {speech.goal_date && <CountdownCard date={speech.goal_date} />}
     <div className="home-overview__mastery"><MasteryRing value={percent} label={t('playful.completed')} /><h2>{t('playful.completed')}</h2><p>{ready ? t('playful.beatCount', { count: mastered, total: beats.length }) : t('common.loading')}</p></div>
-    <ReviewTimeline beats={beats} />
+    <ReviewTimeline beats={beats} goalDate={speech.goal_date} />
     <section className="home-beats"><h2>{t('playful.beats')}</h2><BeatChips beats={beats} onSelect={onPractice} />{!beats.length && <p>{t('playful.noBeats')}</p>}</section>
     <StatsCards streak={streak} accuracy={accuracy} mastered={mastered} total={beats.length} />
     <div className="home-practice"><Button className="home-practice__mic" size="icon" onClick={onPractice} aria-label={t('playful.practice')}><Mic /></Button><strong>{t('playful.practice')}</strong></div>
