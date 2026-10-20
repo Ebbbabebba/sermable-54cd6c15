@@ -219,24 +219,24 @@
       "creating": "Creando tu discurso…",
       "creatingDesc": "Segmentamos, programamos y ajustamos tu plan.",
       "intro": {
-        "eyebrow": "Empecemos",
+        "eyebrow": "",
         "title": "Crea tu discurso, a tu manera",
         "subtitle": "Te haré unas preguntas rápidas y adaptaré tu práctica. Menos de un minuto."
       },
       "title": {
-        "eyebrow": "Primero, lo básico",
+        "eyebrow": "",
         "title": "¿Cómo llamamos a tu discurso?",
         "subtitle": "Un nombre corto para encontrarlo después."
       },
       "date": {
-        "eyebrow": "Fija tu fecha límite",
+        "eyebrow": "",
         "title": "¿Cuándo das el discurso?",
         "subtitle": "Planificaremos tu práctica en torno a esta fecha."
       },
       "text": {
-        "eyebrow": "Tu discurso",
+        "eyebrow": "",
         "title": "Añade tu texto",
-        "subtitle": "Pega, escribe, escanea o créalo con IA — lo que te resulte más fácil."
+        "subtitle": "Pega, escribe, haz una foto o créalo con IA"
       },
       "familiarity": {
         "eyebrow": "Tu punto de partida",
@@ -298,14 +298,14 @@
     },
     "autoDetectsLanguage": "Detecta el idioma automáticamente",
     "analyzingImage": "Analizando imagen...",
-    "scanDocument": "Escanear",
+    "scanDocument": "Hacer foto",
     "uploadImage": "Foto",
     "retake": "Volver a tomar",
     "extractText": "Extraer texto",
     "extracting": "Extrayendo...",
     "scanSuccess": "Texto Extraído",
     "scanSuccessDesc": "El texto ha sido añadido a tu discurso.",
-    "scanError": "Error de Escaneo",
+    "scanError": "Error al hacer la foto",
     "scanErrorDesc": "No se pudo extraer el texto de la imagen. Intenta de nuevo con una foto más clara.",
     "cameraError": "Error de Cámara",
     "cameraErrorDesc": "No se pudo acceder a la cámara. Por favor, verifica los permisos.",

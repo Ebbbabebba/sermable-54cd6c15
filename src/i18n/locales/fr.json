@@ -219,24 +219,24 @@
       "creating": "Création de votre discours…",
       "creatingDesc": "Nous segmentons, planifions et ajustons votre plan.",
       "intro": {
-        "eyebrow": "C'est parti",
+        "eyebrow": "",
         "title": "Créez votre discours, à votre façon",
         "subtitle": "Je vous pose quelques questions rapides pour adapter votre pratique. Moins d'une minute."
       },
       "title": {
-        "eyebrow": "D'abord, les bases",
+        "eyebrow": "",
         "title": "Comment appellerons-nous votre discours ?",
         "subtitle": "Un nom court pour le retrouver plus tard."
       },
       "date": {
-        "eyebrow": "Fixez votre échéance",
+        "eyebrow": "",
         "title": "Quand prononcez-vous le discours ?",
         "subtitle": "Nous planifierons votre pratique autour de cette date."
       },
       "text": {
-        "eyebrow": "Votre discours",
+        "eyebrow": "",
         "title": "Ajoutez votre texte",
-        "subtitle": "Collez, écrivez, scannez ou construisez avec l'IA — comme vous préférez."
+        "subtitle": "Collez, écrivez, prenez une photo ou construisez avec l'IA"
       },
       "familiarity": {
         "eyebrow": "Votre point de départ",
@@ -298,14 +298,14 @@
     },
     "autoDetectsLanguage": "Détection automatique de la langue",
     "analyzingImage": "Analyse de l'image...",
-    "scanDocument": "Scanner",
+    "scanDocument": "Prendre une photo",
     "uploadImage": "Photo",
     "retake": "Reprendre",
     "extractText": "Extraire le texte",
     "extracting": "Extraction...",
     "scanSuccess": "Texte extrait",
     "scanSuccessDesc": "Le texte a été ajouté à votre discours.",
-    "scanError": "Échec du scan",
+    "scanError": "Échec de la photo",
     "scanErrorDesc": "Impossible d'extraire le texte de l'image. Réessayez avec une photo plus nette.",
     "cameraError": "Erreur de caméra",
     "cameraErrorDesc": "Impossible d'accéder à la caméra. Veuillez vérifier les autorisations.",

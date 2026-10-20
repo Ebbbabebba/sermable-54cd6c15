@@ -261,7 +261,7 @@
       "text": {
         "eyebrow": "",
         "title": "Lägg till ditt manus",
-        "subtitle": "Klistra in, skriv, skanna eller bygg med AI"
+        "subtitle": "Klistra in, skriv, fota eller bygg med AI"
       },
       "familiarity": {
         "eyebrow": "Din startpunkt",
@@ -323,14 +323,14 @@
     "analyzingImage": "Analyserar bild...",
     "languageDetected": "Språk upptäckt – gränssnittet uppdaterat",
     "buildWithAi": "Skapa med AI",
-    "scanDocument": "Skanna",
+    "scanDocument": "Fota",
     "uploadImage": "Foto",
     "retake": "Ta om",
     "extractText": "Extrahera text",
     "extracting": "Extraherar...",
     "scanSuccess": "Text extraherad",
     "scanSuccessDesc": "Texten har lagts till i ditt tal.",
-    "scanError": "Skanning misslyckades",
+    "scanError": "Fotograferingen misslyckades",
     "scanErrorDesc": "Kunde inte extrahera text från bilden. Försök igen med en tydligare bild.",
     "cameraError": "Kamerafel",
     "cameraErrorDesc": "Kunde inte komma åt kameran. Kontrollera behörigheter.",
