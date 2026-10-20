@@ -259,9 +259,9 @@
         "subtitle": "Vi planerar din övning utifrån detta datum."
       },
       "text": {
-        "eyebrow": "Ditt tal",
-        "title": "Lägg till din text",
-        "subtitle": "Klistra in, skriv, skanna eller bygg med AI — vad som känns enklast."
+        "eyebrow": "\n",
+        "title": "Lägg till ditt manus",
+        "subtitle": "Klistra in, skriv, skanna eller bygg med AI"
       },
       "familiarity": {
         "eyebrow": "Din startpunkt",
