@@ -60,7 +60,7 @@ export async function createNativeSpeechSession(plugin: Plugin, options: {
       if (disposed || token !== generation) return;
       // The installed iOS plugin resolves start when capture starts, not when
       // dictation finishes. Result/state callbacks remain the source of truth.
-      if (result?.matches?.length) receive(result.matches);
+      if (result && result.matches?.length) receive(result.matches);
     } catch (error) {
       if (disposed || token !== generation) return;
       // An "already listening" rejection must not stop a healthy microphone.
