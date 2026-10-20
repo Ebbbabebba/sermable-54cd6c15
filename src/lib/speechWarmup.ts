@@ -45,10 +45,9 @@ export function warmupSpeechRecognition(): Promise<void> {
           const perm = await withTimeout(NativeSpeech.checkPermissions(), 5000);
           if (perm.speechRecognition === "granted") {
             state.nativePermissionGranted = true;
-          } else {
-            const req = await withTimeout(NativeSpeech.requestPermissions(), 30000);
-            state.nativePermissionGranted = req.speechRecognition === "granted";
           }
+          // Warm-up only checks: the recording action owns permission prompts.
+          // A timed-out prompt cannot be cancelled and would race a second one.
         }
       } catch (e) {
         console.warn("Native speech warm-up failed:", e);

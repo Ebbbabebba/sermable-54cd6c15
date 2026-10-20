@@ -36,6 +36,7 @@ import { scheduleNextReview, type ScheduleNextReviewInput } from "@/lib/schedule
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 import { recordRepDifficulty, recordSpeechWordErrors, getEasiestWordIndices } from "@/utils/wordDifficulty";
 import { scheduleNativeNotification } from "@/lib/nativeNotifications";
+import { createNativeSpeechSession } from "@/lib/nativeSpeechSession";
 
 
 // Web Speech API types
@@ -247,9 +248,6 @@ type Phase = 'sentence_1_learning' | 'sentence_1_fading' | 'sentence_2_learning'
 
 // Session modes: recall (quick review of mastered beats), learn (learning a new beat), beat_rest (pause between beats), pre_beat_recall (recall previous beat before learning new), beat_preview (preview upcoming beat before learning)
 type SessionMode = 'recall' | 'learn' | 'beat_rest' | 'pre_beat_recall' | 'beat_preview' | 'coffee_break' | 'session_complete';
-
-// Set once per app run when the native recognizer never yields results (iPad).
-let forceWebSpeech = false;
 
 // Always 10 minutes coffee break after mastering a beat
 // Follows spaced repetition: short break helps consolidation
@@ -588,6 +586,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // Transcription using Web Speech API
   const recognitionRef = useRef<any>(null);
   const startingRef = useRef(false);
+  const recordingGenerationRef = useRef(0);
   const withSpeechTimeout = <T,>(p: Promise<T>, ms = 5000): Promise<T> =>
     Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("native speech timeout")), ms))]);
   const transcriptRef = useRef<string>("");
@@ -3695,6 +3694,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
   const startRecordingInner = async () => {
     if (recognitionRef.current) return;
+    const recordingGeneration = ++recordingGenerationRef.current;
+    const cancelled = () => recordingGeneration !== recordingGenerationRef.current;
 
     setIsSpeechReady(false);
     if (speechReadyTimeoutRef.current) {
@@ -3709,8 +3710,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // speaking immediately after tapping the mic.
     ignoreResultsUntilRef.current = 0;
 
-    const hasWebSpeech = !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
-    const isNative = Capacitor.isNativePlatform() && !(forceWebSpeech && hasWebSpeech);
+    const isNative = Capacitor.isNativePlatform();
     const lang = getRecognitionLocale(speechLang);
 
     try {
@@ -3746,192 +3746,42 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           }
 
 
-          // Track cumulative transcript across multiple short native sessions.
-          // The native plugin returns the *current utterance* — we have to
-          // accumulate finals ourselves to emulate Web Speech's continuous mode.
-          const nativeFinalsRef = { current: "" };
-          let lastNativeInterim = "";
-          let listenerHandle: any = null;
-          let partialHandle: any = null;
-          let stopped = false;
-
-          // Watchdog: if no partial result arrives within 15s, force restart.
-          // Some Android builds silently stop listening without firing the
-          // "stopped" status — this keeps recognition alive.
-          let lastActivityAt = Date.now();
-          let gotAnyResult = false;
-          let silentRestarts = 0;
-          const watchdog = setInterval(() => {
-            if (stopped || !isRecordingRef.current) return;
-            // Silence alone is not a failure — restarting a live session makes
-            // the mic audibly switch off/on. Only force a restart after a long gap.
-            if (Date.now() - lastActivityAt > 30000) {
-              lastActivityAt = Date.now();
-              // Some devices (seen on iPad) never deliver native results.
-              // After two silent cycles, switch to the WebView recognizer.
-              if (!gotAnyResult && ++silentRestarts >= 2 && hasWebSpeech && !forceWebSpeech) {
-                console.warn("Native speech produced no results — switching to Web Speech");
-                forceWebSpeech = true;
-                const r = recognitionRef.current;
-                recognitionRef.current = null;
-                Promise.resolve(r?.stop?.()).finally(() => {
-                  if (isRecordingRef.current) { isRecordingRef.current = false; void startRecording(); }
-                });
-                return;
-              }
-              NativeSpeech.stop().catch(() => {});
-              setTimeout(() => {
-                if (!stopped && isRecordingRef.current) startNativeSession();
-              }, 120);
-            }
-          }, 3000);
-
-          // Guard against overlapping native starts (watchdog + "stopped"
-          // listener + retry could otherwise fire start() concurrently, which
-          // locks up the iOS audio session) and cap retries with backoff.
-          // NOTE: on iOS, NativeSpeech.start() with partialResults may not
-          // resolve until the recognition session ENDS. Awaiting it (or timing
-          // it out) caused long stalls and needless restarts, so we fire it
-          // and treat the session as live as soon as results/state arrive.
-          let nativeStartInFlight = false;
-          let nativeFailCount = 0;
-          let startToken = 0;
-          const startNativeSession = async () => {
-            if (stopped || !isRecordingRef.current || nativeStartInFlight) return;
-            nativeStartInFlight = true;
-            const token = ++startToken;
-            const startedAt = Date.now();
-            // Release the in-flight guard shortly after, regardless of when
-            // the promise settles (it may only settle when the session ends).
-            setTimeout(() => { if (token === startToken) nativeStartInFlight = false; }, 1200);
-            NativeSpeech.start({
-              language: lang,
-              maxResults: 5,
-              prompt: "",
-              partialResults: true,
-              popup: false,
-            }).then((res: any) => {
-              nativeFailCount = 0;
-              // Some iOS devices only return results when start() resolves.
-              const m: string[] = res?.matches ?? [];
-              if (m.length && !stopped && isRecordingRef.current) {
-                gotAnyResult = true;
-                lastActivityAt = Date.now();
-                const best = pickBestAlternative(m);
-                nativeFinalsRef.current = (nativeFinalsRef.current + " " + best).trim();
-                processTranscriptionRef.current(nativeFinalsRef.current, false, repetitionIdRef.current, phaseEpochRef.current);
-              }
-            }).catch((e) => {
-              // If we got results after this start, the failure is just the
-              // session ending — not a real start failure.
-              if (lastActivityAt > startedAt) return;
-              nativeFailCount++;
-              console.warn("Native start failed", nativeFailCount, e);
-              if (token === startToken) nativeStartInFlight = false;
-              if (!stopped && isRecordingRef.current && nativeFailCount <= 5) {
-                setTimeout(() => { void startNativeSession(); }, 300 * nativeFailCount);
-              } else if (nativeFailCount > 5) {
-                toast({
-                  variant: "destructive",
-                  title: "Microphone problem",
-                  description: "Speech recognition could not start. Please try again.",
-                });
-              }
-            });
-            lastActivityAt = Date.now();
-          };
-
-
-          partialHandle = await withSpeechTimeout(NativeSpeech.addListener(
-            "partialResults" as any,
-            (data: any) => {
-              if (showCelebrationRef.current) return;
-              if (Date.now() < ignoreResultsUntilRef.current) return;
-              if (Date.now() >= ignoreResultIndexCutoffUntilRef.current) {
-                ignoreResultIndexCutoffUntilRef.current = 0;
-              }
-              lastActivityAt = Date.now();
-              if ((data?.matches ?? []).length) gotAnyResult = true;
-              setIsSpeechReady(true);
-
-              const matches: string[] = data?.matches ?? [];
-              const interim = pickBestAlternative(matches);
-              lastNativeInterim = interim;
-              const combined = (nativeFinalsRef.current + " " + interim).trim();
-              processTranscriptionRef.current(
-                combined,
-                false,
-                repetitionIdRef.current,
-                phaseEpochRef.current
-              );
-            }
-          ));
-
-          listenerHandle = await withSpeechTimeout(NativeSpeech.addListener(
-            "listeningState" as any,
-            async (data: any) => {
-              if (data?.status === "started" || data?.status === "listening") {
-                lastActivityAt = Date.now();
-                setIsSpeechReady(true);
-              }
-              if (data?.status === "stopped" && !stopped && isRecordingRef.current) {
-                const hadSpeech = !!lastNativeInterim.trim();
-                // Promote whatever interim was last seen into finals so we keep history.
-                if (hadSpeech) {
-                  nativeFinalsRef.current = (nativeFinalsRef.current + " " + lastNativeInterim).trim();
-                  lastNativeInterim = "";
-                }
-                // Restart right away after speech; after a silent session, wait a
-                // moment so iOS doesn't toggle the mic on and off in a tight loop.
-                const delay = hadSpeech ? 0 : 700;
-                setTimeout(() => { if (!stopped && isRecordingRef.current) startNativeSession(); }, delay);
-              }
-            }
-          ));
-
-          // We expose a thin "recognition object" so the rest of the component
-          // (which reads recognitionRef.current to know it's running) keeps working.
-          recognitionRef.current = {
-            __native: true,
-            clearBuffer: () => {
-              nativeFinalsRef.current = "";
-              lastNativeInterim = "";
+          if (cancelled()) return;
+          const session = await createNativeSpeechSession(NativeSpeech, {
+            language: lang,
+            choose: pickBestAlternative,
+            onTranscript: text => {
+              if (cancelled() || !isRecordingRef.current) return;
+              if (showCelebrationRef.current || Date.now() < ignoreResultsUntilRef.current) return;
+              processTranscriptionRef.current(text, false, repetitionIdRef.current, phaseEpochRef.current);
             },
-            stop: async () => {
-              stopped = true;
-              clearInterval(watchdog);
-              try {
-                await NativeSpeech.stop();
-              } catch {}
-              try {
-                await partialHandle?.remove?.();
-                await listenerHandle?.remove?.();
-              } catch {}
+            onReady: ready => {
+              if (!cancelled()) setIsSpeechReady(ready);
             },
-
-          };
-
+            onError: error => {
+              if (cancelled()) return;
+              console.warn("Native speech stopped:", error);
+              stopListening();
+              toast({ variant: "destructive", title: t('common.micError'), description: t('common.micDeniedDesc') });
+            },
+          });
+          if (cancelled()) { await session.stop(); return; }
+          recognitionRef.current = { __native: true, ...session };
           isRecordingRef.current = true;
           setIsRecording(true);
           runningTranscriptRef.current = "";
           lastWordTimeRef.current = Date.now();
-
-          // If the user left / stopped while we were attaching listeners,
-          // tear everything down instead of leaking listeners + watchdog.
-          if (!isRecordingRef.current || recognitionRef.current === null) {
-            stopped = true;
-            clearInterval(watchdog);
-            try { await partialHandle?.remove?.(); await listenerHandle?.remove?.(); } catch {}
-            return;
-          }
-          await startNativeSession();
-          if (isRecordingRef.current) setIsSpeechReady(true);
+          void session.start();
         } catch (nativeErr) {
-          console.error("Native speech failed, falling back to Web Speech:", nativeErr);
-          // Fall through to Web Speech below
+          if (cancelled()) return;
+          console.error("Native speech failed:", nativeErr);
+          stopListening();
+          toast({ variant: "destructive", title: t("common.micError"), description: t("common.micDeniedDesc") });
+          return;
         }
       }
 
+      if (cancelled()) return;
       if (!recognitionRef.current) {
         // ---- Web Speech API path ----
         const SpeechRecognition =
@@ -3981,6 +3831,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
 
 
+        if (cancelled()) return;
+        let webFailures = 0;
+        let webTerminal = false;
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
@@ -3994,6 +3847,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         runningTranscriptRef.current = "";
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
+          if (cancelled()) return;
+          webFailures = 0;
           if (showCelebrationRef.current) return;
           if (Date.now() < ignoreResultsUntilRef.current) return;
           if (
@@ -4040,19 +3895,24 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         };
 
         recognition.onerror = (event: any) => {
-          console.error("Speech recognition error:", event.error);
+          if (cancelled()) return;
+          console.warn("Speech recognition error:", event.error);
           setIsSpeechReady(false);
-          if (event.error === "not-allowed") {
-            toast({
-              variant: "destructive",
-              title: "Microphone Access Denied",
-              description: "Please allow microphone access to use speech recognition.",
-            });
+          webTerminal = ['not-allowed', 'service-not-allowed', 'audio-capture', 'language-not-supported'].includes(event.error);
+          if (webTerminal) {
+            stopListening();
+            toast({ variant: "destructive", title: t('common.micError'), description: t('common.micDeniedDesc') });
           }
         };
 
         recognition.onend = () => {
+          if (cancelled() || webTerminal) return;
           setIsSpeechReady(false);
+          if (++webFailures > 5) {
+            stopListening();
+            toast({ variant: "destructive", title: t("common.micError"), description: t("common.micDeniedDesc") });
+            return;
+          }
           if (!isRecordingRef.current) return;
           if (!recognitionRef.current) return;
 
@@ -4074,16 +3934,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           sentenceBoundaryHoldRawCountRef.current = 0;
 
           const startSafely = () => {
-            if (!isRecordingRef.current) return;
-            if (!recognitionRef.current) return;
+            if (cancelled() || !isRecordingRef.current) return;
+            if (recognitionRef.current !== recognition) return;
             try {
-              recognitionRef.current.start();
+              recognition.start();
             } catch (e) {
               console.log("Recognition already started");
             }
           };
 
-          const waitMs = recognitionRestartAtRef.current - Date.now();
+          const waitMs = Math.max(recognitionRestartAtRef.current - Date.now(), Math.min(4000, 700 * 2 ** (webFailures - 1)));
           if (waitMs > 0) {
             if (recognitionRestartTimeoutRef.current) {
               clearTimeout(recognitionRestartTimeoutRef.current);
@@ -4226,6 +4086,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   const stopListening = useCallback(() => {
+    recordingGenerationRef.current++;
     isRecordingRef.current = false;
     setIsRecording(false);
     setIsSpeechReady(false);
