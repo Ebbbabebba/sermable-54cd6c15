@@ -921,6 +921,7 @@ const StepShell = ({
         show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
       }}
     >
+      {eyebrow.trim() && (
       <motion.p
         variants={{
           hidden: { opacity: 0, y: 8 },
@@ -930,6 +931,7 @@ const StepShell = ({
       >
         {eyebrow}
       </motion.p>
+      )}
       <motion.h2
         variants={{
           hidden: { opacity: 0, y: 10 },

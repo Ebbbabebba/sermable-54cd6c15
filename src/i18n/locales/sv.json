@@ -249,17 +249,17 @@
         "subtitle": "Jag ställer några snabba frågor och skräddarsyr din övning. Tar mindre än en minut."
       },
       "title": {
-        "eyebrow": "\n",
+        "eyebrow": "",
         "title": "Vad ska vi kalla ditt tal?",
         "subtitle": "Välj ett kort namn så du hittar det senare."
       },
       "date": {
-        "eyebrow": "\n",
+        "eyebrow": "",
         "title": "När ska du hålla talet?",
         "subtitle": "Vi planerar din övning utifrån detta datum."
       },
       "text": {
-        "eyebrow": "\n",
+        "eyebrow": "",
         "title": "Lägg till ditt manus",
         "subtitle": "Klistra in, skriv, skanna eller bygg med AI"
       },
