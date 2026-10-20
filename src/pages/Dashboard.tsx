@@ -585,8 +585,9 @@ const Dashboard = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
             </div>
+            )}
+
 
             {loading ? (
               <div className="dashboard__loading" role="status" aria-live="polite">
