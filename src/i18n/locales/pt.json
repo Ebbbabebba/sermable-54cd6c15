@@ -219,24 +219,24 @@
       "creating": "A criar o seu discurso…",
       "creatingDesc": "Estamos a segmentar, agendar e afinar o seu plano.",
       "intro": {
-        "eyebrow": "Vamos começar",
+        "eyebrow": "",
         "title": "Crie o seu discurso, à sua maneira",
         "subtitle": "Vou fazer algumas perguntas rápidas e adaptar a prática. Menos de um minuto."
       },
       "title": {
-        "eyebrow": "Primeiro, o básico",
+        "eyebrow": "",
         "title": "Como vamos chamar ao seu discurso?",
         "subtitle": "Um nome curto para o encontrar mais tarde."
       },
       "date": {
-        "eyebrow": "Defina o prazo",
+        "eyebrow": "",
         "title": "Quando vai apresentar o discurso?",
         "subtitle": "Planeamos a prática à volta desta data."
       },
       "text": {
-        "eyebrow": "O seu discurso",
+        "eyebrow": "",
         "title": "Adicione o seu texto",
-        "subtitle": "Cole, escreva, digitalize ou construa com IA — o que for mais fácil."
+        "subtitle": "Cole, escreva, tire uma foto ou construa com IA"
       },
       "familiarity": {
         "eyebrow": "O seu ponto de partida",
@@ -298,14 +298,14 @@
     },
     "autoDetectsLanguage": "Detecta idioma automaticamente",
     "analyzingImage": "Analisando imagem...",
-    "scanDocument": "Digitalizar",
+    "scanDocument": "Tirar foto",
     "uploadImage": "Foto",
     "retake": "Refazer",
     "extractText": "Extrair Texto",
     "extracting": "Extraindo...",
     "scanSuccess": "Texto Extraído",
     "scanSuccessDesc": "O texto foi adicionado ao seu discurso.",
-    "scanError": "Falha na Digitalização",
+    "scanError": "Falha na foto",
     "scanErrorDesc": "Não foi possível extrair texto da imagem. Tente novamente com uma foto mais nítida.",
     "cameraError": "Erro na Câmera",
     "cameraErrorDesc": "Não foi possível acessar a câmera. Verifique as permissões.",

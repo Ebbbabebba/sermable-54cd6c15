@@ -219,24 +219,24 @@
       "creating": "Stiamo creando il tuo discorso…",
       "creatingDesc": "Segmentiamo, pianifichiamo e adattiamo il tuo piano.",
       "intro": {
-        "eyebrow": "Iniziamo",
+        "eyebrow": "",
         "title": "Crea il tuo discorso, a modo tuo",
         "subtitle": "Ti faccio qualche domanda veloce e adatto la tua pratica. Meno di un minuto."
       },
       "title": {
-        "eyebrow": "Prima le basi",
+        "eyebrow": "",
         "title": "Come chiamiamo il tuo discorso?",
         "subtitle": "Un nome breve per ritrovarlo dopo."
       },
       "date": {
-        "eyebrow": "Imposta la scadenza",
+        "eyebrow": "",
         "title": "Quando terrai il discorso?",
         "subtitle": "Pianificheremo la pratica intorno a questa data."
       },
       "text": {
-        "eyebrow": "Il tuo discorso",
+        "eyebrow": "",
         "title": "Aggiungi il tuo testo",
-        "subtitle": "Incolla, scrivi, scansiona o costruisci con l'IA — come preferisci."
+        "subtitle": "Incolla, scrivi, scatta una foto o costruisci con l’IA"
       },
       "familiarity": {
         "eyebrow": "Il tuo punto di partenza",
@@ -298,14 +298,14 @@
     },
     "autoDetectsLanguage": "Rilevamento automatico della lingua",
     "analyzingImage": "Analisi immagine in corso...",
-    "scanDocument": "Scansiona",
+    "scanDocument": "Scatta foto",
     "uploadImage": "Foto",
     "retake": "Riprova",
     "extractText": "Estrai testo",
     "extracting": "Estrazione in corso...",
     "scanSuccess": "Testo estratto",
     "scanSuccessDesc": "Il testo è stato aggiunto al tuo discorso.",
-    "scanError": "Scansione fallita",
+    "scanError": "Foto non riuscita",
     "scanErrorDesc": "Impossibile estrarre il testo dall'immagine. Riprova con una foto più chiara.",
     "cameraError": "Errore fotocamera",
     "cameraErrorDesc": "Impossibile accedere alla fotocamera. Controlla le autorizzazioni.",

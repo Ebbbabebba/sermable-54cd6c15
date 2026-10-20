@@ -243,24 +243,24 @@
       "creating": "Crafting your speech…",
       "creatingDesc": "Segmenting, scheduling and tuning your plan.",
       "intro": {
-        "eyebrow": "Let's begin",
+        "eyebrow": "",
         "title": "Create your speech, your way",
         "subtitle": "I'll ask a few quick questions and tailor your practice. Takes less than a minute."
       },
       "title": {
-        "eyebrow": "First, the basics",
+        "eyebrow": "",
         "title": "What should we call your speech?",
         "subtitle": "A short name to help you find it later."
       },
       "date": {
-        "eyebrow": "Set your deadline",
+        "eyebrow": "",
         "title": "When do you give the speech?",
         "subtitle": "We'll plan your practice schedule around this date."
       },
       "text": {
-        "eyebrow": "Your speech",
+        "eyebrow": "",
         "title": "Add your text",
-        "subtitle": "Paste, write, scan or build with AI — whichever feels easiest."
+        "subtitle": "Paste, write, take a photo or build with AI"
       },
       "familiarity": {
         "eyebrow": "Your starting point",
@@ -322,14 +322,14 @@
     "analyzingImage": "Analyzing image...",
     "languageDetected": "Language detected and UI updated",
     "buildWithAi": "Build with AI",
-    "scanDocument": "Scan",
+    "scanDocument": "Take photo",
     "uploadImage": "Photo",
     "retake": "Retake",
     "extractText": "Extract Text",
     "extracting": "Extracting...",
     "scanSuccess": "Text Extracted",
     "scanSuccessDesc": "The text has been added to your speech.",
-    "scanError": "Scan Failed",
+    "scanError": "Photo Failed",
     "scanErrorDesc": "Could not extract text from the image. Try again with a clearer photo.",
     "cameraError": "Camera Error",
     "cameraErrorDesc": "Could not access the camera. Please check permissions.",

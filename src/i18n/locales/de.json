@@ -219,24 +219,24 @@
       "creating": "Deine Rede wird erstellt…",
       "creatingDesc": "Wir gliedern, planen und stimmen deinen Plan ab.",
       "intro": {
-        "eyebrow": "Los geht's",
+        "eyebrow": "",
         "title": "Erstelle deine Rede, ganz nach dir",
         "subtitle": "Ich stelle dir ein paar kurze Fragen und passe das Üben an. Dauert weniger als eine Minute."
       },
       "title": {
-        "eyebrow": "Zuerst die Basics",
+        "eyebrow": "",
         "title": "Wie soll deine Rede heißen?",
         "subtitle": "Ein kurzer Name, damit du sie später wiederfindest."
       },
       "date": {
-        "eyebrow": "Setze deinen Termin",
+        "eyebrow": "",
         "title": "Wann hältst du die Rede?",
         "subtitle": "Wir planen dein Üben rund um dieses Datum."
       },
       "text": {
-        "eyebrow": "Deine Rede",
+        "eyebrow": "",
         "title": "Füge deinen Text hinzu",
-        "subtitle": "Einfügen, schreiben, scannen oder mit KI bauen — wie es dir leichter fällt."
+        "subtitle": "Einfügen, schreiben, fotografieren oder mit KI bauen"
       },
       "familiarity": {
         "eyebrow": "Dein Ausgangspunkt",
@@ -298,14 +298,14 @@
     },
     "autoDetectsLanguage": "Sprache wird automatisch erkannt",
     "analyzingImage": "Bild wird analysiert...",
-    "scanDocument": "Scannen",
+    "scanDocument": "Foto machen",
     "uploadImage": "Foto",
     "retake": "Neu aufnehmen",
     "extractText": "Text extrahieren",
     "extracting": "Wird extrahiert...",
     "scanSuccess": "Text extrahiert",
     "scanSuccessDesc": "Der Text wurde deiner Rede hinzugefügt.",
-    "scanError": "Scan fehlgeschlagen",
+    "scanError": "Foto fehlgeschlagen",
     "scanErrorDesc": "Text konnte nicht aus dem Bild extrahiert werden. Versuche es erneut mit einem klareren Foto.",
     "cameraError": "Kamerafehler",
     "cameraErrorDesc": "Es konnte nicht auf die Kamera zugegriffen werden. Bitte überprüfe die Berechtigungen.",
