@@ -183,10 +183,6 @@ input,textarea,select { font-family:var(--font-system); }
 .speech-row__footer .ui-button--apple { flex:0 1 auto; padding-left:0; padding-right:16px; background:transparent; color:hsl(var(--primary)); font-weight:500; }
 .speech-row__footer .ui-button--secondary { background:transparent; color:hsl(var(--muted-foreground)); }
 .dashboard__speeches { display:flex; flex-direction:column; flex:1; min-height:0; }
-.dashboard__loading { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:hsl(var(--muted-foreground)); font-size:14px; font-weight:600; }
-.dashboard__loading-spinner { width:36px; height:36px; border-radius:50%; border:3px solid hsl(var(--secondary)); border-top-color:hsl(var(--primary)); animation:dashboard-spin 0.9s linear infinite; }
-@keyframes dashboard-spin { to { transform:rotate(1turn); } }
-@media (prefers-reduced-motion: reduce) { .dashboard__loading-spinner { animation:none; } }
 .dashboard__empty { border:0; border-radius:0; box-shadow:none; background:transparent; flex:1; display:flex; align-items:center; justify-content:center; }
 .dashboard__empty > div { padding:0; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px; }
 .dashboard__empty p { margin-left:0; max-width:32ch; text-align:center; }
