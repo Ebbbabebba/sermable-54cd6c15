@@ -6,6 +6,12 @@ type Plugin = {
   addListener: (event: 'partialResults' | 'listeningState', callback: (data: { matches?: string[]; status?: string }) => void) => Promise<Listener>;
 };
 
+// iOS delivers the previous task's final callback shortly after stop().
+// Starting inside that window lets the stale callback switch the new mic off.
+const STOP_SETTLE_MS = 900;
+let lastPluginStopAt = 0;
+const wait = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
 // One restart owner: a native end event and a rejected start can describe the
 // same failure. Never let both open another audio session.
 export async function createNativeSpeechSession(plugin: Plugin, options: {
@@ -19,6 +25,7 @@ export async function createNativeSpeechSession(plugin: Plugin, options: {
   let starting = false;
   let listening = false;
   let failures = 0;
+  let startedAt = 0;
   let generation = 0;
   let restartTimer: ReturnType<typeof setTimeout> | undefined;
   let finals = '';
@@ -56,6 +63,9 @@ export async function createNativeSpeechSession(plugin: Plugin, options: {
     starting = true;
     const token = ++generation;
     try {
+      const settle = lastPluginStopAt + STOP_SETTLE_MS - Date.now();
+      if (settle > 0) await wait(settle);
+      if (disposed || token !== generation) return;
       const result = await plugin.start({ language: options.language, maxResults: 5, partialResults: true, popup: false });
       if (disposed || token !== generation) return;
       // The installed iOS plugin resolves start when capture starts, not when
@@ -82,6 +92,7 @@ export async function createNativeSpeechSession(plugin: Plugin, options: {
     // Detach before stopping: stopping itself emits another stopped event.
     await Promise.all(handles.map(handle => handle.remove().catch(() => {})));
     await plugin.stop().catch(() => {});
+    lastPluginStopAt = Date.now();
   };
 
   try {
@@ -94,8 +105,14 @@ export async function createNativeSpeechSession(plugin: Plugin, options: {
       if (disposed) return;
       if (data.status === 'started' || data.status === 'listening') {
         listening = true;
+        startedAt = Date.now();
         options.onReady(true);
       } else if (data.status === 'stopped') {
+        // iOS ends healthy tasks after silence or about a minute. Only quick
+        // back-to-back failures count toward giving up.
+        if (startedAt && Date.now() - startedAt > 3000) failures = 0;
+        startedAt = 0;
+        lastPluginStopAt = Date.now();
         listening = false;
         starting = false;
         generation++;

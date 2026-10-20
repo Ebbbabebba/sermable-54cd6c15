@@ -8,4 +8,5 @@
 - Use the shared `policy-document` class for legal articles with explicit heading, paragraph, and list styles; policy readability must not depend on a removed typography plugin.
 - Home overview components consume read-only cloud progress through `useSpeechOverview`; keep visual milestones separate from actual review scheduling so redesigns never overwrite learning dates.
 - Bundle the selected interface font locally via Fontsource imports; native offline app rendering must not depend on external font requests.
-- Own native practice recognition through `nativeSpeechSession`: serialize restarts, detach listeners before stopping, and trim pre-reset utterance prefixes so audio races cannot replay words or reopen a healthy microphone.
+- Own native practice recognition through `nativeSpeechSession`: serialize restarts, detach listeners before stopping, and trim pre-reset utterance prefixes so audio races cannot replay words or reopen a healthy microphone; wait for the previous iOS task to settle before starting again.
+- Patch the iOS speech plugin through `patches/` (applied by `patch-package` on install) so callbacks from an older recognition task cannot stop a newer microphone session.

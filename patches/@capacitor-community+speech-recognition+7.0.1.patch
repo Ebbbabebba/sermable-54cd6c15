@@ -1,0 +1,74 @@
+diff --git a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
+index 5d1b35b..de8dc5d 100644
+--- a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
++++ b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
+@@ -18,6 +18,9 @@ public class SpeechRecognition: CAPPlugin {
+     private var audioEngine: AVAudioEngine?
+     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+     private var recognitionTask: SFSpeechRecognitionTask?
++    // Sermable patch: every start owns a session id. Callbacks from an older,
++    // cancelled or ended task must never stop the microphone of a newer one.
++    private var sessionId: Int = 0
+ 
+     @objc func available(_ call: CAPPluginCall) {
+         guard let recognizer = SFSpeechRecognizer() else {
+@@ -55,10 +58,16 @@ public class SpeechRecognition: CAPPlugin {
+             let maxResults: Int = call.getInt("maxResults") ?? self.defaultMatches
+             let partialResults: Bool = call.getBool("partialResults") ?? false
+ 
++            self.sessionId += 1
++            let mySession = self.sessionId
+             if self.recognitionTask != nil {
+                 self.recognitionTask?.cancel()
+                 self.recognitionTask = nil
+             }
++            if let oldEngine = self.audioEngine {
++                oldEngine.stop()
++                oldEngine.inputNode.removeTap(onBus: 0)
++            }
+ 
+             self.audioEngine = AVAudioEngine.init()
+             self.speechRecognizer = SFSpeechRecognizer.init(locale: Locale(identifier: language))
+@@ -84,6 +93,7 @@ public class SpeechRecognition: CAPPlugin {
+             let format: AVAudioFormat = inputNode.outputFormat(forBus: 0)
+ 
+             self.recognitionTask = self.speechRecognizer?.recognitionTask(with: self.recognitionRequest!, resultHandler: { (result, error) in
++                if mySession != self.sessionId { return }
+                 if result != nil {
+                     let resultArray: NSMutableArray = NSMutableArray()
+                     var counter: Int = 0
+@@ -104,7 +114,8 @@ public class SpeechRecognition: CAPPlugin {
+                     }
+ 
+                     if result!.isFinal {
+-                        self.audioEngine!.stop()
++                        self.sessionId += 1
++                        self.audioEngine?.stop()
+                         self.audioEngine?.inputNode.removeTap(onBus: 0)
+                         self.notifyListeners("listeningState", data: ["status": "stopped"])
+                         self.recognitionTask = nil
+@@ -113,7 +124,9 @@ public class SpeechRecognition: CAPPlugin {
+                 }
+ 
+                 if error != nil {
+-                    self.audioEngine!.stop()
++                    if mySession != self.sessionId { return }
++                    self.sessionId += 1
++                    self.audioEngine?.stop()
+                     self.audioEngine?.inputNode.removeTap(onBus: 0)
+                     self.recognitionRequest = nil
+                     self.recognitionTask = nil
+@@ -142,8 +155,13 @@ public class SpeechRecognition: CAPPlugin {
+     @objc func stop(_ call: CAPPluginCall) {
+         DispatchQueue.global(qos: DispatchQoS.QoSClass.default).async {
+             if let engine = self.audioEngine, engine.isRunning {
++                self.sessionId += 1
+                 engine.stop()
++                engine.inputNode.removeTap(onBus: 0)
+                 self.recognitionRequest?.endAudio()
++                self.recognitionTask?.cancel()
++                self.recognitionTask = nil
++                self.recognitionRequest = nil
+                 self.notifyListeners("listeningState", data: ["status": "stopped"])
+             }
+             call.resolve()

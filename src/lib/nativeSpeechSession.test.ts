@@ -29,7 +29,7 @@ test('duplicate stop events schedule only one microphone restart', async () => {
   await session.start();
   fake.callbacks.get('listeningState')?.({ status: 'stopped' });
   fake.callbacks.get('listeningState')?.({ status: 'stopped' });
-  await wait(760);
+  await wait(1000);
   assert.equal(fake.starts(), 2);
   await session.stop();
 });
@@ -40,7 +40,7 @@ test('stopping cancels restart and removes callbacks before releasing microphone
   await session.start();
   fake.callbacks.get('listeningState')?.({ status: 'stopped' });
   await session.stop();
-  await wait(760);
+  await wait(1000);
   assert.equal(fake.starts(), 1);
   assert.equal(fake.callbacks.size, 0);
   assert.equal(fake.stops(), 1);
@@ -65,7 +65,21 @@ test('already-listening start failure never toggles a healthy microphone', async
   fake.plugin.start = async () => { throw new Error('already listening'); };
   const session = await createNativeSpeechSession(fake.plugin, options());
   await session.start();
-  await wait(760);
+  await wait(1000);
   assert.equal(fake.stops(), 0);
+  await session.stop();
+});
+test('a new microphone waits for the previous iOS task to settle after stop', async () => {
+  const first = fakePlugin();
+  const old = await createNativeSpeechSession(first.plugin, options());
+  await old.start();
+  await old.stop();
+  const fake = fakePlugin();
+  const session = await createNativeSpeechSession(fake.plugin, options());
+  void session.start();
+  await wait(400);
+  assert.equal(fake.starts(), 0);
+  await wait(700);
+  assert.equal(fake.starts(), 1);
   await session.stop();
 });
