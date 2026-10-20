@@ -551,7 +551,8 @@ const Dashboard = () => {
           {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.progress')}</h1><StatsCards streak={currentStreak} />{speeches.map(sp => <SpeechProgress key={sp.id} speech={sp} beats={overview.beats.filter(b => b.speech_id === sp.id)} sessions={overview.sessions.filter(x => x.speech_id === sp.id)} />)}</section>}
 
           {/* Speeches Section */}
-          <section hidden={activeTab === 'stats' || (activeTab === 'home' && speeches.length > 0)}>
+          <section className="dashboard__speeches" hidden={activeTab === 'stats' || (activeTab === 'home' && speeches.length > 0)}>
+            {speeches.length > 0 && (
             <div className="dashboard__section-heading">
               <div>
                 <h1 className="s-vi s-d3 s-u9">{t('playful.mySpeeches')}</h1>
