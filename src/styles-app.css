@@ -150,6 +150,9 @@ input,textarea,select { font-family:var(--font-system); }
 [role="dialog"],[role="alertdialog"] { box-shadow:var(--shadow-lg); }
 .dashboard { position:fixed; inset:0; height:100dvh; display:flex; flex-direction:column; overflow:hidden; overscroll-behavior:none; }
 .dashboard__header { flex-shrink:0; background:hsl(var(--background)); border-bottom:1px solid hsl(var(--border)); }
+/* The HTML hidden attribute must win over component display rules. */
+[hidden]:where(:not([hidden="until-found"])) { display: none !important; }
+
 .dashboard__toolbar { max-width:48rem; min-height:56px; margin:0; padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .dashboard__brand { font-size:17px; font-weight:600; }
 .dashboard__header .ui-button--apple { background:transparent; color:hsl(var(--foreground)); }
