@@ -26,12 +26,12 @@
     "noBeats": "Your beats appear after your first practice.",
     "beatCount": "{{count}} of {{total}} beats completed",
     "daysUnit": "days",
-    "hello": "Hi there! 👋",
+    "hello": "Hi there!",
     "mascot": {
       "nervous": "Let's take it beat by beat!",
       "learning": "You're getting there – keep going!",
       "confident": "Looking confident – almost there!",
-      "ready": "You're ready to shine! ⭐"
+      "ready": "You're ready to shine!"
     },
     "todayTitle": "To practise today",
     "allDone": "All done for today!",
@@ -351,7 +351,7 @@
       "general": "General"
     },
     "deadlineWarning": {
-      "critical": "⚠️ Tight Deadline Warning",
+      "critical": " Tight Deadline Warning",
       "challenging": "Intensive Practice Required",
       "tight": "⏰ Stay Consistent"
     },
@@ -691,7 +691,7 @@
     "emailSupport": "Email Support",
     "frequentlyAsked": "Frequently Asked Questions",
     "troubleshootingTitle": "Troubleshooting",
-    "madeWithLove": "Made with ❤️ for speakers everywhere",
+    "madeWithLove": "Made with for speakers everywhere",
     "categories": {
       "gettingStarted": "Getting Started",
       "practice": "Practice Mode",
@@ -1306,8 +1306,8 @@
     "getPremium": "Get Premium",
     "restore": "Restore purchases",
     "restoring": "Restoring purchases…",
-    "premiumRestored": "✅ Premium restored!",
-    "welcomePremium": "✅ Welcome to Premium!",
+    "premiumRestored": " Premium restored!",
+    "welcomePremium": " Welcome to Premium!",
     "subActive": "Your subscription is now active.",
     "payReceivedNotUpgraded": "Payment received but account not yet upgraded. Please tap 'Restore purchases'.",
     "verificationFailed": "Purchase verification failed",

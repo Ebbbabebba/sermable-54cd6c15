@@ -26,12 +26,12 @@
     "noBeats": "Vos passages apparaîtront après la première séance.",
     "beatCount": "{{count}} passages terminés sur {{total}}",
     "daysUnit": "jours",
-    "hello": "Salut ! 👋",
+    "hello": "Salut !",
     "mascot": {
       "nervous": "On avance beat par beat !",
       "learning": "Ça progresse – continue !",
       "confident": "Tu as l'air sûr de toi – presque !",
-      "ready": "Tu es prêt à briller ! ⭐"
+      "ready": "Tu es prêt à briller !"
     },
     "todayTitle": "À pratiquer aujourd'hui",
     "allDone": "Tout est fait pour aujourd'hui !",
@@ -327,7 +327,7 @@
       "general": "Général"
     },
     "deadlineWarning": {
-      "critical": "⚠️ Attention : délai très court",
+      "critical": " Attention : délai très court",
       "challenging": "Pratique intensive requise",
       "tight": "⏰ Restez constant"
     },
@@ -807,7 +807,7 @@
     "analyzingShort": "Analyse...",
     "pressToStart": "Appuyez sur le bouton pour commencer",
     "speechAppearSentence": "Votre discours apparaîtra phrase par phrase",
-    "tryToSayIt": "💭 Essayez de le dire...",
+    "tryToSayIt": " Essayez de le dire...",
     "backToModeSelection": "Retour à la sélection du mode",
     "strictModeLabel": "Mode strict",
     "wordsCount": "{{count}} mots",
@@ -1027,7 +1027,7 @@
     "emailSupport": "Assistance par e-mail",
     "frequentlyAsked": "Foire aux questions",
     "troubleshootingTitle": "Dépannage",
-    "madeWithLove": "Fait avec ❤️ pour les orateurs du monde entier",
+    "madeWithLove": "Fait avec pour les orateurs du monde entier",
     "categories": {
       "gettingStarted": "Démarrer",
       "practice": "Mode Pratique",
@@ -1324,8 +1324,8 @@
     "getPremium": "Obtenir Premium",
     "restore": "Restaurer les achats",
     "restoring": "Restauration des achats…",
-    "premiumRestored": "✅ Premium restauré !",
-    "welcomePremium": "✅ Bienvenue dans Premium !",
+    "premiumRestored": " Premium restauré !",
+    "welcomePremium": " Bienvenue dans Premium !",
     "subActive": "Votre abonnement est maintenant actif.",
     "payReceivedNotUpgraded": "Paiement reçu mais compte pas encore mis à niveau. Appuyez sur « Restaurer les achats ».",
     "verificationFailed": "Échec de la vérification de l'achat",

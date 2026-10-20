@@ -220,7 +220,7 @@ const AccountSettings = () => {
               <div className="s-c5 s-ib s-dn s-mv s-qh s-4w s-6l s-7d s-2y">
                 <CheckCircle2 className="s-g1 s-xv s-ud s-r5" />
                 <p className="s-v9 s-d0 s-ue s-8s">
-                  {t('settings.account.passwordChanged', 'Your password has been updated')} ✓
+                  {t('settings.account.passwordChanged', 'Your password has been updated')}
                 </p>
               </div>
             )}

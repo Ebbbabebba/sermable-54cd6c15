@@ -26,12 +26,12 @@
     "noBeats": "I brani appariranno dopo la prima sessione.",
     "beatCount": "{{count}} brani completati su {{total}}",
     "daysUnit": "giorni",
-    "hello": "Ciao! 👋",
+    "hello": "Ciao!",
     "mascot": {
       "nervous": "Andiamo un beat alla volta!",
       "learning": "Stai migliorando, continua!",
       "confident": "Sembri sicuro, ci sei quasi!",
-      "ready": "Sei pronto a brillare! ⭐"
+      "ready": "Sei pronto a brillare!"
     },
     "todayTitle": "Da esercitare oggi",
     "allDone": "Tutto fatto per oggi!",
@@ -327,7 +327,7 @@
       "general": "Generale"
     },
     "deadlineWarning": {
-      "critical": "⚠️ Avviso Scadenza Ravvicinata",
+      "critical": " Avviso Scadenza Ravvicinata",
       "challenging": "Pratica intensiva richiesta",
       "tight": "⏰ Sii costante"
     },
@@ -807,7 +807,7 @@
     "analyzingShort": "Analisi...",
     "pressToStart": "Premi il pulsante per iniziare",
     "speechAppearSentence": "Il tuo discorso apparirà frase per frase",
-    "tryToSayIt": "💭 Prova a dirlo...",
+    "tryToSayIt": " Prova a dirlo...",
     "backToModeSelection": "Torna alla selezione modalità",
     "strictModeLabel": "Modalità rigorosa",
     "wordsCount": "{{count}} parole",
@@ -1027,7 +1027,7 @@
     "emailSupport": "Supporto Email",
     "frequentlyAsked": "Domande Frequenti",
     "troubleshootingTitle": "Risoluzione Problemi",
-    "madeWithLove": "Realizzato con ❤️ per tutti gli oratori",
+    "madeWithLove": "Realizzato con per tutti gli oratori",
     "categories": {
       "gettingStarted": "Per Iniziare",
       "practice": "Modalità Pratica",
@@ -1324,8 +1324,8 @@
     "getPremium": "Ottieni Premium",
     "restore": "Ripristina acquisti",
     "restoring": "Ripristino acquisti…",
-    "premiumRestored": "✅ Premium ripristinato!",
-    "welcomePremium": "✅ Benvenuto in Premium!",
+    "premiumRestored": " Premium ripristinato!",
+    "welcomePremium": " Benvenuto in Premium!",
     "subActive": "Il tuo abbonamento è ora attivo.",
     "payReceivedNotUpgraded": "Pagamento ricevuto ma account non ancora aggiornato. Tocca \"Ripristina acquisti\".",
     "verificationFailed": "Verifica dell'acquisto fallita",
