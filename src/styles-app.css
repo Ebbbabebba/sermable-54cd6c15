@@ -150,11 +150,11 @@ input,textarea,select { font-family:var(--font-system); }
 [role="dialog"],[role="alertdialog"] { box-shadow:var(--shadow-lg); }
 .dashboard { position:fixed; inset:0; height:100dvh; display:flex; flex-direction:column; overflow:hidden; overscroll-behavior:none; }
 .dashboard__header { flex-shrink:0; background:hsl(var(--background)); border-bottom:1px solid hsl(var(--border)); }
-.dashboard__toolbar { max-width:48rem; min-height:56px; margin:0 auto; padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.dashboard__toolbar { max-width:48rem; min-height:56px; margin:0; padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .dashboard__brand { font-size:17px; font-weight:600; }
 .dashboard__header .ui-button--apple { background:transparent; color:hsl(var(--foreground)); }
 .dashboard__main { flex:1; min-height:0; display:flex; flex-direction:column; overflow-y:auto; padding:24px 24px calc(env(safe-area-inset-bottom,0px) + 32px); }
-.dashboard__content { flex:1; min-height:0; max-width:48rem; margin:0 auto; display:flex; flex-direction:column; gap:28px; }
+.dashboard__content { flex:1; min-height:0; width:100%; max-width:48rem; align-self:stretch; margin:0; display:flex; flex-direction:column; gap:28px; }
 .dashboard__greeting:empty { display:none; }
 .dashboard__greeting h1 { font-size:28px; line-height:1.2; font-weight:600; }
 .dashboard__greeting p:first-child { text-transform:none; margin-bottom:8px; }
