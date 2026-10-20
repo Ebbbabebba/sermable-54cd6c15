@@ -116,11 +116,11 @@ export default function KeycardDesigner() {
         const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
         const g = cv.getContext("2d")!;
         g.fillStyle = bg; g.fillRect(0, 0, W, H);
-        g.fillStyle = ac; g.font = "800 34px Nunito, sans-serif";
+        g.fillStyle = ac; g.font = "800 34px Figtree, sans-serif";
         g.fillText("SERM", 40, 70); g.fillText("ABLE", 40, 106);
-        g.fillStyle = fg; g.globalAlpha = 0.7; g.font = "600 20px Nunito, sans-serif"; g.textAlign = "right";
+        g.fillStyle = fg; g.globalAlpha = 0.7; g.font = "600 20px Figtree, sans-serif"; g.textAlign = "right";
         g.fillText(c.label, W - 40, 70); g.fillText(`${i + 1}/${cards.length}`, W - 40, 98); g.globalAlpha = 1; g.textAlign = "left";
-        g.font = `800 ${W * FS}px Nunito, sans-serif`; g.textBaseline = "top";
+        g.font = `800 ${W * FS}px Figtree, sans-serif`; g.textBaseline = "top";
         c.words.filter((w) => w.kept).forEach((w) => {
           g.fillStyle = w.hard ? tok("--bubblegum-foreground") : fg;
           g.fillText(w.w, w.x * W, w.y * H);

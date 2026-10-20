@@ -32,7 +32,7 @@
   --info: var(--primary);
   --info-foreground: var(--primary-foreground);
   --radius: 1.5rem;
-  --font-system: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-system: 'Figtree', -apple-system, BlinkMacSystemFont, sans-serif;
   --shadow-sm: 0 4px 14px hsl(204 60% 50% / 0.08);
   --shadow-md: 0 8px 24px hsl(204 60% 50% / 0.1);
   --shadow-lg: 0 12px 36px hsl(204 60% 50% / 0.15);

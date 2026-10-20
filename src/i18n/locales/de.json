@@ -26,12 +26,12 @@
     "noBeats": "Deine Abschnitte erscheinen nach der ersten Übung.",
     "beatCount": "{{count}} von {{total}} Abschnitten abgeschlossen",
     "daysUnit": "Tage",
-    "hello": "Hallo! 👋",
+    "hello": "Hallo!",
     "mascot": {
       "nervous": "Wir gehen es Beat für Beat an!",
       "learning": "Es wird – mach weiter so!",
       "confident": "Du klingst sicher – fast geschafft!",
-      "ready": "Du bist bereit zu glänzen! ⭐"
+      "ready": "Du bist bereit zu glänzen!"
     },
     "todayTitle": "Heute üben",
     "allDone": "Für heute alles erledigt!",
@@ -327,7 +327,7 @@
       "general": "Allgemein"
     },
     "deadlineWarning": {
-      "critical": "⚠️ Warnung: knappe Frist",
+      "critical": " Warnung: knappe Frist",
       "challenging": "Intensive Übung erforderlich",
       "tight": "⏰ Bleib dran"
     },
@@ -807,7 +807,7 @@
     "analyzingShort": "Analyse...",
     "pressToStart": "Drücke den Knopf zum Starten",
     "speechAppearSentence": "Deine Rede erscheint Satz für Satz",
-    "tryToSayIt": "💭 Versuch es zu sagen...",
+    "tryToSayIt": " Versuch es zu sagen...",
     "backToModeSelection": "Zurück zur Modusauswahl",
     "strictModeLabel": "Strenger Modus",
     "wordsCount": "{{count}} Wörter",
@@ -1027,7 +1027,7 @@
     "emailSupport": "E-Mail-Support",
     "frequentlyAsked": "Häufig gestellte Fragen",
     "troubleshootingTitle": "Fehlerbehebung",
-    "madeWithLove": "Mit ❤️ für Redner überall gemacht",
+    "madeWithLove": "Mit für Redner überall gemacht",
     "categories": {
       "gettingStarted": "Erste Schritte",
       "practice": "Übungsmodus",
@@ -1324,8 +1324,8 @@
     "getPremium": "Premium holen",
     "restore": "Käufe wiederherstellen",
     "restoring": "Käufe werden wiederhergestellt…",
-    "premiumRestored": "✅ Premium wiederhergestellt!",
-    "welcomePremium": "✅ Willkommen bei Premium!",
+    "premiumRestored": " Premium wiederhergestellt!",
+    "welcomePremium": " Willkommen bei Premium!",
     "subActive": "Dein Abo ist jetzt aktiv.",
     "payReceivedNotUpgraded": "Zahlung erhalten, aber Konto noch nicht aktualisiert. Tippe auf „Käufe wiederherstellen\".",
     "verificationFailed": "Kaufverifizierung fehlgeschlagen",
