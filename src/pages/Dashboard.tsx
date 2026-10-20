@@ -551,7 +551,8 @@ const Dashboard = () => {
           {activeTab === 'stats' && <section className="home-statistics"><h1>{t('playful.progress')}</h1><StatsCards streak={currentStreak} />{speeches.map(sp => <SpeechProgress key={sp.id} speech={sp} beats={overview.beats.filter(b => b.speech_id === sp.id)} sessions={overview.sessions.filter(x => x.speech_id === sp.id)} />)}</section>}
 
           {/* Speeches Section */}
-          <section hidden={activeTab === 'stats' || (activeTab === 'home' && speeches.length > 0)}>
+          <section className="dashboard__speeches" hidden={activeTab === 'stats' || (activeTab === 'home' && speeches.length > 0)}>
+            {speeches.length > 0 && (
             <div className="dashboard__section-heading">
               <div>
                 <h1 className="s-vi s-d3 s-u9">{t('playful.mySpeeches')}</h1>
@@ -586,19 +587,13 @@ const Dashboard = () => {
                 </DropdownMenu>
               </div>
             </div>
+            )}
+
 
             {loading ? (
-              <div className="s-c5 s-c7 s-dr">
-                {[1, 2, 3].map(i => (
-                  <Card key={i} className="s-6l s-71 s-r3 s-30">
-                    <CardContent className="s-my s-t1">
-                      <div className="s-g1 s-50 s-q8 s-xr" />
-                      <div className="s-fz s-50 s-q8 s-xe" />
-                      <div className="s-fw s-50 s-q8 s-y7" />
-                      <div className="s-fw s-50 s-q8 s-xm" />
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="dashboard__loading" role="status" aria-live="polite">
+                <span className="dashboard__loading-spinner" aria-hidden="true" />
+                <p>{t('common.loading')}</p>
               </div>
             ) : speeches.length === 0 ? (
               <Card className="dashboard__empty">
