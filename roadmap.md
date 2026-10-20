@@ -4,6 +4,7 @@
 
 - [x] Ta bort konkurrerande omstarter och gamla mikrofonresultat
 - [x] Testa ordmarkering med simulerade röstresultat och avslut i inloggad övning; fyra mikrofontester passerar
+- [x] Stoppa att gamla iOS-lyssningar stänger av den nya mikrofonen (av/på-loopen)
 - [ ] Bekräfta verkligt mikrofonljud på iPhone/iPad (kräver fysisk enhet)
 
 ## Klart: Lekfull mobilförnyelse
