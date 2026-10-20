@@ -1,5 +1,11 @@
 # Roadmap
 
+## Pågående: Stabil mikrofon i övning
+
+- [ ] Ta bort konkurrerande omstarter och gamla mikrofonresultat
+- [ ] Testa ordmarkering och avslut i övning
+- [ ] Bekräfta verkligt mikrofonljud på iPhone/iPad (kräver fysisk enhet)
+
 ## Klart: Lekfull mobilförnyelse
 
 - [x] Pastellfärger, Nunito och delade kort-/knappstilar
