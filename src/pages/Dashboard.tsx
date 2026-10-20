@@ -588,17 +588,9 @@ const Dashboard = () => {
             </div>
 
             {loading ? (
-              <div className="s-c5 s-c7 s-dr">
-                {[1, 2, 3].map(i => (
-                  <Card key={i} className="s-6l s-71 s-r3 s-30">
-                    <CardContent className="s-my s-t1">
-                      <div className="s-g1 s-50 s-q8 s-xr" />
-                      <div className="s-fz s-50 s-q8 s-xe" />
-                      <div className="s-fw s-50 s-q8 s-y7" />
-                      <div className="s-fw s-50 s-q8 s-xm" />
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="dashboard__loading" role="status" aria-live="polite">
+                <span className="dashboard__loading-spinner" aria-hidden="true" />
+                <p>{t('common.loading')}</p>
               </div>
             ) : speeches.length === 0 ? (
               <Card className="dashboard__empty">
