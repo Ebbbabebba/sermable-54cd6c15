@@ -2,8 +2,8 @@
 
 ## Pågående: Stabil mikrofon i övning
 
-- [ ] Ta bort konkurrerande omstarter och gamla mikrofonresultat
-- [ ] Testa ordmarkering och avslut i övning
+- [x] Ta bort konkurrerande omstarter och gamla mikrofonresultat
+- [x] Testa ordmarkering med simulerade röstresultat och avslut i inloggad övning; fyra mikrofontester passerar
 - [ ] Bekräfta verkligt mikrofonljud på iPhone/iPad (kräver fysisk enhet)
 
 ## Klart: Lekfull mobilförnyelse
