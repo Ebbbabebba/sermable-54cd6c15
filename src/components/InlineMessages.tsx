@@ -48,6 +48,9 @@ export function pushMessage(
       variant: (input?.variant as InlineVariant) ?? opts?.variant ?? "default",
     };
   }
+  // Confirmation pop-ups ("Tal skapat", "Klart!") are deliberately not shown;
+  // only genuine problems (variant "error") interrupt the user.
+  if (msg.variant !== "error") return msg.id;
   messages = [...messages.filter((m) => m.id !== msg.id), msg].slice(-4);
   emit();
   const duration = opts?.duration ?? (msg.variant === "error" ? 6000 : 4000);
