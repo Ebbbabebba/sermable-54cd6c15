@@ -1,4 +1,5 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { MotionConfig } from "framer-motion";
 import InlineMessages from "@/components/InlineMessages";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
+    <MotionConfig reducedMotion="user" transition={{ duration: 0.18, ease: "easeOut" }}>
     <div className="app-typography s-ky s-3v">
       <Suspense fallback={null}>
         <SuspenseProbe onReady={() => setContentReady(true)} />
@@ -31,6 +33,7 @@ const SmoothSuspense = ({ children }: { children: React.ReactNode }) => {
       </Suspense>
       <LoadingOverlay isVisible={showOverlay && !contentReady} />
     </div>
+    </MotionConfig>
   );
 };
 
