@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface WordState {
   text: string;
@@ -98,7 +98,6 @@ const SentenceDisplay = ({
         <motion.span
           key={`${index}-pause`}
           ref={state.isCurrent ? currentWordRef : undefined}
-          layout="position"
           initial={false}
           animate={{
             opacity: state.isSpoken ? 0.4 : 1,
@@ -109,7 +108,6 @@ const SentenceDisplay = ({
             scale: state.isCurrent && !state.isSpoken
               ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.25 },
-            layout: { duration: 0.3, ease: "easeInOut" },
           }}
           className={cn(
             "s-i4 s-ib s-ig s-m4 s-or s-ox s-qe s-tw align-middle",
@@ -174,10 +172,8 @@ const SentenceDisplay = ({
           key={`${index}-hidden`}
           ref={state.isCurrent ? currentWordRef : undefined}
           onClick={() => onWordTap?.(index)}
-          layout="position"
           animate={state.isCurrent ? { scale: [1, 1.08, 1] } : { scale: 1 }}
           transition={{
-            layout: { duration: 0.3, ease: "easeInOut" },
             scale: state.isCurrent
               ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.25 },
@@ -199,17 +195,14 @@ const SentenceDisplay = ({
       <motion.span
         key={`${index}-visible`}
         ref={state.isCurrent ? currentWordRef : undefined}
-        layout="position"
         initial={false}
         animate={{
           opacity: state.isSpoken ? 0.35 : 1,
           scale: state.isCurrent && !state.isSpoken ? 1.03 : 1,
-          y: 0,
         }}
         transition={{
           opacity: { duration: 0.7, ease: "easeInOut" },
           scale: { duration: 0.3, ease: "easeInOut" },
-          layout: { duration: 0.3, ease: "easeInOut" },
         }}
         className={cn(
           "practice-word s-i3 s-m3 s-ol s-ox s-q8 s-ws s-bo",
@@ -244,16 +237,12 @@ const SentenceDisplay = ({
 
 
   return (
-    <LayoutGroup>
-      <div
-        ref={containerRef}
-        className="practice-reading-text s-vi s-kj s-iy s-ip s-u0 s-my s-qq"
-      >
-        <AnimatePresence mode="sync">
-          {words.map((_, index) => renderWord(index))}
-        </AnimatePresence>
-      </div>
-    </LayoutGroup>
+    <div
+      ref={containerRef}
+      className="practice-reading-text s-vi s-kj s-iy s-ip s-u0 s-my s-qq"
+    >
+      {words.map((_, index) => renderWord(index))}
+    </div>
   );
 };
 
