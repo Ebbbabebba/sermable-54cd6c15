@@ -781,7 +781,8 @@
     "full_beat_title": "Tutta la parte insieme",
     "full_beat_explainer": "Ora di' tutte le frasi di seguito, dall'inizio, a memoria.",
     "full_beat_from_start": "Dall'inizio — tutta la parte",
-    "loading_slow": "Ci sta mettendo più del solito."
+    "loading_slow": "Ci sta mettendo più del solito.",
+    "audience_continue": "Continua"
   },
   "presentation": {
     "settings": "Impostazioni presentazione",
