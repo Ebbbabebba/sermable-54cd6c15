@@ -354,6 +354,10 @@ input,textarea,select { font-family:var(--font-system); }
 .practice-word--hesitated { background:hsl(var(--sun)); color:hsl(var(--sun-foreground)); border-color:hsl(var(--sun)); }
 .practice-word--missed { background:hsl(var(--bubblegum)); color:hsl(var(--bubblegum-foreground)); border-color:hsl(var(--bubblegum)); }
 .practice-word--hidden { background:hsl(var(--card)); }
+/* The word the speaker should say right now — an unmistakable blue ring and
+   tint. Box-shadow (not border) so the chip never shifts size when the
+   marker moves to the next word. */
+.practice-word--current { background:hsl(var(--primary)/0.15); box-shadow:0 0 0 2px hsl(var(--primary)), var(--shadow-sm); }
 .practice-listening { display:flex; align-items:center; gap:8px; color:hsl(var(--accent-foreground)); font-weight:700; font-size:13px; padding:10px 16px; background:hsl(var(--card)); border-radius:24px; }
 .practice-listening::before { content:''; width:10px; height:10px; background:hsl(var(--primary)); border-radius:50%; animation:review-pulse 1.5s infinite; }
 .feedback-card > div:first-child { padding:24px; }

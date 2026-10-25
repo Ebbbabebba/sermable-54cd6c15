@@ -52,14 +52,20 @@ const SentenceDisplay = ({
   const pulseIndex = currentWordIndex;
 
 
-  // Auto-scroll to the pulsing word with smooth behavior
+  // Auto-scroll to the pulsing word — but only when it is actually out of
+  // view. Re-centering on every word made the whole card jump around while
+  // the speaker was reading.
   useEffect(() => {
-    if (currentWordRef.current && containerRef.current) {
-      currentWordRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'center',
-      });
+    const el = currentWordRef.current;
+    const container = containerRef.current;
+    if (!el || !container) return;
+    const er = el.getBoundingClientRect();
+    const cr = container.getBoundingClientRect();
+    const outOfView =
+      er.top < cr.top || er.bottom > cr.bottom ||
+      er.left < cr.left || er.right > cr.right;
+    if (outOfView) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
   }, [pulseIndex]);
 
@@ -210,8 +216,9 @@ const SentenceDisplay = ({
           state.isHesitated && "practice-word--hesitated",
           // Prop-cue background — soft warm highlight on the wrapped sequence
           propCueIndices?.has(index + wordIndexOffset) && "s-3o",
-          // Subtle marker for current word (blue pulse)
-          state.isCurrent && !state.isSpoken && "s-pd s-uw s-d0 s-5e s-6w s-7t",
+          // Clear marker for the current word — a distinct blue ring and
+          // tint so there is no doubt about which word to say next.
+          state.isCurrent && !state.isSpoken && "practice-word--current s-pd s-uw s-d0",
           // Spoken word gets muted styling (gray)
           state.isSpoken && "s-un",
           // NOTE: Visible words never turn red (per project rule). Red is reserved
@@ -221,16 +228,6 @@ const SentenceDisplay = ({
         )}
       >
         {state.text}
-        {/* Subtle pulse indicator for current word */}
-        {state.isCurrent && !state.isSpoken && (
-          <motion.span
-            className="s-26 -bottom-2 s-iu s-xd s-fm s-qe s-5c"
-            initial={{ opacity: 0.6, scale: 0.8 }}
-            animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transform: 'translateX(-50%)' }}
-          />
-        )}
       </motion.span>
     );
   };
