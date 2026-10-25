@@ -4261,13 +4261,18 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return stripPropCueMarkers(text);
   }, [audienceVisible, words, pauseWordMeta]);
 
-  // Let a stuck speaker move on: count the sentence as spoken and run the
-  // normal completion path so scheduling and phase transitions stay intact.
+  // Let a stuck speaker move on — but honestly. The rep counts as a failed
+  // attempt (every unspoken word is marked as missed), so the words are
+  // revealed again and the phase does NOT advance until the user actually
+  // says the sentence. This keeps scheduling and mastery truthful.
   const continueFromAudience = () => {
-    freshMatchesThisRepRef.current = Math.max(freshMatchesThisRepRef.current, words.length);
     const all = new Set(words.map((_, i) => i));
+    const failed = new Set<number>();
+    words.forEach((_, i) => {
+      if (!pauseWordMeta.has(i) && !spokenIndicesRef.current.has(i)) failed.add(i);
+    });
     setSpokenIndices(all);
-    checkCompletion(all);
+    checkCompletion(all, failed);
   };
 
   if (loading) {
