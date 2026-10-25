@@ -98,7 +98,6 @@ const SentenceDisplay = ({
         <motion.span
           key={`${index}-pause`}
           ref={state.isCurrent ? currentWordRef : undefined}
-          layout="position"
           initial={false}
           animate={{
             opacity: state.isSpoken ? 0.4 : 1,
@@ -109,7 +108,6 @@ const SentenceDisplay = ({
             scale: state.isCurrent && !state.isSpoken
               ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.25 },
-            layout: { duration: 0.3, ease: "easeInOut" },
           }}
           className={cn(
             "s-i4 s-ib s-ig s-m4 s-or s-ox s-qe s-tw align-middle",
