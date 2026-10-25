@@ -4229,6 +4229,16 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setAudienceCelebrating(true);
     if (audienceHideTimerRef.current) clearTimeout(audienceHideTimerRef.current);
     audienceHideTimerRef.current = setTimeout(() => setAudienceCelebrating(false), 1800);
+    // The speaker said the whole hidden sentence — make sure the rep actually
+    // completes so the NEXT sentence shows after the animals. Auto-advanced
+    // words (hesitation timeouts) can leave the fresh-speech gate below its
+    // threshold and silently block the automatic completion, which left the
+    // same sentence on screen after the celebration.
+    if (!showCelebration && audienceEligible && audienceProgress >= 1) {
+      freshMatchesThisRepRef.current = Math.max(freshMatchesThisRepRef.current, words.length);
+      lastCompletionAtRef.current = 0;
+      checkCompletion(new Set(words.map((_, i) => i)));
+    }
   }, [showCelebration, audienceEligible, audienceProgress, audienceCelebrating]);
   useEffect(() => {
     if (!audienceEligible && !showCelebration) audienceWasEligibleRef.current = false;
