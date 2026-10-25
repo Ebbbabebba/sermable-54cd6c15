@@ -867,7 +867,8 @@
     "full_beat_title": "The whole part together",
     "full_beat_explainer": "Now say all the sentences in a row, from the start, from memory.",
     "full_beat_from_start": "From the start — the whole part",
-    "loading_slow": "This is taking longer than usual."
+    "loading_slow": "This is taking longer than usual.",
+    "audience_continue": "Continue"
   },
   "day_after_recall": {
     "title": "Day-After Recall",

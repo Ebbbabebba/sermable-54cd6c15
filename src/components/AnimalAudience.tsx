@@ -12,6 +12,14 @@ interface AnimalAudienceProps {
   promptLabel?: string;
   /** Called when the user taps the exit marker. */
   onExit?: () => void | Promise<void>;
+  /** The sentence text, revealed after a short silence so a stuck speaker can peek. */
+  hintText?: string;
+  /** Show a "continue" button that lets a stuck speaker move on. */
+  showContinue?: boolean;
+  /** Label for the continue button. */
+  continueLabel?: string;
+  /** Called when the user taps the continue button. */
+  onContinue?: () => void;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
@@ -177,7 +185,7 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
   );
 };
 
-const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit, hintText, showContinue = false, continueLabel, onContinue }: AnimalAudienceProps) => {
   const trio = useMemo(() => {
     const base = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return [0, 1, 2].map(o => ANIMALS[(base + o * 2) % ANIMALS.length]);
@@ -208,6 +216,11 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
       <p style={{ fontSize: 20, fontWeight: 600, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 420 }}>
         {done && doneLabel ? doneLabel : promptLabel}
       </p>
+      {hintText && !done && (
+        <p style={{ fontSize: 17, lineHeight: 1.5, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 480, background: "hsl(var(--muted))", borderRadius: 16, padding: "12px 18px" }}>
+          {hintText}
+        </p>
+      )}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, width: "100%", maxWidth: 560 }}>
         {trio.map((a, i) => (
           <div
@@ -232,6 +245,15 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
           <div style={{ width: `${mood * 100}%`, height: "100%", background: "hsl(var(--primary))", transition: "width 250ms ease" }} />
         </div>
       </div>
+      {showContinue && !done && onContinue && (
+        <button
+          type="button"
+          onClick={onContinue}
+          style={{ padding: "12px 28px", borderRadius: 999, border: 0, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", fontSize: 17, fontWeight: 700, cursor: "pointer" }}
+        >
+          {continueLabel ?? "Continue"}
+        </button>
+      )}
     </div>
   );
 };

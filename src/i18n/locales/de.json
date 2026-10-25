@@ -781,7 +781,8 @@
     "full_beat_title": "Der ganze Abschnitt zusammen",
     "full_beat_explainer": "Sprich jetzt alle Sätze nacheinander, von Anfang an, aus dem Gedächtnis.",
     "full_beat_from_start": "Von Anfang an — der ganze Abschnitt",
-    "loading_slow": "Das dauert länger als gewöhnlich."
+    "loading_slow": "Das dauert länger als gewöhnlich.",
+    "audience_continue": "Weiter"
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",
