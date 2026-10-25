@@ -4234,6 +4234,42 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (!audienceEligible && !showCelebration) audienceWasEligibleRef.current = false;
   }, [audienceEligible, showCelebration]);
 
+  // Stuck-speaker rescue: after ~2s of silence while the audience is up,
+  // reveal the sentence; after a while longer, offer a "continue" button.
+  const [audienceIdleLevel, setAudienceIdleLevel] = useState<0 | 1 | 2>(0);
+  const audienceIdleHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const audienceIdleContinueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (audienceIdleHintTimerRef.current) clearTimeout(audienceIdleHintTimerRef.current);
+    if (audienceIdleContinueTimerRef.current) clearTimeout(audienceIdleContinueTimerRef.current);
+    setAudienceIdleLevel(0);
+    if (!audienceVisible || audienceCelebrating) return;
+    audienceIdleHintTimerRef.current = setTimeout(() => setAudienceIdleLevel(1), 2000);
+    audienceIdleContinueTimerRef.current = setTimeout(() => setAudienceIdleLevel(2), 9000);
+    return () => {
+      if (audienceIdleHintTimerRef.current) clearTimeout(audienceIdleHintTimerRef.current);
+      if (audienceIdleContinueTimerRef.current) clearTimeout(audienceIdleContinueTimerRef.current);
+    };
+  }, [audienceVisible, audienceCelebrating, audienceSpokenTargets]);
+
+  const audienceHintText = useMemo(() => {
+    if (!audienceVisible) return "";
+    const text = words
+      .map((w, i) => (pauseWordMeta.has(i) ? null : w))
+      .filter((w): w is string => !!w)
+      .join(" ");
+    return stripPropCueMarkers(text);
+  }, [audienceVisible, words, pauseWordMeta]);
+
+  // Let a stuck speaker move on: count the sentence as spoken and run the
+  // normal completion path so scheduling and phase transitions stay intact.
+  const continueFromAudience = () => {
+    freshMatchesThisRepRef.current = Math.max(freshMatchesThisRepRef.current, words.length);
+    const all = new Set(words.map((_, i) => i));
+    setSpokenIndices(all);
+    checkCompletion(all);
+  };
+
   if (loading) {
     // Never show a dead blank screen: keep a way out while lessons load.
     return (
