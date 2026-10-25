@@ -172,10 +172,8 @@ const SentenceDisplay = ({
           key={`${index}-hidden`}
           ref={state.isCurrent ? currentWordRef : undefined}
           onClick={() => onWordTap?.(index)}
-          layout="position"
           animate={state.isCurrent ? { scale: [1, 1.08, 1] } : { scale: 1 }}
           transition={{
-            layout: { duration: 0.3, ease: "easeInOut" },
             scale: state.isCurrent
               ? { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.25 },
