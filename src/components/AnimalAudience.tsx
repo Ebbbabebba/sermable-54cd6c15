@@ -245,6 +245,15 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
           <div style={{ width: `${mood * 100}%`, height: "100%", background: "hsl(var(--primary))", transition: "width 250ms ease" }} />
         </div>
       </div>
+      {showContinue && !done && onContinue && (
+        <button
+          type="button"
+          onClick={onContinue}
+          style={{ padding: "12px 28px", borderRadius: 999, border: 0, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", fontSize: 17, fontWeight: 700, cursor: "pointer" }}
+        >
+          {continueLabel ?? "Continue"}
+        </button>
+      )}
     </div>
   );
 };
