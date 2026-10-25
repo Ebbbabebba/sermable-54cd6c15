@@ -37,6 +37,7 @@ import { getHesitationThresholdMs } from "@/lib/practicePrefs";
 import { recordRepDifficulty, recordSpeechWordErrors, getEasiestWordIndices } from "@/utils/wordDifficulty";
 import { scheduleNativeNotification } from "@/lib/nativeNotifications";
 import { createNativeSpeechSession } from "@/lib/nativeSpeechSession";
+import { createWebSpeechRecovery } from "@/lib/webSpeechRecovery";
 
 
 // Web Speech API types
@@ -3832,7 +3833,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
 
         if (cancelled()) return;
-        let webFailures = 0;
+        const webRecovery = createWebSpeechRecovery();
         let webTerminal = false;
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
@@ -3848,7 +3849,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
           if (cancelled()) return;
-          webFailures = 0;
+          webRecovery.reset();
           if (showCelebrationRef.current) return;
           if (Date.now() < ignoreResultsUntilRef.current) return;
           if (
@@ -3898,7 +3899,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           if (cancelled()) return;
           console.warn("Speech recognition error:", event.error);
           setIsSpeechReady(false);
-          webTerminal = ['not-allowed', 'service-not-allowed', 'audio-capture', 'language-not-supported'].includes(event.error);
+          webTerminal = webRecovery.error(event.error);
           if (webTerminal) {
             stopListening();
             toast({ variant: "destructive", title: t('common.micError'), description: t('common.micDeniedDesc') });
@@ -3908,9 +3909,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         recognition.onend = () => {
           if (cancelled() || webTerminal) return;
           setIsSpeechReady(false);
-          if (++webFailures > 5) {
+          if (webRecovery.exhausted()) {
             stopListening();
-            toast({ variant: "destructive", title: t("common.micError"), description: t("common.micDeniedDesc") });
+            toast({ variant: "destructive", title: t("common.micError") });
             return;
           }
           if (!isRecordingRef.current) return;
@@ -3943,7 +3944,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             }
           };
 
-          const waitMs = Math.max(recognitionRestartAtRef.current - Date.now(), Math.min(4000, 700 * 2 ** (webFailures - 1)));
+          const waitMs = Math.max(recognitionRestartAtRef.current - Date.now(), webRecovery.delay());
           if (waitMs > 0) {
             if (recognitionRestartTimeoutRef.current) {
               clearTimeout(recognitionRestartTimeoutRef.current);
