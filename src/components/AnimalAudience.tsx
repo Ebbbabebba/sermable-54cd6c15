@@ -216,6 +216,11 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
       <p style={{ fontSize: 20, fontWeight: 600, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 420 }}>
         {done && doneLabel ? doneLabel : promptLabel}
       </p>
+      {hintText && !done && (
+        <p style={{ fontSize: 17, lineHeight: 1.5, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 480, background: "hsl(var(--muted))", borderRadius: 16, padding: "12px 18px" }}>
+          {hintText}
+        </p>
+      )}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, width: "100%", maxWidth: 560 }}>
         {trio.map((a, i) => (
           <div
