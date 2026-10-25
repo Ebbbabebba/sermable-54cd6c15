@@ -4266,7 +4266,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // revealed again and the phase does NOT advance until the user actually
   // says the sentence. This keeps scheduling and mastery truthful.
   const continueFromAudience = () => {
+    // Bypass the fresh-speech gate (the user is stuck, not cheating)…
+    freshMatchesThisRepRef.current = Math.max(freshMatchesThisRepRef.current, words.length);
     const all = new Set(words.map((_, i) => i));
+    // …but mark every unspoken word as missed so the rep counts as failed:
+    // the words are revealed again and the phase does NOT advance early.
     const failed = new Set<number>();
     words.forEach((_, i) => {
       if (!pauseWordMeta.has(i) && !spokenIndicesRef.current.has(i)) failed.add(i);
