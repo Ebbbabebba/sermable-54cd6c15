@@ -203,28 +203,28 @@ const SentenceDisplay = ({
         ref={state.isCurrent ? currentWordRef : undefined}
         initial={false}
         animate={{
-          opacity: state.isSpoken ? 0.35 : 1,
           scale: state.isCurrent && !state.isSpoken ? 1.03 : 1,
         }}
         transition={{
-          opacity: { duration: 0.7, ease: "easeInOut" },
-          scale: { duration: 0.3, ease: "easeInOut" },
+          scale: { duration: 0.2, ease: "easeOut" },
         }}
         className={cn(
           "practice-word s-i3 s-m3 s-ol s-ox s-q8 s-ws s-bo",
-          state.isSpoken && "practice-word--correct",
-          state.isHesitated && "practice-word--hesitated",
-          // Prop-cue background — soft warm highlight on the wrapped sequence
-          propCueIndices?.has(index + wordIndexOffset) && "s-3o",
-          // Clear marker for the current word — a distinct blue ring and
-          // tint so there is no doubt about which word to say next.
-          state.isCurrent && !state.isSpoken && "practice-word--current s-pd s-uw s-d0",
-          // Spoken word gets muted styling (gray)
-          state.isSpoken && "s-un",
+          // Spoken wins over every other state — a correctly said word is
+          // mint and stays mint, so it never flutters between yellow/blue/gray
+          // while interim results keep arriving.
+          state.isSpoken
+            ? "practice-word--correct"
+            : cn(
+                state.isHesitated && "practice-word--hesitated s-64 s-ve",
+                // Prop-cue background — soft warm highlight on the wrapped sequence
+                propCueIndices?.has(index + wordIndexOffset) && "s-3o",
+                // Clear marker for the current word — a distinct blue ring and
+                // tint so there is no doubt about which word to say next.
+                state.isCurrent && "practice-word--current s-pd s-uw s-d0"
+              )
           // NOTE: Visible words never turn red (per project rule). Red is reserved
           // for hidden words that were missed (handled in the !isVisible branch above).
-          // Hesitated visible word (yellow) — allowed: user paused on a visible word.
-          state.isHesitated && "s-64 s-ve",
         )}
       >
         {state.text}
