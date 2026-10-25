@@ -12,6 +12,14 @@ interface AnimalAudienceProps {
   promptLabel?: string;
   /** Called when the user taps the exit marker. */
   onExit?: () => void | Promise<void>;
+  /** The sentence text, revealed after a short silence so a stuck speaker can peek. */
+  hintText?: string;
+  /** Show a "continue" button that lets a stuck speaker move on. */
+  showContinue?: boolean;
+  /** Label for the continue button. */
+  continueLabel?: string;
+  /** Called when the user taps the continue button. */
+  onContinue?: () => void;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
