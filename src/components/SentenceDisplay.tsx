@@ -237,16 +237,12 @@ const SentenceDisplay = ({
 
 
   return (
-    <LayoutGroup>
-      <div
-        ref={containerRef}
-        className="practice-reading-text s-vi s-kj s-iy s-ip s-u0 s-my s-qq"
-      >
-        <AnimatePresence mode="sync">
-          {words.map((_, index) => renderWord(index))}
-        </AnimatePresence>
-      </div>
-    </LayoutGroup>
+    <div
+      ref={containerRef}
+      className="practice-reading-text s-vi s-kj s-iy s-ip s-u0 s-my s-qq"
+    >
+      {words.map((_, index) => renderWord(index))}
+    </div>
   );
 };
 
