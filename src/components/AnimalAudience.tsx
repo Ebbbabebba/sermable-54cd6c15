@@ -185,7 +185,7 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
   );
 };
 
-const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit, hintText, showContinue = false, continueLabel, onContinue }: AnimalAudienceProps) => {
   const trio = useMemo(() => {
     const base = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return [0, 1, 2].map(o => ANIMALS[(base + o * 2) % ANIMALS.length]);
