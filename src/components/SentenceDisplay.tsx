@@ -228,16 +228,6 @@ const SentenceDisplay = ({
         )}
       >
         {state.text}
-        {/* Subtle pulse indicator for current word */}
-        {state.isCurrent && !state.isSpoken && (
-          <motion.span
-            className="s-26 -bottom-2 s-iu s-xd s-fm s-qe s-5c"
-            initial={{ opacity: 0.6, scale: 0.8 }}
-            animate={{ opacity: [0.6, 1, 0.6], scale: [0.8, 1.1, 0.8] }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transform: 'translateX(-50%)' }}
-          />
-        )}
       </motion.span>
     );
   };
