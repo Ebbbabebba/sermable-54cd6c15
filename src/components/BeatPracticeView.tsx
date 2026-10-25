@@ -4792,6 +4792,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           variant={currentBeatIndex + phase.length}
           doneLabel={t('beat_practice.sentence_done', 'Sentence done!')}
           promptLabel={t('beat_practice.say_sentence_prompt', 'Say the sentence out loud from memory')}
+          hintText={audienceIdleLevel >= 1 ? audienceHintText : undefined}
+          showContinue={audienceIdleLevel >= 2}
+          continueLabel={t('beat_practice.audience_continue', 'Continue')}
+          onContinue={continueFromAudience}
           onExit={() => {
             stopListening();
             void saveCheckpoint();
