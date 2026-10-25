@@ -195,17 +195,14 @@ const SentenceDisplay = ({
       <motion.span
         key={`${index}-visible`}
         ref={state.isCurrent ? currentWordRef : undefined}
-        layout="position"
         initial={false}
         animate={{
           opacity: state.isSpoken ? 0.35 : 1,
           scale: state.isCurrent && !state.isSpoken ? 1.03 : 1,
-          y: 0,
         }}
         transition={{
           opacity: { duration: 0.7, ease: "easeInOut" },
           scale: { duration: 0.3, ease: "easeInOut" },
-          layout: { duration: 0.3, ease: "easeInOut" },
         }}
         className={cn(
           "practice-word s-i3 s-m3 s-ol s-ox s-q8 s-ws s-bo",
