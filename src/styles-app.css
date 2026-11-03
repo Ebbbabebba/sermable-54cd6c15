@@ -517,7 +517,7 @@ input,textarea,select { font-family:var(--font-system); }
  .dashboard__main { padding:32px 0 calc(env(safe-area-inset-bottom,0px) + 40px); }
  .dashboard__list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
  .bottom-nav { padding-inline:max(24px,calc((100% - 36rem)/2)); }
- .onboarding__header,.onboarding__main { width:100%; max-width:44rem; margin-inline:auto; }
+ .onboarding__header,.onboarding__main,.onboarding__footer { width:100%; max-width:44rem; margin-inline:auto; }
 }
 @media(min-width:1200px) {
  .dashboard__toolbar,.dashboard__content { max-width:68rem; }
