@@ -510,3 +510,17 @@ input,textarea,select { font-family:var(--font-system); }
 .ui-button,.today-task,.speech-actions .speech-action.ui-button,.kc-swatch { transition-duration:120ms; transition-timing-function:ease-out; }
 .ui-button:active,.today-task:active { transform:scale(0.98); }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+
+/* Tablet & desktop: center the app column, widen it, keep text left-aligned. */
+@media(min-width:768px) {
+ .dashboard__toolbar,.dashboard__content { max-width:52rem; margin-inline:auto; width:100%; padding-inline:32px; }
+ .dashboard__main { padding:32px 0 calc(env(safe-area-inset-bottom,0px) + 40px); }
+ .dashboard__list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+ .bottom-nav { padding-inline:max(24px,calc((100% - 36rem)/2)); }
+ .onboarding__header,.onboarding__main,.onboarding__footer { width:100%; max-width:44rem; margin-inline:auto; }
+}
+@media(min-width:1200px) {
+ .dashboard__toolbar,.dashboard__content { max-width:68rem; }
+ .dashboard__list { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .dashboard__greeting h1 { font-size:32px; }
+}
