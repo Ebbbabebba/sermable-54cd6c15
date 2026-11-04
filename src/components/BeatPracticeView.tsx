@@ -5181,7 +5181,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               ) : getPhaseType() === 'learning' ? (
                 <>
                   <Circle className="s-fw s-xp s-c0" />
-                  Read aloud {repetitionCount}/{requiredLearningReps}
+                  {t('beat_practice.read_aloud_progress', { current: repetitionCount, total: requiredLearningReps })}
                 </>
               ) : getPhaseType() === 'fading' ? (
                 <>
@@ -5189,7 +5189,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                   {t('playful.visibleWords', { count: words.length - hiddenWordIndices.size })}
                 </>
               ) : (
-                'Combining sentences'
+                t('beat_practice.combining_sentences')
               )}
             </span>
             {sessionMode !== 'pre_beat_recall' && sessionMode !== 'recall' && hiddenWordIndices.size < words.length && (
@@ -5198,11 +5198,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 onClick={jumpHideAhead}
                 disabled={showCelebration}
                 className="s-i4 s-ib s-dl s-or s-p3 s-qe s-vj s-d3 s-3s s-tu s-gt s-ws s-bj"
-                aria-label={t('beat_practice.skip_hide_ahead', 'Skip ahead')}
-                title={t('beat_practice.skip_hide_ahead_tooltip', 'Hide more words now')}
+                aria-label={t('beat_practice.skip_hide_ahead')}
+                title={t('beat_practice.skip_hide_ahead_tooltip')}
               >
                 <FastForward className="s-fx s-xq" />
-                {t('beat_practice.skip_hide_ahead', 'Skip ahead')}
+                {t('beat_practice.skip_hide_ahead')}
               </button>
             )}
             {(sessionMode === 'pre_beat_recall' || sessionMode === 'recall') && hiddenWordIndices.size < words.length && (

@@ -870,7 +870,10 @@
     "loading_slow": "This is taking longer than usual.",
     "audience_continue": "Continue",
     "listening_ready": "Your turn…",
-    "audience_retry": "Practice again"
+    "audience_retry": "Practice again",
+    "read_aloud_progress": "Read aloud {{current}}/{{total}}",
+    "skip_hide_ahead": "Skip ahead",
+    "skip_hide_ahead_tooltip": "Hide more words now"
   },
   "day_after_recall": {
     "title": "Day-After Recall",

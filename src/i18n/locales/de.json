@@ -784,7 +784,10 @@
     "loading_slow": "Das dauert länger als gewöhnlich.",
     "audience_continue": "Weiter",
     "listening_ready": "Du bist dran…",
-    "audience_retry": "Nochmal üben"
+    "audience_retry": "Nochmal üben",
+    "read_aloud_progress": "Lies laut vor {{current}}/{{total}}",
+    "skip_hide_ahead": "Weiter",
+    "skip_hide_ahead_tooltip": "Jetzt mehr Wörter ausblenden"
   },
   "presentation": {
     "settings": "Präsentationseinstellungen",

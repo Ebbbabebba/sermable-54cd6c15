@@ -1105,7 +1105,10 @@
     "loading_slow": "Det här tar längre tid än vanligt.",
     "audience_continue": "Fortsätt",
     "listening_ready": "Din tur…",
-    "audience_retry": "Öva igen"
+    "audience_retry": "Öva igen",
+    "read_aloud_progress": "Läs högt {{current}}/{{total}}",
+    "skip_hide_ahead": "Hoppa vidare",
+    "skip_hide_ahead_tooltip": "Dölj fler ord nu"
   },
   "presentation": {
     "settings": "Presentationsinställningar",

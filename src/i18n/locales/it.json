@@ -784,7 +784,10 @@
     "loading_slow": "Ci sta mettendo più del solito.",
     "audience_continue": "Continua",
     "listening_ready": "Tocca a te…",
-    "audience_retry": "Riprova"
+    "audience_retry": "Riprova",
+    "read_aloud_progress": "Leggi ad alta voce {{current}}/{{total}}",
+    "skip_hide_ahead": "Vai avanti",
+    "skip_hide_ahead_tooltip": "Nascondi più parole ora"
   },
   "presentation": {
     "settings": "Impostazioni presentazione",
