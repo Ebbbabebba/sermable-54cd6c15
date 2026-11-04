@@ -4272,31 +4272,47 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [audienceEligible, showCelebration]);
 
   // Stuck-speaker rescue: after ~2s of silence while the audience is up,
-  // reveal the sentence; after a while longer, offer a "continue" button.
+  // reveal ONE hint word at a time (hardest words from earlier practice
+  // first); after a while longer, offer the retry/continue buttons.
   const [audienceIdleLevel, setAudienceIdleLevel] = useState<0 | 1 | 2>(0);
+  const [audienceHintCount, setAudienceHintCount] = useState(0);
   const audienceIdleHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const audienceIdleContinueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const audienceHintIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
     if (audienceIdleHintTimerRef.current) clearTimeout(audienceIdleHintTimerRef.current);
     if (audienceIdleContinueTimerRef.current) clearTimeout(audienceIdleContinueTimerRef.current);
+    if (audienceHintIntervalRef.current) clearInterval(audienceHintIntervalRef.current);
     setAudienceIdleLevel(0);
+    setAudienceHintCount(0);
     if (!audienceVisible || audienceCelebrating) return;
-    audienceIdleHintTimerRef.current = setTimeout(() => setAudienceIdleLevel(1), 2000);
+    audienceIdleHintTimerRef.current = setTimeout(() => {
+      setAudienceIdleLevel(1);
+      setAudienceHintCount(1);
+      audienceHintIntervalRef.current = setInterval(
+        () => setAudienceHintCount(c => c + 1),
+        2500
+      );
+    }, 2000);
     audienceIdleContinueTimerRef.current = setTimeout(() => setAudienceIdleLevel(2), 9000);
     return () => {
       if (audienceIdleHintTimerRef.current) clearTimeout(audienceIdleHintTimerRef.current);
       if (audienceIdleContinueTimerRef.current) clearTimeout(audienceIdleContinueTimerRef.current);
+      if (audienceHintIntervalRef.current) clearInterval(audienceHintIntervalRef.current);
     };
   }, [audienceVisible, audienceCelebrating, audienceSpokenTargets]);
 
-  const audienceHintText = useMemo(() => {
-    if (!audienceVisible) return "";
-    const text = words
-      .map((w, i) => (pauseWordMeta.has(i) ? null : w))
-      .filter((w): w is string => !!w)
-      .join(" ");
-    return stripPropCueMarkers(text);
-  }, [audienceVisible, words, pauseWordMeta]);
+  // Hint words ordered hardest-first, based on which words the user
+  // hesitated on or missed in earlier reps of this beat.
+  const audienceHintWords = useMemo(() => {
+    if (!audienceVisible) return [] as string[];
+    const hardestFirst = getEasiestWordIndices(
+      currentBeat?.id,
+      words.length,
+      (i) => !pauseWordMeta.has(i)
+    ).reverse();
+    return hardestFirst.map(i => stripPropCueMarkers(words[i]));
+  }, [audienceVisible, currentBeat?.id, words, pauseWordMeta]);
 
   // Stuck-speaker actions. Both force-clear the completion locks first: a
   // recent auto-advance can leave the debounce/lock active, which previously
@@ -4316,8 +4332,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   };
 
   // "Öva igen": the animals look sad for a moment, then the same sentence is
-  // practiced again — every unspoken word counts as missed, so the words are
-  // revealed and the phase does NOT advance until the user actually says it.
+  // practiced again. This never goes through checkCompletion (which could
+  // trigger a celebration); it directly reveals the unspoken words, protects
+  // them so they re-hide last, and restarts the rep.
   const [audienceSad, setAudienceSad] = useState(false);
   const audienceSadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryFromAudience = () => {
@@ -4326,14 +4343,36 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (audienceSadTimerRef.current) clearTimeout(audienceSadTimerRef.current);
     audienceSadTimerRef.current = setTimeout(() => {
       setAudienceSad(false);
-      unlockCompletion();
-      const all = new Set(words.map((_, i) => i));
-      const failed = new Set<number>();
+      const newHidden = new Set(hiddenWordIndices);
+      const newOrder = [...hiddenWordOrder];
+      const newProtected = new Set(protectedWordIndices);
+      let revealed = 0;
       words.forEach((_, i) => {
-        if (!pauseWordMeta.has(i) && !spokenIndicesRef.current.has(i)) failed.add(i);
+        if (pauseWordMeta.has(i) || spokenIndicesRef.current.has(i)) return;
+        newProtected.add(i);
+        if (newHidden.has(i)) {
+          newHidden.delete(i);
+          const orderIdx = newOrder.indexOf(i);
+          if (orderIdx !== -1) newOrder.splice(orderIdx, 1);
+          revealed++;
+        }
       });
-      setSpokenIndices(all);
-      checkCompletion(all, failed);
+      // Every word was somehow spoken but completion never fired — reveal the
+      // last-hidden word so the audience overlay always closes.
+      if (revealed === 0 && newOrder.length > 0) {
+        const last = newOrder.pop()!;
+        newHidden.delete(last);
+        newProtected.add(last);
+      }
+      setProtectedWordIndices(newProtected);
+      setHiddenWordIndices(newHidden);
+      setHiddenWordOrder(newOrder);
+      setFailedWordIndices(new Set());
+      setFadingSuccessCount(prev => Math.max(0, prev - 1));
+      setConsecutiveNoScriptSuccess(0);
+      phaseCompletionLockRef.current = false;
+      lastCompletionAtRef.current = 0;
+      resetForNextRep(true, true);
     }, 1400);
   };
   useEffect(() => () => {
@@ -4862,7 +4901,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           variant={currentBeatIndex + phase.length}
           doneLabel={t('beat_practice.sentence_done', 'Sentence done!')}
           promptLabel={t('beat_practice.say_sentence_prompt', 'Say the sentence out loud from memory')}
-          hintText={audienceIdleLevel >= 1 ? audienceHintText : undefined}
+          hintWords={audienceIdleLevel >= 1 ? audienceHintWords.slice(0, audienceHintCount) : undefined}
+          hintRemaining={Math.max(0, audienceHintWords.length - audienceHintCount)}
           showContinue={audienceIdleLevel >= 2}
           continueLabel={t('beat_practice.audience_continue', 'Continue')}
           onContinue={continueFromAudience}

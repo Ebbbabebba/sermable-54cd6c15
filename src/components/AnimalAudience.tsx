@@ -12,8 +12,10 @@ interface AnimalAudienceProps {
   promptLabel?: string;
   /** Called when the user taps the exit marker. */
   onExit?: () => void | Promise<void>;
-  /** The sentence text, revealed after a short silence so a stuck speaker can peek. */
-  hintText?: string;
+  /** Hint words revealed so far (one at a time, hardest first). */
+  hintWords?: string[];
+  /** How many hint words are still hidden. */
+  hintRemaining?: number;
   /** Show a "continue" button that lets a stuck speaker move on. */
   showContinue?: boolean;
   /** Label for the continue button. */
@@ -191,7 +193,7 @@ export const Animal = ({ kind, palette, mood, celebrating, sad = false }: { kind
   );
 };
 
-const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit, hintText, showContinue = false, continueLabel, onContinue, retryLabel, onRetry, sad = false }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit, hintWords, hintRemaining = 0, showContinue = false, continueLabel, onContinue, retryLabel, onRetry, sad = false }: AnimalAudienceProps) => {
   const trio = useMemo(() => {
     const base = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return [0, 1, 2].map(o => ANIMALS[(base + o * 2) % ANIMALS.length]);
@@ -222,10 +224,22 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
       <p style={{ fontSize: 20, fontWeight: 600, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 420 }}>
         {done && doneLabel ? doneLabel : promptLabel}
       </p>
-      {hintText && !done && (
-        <p style={{ fontSize: 17, lineHeight: 1.5, color: "hsl(var(--foreground))", textAlign: "center", maxWidth: 480, background: "hsl(var(--muted))", borderRadius: 16, padding: "12px 18px" }}>
-          {hintText}
-        </p>
+      {hintWords && hintWords.length > 0 && !done && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 480 }}>
+          {hintWords.map((word, i) => (
+            <span
+              key={`${word}-${i}`}
+              style={{ background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderRadius: 10, padding: "6px 12px", fontSize: 17, fontWeight: 600 }}
+            >
+              {word}
+            </span>
+          ))}
+          {hintRemaining > 0 && (
+            <span style={{ borderRadius: 10, padding: "6px 12px", fontSize: 17, fontWeight: 600, color: "hsl(var(--muted-foreground))", border: "1px dashed hsl(var(--border))" }}>
+              +{hintRemaining}
+            </span>
+          )}
+        </div>
       )}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 12, width: "100%", maxWidth: 560 }}>
         {trio.map((a, i) => (
