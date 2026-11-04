@@ -174,10 +174,10 @@ serve(async (req) => {
       );
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const audioLanguage = language || 'en';
@@ -190,13 +190,13 @@ serve(async (req) => {
     
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.webm');
-    formData.append('model', 'whisper-1');
+    formData.append('model', 'openai/gpt-transcribe');
     formData.append('language', audioLanguage);
 
-    const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    const transcriptionResponse = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       },
       body: formData,
     });
@@ -361,14 +361,15 @@ Return ONLY this JSON structure with no extra text:
   "analysis": "92% accuracy. You hesitated on 'consolidation' and substituted 'exponentially' with 'extensively'. Your pacing was good."
 }`;
 
-    // Use GPT-4o-mini for fast, high-quality analysis
-    const analysisModel = 'gpt-4o-mini';
+    // Built-in Lovable AI Gateway default chat model — newer and stronger
+    // than gpt-4o-mini, so analysis quality is preserved or better.
+    const analysisModel = 'openai/gpt-6-astra';
     console.log('Using analysis model:', analysisModel);
 
-    const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const analysisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -543,14 +544,14 @@ Level 3 (Aggressive): Show only key words and problem areas
 
 Return ONLY the simplified cue text, nothing else.`;
 
-      const cueResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      const cueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'openai/gpt-6-astra',
           messages: [
             { role: 'system', content: 'You create concise cue texts. Return only the cue text with no explanations.' },
             { role: 'user', content: cuePrompt }
@@ -584,14 +585,14 @@ Keep all important content words and structure.
 
 Return ONLY the simplified text.`;
 
-      const simpleCueResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      const simpleCueResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'openai/gpt-6-astra',
           messages: [
             { role: 'system', content: 'You simplify texts by removing small words. Return only the simplified text.' },
             { role: 'user', content: simpleCuePrompt }

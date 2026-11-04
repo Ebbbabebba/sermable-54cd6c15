@@ -183,8 +183,8 @@ User's request:
 ${prompt}
 
 Return the JSON with the clarifying questions.`;
-      const json = await callOpenAI(
-        OPENAI_API_KEY,
+      const json = await callAI(
+        LOVABLE_API_KEY,
         QUESTIONS_SYSTEM_PROMPT,
         userPrompt,
       );
@@ -227,8 +227,8 @@ Follow-up answers:
 ${qaBlock}
 
 Now write the speech and propose a short title. Return JSON only.`;
-      const json = await callOpenAI(
-        OPENAI_API_KEY,
+      const json = await callAI(
+        LOVABLE_API_KEY,
         DRAFT_SYSTEM_PROMPT,
         userPrompt,
       );
