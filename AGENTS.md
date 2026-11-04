@@ -12,3 +12,4 @@
 - Patch the iOS speech plugin through `patches/` (applied by `patch-package` on install) so callbacks from an older recognition task cannot stop a newer microphone session.
 - Classify browser speech retries through `webSpeechRecovery`: silence and normal session ends are not failures, so thinking pauses cannot exhaust microphone retries.
 - Keep progressive word support in `progressiveWordSupport`; scope per-word history to the exact displayed text, and apply background AI advice only between rounds so delayed analysis cannot move words or disturb recognition.
+- Keep audience success and hint ordering in `audiencePractice`: require recognized target words, pause hint time during speech, and hold successful recall for explicit continuation so silence never manufactures progress.

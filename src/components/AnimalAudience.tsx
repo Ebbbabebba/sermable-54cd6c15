@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { ArrowRight, Mic, RotateCcw, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface AnimalAudienceProps {
   progress: number;
@@ -265,27 +266,19 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
           <div style={{ width: `${mood * 100}%`, height: "100%", background: "hsl(var(--primary))", transition: "width 250ms ease" }} />
         </div>
       </div>
-      {showContinue && !done && !sad && (onRetry || onContinue) && (
+      {showContinue && !sad && (onRetry || onContinue) && (
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-          {onRetry && (
-            <button
-              type="button"
-              onClick={onRetry}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 999, border: 0, background: "hsl(var(--muted))", color: "hsl(var(--foreground))", fontSize: 17, fontWeight: 700, cursor: "pointer" }}
-            >
+          {onRetry && !done && (
+            <Button variant="secondary" onClick={onRetry}>
               <RotateCcw size={18} />
               {retryLabel ?? "Practice again"}
-            </button>
+            </Button>
           )}
           {onContinue && (
-            <button
-              type="button"
-              onClick={onContinue}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 999, border: 0, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", fontSize: 17, fontWeight: 700, cursor: "pointer" }}
-            >
+            <Button onClick={onContinue}>
               {continueLabel ?? "Continue"}
               <ArrowRight size={18} />
-            </button>
+            </Button>
           )}
         </div>
       )}

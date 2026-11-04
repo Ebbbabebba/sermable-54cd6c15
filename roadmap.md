@@ -1,5 +1,12 @@
 # Roadmap
 
+## Klart: Djurvyn och verkligt tal
+
+- [x] Fortsätt efter godkänd mening går till nästa övningssteg
+- [x] Tystnad fyller aldrig i ord eller godkänner en mening
+- [x] Ledtrådar pausar under tal, viktigast först i tid och manusordning på skärmen
+- [x] Testa regler och inloggat övningsflöde med simulerad röstigenkänning
+
 ## Klart: Stegvis, resultatstyrt ordstöd
 
 - [x] Placera lyssningsindikatorn bredvid läsräknaren

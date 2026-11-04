@@ -39,6 +39,7 @@ import { scheduleNativeNotification } from "@/lib/nativeNotifications";
 import { createNativeSpeechSession } from "@/lib/nativeSpeechSession";
 import { createWebSpeechRecovery } from "@/lib/webSpeechRecovery";
 import { nextSupportWord, progressiveHideCount } from "@/lib/progressiveWordSupport";
+import { hasMatchedAudienceTargets, audienceHintOrder, visibleAudienceHints, audienceSilenceStep } from "@/lib/audiencePractice";
 
 
 // Web Speech API types
@@ -573,6 +574,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const [audienceCelebrating, setAudienceCelebrating] = useState(false);
   const audienceWinCountRef = useRef(0);
   const audienceHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const audienceCompletionRef = useRef<(() => void) | null>(null);
+  const audienceConfirmedRef = useRef(false);
   useEffect(() => () => { if (audienceHideTimerRef.current) clearTimeout(audienceHideTimerRef.current); }, []);
   const [celebrationMessage, setCelebrationMessage] = useState("");
   // Explanatory line under the celebration headline, e.g. why the script
@@ -2285,7 +2288,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // FLOW: paraphrasing is allowed, so the cursor may also step over a
         // hidden word (still bounded by sentence + pause guards below).
         const canSkipCurrent =
-          practiceStrictnessRef.current === 'flow' ||
           !hiddenWordIndicesRef.current.has(advancedTo);
         // Never jump over a planned pause — the pause overlay must fire.
         const pauseInRange = (from: number, to: number) => {
@@ -2337,6 +2339,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         newSpoken.add(j);
       }
       newSpoken.add(foundIdx);
+      // Only recognition matches count as evidence, never timers or skip-fills.
+      for (let i = compoundSplitMatched ? advancedTo : foundIdx; i <= foundIdx; i++) {
+        matchedWordIndicesRef.current.add(i);
+      }
       postPauseNoHesitationIndicesRef.current.delete(foundIdx);
       
       // IMPORTANT: If this exact word was previously marked as missed (red), remove it
@@ -2485,11 +2491,23 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
 
 
 
+    const failedSet = new Set(failed ?? failedWordIndices);
+    const targets = words.map((_, i) => i).filter(i => !pauseWordMeta.has(i) && (!isOverviewMode || keywordIndices.has(i)));
+    const fullyHidden = isAllTargetHidden(hiddenWordIndicesRef.current);
+    if (fullyHidden) {
+      targets.forEach(i => { if (!matchedWordIndicesRef.current.has(i)) failedSet.add(i); });
+    }
+    const hadErrors = !isRepPassable(failedSet) || (fullyHidden && !hasMatchedAudienceTargets(targets, matchedWordIndicesRef.current));
+    // Hold a genuine successful recall on the animals until Continue is tapped.
+    // No synthetic spoken words and no weakened fresh-speech gate.
+    if (fullyHidden && !hadErrors && !audienceConfirmedRef.current) {
+      phaseCompletionLockRef.current = true;
+      audienceCompletionRef.current = () => checkCompletion(spoken, failedSet);
+      setAudienceCelebrating(true);
+      return;
+    }
     phaseCompletionLockRef.current = true;
     lastCompletionAtRef.current = Date.now();
-
-    const failedSet = failed ?? failedWordIndices;
-    const hadErrors = !isRepPassable(failedSet);
 
     // Remember which words were shaky this rep, so the NEXT recall pre-hides
     // the words with the fewest errors and keeps the hard ones visible.
@@ -3200,6 +3218,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [hiddenWordOrder, showCelebration, countVisibleTargets, recallSuccessCount, getNextWordToHide]);
 
   const resetForNextRep = (releaseCompletionLock = true, requireFreshStart = false) => {
+    audienceCompletionRef.current = null;
+    audienceConfirmedRef.current = false;
     const now = Date.now();
     const hadActiveRecognizer = Boolean(recognitionRef.current);
     // Only guard against stale replay if the recognizer has actually
@@ -3403,6 +3423,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const showSentenceCelebration = () => {
     const currentPhase = phase;
     const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
+    const confirmedAudience = audienceConfirmedRef.current;
 
     resetForNextRep(false);
 
@@ -3459,7 +3480,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             transitionToPhase('beat_learning');
           }
         }
-      }, 3500);
+      }, confirmedAudience ? 180 : 3500);
     }, 150);
   };
 
@@ -3954,116 +3975,25 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         lastWordTimeRef.current = Date.now();
       }
 
-      // Hesitation timer (shared between both engines)
+      // Silence can reveal a hint, but can never mark it spoken or move the cursor.
       if (hesitationTimerRef.current) clearInterval(hesitationTimerRef.current);
       hesitationTimerRef.current = setInterval(() => {
-        const elapsed = Date.now() - lastWordTimeRef.current;
+        if (phaseCompletionLockRef.current || showCelebrationRef.current) return;
+        // Audience hints handle thinking pauses separately. Mere silence is
+        // neither a spoken word nor evidence of an incorrect attempt.
+        if (hiddenWordIndicesRef.current.size >= wordsLengthRef.current) return;
         const idx = currentWordIndexRef.current;
-        // Flow gets an extra second before a hidden word is marked hesitated.
-        const hesitationMs =
-          getHesitationThresholdMs() + (practiceStrictnessRef.current === 'flow' ? 1000 : 0);
-        const currentIsHidden = hiddenWordIndicesRef.current.has(idx);
-        if (elapsed > hesitationMs && idx < wordsLengthRef.current) {
-          if (currentIsHidden) {
-            if (!hasHeardSpeechRef.current && spokenIndicesRef.current.size === 0) {
-              return;
-            }
-            if (postPauseNoHesitationIndicesRef.current.has(idx)) {
-              return;
-            }
-            if (!hesitatedIndicesRef.current.has(idx)) {
-              const newHesitated = new Set([...hesitatedIndicesRef.current, idx]);
-              hesitatedIndicesRef.current = newHesitated;
-              setHesitatedIndices(newHesitated);
-
-              console.log(
-                `⏭️ Revealing and advancing past hesitated word "${words[idx]}" at index ${idx} after ${hesitationMs / 1000}s`
-              );
-              const isSentenceEndingWord = /[.!?]$/.test(words[idx] ?? '');
-              const isFinalWord = idx >= wordsLengthRef.current - 1;
-              // Previously: sentence-ending / final hidden words just revealed
-              // and returned, waiting forever for the user to speak. After many
-              // hesitations earlier in the beat this stalled the blue cursor
-              // (the classic "Hej alla unga aktiesparare!" freeze). Now we
-              // advance like any other hidden word so the practice keeps
-              // flowing — the user still sees the revealed word and can read
-              // it on the next rep.
-              void isSentenceEndingWord;
-              void isFinalWord;
-
-              const newSpoken = new Set([...spokenIndicesRef.current, idx]);
-              spokenIndicesRef.current = newSpoken;
-              setSpokenIndices(newSpoken);
-              postPauseNoHesitationIndicesRef.current.delete(idx);
-              const nextIdx = idx + 1;
-              currentWordIndexRef.current = nextIdx;
-              setCurrentWordIndex(nextIdx);
-              hasHeardSpeechRef.current = false;
-              lastWordTimeRef.current = Date.now();
-              lastAutoAdvanceAtRef.current = Date.now();
-              // Clear buffered transcript so old recognition results cannot
-              // cascade-advance the next word/sentence.
-              transcriptRef.current = "";
-              transcriptWordsRef.current = [];
-              runningTranscriptRef.current = "";
-              sentenceBoundaryHoldRawCountRef.current = 0;
-              ignoreResultsUntilRef.current = Date.now() + 400;
-              if (nextIdx >= wordsLengthRef.current) {
-                const failedFromSignals = new Set<number>();
-                hiddenWordIndicesRef.current.forEach((hiddenIdx) => {
-                  if (hesitatedIndicesRef.current.has(hiddenIdx) || missedIndicesRef.current.has(hiddenIdx)) {
-                    failedFromSignals.add(hiddenIdx);
-                  }
-                });
-                checkCompletion(newSpoken, failedFromSignals);
-              }
-              // Note: no transcript replay — that caused cascading skips.
-            }
-          } else {
-            // VISIBLE word safety net: if the matcher has failed to advance a
-            // visible word for ~6s while the user is clearly speaking, advance
-            // it silently. Without this the blue cursor could stay frozen on a
-            // visible word forever (e.g. speech recognition mishears "Ladies").
-            // Hard-to-recognize visible words (SpaceX, NATO, COVID-19, years)
-            // get a much shorter timeout — the engine often can't transcribe
-            // them at all, so we shouldn't make the user wait 6s.
-            const isHardWord = isHardToRecognizeWord(words[idx] ?? '');
-            // Sentence-ending and final words get a longer leash so the user
-            // has time to actually say them — but they must STILL auto-advance
-            // eventually. Previously they were excluded entirely, which froze
-            // the whole practice when the last word got misheard (yellow).
-            const isFinalOrSentenceEnding =
-              idx >= wordsLengthRef.current - 1 || /[.!?]$/.test(words[idx] ?? '');
-            const VISIBLE_STUCK_MS = isHardWord ? 2500 : isFinalOrSentenceEnding ? 9000 : 6000;
-            if (
-              hasHeardSpeechRef.current &&
-              elapsed > VISIBLE_STUCK_MS &&
-              !postPauseNoHesitationIndicesRef.current.has(idx)
-            ) {
-              console.log(
-                `⏭️ Visible word "${words[idx]}" at index ${idx} stuck for ${(elapsed / 1000).toFixed(1)}s — auto-advancing`
-              );
-              const newSpoken = new Set([...spokenIndicesRef.current, idx]);
-              spokenIndicesRef.current = newSpoken;
-              setSpokenIndices(newSpoken);
-              const nextIdx = idx + 1;
-              currentWordIndexRef.current = nextIdx;
-              setCurrentWordIndex(nextIdx);
-              hasHeardSpeechRef.current = false;
-              lastWordTimeRef.current = Date.now();
-              lastAutoAdvanceAtRef.current = Date.now();
-              transcriptRef.current = "";
-              transcriptWordsRef.current = [];
-              runningTranscriptRef.current = "";
-              sentenceBoundaryHoldRawCountRef.current = 0;
-              ignoreResultsUntilRef.current = Date.now() + 400;
-              if (nextIdx >= wordsLengthRef.current) {
-                checkCompletion(newSpoken);
-              }
-            }
-          }
+        if (idx >= wordsLengthRef.current || pauseWordMeta.has(idx)) return;
+        const idleMs = Date.now() - lastSpeechActivityRef.current;
+        const elapsed = Date.now() - lastWordTimeRef.current;
+        const threshold = getHesitationThresholdMs() + (practiceStrictnessRef.current === 'flow' ? 1000 : 0);
+        if (idleMs < 2000 || elapsed <= threshold) return;
+        if (hiddenWordIndicesRef.current.has(idx) && !hesitatedIndicesRef.current.has(idx)) {
+          const next = new Set([...hesitatedIndicesRef.current, idx]);
+          hesitatedIndicesRef.current = next;
+          setHesitatedIndices(next);
         }
-      }, 500);
+      }, 400);
     } catch (error) {
       console.error("Failed to start recording:", error);
       toast({
@@ -4201,92 +4131,49 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     ? Array.from(keywordIndices)
     : words.map((_, index) => index).filter(index => !pauseWordMeta.has(index));
   const audienceSpokenTargets = audienceTargetIndices.reduce(
-    (count, index) => count + (spokenIndices.has(index) ? 1 : 0),
-    0
+    (count, index) => count + (matchedWordIndicesRef.current.has(index) ? 1 : 0), 0
   );
-  const audienceProgress = audienceCelebrating
-    ? 1
+  const audienceProgress = audienceCelebrating ? 1
     : Math.min(1, audienceSpokenTargets / Math.max(1, audienceTargetIndices.length));
-  const audienceWasEligibleRef = useRef(false);
-  if (audienceEligible && !showCelebration) audienceWasEligibleRef.current = true;
-  useEffect(() => {
-    if (audienceCelebrating) return;
-    const finished = audienceWasEligibleRef.current && (showCelebration || (audienceEligible && audienceProgress >= 1));
-    if (!finished) return;
-    audienceWasEligibleRef.current = false;
-    setAudienceCelebrating(true);
-    if (audienceHideTimerRef.current) clearTimeout(audienceHideTimerRef.current);
-    audienceHideTimerRef.current = setTimeout(() => setAudienceCelebrating(false), 1800);
-    // The speaker said the whole hidden sentence — make sure the rep actually
-    // completes so the NEXT sentence shows after the animals. Auto-advanced
-    // words (hesitation timeouts) can leave the fresh-speech gate below its
-    // threshold and silently block the automatic completion, which left the
-    // same sentence on screen after the celebration.
-    if (!showCelebration && audienceEligible && audienceProgress >= 1) {
-      freshMatchesThisRepRef.current = Math.max(freshMatchesThisRepRef.current, words.length);
-      lastCompletionAtRef.current = 0;
-      checkCompletion(new Set(words.map((_, i) => i)));
-    }
-  }, [showCelebration, audienceEligible, audienceProgress, audienceCelebrating]);
-  useEffect(() => {
-    if (!audienceEligible && !showCelebration) audienceWasEligibleRef.current = false;
-  }, [audienceEligible, showCelebration]);
 
-  // Hint words ordered hardest-first, based on which words the user
-  // hesitated on or missed in earlier reps of this beat.
-  const audienceHintWords = useMemo(() => {
-    if (!audienceVisible) return [] as string[];
-    const hardestFirst = getEasiestWordIndices(
-      currentBeat?.id,
-      words.length,
-      (i) => !pauseWordMeta.has(i)
-    ).reverse();
-    return hardestFirst.map(i => stripPropCueMarkers(words[i]));
-  }, [audienceVisible, currentBeat?.id, words, pauseWordMeta]);
-
-  // Stuck-speaker rescue: after ~2s of silence while the audience is up,
-  // reveal ONE hint word at a time (hardest words from earlier practice
-  // first); after a while longer, offer the retry/continue buttons. The
-  // clock only counts SILENCE — as soon as the user starts speaking the
-  // hints wait, and already-shown hints stay on screen.
+  // Reveal priority is temporal; the rendered words always retain script order.
+  const audienceHintIndices = useMemo(() => {
+    const targets = words.map((_, i) => i).filter(i => !pauseWordMeta.has(i));
+    const errors = difficultyKey ? getWordDifficultyResults(difficultyKey, words.length).errors : [];
+    return audienceHintOrder(targets, errors, getKeywordIndices(words, COMMON_WORDS));
+  }, [difficultyKey, words, pauseWordMeta]);
   const [audienceIdleLevel, setAudienceIdleLevel] = useState<0 | 1 | 2>(0);
   const [audienceHintCount, setAudienceHintCount] = useState(0);
-  const audienceIdleTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
-    if (audienceIdleTickRef.current) clearInterval(audienceIdleTickRef.current);
     setAudienceIdleLevel(0);
     setAudienceHintCount(0);
     if (!audienceVisible || audienceCelebrating) return;
     const shownAt = Date.now();
-    const hintTotal = audienceHintWords.length;
-    audienceIdleTickRef.current = setInterval(() => {
-      const idleMs = Date.now() - Math.max(shownAt, lastSpeechActivityRef.current);
-      setAudienceIdleLevel(l => Math.max(l, idleMs >= 9000 ? 2 : idleMs >= 2000 ? 1 : 0) as 0 | 1 | 2);
-      if (idleMs >= 2000) {
-        const target = Math.min(hintTotal, 1 + Math.floor((idleMs - 2000) / 2500));
-        setAudienceHintCount(c => Math.max(c, target));
-      }
-    }, 400);
-    return () => {
-      if (audienceIdleTickRef.current) clearInterval(audienceIdleTickRef.current);
-    };
-  }, [audienceVisible, audienceCelebrating, audienceHintWords.length]);
+    let lastTick = shownAt;
+    let silentMs = 0;
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const idleMs = now - Math.max(shownAt, lastSpeechActivityRef.current);
+      silentMs += audienceSilenceStep(idleMs, now - lastTick);
+      lastTick = now;
+      // Retain revealed hints while speaking, without revealing any new ones.
+      if (idleMs < 2000) return;
+      setAudienceIdleLevel(silentMs >= 7000 ? 2 : 1);
+      setAudienceHintCount(Math.min(audienceHintIndices.length, 1 + Math.floor(silentMs / 2500)));
+    }, 200);
+    return () => clearInterval(timer);
+  }, [audienceVisible, audienceCelebrating, difficultyKey, audienceHintIndices]);
+  const audienceHintWords = visibleAudienceHints(audienceHintIndices, audienceHintCount, matchedWordIndicesRef.current)
+    .map(i => stripPropCueMarkers(words[i]));
 
-  // Stuck-speaker actions. Both force-clear the completion locks first: a
-  // recent auto-advance can leave the debounce/lock active, which previously
-  // swallowed the tap and left the audience overlay frozen on screen.
-  const unlockCompletion = () => {
-    phaseCompletionLockRef.current = false;
-    lastCompletionAtRef.current = 0;
-    freshMatchesThisRepRef.current = Math.max(freshMatchesThisRepRef.current, words.length);
-  };
-
-  // "Fortsätt": complete the rep and move on to the NEXT sentence.
   const continueFromAudience = () => {
-    unlockCompletion();
-    const all = new Set(words.map((_, i) => i));
-    setSpokenIndices(all);
-    checkCompletion(all);
+    const complete = audienceCompletionRef.current;
+    if (!complete) return; // A stuck attempt can only be retried, never credited.
+    audienceCompletionRef.current = null;
+    audienceConfirmedRef.current = true;
+    phaseCompletionLockRef.current = false;
+    setAudienceCelebrating(false);
+    complete();
   };
 
   // "Öva igen": the animals look sad for a moment, then the same sentence is
@@ -4318,9 +4205,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       // Every word was somehow spoken but completion never fired — reveal the
       // last-hidden word so the audience overlay always closes.
       if (revealed === 0 && newOrder.length > 0) {
-        const last = newOrder.pop()!;
-        newHidden.delete(last);
-        newProtected.add(last);
+        const last = newOrder.pop();
+        if (last !== undefined) {
+          newHidden.delete(last);
+          newProtected.add(last);
+        }
       }
       setProtectedWordIndices(newProtected);
       setHiddenWordIndices(newHidden);
@@ -4859,11 +4748,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           variant={currentBeatIndex + phase.length}
           doneLabel={t('beat_practice.sentence_done', 'Sentence done!')}
           promptLabel={t('beat_practice.say_sentence_prompt', 'Say the sentence out loud from memory')}
-          hintWords={audienceIdleLevel >= 1 ? audienceHintWords.slice(0, audienceHintCount) : undefined}
-          hintRemaining={Math.max(0, audienceHintWords.length - audienceHintCount)}
-          showContinue={audienceIdleLevel >= 2}
+          hintWords={audienceIdleLevel >= 1 ? audienceHintWords : undefined}
+          hintRemaining={Math.max(0, audienceHintIndices.length - audienceHintCount)}
+          showContinue={audienceCelebrating || audienceIdleLevel >= 2}
           continueLabel={t('beat_practice.audience_continue', 'Continue')}
-          onContinue={continueFromAudience}
+          onContinue={audienceCelebrating ? continueFromAudience : undefined}
           retryLabel={t('beat_practice.audience_retry', 'Practice again')}
           onRetry={retryFromAudience}
           sad={audienceSad}
