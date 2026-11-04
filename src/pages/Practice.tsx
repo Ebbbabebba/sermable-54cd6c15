@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { useAdaptiveTempo } from "@/hooks/useAdaptiveTempo";
 import { format } from "date-fns";
 import PracticeResults from "@/components/PracticeResults";
@@ -2367,56 +2368,46 @@ const [liveTranscription, setLiveTranscription] = useState("");
             </div>
           )}
 
-          {/* Beat Timeline - horizontal dots with connecting progress track */}
+          {/* Beat path - pebble trail showing progress through the speech */}
           {hasBeats && (
-            <div className="s-o9 s-n1">
-              <div className="s-c5 s-ib s-if s-jy s-ol">
-                <span className="s-tl s-x1 s-wj s-ul s-d0">
+            <div className="beat-path">
+              <div className="beat-path__head">
+                <span className="beat-path__label">
                   {t('beat_practice.beats', 'Beats')}
                 </span>
-                <span className="s-tl s-x1 s-wj s-ul s-d0 tabular-nums">
+                <span className="beat-path__count">
                   {masteredBeats}/{totalBeats}
                 </span>
               </div>
-              <div className="s-pd">
-                {/* Track */}
-                <div className="s-26 s-iw s-pi s-w4 s-9 s-fk s-50 s-qe" />
+              <div className="beat-path__rail">
+                <div className="beat-path__track" />
                 <div
-                  className="s-26 s-iw s-w4 s-9 s-fk s-5c s-qe s-wr s-bq"
+                  className="beat-path__fill"
                   style={{
                     width: totalBeats > 1
                       ? `calc((100% - 2rem) * ${Math.min(masteredBeats / (totalBeats - 1), 1)})`
                       : masteredBeats > 0 ? 'calc(100% - 2rem)' : '0px'
                   }}
                 />
-                <div className="s-pd s-c5 s-ib s-if">
+                <div className="beat-path__dots">
                   {segments.map((segment, idx) => {
                     const isCurrent = !segment.is_mastered && idx === masteredBeats;
                     const isLast = idx === totalBeats - 1;
                     const showSmallDot = idx > masteredBeats && !isLast;
 
                     if (showSmallDot) {
-                      return (
-                        <div
-                          key={segment.id}
-                          className="s-pd s-ye s-y0 s-g6 s-qe s-c5 s-ib s-ig"
-                        >
-                          <div className="s-xk s-fs s-qe s-51" />
-                        </div>
-                      );
+                      return <div key={segment.id} className="beat-path__pebble" />;
                     }
 
                     return (
                       <div
                         key={segment.id}
-                        className={`
-                          s-pd s-ye s-y0 s-g6 s-qe s-c5 s-ib s-ig s-vj s-d3 s-wr
-                          ${segment.is_mastered
-                            ? 's-5c s-ux s-r3 s-r1'
-                            : isCurrent
-                              ? 's-3v s-uw s-6n s-7n s-pn s-px'
-                              : 's-50 s-ul s-6l s-6x'}
-                        `}
+                        className={cn(
+                          'beat-path__stone',
+                          segment.is_mastered && 'beat-path__stone--done',
+                          isCurrent && 'beat-path__stone--current',
+                          !segment.is_mastered && !isCurrent && 'beat-path__stone--todo'
+                        )}
                       >
                         {segment.is_mastered ? (
                           <CheckCircle2 className="s-fz s-xt" />
