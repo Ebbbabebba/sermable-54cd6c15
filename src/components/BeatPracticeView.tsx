@@ -4122,11 +4122,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // reacts only to targetable words (pause markers never reduce progress).
   const audienceScriptFree = phase.includes('fading') || sessionMode === 'recall' || sessionMode === 'pre_beat_recall';
   void audienceScriptFree;
+  // Loader shown while "Öva igen" hands the view back to practice mode.
+  const [audienceResetting, setAudienceResetting] = useState(false);
+  const audienceResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Full-screen audience replaces the script once every word is hidden.
   const audienceEligible = words.length > 0 && isAllTargetHidden(hiddenWordIndices) && !activePause;
   // While cheering, keep the animals on screen; otherwise step aside as soon
   // as the sentence is done so the celebration and next step are reachable.
-  const audienceVisible = audienceCelebrating || (audienceEligible && !showCelebration);
+  const audienceVisible = audienceCelebrating || (audienceEligible && !showCelebration) || audienceResetting;
   const audienceTargetIndices = isOverviewMode
     ? Array.from(keywordIndices)
     : words.map((_, index) => index).filter(index => !pauseWordMeta.has(index));
@@ -4187,7 +4190,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setAudienceSad(true);
     if (audienceSadTimerRef.current) clearTimeout(audienceSadTimerRef.current);
     audienceSadTimerRef.current = setTimeout(() => {
+      // Swap the sad animals for a centered loader while the rep resets and
+      // the microphone warms up again — no abrupt cut back into practice.
       setAudienceSad(false);
+      setAudienceResetting(true);
       const newHidden = new Set(hiddenWordIndices);
       const newOrder = [...hiddenWordOrder];
       const newProtected = new Set(protectedWordIndices);
@@ -4220,10 +4226,13 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       phaseCompletionLockRef.current = false;
       lastCompletionAtRef.current = 0;
       resetForNextRep(true, true);
+      if (audienceResetTimerRef.current) clearTimeout(audienceResetTimerRef.current);
+      audienceResetTimerRef.current = setTimeout(() => setAudienceResetting(false), 900);
     }, 1400);
   };
   useEffect(() => () => {
     if (audienceSadTimerRef.current) clearTimeout(audienceSadTimerRef.current);
+    if (audienceResetTimerRef.current) clearTimeout(audienceResetTimerRef.current);
   }, []);
 
   if (loading) {
@@ -4741,7 +4750,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           </div>
         </div>
       )}
-      {audienceVisible && (
+      {audienceVisible && !audienceResetting && (
         <AnimalAudience
           progress={audienceProgress}
           celebrating={audienceCelebrating}
@@ -4762,6 +4771,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             onExit?.();
           }}
         />
+      )}
+      {audienceResetting && (
+        <div className="practice-restore" role="status">
+          <div className="practice-restore__spinner" aria-hidden="true" />
+        </div>
       )}
       <PauseCountdownOverlay
         remainingSeconds={activePause?.remainingSeconds ?? null}
