@@ -1,5 +1,12 @@
 # Roadmap
 
+## Klart: Stegvis, resultatstyrt ordstöd
+
+- [x] Placera lyssningsindikatorn bredvid läsräknaren
+- [x] Dölj samband och enkla ord först, några åt gången; återvisa svåra ord
+- [x] Låt bakgrundsanalys föreslå ordstöd utan att störa mikrofonen; verkligt AI-svar verifierat
+- [x] Testa regler och verifiera inloggad övning med simulerat tal
+
 ## Pågående: Stabil mikrofon i övning
 
 - [x] Ta bort konkurrerande omstarter och gamla mikrofonresultat

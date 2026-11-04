@@ -11,6 +11,7 @@ type BeatWordStats = {
   wordCount: number;
   reps: number;
   errors: Record<number, number>;
+  correct?: Record<number, number>;
 };
 
 const KEY = (beatId: string) => `sermable:wordDifficulty:${beatId}`;
@@ -32,13 +33,19 @@ function read(beatId: string, wordCount: number): BeatWordStats {
 export function recordRepDifficulty(
   beatId: string | undefined | null,
   wordCount: number,
-  failedIndices: Iterable<number>
+  failedIndices: Iterable<number>,
+  matchedIndices: Iterable<number> = [],
 ): void {
   if (!beatId || wordCount <= 0) return;
   try {
     const stats = read(beatId, wordCount);
     stats.reps += 1;
-    for (const idx of failedIndices) {
+    const failed = new Set(failedIndices);
+    stats.correct ??= {};
+    for (const idx of matchedIndices) {
+      if (idx >= 0 && idx < wordCount && !failed.has(idx)) stats.correct[idx] = (stats.correct[idx] ?? 0) + 1;
+    }
+    for (const idx of failed) {
       if (idx >= 0 && idx < wordCount) {
         stats.errors[idx] = (stats.errors[idx] ?? 0) + 1;
       }
@@ -65,6 +72,9 @@ export function getEasiestWordIndices(
     const ea = stats.errors[a] ?? 0;
     const eb = stats.errors[b] ?? 0;
     if (ea !== eb) return ea - eb;
+    const ca = stats.correct?.[a] ?? 0;
+    const cb = stats.correct?.[b] ?? 0;
+    if (ca !== cb) return cb - ca;
     return a - b;
   });
 }
@@ -72,6 +82,11 @@ export function getEasiestWordIndices(
 export function hasDifficultyHistory(beatId: string | undefined | null, wordCount: number): boolean {
   if (!beatId) return false;
   return read(beatId, wordCount).reps > 0;
+}
+
+export function getWordDifficultyResults(beatId: string, wordCount: number): { reps: number; errors: number[]; correct: number[] } {
+  const stats = read(beatId, wordCount);
+  return { reps: stats.reps, errors: Array.from({ length: wordCount }, (_, i) => stats.errors[i] ?? 0), correct: Array.from({ length: wordCount }, (_, i) => stats.correct?.[i] ?? 0) };
 }
 
 /* ---- Per-speech word error memory (by normalized word, used by Keycards) ---- */

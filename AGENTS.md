@@ -11,3 +11,4 @@
 - Own native practice recognition through `nativeSpeechSession`: serialize restarts, detach listeners before stopping, and trim pre-reset utterance prefixes so audio races cannot replay words or reopen a healthy microphone; wait for the previous iOS task to settle before starting again.
 - Patch the iOS speech plugin through `patches/` (applied by `patch-package` on install) so callbacks from an older recognition task cannot stop a newer microphone session.
 - Classify browser speech retries through `webSpeechRecovery`: silence and normal session ends are not failures, so thinking pauses cannot exhaust microphone retries.
+- Keep progressive word support in `progressiveWordSupport`; scope per-word history to the exact displayed text, and apply background AI advice only between rounds so delayed analysis cannot move words or disturb recognition.

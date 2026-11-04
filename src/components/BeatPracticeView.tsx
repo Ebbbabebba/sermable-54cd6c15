@@ -34,10 +34,11 @@ import { stripPropCueMarkers, extractPropCues, getActivePropCue } from "@/utils/
 import { getKeywordIndices } from "@/utils/keywordExtraction";
 import { scheduleNextReview, type ScheduleNextReviewInput } from "@/lib/scheduleNextReview";
 import { getHesitationThresholdMs } from "@/lib/practicePrefs";
-import { recordRepDifficulty, recordSpeechWordErrors, getEasiestWordIndices } from "@/utils/wordDifficulty";
+import { recordRepDifficulty, recordSpeechWordErrors, getEasiestWordIndices, getWordDifficultyResults } from "@/utils/wordDifficulty";
 import { scheduleNativeNotification } from "@/lib/nativeNotifications";
 import { createNativeSpeechSession } from "@/lib/nativeSpeechSession";
 import { createWebSpeechRecovery } from "@/lib/webSpeechRecovery";
+import { nextSupportWord, progressiveHideCount } from "@/lib/progressiveWordSupport";
 
 
 // Web Speech API types
@@ -540,6 +541,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // (not lookahead skip-fills, not hesitation auto-advance). Used as a hard
   // gate against premature sentence completion.
   const freshMatchesThisRepRef = useRef(0);
+  const matchedWordIndicesRef = useRef(new Set<number>());
   
   // Word tracking
   const [hiddenWordIndices, setHiddenWordIndices] = useState<Set<number>>(new Set());
@@ -862,6 +864,29 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   }, [propCues]);
   const words = useMemo(() => currentText.split(/\s+/).filter(w => w.trim()), [currentText]);
   const PAUSE_TOKEN_RE = /^-(\d{1,2})?s?$/;
+  // Index-based performance belongs to this exact displayed text, not another sentence.
+  const difficultyKey = currentBeat ? `${currentBeat.id}:${currentText}` : null;
+  const aiWordSupportRef = useRef<{ key: string; indices: Set<number> } | null>(null);
+  const supportRequestsRef = useRef(new Set<string>());
+  const supportAnalysisPausedRef = useRef(false);
+  const activeDifficultyKeyRef = useRef(difficultyKey);
+  activeDifficultyKeyRef.current = difficultyKey;
+  const analyzeWordSupport = (key: string) => {
+    const results = getWordDifficultyResults(key, words.length);
+    // One nonblocking request per displayed text/session, after real repetitions.
+    if (results.reps < 2 || supportAnalysisPausedRef.current || supportRequestsRef.current.has(key)) return;
+    supportRequestsRef.current.add(key);
+    void supabase.functions.invoke('analyze-word-support', {
+      body: { words, language: speechLang, ...results },
+    }).then(({ data, error }) => {
+      if (error) { supportAnalysisPausedRef.current = true; return; }
+      if (activeDifficultyKeyRef.current !== key || !Array.isArray(data?.keepVisible)) return;
+      aiWordSupportRef.current = { key, indices: new Set(data.keepVisible.filter((i: unknown): i is number =>
+        typeof i === 'number' && Number.isInteger(i) && i >= 0 && i < words.length)) };
+      // Advice is used on the next completed round; never mutate words mid-speech.
+    }).catch(() => { supportAnalysisPausedRef.current = true; });
+  };
+
 
   // ---- General overview mode -------------------------------------------
   // In overview mode only content-bearing KEYWORDS (names, numbers, longer
@@ -1674,20 +1699,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setHiddenWordOrder([]);
   };
 
-  // HYBRID streak-based hiding:
-  //   • Per repetition: clean rep → hide MORE next time. The curve is now
-  //     PROPORTIONAL: at least 25% of the still-visible target words (min 3),
-  //     so a recall reaches "all hidden" in ~3-4 reps instead of 6-7.
-  //   • Per word: missed (red) or hesitated (yellow) words reset the streak
-  //     to 0 AND are marked "protected" so they stay visible until the user
-  //     says them cleanly (see protectedWordIndices + getNextWordToHide).
-  const getWordsToHideCount = useCallback((successCount: number, visibleTargets?: number): number => {
-    const curve = [3, 5, 8, 11, 14, 16, 18, 20, 22];
-    const base = curve[Math.min(successCount, curve.length - 1)];
-    if (typeof visibleTargets !== 'number') return base;
-    const proportional = Math.max(3, Math.ceil(visibleTargets * 0.25));
-    return Math.max(base, proportional);
-  }, []);
+  // Gradual retrieval: one, then two, then at most three words per clean round.
+  const getWordsToHideCount = useCallback((successCount: number, visibleTargets = 0): number =>
+    progressiveHideCount(visibleTargets, successCount), []);
 
   // How many target words are still visible (keywords only in overview mode)
   const countVisibleTargets = useCallback((hidden: Set<number>): number => {
@@ -1746,9 +1760,14 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         else if (overdueDays >= 1) ratio *= 0.8;
       }
 
-      const target = Math.max(3, Math.floor(eligibleCount * ratio));
+      const target = Math.min(Math.max(0, eligibleCount - 1), Math.max(1, Math.floor(eligibleCount * ratio)));
+      while (preHidden.size > target) {
+        const idx = preHiddenOrder.pop();
+        if (idx === undefined) break;
+        preHidden.delete(idx);
+      }
 
-      const easiestFirst = getEasiestWordIndices(activeBeat?.id, words.length, eligible);
+      const easiestFirst = getEasiestWordIndices(difficultyKey, words.length, eligible);
       for (const idx of easiestFirst) {
         if (preHidden.size >= target) break;
         if (!preHidden.has(idx)) {
@@ -1760,66 +1779,17 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setHiddenWordIndices(preHidden);
       setHiddenWordOrder(preHiddenOrder);
     }
-  }, [sessionMode, recallIndex, words, beatsToRecall, beatToRecallBeforeNext]);
+  }, [sessionMode, recallIndex, words, beatsToRecall, beatToRecallBeforeNext, difficultyKey]);
 
 
 
-  // Determine which word to hide next (priority order)
-  // Protected words (failed/hesitated) are hidden LAST
+  // Observed misses outrank AI advice; connectors disappear before content.
   const getNextWordToHide = useCallback((currentHidden: Set<number>, protectedSet?: Set<number>): number | null => {
-    const protected_ = protectedSet ?? protectedWordIndices;
-
-    // Overview mode: only keyword indices are eligible for hiding — the rest
-    // of the text remains visible as support for free retelling.
-    const hideEligible = (i: number) =>
-      !isOverviewModeRef.current || keywordIndicesRef.current.has(i);
-
-    // First pass: only consider non-protected visible words
-    const nonProtectedVisible = words
-      .map((_, i) => i)
-      .filter(i => !currentHidden.has(i) && !protected_.has(i) && hideEligible(i));
-
-    // Identify sentence-start indices — these are fragile to hide because the
-    // first word of a sentence is the most error-prone for speech recognition.
-    const isSentenceStart = (i: number) =>
-      i === 0 || /[.!?]$/.test(words[i - 1] ?? '');
-    const nonSentenceStart = nonProtectedVisible.filter(i => !isSentenceStart(i));
-
-    // If there are non-protected words to hide, use those first
-    if (nonProtectedVisible.length > 0) {
-      // Priority 1: Common articles/prepositions (skip sentence-starts when possible)
-      for (const idx of nonSentenceStart) {
-        const word = words[idx].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
-        if (COMMON_WORDS.has(word)) return idx;
-      }
-
-      // Priority 2: Short words (2-4 chars), still avoiding sentence-starts
-      for (const idx of nonSentenceStart) {
-        const word = words[idx].normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
-        if (word.length >= 2 && word.length <= 4) return idx;
-      }
-
-      // Priority 3: Middle words (not first or last)
-      const middleIndices = nonSentenceStart.filter(i => i > 0 && i < words.length - 1);
-      if (middleIndices.length > 0) return middleIndices[0];
-
-      // Priority 4: Any non-sentence-start word
-      if (nonSentenceStart.length > 0) return nonSentenceStart[0];
-
-      // Priority 5: Fallback — only sentence-starts left, hide them last
-      return nonProtectedVisible[0];
-    }
-    
-    // Second pass: all non-protected words are hidden, now hide protected words
-    const protectedVisible = words
-      .map((_, i) => i)
-      .filter(i => !currentHidden.has(i) && protected_.has(i) && hideEligible(i));
-    
-    if (protectedVisible.length === 0) return null;
-    
-    // For protected words, hide in order they appear (first to last)
-    return protectedVisible[0];
-  }, [words, protectedWordIndices]);
+    const eligible = (i: number) => !isOverviewModeRef.current || keywordIndicesRef.current.has(i);
+    const order = getEasiestWordIndices(difficultyKey, words.length, eligible);
+    const advice = aiWordSupportRef.current?.key === difficultyKey ? aiWordSupportRef.current.indices : new Set<number>();
+    return nextSupportWord(words, currentHidden, protectedSet ?? protectedWordIndices, COMMON_WORDS, order, eligible, advice);
+  }, [words, protectedWordIndices, difficultyKey]);
 
   // Normalize word for comparison (language-agnostic)
   const normalizeWord = (word: string): string => {
@@ -2395,6 +2365,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Count fresh, real matches (not skip-fills) for the completion gate.
         if (!usedSkipFill) {
           freshMatchesThisRepRef.current += 1;
+          matchedWordIndicesRef.current.add(foundIdx);
         }
       }
       lastWordTimeRef.current = Date.now();
@@ -2526,7 +2497,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       const repErrors = new Set<number>(failedSet);
       hesitatedIndicesRef.current.forEach(i => repErrors.add(i));
       missedIndicesRef.current.forEach(i => repErrors.add(i));
-      recordRepDifficulty(currentBeat?.id, words.length, repErrors);
+      recordRepDifficulty(difficultyKey, words.length, repErrors, matchedWordIndicesRef.current);
+      if (difficultyKey) analyzeWordSupport(difficultyKey);
       recordSpeechWordErrors(speechId, [...repErrors].map(i => words[i]).filter(Boolean));
     }
 
@@ -2545,6 +2517,10 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     }
 
     if (phase.includes('learning')) {
+      if (hadErrors) {
+        resetForNextRep(true, true);
+        return;
+      }
       const currentPhase = phase;
       const currentRep = repetitionCountRef.current;
 
@@ -3020,7 +2996,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }, 1800);
     } else if (!allHidden) {
       // Success but not all hidden yet - hide more words progressively 3 → 4 → 5
-      const wordsToHide = Math.min(3 + preBeatRecallSuccessCount, 5);
+      const wordsToHide = progressiveHideCount(countVisibleTargets(hiddenWordIndices), preBeatRecallSuccessCount);
       const newSuccessCount = preBeatRecallSuccessCount + 1;
       setPreBeatRecallSuccessCount(newSuccessCount);
       
@@ -3122,29 +3098,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       }
 
       
-      // Word-hiding hierarchy:
-      //   PHASE 1 (junk/gap words) — hide ALL remaining visible gap words
-      //     ("att, typ, där, och, ...") in one go after the first clean rep.
-      //     These add no semantic load, so making the user re-prove them one
-      //     by one wastes reps and breaks flow.
-      //   PHASE 2 (content words) — progress 1 → 2 → 3 per clean rep so the
-      //     user actively recalls meaningful words a few at a time.
-      const visibleGapIndices: number[] = [];
-      for (let i = 0; i < words.length; i++) {
-        if (newHidden.has(i) || newProtected.has(i)) continue;
-        if (isGapWord(words[i])) visibleGapIndices.push(i);
-      }
-
-      let wordsToHide: number;
-      if (visibleGapIndices.length > 0) {
-        // PHASE 1: drop all gap words at once (capped so we never blow past
-        // 3-in-a-row spacing rules inside getNextWordToHide).
-        wordsToHide = Math.min(visibleGapIndices.length, 8);
-      } else {
-        // PHASE 2: 1, 2, 3 progression for content words.
-        const curve = [1, 2, 3];
-        wordsToHide = curve[Math.min(fadingSuccessCount, curve.length - 1)];
-      }
+      const wordsToHide = progressiveHideCount(countVisibleTargets(newHidden), fadingSuccessCount);
 
       for (let i = 0; i < wordsToHide; i++) {
         // Pass the updated protected set to prioritize hiding non-protected words
@@ -3208,7 +3162,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (showCelebration) return;
     const newHidden = new Set(hiddenWordIndicesRef.current);
     const newOrder = [...hiddenWordOrder];
-    const jumpSize = 5;
+    const jumpSize = progressiveHideCount(countVisibleTargets(newHidden), fadingSuccessCount);
     let added = 0;
     for (let i = 0; i < jumpSize; i++) {
       const nextToHide = getNextWordToHide(newHidden, protectedWordIndices);
@@ -3223,26 +3177,27 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     setFailedWordIndices(new Set());
     setFadingSuccessCount(prev => Math.min(prev + 1, 2));
     resetForNextRep();
-  }, [hiddenWordOrder, protectedWordIndices, getNextWordToHide, showCelebration]);
+  }, [hiddenWordOrder, protectedWordIndices, getNextWordToHide, showCelebration, countVisibleTargets, fadingSuccessCount]);
 
   // Recall variant: hide ALL remaining words so the user has to recite the
   // entire beat from memory in one go. This is the "jump over" button during
   // recall — it does NOT auto-complete; the user still has to say every word.
   const jumpHideAllRecall = useCallback(() => {
     if (showCelebration) return;
-    const allHidden = new Set<number>();
+    const nextHidden = new Set(hiddenWordIndicesRef.current);
     const newOrder = [...hiddenWordOrder];
-    for (let i = 0; i < words.length; i++) {
-      // Overview mode: only keywords are hidden — support text stays visible.
-      if (isOverviewModeRef.current && !keywordIndicesRef.current.has(i)) continue;
-      allHidden.add(i);
-      if (!hiddenWordIndicesRef.current.has(i)) newOrder.push(i);
+    const count = progressiveHideCount(countVisibleTargets(nextHidden), recallSuccessCount);
+    for (let i = 0; i < count; i++) {
+      const next = getNextWordToHide(nextHidden);
+      if (next === null) break;
+      nextHidden.add(next);
+      newOrder.push(next);
     }
-    setHiddenWordIndices(allHidden);
+    setHiddenWordIndices(nextHidden);
     setHiddenWordOrder(newOrder);
     setFailedWordIndices(new Set());
     resetForNextRep();
-  }, [hiddenWordOrder, words.length, showCelebration]);
+  }, [hiddenWordOrder, showCelebration, countVisibleTargets, recallSuccessCount, getNextWordToHide]);
 
   const resetForNextRep = (releaseCompletionLock = true, requireFreshStart = false) => {
     const now = Date.now();
@@ -3255,6 +3210,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       hadActiveRecognizer && now - lastWordTimeRef.current < 300;
     repetitionIdRef.current += 1;
     freshMatchesThisRepRef.current = 0;
+    matchedWordIndicesRef.current = new Set();
     roundNeedsFreshStartRef.current = requireFreshStart;
     lastResetAtRef.current = now;
     staleReplayGuardUntilRef.current = Math.max(
@@ -3344,6 +3300,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // callback that was captured with the previous phase exits early.
     phaseEpochRef.current += 1;
     freshMatchesThisRepRef.current = 0;
+    matchedWordIndicesRef.current = new Set();
     roundNeedsFreshStartRef.current = true;
     needsFreshSpeechRef.current = true;
     phaseTransitionAtRef.current = now;
@@ -5094,12 +5051,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               </span>
             </motion.div>
           )}
-          {isRecording && isSpeechReady && !showCelebration && (
-            <span className="practice-listening" aria-live="polite" aria-label={t('beat_practice.listening_ready', 'Your turn…')}>
-              <Mic className="practice-listening__icon" aria-hidden="true" />
-            </span>
-          )}
-          
           {/* Sentence dots (only in learn mode, show only unique sentences) */}
           {sessionMode === 'learn' && !phase.includes('beat') && (() => {
             const uniqueCount = currentBeat ? getUniqueSentences(currentBeat).length : 3;
@@ -5173,6 +5124,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
               sessionMode !== 'pre_beat_recall' && getPhaseType() === 'fading' && "s-3s s-tt",
               sessionMode !== 'pre_beat_recall' && getPhaseType() === 'combining' && "s-5m s-v0"
             )}>
+              {isRecording && isSpeechReady && !showCelebration && (
+                <span className="practice-listening" aria-label={t('beat_practice.listening_ready')}>
+                  <Mic className="practice-listening__icon" aria-hidden="true" />
+                </span>
+              )}
               {sessionMode === 'pre_beat_recall' ? (
                 <>
                   <RotateCcw className="s-fz s-xt" />
@@ -5180,7 +5136,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 </>
               ) : getPhaseType() === 'learning' ? (
                 <>
-                  <Circle className="s-fw s-xp s-c0" />
                   {t('beat_practice.read_aloud_progress', { current: repetitionCount, total: requiredLearningReps })}
                 </>
               ) : getPhaseType() === 'fading' ? (
@@ -5211,11 +5166,11 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                 onClick={jumpHideAllRecall}
                 disabled={showCelebration}
                 className="s-i4 s-ib s-dl s-or s-p3 s-qe s-vj s-d3 s-3s s-tu s-gt s-ws s-bj"
-                aria-label={t('beat_practice.recall_hide_all', 'Hide all & test')}
-                title={t('beat_practice.recall_hide_all_tooltip', 'Hide every word — recite the whole beat from memory')}
+                aria-label={t('beat_practice.skip_hide_ahead')}
+                title={t('beat_practice.skip_hide_ahead_tooltip')}
               >
                 <FastForward className="s-fx s-xq" />
-                {t('beat_practice.recall_hide_all', 'Hide all & test')}
+                {t('beat_practice.skip_hide_ahead')}
               </button>
             )}
           </div>

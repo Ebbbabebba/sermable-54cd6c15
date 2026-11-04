@@ -361,8 +361,8 @@ input,textarea,select { font-family:var(--font-system); }
    marker moves to the next word. */
 .practice-word--current { background:hsl(var(--primary)/0.15); box-shadow:0 0 0 2px hsl(var(--primary)), var(--shadow-sm); }
 /* Icon-only "your turn" cue: water-blue mic badge with a soft pulsing ring */
-.practice-listening { display:flex; align-items:center; justify-content:center; width:40px; height:40px; color:hsl(var(--primary)); background:hsl(var(--card)); border-radius:50%; box-shadow:var(--shadow-sm); animation:mic-pulse 1.8s ease-out infinite; }
-.practice-listening__icon { width:20px; height:20px; }
+.practice-listening { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; width:24px; height:24px; color:hsl(var(--primary)); background:hsl(var(--card)); border-radius:50%; box-shadow:var(--shadow-sm); animation:mic-pulse 1.8s ease-out infinite; }
+.practice-listening__icon { width:16px; height:16px; }
 .feedback-card > div:first-child { padding:24px; }
 .feedback-card > div:first-child > div { flex-wrap:wrap; }
 .feedback-card > div:last-child { padding:0 24px 24px; }
