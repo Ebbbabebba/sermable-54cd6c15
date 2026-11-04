@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, PartyPopper, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil, FastForward } from "lucide-react";
+import { RotateCcw, PartyPopper, CheckCircle2, ChevronRight, GraduationCap, FileText, Medal, X, Circle, Coffee, Play, BookOpen, Eye, Bell, Lock, AlertTriangle, Crown, Pencil, FastForward, Mic } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -5095,8 +5095,8 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
             </motion.div>
           )}
           {isRecording && isSpeechReady && !showCelebration && (
-            <span className="practice-listening" aria-live="polite">
-              {t('beat_practice.listening_ready', 'Your turn…')}
+            <span className="practice-listening" aria-live="polite" aria-label={t('beat_practice.listening_ready', 'Your turn…')}>
+              <Mic className="practice-listening__icon" aria-hidden="true" />
             </span>
           )}
           
