@@ -4298,23 +4298,47 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     return stripPropCueMarkers(text);
   }, [audienceVisible, words, pauseWordMeta]);
 
-  // Let a stuck speaker move on — but honestly. The rep counts as a failed
-  // attempt (every unspoken word is marked as missed), so the words are
-  // revealed again and the phase does NOT advance until the user actually
-  // says the sentence. This keeps scheduling and mastery truthful.
-  const continueFromAudience = () => {
-    // Bypass the fresh-speech gate (the user is stuck, not cheating)…
+  // Stuck-speaker actions. Both force-clear the completion locks first: a
+  // recent auto-advance can leave the debounce/lock active, which previously
+  // swallowed the tap and left the audience overlay frozen on screen.
+  const unlockCompletion = () => {
+    phaseCompletionLockRef.current = false;
+    lastCompletionAtRef.current = 0;
     freshMatchesThisRepRef.current = Math.max(freshMatchesThisRepRef.current, words.length);
-    const all = new Set(words.map((_, i) => i));
-    // …but mark every unspoken word as missed so the rep counts as failed:
-    // the words are revealed again and the phase does NOT advance early.
-    const failed = new Set<number>();
-    words.forEach((_, i) => {
-      if (!pauseWordMeta.has(i) && !spokenIndicesRef.current.has(i)) failed.add(i);
-    });
-    setSpokenIndices(all);
-    checkCompletion(all, failed);
   };
+
+  // "Fortsätt": complete the rep and move on to the NEXT sentence.
+  const continueFromAudience = () => {
+    unlockCompletion();
+    const all = new Set(words.map((_, i) => i));
+    setSpokenIndices(all);
+    checkCompletion(all);
+  };
+
+  // "Öva igen": the animals look sad for a moment, then the same sentence is
+  // practiced again — every unspoken word counts as missed, so the words are
+  // revealed and the phase does NOT advance until the user actually says it.
+  const [audienceSad, setAudienceSad] = useState(false);
+  const audienceSadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryFromAudience = () => {
+    if (audienceSad) return;
+    setAudienceSad(true);
+    if (audienceSadTimerRef.current) clearTimeout(audienceSadTimerRef.current);
+    audienceSadTimerRef.current = setTimeout(() => {
+      setAudienceSad(false);
+      unlockCompletion();
+      const all = new Set(words.map((_, i) => i));
+      const failed = new Set<number>();
+      words.forEach((_, i) => {
+        if (!pauseWordMeta.has(i) && !spokenIndicesRef.current.has(i)) failed.add(i);
+      });
+      setSpokenIndices(all);
+      checkCompletion(all, failed);
+    }, 1400);
+  };
+  useEffect(() => () => {
+    if (audienceSadTimerRef.current) clearTimeout(audienceSadTimerRef.current);
+  }, []);
 
   if (loading) {
     // Never show a dead blank screen: keep a way out while lessons load.
@@ -4842,6 +4866,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           showContinue={audienceIdleLevel >= 2}
           continueLabel={t('beat_practice.audience_continue', 'Continue')}
           onContinue={continueFromAudience}
+          retryLabel={t('beat_practice.audience_retry', 'Practice again')}
+          onRetry={retryFromAudience}
+          sad={audienceSad}
           onExit={() => {
             stopListening();
             void saveCheckpoint();

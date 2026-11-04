@@ -1103,7 +1103,8 @@
     "full_beat_explainer": "Säg nu alla meningarna i följd, från början, ur minnet.",
     "full_beat_from_start": "Från början — hela stycket",
     "loading_slow": "Det här tar längre tid än vanligt.",
-    "audience_continue": "Fortsätt"
+    "audience_continue": "Fortsätt",
+    "audience_retry": "Öva igen"
   },
   "presentation": {
     "settings": "Presentationsinställningar",

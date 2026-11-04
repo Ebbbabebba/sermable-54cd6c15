@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Mic, X } from "lucide-react";
+import { ArrowRight, Mic, RotateCcw, X } from "lucide-react";
 
 interface AnimalAudienceProps {
   progress: number;
@@ -20,6 +20,12 @@ interface AnimalAudienceProps {
   continueLabel?: string;
   /** Called when the user taps the continue button. */
   onContinue?: () => void;
+  /** Label for the retry button (practice the same sentence again). */
+  retryLabel?: string;
+  /** Called when the user taps the retry button. */
+  onRetry?: () => void;
+  /** Sad state: the speaker gave up, animals look disappointed. */
+  sad?: boolean;
 }
 
 type AnimalKind = "fox" | "bunny" | "frog" | "cat" | "bear" | "owl";
@@ -85,7 +91,7 @@ const Ears = ({ kind, palette, mood }: { kind: AnimalKind; palette: Palette; moo
   </>;
 };
 
-export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind; palette: Palette; mood: number; celebrating: boolean }) => {
+export const Animal = ({ kind, palette, mood, celebrating, sad = false }: { kind: AnimalKind; palette: Palette; mood: number; celebrating: boolean; sad?: boolean }) => {
   const transition = "all 360ms cubic-bezier(0.34, 1.56, 0.64, 1)";
   const o = { stroke: OUTLINE, strokeWidth: SW, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
   const blush = "hsl(var(--bubblegum, 337 88% 80%))";
@@ -172,7 +178,9 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
       </g>}
 
       {/* Mouth */}
-      {celebrating || mood > 0.75
+      {sad
+        ? <path d={`M52 ${mouthY + 8} Q60 ${mouthY} 68 ${mouthY + 8}`} fill="none" stroke={OUTLINE} strokeWidth="3" strokeLinecap="round" />
+        : celebrating || mood > 0.75
         ? <g>
             <path d={`M50 ${mouthY} Q60 ${mouthY + 2} 70 ${mouthY} Q68 ${mouthY + 14} 60 ${mouthY + 14} Q52 ${mouthY + 14} 50 ${mouthY} Z`} fill={OUTLINE} {...o} strokeWidth="2" />
             <ellipse cx="60" cy={mouthY + 10} rx="5" ry="3" fill={blush} />
@@ -183,13 +191,13 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
   );
 };
 
-const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit, hintText, showContinue = false, continueLabel, onContinue }: AnimalAudienceProps) => {
+const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabel, doneLabel, onExit, hintText, showContinue = false, continueLabel, onContinue, retryLabel, onRetry, sad = false }: AnimalAudienceProps) => {
   const trio = useMemo(() => {
     const base = ((Math.trunc(variant) % ANIMALS.length) + ANIMALS.length) % ANIMALS.length;
     return [0, 1, 2].map(o => ANIMALS[(base + o * 2) % ANIMALS.length]);
   }, [variant]);
-  const mood = clamp01(progress);
-  const done = celebrating || mood >= 1;
+  const mood = sad ? 0 : clamp01(progress);
+  const done = !sad && (celebrating || mood >= 1);
 
   return (
     <div
@@ -223,7 +231,7 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
         {trio.map((a, i) => (
           <div
             key={a.kind}
-            className={`animal-audience__character ${done ? "is-celebrating" : "is-idle"}`}
+            className={`animal-audience__character ${done ? "is-celebrating" : sad ? "" : "is-idle"}`}
             style={{
               flex: i === 1 ? 1.3 : 1,
               aspectRatio: "120 / 140",
@@ -233,7 +241,7 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
               ["--bob-height" as string]: `${-1 - mood * 2.5}%`,
             }}
           >
-            <Animal kind={a.kind} palette={a.palette} mood={mood} celebrating={done} />
+            <Animal kind={a.kind} palette={a.palette} mood={mood} celebrating={done} sad={sad} />
           </div>
         ))}
       </div>
@@ -243,14 +251,29 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
           <div style={{ width: `${mood * 100}%`, height: "100%", background: "hsl(var(--primary))", transition: "width 250ms ease" }} />
         </div>
       </div>
-      {showContinue && !done && onContinue && (
-        <button
-          type="button"
-          onClick={onContinue}
-          style={{ padding: "12px 28px", borderRadius: 999, border: 0, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", fontSize: 17, fontWeight: 700, cursor: "pointer" }}
-        >
-          {continueLabel ?? "Continue"}
-        </button>
+      {showContinue && !done && !sad && (onRetry || onContinue) && (
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 999, border: 0, background: "hsl(var(--muted))", color: "hsl(var(--foreground))", fontSize: 17, fontWeight: 700, cursor: "pointer" }}
+            >
+              <RotateCcw size={18} />
+              {retryLabel ?? "Practice again"}
+            </button>
+          )}
+          {onContinue && (
+            <button
+              type="button"
+              onClick={onContinue}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 999, border: 0, background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", fontSize: 17, fontWeight: 700, cursor: "pointer" }}
+            >
+              {continueLabel ?? "Continue"}
+              <ArrowRight size={18} />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

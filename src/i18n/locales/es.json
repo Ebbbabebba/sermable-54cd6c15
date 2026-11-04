@@ -782,7 +782,8 @@
     "full_beat_explainer": "Ahora di todas las frases seguidas, desde el principio, de memoria.",
     "full_beat_from_start": "Desde el principio — toda la parte",
     "loading_slow": "Esto está tardando más de lo normal.",
-    "audience_continue": "Continuar"
+    "audience_continue": "Continuar",
+    "audience_retry": "Practicar de nuevo"
   },
   "presentation": {
     "settings": "Configuración de presentación",
