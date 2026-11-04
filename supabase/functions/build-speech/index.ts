@@ -85,19 +85,21 @@ function normalizePauseDirections(text: string): string {
     .replace(/ +\n/g, "\n");
 }
 
-async function callOpenAI(
+async function callAI(
   apiKey: string,
   systemPrompt: string,
   userPrompt: string,
 ): Promise<any> {
-  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+  // Built-in Lovable AI Gateway: no provider account or credits to manage,
+  // billed to workspace credits at the provider's list price.
+  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "openai/gpt-6-astra",
       response_format: { type: "json_object" },
       temperature: 0.7,
       messages: [
@@ -108,7 +110,7 @@ async function callOpenAI(
   });
   if (!r.ok) {
     const t = await r.text();
-    throw new Error(`OpenAI error ${r.status}: ${t}`);
+    throw new Error(`AI gateway error ${r.status}: ${t}`);
   }
   const data = await r.json();
   const content = data?.choices?.[0]?.message?.content ?? "{}";
@@ -152,10 +154,10 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json()) as BuildRequest;
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "OPENAI_API_KEY is not configured" }),
+        JSON.stringify({ error: "LOVABLE_API_KEY is not configured" }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

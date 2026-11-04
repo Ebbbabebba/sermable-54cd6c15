@@ -3157,8 +3157,35 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       setHiddenWordOrder(newOrder);
       setFailedWordIndices(new Set());
       resetForNextRep(true, true);
+    } else if (hadErrors) {
+      // All words are hidden, but this rep had missed/hesitated words — e.g.
+      // the user tapped "Continue" on the animal audience without saying
+      // anything. That is NOT a clean no-script run: reveal the failed words,
+      // protect them so they are re-hidden last, and stay in the phase
+      // instead of celebrating or marking the beat as mastered.
+      const newHidden = new Set(hiddenWordIndices);
+      const newOrder = [...hiddenWordOrder];
+      const newProtected = new Set(protectedWordIndices);
+      const sortedFailed = [...failedSet].sort((a, b) => a - b);
+      sortedFailed.forEach((idx) => {
+        newProtected.add(idx);
+        if (newHidden.has(idx)) {
+          newHidden.delete(idx);
+          const orderIdx = newOrder.indexOf(idx);
+          if (orderIdx !== -1) {
+            newOrder.splice(orderIdx, 1);
+          }
+        }
+      });
+      setProtectedWordIndices(newProtected);
+      setFadingSuccessCount(prev => Math.max(0, prev - 1));
+      setConsecutiveNoScriptSuccess(0);
+      setHiddenWordIndices(newHidden);
+      setHiddenWordOrder(newOrder);
+      setFailedWordIndices(new Set());
+      resetForNextRep(true, true);
     } else {
-      // All words hidden - SUCCESS! 
+      // All words hidden - SUCCESS!
       // Mark beat as mastered immediately after ONE successful no-script run
       // (Previously required 2 consecutive no-script successes, which confused users)
       if (phase === 'beat_fading') {
