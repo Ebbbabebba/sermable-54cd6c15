@@ -531,7 +531,7 @@ const Dashboard = () => {
               return (
                 <>
                   <p className="s-vj s-d3 s-x1 s-wf s-ul s-jz">
-                    {dateLabel}
+                    {dateLabel.charAt(0).toLocaleUpperCase(i18n.language) + dateLabel.slice(1)}
                   </p>
                   <h1 className="s-tb s-si s-cy s-d3 s-u9 s-jy s-im">
                     {greetingText}
