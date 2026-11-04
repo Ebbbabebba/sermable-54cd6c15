@@ -43,7 +43,7 @@ export const ANIMALS: { kind: AnimalKind; palette: Palette }[] = [
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 const OUTLINE = "hsl(var(--animal-outline, 216 48% 23%))";
-const SW = 3;
+const SW = 2.25;
 
 /**
  * Sticker-style critter on a 120 x 140 canvas: chunky navy outline, one
@@ -95,12 +95,12 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
   const eyeY = kind === "frog" ? 30 : 58;
   const eyeLX = kind === "frog" ? 38 : 45;
   const eyeRX = kind === "frog" ? 82 : 75;
-  const eyeR = 7 + mood * 1.5;
+  const eyeR = 5.5 + mood * 1.2;
   const lid = Math.max(0, (1 - mood) * 7);
   const brow = 10 + mood * 4;
   const browTilt = (1 - mood) * 4;
   const mouthY = kind === "frog" ? 76 : 76;
-  const smile = 2 + mood * 9;
+  const smile = 2 + mood * 7;
 
   return (
     <svg viewBox="0 0 120 140" className="s-gg s-y7 s-mo" style={{ overflow: "visible", transform: celebrating ? "scale(1.05)" : `scale(${0.95 + mood * 0.05})`, transition }} aria-hidden="true">
@@ -148,10 +148,8 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
           {kind === "frog" && <><circle cx={eyeLX} cy={eyeY} r={eyeR + 3} fill={glint} /><circle cx={eyeRX} cy={eyeY} r={eyeR + 3} fill={glint} /></>}
           <circle cx={eyeLX} cy={eyeY} r={eyeR} fill={OUTLINE} style={{ transition }} />
           <circle cx={eyeRX} cy={eyeY} r={eyeR} fill={OUTLINE} style={{ transition }} />
-          <circle cx={eyeLX + 2.5} cy={eyeY - 2.5} r="2.6" fill={glint} />
-          <circle cx={eyeRX + 2.5} cy={eyeY - 2.5} r="2.6" fill={glint} />
-          <circle cx={eyeLX - 2} cy={eyeY + 2.5} r="1.2" fill={glint} />
-          <circle cx={eyeRX - 2} cy={eyeY + 2.5} r="1.2" fill={glint} />
+          <circle cx={eyeLX + 2} cy={eyeY - 2} r="1.8" fill={glint} />
+          <circle cx={eyeRX + 2} cy={eyeY - 2} r="1.8" fill={glint} />
           {lid > 0.5 && <>
             <rect x={eyeLX - 10} y={eyeY - 11} width="20" height={lid + 2} fill={kind === "owl" ? palette.belly : palette.body} style={{ transition }} />
             <rect x={eyeRX - 10} y={eyeY - 11} width="20" height={lid + 2} fill={kind === "owl" ? palette.belly : palette.body} style={{ transition }} />
@@ -160,8 +158,8 @@ export const Animal = ({ kind, palette, mood, celebrating }: { kind: AnimalKind;
       </g>
 
       {/* Cheeks */}
-      <ellipse cx="33" cy="72" rx="6" ry="3.6" fill={blush} style={{ opacity: 0.3 + mood * 0.7, transition }} />
-      <ellipse cx="87" cy="72" rx="6" ry="3.6" fill={blush} style={{ opacity: 0.3 + mood * 0.7, transition }} />
+      <ellipse cx="33" cy="72" rx="5" ry="3" fill={blush} style={{ opacity: 0.12 + mood * 0.3, transition }} />
+      <ellipse cx="87" cy="72" rx="5" ry="3" fill={blush} style={{ opacity: 0.12 + mood * 0.3, transition }} />
 
       {/* Nose / beak */}
       {kind === "owl"
@@ -231,8 +229,8 @@ const AnimalAudience = ({ progress, celebrating = false, variant = 0, promptLabe
               aspectRatio: "120 / 140",
               animationDelay: `${i * (done ? 120 : 420)}ms`,
               // Bob faster and higher the closer the speaker gets to finishing.
-              animationDuration: done ? undefined : `${Math.round(3200 - mood * 2000)}ms`,
-              ["--bob-height" as string]: `${-1.5 - mood * 5}%`,
+              animationDuration: done ? undefined : `${Math.round(3600 - mood * 1200)}ms`,
+              ["--bob-height" as string]: `${-1 - mood * 2.5}%`,
             }}
           >
             <Animal kind={a.kind} palette={a.palette} mood={mood} celebrating={done} />

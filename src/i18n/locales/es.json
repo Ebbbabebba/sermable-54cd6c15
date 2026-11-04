@@ -1364,8 +1364,8 @@
   },
   "streak": {
     "title": "¡Días seguidos!",
-    "subtitle": "¡Estás que arde! Practica cada día para mantener tu racha.",
-    "button": "¡Genial!"
+    "subtitle": "Practica cada día para mantener tu racha.",
+    "button": "OK"
   },
   "premiumDialog": {
     "title": "Mejorar a Premium",

@@ -1364,8 +1364,8 @@
   },
   "streak": {
     "title": "Jours de suite !",
-    "subtitle": "Tu es en feu ! Entraîne-toi chaque jour pour garder ta série.",
-    "button": "Génial !"
+    "subtitle": "Entraîne-toi chaque jour pour garder ta série.",
+    "button": "OK"
   },
   "premiumDialog": {
     "title": "Passer à Premium",

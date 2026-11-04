@@ -1393,8 +1393,8 @@
   },
   "streak": {
     "title": "Dagar i rad!",
-    "subtitle": "Du är på gång! Öva varje dag för att hålla din svit vid liv.",
-    "button": "Härligt!"
+    "subtitle": "Öva varje dag för att hålla din svit vid liv.",
+    "button": "OK"
   },
   "premiumDialog": {
     "title": "Uppgradera till Premium",

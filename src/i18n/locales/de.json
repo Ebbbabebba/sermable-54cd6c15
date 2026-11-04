@@ -1364,8 +1364,8 @@
   },
   "streak": {
     "title": "Tage in Folge!",
-    "subtitle": "Du bist auf Feuer! Übe jeden Tag, um deine Serie zu halten.",
-    "button": "Super!"
+    "subtitle": "Übe jeden Tag, um deine Serie zu halten.",
+    "button": "OK"
   },
   "premiumDialog": {
     "title": "Auf Premium upgraden",

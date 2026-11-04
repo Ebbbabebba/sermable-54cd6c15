@@ -1364,8 +1364,8 @@
   },
   "streak": {
     "title": "Dias seguidos!",
-    "subtitle": "Você está em chamas! Pratique todos os dias para manter a sequência.",
-    "button": "Isso!"
+    "subtitle": "Pratique todos os dias para manter a sequência.",
+    "button": "OK"
   },
   "premiumDialog": {
     "title": "Atualizar para Premium",

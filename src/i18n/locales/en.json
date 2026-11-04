@@ -1346,8 +1346,8 @@
   },
   "streak": {
     "title": "Day Streak!",
-    "subtitle": "You're on fire! Keep practicing every day to maintain your streak.",
-    "button": "Yay!"
+    "subtitle": "Keep practicing every day to maintain your streak.",
+    "button": "OK"
   },
   "premiumDialog": {
     "title": "Upgrade to Premium",
