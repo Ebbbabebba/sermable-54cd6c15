@@ -598,6 +598,9 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   const ignoreResultIndexCutoffUntilRef = useRef(0);
   const lastWordTimeRef = useRef<number>(Date.now());
   const hasHeardSpeechRef = useRef(false);
+  // Stamped on every non-empty recognition event (interim included) so the
+  // audience hint timers can pause while the user is actively speaking.
+  const lastSpeechActivityRef = useRef<number>(Date.now());
   // Throttles auto-advance so consecutive hidden words can't cascade — the
   // user must produce fresh speech (or genuinely wait) between advances.
   const lastAutoAdvanceAtRef = useRef<number>(0);
@@ -2104,6 +2107,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     // Do this before tail-deduping so repeated interim results don't let the
     // hesitation timer mark hidden words yellow while the microphone is hearing them.
     hasHeardSpeechRef.current = true;
+    lastSpeechActivityRef.current = Date.now();
     // IMPORTANT: do NOT reset lastWordTimeRef on every interim result. If the
     // recognizer keeps emitting fragments that never match the expected hidden
     // word (e.g. "har"/"harmod"/"fahar" while we expect "man"), resetting the
@@ -4271,37 +4275,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     if (!audienceEligible && !showCelebration) audienceWasEligibleRef.current = false;
   }, [audienceEligible, showCelebration]);
 
-  // Stuck-speaker rescue: after ~2s of silence while the audience is up,
-  // reveal ONE hint word at a time (hardest words from earlier practice
-  // first); after a while longer, offer the retry/continue buttons.
-  const [audienceIdleLevel, setAudienceIdleLevel] = useState<0 | 1 | 2>(0);
-  const [audienceHintCount, setAudienceHintCount] = useState(0);
-  const audienceIdleHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const audienceIdleContinueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const audienceHintIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  useEffect(() => {
-    if (audienceIdleHintTimerRef.current) clearTimeout(audienceIdleHintTimerRef.current);
-    if (audienceIdleContinueTimerRef.current) clearTimeout(audienceIdleContinueTimerRef.current);
-    if (audienceHintIntervalRef.current) clearInterval(audienceHintIntervalRef.current);
-    setAudienceIdleLevel(0);
-    setAudienceHintCount(0);
-    if (!audienceVisible || audienceCelebrating) return;
-    audienceIdleHintTimerRef.current = setTimeout(() => {
-      setAudienceIdleLevel(1);
-      setAudienceHintCount(1);
-      audienceHintIntervalRef.current = setInterval(
-        () => setAudienceHintCount(c => c + 1),
-        2500
-      );
-    }, 2000);
-    audienceIdleContinueTimerRef.current = setTimeout(() => setAudienceIdleLevel(2), 9000);
-    return () => {
-      if (audienceIdleHintTimerRef.current) clearTimeout(audienceIdleHintTimerRef.current);
-      if (audienceIdleContinueTimerRef.current) clearTimeout(audienceIdleContinueTimerRef.current);
-      if (audienceHintIntervalRef.current) clearInterval(audienceHintIntervalRef.current);
-    };
-  }, [audienceVisible, audienceCelebrating, audienceSpokenTargets]);
-
   // Hint words ordered hardest-first, based on which words the user
   // hesitated on or missed in earlier reps of this beat.
   const audienceHintWords = useMemo(() => {
@@ -4313,6 +4286,34 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
     ).reverse();
     return hardestFirst.map(i => stripPropCueMarkers(words[i]));
   }, [audienceVisible, currentBeat?.id, words, pauseWordMeta]);
+
+  // Stuck-speaker rescue: after ~2s of silence while the audience is up,
+  // reveal ONE hint word at a time (hardest words from earlier practice
+  // first); after a while longer, offer the retry/continue buttons. The
+  // clock only counts SILENCE — as soon as the user starts speaking the
+  // hints wait, and already-shown hints stay on screen.
+  const [audienceIdleLevel, setAudienceIdleLevel] = useState<0 | 1 | 2>(0);
+  const [audienceHintCount, setAudienceHintCount] = useState(0);
+  const audienceIdleTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (audienceIdleTickRef.current) clearInterval(audienceIdleTickRef.current);
+    setAudienceIdleLevel(0);
+    setAudienceHintCount(0);
+    if (!audienceVisible || audienceCelebrating) return;
+    const shownAt = Date.now();
+    const hintTotal = audienceHintWords.length;
+    audienceIdleTickRef.current = setInterval(() => {
+      const idleMs = Date.now() - Math.max(shownAt, lastSpeechActivityRef.current);
+      setAudienceIdleLevel(l => Math.max(l, idleMs >= 9000 ? 2 : idleMs >= 2000 ? 1 : 0) as 0 | 1 | 2);
+      if (idleMs >= 2000) {
+        const target = Math.min(hintTotal, 1 + Math.floor((idleMs - 2000) / 2500));
+        setAudienceHintCount(c => Math.max(c, target));
+      }
+    }, 400);
+    return () => {
+      if (audienceIdleTickRef.current) clearInterval(audienceIdleTickRef.current);
+    };
+  }, [audienceVisible, audienceCelebrating, audienceHintWords.length]);
 
   // Stuck-speaker actions. Both force-clear the completion locks first: a
   // recent auto-advance can leave the debounce/lock active, which previously
@@ -5095,7 +5096,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
           )}
           {isRecording && isSpeechReady && !showCelebration && (
             <span className="practice-listening" aria-live="polite">
-              {t('beat_practice.listening_ready', 'Listening')}
+              {t('beat_practice.listening_ready', 'Your turn…')}
             </span>
           )}
           

@@ -1104,6 +1104,7 @@
     "full_beat_from_start": "Från början — hela stycket",
     "loading_slow": "Det här tar längre tid än vanligt.",
     "audience_continue": "Fortsätt",
+    "listening_ready": "Din tur…",
     "audience_retry": "Öva igen"
   },
   "presentation": {
