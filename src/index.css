@@ -16,18 +16,18 @@
     --foreground: 222 30% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 30% 11%;
-    --muted: 220 16% 96%;
+    --muted: 220 15% 94%;
     --muted-foreground: 220 9% 40%;
-    --secondary: 220 16% 96%;
+    --secondary: 220 14% 92%;
     --secondary-foreground: 222 30% 11%;
-    --border: 220 13% 90%;
+    --border: 220 13% 84%;
     --input: 220 9% 68%;
     --ring: 204 89% 36%;
 
     /* Handling – en blå, används bara för det man kan trycka på */
     --primary: 204 89% 36%;
     --primary-foreground: 0 0% 100%;
-    --accent: 204 70% 95%;
+    --accent: 204 72% 92%;
     --accent-foreground: 204 89% 30%;
 
     /* Status */

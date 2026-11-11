@@ -51,7 +51,10 @@ const Settings = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
-  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
+  const [currentLanguage, setCurrentLanguage] = useState(() => {
+    const code = i18n.language || "en";
+    return code.length > 2 ? code.slice(0, 2) : code;
+  });
   
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
@@ -293,9 +296,9 @@ const Settings = () => {
               <span className="s-v9">{t('settings.language.appLanguage')}</span>
             </div>
             <Select value={currentLanguage} onValueChange={handleLanguageChange}>
-              <SelectTrigger className="s-y6 s-ld s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
+              <SelectTrigger className="settings-select s-y6 s-ld s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
                 <SelectValue>
-                  {languages.find(l => l.code === currentLanguage)?.name}
+                  {languages.find(l => l.code === currentLanguage)?.name ?? currentLanguage}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -345,7 +348,7 @@ const Settings = () => {
               <span className="s-v9">{t('settings.practiceHours.startTime')}</span>
             </div>
             <Select value={practiceStartHour.toString()} onValueChange={handleStartHourChange}>
-              <SelectTrigger className="s-y6 s-lf s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
+              <SelectTrigger className="settings-select s-y6 s-lf s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -365,7 +368,7 @@ const Settings = () => {
               <span className="s-v9">{t('settings.practiceHours.endTime')}</span>
             </div>
             <Select value={practiceEndHour.toString()} onValueChange={handleEndHourChange}>
-              <SelectTrigger className="s-y6 s-lf s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
+              <SelectTrigger className="settings-select s-y6 s-lf s-g6 s-6m s-61 s-v9 s-ul s-ih s-dl">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

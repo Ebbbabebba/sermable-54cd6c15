@@ -826,7 +826,7 @@ const UploadSpeechDialog = ({
 
             {/* Footer nav */}
             {step !== "submitting" && (
-              <div className="s-ca s-82 s-70 s-40 s-3i">
+              <div className="upload-dialog__footer s-ca s-82 s-70 s-40 s-3i">
                 <div
                   className="s-jc s-m9 s-c5 s-ib s-if s-dp s-os s-s9 s-oc"
                   style={{
