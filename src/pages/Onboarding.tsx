@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MessageCircle, GraduationCap, TrendingUp, Theater } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { IntroWave } from "@/components/brand/IntroWave";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 const STEPS = [
@@ -48,6 +49,7 @@ const Onboarding = () => {
         <AnimatePresence mode="wait">
           <motion.div key={step.key} className="onboarding__content" initial={{ opacity: reducedMotion ? 1 : 0, x: reducedMotion ? 0 : 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: reducedMotion ? 1 : 0 }} transition={{ duration: reducedMotion ? 0 : 0.18 }}>
             <span className="onboarding__step">{String(currentStep + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}</span>
+            {!Icon && <IntroWave />}
             {Icon && <div className="onboarding__icon"><Icon aria-hidden="true" /></div>}
             <h1 className={`onboarding__title ${Icon ? "" : "onboarding__title--brand"}`}>{t(`onboarding.steps.${step.key}.title`)}</h1>
             <p className="onboarding__message">{t(`onboarding.steps.${step.key}.message`)}</p>

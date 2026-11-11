@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { IntroWave } from "@/components/brand/IntroWave";
 import { PublicFooter } from "@/components/PublicFooter";
 const Index = () => {
   const navigate = useNavigate();
@@ -20,7 +21,8 @@ const Index = () => {
   }, [navigate]);
   return <div className="welcome">
     <main className="welcome__main">
-      <h1 className="welcome__brand">SERM<br />ABLE</h1>
+      <IntroWave />
+      <h1 className="welcome__brand"><span className="reveal"><span>SERM</span></span><span className="reveal"><span>ABLE</span></span></h1>
       {isLoading ? <Loader2 className="welcome__loader" aria-label={t("common.loading")} /> : <>
         <p className="welcome__tagline">{t("app.tagline")}</p>
         <div className="welcome__actions">
