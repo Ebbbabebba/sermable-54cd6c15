@@ -1,5 +1,15 @@
 # Roadmap
 
+## Pågående: Verifierbar feedback, kamera och kallstart
+
+- [ ] Granska inspelning och AI-feedback och ersätta uppskattade underlag med verklig transkribering och mätning
+- [ ] Validera svensk JSON-feedback, högst tre belagda tips, 20 sekunders gräns och sparad inspelning för nytt försök
+- [ ] Integrera VoiceLoader (väntar på originalfilen)
+- [ ] Rätta kamerabehörighet, frontkamera, nekad-vy och stängning av spår
+- [ ] Integrera mottagen SplashWave oförändrad vid kallstart och dölja native splash
+- [ ] Testa regler och inloggat flöde
+- [ ] Testa kamera på fysisk iPhone (ingen fysisk enhet tillgänglig)
+
 ## Klart: Djurvyn och verkligt tal
 
 - [x] Fortsätt efter godkänd mening går till nästa övningssteg

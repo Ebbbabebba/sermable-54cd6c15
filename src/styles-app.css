@@ -538,6 +538,21 @@ input,textarea,select { font-family:var(--font-system); }
 }
 
 /* Beat path — pebble trail progress (Practice overview) */
+.analysis-pending { position:fixed; inset:0; z-index:70; display:flex; flex-direction:column; align-items:center; justify-content:center; background:hsl(var(--background)); color:hsl(var(--foreground)); }
+.analysis-pending__spinner { width:32px; height:32px; border:3px solid hsl(var(--border)); border-top-color:hsl(var(--primary)); border-radius:50%; animation:analysis-spin 0.9s linear infinite; }
+.recorded-feedback { width:min(100%,48rem); margin:0 auto; padding:24px; color:hsl(var(--foreground)); }
+.recorded-feedback h1 { font-size:26px; margin-bottom:16px; }
+.recorded-feedback h2 { font-size:18px; margin:24px 0 12px; }
+.recorded-feedback p,.recorded-feedback li { line-height:1.6; }
+.recorded-feedback ol,.recorded-feedback ul { padding-left:24px; }
+.recorded-feedback__metrics { display:flex; flex-wrap:wrap; gap:24px; margin:24px 0; }
+.recorded-feedback__metrics dt { color:hsl(var(--muted-foreground)); }
+.recorded-feedback__metrics dd { font-size:24px; font-weight:700; }
+.analysis-recovery { position:fixed; inset:0; z-index:65; overflow:auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:24px; background:hsl(var(--background)); }
+.analysis-recovery audio { max-width:100%; }
+@keyframes analysis-spin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .analysis-pending__spinner { animation:none; } }
+
 .beat-path { margin: 1.25rem 0 0.5rem; }
 .beat-path__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
 .beat-path__label { font-size: 0.9375rem; font-weight: 700; color: hsl(var(--foreground)); }

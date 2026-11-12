@@ -15,6 +15,11 @@ import KeycardsView from "@/components/KeycardsView";
 import PresentationControls from "@/components/PresentationControls";
 import { ProximityGuide } from "@/components/ProximityGuide";
 import { stripStageDirections } from "@/utils/stageDirections";
+import AnalysisPending from '@/components/AnalysisPending';
+import RecordedFeedback from '@/components/RecordedFeedback';
+import { analyzeRecording, measurePauses } from '@/lib/recordedSpeech';
+import { saveRecordingDraft, loadRecordingDraft, type RecordingDraft } from '@/lib/recordingDraft';
+import type { SpeechAnalysis } from '@/lib/feedbackContract';
 
 interface WordPerformance {
   word: string;
@@ -61,15 +66,35 @@ const Presentation = () => {
   const [sentenceStartDelay, setSentenceStartDelay] = useState(2500);
 
   // Results
-  const [sessionResults, setSessionResults] = useState<any>(null);
+  const [sessionResults, setSessionResults] = useState<SpeechAnalysis | null>(null);
+  const [analysisError, setAnalysisError] = useState('');
+  const [recordingDraft, setRecordingDraft] = useState<RecordingDraft | null>(null);
+  const [recordingUrl, setRecordingUrl] = useState('');
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const stopPauseMeasurement = useRef<(() => {start: number; duration: number}[]) | null>(null);
+  const recordingStartedRef = useRef(0);
 
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    if (!id) return;
+    void loadRecordingDraft(`presentation:${id}`).then(draft => {
+      if (draft) { setRecordingDraft(draft); setAnalysisError('En tidigare inspelning finns kvar och kan analyseras igen.'); }
+    }).catch(() => {});
+  }, [id]);
+  useEffect(() => {
+    if (!recordingDraft) return;
+    const url = URL.createObjectURL(recordingDraft.blob); setRecordingUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [recordingDraft]);
+
+  useEffect(() => {
     loadSpeech();
 
     return () => {
+      if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+      stopPauseMeasurement.current?.(); stopPauseMeasurement.current = null;
       if (timerRef.current) clearInterval(timerRef.current);
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -139,9 +164,26 @@ const Presentation = () => {
         autoGainControl: true,
       });
       streamRef.current = stream;
+      const mimeType = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(type => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(stream, mimeType ? {mimeType} : undefined);
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+      recorder.onstop = () => {
+        if (!speech) return;
+        const durationSeconds = Math.max(0.1, (performance.now() - recordingStartedRef.current) / 1000);
+        const pauses = stopPauseMeasurement.current?.() ?? []; stopPauseMeasurement.current = null;
+        const draft: RecordingDraft = {id:`presentation:${speech.id}`,blob:new Blob(chunks,{type:recorder.mimeType}),durationSeconds,pauses,originalText:stripStageDirections(speech.text_original),language:speech.speech_language};
+        setRecordingDraft(draft);
+        void runAnalysis(draft);
+      };
+      recorderRef.current = recorder;
+      stopPauseMeasurement.current = measurePauses(stream);
+      recordingStartedRef.current = performance.now();
+      recorder.start(250);
       setIsRecording(true);
       startTimer();
     } catch (error) {
+      streamRef.current?.getTracks().forEach(track => track.stop()); streamRef.current = null;
       console.error('Error starting recording:', error);
       toast({
         variant: "destructive",
@@ -152,6 +194,7 @@ const Presentation = () => {
   };
 
   const handleStopRecording = () => {
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
     setIsRecording(false);
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -188,61 +231,21 @@ const Presentation = () => {
     setStage('prep');
   };
 
-  // Analyse and persist a completed run-through (visible or hidden script)
-  const handlePerformanceData = async (data: WordPerformance[]) => {
+  // Recognition cursor statuses are not evidence of speech; analyze the captured audio.
+  const runAnalysis = async (draft: RecordingDraft) => {
     setIsProcessing(true);
-    const duration = Math.max(1, Math.floor((Date.now() - startTime) / 1000));
-
+    setAnalysisError('');
     try {
-      toast({
-        title: t('presentation.processing'),
-        description: t('presentation.processingDesc'),
-      });
-
-      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-presentation', {
-        body: {
-          originalText: stripStageDirections(speech!.text_original),
-          speechId: speech!.id,
-          durationSeconds: duration,
-          wordPerformance: data,
-          scriptHidden,
-          feedbackLanguage: i18n.language || speech?.speech_language || 'en',
-        }
-      });
-
-      if (analysisError) throw analysisError;
-
-      const { error: saveError } = await supabase
-        .from('presentation_sessions')
-        .insert({
-          speech_id: speech!.id,
-          transcript: analysisData.transcript,
-          accuracy: analysisData.accuracy,
-          hesitations: analysisData.hesitations,
-          missed_words: analysisData.missedWords,
-          duration_seconds: duration,
-          feedback_summary: analysisData.feedbackSummary,
-          feedback_advice: analysisData.feedbackAdvice,
-          feedback_next_step: analysisData.feedbackNextStep,
-        });
-
-      if (saveError) {
-        console.error('Error saving session:', saveError);
-      }
-
-      setSessionResults({ ...analysisData, durationSeconds: duration });
+      await saveRecordingDraft(draft);
+      const analysisData = await analyzeRecording(draft);
+      setSessionResults(analysisData);
       setStage('summary');
-      setIsProcessing(false);
-    } catch (error: any) {
-      console.error('Error processing:', error);
-      toast({
-        variant: "destructive",
-        title: t('presentation.processingFailed', 'Processing failed'),
-        description: error.message,
-      });
-      setIsProcessing(false);
-      setStage('prep');
-    }
+      if (speech) {
+        const {data:{user}} = await supabase.auth.getUser();
+        if (user) void supabase.from('presentation_sessions').insert({speech_id:speech.id,user_id:user.id,transcript:analysisData.transcript,duration_seconds:draft.durationSeconds,hesitations:analysisData.metrics.fillers.length,feedback_summary:analysisData.feedback.summary,feedback_advice:analysisData.feedback.tips.map(tip=>tip.text).join('\n'),feedback_next_step:analysisData.feedback.positive}).then(({error})=>{if(error)console.error('Session save failed');});
+      }
+    } catch (error) { setAnalysisError(error instanceof Error ? error.message : 'Analysen misslyckades. Inspelningen finns kvar.'); }
+    finally { setIsProcessing(false); }
   };
 
   if (loading) {
@@ -254,6 +257,14 @@ const Presentation = () => {
   }
 
   if (!speech) return null;
+
+  if (isProcessing) return <AnalysisPending />;
+  if (analysisError && recordingDraft) return <div className="analysis-recovery" lang="sv" role="alert">
+    <h1>Analysen kunde inte slutföras</h1><p>{analysisError}</p>
+    <audio controls src={recordingUrl}/><a href={recordingUrl} download="sermable-inspelning">Spara inspelningen</a>
+    <Button onClick={() => void runAnalysis(recordingDraft)}>Försök igen</Button>
+    <Button variant="outline" onClick={() => {setAnalysisError('');setStage('prep');}}>Tillbaka</Button>
+  </div>;
 
   // Mode selector
   if (stage === 'mode-select') {
@@ -277,16 +288,9 @@ const Presentation = () => {
   // Summary
   if (stage === 'summary' && sessionResults) {
     return (
-      <PresentationSummary
-        accuracy={sessionResults.accuracy}
-        duration={sessionResults.durationSeconds}
-        hesitations={sessionResults.hesitations}
-        missedWords={sessionResults.missedWords}
-        feedbackSummary={sessionResults.feedbackSummary}
-        feedbackAdvice={sessionResults.feedbackAdvice}
-        feedbackNextStep={sessionResults.feedbackNextStep}
-        onExit={handleExit}
-      />
+      <div className="s-l6 s-3v s-2y"><RecordedFeedback analysis={sessionResults}/>
+        <audio controls src={recordingUrl}/><Button onClick={handleExit}>{t('common.exit')}</Button>
+      </div>
     );
   }
 
@@ -446,7 +450,7 @@ const Presentation = () => {
         scriptHidden={scriptHidden}
         onStartRecording={handleRecordingStart}
         onStopRecording={handleStopRecording}
-        onPerformanceData={handlePerformanceData}
+        onPerformanceData={() => {}}
         onExit={handleExit}
         hintDelay={hintDelay}
         sentenceStartDelay={sentenceStartDelay}

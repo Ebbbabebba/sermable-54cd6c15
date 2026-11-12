@@ -2,6 +2,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { MotionConfig } from "framer-motion";
 import InlineMessages from "@/components/InlineMessages";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import ColdStartSplash from '@/components/ColdStartSplash';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, ComponentType, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
@@ -128,6 +129,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <ColdStartSplash />
       <InlineMessages />
       <BrowserRouter>
         <RouteTransition>
