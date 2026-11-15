@@ -2,12 +2,13 @@
 
 ## Pågående: Verifierbar feedback, kamera och kallstart
 
-- [ ] Granska inspelning och AI-feedback och ersätta uppskattade underlag med verklig transkribering och mätning
-- [ ] Validera svensk JSON-feedback, högst tre belagda tips, 20 sekunders gräns och sparad inspelning för nytt försök
+- [x] Granska inspelning och AI-feedback och ersätta uppskattade underlag med verklig transkribering och mätning
+- [x] Validera svensk JSON-feedback, högst tre belagda tips, 20 sekunders gräns och sparad inspelning för nytt försök
+- [ ] Driftsätt AI-rättningar och testa med verklig inspelning (Lovable Cloud är pausat)
 - [ ] Integrera VoiceLoader (väntar på originalfilen)
-- [ ] Rätta kamerabehörighet, frontkamera, nekad-vy och stängning av spår
-- [ ] Integrera mottagen SplashWave oförändrad vid kallstart och dölja native splash
-- [ ] Testa regler och inloggat flöde
+- [x] Rätta kamerabehörighet, frontkamera, nekad-vy och stängning av spår
+- [x] Integrera mottagen SplashWave oförändrad vid kallstart och dölja native splash
+- [ ] Testa regler och inloggat flöde (inloggning blockerad av pausat Lovable Cloud)
 - [ ] Testa kamera på fysisk iPhone (ingen fysisk enhet tillgänglig)
 
 ## Klart: Djurvyn och verkligt tal

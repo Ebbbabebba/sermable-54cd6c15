@@ -5,7 +5,9 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Capacitor } from "@capacitor/core";
-import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { Camera as CapCamera, CameraResultType, CameraSource, CameraDirection } from "@capacitor/camera";
+import CameraPermissionNotice from './CameraPermissionNotice';
+import { createCameraRequestGuard, isCameraPermissionError } from '@/lib/cameraAccess';
 
 import { PauseSlidersList } from "@/components/PauseSlidersList";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +92,9 @@ const UploadSpeechDialog = ({
   const [isScanning, setIsScanning] = useState(false);
   const [showAiBuilder, setShowAiBuilder] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [cameraDenied, setCameraDenied] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  const cameraRequests = useRef(createCameraRequestGuard());
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -103,63 +108,82 @@ const UploadSpeechDialog = ({
       stopCamera();
     }
   }, [open]);
+  useEffect(() => () => {
+    cameraRequests.current.cancel();
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+  }, []);
+  useEffect(() => {
+    if (!showCamera || !videoRef.current || !streamRef.current) return;
+    const video = videoRef.current;
+    video.srcObject = streamRef.current;
+    video.muted = true;
+    void video.play().catch(() => {});
+    return () => { video.srcObject = null; };
+  }, [showCamera]);
 
   // ----- camera / scan -----
   const startCamera = async () => {
+    if (cameraStarting) return;
+    const request = cameraRequests.current.begin();
+    setCameraStarting(true);
+    setCameraDenied(false);
     // On native (iOS/Android) use Capacitor Camera — the WebView getUserMedia
     // path renders black and lacks a proper permission prompt on iOS.
     if (Capacitor.isNativePlatform()) {
       try {
+        let permission = await CapCamera.checkPermissions();
+        if (permission.camera === 'prompt' || permission.camera === 'prompt-with-rationale') {
+          permission = await CapCamera.requestPermissions({permissions: ['camera']});
+        }
+        if (!cameraRequests.current.current(request)) return;
+        if (permission.camera !== 'granted') { setCameraDenied(true); return; }
         const photo = await CapCamera.getPhoto({
           quality: 85,
           allowEditing: false,
           resultType: CameraResultType.DataUrl,
           source: CameraSource.Camera,
+          direction: CameraDirection.Front,
         });
-        if (photo.dataUrl) {
+        if (photo.dataUrl && cameraRequests.current.current(request)) {
           await processImageDirectly(photo.dataUrl);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        if (!cameraRequests.current.current(request)) return;
+        if (isCameraPermissionError(err)) { setCameraDenied(true); return; }
         // User cancelled — silent. Real errors → inline toast.
-        if (err?.message && !/cancel/i.test(err.message)) {
+        if (err instanceof Error && !/cancel/i.test(err.message)) {
           toast({
             variant: "destructive",
             title: t("upload.cameraError"),
             description: err.message || t("upload.cameraErrorDesc"),
           });
         }
-      }
+      } finally { if (cameraRequests.current.current(request)) setCameraStarting(false); }
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: {ideal: "user"} }, audio: false,
       });
+      if (!cameraRequests.current.accept(request, stream)) return;
       streamRef.current = stream;
       setShowCamera(true);
-      // Attach stream on next tick so the <video> is mounted, then explicitly play().
-      setTimeout(async () => {
-        const v = videoRef.current;
-        if (!v) return;
-        v.srcObject = stream;
-        v.muted = true;
-        v.setAttribute("playsinline", "true");
-        try {
-          await v.play();
-        } catch (e) {
-          console.warn("video.play() failed:", e);
-        }
-      }, 0);
-    } catch {
+    } catch (error) {
+      if (!cameraRequests.current.current(request)) return;
+      if (isCameraPermissionError(error)) { setCameraDenied(true); return; }
       toast({
         variant: "destructive",
         title: t("upload.cameraError"),
         description: t("upload.cameraErrorDesc"),
       });
-    }
+    } finally { if (cameraRequests.current.current(request)) setCameraStarting(false); }
   };
 
   const stopCamera = () => {
+    cameraRequests.current.cancel();
+    setCameraStarting(false);
+    setCameraDenied(false);
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
@@ -535,7 +559,7 @@ const UploadSpeechDialog = ({
                 size="sm"
                 variant="outline"
                 onClick={startCamera}
-                disabled={loading || isScanning}
+                disabled={loading || isScanning || cameraStarting}
                 className="s-dm"
               >
                 <Camera className="s-fz s-xt" />
@@ -561,12 +585,14 @@ const UploadSpeechDialog = ({
               />
             </div>
 
+            {cameraDenied && <CameraPermissionNotice onRetry={() => void startCamera()}/>}
             {showCamera && (
               <div className="s-pd s-qo s-mn s-44">
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
+                  muted
                   className="s-y7 s-j8"
                 />
                 <div className="s-26 s-8d s-is s-pe s-c5 s-ig s-dp">
@@ -575,12 +601,14 @@ const UploadSpeechDialog = ({
                     variant="secondary"
                     size="icon"
                     onClick={stopCamera}
+                    aria-label={t('common.close')}
                   >
                     <X className="s-g1 s-xv" />
                   </Button>
                   <Button
                     type="button"
                     onClick={capturePhoto}
+                    aria-label={t('upload.scanDocument')}
                     className="s-qe s-xi s-fq"
                   >
                     <Camera className="s-g2 s-xw" />

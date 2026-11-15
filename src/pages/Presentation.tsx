@@ -73,6 +73,9 @@ const Presentation = () => {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const stopPauseMeasurement = useRef<(() => {start: number; duration: number}[]) | null>(null);
   const recordingStartedRef = useRef(0);
+  const recordingStoppedRef = useRef(0);
+  const recordingStartingRef = useRef(false);
+  const mountedRef = useRef(false);
 
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -90,9 +93,12 @@ const Presentation = () => {
   }, [recordingDraft]);
 
   useEffect(() => {
+    mountedRef.current = true;
     loadSpeech();
 
     return () => {
+      mountedRef.current = false;
+      recordingStoppedRef.current = performance.now();
       if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
       stopPauseMeasurement.current?.(); stopPauseMeasurement.current = null;
       if (timerRef.current) clearInterval(timerRef.current);
@@ -155,6 +161,8 @@ const Presentation = () => {
   // Speech recognition lives inside CompactPresentationView; here we only make
   // sure the microphone permission is granted and keep the session timer.
   const handleRecordingStart = async () => {
+    if (recordingStartingRef.current || recorderRef.current?.state === 'recording') return;
+    recordingStartingRef.current = true;
     try {
       const stream = await requestMicrophoneAccess({
         sampleRate: 24000,
@@ -163,6 +171,7 @@ const Presentation = () => {
         noiseSuppression: true,
         autoGainControl: true,
       });
+      if (!mountedRef.current) { stream.getTracks().forEach(track => track.stop()); return; }
       streamRef.current = stream;
       const mimeType = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(type => MediaRecorder.isTypeSupported(type));
       const recorder = new MediaRecorder(stream, mimeType ? {mimeType} : undefined);
@@ -170,19 +179,21 @@ const Presentation = () => {
       recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
       recorder.onstop = () => {
         if (!speech) return;
-        const durationSeconds = Math.max(0.1, (performance.now() - recordingStartedRef.current) / 1000);
+        const durationSeconds = Math.max(0.1, (recordingStoppedRef.current - recordingStartedRef.current) / 1000);
         const pauses = stopPauseMeasurement.current?.() ?? []; stopPauseMeasurement.current = null;
         const draft: RecordingDraft = {id:`presentation:${speech.id}`,blob:new Blob(chunks,{type:recorder.mimeType}),durationSeconds,pauses,originalText:stripStageDirections(speech.text_original),language:speech.speech_language};
-        setRecordingDraft(draft);
-        void runAnalysis(draft);
+        if (mountedRef.current) { setRecordingDraft(draft); void runAnalysis(draft); }
+        else void saveRecordingDraft(draft).catch(() => {});
       };
       recorderRef.current = recorder;
       stopPauseMeasurement.current = measurePauses(stream);
       recordingStartedRef.current = performance.now();
+      recordingStoppedRef.current = 0;
       recorder.start(250);
       setIsRecording(true);
       startTimer();
     } catch (error) {
+      stopPauseMeasurement.current?.(); stopPauseMeasurement.current = null;
       streamRef.current?.getTracks().forEach(track => track.stop()); streamRef.current = null;
       console.error('Error starting recording:', error);
       toast({
@@ -190,10 +201,11 @@ const Presentation = () => {
         title: t('presentation.micErrorTitle', 'Microphone error'),
         description: t('presentation.micErrorDesc', 'Could not access the microphone. Please check permissions.'),
       });
-    }
+    } finally { recordingStartingRef.current = false; }
   };
 
   const handleStopRecording = () => {
+    recordingStoppedRef.current = performance.now();
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
     setIsRecording(false);
     if (timerRef.current) {

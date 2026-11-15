@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
-import type {} from '../_shared/gateway-models.d.ts';
+import type {} from '../_shared/gateway-types/models.d.ts';
 import { generateChatCompletion, GatewayError } from 'npm:@lovable.dev/ai-gateway@0.1.11';
 
 const text = z.string().trim().min(1).max(600).refine(value => !/bra jobbat|fantastiskt jobbat|grattis|\p{Extended_Pictographic}/iu.test(value));
@@ -55,6 +55,7 @@ Deno.serve(async req => {
     const feedback = feedbackSchema.parse(JSON.parse(content));
     for (const tip of feedback.tips) {
       if (tip.quote && !input.transcript.toLocaleLowerCase('sv').includes(tip.quote.toLocaleLowerCase('sv'))) throw new Error('Unsupported quote');
+      if (tip.quote && !tip.text.toLocaleLowerCase('sv').includes(tip.quote.toLocaleLowerCase('sv'))) throw new Error('Missing quote in tip');
       if (tip.atSeconds !== null && ![...input.pauses.map(p=>p.start),...input.segments.map(s=>s.start)].some(t=>Math.abs(t-tip.atSeconds)<0.1)) throw new Error('Unsupported timestamp');
     }
     return reply({transcript:input.transcript,metrics,feedback});

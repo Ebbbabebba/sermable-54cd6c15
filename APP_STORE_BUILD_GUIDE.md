@@ -96,9 +96,9 @@ Run this command every time you:
    - Add key: `NSSpeechRecognitionUsageDescription`
    - Value: "Sermable uses speech recognition to analyze your practice sessions"
 
-8. **Camera Permission** (Required for document scanning):
+8. **Camera Permission** (Required for photographing scripts):
    - Add key: `NSCameraUsageDescription`
-   - Value: "Sermable uses the camera to scan documents into speeches"
+   - Value: "Sermable needs the camera to photograph your script and add its text to your speech."
    - Without this key the app crashes instantly when opening the camera, and Apple rejects the build at review
 
 ### Build for App Store

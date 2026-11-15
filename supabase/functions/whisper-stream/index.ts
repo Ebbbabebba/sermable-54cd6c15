@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { z } from 'npm:zod@3';
-import type {} from '../_shared/gateway-models.d.ts';
+import type {} from '../_shared/gateway-types/models.d.ts';
 import { transcribeAudio, GatewayError } from 'npm:@lovable.dev/ai-gateway@0.1.11';
 const schema = z.object({audio:z.string().min(1).max(35000000).regex(/^[A-Za-z0-9+/=]+$/), language:z.string().max(20).default('sv'), mimeType:z.string().max(100).default('audio/webm')});
 const reply = (body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});

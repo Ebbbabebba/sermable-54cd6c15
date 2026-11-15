@@ -10,13 +10,11 @@
 //
 // Auth: requires a logged-in Supabase user (verify_jwt = true).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { generateChatCompletion, GatewayError } from 'npm:@lovable.dev/ai-gateway@0.1.11';
+import { z } from 'npm:zod@3';
+import type {} from '../_shared/gateway-types/models.d.ts';
 
 interface QuestionsRequest {
   mode: "questions";
@@ -31,6 +29,11 @@ interface DraftRequest {
   targetMinutes?: number;
 }
 type BuildRequest = QuestionsRequest | DraftRequest;
+const inputSchema = z.discriminatedUnion('mode', [
+  z.object({mode:z.literal('questions'),prompt:z.string().trim().min(3).max(12000),language:z.string().max(20).optional()}),
+  z.object({mode:z.literal('draft'),prompt:z.string().trim().min(3).max(12000),language:z.string().max(20).optional(),
+    answers:z.array(z.object({question:z.string().max(1000),answer:z.string().max(6000)})).max(10),targetMinutes:z.number().positive().max(60).optional()}),
+]);
 
 const QUESTIONS_SYSTEM_PROMPT = `You are an expert speechwriting coach.
 The user will tell you, in one short paragraph, what kind of speech they
@@ -86,33 +89,19 @@ function normalizePauseDirections(text: string): string {
 }
 
 async function callAI(
-  apiKey: string,
   systemPrompt: string,
   userPrompt: string,
-): Promise<any> {
-  // Built-in Lovable AI Gateway: no provider account or credits to manage,
-  // billed to workspace credits at the provider's list price.
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+): Promise<unknown> {
+  const data = await generateChatCompletion({
       model: "openai/gpt-6-astra",
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-    }),
   });
-  if (!r.ok) {
-    const t = await r.text();
-    throw new Error(`AI gateway error ${r.status}: ${t}`);
-  }
-  const data = await r.json();
-  const content = data?.choices?.[0]?.message?.content ?? "{}";
+  const content = data.choices?.[0]?.message?.content;
+  if (typeof content !== 'string') throw new Error('AI returned no content');
   try {
     return JSON.parse(content);
   } catch (e) {
@@ -134,8 +123,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? '';
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? '';
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false },
@@ -152,17 +141,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = (await req.json()) as BuildRequest;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY is not configured" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
+    const parsed = inputSchema.safeParse(await req.json());
+    if (!parsed.success) return new Response(JSON.stringify({error:'Invalid speech request'}), {status:400,headers:{...corsHeaders,'Content-Type':'application/json'}});
+    const body = parsed.data;
 
     const language = body.language || "en";
 
@@ -183,13 +164,10 @@ ${prompt}
 
 Return the JSON with the clarifying questions.`;
       const json = await callAI(
-        LOVABLE_API_KEY,
         QUESTIONS_SYSTEM_PROMPT,
         userPrompt,
       );
-      const questions = Array.isArray(json?.questions)
-        ? json.questions.filter((q: unknown) => typeof q === "string")
-        : [];
+      const {questions} = z.object({questions:z.array(z.string().trim().min(1).max(300)).min(1).max(4)}).parse(json);
       return new Response(JSON.stringify({ questions }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -227,14 +205,12 @@ ${qaBlock}
 
 Now write the speech and propose a short title. Return JSON only.`;
       const json = await callAI(
-        LOVABLE_API_KEY,
         DRAFT_SYSTEM_PROMPT,
         userPrompt,
       );
-      const title = typeof json?.title === "string" ? json.title.trim() : "";
-      const speech = typeof json?.speech === "string"
-        ? normalizePauseDirections(json.speech.trim())
-        : "";
+      const draft = z.object({title:z.string().trim().min(1).max(200),speech:z.string().trim().min(1).max(60000)}).parse(json);
+      const title = draft.title;
+      const speech = normalizePauseDirections(draft.speech);
       if (!speech) {
         return new Response(
           JSON.stringify({ error: "AI did not return a speech" }),
@@ -254,11 +230,11 @@ Now write the speech and propose a short title. Return JSON only.`;
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("build-speech error:", e);
+    console.error('build-speech failed', e instanceof GatewayError ? {code:e.code,ids:e.ids,outcome:e.outcome} : 'invalid-response');
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : String(e) }),
+      JSON.stringify({ error: 'AI kunde inte skapa talet. Dina svar finns kvar.' }),
       {
-        status: 500,
+        status: e instanceof GatewayError && e.httpStatus ? e.httpStatus : 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );

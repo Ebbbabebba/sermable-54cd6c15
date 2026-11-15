@@ -22,7 +22,10 @@ export function validateEvidence(result: SpeechAnalysis) {
   for (const tip of result.feedback.tips) {
     if (tip.quote && !result.transcript.toLocaleLowerCase('sv').includes(tip.quote.toLocaleLowerCase('sv'))) throw new Error('Citatet saknas i transkriberingen');
     if (tip.atSeconds !== null && tip.atSeconds > result.metrics.durationSeconds) throw new Error('Tidpunkten ligger utanför inspelningen');
+    if (tip.quote && !tip.text.toLocaleLowerCase('sv').includes(tip.quote.toLocaleLowerCase('sv'))) throw new Error('Tipset måste ange citatet');
   }
+  if (result.metrics.pauses.some(pause => pause.start + pause.duration > result.metrics.durationSeconds + 0.2)) throw new Error('Pausen ligger utanför inspelningen');
+  if (result.metrics.fillers.some(filler => filler.atSeconds !== null && filler.atSeconds > result.metrics.durationSeconds)) throw new Error('Utfyllnadsordets tidpunkt ligger utanför inspelningen');
   return result;
 }
 export const timeLabel = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;

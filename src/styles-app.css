@@ -550,6 +550,11 @@ input,textarea,select { font-family:var(--font-system); }
 .recorded-feedback__metrics dd { font-size:24px; font-weight:700; }
 .analysis-recovery { position:fixed; inset:0; z-index:65; overflow:auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:24px; background:hsl(var(--background)); }
 .analysis-recovery audio { max-width:100%; }
+.camera-permission { padding:20px 0; color:hsl(var(--foreground)); display:flex; flex-direction:column; gap:12px; }
+.camera-permission > svg { width:28px; height:28px; color:hsl(var(--primary)); }
+.camera-permission h3 { font-size:18px; font-weight:700; }
+.camera-permission p { line-height:1.5; }
+.camera-permission__actions { display:flex; flex-wrap:wrap; gap:12px; }
 @keyframes analysis-spin { to { transform:rotate(360deg); } }
 @media(prefers-reduced-motion:reduce) { .analysis-pending__spinner { animation:none; } }
 
