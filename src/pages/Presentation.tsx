@@ -18,7 +18,7 @@ import { stripStageDirections } from "@/utils/stageDirections";
 import AnalysisPending from '@/components/AnalysisPending';
 import RecordedFeedback from '@/components/RecordedFeedback';
 import { analyzeRecording, measurePauses } from '@/lib/recordedSpeech';
-import { saveRecordingDraft, loadRecordingDraft, type RecordingDraft } from '@/lib/recordingDraft';
+import { saveRecordingDraft, loadRecordingDraft, deleteRecordingDraft, type RecordingDraft } from '@/lib/recordingDraft';
 import type { SpeechAnalysis } from '@/lib/feedbackContract';
 
 interface WordPerformance {
@@ -82,9 +82,13 @@ const Presentation = () => {
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
+    setRecordingDraft(null);
+    setAnalysisError('');
     void loadRecordingDraft(`presentation:${id}`).then(draft => {
-      if (draft) { setRecordingDraft(draft); setAnalysisError('En tidigare inspelning finns kvar och kan analyseras igen.'); }
+      if (!cancelled && draft) { setRecordingDraft(draft); setAnalysisError('En tidigare inspelning finns kvar och kan analyseras igen.'); }
     }).catch(() => {});
+    return () => { cancelled = true; };
   }, [id]);
   useEffect(() => {
     if (!recordingDraft) return;
@@ -99,7 +103,11 @@ const Presentation = () => {
     return () => {
       mountedRef.current = false;
       recordingStoppedRef.current = performance.now();
-      if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+      if (recorderRef.current) {
+        recorderRef.current.onstop = null;
+        if (recorderRef.current.state === 'recording') recorderRef.current.stop();
+        recorderRef.current = null;
+      }
       stopPauseMeasurement.current?.(); stopPauseMeasurement.current = null;
       if (timerRef.current) clearInterval(timerRef.current);
       if (streamRef.current) {
@@ -178,12 +186,12 @@ const Presentation = () => {
       const chunks: Blob[] = [];
       recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
       recorder.onstop = () => {
-        if (!speech) return;
+        if (!speech || !mountedRef.current) return;
         const durationSeconds = Math.max(0.1, (recordingStoppedRef.current - recordingStartedRef.current) / 1000);
         const pauses = stopPauseMeasurement.current?.() ?? []; stopPauseMeasurement.current = null;
         const draft: RecordingDraft = {id:`presentation:${speech.id}`,blob:new Blob(chunks,{type:recorder.mimeType}),durationSeconds,pauses,originalText:stripStageDirections(speech.text_original),language:speech.speech_language};
-        if (mountedRef.current) { setRecordingDraft(draft); void runAnalysis(draft); }
-        else void saveRecordingDraft(draft).catch(() => {});
+        setRecordingDraft(draft);
+        void runAnalysis(draft);
       };
       recorderRef.current = recorder;
       stopPauseMeasurement.current = measurePauses(stream);
@@ -250,6 +258,8 @@ const Presentation = () => {
     try {
       await saveRecordingDraft(draft);
       const analysisData = await analyzeRecording(draft);
+      await deleteRecordingDraft(draft.id);
+      if (!mountedRef.current) return;
       setSessionResults(analysisData);
       setStage('summary');
       if (speech) {

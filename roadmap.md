@@ -1,5 +1,12 @@
 # Roadmap
 
+## Complete: Three monitoring findings
+
+- [x] Recover stuck practice attempts without granting recall credit
+- [x] Use the rear camera for document photos
+- [x] Clear successful analysis drafts and discard recordings on exit
+- [x] Run 22 regression tests and signed-in browser checks with controlled speech and analysis responses; physical-device camera/audio remain unverified
+
 ## Pågående: Verifierbar feedback, kamera och kallstart
 
 - [x] Granska inspelning och AI-feedback och ersätta uppskattade underlag med verklig transkribering och mätning

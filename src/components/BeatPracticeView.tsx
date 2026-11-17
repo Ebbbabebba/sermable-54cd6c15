@@ -40,6 +40,7 @@ import { createNativeSpeechSession } from "@/lib/nativeSpeechSession";
 import { createWebSpeechRecovery } from "@/lib/webSpeechRecovery";
 import { nextSupportWord, progressiveHideCount } from "@/lib/progressiveWordSupport";
 import { hasMatchedAudienceTargets, audienceHintOrder, visibleAudienceHints, audienceSilenceStep } from "@/lib/audiencePractice";
+import { restorePracticeSupport } from "@/lib/practiceRetry";
 
 
 // Web Speech API types
@@ -2285,8 +2286,6 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
         // Current word didn't match - optionally check the next 1-2 words, but ONLY
         // when the skipped words are visible. Hidden words must be spoken or
         // revealed by the hesitation timer.
-        // FLOW: paraphrasing is allowed, so the cursor may also step over a
-        // hidden word (still bounded by sentence + pause guards below).
         const canSkipCurrent =
           !hiddenWordIndicesRef.current.has(advancedTo);
         // Never jump over a planned pause — the pause overlay must fire.
@@ -2317,7 +2316,7 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
       if (foundIdx === -1) {
         // No match for this spoken token. Do NOT auto-advance hidden words —
         // that caused the cursor to jump over hidden words on background speech.
-        // Hidden words advance only on a real match or the hesitation timeout.
+        // Hidden words advance only on a real match; retry restores support.
         continue;
       }
 
@@ -4185,47 +4184,28 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
   // them so they re-hide last, and restarts the rep.
   const [audienceSad, setAudienceSad] = useState(false);
   const audienceSadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const retryFromAudience = () => {
-    if (audienceSad) return;
-    setAudienceSad(true);
-    if (audienceSadTimerRef.current) clearTimeout(audienceSadTimerRef.current);
-    audienceSadTimerRef.current = setTimeout(() => {
-      // Swap the sad animals for a centered loader while the rep resets and
-      // the microphone warms up again — no abrupt cut back into practice.
-      setAudienceSad(false);
-      setAudienceResetting(true);
-      const newHidden = new Set(hiddenWordIndices);
-      const newOrder = [...hiddenWordOrder];
-      const newProtected = new Set(protectedWordIndices);
-      let revealed = 0;
-      words.forEach((_, i) => {
-        if (pauseWordMeta.has(i) || spokenIndicesRef.current.has(i)) return;
-        newProtected.add(i);
-        if (newHidden.has(i)) {
-          newHidden.delete(i);
-          const orderIdx = newOrder.indexOf(i);
-          if (orderIdx !== -1) newOrder.splice(orderIdx, 1);
-          revealed++;
-        }
-      });
-      // Every word was somehow spoken but completion never fired — reveal the
-      // last-hidden word so the audience overlay always closes.
-      if (revealed === 0 && newOrder.length > 0) {
-        const last = newOrder.pop();
-        if (last !== undefined) {
-          newHidden.delete(last);
-          newProtected.add(last);
-        }
-      }
-      setProtectedWordIndices(newProtected);
-      setHiddenWordIndices(newHidden);
-      setHiddenWordOrder(newOrder);
+  const retryWithSupport = () => {
+      const support = restorePracticeSupport(hiddenWordIndices, hiddenWordOrder, protectedWordIndices,
+        words.map((_, i) => i).filter(i => !pauseWordMeta.has(i)), matchedWordIndicesRef.current);
+      setProtectedWordIndices(support.protectedWords);
+      hiddenWordIndicesRef.current = support.hidden;
+      setHiddenWordIndices(support.hidden);
+      setHiddenWordOrder(support.order);
       setFailedWordIndices(new Set());
       setFadingSuccessCount(prev => Math.max(0, prev - 1));
       setConsecutiveNoScriptSuccess(0);
       phaseCompletionLockRef.current = false;
       lastCompletionAtRef.current = 0;
       resetForNextRep(true, true);
+  };
+  const retryFromAudience = () => {
+    if (audienceSad) return;
+    setAudienceSad(true);
+    if (audienceSadTimerRef.current) clearTimeout(audienceSadTimerRef.current);
+    audienceSadTimerRef.current = setTimeout(() => {
+      setAudienceSad(false);
+      setAudienceResetting(true);
+      retryWithSupport();
       if (audienceResetTimerRef.current) clearTimeout(audienceResetTimerRef.current);
       audienceResetTimerRef.current = setTimeout(() => setAudienceResetting(false), 900);
     }, 1400);
@@ -5154,6 +5134,12 @@ const BeatPracticeView = ({ speechId, subscriptionTier = 'free', fullSpeechText,
                       }
                     }}
                   />
+                  {!audienceVisible && !activePause && (
+                    <Button variant="outline" size="sm" onClick={retryWithSupport} className="s-ly">
+                      <RotateCcw className="s-fz s-xt s-lp" aria-hidden="true" />
+                      {t('beat_practice.audience_retry', 'Practice again')}
+                    </Button>
+                  )}
                   
                   {/* "One more time!" indicator when 1 more recall needed - not shown for pre_beat_recall (only needs 1) */}
                   {(sessionMode === 'recall' || (sessionMode === 'learn' && phase.includes('fading'))) && 

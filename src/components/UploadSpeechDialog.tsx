@@ -143,7 +143,7 @@ const UploadSpeechDialog = ({
           allowEditing: false,
           resultType: CameraResultType.DataUrl,
           source: CameraSource.Camera,
-          direction: CameraDirection.Front,
+          direction: CameraDirection.Rear,
         });
         if (photo.dataUrl && cameraRequests.current.current(request)) {
           await processImageDirectly(photo.dataUrl);
@@ -164,7 +164,7 @@ const UploadSpeechDialog = ({
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: {ideal: "user"} }, audio: false,
+        video: { facingMode: {ideal: "environment"} }, audio: false,
       });
       if (!cameraRequests.current.accept(request, stream)) return;
       streamRef.current = stream;

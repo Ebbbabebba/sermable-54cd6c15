@@ -14,4 +14,6 @@
 - Keep progressive word support in `progressiveWordSupport`; scope per-word history to the exact displayed text, and apply background AI advice only between rounds so delayed analysis cannot move words or disturb recognition.
 - Keep audience success and hint ordering in `audiencePractice`: require recognized target words, pause hint time during speech, and hold successful recall for explicit continuation so silence never manufactures progress.
 - Use SDK-backed speech generation and recorded-audio feedback with validated evidence; retain audio for explicit retries so recognition cursor states cannot become invented coaching metrics.
+- Delete persisted recording drafts only after successful analysis, and detach recorder callbacks on exit; only unfinished analysis should offer recovery on reopening.
+- Reuse support-restoring repetition reset for practice retries in every word-visibility phase; recovery must never synthesize recognition matches or advance mastery.
 - Guard camera permission requests against view closure and stop every stale stream; native permission denials open app-specific settings so delayed permission responses cannot leave a camera active.
